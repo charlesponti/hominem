@@ -1,0 +1,6 @@
+[submodule "api"]
+	path = api
+	url = https://github.com/charlesponti/hominem-api
+[submodule "ui"]
+	path = ui
+	url = https://github.com/charlesponti/hominem-ui
