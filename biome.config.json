@@ -20,6 +20,7 @@
 		"attributePosition": "auto"
 	},
 	"organizeImports": {
+		"enabled": true,
 		"include": [
 			"apps/**/*.{ts,tsx}",
 			"packages/**/*.{ts,tsx}",
