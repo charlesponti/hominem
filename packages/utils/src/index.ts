@@ -8,9 +8,11 @@ export * from "./career/job.service";
 
 // Data
 export { db } from "./db";
+export { redis } from "./redis";
 
 // Utils
+export * from "./notes.utils";
+export * from "./rate-limit";
 export * from "./time";
 export * from "./types";
-export * from "./notes.utils";
 export * from "./writer";

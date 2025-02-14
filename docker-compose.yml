@@ -83,7 +83,7 @@ services:
     image: redis:latest
     container_name: hominem-redis
     ports:
-      - 4479:6379
+      - 6379:6379
     volumes:
       - hominem-redis:/data
     healthcheck:

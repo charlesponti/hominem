@@ -1,11 +1,11 @@
 import { eq, type SQL } from "drizzle-orm";
 
+import { db } from "../db";
 import {
 	job_applications,
 	type JobApplication,
 	type JobApplicationInsert,
 } from "../db/schema/job.schema";
-import { db } from "../db";
 
 export class ApplicationService {
 	async create(data: JobApplicationInsert) {

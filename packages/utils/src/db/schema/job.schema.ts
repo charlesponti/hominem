@@ -7,6 +7,8 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 import { users } from "../../types/users";
 import { companies } from "./company.schema";
 import { notes } from "./notes.schema";
@@ -27,6 +29,8 @@ export const jobs = pgTable("jobs", {
 
 export type Job = typeof jobs.$inferSelect;
 export type NewJob = typeof jobs.$inferInsert;
+export const JobInsert = createInsertSchema(jobs);
+export const Job = createSelectSchema(jobs);
 
 export enum JobApplicationStage {
 	APPLICATION = "Application",
@@ -46,6 +50,7 @@ export enum JobApplicationStatus {
 	OFFER = "Offer",
 }
 
+export type JosApplicationStages = { stage: JobApplicationStage; date: Date }[];
 export const job_applications = pgTable("job_applications", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	position: text("position").notNull(),
@@ -56,9 +61,7 @@ export const job_applications = pgTable("job_applications", {
 	link: text("link"),
 	location: text("location").notNull().default("Remote"),
 	reference: boolean("reference").notNull().default(false),
-	stages: jsonb("stages")
-		.notNull()
-		.$type<{ stage: JobApplicationStage; date: Date }[]>(),
+	stages: jsonb("stages").notNull().$type<JosApplicationStages>(),
 	status: text("status").notNull().default(JobApplicationStatus.APPLIED),
 	salaryQuoted: text("salary_quoted"),
 	salaryAccepted: text("salary_accepted"),
@@ -79,8 +82,25 @@ export const job_applications = pgTable("job_applications", {
 	updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export type JobApplication = typeof job_applications.$inferSelect;
 export type JobApplicationInsert = typeof job_applications.$inferInsert;
+export type JobApplication = typeof job_applications.$inferSelect;
+export const JobApplicationSchema = createSelectSchema(job_applications);
+export const JobApplicationInsertSchema = createInsertSchema(job_applications, {
+	stages: z.array(
+		z.object({
+			stage: z.enum([
+				JobApplicationStage.APPLICATION,
+				JobApplicationStage.PHONE_SCREEN,
+				JobApplicationStage.TECHNICAL_SCREEN_CALL,
+				JobApplicationStage.TECHNICAL_SCREEN_EXERCISE,
+				JobApplicationStage.INTERVIEW,
+				JobApplicationStage.IN_PERSON,
+				JobApplicationStage.OFFER,
+			]),
+			date: z.date(),
+		}),
+	),
+});
 
 export const application_notes = pgTable("application_notes", {
 	applicationId: uuid("application_id")

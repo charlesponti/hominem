@@ -67,7 +67,6 @@
     "xenova"
   ],
   "editor.codeActionsOnSave": {
-    "source.organizeImports.biome": "always",
     "source.sortImports": "always"
   },
   "editor.defaultFormatter": "biomejs.biome",

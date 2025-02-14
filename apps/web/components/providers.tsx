@@ -1,17 +1,16 @@
 "use client";
 
+import { makeQueryClient, trpc } from "@/lib/trpc";
 import { ClerkProvider } from "@clerk/nextjs";
+import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import type * as React from "react";
-import { SidebarProvider } from "./ui/sidebar";
-import type { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
+import type * as React from "react";
 import { useState } from "react";
-import { makeQueryClient } from "@/lib/trpc";
 import SuperJSON from "superjson";
-import { trpc } from "@/lib/trpc";
 import { UserProvider } from "../context/user-context";
+import { SidebarProvider } from "./ui/sidebar";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
 	return (
@@ -19,7 +18,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 			<TRPCProvider>
 				<UserProvider>
 					<SidebarProvider>{children}</SidebarProvider>
-					{children}
 					<ReactQueryDevtools />
 				</UserProvider>
 			</TRPCProvider>

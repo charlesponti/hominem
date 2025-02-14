@@ -191,7 +191,7 @@ type SpotifyPlaylistItemsResponse = {
 export async function getSpotifyPlaylistItems(
 	playlistId: string,
 	accessToken: string,
-): Promise<SpotifyPlaylistItemsResponse["items"]> {
+): Promise<SpotifyPlaylistItem[]> {
 	const response = await fetch(
 		`https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
 		{
@@ -200,7 +200,7 @@ export async function getSpotifyPlaylistItems(
 	);
 	const { items } = (await response.json()) as SpotifyPlaylistItemsResponse;
 
-	return items.filter((item) => !!item);
+	return items.filter((item) => !!item) as SpotifyPlaylistItem[];
 }
 
 export function getUniqueArtistIdsFromTracks(

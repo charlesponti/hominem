@@ -1,11 +1,14 @@
-import { z } from "zod";
-import { ApplicationService, CompanyService } from "@ponti/utils/career";
 import { publicProcedure, router } from "@/server/trpc";
-import { JobApplicationSchema } from "../../../../lib/career/job-applications.utils";
+import {
+	ApplicationService,
+	CompanyService,
+	JobApplicationInsertSchema,
+} from "@ponti/utils/career";
+import { z } from "zod";
 
-export const applicationRouter = router({
+export const jobApplicationsRouter = router({
 	create: publicProcedure
-		.input(JobApplicationSchema)
+		.input(JobApplicationInsertSchema)
 		.mutation(async ({ input }) => {
 			const companyService = new CompanyService();
 			const company = await companyService.findById(input.companyId);
@@ -14,15 +17,7 @@ export const applicationRouter = router({
 			}
 
 			const applicationService = new ApplicationService();
-			const applicationId = await applicationService.create({
-				jobId: input.job_posting,
-				userId: input.userId,
-				status: "pending",
-				resume: input.resume,
-				coverLetter: input.coverLetter,
-				companyId: company.id,
-				position: input.position,
-			});
+			const applicationId = await applicationService.create(input);
 
 			return applicationService.findById(applicationId.toString());
 		}),

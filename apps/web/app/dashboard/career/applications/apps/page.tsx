@@ -8,7 +8,6 @@ import {
 	JobApplicationStage,
 	JobApplicationStatus,
 	type JobApplication,
-	type JobApplicationInsert,
 } from "@ponti/utils/career";
 import { PlusCircle } from "lucide-react";
 import { useState, type FormEvent } from "react";

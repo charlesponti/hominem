@@ -1,7 +1,8 @@
-import * as schema from "./schema";
 // import { Pool } from '@neondatabase/serverless';
+// biome-ignore lint/style/useNodejsImportProtocol: <explanation>
+import assert from "assert";
 import { drizzle, type NeonDatabase } from "drizzle-orm/neon-serverless";
-import assert from "node:assert";
+import * as schema from "./schema";
 
 const DATABASE_URL =
 	process.env.NODE_ENV === "test"

@@ -1,10 +1,8 @@
-export const DAY = 24 * 60 * 60 * 1000;
-
-const TIME_UNITS = {
+export const TIME_UNITS = {
 	SECOND: 1000,
 	MINUTE: 60 * 1000,
 	HOUR: 60 * 60 * 1000,
-	DAY,
+	DAY: 24 * 60 * 60 * 1000,
 	WEEK: 7 * 24 * 60 * 60 * 1000,
 	MONTH: 30 * 24 * 60 * 60 * 1000,
 	YEAR: 365 * 24 * 60 * 60 * 1000,
@@ -94,7 +92,7 @@ export const datePatterns = [
 ];
 
 export const getNumberOfDays = (dateTimeNumber: number) => {
-	return Math.abs(dateTimeNumber) / DAY;
+	return Math.abs(dateTimeNumber) / TIME_UNITS.DAY;
 };
 
 export const getDaysBetweenDates = (startDate: Date, endDate: Date) => {

@@ -1,8 +1,8 @@
-import React from "react";
+import { BackgroundElements } from "@/components/404-background-elements";
 import { Home } from "lucide-react";
 import Link from "next/link";
-import "./animations.css"; // Import CSS animations
-import { BackgroundElements } from "@/components/404-background-elements";
+import React from "react";
+import "./animations.css";
 
 const NotFound = () => {
 	return (
