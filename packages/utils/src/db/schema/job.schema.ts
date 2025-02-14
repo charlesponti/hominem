@@ -7,9 +7,9 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
-import { notes } from "./notes.schema";
-import { companies } from "./company.schema";
 import { users } from "../../types/users";
+import { companies } from "./company.schema";
+import { notes } from "./notes.schema";
 
 export const jobs = pgTable("jobs", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -49,15 +49,21 @@ export enum JobApplicationStatus {
 export const job_applications = pgTable("job_applications", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	position: text("position").notNull(),
-	resume: text("resume").notNull(),
+	resume: text("resume"),
 	coverLetter: text("cover_letter"),
 	startDate: timestamp("start_date").notNull().defaultNow(),
 	endDate: timestamp("end_date"),
 	link: text("link"),
 	location: text("location").notNull().default("Remote"),
 	reference: boolean("reference").notNull().default(false),
-	stages: jsonb("stages").notNull().default([JobApplicationStage.APPLICATION]),
+	stages: jsonb("stages")
+		.notNull()
+		.$type<{ stage: JobApplicationStage; date: Date }[]>(),
 	status: text("status").notNull().default(JobApplicationStatus.APPLIED),
+	salaryQuoted: text("salary_quoted"),
+	salaryAccepted: text("salary_accepted"),
+	jobPosting: text("job_posting"),
+	phoneScreen: text("phone_screen"),
 
 	// Relationships
 	companyId: uuid("company_id")

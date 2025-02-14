@@ -1,7 +1,7 @@
 "use client";
 
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
-import { DollarSign, User, FilePen } from "lucide-react";
+import { DollarSign, User, FilePen, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import {
 	Sidebar,
@@ -38,6 +38,10 @@ export function SiteNavigation() {
 						<SidebarLink href="/dashboard/finance">
 							<DollarSign size={16} />
 							Finance
+						</SidebarLink>
+						<SidebarLink href="/dashboard/activities/task-tracker">
+							<CheckCircle size={16} />
+							Task Tracker
 						</SidebarLink>
 					</SidebarContent>
 				</SidebarGroup>

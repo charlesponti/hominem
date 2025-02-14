@@ -1,88 +1,68 @@
+import { z } from "zod";
 import { ApplicationService, CompanyService } from "@ponti/utils/career";
-import z from "zod";
+import { publicProcedure, router } from "@/server/trpc";
+import { JobApplicationSchema } from "../../../../lib/career/job-applications.utils";
 
-const CreateApplicationSchema = z.object({
-	jobId: z.string(),
-	userId: z.string(),
-	resume: z.string(),
-	coverLetter: z.string(),
-	companyId: z.string(),
-	position: z.string(),
-});
-export async function POST(req: Request) {
-	const data = CreateApplicationSchema.parse(await req.json());
+export const applicationRouter = router({
+	create: publicProcedure
+		.input(JobApplicationSchema)
+		.mutation(async ({ input }) => {
+			const companyService = new CompanyService();
+			const company = await companyService.findById(input.companyId);
+			if (!company) {
+				throw new Error("Company not found");
+			}
 
-	const companyService = new CompanyService();
-	const company = await companyService.findById(data.companyId);
-	if (!company) {
-		return Response.json({ error: "Company not found" }, { status: 404 });
-	}
+			const applicationService = new ApplicationService();
+			const applicationId = await applicationService.create({
+				jobId: input.job_posting,
+				userId: input.userId,
+				status: "pending",
+				resume: input.resume,
+				coverLetter: input.coverLetter,
+				companyId: company.id,
+				position: input.position,
+			});
 
-	const applicationService = new ApplicationService();
+			return applicationService.findById(applicationId.toString());
+		}),
 
-	const applicationId = await applicationService.create({
-		jobId: data.jobId,
-		userId: data.userId,
-		status: "pending",
-		resume: data.resume,
-		coverLetter: data.coverLetter,
-		companyId: company.id,
-		position: data.position,
-	});
+	update: publicProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				data: z.object({}).passthrough(),
+			}),
+		)
+		.mutation(async ({ input }) => {
+			const applicationService = new ApplicationService();
+			const success = await applicationService.update(input.id, input.data);
+			if (!success) {
+				throw new Error("Application not found");
+			}
+			return applicationService.findById(input.id);
+		}),
 
-	const application = await applicationService.findById(
-		applicationId.toString(),
-	);
-	return Response.json(application, { status: 201 });
-}
-
-export async function PUT(req: Request) {
-	const applicationService = new ApplicationService();
-
-	const { id, ...data } = await req.json();
-
-	const success = await applicationService.update(id, data);
-
-	if (!success) {
-		return Response.json({ error: "Application not found" }, { status: 404 });
-	}
-
-	const updated = await applicationService.findById(id);
-	return Response.json(updated, { status: 200 });
-}
-
-export async function GET(req: Request) {
-	const applicationService = new ApplicationService();
-
-	const { searchParams } = new URL(req.url);
-	const id = searchParams.get("id");
-
-	if (id) {
-		const application = await applicationService.findById(id);
+	getById: publicProcedure.input(z.string()).query(async ({ input }) => {
+		const applicationService = new ApplicationService();
+		const application = await applicationService.findById(input);
 		if (!application) {
-			return Response.json({ error: "Application not found" }, { status: 404 });
+			throw new Error("Application not found");
 		}
-		return Response.json(application);
-	}
+		return application;
+	}),
 
-	const applications = await applicationService.findMany();
-	return Response.json(applications);
-}
+	getAll: publicProcedure.query(async () => {
+		const applicationService = new ApplicationService();
+		return applicationService.findMany();
+	}),
 
-export async function DELETE(req: Request) {
-	const applicationService = new ApplicationService();
-
-	const { searchParams } = new URL(req.url);
-	const id = searchParams.get("id");
-
-	if (!id) {
-		return Response.json({ error: "ID is required" }, { status: 400 });
-	}
-
-	const success = await applicationService.delete(id);
-	if (!success) {
-		return Response.json({ error: "Application not found" }, { status: 404 });
-	}
-
-	return new Response(null, { status: 204 });
-}
+	delete: publicProcedure.input(z.string()).mutation(async ({ input }) => {
+		const applicationService = new ApplicationService();
+		const success = await applicationService.delete(input);
+		if (!success) {
+			throw new Error("Application not found");
+		}
+		return true;
+	}),
+});

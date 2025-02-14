@@ -1,9 +1,9 @@
-export const formatCurrency = (amount: number) => {
+export const formatCurrency = (amount: number | string) => {
 	return new Intl.NumberFormat("en-US", {
 		style: "currency",
 		currency: "USD",
 		maximumFractionDigits: 0,
-	}).format(amount);
+	}).format(typeof amount === "string" ? Number.parseFloat(amount) : amount);
 };
 
 // 2024 Federal Tax Brackets (simplified)
