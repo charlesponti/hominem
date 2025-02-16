@@ -8,6 +8,7 @@ export * from "./career/job.service";
 
 // Data
 export { db } from "./db";
+export * as schema from "./db/schema";
 export { redis } from "./redis";
 
 // Utils

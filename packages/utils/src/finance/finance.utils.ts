@@ -10,6 +10,7 @@ interface ItemCategory {
 
 interface Item {
 	name: string;
+	description: string;
 	date_acquired: Date;
 	date_sold: Date | null;
 	brand: Company;

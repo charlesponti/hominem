@@ -13,25 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
-
-export const users = pgTable(
-	"users",
-	{
-		id: uuid("id").primaryKey().defaultRandom(),
-		email: text("email").notNull().unique(),
-		clerkId: text("clerk_id").unique(),
-		createdAt: timestamp("created_at").notNull().defaultNow(),
-		updatedAt: timestamp("updated_at").notNull().defaultNow(),
-	},
-	(table) => ({
-		emailIdx: index("email_idx").on(table.email),
-		clerkIdIdx: index("clerk_id_idx").on(table.clerkId),
-	}),
-);
-export const UserInsertSchema = createInsertSchema(users);
-export const UserSelectSchema = createSelectSchema(users);
-export type UserInsert = z.infer<typeof UserInsertSchema>;
-export type User = z.infer<typeof UserSelectSchema>;
+import { users } from "./users";
 
 export const artists = pgTable(
 	"artists",

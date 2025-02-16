@@ -1,4 +1,3 @@
-// import { Pool } from '@neondatabase/serverless';
 // biome-ignore lint/style/useNodejsImportProtocol: <explanation>
 import assert from "assert";
 import { drizzle, type NeonDatabase } from "drizzle-orm/neon-serverless";

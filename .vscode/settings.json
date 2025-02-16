@@ -17,55 +17,6 @@
   "biome.enabled": true,
   "biome.lspBin": "node_modules/.bin/biome",
   "biome.searchInPath": true,
-  "cSpell.ignorePaths": [
-    "package-lock.json",
-    "node_modules",
-    "vscode-extension",
-    ".git/{info,lfs,logs,refs,objects}/**",
-    ".git/{index,*refs,*HEAD}",
-    ".vscode",
-    ".vscode-insiders",
-    ".env*"
-  ],
-  "cSpell.ignoreWords": [
-    "openai",
-    "langchain",
-    "fastify"
-  ],
-  "cSpell.words": [
-    "AUTOINCREMENT",
-    "biomejs",
-    "Checkpointer",
-    "chromadb",
-    "chrono",
-    "googleauth",
-    "healthcheck",
-    "initdb",
-    "langchain",
-    "langgraph",
-    "libsql",
-    "ollama",
-    "onnxruntime",
-    "openai",
-    "Peloton",
-    "pgadmin",
-    "pino",
-    "ponti",
-    "posttest",
-    "prepush",
-    "qrcode",
-    "rabbitmq",
-    "sendgrid",
-    "Serp",
-    "serpapi",
-    "shadcn",
-    "supabase",
-    "tavily",
-    "typecheck",
-    "vectorstores",
-    "vercel",
-    "xenova"
-  ],
   "editor.codeActionsOnSave": {
     "source.sortImports": "always"
   },
@@ -76,5 +27,7 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.preferences.importModuleSpecifier": "shortest",
   "javascript.preferences.importModuleSpecifier": "shortest",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "github.copilot.chat.followUps": "always"
 }

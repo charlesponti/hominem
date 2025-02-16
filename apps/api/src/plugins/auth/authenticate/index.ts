@@ -1,0 +1,167 @@
+import { db } from "@ponti/utils";
+import { token, users } from "@ponti/utils/schema";
+import { and, eq, gt } from "drizzle-orm";
+import type { FastifyPluginAsync } from "fastify";
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
+import { userService } from "../../../services/user.service";
+
+interface AuthenticateInput {
+	email: string;
+	emailToken: string;
+}
+
+interface AuthenticateResponse {
+	user: {
+		isAdmin: boolean;
+		roles: string[];
+		userId: string;
+		name: string | null;
+	};
+}
+
+const authenticateSchema = z.object({
+	email: z.string().email(),
+	emailToken: z.string(),
+});
+
+async function validateEmailToken(t: string, email: string) {
+	const [fetchedToken] = await db
+		.select()
+		.from(token)
+		.where(
+			and(
+				eq(token.emailToken, t),
+				gt(token.expiration, new Date().toISOString()),
+			),
+		)
+		.leftJoin(users, eq(token.userId, users.id));
+
+	if (!fetchedToken) {
+		return null;
+		// throw new AuthenticationError(401, "Invalid or expired token");
+	}
+
+	return fetchedToken;
+}
+
+const authenticatePlugin: FastifyPluginAsync = async (server) => {
+	server.addHook("preHandler", async (request) => {
+		request.id = randomUUID();
+		request.log.info(
+			{ requestId: request.id },
+			"Incoming authentication request",
+		);
+	});
+
+	server.post<{
+		Body: AuthenticateInput;
+		Reply: AuthenticateResponse | { error: string };
+	}>(
+		"/authenticate",
+		{
+			schema: {
+				body: {
+					type: "object",
+					required: ["email", "emailToken"],
+					properties: {
+						email: { type: "string", format: "email" },
+						emailToken: { type: "string" },
+					},
+				},
+				response: {
+					200: {
+						type: "object",
+						required: ["user"],
+						properties: {
+							user: {
+								type: "object",
+								required: ["isAdmin", "roles", "userId", "name"],
+								properties: {
+									isAdmin: { type: "boolean" },
+									roles: { type: "array", items: { type: "string" } },
+									userId: { type: "string" },
+									name: { type: ["string", "null"] },
+								},
+							},
+						},
+					},
+					"4xx": {
+						type: "object",
+						required: ["error"],
+						properties: {
+							error: { type: "string" },
+						},
+					},
+				},
+			},
+		},
+		async (request, reply) => {
+			try {
+				console.log("starting parsing");
+
+				const { email, emailToken } = authenticateSchema.parse(request.body);
+
+				console.log("accessToken", emailToken, email);
+
+				const fetchedEmailToken = await validateEmailToken(emailToken, email);
+
+				if (!fetchedEmailToken) {
+					request.log.error(
+						{ email, emailToken, requestId: request.id },
+						"Invalid or expired token",
+					);
+					return reply.code(401).send({ error: "Invalid or expired token" });
+				}
+
+				if (!fetchedEmailToken.users) {
+					request.log.error(
+						{ email, emailToken, requestId: request.id },
+						"No user found matching token",
+					);
+					return reply
+						.code(401)
+						.send({ error: "No user found matching token" });
+				}
+
+				const tokenBase = {
+					isAdmin: fetchedEmailToken.users.isAdmin,
+					roles: ["user", !!fetchedEmailToken.users.isAdmin && "admin"].filter(
+						Boolean,
+					),
+					userId: fetchedEmailToken.users.id,
+				};
+
+				const accessToken = server.jwt.sign(tokenBase);
+
+				const newUser = await userService.createOrUpdateUser(
+					email,
+					accessToken,
+				);
+
+				return reply.send({
+					user: {
+						isAdmin: newUser.isAdmin,
+						roles: tokenBase.roles,
+						userId: newUser.id,
+						name: newUser.name,
+					},
+				});
+			} catch (error) {
+				console.error(error);
+				request.log.error(
+					{ error, requestId: request.id },
+					"Authentication failed",
+				);
+
+				if (error instanceof z.ZodError) {
+					return reply.code(400).send({ error: "Invalid input data" });
+				}
+
+				return reply.code(500).send({ error: "Internal server error" });
+			}
+		},
+	);
+};
+
+export default authenticatePlugin;

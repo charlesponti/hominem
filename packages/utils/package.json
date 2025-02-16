@@ -13,7 +13,8 @@
 		"./notes": "./src/notes.utils.ts",
 		"./google-sheets": "./src/google/sheets.ts",
 		"./google-calendar": "./src/google/calendar.ts",
-		"./google-maps": "./src/google/maps.ts"
+		"./google-maps": "./src/google/maps.ts",
+		"./schema": "./src/db/schema/index.ts"
 	},
 	"scripts": {
 		"build": "tsc",

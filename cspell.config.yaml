@@ -1,0 +1,18 @@
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+version: '0.2'
+dictionaryDefinitions:
+  - name: hominem-dictionary
+    path: './config/dictionary.txt'
+    addWords: true
+dictionaries:
+  - hominem-dictionary
+ignorePaths:
+  - "/config/dictionary.txt"
+  - "node_modules"
+  - "package-lock.json"
+  - "vscode-extension"
+  - ".git/{info,lfs,logs,refs,objects}/**"
+  - ".git/{index,*refs,*HEAD}"
+  - ".vscode"
+  - ".vscode-insiders"
+  - ".env*"

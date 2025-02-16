@@ -1,8 +1,8 @@
-import { pgTable, text, timestamp, pgEnum, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { transactions } from "../finance";
 import { people } from "./people";
 import { tags } from "./tagging";
-import { transactions } from "../finance";
 
 // Enums
 export const eventTypeEnum = pgEnum("event_type", [
@@ -33,7 +33,7 @@ export const events = pgTable("events", {
 	title: text("title").notNull(),
 	description: text("description"),
 	date: timestamp("date").notNull(),
-	placeId: text("place_id").references(() => places.id),
+	placeId: uuid("place_id").references(() => places.id),
 	dateStart: timestamp("date_start"),
 	dateEnd: timestamp("date_end"),
 	dateTime: timestamp("date_time"),
