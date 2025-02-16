@@ -2,7 +2,6 @@ import { db } from "@ponti/utils";
 import { token, users } from "@ponti/utils/schema";
 import { add } from "date-fns";
 import { eq } from "drizzle-orm";
-import type { FastifyInstance } from "fastify";
 import { APP_USER_ID, EVENTS, track } from "../../../analytics";
 import { sendEmailToken } from "../../email";
 
@@ -15,10 +14,8 @@ function generateEmailToken(): string {
 
 async function createToken({
 	email,
-	server,
 }: {
 	email: string;
-	server: FastifyInstance;
 }) {
 	// 👇 Generate an alphanumeric token
 	const emailToken = generateEmailToken();
@@ -52,13 +49,8 @@ async function createToken({
 
 	track(APP_USER_ID, EVENTS.USER_EVENTS.REGISTER_SUCCESS, {});
 
-	try {
-		// 👇 Send the email token
-		await sendEmailToken(email, emailToken);
-	} catch (error) {
-		server.log.error("Error sending email token", error);
-		throw new Error("Error sending email token");
-	}
+	// 👇 Send the email token
+	return sendEmailToken(email, emailToken);
 }
 
 export { createToken };

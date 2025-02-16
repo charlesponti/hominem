@@ -1,9 +1,9 @@
-import "dotenv/config";
-import path from "node:path";
-
-console.log("path is", path.resolve(__dirname, ".env"));
-
 import "@total-typescript/ts-reset";
+import "dotenv/config";
+
 import { startServer } from "./server";
 
-startServer();
+startServer().catch((error) => {
+	console.error(error);
+	process.exit(1);
+});

@@ -2,9 +2,9 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { chromium } from "playwright";
-import type { ElementHandle, Page } from "playwright";
 import readline from "node:readline/promises";
+import type { ElementHandle, Page } from "playwright";
+import { chromium } from "playwright";
 
 const rl = readline.createInterface({
 	input: process.stdin,

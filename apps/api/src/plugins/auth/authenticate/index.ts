@@ -46,7 +46,6 @@ async function validateEmailToken(t: string, email: string) {
 
 	if (!fetchedToken) {
 		return null;
-		// throw new AuthenticationError(401, "Invalid or expired token");
 	}
 
 	return fetchedToken;
@@ -60,7 +59,7 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
 			"Incoming authentication request",
 		);
 	});
-
+	const fo = "1234";
 	server.post<{
 		Body: AuthenticateInput;
 		Reply: AuthenticateResponse | { error: string };
@@ -68,14 +67,14 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
 		"/authenticate",
 		{
 			schema: {
-				body: {
-					type: "object",
-					required: ["email", "emailToken"],
-					properties: {
-						email: { type: "string" },
-						emailToken: { type: "string" },
-					},
-				},
+				// body: {
+				// 	type: "object",
+				// 	required: ["email", "emailToken"],
+				// 	properties: {
+				// 		email: { type: "string" },
+				// 		emailToken: { type: "string" },
+				// 	},
+				// },
 				response: {
 					200: {
 						type: "object",
@@ -106,7 +105,6 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
 		async (request, reply) => {
 			try {
 				const { email, emailToken } = authenticateSchema.parse(request.body);
-
 				const fetchedEmailToken = await validateEmailToken(emailToken, email);
 
 				if (!fetchedEmailToken) {

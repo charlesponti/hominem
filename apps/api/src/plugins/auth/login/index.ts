@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { APP_USER_ID, EVENTS, track } from "../../../analytics";
 import logger from "../../../logger";
-import { createToken } from "./createToken";
+import { createToken } from "../utils/create-token";
 
 interface LoginInput {
 	email: string;
@@ -25,7 +25,7 @@ const loginPlugin: FastifyPluginAsync = async (server) => {
 			const { email } = request.body as LoginInput;
 
 			try {
-				await createToken({ email, server });
+				await createToken({ email });
 				return reply.code(200).send();
 			} catch (error) {
 				const message = (error as Error)?.message;

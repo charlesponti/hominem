@@ -92,17 +92,17 @@ export const verifySession: preValidationHookHandler = async (
 				return reply.code(401).send();
 			}
 
+			request.session.set("data", {
+				userId: token.userId,
+				name: user.name,
+				isAdmin: user.isAdmin,
+				roles: [],
+			});
+
 			request.user = user;
 		} catch (e) {
 			reply.log.error("Could not verify session", e);
 			return reply.code(401).send();
 		}
-
-		request.session.set("data", {
-			userId: token.userId,
-			name: user.name,
-			isAdmin: user.isAdmin,
-			roles: [],
-		});
 	}
 };

@@ -4,6 +4,7 @@ import fastify, {
 	type FastifyServerOptions,
 } from "fastify";
 import assert from "node:assert";
+import type { ZodSchema } from "zod";
 import adminPlugin from "./plugins/admin";
 import authPlugin from "./plugins/auth";
 import bookmarksPlugin from "./plugins/bookmarks";
@@ -76,6 +77,14 @@ export async function createServer(
 
 		// Register Google-related routes
 		// googleService.registerRoutes(server);
+
+		server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
+			return (data) => schema.parse(data);
+		});
+
+		server.setSerializerCompiler(({ schema }: { schema: ZodSchema }) => {
+			return (data) => schema.parse(data);
+		});
 
 		server.setErrorHandler((error, request, reply) => {
 			console.error(error);
