@@ -1,11 +1,11 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
+import { db, takeUniqueOrThrow } from "@ponti/utils";
 import { chat, chatMessage } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
 import { HttpResponseOutputParser } from "langchain/output_parsers";
-import { db, takeUniqueOrThrow } from "../../db";
 import type { RequestWithSession } from "../../typings";
 import { verifySession } from "../auth/utils";
 

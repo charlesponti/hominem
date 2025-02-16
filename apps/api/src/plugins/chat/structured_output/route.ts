@@ -1,5 +1,6 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
+import { db } from "@ponti/utils";
 import { chatMessage } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
@@ -7,7 +8,6 @@ import fastifyPlugin from "fastify-plugin";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { db } from "../../../db";
 import { verifySession } from "../../auth/utils";
 
 const STRUCTURED_OUTPUT_TEMPLATE =

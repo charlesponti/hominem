@@ -3,10 +3,10 @@
  * and updates the place with the photo URL.
  */
 
+import { db } from "@ponti/utils";
 import { place } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
-import { db } from "../../../db";
 import logger from "../../../logger";
 import { getPlacePhotos, isValidImageUrl } from "../../google/places";
 

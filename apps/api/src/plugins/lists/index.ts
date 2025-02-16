@@ -1,9 +1,9 @@
+import { db, takeUniqueOrThrow } from "@ponti/utils";
 import { list, users } from "@ponti/utils/schema";
 import { desc, eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import fastifyPlugin from "fastify-plugin";
 import { EVENTS, track } from "../../analytics";
-import { db, takeUniqueOrThrow } from "../../db";
 import type { RequestWithSession } from "../../typings";
 import { verifySession } from "../auth/utils";
 import acceptListInviteRoute from "./accept-invite/route";

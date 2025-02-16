@@ -1,6 +1,6 @@
+import { db } from "@ponti/utils";
 import { users } from "@ponti/utils/schema";
 import type { FastifyPluginAsync } from "fastify";
-import { db } from "../db";
 import { verifyIsAdmin } from "./auth/utils";
 
 const adminPlugin: FastifyPluginAsync = async (server) => {

@@ -1,5 +1,5 @@
 import ogs from "open-graph-scraper";
-import type { OgObject } from "open-graph-scraper/types/lib/types";
+import type { OgObject } from "open-graph-scraper/types";
 
 interface GetOpenGraphDataParams {
 	url: string;

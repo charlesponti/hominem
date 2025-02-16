@@ -6,6 +6,13 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { userService } from "../../../services/user.service";
 
+export enum TOKEN_FAILURE_REASONS {
+	NOT_FOUND = "Token not found",
+	INVALID = "Token is invalid",
+	EXPIRED = "Token has expired",
+	EMAIL_MISMATCH = "Email does not match",
+}
+
 interface AuthenticateInput {
 	email: string;
 	emailToken: string;
@@ -65,7 +72,7 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
 					type: "object",
 					required: ["email", "emailToken"],
 					properties: {
-						email: { type: "string", format: "email" },
+						email: { type: "string" },
 						emailToken: { type: "string" },
 					},
 				},
@@ -98,11 +105,7 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
 		},
 		async (request, reply) => {
 			try {
-				console.log("starting parsing");
-
 				const { email, emailToken } = authenticateSchema.parse(request.body);
-
-				console.log("accessToken", emailToken, email);
 
 				const fetchedEmailToken = await validateEmailToken(emailToken, email);
 
@@ -148,7 +151,6 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
 					},
 				});
 			} catch (error) {
-				console.error(error);
 				request.log.error(
 					{ error, requestId: request.id },
 					"Authentication failed",

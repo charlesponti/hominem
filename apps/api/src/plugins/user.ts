@@ -1,8 +1,8 @@
+import { db } from "@ponti/utils";
 import { users } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
-import { db } from "../db";
 import type { RequestWithSession } from "../typings";
 import { verifySession } from "./auth/utils";
 

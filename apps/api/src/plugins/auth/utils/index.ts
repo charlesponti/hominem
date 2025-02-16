@@ -1,3 +1,4 @@
+import { db, takeUniqueOrThrow } from "@ponti/utils";
 import { users } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
 import type {
@@ -5,7 +6,6 @@ import type {
 	FastifyRequest,
 	preValidationHookHandler,
 } from "fastify";
-import { db, takeUniqueOrThrow } from "../../../db";
 
 export function verifyPermissions(permissions: string[]) {
 	return (request: FastifyRequest, reply: FastifyReply, done: () => void) => {

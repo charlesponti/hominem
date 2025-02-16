@@ -1,8 +1,8 @@
+import { db, takeUniqueOrThrow } from "@ponti/utils";
 import { item, list, place as places } from "@ponti/utils/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { EVENTS, track } from "../../analytics";
-import { db, takeUniqueOrThrow } from "../../db";
 import type { RequestWithSession } from "../../typings";
 import { verifySession } from "../auth/utils";
 import {

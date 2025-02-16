@@ -1,6 +1,6 @@
+import { db } from "@ponti/utils";
 import { token, users } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
-import { db } from "../../../db";
 import { TOKEN_FAILURE_REASONS } from "./index";
 
 export class TokenValidationError extends Error {

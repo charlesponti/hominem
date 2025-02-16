@@ -1,6 +1,6 @@
+import { db } from "@ponti/utils";
 import { list, userLists, users } from "@ponti/utils/schema";
 import { desc, eq } from "drizzle-orm";
-import { db } from "../../db";
 
 export async function getUserLists(userId: string) {
 	return db

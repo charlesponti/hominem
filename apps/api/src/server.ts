@@ -1,15 +1,16 @@
+import { db } from "@ponti/utils";
 import fastify, {
 	type FastifyInstance,
 	type FastifyServerOptions,
 } from "fastify";
 import assert from "node:assert";
-import { PgPlugin } from "./db";
 import adminPlugin from "./plugins/admin";
 import authPlugin from "./plugins/auth";
 import bookmarksPlugin from "./plugins/bookmarks";
 import chatSingleResponsePlugin from "./plugins/chat/single-response";
 import circuitBreaker from "./plugins/circuit-breaker";
 import emailPlugin from "./plugins/email";
+import googleService from "./plugins/google/auth";
 import ideasPlugin from "./plugins/ideas";
 import invites from "./plugins/invites";
 import listsPlugin from "./plugins/lists";
@@ -18,7 +19,6 @@ import sessionPlugin from "./plugins/session";
 import shutdownPlugin from "./plugins/shutdown";
 import statusPlugin from "./plugins/status";
 import usersPlugin from "./plugins/user";
-import googleService from "./plugins/google/auth";
 
 const { APP_URL, JWT_SECRET, PORT } = process.env;
 
@@ -45,7 +45,6 @@ export async function createServer(
 		await server.register(require("@fastify/jwt"), {
 			secret: JWT_SECRET,
 		});
-		await server.register(PgPlugin);
 		await server.register(circuitBreaker);
 
 		// // Register Redis plugin

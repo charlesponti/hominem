@@ -1,28 +1,44 @@
 import { db } from "@ponti/utils";
 import { token, users } from "@ponti/utils/schema";
 import { add } from "date-fns";
+import { sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { createServer } from "../../../server";
 import { userService } from "../../../services/user.service";
 
 describe("authenticatePlugin", () => {
 	let server: FastifyInstance;
 
+	beforeAll(async () => {
+		// Ensure database connection is established
+		await db.execute(sql`SELECT 1`);
+		vi.spyOn(userService, "createOrUpdateUser");
+	});
+
+	afterAll(async () => {
+		// Close database connection
+		await db.delete(token);
+		await db.delete(users);
+	});
+
 	beforeEach(async () => {
+		// Clear database tables
+		await db.delete(token);
+		await db.delete(users);
+
 		const testServer = await createServer({ logger: false });
 		if (!testServer) throw new Error("Server is null");
 		server = testServer;
 		await server.ready();
-
-		// Clear database tables
-		// try {
-		// 	await db.delete(token);
-		// 	await db.delete(users);
-		// } catch (error) {
-		// 	console.error(error);
-		// 	throw error;
-		// }
 	});
 
 	it("should authenticate a user with valid token", async () => {
@@ -30,7 +46,7 @@ describe("authenticatePlugin", () => {
 		const [testUser] = await db
 			.insert(users)
 			.values({
-				id: "test_user_id",
+				id: crypto.randomUUID(),
 				email: "test@example.com",
 				isAdmin: false,
 				name: null,
@@ -38,7 +54,7 @@ describe("authenticatePlugin", () => {
 			.returning();
 
 		await db.insert(token).values({
-			id: crypto.getRandomValues(new Uint32Array(1))[0],
+			id: Math.floor(Math.random() * 1000000),
 			userId: testUser.id,
 			emailToken: "valid_token",
 			type: "EMAIL",
@@ -61,7 +77,7 @@ describe("authenticatePlugin", () => {
 			user: {
 				isAdmin: false,
 				roles: ["user"],
-				userId: "user_id",
+				userId: testUser.id,
 				name: null,
 			},
 		});
@@ -87,7 +103,7 @@ describe("authenticatePlugin", () => {
 		const [testUser] = await db
 			.insert(users)
 			.values({
-				id: "test_user_id",
+				id: crypto.randomUUID(),
 				email: "test@example.com",
 				isAdmin: false,
 				name: null,
@@ -95,7 +111,7 @@ describe("authenticatePlugin", () => {
 			.returning();
 
 		await db.insert(token).values({
-			id: crypto.getRandomValues(new Uint32Array(1))[0],
+			id: Math.floor(Math.random() * 1000000),
 			type: "EMAIL",
 			userId: testUser.id,
 			emailToken: "expired_token",

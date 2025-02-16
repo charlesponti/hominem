@@ -34,6 +34,9 @@ type StoredCredentials = {
 	refresh_token: string;
 };
 
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+type FileCredentials = { installed: any; web: any };
+
 export class GoogleOAuthService {
 	private options: GoogleOAuthServiceOptions;
 
@@ -77,11 +80,11 @@ export class GoogleOAuthService {
 		return newClient as any as OAuth2Client;
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	private async getCredentials(): Promise<{ installed: any; web: any }> {
+	private async getCredentials(): Promise<FileCredentials> {
 		try {
 			const content = await readFile(CREDENTIALS_PATH);
-			return JSON.parse(content.toString());
+			const keys = JSON.parse(content.toString()) as FileCredentials;
+			return keys;
 		} catch (err) {
 			logger.error("Error loading client secret file:", err);
 			throw err;

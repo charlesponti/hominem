@@ -1,7 +1,7 @@
+import { db } from "@ponti/utils";
 import { bookmark } from "@ponti/utils/schema";
 import { and, desc, eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
-import { db } from "../../db";
 import type { RequestWithSession } from "../../typings";
 import { verifySession } from "../auth/utils";
 import { convertOGContentToBookmark, getOpenGraphData } from "./utils";
