@@ -1,64 +1,86 @@
 {
-    # Development-specific global options
-    debug
-    local_certs
-    auto_https disable_redirects
-    
-    servers {
-      # Timeouts
-      timeouts {
-          read_body 10s
-          read_header 10s
-          write 30s
-          idle 60s
-      }
-    }
+	# Development-specific global options
+	debug
+	local_certs
+	auto_https disable_redirects
+
+	servers {
+		# Timeouts
+		timeouts {
+			read_body 10s
+			read_header 10s
+			write 30s
+			idle 60s
+		}
+	}
 }
 
 (common) {
-    # Security headers
-    header {
-        # CORS for local development
-        Access-Control-Allow-Origin "*"
-        # Security headers
-        Strict-Transport-Security "max-age=31536000;"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "DENY"
-        Referrer-Policy "strict-origin-when-cross-origin"
-    }
-    
-    # Enable compression
-    encode zstd gzip
+	# Security headers
+	header {
+		# CORS for local development
+		Access-Control-Allow-Origin "*"
+		# Security headers
+		Strict-Transport-Security "max-age=31536000;"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
 
-    # Basic logging for development
-    log {
-        output stdout
-        format console
-        level INFO
-    }
+	# Enable compression
+	encode zstd gzip
 
-    # Custom error pages
-    handle_errors {
-        respond "* {http.error.status_code} {http.error.status_text}" 
-    }
-}
+	# Basic logging for development
+	log {
+		output stdout
+		format console
+		level INFO
+	}
 
-rocco.hominem.localhost {
-    import common
-    reverse_proxy localhost:53422
+	# Custom error pages
+	handle_errors {
+		respond "* {http.error.status_code} {http.error.status_text}"
+	}
 }
 
 api.hominem.localhost {
-    import common
-    reverse_proxy localhost:53421
+	import common
+	reverse_proxy localhost:4040
 }
 
 app.hominem.localhost {
-    import common
-    reverse_proxy localhost:4444
+	import common
+	reverse_proxy localhost:4444
 }
 
 data.hominem.localhost {
-    import common
-    reverse_proxy * localhost:4432
+	import common
+	listener_wrappers {
+		tcp
+		proxy_protocol
+	}
+	tls {
+		protocols tls1.2 tls1.3
+	}
+	servers {
+		protocol {
+			tcp
+			proxy_protocol
+		}
+	}
+	proxy {
+		tcp
+		upstream localhost:4432
+		max_connections 100
+		read_timeout 10s
+		write_timeout 10s
+		# Consider adding health check configurations to ensure backend availability.
+		health_check {
+			interval 10s
+			timeout 2s
+		}
+		max_connections 100
+		read_timeout 10s
+		write_timeout 10s
+	}
 }
