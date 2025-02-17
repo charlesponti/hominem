@@ -22,8 +22,8 @@ jobs:
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      SENDGRID_API_KEY: "SG.sendgrid-api-key"
-      REDIS_URL: "redis://localhost:6379"
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
     services:
       postgres:
         env:
@@ -37,7 +37,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5432:5432
+          - 4433:5432
       redis:
         image: redis
         options: >-
@@ -64,6 +64,9 @@ jobs:
 
       - name: 🔬 Lint & Type check
         run: npm run lint
+
+      - name: ⚙️ apply database migrations
+        run: npm run migrate
 
       - name: 🧪 Unit tests
         run: npm test

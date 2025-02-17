@@ -19,6 +19,7 @@
 	"scripts": {
 		"build": "tsc",
 		"test": "vitest --run --passWithNoTests",
+		"migrate": "npx drizzle-kit migrate",
 		"test:watch": "vitest"
 	},
 	"dependencies": {

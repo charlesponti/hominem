@@ -24,6 +24,7 @@
 		},
 		"lint": {},
 		"test": {},
+		"migrate": {},
 		"dev": {
 			"cache": false,
 			"persistent": true

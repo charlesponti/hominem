@@ -1,7 +1,5 @@
-// Load environment variables
-import dotenv from "dotenv";
+import dotenv from "dotenv/config";
 import assert from "node:assert";
-dotenv.config();
 
 const DATABASE_URL = process.env.DATABASE_URL;
 

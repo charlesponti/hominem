@@ -1,6 +1,5 @@
 // Load environment variables
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 
 import readline from "node:readline/promises";
 import type { ElementHandle, Page } from "playwright";
