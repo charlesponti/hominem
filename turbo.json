@@ -15,6 +15,7 @@
 		"JWT_SECRET",
 		"OPENAI_API_KEY",
 		"OPENAI_ORG_ID",
+		"REDIS_URL",
 		"SENDGRID_API_KEY"
 	],
 	"tasks": {
