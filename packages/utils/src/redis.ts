@@ -2,6 +2,8 @@ import Redis from "ioredis";
 
 const { REDIS_URL } = process.env;
 if (!REDIS_URL) {
+	console.log(REDIS_URL);
+	console.log(process.env.DATABASE_URL);
 	throw new Error("Missing REDIS_URL");
 }
 
