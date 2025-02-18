@@ -10,10 +10,6 @@ import { PlusCircle } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 const JobApplicationTracker = () => {
-	const auth = useAuth();
-
-	if (!auth?.userId) return;
-
 	const [applications, setApplications] = useState<JobApplication[]>([]);
 	const [position, setPosition] = useState("");
 	const [company, setCompany] = useState("");
@@ -23,6 +19,7 @@ const JobApplicationTracker = () => {
 	const [jobPosting, setJobPosting] = useState("");
 	const [companyUrl, setCompanyUrl] = useState("");
 	const [salaryQuoted, setSalaryQuoted] = useState("");
+	const auth = useAuth();
 
 	const stages = [
 		"Application",
@@ -35,6 +32,7 @@ const JobApplicationTracker = () => {
 	];
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+		if (!auth?.userId) return;
 		e.preventDefault();
 		if (position && company) {
 			setApplications((prev) => [
