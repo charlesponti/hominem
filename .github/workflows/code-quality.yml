@@ -15,20 +15,21 @@ jobs:
       COOKIE_NAME: ${{ secrets.COOKIE_NAME }}
       COOKIE_SALT: ${{ secrets.COOKIE_SALT }}
       COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hominem
+      DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      SENDGRID_API_KEY: "SG.sendgrid-api-key"
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
     services:
       postgres:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: hominem
+          POSTGRES_DB: hominem-test
         image: postgres
         options: >-
           --health-cmd pg_isready
@@ -36,7 +37,16 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5432:5432
+          - 4433:5432
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
     steps:
       - name: 🛑 Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.9.1
@@ -54,6 +64,9 @@ jobs:
 
       - name: 🔬 Lint & Type check
         run: npm run lint
+
+      - name: ⚙️ apply database migrations
+        run: npm run migrate
 
       - name: 🧪 Unit tests
         run: npm test

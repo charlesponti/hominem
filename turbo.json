@@ -28,6 +28,7 @@
 			"persistent": true
 		},
 		"lint": {},
+		"migrate": {},
 		"start": {
 			"dependsOn": ["^build"]
 		},
