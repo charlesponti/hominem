@@ -21,7 +21,6 @@
     "sourceMap": true,
     "strict": true,
     "baseUrl": ".",
-    "incremental": true,
     "strictNullChecks": true
   },
   "include": [

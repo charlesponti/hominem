@@ -1,4 +1,3 @@
-import Boom from "@hapi/boom";
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
 import type { Redis } from "ioredis";
@@ -59,9 +58,12 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (
 			if (counter >= maxHits) {
 				await verifyKeyExpiration(cacheKey);
 				onRateLimit(request, key);
-				rateLimitError = getCustomError
-					? getCustomError(request, key)
-					: Boom.tooManyRequests();
+
+				if (!getCustomError) {
+					throw new Error("Rate limit exceeded");
+				}
+
+				rateLimitError = getCustomError(request, key);
 			} else if (cachedValue) {
 				await Promise.all([
 					redis.incr(cacheKey),
