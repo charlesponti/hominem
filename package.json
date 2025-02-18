@@ -20,7 +20,7 @@
 		"build": "turbo run build",
 		"clean": "gts clean",
 		"dev": "turbo run dev --parallel",
-		"lint": "turbo run lint",
+		"lint": "turbo run lint --parallel",
 		"migrate": "turbo run migrate",
 		"postinstall": "npx husky install",
 		"posttest": "npm run lint",
