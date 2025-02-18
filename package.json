@@ -34,16 +34,24 @@
 		"test:e2e:ci": "turbo run test:e2e:ci",
 		"test:update": "turbo run test:update"
 	},
-	"dependencies": {},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@eslint/js": "^9.20.0",
 		"@turbo/gen": "^1.9.7",
+		"eslint": "^9.20.1",
+		"eslint-plugin-react": "^7.37.4",
+		"globals": "^15.15.0",
 		"husky": "^7.0.0",
 		"turbo": "^2.3.3",
-		"typescript": "5.4.3"
+		"typescript": "5.4.3",
+		"typescript-eslint": "^8.24.1"
 	},
 	"keywords": [],
 	"license": "ISC",
 	"packageManager": "npm@10.2.4",
-	"workspaces": ["scratchpad", "apps/*", "packages/*"]
+	"workspaces": [
+		"scratchpad",
+		"apps/*",
+		"packages/*"
+	]
 }
