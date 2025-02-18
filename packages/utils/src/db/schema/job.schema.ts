@@ -9,6 +9,10 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+import {
+	JobApplicationStage,
+	JobApplicationStatus,
+} from "../../types/career.types";
 import { users } from "../../types/users";
 import { companies } from "./company.schema";
 import { notes } from "./notes.schema";
@@ -31,24 +35,6 @@ export type Job = typeof jobs.$inferSelect;
 export type NewJob = typeof jobs.$inferInsert;
 export const JobInsert = createInsertSchema(jobs);
 export const Job = createSelectSchema(jobs);
-
-export enum JobApplicationStage {
-	APPLICATION = "Application",
-	PHONE_SCREEN = "Phone Screen",
-	TECHNICAL_SCREEN_CALL = "Technical Screen (Call)",
-	TECHNICAL_SCREEN_EXERCISE = "Technical Screen (Exercise)",
-	INTERVIEW = "Interview",
-	IN_PERSON = "In Person",
-	OFFER = "Offer",
-}
-
-export enum JobApplicationStatus {
-	APPLIED = "Applied",
-	HIRED = "Hired",
-	WITHDREW = "Withdrew",
-	REJECTED = "Rejected",
-	OFFER = "Offer",
-}
 
 export type JosApplicationStages = { stage: JobApplicationStage; date: Date }[];
 export const job_applications = pgTable("job_applications", {

@@ -4,11 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@clerk/nextjs";
-import {
-	JobApplicationStage,
-	JobApplicationStatus,
-	type JobApplication,
-} from "@ponti/utils/career";
+import type { JobApplication } from "@ponti/utils/career";
+import { JobApplicationStage, JobApplicationStatus } from "@ponti/utils/types";
 import { PlusCircle } from "lucide-react";
 import { useState, type FormEvent } from "react";
 

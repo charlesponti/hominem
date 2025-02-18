@@ -18,6 +18,7 @@ logs
 .DS_Store
 *.pem
 db.sqlite
+tsconfig.tsbuildinfo
 
 # Google credentials
 credentials.json

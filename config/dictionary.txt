@@ -1,5 +1,9 @@
+autobuild
+isready
+styfle
 autoincrement
 biomejs
+buildscript
 chartjs
 checkpointer
 chromadb

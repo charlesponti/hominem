@@ -16,6 +16,7 @@
 		"@langchain/core": "0.3.39",
 		"@langchain/langgraph": "0.2.45",
 		"@langchain/openai": "^0.4.3",
+		"@million/lint": "^1.0.14",
 		"@ponti/utils": "*",
 		"@radix-ui/react-accordion": "^1.2.3",
 		"@radix-ui/react-alert-dialog": "^1.1.6",

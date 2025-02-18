@@ -11,25 +11,37 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
+
+interface CalculationResult {
+	poundsToLose: number;
+	daysUntilTarget: number;
+	dailyCaloriesToBurn: number;
+	isHealthyRate: boolean;
+	dateWithFixedDeficit: string;
+	daysWithFixedDeficit: number;
+}
 
 const WeightGoalCalculator = () => {
-	const [startWeight, setStartWeight] = useState("");
-	const [goalWeight, setGoalWeight] = useState("");
-	const [targetDate, setTargetDate] = useState("");
-	const [result, setResult] = useState(null);
-	const [error, setError] = useState("");
+	const [startWeight, setStartWeight] = useState<string>("");
+	const [goalWeight, setGoalWeight] = useState<string>("");
+	const [targetDate, setTargetDate] = useState<string>("");
+	const [result, setResult] = useState<CalculationResult | null>(null);
+	const [error, setError] = useState<string>("");
 
 	// Function to calculate days between two dates
-	const calculateDaysDifference = (date1Str, date2Str) => {
+	const calculateDaysDifference = (
+		date1Str: string,
+		date2Str: string,
+	): number => {
 		const date1 = new Date(date1Str);
 		const date2 = new Date(date2Str);
-		const diffTime = Math.abs(date2 - date1);
+		const diffTime = Math.abs(date2.getTime() - date1.getTime());
 		return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 	};
 
 	// Get today's date in YYYY-MM-DD format for min attribute
-	const getTodayString = () => {
+	const getTodayString = (): string => {
 		const today = new Date();
 		const year = today.getFullYear();
 		const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -38,13 +50,13 @@ const WeightGoalCalculator = () => {
 	};
 
 	// Format date as MM/DD/YYYY
-	const formatDate = (dateStr) => {
+	const formatDate = (dateStr: string): string => {
 		const date = new Date(dateStr);
 		return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
 	};
 
 	// Calculate date after adding days to a date
-	const addDaysToDate = (dateStr, days) => {
+	const addDaysToDate = (dateStr: string, days: number): string => {
 		const date = new Date(dateStr);
 		date.setDate(date.getDate() + days);
 		const year = date.getFullYear();
@@ -53,7 +65,7 @@ const WeightGoalCalculator = () => {
 		return `${year}-${month}-${day}`;
 	};
 
-	const calculateGoal = () => {
+	const calculateGoal = (): void => {
 		// Clear previous results
 		setError("");
 		setResult(null);
@@ -64,10 +76,10 @@ const WeightGoalCalculator = () => {
 			return;
 		}
 
-		const startWeightNum = parseFloat(startWeight);
-		const goalWeightNum = parseFloat(goalWeight);
+		const startWeightNum = Number.parseFloat(startWeight);
+		const goalWeightNum = Number.parseFloat(goalWeight);
 
-		if (isNaN(startWeightNum) || isNaN(goalWeightNum)) {
+		if (Number.isNaN(startWeightNum) || Number.isNaN(goalWeightNum)) {
 			setError("Please enter valid numbers for weights");
 			return;
 		}
@@ -130,7 +142,9 @@ const WeightGoalCalculator = () => {
 						min="0"
 						placeholder="Enter your current weight"
 						value={startWeight}
-						onChange={(e) => setStartWeight(e.target.value)}
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+							setStartWeight(e.target.value)
+						}
 					/>
 				</div>
 
@@ -142,7 +156,9 @@ const WeightGoalCalculator = () => {
 						min="0"
 						placeholder="Enter your target weight"
 						value={goalWeight}
-						onChange={(e) => setGoalWeight(e.target.value)}
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+							setGoalWeight(e.target.value)
+						}
 					/>
 				</div>
 
@@ -153,7 +169,9 @@ const WeightGoalCalculator = () => {
 						type="date"
 						min={getTodayString()}
 						value={targetDate}
-						onChange={(e) => setTargetDate(e.target.value)}
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+							setTargetDate(e.target.value)
+						}
 					/>
 				</div>
 
@@ -193,7 +211,7 @@ const WeightGoalCalculator = () => {
 						</Alert>
 
 						{!result.isHealthyRate && (
-							<Alert variant="warning">
+							<Alert variant="destructive">
 								<AlertCircle className="h-4 w-4" />
 								<AlertTitle>Health Warning</AlertTitle>
 								<AlertDescription>

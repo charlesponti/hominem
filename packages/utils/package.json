@@ -14,7 +14,8 @@
 		"./google-sheets": "./src/google/sheets.ts",
 		"./google-calendar": "./src/google/calendar.ts",
 		"./google-maps": "./src/google/maps.ts",
-		"./schema": "./src/db/schema/index.ts"
+		"./schema": "./src/db/schema/index.ts",
+		"./types": "./src/types/index.ts"
 	},
 	"scripts": {
 		"build": "tsc",
@@ -23,10 +24,7 @@
 		"test:watch": "vitest"
 	},
 	"dependencies": {
-		"@hapi/boom": "^10.0.1",
-		"@neondatabase/serverless": "^0.10.4",
 		"ai": "^4.1.26",
-		"aws4": "^1.13.2",
 		"axios": "^1.7.9",
 		"chrono-node": "^2.7.8",
 		"compromise": "^14.14.4",

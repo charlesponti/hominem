@@ -41,7 +41,12 @@
 		"openai": "^4.83.0",
 		"pino": "^9.6.0",
 		"sqlite": "^5.1.1",
-		"sqlite3": "^5.1.7"
+		"sqlite3": "^5.1.7",
+		"unified": "^11.0.3",
+		"remark-parse": "^11.0.0",
+		"remark-stringify": "^11.0.0",
+		"mdast-util-to-string": "^4.0.0",
+		"mdast-util-from-markdown": "^2.0.0"
 	},
 	"devDependencies": {
 		"@types/cli-progress": "^3.11.6",
