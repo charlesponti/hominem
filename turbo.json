@@ -1,6 +1,6 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"globalDependencies": ["**/.env.*local"],
+	"globalDependencies": [".env.local", "**/.env.*local"],
 	"globalEnv": [
 		"APP_URL",
 		"COOKIE_DOMAIN",
@@ -22,14 +22,14 @@
 			"dependsOn": ["^build"],
 			"outputs": [".next/**", "!.next/cache/**", "build"]
 		},
-		"lint": {},
-		"test": {},
 		"dev": {
 			"cache": false,
 			"persistent": true
 		},
+		"lint": {},
 		"start": {
 			"dependsOn": ["^build"]
-		}
+		},
+		"test": {}
 	}
 }

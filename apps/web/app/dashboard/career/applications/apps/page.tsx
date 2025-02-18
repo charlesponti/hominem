@@ -4,19 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@clerk/nextjs";
-import {
-	JobApplicationStage,
-	JobApplicationStatus,
-	type JobApplication,
-} from "@ponti/utils/career";
+import type { JobApplication } from "@ponti/utils/career";
+import { JobApplicationStage, JobApplicationStatus } from "@ponti/utils/types";
 import { PlusCircle } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 const JobApplicationTracker = () => {
-	const auth = useAuth();
-
-	if (!auth?.userId) return;
-
 	const [applications, setApplications] = useState<JobApplication[]>([]);
 	const [position, setPosition] = useState("");
 	const [company, setCompany] = useState("");
@@ -26,6 +19,7 @@ const JobApplicationTracker = () => {
 	const [jobPosting, setJobPosting] = useState("");
 	const [companyUrl, setCompanyUrl] = useState("");
 	const [salaryQuoted, setSalaryQuoted] = useState("");
+	const auth = useAuth();
 
 	const stages = [
 		"Application",
@@ -38,6 +32,7 @@ const JobApplicationTracker = () => {
 	];
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+		if (!auth?.userId) return;
 		e.preventDefault();
 		if (position && company) {
 			setApplications((prev) => [

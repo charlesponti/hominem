@@ -1,23 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 import {
-	BarChart,
 	Bar,
+	BarChart,
+	ResponsiveContainer,
+	Tooltip,
 	XAxis,
 	YAxis,
-	Tooltip,
-	Legend,
-	ResponsiveContainer,
 } from "recharts";
+import { formatCurrency } from "../../../../lib/finance";
 import { useIndexedDBCollection } from "../../../../lib/hooks/use-indexdb-collection";
 import { formatPercent } from "../../../../lib/number.tools";
-import { formatCurrency } from "../../../../lib/finance";
 
 const INITIAL_LOCATIONS = [
 	{
@@ -176,7 +175,7 @@ const LocationComparison = () => {
 										</tr>
 									</thead>
 									<tbody>
-										{locations.map((loc, index) => (
+										{locations.map((loc) => (
 											<tr
 												key={crypto.getRandomValues(new Uint16Array(1))[0]}
 												className="border-b"
@@ -384,7 +383,7 @@ const LocationComparison = () => {
 											</tr>
 										</thead>
 										<tbody>
-											{locations.map((loc, index) => {
+											{locations.map((loc) => {
 												const baseLocation = locations[0];
 												const relativeCol =
 													(baseLocation.costIndex / loc.costIndex) * 100;

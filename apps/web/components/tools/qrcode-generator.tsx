@@ -1,6 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -9,9 +11,8 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import * as qrcode from "qrcode";
+import React, { useState } from "react";
 
 const QRCodeGenerator = () => {
 	const [text, setText] = useState("");
@@ -32,7 +33,7 @@ const QRCodeGenerator = () => {
 			});
 			setQrCode(qrUrl);
 			setError("");
-		} catch (err) {
+		} catch {
 			setError("Failed to generate QR code");
 		}
 	};

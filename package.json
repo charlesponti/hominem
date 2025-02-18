@@ -33,7 +33,10 @@
 		"test:e2e:ci": "turbo run test:e2e:ci",
 		"test:update": "turbo run test:update"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"chart.js": "^4.4.7",
+		"react-chartjs-2": "^5.3.0"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@turbo/gen": "^1.9.7",
@@ -44,5 +47,9 @@
 	"keywords": [],
 	"license": "ISC",
 	"packageManager": "npm@10.2.4",
-	"workspaces": ["scratchpad", "apps/*", "packages/*"]
+	"workspaces": [
+		"scratchpad",
+		"apps/*",
+		"packages/*"
+	]
 }
