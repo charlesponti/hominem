@@ -1,7 +1,6 @@
 "use client";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import {
 	Card,
 	CardContent,
@@ -10,9 +9,9 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import * as qrcode from "qrcode";
-import React, { useState } from "react";
 
 const QRCodeGenerator = () => {
 	const [text, setText] = useState("");
@@ -64,7 +63,7 @@ const QRCodeGenerator = () => {
 
 				{qrCode && (
 					<div className="flex justify-center mt-4">
-						<Image
+						<img
 							src={qrCode}
 							alt="Generated QR Code"
 							className="border rounded-lg"

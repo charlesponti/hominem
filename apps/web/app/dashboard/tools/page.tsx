@@ -1,6 +1,6 @@
 import QRCodeGenerator from "@/components/tools/qrcode-generator";
 
-function Page() {
+export default function Page() {
 	return (
 		<div className="flex flex-col px-4 pt-4 h-screen">
 			<header>
@@ -12,5 +12,3 @@ function Page() {
 		</div>
 	);
 }
-
-export default Page;

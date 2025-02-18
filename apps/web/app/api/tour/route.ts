@@ -1,5 +1,5 @@
-import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
+import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 
 const TourCostBreakdown = z.object({
@@ -39,6 +39,8 @@ const inputSchema = z.object({
 	numberOfCrewMembers: z.number().min(0).default(2),
 	durationInDays: z.number().min(1).max(90).default(14),
 });
+
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
 	try {
