@@ -40,8 +40,6 @@ const inputSchema = z.object({
 	durationInDays: z.number().min(1).max(90).default(14),
 });
 
-const maxDuration = 30;
-
 export async function POST(req: Request) {
 	try {
 		const body = await req.json();
