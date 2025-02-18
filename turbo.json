@@ -1,6 +1,6 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"globalDependencies": ["**/.env.*local"],
+	"globalDependencies": [".env.local", "**/.env.*local"],
 	"globalEnv": [
 		"APP_URL",
 		"COOKIE_DOMAIN",
@@ -15,23 +15,23 @@
 		"JWT_SECRET",
 		"OPENAI_API_KEY",
 		"OPENAI_ORG_ID",
-		"SENDGRID_API_KEY",
-		"REDIS_URL"
+		"REDIS_URL",
+		"SENDGRID_API_KEY"
 	],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
 			"outputs": [".next/**", "!.next/cache/**", "build"]
 		},
-		"lint": {},
-		"test": {},
-		"migrate": {},
 		"dev": {
 			"cache": false,
 			"persistent": true
 		},
+		"lint": {},
+		"migrate": {},
 		"start": {
 			"dependsOn": ["^build"]
-		}
+		},
+		"test": {}
 	}
 }

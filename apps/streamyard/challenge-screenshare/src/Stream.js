@@ -1,6 +1,6 @@
-import PropTypes from 'prop-types';
-import React, { useEffect, useRef, useState } from 'react';
-import MoreVerticalIcon from './MoreVerticalIcon';
+import PropTypes from "prop-types";
+import React, { useEffect, useRef, useState } from "react";
+import MoreVerticalIcon from "./MoreVerticalIcon";
 
 /**
  * Construct calculators for menu position
@@ -51,7 +51,7 @@ function PositionCalculators(
 		 * If the aspect ratio of the video is equal to or above that of the container, the width
 		 * of the video will match that of the container.
 		 */
-		getRightPosition: aspectRatio =>
+		getRightPosition: (aspectRatio) =>
 			aspectRatio > containerAspectRatio
 				? (containerWidth - containerHeight / aspectRatio) / 2 + 4
 				: 4,
@@ -88,8 +88,6 @@ const Stream = ({ containerHeight, containerWidth, mediaStream }) => {
 			if (containerAspectRatio === videoAspectRatio) return;
 			if (prevRatio === videoAspectRatio) return;
 
-			console.log('foo');
-
 			// Set new aspect ratio
 			setPrevRatio(videoAspectRatio);
 			setIconTop(getTopPosition(videoAspectRatio));
@@ -104,25 +102,25 @@ const Stream = ({ containerHeight, containerWidth, mediaStream }) => {
 			style={{
 				width: `${containerWidth}px`,
 				height: `${containerHeight}px`,
-				position: 'relative',
-				backgroundColor: 'black',
+				position: "relative",
+				backgroundColor: "black",
 			}}
 		>
 			<video
 				autoPlay
 				muted
 				ref={videoRef}
-				style={{ width: '100%', height: '100%' }}
+				style={{ width: "100%", height: "100%" }}
 			/>
 			<MoreVerticalIcon
 				fill="#fff"
 				style={{
-					position: 'absolute',
+					position: "absolute",
 					top: `${iconTop}px`,
 					right: `${iconRight}px`,
-					backgroundColor: '#333',
-					borderRadius: '2px',
-					transition: 'all 125ms ease 0s',
+					backgroundColor: "#333",
+					borderRadius: "2px",
+					transition: "all 125ms ease 0s",
 				}}
 			/>
 		</div>

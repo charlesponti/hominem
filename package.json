@@ -49,9 +49,5 @@
 	"keywords": [],
 	"license": "ISC",
 	"packageManager": "npm@10.2.4",
-	"workspaces": [
-		"scratchpad",
-		"apps/*",
-		"packages/*"
-	]
+	"workspaces": ["scratchpad", "apps/*", "packages/*"]
 }
