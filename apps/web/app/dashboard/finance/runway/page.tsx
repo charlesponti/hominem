@@ -157,7 +157,7 @@ export default function RunwayPage() {
 				</button>
 
 				<ul className="mt-4 space-y-2">
-					{plannedPurchases.map((purchase, index) => (
+					{plannedPurchases.map((purchase) => (
 						<li
 							key={crypto.getRandomValues(new Uint32Array(1))[0]}
 							className="flex justify-between items-center bg-gray-50 p-2 rounded"

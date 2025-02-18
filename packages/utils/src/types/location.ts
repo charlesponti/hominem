@@ -1,14 +1,14 @@
 import {
+	boolean,
+	geometry,
+	integer,
 	pgTable,
 	text,
-	integer,
 	uuid,
-	geometry,
-	boolean,
 } from "drizzle-orm/pg-core";
 import { events } from "./calendar";
-import { users } from "./users";
 import { tags } from "./tagging";
+import { users } from "./users";
 
 export const places = pgTable("places", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -38,7 +38,7 @@ export const places = pgTable("places", {
 	wifiInfo: text("wifi_info"),
 });
 
-const placeTags = pgTable("place_tags", {
+export const placeTags = pgTable("place_tags", {
 	placeId: uuid("place_id").references(() => places.id),
 	tagId: uuid("tag_id").references(() => tags.id),
 });
@@ -66,7 +66,7 @@ export const placeVisits = pgTable("place_visits", {
 	userId: uuid("user_id").references(() => users.id),
 });
 
-interface WifiInfo {
+export interface WifiInfo {
 	/**
 	 * The WiFi network name.
 	 */
@@ -99,6 +99,18 @@ export const transportationRoutes = pgTable("transportation_routes", {
 	 * @example
 	 * `LINESTRING(0 0, 1 1, 2 2)`
 	 */
-	route: geometry("location").notNull(),
+	route: geometry("location", {
+		mode: "tuple",
+		srid: 4326,
+		type: "linestring",
+	}).notNull(),
 	duration: integer("duration").notNull(),
+	/**
+	 * The estimated distance of the route in kilometers.
+	 */
+	estimatedDistance: integer("estimated_distance").notNull(),
+	/**
+	 * The estimated time to complete the route in minutes.
+	 */
+	estimatedTime: integer("estimated_time").notNull(),
 });

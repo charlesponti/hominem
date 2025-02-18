@@ -40,7 +40,7 @@ export function parseNoteDetails(userInput: string): NoteDetails {
 
 	// Extract and parse date/time
 	const dates = chrono.parse(userInput);
-	if (dates.length > 0) {
+	if (dates.length > 0 && dates[0]) {
 		dateTime = dates[0].start.date().toISOString();
 	}
 

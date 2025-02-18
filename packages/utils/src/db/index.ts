@@ -1,6 +1,5 @@
 import { schema } from "@ponti/utils";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import fastifyPlugin from "fastify-plugin";
 import assert from "node:assert";
 import postgres from "postgres";
 
@@ -17,13 +16,19 @@ export const db: PostgresJsDatabase<typeof schema> = drizzle(client, {
 	schema,
 });
 
-export const takeOne = <T>(values: T[]): T => {
+export const takeOne = <T>(values: T[]): T | undefined => {
 	return values[0];
 };
 
 export const takeUniqueOrThrow = <T>(values: T[]): T => {
-	if (!Array.isArray(values)) return values;
-	if (values.length !== 1)
-		throw new Error("Found non unique or inexistent value");
+	if (values.length === 0) {
+		throw new Error("No value found");
+	}
+	if (values.length > 1) {
+		throw new Error("Found multiple values");
+	}
+	if (!values[0]) {
+		throw new Error("Value is undefined");
+	}
 	return values[0];
 };

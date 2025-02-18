@@ -1,13 +1,13 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { ChatOpenAI } from "@langchain/openai";
 import z from "zod";
-import { HumanMessage } from "@langchain/core/messages";
 
 const factCheckerTool = tool(
 	async ({ input }: { input: string }): Promise<string> => {
-		return "All facts seem correct.";
+		return `All facts seem correct. ${input}`;
 	},
 	{
 		name: "fact-checker",
@@ -20,7 +20,7 @@ const factCheckerTool = tool(
 
 const grammarCheckerTool = tool(
 	async ({ input }: { input: string }): Promise<string> => {
-		return "No errors found.";
+		return `No errors found for ${input}`;
 	},
 	{
 		name: "grammar-checker",
@@ -33,7 +33,7 @@ const grammarCheckerTool = tool(
 
 const sentimentAnalysisTool = tool(
 	async ({ input }: { input: string }): Promise<string> => {
-		return "Positive.";
+		return `Positive sentiment detected in ${input}`;
 	},
 	{
 		name: "sentiment-analysis",

@@ -1,18 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
 	Dialog,
 	DialogContent,
@@ -26,7 +14,19 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import type { JobApplication } from "@ponti/utils/career";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function ApplicationsPage() {
 	const router = useRouter();
@@ -58,6 +58,8 @@ export default function ApplicationsPage() {
 		if (res.ok) {
 			router.refresh();
 		}
+		const response = (await res.json()) as JobApplication;
+		setApplications((prev) => [...prev, response]);
 	}
 
 	async function handleDelete(id: string) {
