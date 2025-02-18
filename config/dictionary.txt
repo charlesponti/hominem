@@ -1,6 +1,4 @@
 autobuild
-isready
-styfle
 autoincrement
 biomejs
 buildscript
@@ -8,16 +6,17 @@ chartjs
 checkpointer
 chromadb
 chrono
+cmdk
 fastify
 googleauth
 healthcheck
 initdb
+isready
 langchain
 langgraph
 libsql
 ollama
 onnxruntime
-openai
 openai
 peloton
 pgadmin
@@ -32,6 +31,7 @@ sendgrid
 serp
 serpapi
 shadcn
+styfle
 supabase
 tavily
 typecheck
