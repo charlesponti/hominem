@@ -28,12 +28,12 @@ test:
 
 # Build the application
 build:
-	npm run lint
-	npm run build
+	npx turbo run lint --force --parallel
+  npx turbo run build --force
 
 # Run linter
 lint:
-	npm run lint
+	npx turbo run lint --force --parallel
 
 # Format code
 format:
