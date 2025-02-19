@@ -29,7 +29,7 @@ test:
 # Build the application
 build:
 	npx turbo run lint --force --parallel
-  npx turbo run build --force
+	npx turbo run build --force
 
 # Run linter
 lint:
@@ -44,6 +44,8 @@ clean:
 	find apps packages -type d -name "node_modules" -exec rm -rf {} +
 	find apps packages -type d -name "dist" -exec rm -rf {} +
 	find apps packages -type d -name "build" -exec rm -rf {} +
+	find apps packages -type d -name "coverage" -exec rm -rf {} +
+	find apps packages -type d -name ".next" -exec rm -rf {} +
 	
 
 # Start Docker containers

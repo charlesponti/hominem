@@ -1,20 +1,20 @@
 {
-	"name": "random",
+	"name": "hominem",
 	"version": "1.0.0",
-	"description": "random stuff",
+	"description": "hominem",
 	"author": {
 		"name": "chase bridges",
 		"email": "code@ponti.io",
 		"url": "https://ponti.io/"
 	},
-	"homepage": "https://github.com/charlesponti/randomstuff#readme",
+	"homepage": "https://github.com/charlesponti/hominem#readme",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/charlesponti/randomstuff.git"
+		"url": "git+https://github.com/charlesponti/hominem.git"
 	},
 	"private": true,
 	"bugs": {
-		"url": "https://github.com/charlesponti/randomstuff/issues"
+		"url": "https://github.com/charlesponti/hominem/issues"
 	},
 	"scripts": {
 		"build": "turbo run build",
@@ -49,9 +49,5 @@
 	"keywords": [],
 	"license": "ISC",
 	"packageManager": "npm@10.2.4",
-	"workspaces": [
-		"scratchpad",
-		"apps/*",
-		"packages/*"
-	]
+	"workspaces": ["scratchpad", "apps/*", "packages/*"]
 }
