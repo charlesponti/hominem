@@ -28,6 +28,7 @@ test:
 
 # Build the application
 build:
+	npm run lint
 	npm run build
 
 # Run linter
