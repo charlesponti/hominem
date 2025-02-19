@@ -37,8 +37,6 @@
 		"@sentry/node": "^8.54.0",
 		"@sentry/tracing": "^7.120.3",
 		"@supabase/supabase-js": "^2.48.1",
-		"@swc/core": "^1.10.15",
-		"@swc/helpers": "^0.5.15",
 		"@total-typescript/ts-reset": "^0.6.1",
 		"ai": "^4.1.26",
 		"chromadb": "^1.10.4",

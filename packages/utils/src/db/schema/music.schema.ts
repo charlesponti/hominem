@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
-import { users } from "./users";
+import { users } from "./users.schema";
 
 export const artists = pgTable(
 	"artists",
@@ -47,11 +47,11 @@ export const artists = pgTable(
 		createdAt: timestamp("created_at").notNull().defaultNow(),
 		updatedAt: timestamp("updated_at").notNull().defaultNow(),
 	},
-	(table) => ({
-		nameIdx: index("artist_name_idx").on(table.name),
-		spotifyIdIdx: index("spotify_id_idx").on(table.spotifyId),
-		genresIdx: index("genres_idx").on(table.genres),
-	}),
+	(table) => [
+		index("artist_name_idx").on(table.name),
+		index("spotify_id_idx").on(table.spotifyId),
+		index("genres_idx").on(table.genres),
+	],
 );
 export const ArtistInsertSchema = createInsertSchema(artists);
 export const ArtistSelectSchema = createSelectSchema(artists);

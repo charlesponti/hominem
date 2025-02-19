@@ -1,5 +1,6 @@
 import moment from "moment";
-import type { users } from "../types/users";
+import type { users } from "../db/schema/users.schema";
+
 interface Expense {
 	cost: number;
 }

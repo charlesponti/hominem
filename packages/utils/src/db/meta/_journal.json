@@ -8,6 +8,27 @@
       "when": 1739579065719,
       "tag": "0000_fast_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1739943488916,
+      "tag": "0001_awesome_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1739944271789,
+      "tag": "0002_nice_wind_dancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1739944498167,
+      "tag": "0003_unknown_phantom_reporter",
+      "breakpoints": true
     }
   ]
 }

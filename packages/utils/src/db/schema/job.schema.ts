@@ -13,9 +13,9 @@ import {
 	JobApplicationStage,
 	JobApplicationStatus,
 } from "../../types/career.types";
-import { users } from "../../types/users";
 import { companies } from "./company.schema";
 import { notes } from "./notes.schema";
+import { users } from "./users.schema";
 
 export const jobs = pgTable("jobs", {
 	id: uuid("id").primaryKey().defaultRandom(),

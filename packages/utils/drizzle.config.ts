@@ -1,4 +1,4 @@
-import dotenv from "dotenv/config";
+import "dotenv/config";
 import assert from "node:assert";
 
 const DATABASE_URL = process.env.DATABASE_URL;

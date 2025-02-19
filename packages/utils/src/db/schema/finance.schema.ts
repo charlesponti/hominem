@@ -1,15 +1,15 @@
+import { relations } from "drizzle-orm";
 import {
+	boolean,
+	jsonb,
+	numeric,
+	pgEnum,
 	pgTable,
 	text,
 	timestamp,
-	numeric,
-	boolean,
-	pgEnum,
 	uuid,
-	jsonb,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { events } from "../types/calendar";
+import { events } from "./calendar.schema";
 
 // Enums
 export const transactionTypeEnum = pgEnum("transaction_type", [
@@ -31,7 +31,7 @@ export const accountTypeEnum = pgEnum("account_type", [
 ]);
 
 // Tables
-export const accounts = pgTable("accounts", {
+export const financeAccounts = pgTable("finance_accounts", {
 	id: uuid("id").primaryKey(),
 	type: accountTypeEnum("type").notNull(),
 	balance: numeric("balance").notNull(),
@@ -46,8 +46,8 @@ export const transactions = pgTable("transactions", {
 	amount: numeric("amount").notNull(),
 	date: timestamp("date").notNull(),
 	description: text("description"),
-	fromAccountId: uuid("from_account_id").references(() => accounts.id),
-	toAccountId: uuid("to_account_id").references(() => accounts.id),
+	fromAccountId: uuid("from_account_id").references(() => financeAccounts.id),
+	toAccountId: uuid("to_account_id").references(() => financeAccounts.id),
 	eventId: uuid("event_id").references(() => events.id),
 	investmentDetails: jsonb("investment_details"),
 	status: text("status"),
@@ -61,20 +61,23 @@ export const transactions = pgTable("transactions", {
 });
 
 // Relations
-export const accountRelations = relations(accounts, ({ many }) => ({
-	fromTransactions: many(transactions, { relationName: "fromAccount" }),
-	toTransactions: many(transactions, { relationName: "toAccount" }),
-}));
+export const financeAccountRelations = relations(
+	financeAccounts,
+	({ many }) => ({
+		fromTransactions: many(transactions, { relationName: "fromAccount" }),
+		toTransactions: many(transactions, { relationName: "toAccount" }),
+	}),
+);
 
 export const transactionRelations = relations(transactions, ({ one }) => ({
-	fromAccount: one(accounts, {
+	fromAccount: one(financeAccounts, {
 		fields: [transactions.fromAccountId],
-		references: [accounts.id],
+		references: [financeAccounts.id],
 		relationName: "fromAccount",
 	}),
-	toAccount: one(accounts, {
+	toAccount: one(financeAccounts, {
 		fields: [transactions.toAccountId],
-		references: [accounts.id],
+		references: [financeAccounts.id],
 		relationName: "toAccount",
 	}),
 	event: one(events, {
@@ -85,4 +88,4 @@ export const transactionRelations = relations(transactions, ({ one }) => ({
 
 // Types can be inferred from the tables
 export type Transaction = typeof transactions.$inferSelect;
-export type Account = typeof accounts.$inferSelect;
+export type FinanceAccount = typeof financeAccounts.$inferSelect;

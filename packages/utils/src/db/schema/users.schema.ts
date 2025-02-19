@@ -15,8 +15,10 @@ import type { z } from "zod";
 export const users = pgTable(
 	"users",
 	{
-		id: uuid("id").primaryKey().notNull(),
 		email: text("email").notNull(),
+		photoUrl: text("photo_url"),
+		birthday: text("birthday"),
+		id: uuid("id").primaryKey().notNull(),
 		name: text("name"),
 		image: text("image"),
 		clerkId: text("clerk_id").unique(),

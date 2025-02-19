@@ -109,6 +109,7 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
 					googleMapsId: place.googleMapsId,
 					types: filteredListTypes,
 					imageUrl: place.imageUrl,
+					location: [place.latitude, place.longitude],
 					latitude: place.latitude,
 					longitude: place.longitude,
 					websiteUri: place.websiteUri,

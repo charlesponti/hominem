@@ -17,6 +17,7 @@ export const MOCKS = {
 		imageUrl: PHOTO_URL,
 		photos: [PHOTO_URL],
 		userId: "123",
+		location: [1, 1],
 	} as typeof place.$inferInsert,
 	GOOGLE_PLACE_GET: {
 		data: {
