@@ -1,7 +1,11 @@
 import { eq, type SQL } from "drizzle-orm";
-import { jobs, type Job, type NewJob } from "../db/schema/job.schema";
-import { companies } from "../db/schema/company.schema";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { db } from "../db/index";
+import { companies } from "../db/schema/company.schema";
+import { jobs, type Job, type NewJob } from "../db/schema/job.schema";
+
+export const JobInsertSchema = createInsertSchema(jobs);
+export const JobSchema = createSelectSchema(jobs);
 
 export class JobService {
 	async create(
