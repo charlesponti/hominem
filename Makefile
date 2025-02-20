@@ -11,33 +11,33 @@ NODE_ENV ?= development
 
 # Install dependencies
 install:
-	npm install
+	yarn install
 
 # Start the application in production mode
 start:
-	npm start
+	yarn start
 
 # Start the application in development mode
 dev:
 	@echo "Starting development server..."
-	pm2 start npm --name="hominem" -- run dev
+	pm2 start yarn --name="hominem" -- dev
 
 # Run tests
 test:
-	npm test
+	yarn test
 
 # Build the application
 build:
-	npx turbo run lint --force --parallel
-	npx turbo run build --force
+	yarn turbo run lint --force --parallel
+	yarn turbo run build --force
 
 # Run linter
 lint:
-	npx turbo run lint --force --parallel
+	yarn turbo run lint --force --parallel
 
 # Format code
 format:
-	npm run format
+	yarn format
 
 # Clean build artifacts and dependencies
 clean:
@@ -46,6 +46,7 @@ clean:
 	find apps packages -type d -name "build" -exec rm -rf {} +
 	find apps packages -type d -name "coverage" -exec rm -rf {} +
 	find apps packages -type d -name ".next" -exec rm -rf {} +
+	find apps packages -type d -name "yarn.lock" -exec rm -rf {} +
 	
 
 # Start Docker containers

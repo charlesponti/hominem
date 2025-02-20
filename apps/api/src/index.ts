@@ -1,25 +1,9 @@
-import { Hono } from "hono";
-import { cors } from "hono/cors";
+import "@total-typescript/ts-reset";
+import "dotenv/config";
 
-type Bindings = {
-  ENV: string;
-  API_ORIGIN: string;
-  OPENAI_API_KEY: string;
-};
+import { startServer } from "./server";
 
-const app = new Hono<{ Bindings: Bindings }>();
-
-app.use("api/*", async (c, next) => {
-  cors({
-    origin: c.env.API_ORIGIN,
-    allowMethods: ["GET", "POST"],
-    allowHeaders: ["Content-Type"],
-    maxAge: 600,
-  });
+startServer().catch((error) => {
+	console.error(error);
+	process.exit(1);
 });
-
-app.get("/", (c) => {
-  return c.text("Hello Hono!");
-});
-
-export default app;

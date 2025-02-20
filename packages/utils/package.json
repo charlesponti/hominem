@@ -20,7 +20,7 @@
 	},
 	"scripts": {
 		"test": "vitest --run --passWithNoTests",
-		"migrate": "npx drizzle-kit migrate",
+		"migrate": "yarn drizzle-kit migrate",
 		"test:watch": "vitest"
 	},
 	"dependencies": {
@@ -42,6 +42,7 @@
 		"postgres": "^3.4.5",
 		"ts-node": "^10.9.2",
 		"uuid": "^11.0.5",
+		"vite": "^6.1.1",
 		"winston": "3.17.0",
 		"zod": "^3.24.1"
 	},
@@ -52,8 +53,7 @@
 		"jsdom": "^26.0.0",
 		"tsconfig": "*",
 		"typescript": "5.7.3",
-		"vite": "^6.1.0",
 		"vite-tsconfig-paths": "^5.1.4",
-		"vitest": "^3.0.5"
+		"vitest": "^3.0.6"
 	}
 }

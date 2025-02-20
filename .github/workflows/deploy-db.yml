@@ -24,16 +24,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22.14.0"
-          cache: "npm"
-          cache-dependency-path: "./package-lock.json"
+          cache-dependency-path: "./yarn.lock"
 
       - name: Enable corepack
         run: corepack enable
 
       - name: ⬇️ Install dependencies
-        run: npm ci
+        run: yarn install --prod
 
       - name: ⬆️ Deploy
-        run: npx drizzle-kit migrate
+        run: yarn drizzle-kit migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
