@@ -15,7 +15,8 @@
 		"./google-calendar": "./src/google/calendar.ts",
 		"./google-maps": "./src/google/maps.ts",
 		"./schema": "./src/db/schema/index.ts",
-		"./types": "./src/types/index.ts"
+		"./types": "./src/types/index.ts",
+		"./writer": "./src/writer/index.ts"
 	},
 	"scripts": {
 		"test": "vitest --run --passWithNoTests",

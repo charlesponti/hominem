@@ -1,7 +1,7 @@
-import { get_location_info } from "./tools";
-import { generateObject, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import z from "zod";
+import { generateObject, generateText } from "ai";
+import { z } from "zod";
+import { get_location_info } from "./tools";
 
 export async function getAnswer({ prompt }: { prompt: string }) {
 	const response = await generateObject({

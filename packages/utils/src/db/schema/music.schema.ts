@@ -10,8 +10,6 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import type { z } from "zod";
 import { users } from "./users.schema";
 
 export const artists = pgTable(
@@ -53,10 +51,9 @@ export const artists = pgTable(
 		index("genres_idx").on(table.genres),
 	],
 );
-export const ArtistInsertSchema = createInsertSchema(artists);
-export const ArtistSelectSchema = createSelectSchema(artists);
-export type ArtistInsert = z.infer<typeof ArtistInsertSchema>;
-export type Artist = z.infer<typeof ArtistSelectSchema>;
+
+export type ArtistInsert = typeof artists.$inferInsert;
+export type Artist = typeof artists.$inferSelect;
 
 export const userArtists = pgTable(
 	"user_artists",
