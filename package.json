@@ -22,12 +22,12 @@
 		"dev": "turbo run dev --parallel",
 		"lint": "turbo run lint --parallel",
 		"migrate": "turbo run migrate",
-		"postinstall": "npx husky install",
-		"prepare": "npx husky install",
-		"prepush": "npm run test",
-		"prerelease": "npm run test",
-		"start:api": "cd apps/hominem-api && npm start",
-		"start:web": "cd apps/web && npm start",
+		"postinstall": "yarn husky install",
+		"prepare": "yarn husky install",
+		"prepush": "yarn test",
+		"prerelease": "yarn test",
+		"start:api": "cd apps/hominem-api && yarn start",
+		"start:web": "cd apps/web && yarn start",
 		"test": "turbo run test",
 		"test:ci": "turbo run test",
 		"test:e2e:ci": "turbo run test:e2e:ci",
@@ -47,6 +47,6 @@
 	},
 	"keywords": [],
 	"license": "ISC",
-	"packageManager": "npm@10.2.4",
-	"workspaces": ["scratchpad", "apps/*", "packages/*"]
+	"workspaces": ["scratchpad", "apps/*", "packages/*"],
+	"packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

@@ -8,12 +8,12 @@ See [this video](https://www.loom.com/share/f4da1b3543b042c18d57677831c6607a) fo
 
 Install the dependencies
 ```shell
-npm install
+yarn install
 ```
 
 Run webpack dev server
 ```shell
-npm run start
+yarn start
 ```
 
 You should be able to access the application at http://localhost:8080
