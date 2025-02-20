@@ -30,7 +30,7 @@ jobs:
         run: corepack enable
 
       - name: ⬇️ Install dependencies
-        run: yarn install --prod
+        run: yarn install --from-lockfile
 
       - name: ⬆️ Deploy
         run: yarn drizzle-kit migrate

@@ -24,6 +24,7 @@
 		"test:watch": "vitest"
 	},
 	"dependencies": {
+		"@google-cloud/local-auth": "^3.0.1",
 		"ai": "^4.1.26",
 		"axios": "^1.7.9",
 		"chrono-node": "^2.7.8",
