@@ -11,33 +11,33 @@ NODE_ENV ?= development
 
 # Install dependencies
 install:
-	yarn install
+	bun install
 
 # Start the application in production mode
 start:
-	yarn start
+	bun start
 
 # Start the application in development mode
 dev:
 	@echo "Starting development server..."
-	pm2 start yarn --name="hominem" -- dev
+	pm2 start bun --name="hominem" -- run dev
+
+run-redis:
+	@echo "Starting Redis..."
+	pm2 start bun --name="hominem-redis" -- run redis
 
 # Run tests
 test:
-	yarn test
+	bun run test
 
 # Build the application
 build:
-	yarn turbo run lint --force --parallel
-	yarn turbo run build --force
+	bunx turbo run lint --force --parallel
+	bunx turbo run build --force
 
 # Run linter
 lint:
-	yarn turbo run lint --force --parallel
-
-# Format code
-format:
-	yarn format
+	bunx turbo run lint --force --parallel
 
 # Clean build artifacts and dependencies
 clean:
@@ -47,7 +47,7 @@ clean:
 	find . -type d -name "coverage" -exec rm -rf {} +
 	find . -type d -name ".next" -exec rm -rf {} +
 	find . -type d -name ".turbo" -exec rm -rf {} +
-	find . -type d -name "yarn.lock" -exec rm -rf {} +
+	find . -name "bun.lock" -exec rm -rf {} +
 
 # Stop Docker containers
 docker-down:

@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22-alpine AS base
+FROM oven/bun:1 AS base
 WORKDIR /app
 
 
@@ -7,16 +7,16 @@ WORKDIR /app
 FROM base AS prune
 WORKDIR /app
 # Copy package files from parent directory
-COPY ../package*.json yarn.lock /app/
+COPY ../package*.json bun.lock /app/
 
 # Install dependencies
-RUN yarn install --frozen-lockfile
+RUN bun install
 
 # Copy source code from parent directory
 COPY .. .
 
 # Prune monorepo to only include the api and related packages
-RUN yarn turbo prune @hominem/api
+RUN bunx turbo prune @hominem/api
 
 
 
@@ -59,5 +59,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Start the application
-ENTRYPOINT ["node", "build/src/index.js"]
+ENTRYPOINT ["bun", "run", "build/src/index"]
 CMD []

@@ -20,7 +20,7 @@
 	},
 	"scripts": {
 		"test": "vitest --run --passWithNoTests",
-		"migrate": "yarn drizzle-kit migrate",
+		"migrate": "bunx drizzle-kit migrate",
 		"test:watch": "vitest"
 	},
 	"dependencies": {
