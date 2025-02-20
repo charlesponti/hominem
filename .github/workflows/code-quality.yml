@@ -51,35 +51,24 @@ jobs:
         ports:
           - 6379:6379
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-
-      - name: 🏗️ Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.14.0"
-          cache-dependency-path: "./yarn.lock"
-
-      - name: Enable corepack
-        run: corepack enable
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
 
       - name: 📦 Install dependencies
-        run: yarn install
+        run: bun install
 
       - name: 🏗️ Build
-        run: yarn build
+        run: bunx turbo run build
       
       - name: 🔬 Lint & Type check
-        run: yarn lint
+        run: bun run lint
 
       - name: ⚙️ apply database migrations
-        run: yarn migrate
+        run: bun run migrate
 
       - name: 🧪 Unit tests
-        run: yarn test
+        run: bun run test
 
   analyze:
     name: Analyze
