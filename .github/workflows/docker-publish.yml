@@ -3,6 +3,9 @@ name: Build and Publish Docker Image
 on:
   push:
     branches: [ main ]
+    paths:
+      - docker/postgres.dockerfile
+      - docker/init-extensions.sql
   workflow_dispatch:
 
 jobs:
