@@ -1,4 +1,4 @@
-import type { tags } from "./tagging";
+import type { tags } from "../db/schema/tags.schema";
 
 export interface Note {
 	id: string;

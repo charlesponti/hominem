@@ -1,6 +1,6 @@
-import { z } from "zod";
 import { generateObject } from "ai";
 import { createOllama } from "ollama-ai-provider";
+import { z } from "zod";
 import type { BulletPoint, EnhancedBulletPoint } from "./text";
 
 export const ollama = createOllama();
@@ -52,6 +52,11 @@ export async function enhanceBulletPoints(
 
 	for (let i = 0; i < bullets.length; i++) {
 		const bullet = bullets[i];
+
+		if (!bullet) {
+			continue;
+		}
+
 		try {
 			const { improvedText, categories } = await enhanceBulletPoint(
 				bullet.text,

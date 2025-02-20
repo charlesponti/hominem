@@ -1,15 +1,36 @@
 {
-  "extends": "tsconfig/base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "build",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "node16",
     "esModuleInterop": true,
-    "declaration": true
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "strictFunctionTypes": true,
+    "noUncheckedIndexedAccess": true
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
   ],
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.test.ts"
   ]
 }

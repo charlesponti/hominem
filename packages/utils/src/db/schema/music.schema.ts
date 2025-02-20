@@ -1,4 +1,3 @@
-import { min } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -11,27 +10,7 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import type { z } from "zod";
-
-export const users = pgTable(
-	"users",
-	{
-		id: uuid("id").primaryKey().defaultRandom(),
-		email: text("email").notNull().unique(),
-		clerkId: text("clerk_id").unique(),
-		createdAt: timestamp("created_at").notNull().defaultNow(),
-		updatedAt: timestamp("updated_at").notNull().defaultNow(),
-	},
-	(table) => ({
-		emailIdx: index("email_idx").on(table.email),
-		clerkIdIdx: index("clerk_id_idx").on(table.clerkId),
-	}),
-);
-export const UserInsertSchema = createInsertSchema(users);
-export const UserSelectSchema = createSelectSchema(users);
-export type UserInsert = z.infer<typeof UserInsertSchema>;
-export type User = z.infer<typeof UserSelectSchema>;
+import { users } from "./users.schema";
 
 export const artists = pgTable(
 	"artists",
@@ -66,16 +45,15 @@ export const artists = pgTable(
 		createdAt: timestamp("created_at").notNull().defaultNow(),
 		updatedAt: timestamp("updated_at").notNull().defaultNow(),
 	},
-	(table) => ({
-		nameIdx: index("artist_name_idx").on(table.name),
-		spotifyIdIdx: index("spotify_id_idx").on(table.spotifyId),
-		genresIdx: index("genres_idx").on(table.genres),
-	}),
+	(table) => [
+		index("artist_name_idx").on(table.name),
+		index("spotify_id_idx").on(table.spotifyId),
+		index("genres_idx").on(table.genres),
+	],
 );
-export const ArtistInsertSchema = createInsertSchema(artists);
-export const ArtistSelectSchema = createSelectSchema(artists);
-export type ArtistInsert = z.infer<typeof ArtistInsertSchema>;
-export type Artist = z.infer<typeof ArtistSelectSchema>;
+
+export type ArtistInsert = typeof artists.$inferInsert;
+export type Artist = typeof artists.$inferSelect;
 
 export const userArtists = pgTable(
 	"user_artists",

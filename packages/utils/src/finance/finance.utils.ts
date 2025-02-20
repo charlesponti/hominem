@@ -1,5 +1,5 @@
 import type { Company } from "../db/schema/company.schema";
-import type { Person } from "../types/people";
+import type { User } from "../db/schema/users.schema";
 
 interface ItemCategory {
 	id: number;
@@ -10,6 +10,7 @@ interface ItemCategory {
 
 interface Item {
 	name: string;
+	description: string;
 	date_acquired: Date;
 	date_sold: Date | null;
 	brand: Company;
@@ -25,7 +26,7 @@ interface Item {
 	serial_number: string | null;
 	notes: string | null;
 	size: string | null;
-	from: Person;
+	from: User["id"];
 }
 
 /**

@@ -3,7 +3,7 @@ import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import z from "zod";
+import { z } from "zod";
 
 const factCheckerTool = tool(
 	async ({ input }: { input: string }): Promise<string> => {

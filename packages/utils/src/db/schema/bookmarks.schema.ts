@@ -1,6 +1,5 @@
 import {
 	foreignKey,
-	json,
 	pgTable,
 	text,
 	timestamp,
@@ -9,13 +8,20 @@ import {
 import { relations } from "drizzle-orm/relations";
 import { users } from "./users.schema";
 
-export const notes = pgTable(
-	"notes",
+export const bookmark = pgTable(
+	"bookmark",
 	{
-		id: uuid("id").primaryKey().defaultRandom(),
-		content: text("content").notNull(),
+		id: uuid("id").primaryKey().notNull(),
+		image: text("image"),
 		title: text("title").notNull(),
-		tags: json("tags").notNull().$type<Record<string, string>[]>().default([]),
+		description: text("description"),
+		imageHeight: text("imageHeight"),
+		imageWidth: text("imageWidth"),
+		locationAddress: text("locationAddress"),
+		locationLat: text("locationLat"),
+		locationLng: text("locationLng"),
+		siteName: text("siteName").notNull(),
+		url: text("url").notNull(),
 		userId: uuid("userId").notNull(),
 		createdAt: timestamp("createdAt", { precision: 3, mode: "string" })
 			.defaultNow()
@@ -28,16 +34,16 @@ export const notes = pgTable(
 		foreignKey({
 			columns: [table.userId],
 			foreignColumns: [users.id],
-			name: "idea_userId_user_id_fk",
+			name: "bookmark_userId_user_id_fk",
 		})
 			.onUpdate("cascade")
 			.onDelete("cascade"),
 	],
 );
 
-export const notesRelations = relations(notes, ({ one }) => ({
+export const bookmarkRelations = relations(bookmark, ({ one }) => ({
 	user: one(users, {
-		fields: [notes.userId],
+		fields: [bookmark.userId],
 		references: [users.id],
 	}),
 }));
