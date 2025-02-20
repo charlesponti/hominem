@@ -70,7 +70,7 @@ COPY .. .
 RUN bun install
 
 # Build the application
-RUN bun run build
+# RUN bun run build
 
 # Production stage
 FROM base AS release
