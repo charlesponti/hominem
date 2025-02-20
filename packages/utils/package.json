@@ -17,7 +17,6 @@
 		"./types": "./src/types/index.ts"
 	},
 	"scripts": {
-		"build": "tsc",
 		"test": "vitest --run --passWithNoTests",
 		"test:watch": "vitest"
 	},
