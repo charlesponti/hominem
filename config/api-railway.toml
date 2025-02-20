@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "yarn build"
 
 [deploy]
-startCommand = "node apps/hominem-api/build/src/index"
+startCommand = "node apps/api/build/src/index"
 healthcheckPath = "/status"
 healthcheckTimeout = 100
 restartPolicyType = "never"

@@ -26,7 +26,7 @@
 		"prepare": "yarn husky install",
 		"prepush": "yarn test",
 		"prerelease": "yarn test",
-		"start:api": "cd apps/hominem-api && yarn start",
+		"start:api": "cd apps/api && yarn start",
 		"start:web": "cd apps/web && yarn start",
 		"test": "turbo run test",
 		"test:ci": "turbo run test",
