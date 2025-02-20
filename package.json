@@ -44,6 +44,6 @@
 	},
 	"keywords": [],
 	"license": "ISC",
-	"workspaces": ["scratchpad", "apps/*", "packages/*"],
+	"workspaces": ["apps/*", "packages/*"],
 	"packageManager": "bun@1.2.2"
 }
