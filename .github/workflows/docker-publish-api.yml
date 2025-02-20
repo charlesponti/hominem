@@ -27,6 +27,11 @@ env:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
   REDIS_URL: ${{ secrets.REDIS_URL }}
   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+  SENDGRID_SENDER_EMAIL: ${{ secrets.SENDGRID_SENDER_EMAIL }}
+  SENDGRID_SENDER_NAME: ${{ secrets.SENDGRID_SENDER_NAME }}
+  SEGMENT_KEY: ${{ secrets.SEGMENT_KEY }}
+  APP_USER_ID: ${{ secrets.APP_USER_ID }}
+  ENABLE_REQUEST_LOGGING: true
 
 jobs:
   build-and-push:
