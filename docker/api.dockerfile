@@ -27,10 +27,10 @@ WORKDIR /app
 COPY --from=prune /app/out /app
 
 # Install the pruned dependencies
-RUN yarn install
+RUN bun install
 
 # Build the application
-RUN yarn run build
+RUN bun run build
 
 
 

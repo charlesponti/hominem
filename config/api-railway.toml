@@ -1,9 +1,9 @@
 [build]
 builder = "nixpacks"
-buildCommand = "yarn build"
+buildCommand = "bun run build"
 
 [deploy]
-startCommand = "node apps/api/build/src/index"
+startCommand = "bun run apps/api/build/src/index"
 healthcheckPath = "/status"
 healthcheckTimeout = 100
 restartPolicyType = "never"

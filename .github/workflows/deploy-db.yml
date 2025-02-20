@@ -15,21 +15,14 @@ jobs:
   deploy-migrations:
     runs-on: ubuntu-latest
     steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v4
-
-      - name: 🏗️ Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.14.0"
-          cache-dependency-path: "./yarn.lock"
-
-      - name: Enable corepack
-        run: corepack enable
+      - uses: oven-sh/setup-bun@v2
 
       - name: ⬇️ Install dependencies
-        run: yarn install --from-lockfile
+        run: bun install
 
       - name: ⬆️ Deploy
-        run: yarn run migrate
+        run: bun run migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

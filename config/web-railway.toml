@@ -1,9 +1,9 @@
 [build]
 builder = "nixpacks"
-buildCommand = "yarn build"
+buildCommand = "bun run build"
 
 [deploy]
-startCommand = "cd apps/web && yarn start"
+startCommand = "cd apps/web && bun run start"
 healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "never"

@@ -1,6 +1,6 @@
 ```
-npm install
-yarn dev
+bun install
+bun run dev
 ```
 
 ```

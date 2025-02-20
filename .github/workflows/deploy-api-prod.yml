@@ -16,16 +16,15 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.workflow_id != github.workflow }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
 
-      - name: 🏗️ Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.14.0"
+      - name: 📦 Install dependencies
+        run: bun install
 
       - name: Install Railway
-        run: yarn global add @railway/cli
+        run: bun install --global @railway/cli
         
       - name: Deploy
         run: railway up --service ${{ secrets.RAILWAY_SERVICE_API }}

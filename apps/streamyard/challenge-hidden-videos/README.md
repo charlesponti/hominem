@@ -14,12 +14,12 @@ Here's a [video](https://www.loom.com/share/c2f0a8e359cf4367ab7dece00b52b770) sh
 
 Install the dependencies
 ```shell
-yarn install
+bun install
 ```
 
 Run webpack dev server
 ```shell
-yarn start
+bun run start
 ```
 
 You should be able to access the application at http://localhost:8080
