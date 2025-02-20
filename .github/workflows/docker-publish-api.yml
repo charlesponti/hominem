@@ -39,6 +39,24 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          COOKIE_DOMAIN: ${{ secrets.COOKIE_DOMAIN }}
+          COOKIE_NAME: ${{ secrets.COOKIE_NAME }}
+          COOKIE_SALT: ${{ secrets.COOKIE_SALT }}
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NODE_ENV: production
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
         with:
           context: .
           file: ./docker/api.dockerfile
