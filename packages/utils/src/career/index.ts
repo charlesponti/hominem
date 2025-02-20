@@ -4,5 +4,5 @@ export * from "../db/schema/job.schema";
 
 // Services
 export * from "./company.service";
-export * from "./job.service";
 export * from "./job-application.service";
+export * from "./job.service";
