@@ -9,13 +9,10 @@ on:
   push:
     branches: [main]
     paths:
-      - 'apps/api/**'
+      - 'packages/utils/db/**'
 
 jobs:
   deploy-migrations:
-    defaults:
-      run:
-        working-directory: ./apps/api
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +30,6 @@ jobs:
         run: yarn install --from-lockfile
 
       - name: ⬆️ Deploy
-        run: yarn drizzle-kit migrate
+        run: yarn run migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
