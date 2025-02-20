@@ -23,7 +23,6 @@
 		"lint": "turbo run lint --parallel",
 		"migrate": "turbo run migrate",
 		"postinstall": "npx husky install",
-		"posttest": "npm run lint",
 		"prepare": "npx husky install",
 		"prepush": "npm run test",
 		"prerelease": "npm run test",
@@ -49,9 +48,5 @@
 	"keywords": [],
 	"license": "ISC",
 	"packageManager": "npm@10.2.4",
-	"workspaces": [
-		"scratchpad",
-		"apps/*",
-		"packages/*"
-	]
+	"workspaces": ["scratchpad", "apps/*", "packages/*"]
 }
