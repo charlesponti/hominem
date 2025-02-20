@@ -18,12 +18,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "23"
+          node-version: "22.14.0"
           cache: "npm"
           cache-dependency-path: "./package-lock.json"
+      
+      - name: Enable corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Install Railway
         run: npm install -g @railway/cli
