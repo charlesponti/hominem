@@ -20,13 +20,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🏗 Set up Node.js
+      - name: 🏗️ Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.14.0"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
+
+      - name: Enable corepack
+        run: corepack enable
 
       - name: ⬇️ Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: ⬆️ Deploy
         run: npx drizzle-kit migrate
