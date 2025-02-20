@@ -5,4 +5,4 @@ if (!REDIS_URL) {
 	throw new Error("Missing REDIS_URL");
 }
 
-export const redis = new Redis(REDIS_URL || "redis://localhost:6379");
+export const redis = new Redis(`${REDIS_URL}?family=0`);
