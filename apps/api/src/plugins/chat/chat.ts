@@ -1,6 +1,6 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { db, takeUniqueOrThrow } from "@ponti/utils";
+import { db, takeUniqueOrThrow } from "@ponti/utils/db";
 import { chat, chatMessage } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";

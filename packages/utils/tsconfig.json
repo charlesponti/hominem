@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./build",
     "rootDir": "./src",
     "declaration": true,
     "sourceMap": true,
@@ -26,11 +26,10 @@
     "noUncheckedIndexedAccess": true
   },
   "include": [
-    "src/**/*.ts",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
     "**/*.test.ts"
   ]
 }

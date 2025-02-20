@@ -1,4 +1,4 @@
-import { db } from "@ponti/utils";
+import { db } from "@ponti/utils/db";
 import { list, userLists, users } from "@ponti/utils/schema";
 import { desc, eq } from "drizzle-orm";
 

@@ -18,12 +18,9 @@
 	},
 	"scripts": {
 		"build": "turbo run build",
-		"clean": "gts clean",
 		"dev": "turbo run dev --parallel",
 		"lint": "turbo run lint --parallel",
 		"migrate": "turbo run migrate",
-		"postinstall": "yarn husky install",
-		"prepare": "yarn husky install",
 		"prepush": "yarn test",
 		"prerelease": "yarn test",
 		"start:api": "cd apps/api && yarn start",

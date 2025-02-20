@@ -7,11 +7,9 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { z } from "zod";
 import {
-	JobApplicationStage,
 	JobApplicationStatus,
+	type JobApplicationStage,
 } from "../../types/career.types";
 import { companies } from "./company.schema";
 import { notes } from "./notes.schema";
@@ -33,8 +31,6 @@ export const jobs = pgTable("jobs", {
 
 export type Job = typeof jobs.$inferSelect;
 export type NewJob = typeof jobs.$inferInsert;
-export const JobInsert = createInsertSchema(jobs);
-export const Job = createSelectSchema(jobs);
 
 export type JosApplicationStages = { stage: JobApplicationStage; date: Date }[];
 export const job_applications = pgTable("job_applications", {
@@ -70,23 +66,6 @@ export const job_applications = pgTable("job_applications", {
 
 export type JobApplicationInsert = typeof job_applications.$inferInsert;
 export type JobApplication = typeof job_applications.$inferSelect;
-export const JobApplicationSchema = createSelectSchema(job_applications);
-export const JobApplicationInsertSchema = createInsertSchema(job_applications, {
-	stages: z.array(
-		z.object({
-			stage: z.enum([
-				JobApplicationStage.APPLICATION,
-				JobApplicationStage.PHONE_SCREEN,
-				JobApplicationStage.TECHNICAL_SCREEN_CALL,
-				JobApplicationStage.TECHNICAL_SCREEN_EXERCISE,
-				JobApplicationStage.INTERVIEW,
-				JobApplicationStage.IN_PERSON,
-				JobApplicationStage.OFFER,
-			]),
-			date: z.date(),
-		}),
-	),
-});
 
 export const application_notes = pgTable("application_notes", {
 	applicationId: uuid("application_id")

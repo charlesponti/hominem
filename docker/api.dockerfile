@@ -1,38 +1,63 @@
-# use the official Bun image
-# see all versions at https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:1 AS base
-WORKDIR /usr/src/app
+# Build stage
+FROM node:22-alpine AS base
+WORKDIR /app
 
-# install dependencies into temp directory
-# this will cache them and speed up future builds
+
+
+FROM base AS prune
+WORKDIR /app
+# Copy package files from parent directory
+COPY ../package*.json yarn.lock /app/
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy source code from parent directory
+COPY .. .
+
+# Prune monorepo to only include the api and related packages
+RUN yarn turbo prune @hominem/api
+
+
+
 FROM base AS install
-RUN mkdir -p /temp/dev
-COPY package.json bun.lock /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
+WORKDIR /app
 
-# install with --production (exclude devDependencies)
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
+# Copy pruned directory
+COPY --from=prune /app/out /app
 
-# copy node_modules from temp directory
-# then copy all (non-ignored) project files into the image
-FROM base AS prerelease
-COPY --from=install /temp/dev/node_modules node_modules
-COPY . .
+# Install the pruned dependencies
+RUN yarn install
 
-# [optional] tests & build
-ENV NODE_ENV=production
-RUN bun test
-RUN bun run build
+# Build the application
+RUN yarn run build
 
-# copy production dependencies and source code into final image
+
+
+# Production stage
 FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/index.ts .
-COPY --from=prerelease /usr/src/app/package.json .
+WORKDIR /app
+ENV NODE_ENV=production
 
-# run the app
-USER bun
-EXPOSE 3000/tcp
-ENTRYPOINT [ "bun", "run", "index.ts" ]
+# Create non-root user
+RUN addgroup -g 1001 nodejs && \
+    adduser -S -u 1001 -G nodejs hominem
+
+# Copy built files from builder
+COPY --from=install --chown=hominem:nodejs /app/package*.json ./
+COPY --from=install --chown=hominem:nodejs /app/node_modules ./node_modules
+COPY --from=install --chown=hominem:nodejs /app/apps/api/build ./build
+
+# Security: Run as non-root user
+USER hominem
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Start the application
+ENTRYPOINT ["node", "build/src/index.js"]
+CMD []

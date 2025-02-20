@@ -1,4 +1,4 @@
-import { db, takeUniqueOrThrow } from "@ponti/utils";
+import { db, takeUniqueOrThrow } from "@ponti/utils/db";
 import { list, users } from "@ponti/utils/schema";
 import { desc, eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";

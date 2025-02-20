@@ -1,4 +1,4 @@
-import { db } from "@ponti/utils";
+import { db } from "@ponti/utils/db";
 import { users } from "@ponti/utils/schema";
 import type { FastifyPluginAsync } from "fastify";
 import { verifyIsAdmin } from "./auth/utils";

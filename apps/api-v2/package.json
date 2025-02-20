@@ -1,6 +1,6 @@
 {
 	"name": "api-v2",
-	"type": "module",
+	"version": "0.0.0",
 	"scripts": {
 		"dev": "tsx watch src/index.ts"
 	},

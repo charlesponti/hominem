@@ -1,4 +1,3 @@
-import { db } from "@ponti/utils";
 import fastify, {
 	type FastifyInstance,
 	type FastifyServerOptions,
@@ -11,11 +10,11 @@ import bookmarksPlugin from "./plugins/bookmarks";
 import chatSingleResponsePlugin from "./plugins/chat/single-response";
 import circuitBreaker from "./plugins/circuit-breaker";
 import emailPlugin from "./plugins/email";
-import googleService from "./plugins/google/auth";
 import ideasPlugin from "./plugins/ideas";
 import invites from "./plugins/invites";
 import listsPlugin from "./plugins/lists";
 import PlacesPlugin from "./plugins/places";
+import rateLimitPlugin from "./plugins/rate-limit";
 import sessionPlugin from "./plugins/session";
 import shutdownPlugin from "./plugins/shutdown";
 import statusPlugin from "./plugins/status";
@@ -48,20 +47,13 @@ export async function createServer(
 		});
 		await server.register(circuitBreaker);
 
-		// // Register Redis plugin
-		// await server.register(import("./plugins/redis"), {
-		// 	host: process.env.REDIS_HOST,
-		// 	port: Number(process.env.REDIS_PORT),
-		// 	password: process.env.REDIS_PASSWORD,
-		// });
-
-		// // Register rate limit plugin with Redis client
-		// await server.register(import("./plugins/rate-limit"), {
-		// 	redis: server.redis,
-		// 	maxHits: 100,
-		// 	segment: "api",
-		// 	windowLength: 60000, // 1 minute
-		// });
+		// Register rate limit plugin with Redis client
+		await server.register(rateLimitPlugin, {
+			redis: server.redis,
+			maxHits: 100,
+			segment: "api",
+			windowLength: 60000, // 1 minute
+		});
 
 		await server.register(statusPlugin);
 		await server.register(emailPlugin);
@@ -74,9 +66,6 @@ export async function createServer(
 		await server.register(bookmarksPlugin);
 		await server.register(ideasPlugin);
 		await server.register(chatSingleResponsePlugin);
-
-		// Register Google-related routes
-		// googleService.registerRoutes(server);
 
 		server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
 			return (data) => schema.parse(data);

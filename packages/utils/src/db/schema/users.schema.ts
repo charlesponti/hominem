@@ -8,9 +8,6 @@ import {
 	uniqueIndex,
 	uuid,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm/relations";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import type { z } from "zod";
 
 export const users = pgTable(
 	"users",
@@ -37,16 +34,16 @@ export const users = pgTable(
 		index("clerk_id_idx").on(table.clerkId),
 	],
 );
-export const UserInsertSchema = createInsertSchema(users);
-export const UserSelectSchema = createSelectSchema(users);
-export type UserInsert = z.infer<typeof UserInsertSchema>;
-export type User = z.infer<typeof UserSelectSchema>;
+export type UserInsert = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
 
 export const account = pgTable(
 	"account",
 	{
 		id: uuid("id").primaryKey().notNull(),
-		userId: uuid("userId").notNull(),
+		userId: uuid("userId")
+			.notNull()
+			.references(() => users.id),
 		type: text("type").notNull(),
 		provider: text("provider").notNull(),
 		providerAccountId: text("providerAccountId").notNull(),
@@ -74,9 +71,9 @@ export const account = pgTable(
 	],
 );
 
-export const accountRelations = relations(account, ({ one }) => ({
-	user: one(users, {
-		fields: [account.userId],
-		references: [users.id],
-	}),
-}));
+// export const accountRelations = relations(account, ({ one }) => ({
+// 	user: one(users, {
+// 		fields: [account.userId],
+// 		references: [users.id],
+// 	}),
+// }));

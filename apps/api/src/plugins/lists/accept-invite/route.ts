@@ -1,4 +1,4 @@
-import { db, takeUniqueOrThrow } from "@ponti/utils";
+import { db, takeUniqueOrThrow } from "@ponti/utils/db";
 import { listInvite, userLists, type users } from "@ponti/utils/schema";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";

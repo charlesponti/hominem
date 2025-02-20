@@ -1,4 +1,4 @@
-import { db, takeUniqueOrThrow } from "@ponti/utils";
+import { db, takeUniqueOrThrow } from "@ponti/utils/db";
 import { item, list, place as places } from "@ponti/utils/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";

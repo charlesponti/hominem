@@ -1,7 +1,7 @@
-import { schema } from "@ponti/utils";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import assert from "node:assert";
 import postgres from "postgres";
+import * as schema from "./schema/index";
 
 const DATABASE_URL =
 	process.env.NODE_ENV === "test"

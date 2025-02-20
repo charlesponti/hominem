@@ -10,7 +10,7 @@
 		"./finance": "./src/finance/index.ts",
 		"./time": "./src/time.ts",
 		"./logger": "./src/logger.ts",
-		"./notes": "./src/notes.utils.ts",
+		"./notes": "./src/writer/notes.ts",
 		"./google-sheets": "./src/google/sheets.ts",
 		"./google-calendar": "./src/google/calendar.ts",
 		"./google-maps": "./src/google/maps.ts",

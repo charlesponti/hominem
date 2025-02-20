@@ -1,4 +1,4 @@
-import { db } from "@ponti/utils";
+import { db } from "@ponti/utils/db";
 import { list, listInvite, users } from "@ponti/utils/schema";
 import { and, asc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";

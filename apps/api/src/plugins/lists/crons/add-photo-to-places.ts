@@ -3,7 +3,7 @@
  * and updates the place with the photo URL.
  */
 
-import { db } from "@ponti/utils";
+import { db } from "@ponti/utils/db";
 import { place } from "@ponti/utils/schema";
 import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";

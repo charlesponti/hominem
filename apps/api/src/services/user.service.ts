@@ -1,4 +1,4 @@
-import { db } from "@ponti/utils";
+import { db } from "@ponti/utils/db";
 import { list, token, users } from "@ponti/utils/schema";
 import { add } from "date-fns";
 import { eq } from "drizzle-orm";

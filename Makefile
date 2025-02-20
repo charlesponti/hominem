@@ -41,17 +41,13 @@ format:
 
 # Clean build artifacts and dependencies
 clean:
-	find apps packages -type d -name "node_modules" -exec rm -rf {} +
-	find apps packages -type d -name "dist" -exec rm -rf {} +
-	find apps packages -type d -name "build" -exec rm -rf {} +
-	find apps packages -type d -name "coverage" -exec rm -rf {} +
-	find apps packages -type d -name ".next" -exec rm -rf {} +
-	find apps packages -type d -name "yarn.lock" -exec rm -rf {} +
-	
-
-# Start Docker containers
-docker-up:
-	$(DOCKER_COMPOSE) up -d
+	find . -type d -name "node_modules" -exec rm -rf {} +
+	find . -type d -name "dist" -exec rm -rf {} +
+	find . -type d -name "build" -exec rm -rf {} +
+	find . -type d -name "coverage" -exec rm -rf {} +
+	find . -type d -name ".next" -exec rm -rf {} +
+	find . -type d -name ".turbo" -exec rm -rf {} +
+	find . -type d -name "yarn.lock" -exec rm -rf {} +
 
 # Stop Docker containers
 docker-down:
