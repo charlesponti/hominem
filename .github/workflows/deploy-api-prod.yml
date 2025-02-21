@@ -12,21 +12,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_API }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
     if: >
       ${{ github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.workflow_id != github.workflow }}
     steps:
       - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-
-      - name: 📦 Install dependencies
-        run: bun install
-
-      - name: Install Railway
-        run: bun install --global @railway/cli
-        
       - name: Deploy
-        run: railway up --service ${{ secrets.RAILWAY_SERVICE_API }}
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service ${{ env.SERVICE_ID }}
