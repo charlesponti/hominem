@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+export * from "./rate-limit";
 
 const { REDIS_URL } = process.env;
 if (!REDIS_URL) {

@@ -1,13 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
+	CreateApplicationDialog,
+	EditApplicationDialog,
+} from "@/components/career/job-application.form";
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -24,7 +21,6 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import type { JobApplication } from "@ponti/utils/career";
-import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -82,20 +78,7 @@ export default function ApplicationsPage() {
 						className="w-full"
 					/>
 				</div>
-				<Dialog>
-					<DialogTrigger asChild>
-						<Button className="space-x-2">
-							<Plus className="h-4 w-4" />
-							New Application
-						</Button>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Create Application</DialogTitle>
-						</DialogHeader>
-						<ApplicationForm onSubmit={handleCreate} />
-					</DialogContent>
-				</Dialog>
+				<CreateApplicationDialog handleCreate={handleCreate} />
 			</div>
 
 			<Table>
@@ -159,66 +142,13 @@ export default function ApplicationsPage() {
 			</Table>
 
 			{/* Edit Dialog */}
-			<Dialog open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Edit Application</DialogTitle>
-					</DialogHeader>
-					<ApplicationForm
-						onSubmit={(data) =>
-							selectedApp?.id && handleUpdate(selectedApp.id.toString(), data)
-						}
-						initialValues={selectedApp}
-					/>
-				</DialogContent>
-			</Dialog>
+			{selectedApp ? (
+				<EditApplicationDialog
+					application={selectedApp}
+					handleUpdate={handleUpdate}
+					onOpenChange={() => setSelectedApp(null)}
+				/>
+			) : null}
 		</div>
-	);
-}
-
-function ApplicationForm({
-	onSubmit,
-	initialValues,
-}: {
-	onSubmit: (data: Partial<JobApplication>) => void;
-	initialValues?: Partial<JobApplication> | null;
-}) {
-	const [data, setData] = useState<Partial<JobApplication>>(
-		initialValues || {},
-	);
-
-	function handleChange(key: keyof JobApplication, value: string) {
-		setData((prev) => ({ ...prev, [key]: value }));
-	}
-
-	return (
-		<form
-			onSubmit={(e) => {
-				e.preventDefault();
-				onSubmit(data);
-			}}
-		>
-			<Input
-				name="jobId"
-				value={data.jobId?.toString() || ""}
-				onChange={(e) => handleChange("jobId", e.target.value)}
-			/>
-			<Input
-				name="company"
-				value={data.companyId?.toString() || ""}
-				onChange={(e) => handleChange("companyId", e.target.value)}
-			/>
-			<Input
-				name="position"
-				value={data.position || ""}
-				onChange={(e) => handleChange("position", e.target.value)}
-			/>
-			<Input
-				name="status"
-				value={data.status || ""}
-				onChange={(e) => handleChange("status", e.target.value)}
-			/>
-			<Button type="submit">Submit</Button>
-		</form>
 	);
 }

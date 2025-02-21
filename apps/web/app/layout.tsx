@@ -13,7 +13,9 @@ export default function RootLayout({
 				<Providers>
 					<div className="bg-background text-foreground min-h-screen min-w-full flex">
 						<SiteNavigation />
-						<div className="flex-1 flex flex-col">{children}</div>
+						<div className="flex-1 flex flex-col md:max-w-[calc(100%-260px)] md:ml-[260px]">
+							{children}
+						</div>
 					</div>
 				</Providers>
 			</body>

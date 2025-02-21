@@ -7,7 +7,7 @@ export default function DashboardLayout({
 		<div className="flex flex-col h-screen">
 			<header className="w-full flex justify-between items-center bg-white shadow-xs p-4">
 				<p> Hominem </p>
-				<SidebarTrigger />
+				<SidebarTrigger/>
 			</header>
 			<main className="flex-1">{children}</main>
 		</div>
