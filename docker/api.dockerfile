@@ -1,5 +1,5 @@
 # Build stage
-FROM node:23-bookworm-slim AS base
+FROM node:23-bookworm AS base
 WORKDIR /app
 
 # Define build arguments
