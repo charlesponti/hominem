@@ -2,7 +2,7 @@ name: deploy-api-prod
 
 on:
   workflow_run:
-    workflows: ["deploy-db"]
+    workflows: ["docker-publish-api"]
     branches: [main]
     # Required to run only on successful completion of the code-quality workflow
     types:
@@ -27,6 +27,6 @@ jobs:
         run: bun install --global @railway/cli
         
       - name: Deploy
-        run: railway up --service ${{ secrets.RAILWAY_SERVICE_API }}
+        run: railway redeploy --service ${{ secrets.RAILWAY_SERVICE_API }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
