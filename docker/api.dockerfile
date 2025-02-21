@@ -62,6 +62,10 @@ ENV NODE_ENV=production
 RUN addgroup --gid 1001 nodejs && \
     adduser --uid 1001 --gid 1001 hominem
 
+# Create logs directory with correct permissions
+RUN mkdir -p /app/logs && \
+  chown -R hominem:nodejs /app/logs
+
 # Copy built files from builder
 COPY --from=install --chown=hominem:nodejs /app ./
 
