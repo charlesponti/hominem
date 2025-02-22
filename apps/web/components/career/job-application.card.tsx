@@ -1,15 +1,9 @@
 import { useApplications } from '@/hooks/useApplications'
-import { JobApplicationStatus } from '@/lib/career'
 import type { JobApplication } from '@ponti/utils/schema'
-import { ChevronDown } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
+import { JobApplicationStatusDropdown } from './job-application-status-dropdown'
+import { StagesDialog } from './stages-dialog'
 
 export const JobApplicationCard = ({
   application: app,
@@ -18,13 +12,13 @@ export const JobApplicationCard = ({
   setSelectedApp: (app: JobApplication) => void
   application: JobApplication & { company?: string }
 }) => {
-  const { deleteApplication, updateApplication } = useApplications()
+  const { updateApplication } = useApplications()
 
   async function handleUpdate(id: string, data: Partial<JobApplication>) {
     updateApplication({ data, id })
   }
 
-  async function onStageSelect(status: JobApplication['status']) {
+  async function onStatusSelect(status: JobApplication['status']) {
     await handleUpdate(app.id.toString(), { status })
   }
 
@@ -37,63 +31,26 @@ export const JobApplicationCard = ({
             {app.company}
           </span>
         </CardTitle>
-        <JobApplicationStageSelect status={app.status} onSelect={onStageSelect} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <div className="md:grid md:grid-cols-2 gap-4 space-y-4">
-          <div>
-            <p className="font-medium">Current Stage: {app.status}</p>
-            <p>Applied: {new Date(app.startDate).toLocaleDateString()}</p>
-            <p>Location: {app.location}</p>
+          <div className="col-span-2 flex justify-between">
+            <p className="font-medium">Current Status:</p>
+            <div className="flex gap-2">
+              <JobApplicationStatusDropdown status={app.status} onSelect={onStatusSelect} />
+            </div>
           </div>
-          {/* <div>
-						<p className="font-medium">Stage History:</p>
-						{app.stages.map((history) => (
-							<p key={crypto.getRandomValues(new Uint32Array(1))[0]}>
-								{history.stage} - {new Date(history.date).toLocaleDateString()}
-							</p>
-						))}
-					</div> */}
         </div>
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => deleteApplication(app.id.toString())}
-          >
-            Delete
-          </Button>
-          <Button size="sm" onClick={() => setSelectedApp(app)}>
-            Edit
-          </Button>
+        <div className="flex justify-between items-center">
+          <p className="text-gray-400 italic">{new Date(app.startDate).toLocaleDateString()}</p>
+          <div className="flex gap-2">
+            <StagesDialog stages={app.stages} applicationId={app.id} />
+            <Button size="sm" onClick={() => setSelectedApp(app)}>
+              Edit
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function JobApplicationStageSelect({
-  status,
-  onSelect,
-}: {
-  status: JobApplication['status']
-  onSelect: (status: JobApplication['status']) => void
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex justify-between border border-gray-400">
-          {status}
-          <ChevronDown size={16} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {Object.values(JobApplicationStatus).map((status: JobApplication['status']) => (
-          <DropdownMenuItem key={status} onClick={() => onSelect(status)}>
-            {status}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }
