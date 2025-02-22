@@ -1,22 +1,22 @@
-import { generateObject } from "ai";
-import { createOllama } from "ollama-ai-provider";
-import { z } from "zod";
-import type { BulletPoint, EnhancedBulletPoint } from "./text";
+import { generateObject } from 'ai'
+import { createOllama } from 'ollama-ai-provider'
+import { z } from 'zod'
+import type { BulletPoint, EnhancedBulletPoint } from './text'
 
-export const ollama = createOllama();
+export const ollama = createOllama()
 
 const BulletPointSchema = z.object({
-	improvedText: z.string(),
-	categories: z.array(z.string()),
-});
+  improvedText: z.string(),
+  categories: z.array(z.string()),
+})
 
 export async function enhanceBulletPoint(
-	content: string,
-	model = "llama3.2",
+  content: string,
+  model = 'llama3.2'
 ): Promise<z.infer<typeof BulletPointSchema>> {
-	const response = await generateObject({
-		model: ollama(model),
-		prompt: `
+  const response = await generateObject({
+    model: ollama(model),
+    prompt: `
       <|start_header_id|>system<|end_header_id|>
       You are an AI designed to analyze user thoughts like a therapist would. Your responses should be concise, action-oriented, and supportive.
 
@@ -38,51 +38,49 @@ export async function enhanceBulletPoint(
       ${content}
       <|eot_id|><|start_header_id|>assistant<|end_header_id|>
     `,
-		schema: BulletPointSchema,
-	});
+    schema: BulletPointSchema,
+  })
 
-	return response.object;
+  return response.object
 }
 
 export async function enhanceBulletPoints(
-	bullets: BulletPoint[],
-	onProgress?: (current: number, total: number) => void,
+  bullets: BulletPoint[],
+  onProgress?: (current: number, total: number) => void
 ): Promise<EnhancedBulletPoint[]> {
-	const enhanced: EnhancedBulletPoint[] = [];
+  const enhanced: EnhancedBulletPoint[] = []
 
-	for (let i = 0; i < bullets.length; i++) {
-		const bullet = bullets[i];
+  for (let i = 0; i < bullets.length; i++) {
+    const bullet = bullets[i]
 
-		if (!bullet) {
-			continue;
-		}
+    if (!bullet) {
+      continue
+    }
 
-		try {
-			const { improvedText, categories } = await enhanceBulletPoint(
-				bullet.text,
-			);
-			enhanced.push({
-				...bullet,
-				improvedText,
-				categories,
-			});
+    try {
+      const { improvedText, categories } = await enhanceBulletPoint(bullet.text)
+      enhanced.push({
+        ...bullet,
+        improvedText,
+        categories,
+      })
 
-			if (onProgress) {
-				onProgress(i + 1, bullets.length);
-			}
-		} catch (error) {
-			console.error(`Error processing bullet: ${bullet.text}`, error);
-			// Keep original text if enhancement fails
-			enhanced.push({
-				...bullet,
-				improvedText: bullet.text,
-				categories: [],
-			});
-		}
+      if (onProgress) {
+        onProgress(i + 1, bullets.length)
+      }
+    } catch (error) {
+      console.error(`Error processing bullet: ${bullet.text}`, error)
+      // Keep original text if enhancement fails
+      enhanced.push({
+        ...bullet,
+        improvedText: bullet.text,
+        categories: [],
+      })
+    }
 
-		// Add delay to avoid rate limiting
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-	}
+    // Add delay to avoid rate limiting
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
 
-	return enhanced;
+  return enhanced
 }

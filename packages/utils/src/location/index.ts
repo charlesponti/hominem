@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 export const GeocodingSchema = z.object({
   geocoding: z.object({
@@ -30,12 +30,12 @@ export const GeocodingSchema = z.object({
     }),
     timestamp: z.number(),
   }),
-  type: z.literal("FeatureCollection"),
+  type: z.literal('FeatureCollection'),
   features: z.array(
     z.object({
-      type: z.literal("Feature"),
+      type: z.literal('Feature'),
       geometry: z.object({
-        type: z.literal("Point"),
+        type: z.literal('Point'),
         coordinates: z.tuple([z.number(), z.number()]),
       }),
       properties: z.object({
@@ -64,49 +64,42 @@ export const GeocodingSchema = z.object({
         street: z.string().nullable(),
         addendum: z.object({
           concordances: z.object({
-            "dbp:id": z.string(),
-            "fb:id": z.string(),
-            "fct:id": z.string(),
-            "fips:code": z.string(),
-            "gn:id": z.number(),
-            "gp:id": z.number(),
-            "loc:id": z.string(),
-            "ne:id": z.number(),
-            "nyt:id": z.string(),
-            "qs_pg:id": z.number(),
-            "uscensus:geoid": z.string(),
-            "wd:id": z.string(),
-            "wk:page": z.string(),
+            'dbp:id': z.string(),
+            'fb:id': z.string(),
+            'fct:id': z.string(),
+            'fips:code': z.string(),
+            'gn:id': z.number(),
+            'gp:id': z.number(),
+            'loc:id': z.string(),
+            'ne:id': z.number(),
+            'nyt:id': z.string(),
+            'qs_pg:id': z.number(),
+            'uscensus:geoid': z.string(),
+            'wd:id': z.string(),
+            'wk:page': z.string(),
           }),
         }),
       }),
       bbox: z.tuple([z.number(), z.number(), z.number(), z.number()]),
     })
   ),
-});
-export type Geocoding = z.infer<typeof GeocodingSchema>;
+})
+export type Geocoding = z.infer<typeof GeocodingSchema>
 
-export const LAYERS = [
-  "locality",
-  "borough",
-  "neighbourhood",
-  "county",
-  "region",
-  "venue",
-] as const;
+export const LAYERS = ['locality', 'borough', 'neighbourhood', 'county', 'region', 'venue'] as const
 
-type GeoProps = Geocoding["features"][0]["properties"];
+type GeoProps = Geocoding['features'][0]['properties']
 export type GeocodeFeature = {
-  id: string;
-  name: GeoProps["name"];
-  coordinates: Geocoding["features"][0]["geometry"]["coordinates"];
-  label: GeoProps["label"];
-  locality: GeoProps["locality"];
-  layer: GeoProps["layer"];
-  street: GeoProps["street"];
-  region: GeoProps["region"];
-  address: string;
-};
+  id: string
+  name: GeoProps['name']
+  coordinates: Geocoding['features'][0]['geometry']['coordinates']
+  label: GeoProps['label']
+  locality: GeoProps['locality']
+  layer: GeoProps['layer']
+  street: GeoProps['street']
+  region: GeoProps['region']
+  address: string
+}
 
 export const formatGeocodeFeatures = (data: Geocoding): GeocodeFeature[] => {
   return data.features.map((loc) => ({
@@ -125,6 +118,6 @@ export const formatGeocodeFeatures = (data: Geocoding): GeocodeFeature[] => {
       loc.properties.postalcode,
     ]
       .filter(Boolean)
-      .join(", "),
-  }));
-};
+      .join(', '),
+  }))
+}

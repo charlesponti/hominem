@@ -16,6 +16,6 @@
  * @param ms The number of milliseconds to delay for.
  * @returns
  */
-const delay = async (ms: number) => new Promise(res => setTimeout(res, ms));
+const delay = async (ms: number) => new Promise((res) => setTimeout(res, ms))
 
-export default delay;
+export default delay

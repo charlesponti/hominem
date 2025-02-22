@@ -17,7 +17,7 @@ export function StagesDialog({ applicationId, stages }: StagesDialogProps) {
   const updateApplication = useUpdateApplication()
 
   async function handleAddStage(status: JobApplication['stages'][number]['stage']) {
-    const newStages = [...stages, { stage: status, date: new Date() }]
+    const newStages = [...stages, { stage: status, date: new Date().toISOString() }]
     await updateApplication.mutateAsync({ id: applicationId, data: { stages: newStages } })
   }
 

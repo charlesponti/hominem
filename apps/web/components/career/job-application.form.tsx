@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/nextjs'
 import type { JobApplication } from '@ponti/utils/career'
 import { JobApplicationStage, JobApplicationStatus } from '@ponti/utils/types'
 import { Plus, PlusCircle } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useState, type FormEvent } from 'react'
 import { Button } from '../ui/button'
 import { CompanySelect } from '../ui/company-select'
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
@@ -45,7 +45,7 @@ export function CreateApplicationDialog() {
 
 export function JobApplicationForm({ application }: { application?: JobApplication }) {
   const { userId } = useAuth()
-  const { createApplication } = useApplications(userId)
+  const { createApplication, deleteApplication } = useApplications(userId)
   const [position, setPosition] = useState(application?.position ?? '')
   const [companyId, setCompanyId] = useState(application?.companyId ?? '')
   const [date, setDate] = useState(
@@ -56,6 +56,12 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
   const [jobPosting, setJobPosting] = useState(application?.jobPosting ?? '')
   const [salaryQuoted, setSalaryQuoted] = useState(application?.salaryQuoted ?? '')
   const statusOptions = useMemo(() => Object.values(JobApplicationStatus), [])
+
+  const onDeleteClick = useCallback(() => {
+    if (application) {
+      deleteApplication(application.id)
+    }
+  }, [application, deleteApplication])
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     if (!userId) return
@@ -71,7 +77,7 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
         stages: [
           {
             stage: JobApplicationStage.APPLICATION,
-            date: new Date(),
+            date: new Date().toISOString(),
           },
         ],
         location,
@@ -97,56 +103,65 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2 space-y-2">
+    <div className="space-y-1">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2 space-y-2">
+            <Input
+              placeholder="Job Title"
+              name="position"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+            />
+            <CompanySelect value={companyId} onSelectAction={setCompanyId} />
+          </div>
+          <Input type="date" name="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <Select
+            value={status}
+            onValueChange={(value: string) => setStatus(value as JobApplicationStatus)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Input
-            placeholder="Job Title"
-            name="position"
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
+            placeholder="Location"
+            name="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
           />
-          <CompanySelect value={companyId} onSelectAction={setCompanyId} />
+          <Input
+            placeholder="Job Posting URL"
+            name="job_posting"
+            value={jobPosting}
+            onChange={(e) => setJobPosting(e.target.value)}
+          />
+          <Input
+            placeholder="Salary Quoted"
+            name="salary_quoted"
+            value={salaryQuoted}
+            onChange={(e) => setSalaryQuoted(e.target.value)}
+          />
         </div>
-        <Input type="date" name="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        <Select
-          value={status}
-          onValueChange={(value: string) => setStatus(value as JobApplicationStatus)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statusOptions.map((value) => (
-              <SelectItem key={value} value={value}>
-                {value}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="Location"
-          name="location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-        <Input
-          placeholder="Job Posting URL"
-          name="job_posting"
-          value={jobPosting}
-          onChange={(e) => setJobPosting(e.target.value)}
-        />
-        <Input
-          placeholder="Salary Quoted"
-          name="salary_quoted"
-          value={salaryQuoted}
-          onChange={(e) => setSalaryQuoted(e.target.value)}
-        />
-      </div>
-      <Button type="submit" className="w-full">
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Application
+        <Button type="submit" className="w-full">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Application
+        </Button>
+      </form>
+      <Button
+        variant="ghost"
+        className="w-full text-red-500 hover:bg-red-500 hover:text-white"
+        onClick={onDeleteClick}
+      >
+        Delete
       </Button>
-    </form>
+    </div>
   )
 }
