@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function useApplications(userId?: string) {
+export function useApplications(userId?: string | null) {
 	const queryClient = useQueryClient();
 
 	const { data: applications, isLoading } = trpc.applications.getAll.useQuery(

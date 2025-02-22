@@ -9,6 +9,7 @@
 		"./career": "./src/career/index.ts",
 		"./finance": "./src/finance/index.ts",
 		"./time": "./src/time.ts",
+		"./location": "./src/location/index.ts",
 		"./logger": "./src/logger.ts",
 		"./notes": "./src/writer/notes.ts",
 		"./google-sheets": "./src/google/sheets.ts",

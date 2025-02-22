@@ -1,5 +1,6 @@
 "use client";
 
+import { JobApplicationCard } from "@/components/career/job-application.card";
 import {
 	CreateApplicationDialog,
 	EditApplicationDialog,
@@ -36,16 +37,6 @@ export default function ApplicationsPage() {
 			app.status.toLowerCase().includes(search.toLowerCase()),
 	);
 
-	async function handleCreate(data: Partial<JobApplication>) {
-		const res = await fetch("/api/career/application", {
-			method: "POST",
-			body: JSON.stringify(data),
-		});
-		if (res.ok) {
-			router.refresh();
-		}
-	}
-
 	async function handleUpdate(id: string, data: Partial<JobApplication>) {
 		const res = await fetch("/api/career/application", {
 			method: "PUT",
@@ -69,16 +60,23 @@ export default function ApplicationsPage() {
 
 	return (
 		<div className="container mx-auto py-10">
-			<div className="flex justify-between items-center gap-2 mb-6 px-2 md:px-0">
-				<div className="flex-1 flex items-center gap-4">
-					<Input
-						placeholder="Search applications..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						className="w-full"
-					/>
-				</div>
-				<CreateApplicationDialog handleCreate={handleCreate} />
+			<div className="flex justify-between">
+				<h1 className="text-2xl font-bold mb-6">Applications</h1>
+				<CreateApplicationDialog />
+			</div>
+			<div className="flex flex-col md:flex-row justify-between items-center gap-2 mb-6 md:px-0">
+				<Input
+					placeholder="Search applications..."
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+					className="w-full"
+				/>
+			</div>
+
+			<div className="space-y-4">
+				{applications?.map((app) => (
+					<JobApplicationCard key={app.id} application={app} />
+				))}
 			</div>
 
 			<Table>
@@ -145,7 +143,6 @@ export default function ApplicationsPage() {
 			{selectedApp ? (
 				<EditApplicationDialog
 					application={selectedApp}
-					handleUpdate={handleUpdate}
 					onOpenChange={() => setSelectedApp(null)}
 				/>
 			) : null}

@@ -40,7 +40,10 @@ export const applicationsRouter = router({
 		}),
 
 	create: protectedProcedure
-		.input(JobApplicationInsertSchema)
+		/**
+		 * - `userId` is omitted because the api will use the authenticated user's id
+		 */
+		.input(JobApplicationInsertSchema.omit({ userId: true }))
 		.mutation(async ({ ctx, input }) => {
 			return await db.insert(job_applications).values({
 				...input,

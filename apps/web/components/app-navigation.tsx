@@ -13,10 +13,12 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { CheckCircle, DollarSign, FilePen, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Button } from "./ui/button";
 
@@ -43,30 +45,13 @@ const data = {
 					url: "/career/applications",
 					isActive: false,
 				},
-				{
-					title: "Applications v1",
-					icon: User,
-					url: "/career/applications-v2",
-					isActive: false,
-				},
-				{
-					title: "Resume Builder",
-					icon: FilePen,
-					url: "/career/resume-builder",
-					isActive: false,
-				},
-				{
-					title: "Interview Prep",
-					icon: FilePen,
-					url: "/career/interview-prep",
-					isActive: false,
-				},
 			],
 		},
 	],
 };
 
 export function SiteNavigation() {
+	const pathname = usePathname();
 	const { user, isLoaded } = useUser();
 	const { toggleSidebar } = useSidebar();
 	const isLoggedIn = isLoaded && user;
@@ -93,14 +78,22 @@ export function SiteNavigation() {
 					<h1 className="text-2xl font-bold">ominem</h1>
 				</div>
 				<div>
-					{isLoaded && isLoggedIn ? (
-						<div className="flex gap-4 items-center border-input border rounded-md px-3 py-2">
-							<User size={24} />
-							<Link href="/dashboard/profile" className="text-sm font-medium">
-								{user.fullName}
-							</Link>
-						</div>
-					) : null}
+					<div className="flex gap-2 items-center border-input border rounded-md px-3 h-12">
+						{isLoaded && isLoggedIn ? (
+							<>
+								<div className="rounded-full border border-gray-600">
+									<User size={13} />
+								</div>
+								<Link href="/dashboard/profile" className="text-sm font-medium">
+									{user.fullName}
+								</Link>
+							</>
+						) : (
+							<div className="w-full flex items-center justify-center">
+								<span className="loading loading-dots text-gray-300" />
+							</div>
+						)}
+					</div>
 					{isLoaded && !isLoggedIn ? (
 						<SignInButton>
 							<Button size="lg">Sign in</Button>
@@ -108,43 +101,36 @@ export function SiteNavigation() {
 					) : null}
 				</div>
 			</SidebarHeader>
-			<SidebarContent className="w-[100vw] md:max-w-[260px]">
-				{/* We create a SidebarGroup for each parent. */}
+			<SidebarContent className="max-w-full">
 				{data.navMain.map((item) => (
-					<SidebarGroup key={item.title}>
+					<SidebarGroup
+						key={item.title}
+						className={cn("max-w-full", { "my-0 pb-0": !item.items })}
+					>
 						<SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-						<SidebarGroupContent>
-							<SidebarMenu>
-								{item.items?.map((item) => (
-									<SidebarMenuItem key={item.title}>
-										<SidebarMenuButton asChild isActive={item.isActive}>
-											<a href={item.url}>{item.title}</a>
-										</SidebarMenuButton>
-									</SidebarMenuItem>
-								))}
-							</SidebarMenu>
-						</SidebarGroupContent>
+						{item.items ? (
+							<SidebarGroupContent className="pl-6 w-full">
+								<SidebarMenu>
+									{item.items?.map((item) => (
+										<SidebarMenuItem key={item.title}>
+											<SidebarMenuButton
+												asChild
+												isActive={pathname.indexOf(item.url) > -1}
+											>
+												<div>
+													<item.icon size={14} />
+													<a href={item.url}>{item.title}</a>
+												</div>
+											</SidebarMenuButton>
+										</SidebarMenuItem>
+									))}
+								</SidebarMenu>
+							</SidebarGroupContent>
+						) : null}
 					</SidebarGroup>
 				))}
-				<SidebarGroup>
-					<SidebarContent className="flex flex-col gap-4">
-						<SidebarLink href="/dashboard/career/applications">
-							<FilePen size={14} />
-							Applications
-						</SidebarLink>
-						<SidebarLink href="/dashboard/finance">
-							<DollarSign size={14} />
-							Finance
-						</SidebarLink>
-						<SidebarLink href="/dashboard/activities/task-tracker">
-							<CheckCircle size={14} />
-							Task Tracker
-						</SidebarLink>
-					</SidebarContent>
-				</SidebarGroup>
-				<SidebarGroup />
 			</SidebarContent>
-			{isLoggedIn ? (
+			{isLoaded && isLoggedIn ? (
 				<SidebarFooter>
 					<SignOutButton>
 						<span className="btn bg-black text-white max-h-fit">Sign Out</span>
@@ -152,19 +138,5 @@ export function SiteNavigation() {
 				</SidebarFooter>
 			) : null}
 		</Sidebar>
-	);
-}
-
-function SidebarLink({
-	href,
-	children,
-}: { href: string; children: React.ReactNode }) {
-	return (
-		<Link
-			href={href}
-			className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-md text-sm"
-		>
-			{children}
-		</Link>
 	);
 }
