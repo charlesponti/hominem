@@ -16,13 +16,13 @@
  * consider weighted quick union with path compression.
  */
 class QuickUnion {
-  private tree: number[];
+  private tree: number[]
 
   constructor(N: number) {
     // Assign tree to an array of length equal to the provided value.
-    this.tree = new Array(N);
+    this.tree = new Array(N)
     for (var i = 0; i < N; i++) {
-      this.tree[i] = N;
+      this.tree[i] = N
     }
   }
 
@@ -32,9 +32,9 @@ class QuickUnion {
    * @param {Number} q
    */
   union(p: number, q: number) {
-    const pRoot = this.root(p);
-    const qRoot = this.root(q);
-    this.tree[pRoot] = this.tree[qRoot];
+    const pRoot = this.root(p)
+    const qRoot = this.root(q)
+    this.tree[pRoot] = this.tree[qRoot]
   }
 
   /**
@@ -43,7 +43,7 @@ class QuickUnion {
    * @param {Number} q
    */
   connected(p: number, q: number): boolean {
-    return this.root(p) === this.root(q);
+    return this.root(p) === this.root(q)
   }
 
   /**
@@ -51,9 +51,9 @@ class QuickUnion {
    * @param {Number} i
    */
   root(i: number): number {
-    while (i != this.tree[i]) i = this.tree[i];
-    return i;
+    while (i != this.tree[i]) i = this.tree[i]
+    return i
   }
 }
 
-module.exports = QuickUnion;
+module.exports = QuickUnion

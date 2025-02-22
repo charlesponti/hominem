@@ -1,19 +1,19 @@
 export interface Note {
-	file: string;
-	heading?: string;
-	text: string;
-	tag?: string;
-	date?: string;
+  file: string
+  heading?: string
+  text: string
+  tag?: string
+  date?: string
 }
 
 export interface DateFromText {
-	fullDate?: string;
-	year?: string;
+  fullDate?: string
+  year?: string
 }
 
 export interface ProcessedContent {
-	headings: string[];
-	paragraphs: Note[];
-	bulletPoints: Note[];
-	others: Note[];
+  headings: string[]
+  paragraphs: Note[]
+  bulletPoints: Note[]
+  others: Note[]
 }

@@ -1,7 +1,7 @@
 /**
- * This file displays how 
+ * This file displays how
  */
-function Bird () {}
+function Bird() {}
 
 Bird.prototype.makeNoise = function () {
   return 'chirp'
@@ -20,7 +20,7 @@ console.log(bird.fly() === 'fly')
  * Extend Bird by copying prototype to Parrot.prototype
  * @param {*} params
  */
-function Parrot (params) {}
+function Parrot(params) {}
 Parrot.prototype = Bird.prototype
 
 var parrot = new Parrot()
