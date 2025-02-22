@@ -1,6 +1,6 @@
 import { JobApplicationInsertSchema } from "@ponti/utils/career";
 import { db } from "@ponti/utils/db";
-import { job_applications } from "@ponti/utils/schema";
+import { companies, job_applications } from "@ponti/utils/schema";
 import { TRPCError } from "@trpc/server";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -8,11 +8,20 @@ import { protectedProcedure, router } from "../trpc";
 
 export const applicationsRouter = router({
 	getAll: protectedProcedure.query(async ({ ctx }) => {
-		return await db
-			.select()
+		const results = await db
+			.select({
+				company: companies,
+				application: job_applications,
+			})
 			.from(job_applications)
 			.where(eq(job_applications.userId, ctx.userId))
+			.leftJoin(companies, eq(companies.id, job_applications.companyId))
 			.orderBy(desc(job_applications.createdAt));
+
+		return results.map(({ company, application }) => ({
+			...application,
+			company: company?.name,
+		}));
 	}),
 
 	getById: protectedProcedure
