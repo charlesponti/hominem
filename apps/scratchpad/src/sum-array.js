@@ -1,5 +1,5 @@
-let start = 0;
-const end = 0;
+let start = 0
+const end = 0
 
 /**
  * @complexity O(n)
@@ -8,35 +8,35 @@ const end = 0;
  * @param {*} array
  */
 function sumOfNumbers(numbers) {
-  let result = 0;
+  let result = 0
 
   for (const number of numbers) {
-    result += number;
+    result += number
   }
 
-  return result;
+  return result
 }
 
-console.log(sumOfNumbers([1, 2, 3, 4, 5]));
+console.log(sumOfNumbers([1, 2, 3, 4, 5]))
 
 function sumUp(n) {
-  let result = 0;
+  let result = 0
 
   for (let i = 1; i <= n; i++) {
-    result += i;
+    result += i
   }
 
-  return result;
+  return result
 }
 
 function sumUpOne(n) {
-  return (n / 2) * (1 + n);
+  return (n / 2) * (1 + n)
 }
 
-start = performance.now();
-console.log(sumUp(30000));
-console.log(performance.now() - start);
+start = performance.now()
+console.log(sumUp(30000))
+console.log(performance.now() - start)
 
-start = performance.now();
-console.log(sumUpOne(3000));
-console.log(performance.now() - start);
+start = performance.now()
+console.log(sumUpOne(3000))
+console.log(performance.now() - start)

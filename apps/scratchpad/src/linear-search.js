@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 const arr = new Array(100)
 for (var i = 0; i < 101; i++) {
@@ -9,7 +9,7 @@ for (var i = 0; i < 101; i++) {
 const correctAnswer = Math.floor(Math.random() * (100 - 1) + 1)
 
 /**
- * This will be used to keep a count of how many times the 
+ * This will be used to keep a count of how many times the
  * function is executed in order to find the correct answer.
  */
 let count = 0
@@ -19,7 +19,7 @@ let count = 0
  * @param {Number} n
  * @param {Array} list
  */
-function linearSearch (n, list) {
+function linearSearch(n, list) {
   for (var i = 0; i < list.length; i++) {
     count++
     if (list[i] === n) return

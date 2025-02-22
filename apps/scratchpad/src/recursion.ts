@@ -1,38 +1,38 @@
 export function sumRange(n: number) {
-	let total = 0;
+  let total = 0
 
-	for (let i = n; i > 0; i--) {
-		total += i;
-	}
+  for (let i = n; i > 0; i--) {
+    total += i
+  }
 
-	return total;
+  return total
 }
 
 export function sumRangeRecursive(n, total = 0) {
-	if (n <= 0) {
-		return total;
-	}
+  if (n <= 0) {
+    return total
+  }
 
-	return sumRangeRecursive(n - 1, total + n);
+  return sumRangeRecursive(n - 1, total + n)
 }
 
 type Child = {
-	name: string;
-	children: Child[];
-};
+  name: string
+  children: Child[]
+}
 export function printChildren(
-	tree: {
-		name: string;
-		children: Child[];
-	},
-	children: string[] = [],
+  tree: {
+    name: string
+    children: Child[]
+  },
+  children: string[] = []
 ) {
-	for (const child of tree.children) {
-		children.push(child.name);
-		printChildren(child, children);
-	}
+  for (const child of tree.children) {
+    children.push(child.name)
+    printChildren(child, children)
+  }
 
-	return children;
+  return children
 }
 
 // const tree = {
@@ -52,23 +52,23 @@ export function printChildren(
 // };
 
 export function searchTree(t, searchTerm) {
-	if (t.name === searchTerm) return t;
+  if (t.name === searchTerm) return t
 
-	for (const child of t.children) {
-		const value = searchTree(child, searchTerm);
-		if (value) return value;
-	}
+  for (const child of t.children) {
+    const value = searchTree(child, searchTerm)
+    if (value) return value
+  }
 }
 
 export function getParent(t, searchTerm, parent) {
-	if (t.name === searchTerm) {
-		return parent;
-	}
+  if (t.name === searchTerm) {
+    return parent
+  }
 
-	for (const child of t.children) {
-		const value = getParent(child, searchTerm, t);
-		if (value) return value;
-	}
+  for (const child of t.children) {
+    const value = getParent(child, searchTerm, t)
+    if (value) return value
+  }
 }
 
 /**
@@ -78,12 +78,12 @@ export function getParent(t, searchTerm, parent) {
  * @return {T[]} Flattened array
  */
 export function flattenArray<T>(arr: (T | T[])[], result: T[] = []): T[] {
-	for (const item of arr) {
-		if (Array.isArray(item)) flattenArray(item, result);
-		else result.push(item);
-	}
+  for (const item of arr) {
+    if (Array.isArray(item)) flattenArray(item, result)
+    else result.push(item)
+  }
 
-	return result;
+  return result
 }
 
 /**
@@ -94,7 +94,7 @@ export function flattenArray<T>(arr: (T | T[])[], result: T[] = []): T[] {
  * @returns {boolean}
  */
 export function isDivisible(a: number, b: number): boolean {
-	return a % b === 0;
+  return a % b === 0
 }
 
 /**
@@ -104,7 +104,7 @@ export function isDivisible(a: number, b: number): boolean {
  * @returns {boolean}
  */
 export function isEven(n: number): boolean {
-	return n % 2 === 0;
+  return n % 2 === 0
 }
 
 /**
@@ -114,7 +114,7 @@ export function isEven(n: number): boolean {
  * @returns {boolean}
  */
 export function isOdd(n: number): boolean {
-	return !isEven(n);
+  return !isEven(n)
 }
 
 /**
@@ -125,34 +125,34 @@ export function isOdd(n: number): boolean {
  * @returns {number} The value of a to the power of b
  */
 export function power(a: number, b: number): number {
-	/**
-	 * base case: n is zero
-	 * n = 0, x^0 = 1
-	 */
-	if (b === 0) return 1;
+  /**
+   * base case: n is zero
+   * n = 0, x^0 = 1
+   */
+  if (b === 0) return 1
 
-	/**
-	 * recursive case: n is negative
-	 * y = 1 / x^-n
-	 */
-	if (b < 0) return 1 / power(a, -b);
+  /**
+   * recursive case: n is negative
+   * y = 1 / x^-n
+   */
+  if (b < 0) return 1 / power(a, -b)
 
-	/**
-	 * recursive case: n is odd
-	 * y = x * x^(n - 1 ... 1)
-	 */
-	if (isOdd(b)) return a * power(a, b - 1);
+  /**
+   * recursive case: n is odd
+   * y = x * x^(n - 1 ... 1)
+   */
+  if (isOdd(b)) return a * power(a, b - 1)
 
-	/**
-	 * recursive case: n is even
-	 * y = x^n/2 ... x^n = y * y
-	 */
-	if (isEven(b)) {
-		const y = power(a, b / 2);
-		return y * y;
-	}
+  /**
+   * recursive case: n is even
+   * y = x^n/2 ... x^n = y * y
+   */
+  if (isEven(b)) {
+    const y = power(a, b / 2)
+    return y * y
+  }
 
-	return 0;
+  return 0
 }
 
 /**
@@ -163,21 +163,21 @@ export function power(a: number, b: number): number {
  * @returns {number} The factorial of n
  */
 export function factorial(n: number): number {
-	// Base case: if n is 0 or 1, return 1
-	// This is important to stop the recursion
-	if (n <= 1) {
-		return 1;
-	}
+  // Base case: if n is 0 or 1, return 1
+  // This is important to stop the recursion
+  if (n <= 1) {
+    return 1
+  }
 
-	// Recursive case:
-	// 1. Multiply n by factorial of (n-1)
-	// 2. This will keep calling factorial with a smaller number
-	// 3. Eventually hits base case when n <= 1
-	// Example flow for factorial(4):
-	// factorial(4) = 4 * factorial(3)
-	// factorial(3) = 3 * factorial(2)
-	// factorial(2) = 2 * factorial(1)
-	// factorial(1) = 1
-	// Then it resolves back up: 4 * 3 * 2 * 1 = 24
-	return n * factorial(n - 1);
+  // Recursive case:
+  // 1. Multiply n by factorial of (n-1)
+  // 2. This will keep calling factorial with a smaller number
+  // 3. Eventually hits base case when n <= 1
+  // Example flow for factorial(4):
+  // factorial(4) = 4 * factorial(3)
+  // factorial(3) = 3 * factorial(2)
+  // factorial(2) = 2 * factorial(1)
+  // factorial(1) = 1
+  // Then it resolves back up: 4 * 3 * 2 * 1 = 24
+  return n * factorial(n - 1)
 }

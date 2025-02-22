@@ -55,12 +55,8 @@
           "name": "session_userId_user_id_fk",
           "tableFrom": "session",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -192,12 +188,8 @@
           "name": "token_userId_user_id_fk",
           "tableFrom": "token",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -373,12 +365,8 @@
           "name": "bookmark_userId_user_id_fk",
           "tableFrom": "bookmark",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -615,12 +603,8 @@
           "name": "item_listId_list_id_fk",
           "tableFrom": "item",
           "tableTo": "list",
-          "columnsFrom": [
-            "listId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listId"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
@@ -628,12 +612,8 @@
           "name": "item_userId_user_id_fk",
           "tableFrom": "item",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -667,12 +647,8 @@
           "name": "application_notes_application_id_job_applications_id_fk",
           "tableFrom": "application_notes",
           "tableTo": "job_applications",
-          "columnsFrom": [
-            "application_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -680,12 +656,8 @@
           "name": "application_notes_note_id_notes_id_fk",
           "tableFrom": "application_notes",
           "tableTo": "notes",
-          "columnsFrom": [
-            "note_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["note_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -834,12 +806,8 @@
           "name": "job_applications_company_id_companies_id_fk",
           "tableFrom": "job_applications",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -847,12 +815,8 @@
           "name": "job_applications_user_id_users_id_fk",
           "tableFrom": "job_applications",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -860,12 +824,8 @@
           "name": "job_applications_job_id_jobs_id_fk",
           "tableFrom": "job_applications",
           "tableTo": "jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -959,12 +919,8 @@
           "name": "jobs_company_id_companies_id_fk",
           "tableFrom": "jobs",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1024,12 +980,8 @@
           "name": "list_userId_user_id_fk",
           "tableFrom": "list",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1082,12 +1034,8 @@
           "name": "list_invite_listId_list_id_fk",
           "tableFrom": "list_invite",
           "tableTo": "list",
-          "columnsFrom": [
-            "listId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1095,12 +1043,8 @@
           "name": "list_invite_invitedUserId_user_id_fk",
           "tableFrom": "list_invite",
           "tableTo": "users",
-          "columnsFrom": [
-            "invitedUserId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invitedUserId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1108,12 +1052,8 @@
           "name": "list_invite_userId_user_id_fk",
           "tableFrom": "list_invite",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1121,10 +1061,7 @@
       "compositePrimaryKeys": {
         "list_invite_pkey": {
           "name": "list_invite_pkey",
-          "columns": [
-            "listId",
-            "invitedUserEmail"
-          ]
+          "columns": ["listId", "invitedUserEmail"]
         }
       },
       "uniqueConstraints": {},
@@ -1169,12 +1106,8 @@
           "name": "user_lists_listId_list_id_fk",
           "tableFrom": "user_lists",
           "tableTo": "list",
-          "columnsFrom": [
-            "listId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1182,12 +1115,8 @@
           "name": "user_lists_userId_user_id_fk",
           "tableFrom": "user_lists",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1195,10 +1124,7 @@
       "compositePrimaryKeys": {
         "user_lists_pkey": {
           "name": "user_lists_pkey",
-          "columns": [
-            "listId",
-            "userId"
-          ]
+          "columns": ["listId", "userId"]
         }
       },
       "uniqueConstraints": {},
@@ -1312,12 +1238,8 @@
           "name": "movie_viewings_movieId_movie_id_fk",
           "tableFrom": "movie_viewings",
           "tableTo": "movie",
-          "columnsFrom": [
-            "movieId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["movieId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1325,12 +1247,8 @@
           "name": "movie_viewings_userId_user_id_fk",
           "tableFrom": "movie_viewings",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1398,12 +1316,8 @@
           "name": "idea_userId_user_id_fk",
           "tableFrom": "notes",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1523,12 +1437,8 @@
           "name": "place_userId_user_id_fk",
           "tableFrom": "place",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1536,12 +1446,8 @@
           "name": "place_itemId_item_id_fk",
           "tableFrom": "place",
           "tableTo": "item",
-          "columnsFrom": [
-            "itemId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["itemId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1643,12 +1549,8 @@
           "name": "activity_userId_user_id_fk",
           "tableFrom": "activity",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1656,12 +1558,8 @@
           "name": "activity_listId_list_id_fk",
           "tableFrom": "activity",
           "tableTo": "list",
-          "columnsFrom": [
-            "listId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1763,12 +1661,8 @@
           "name": "flight_userId_user_id_fk",
           "tableFrom": "flight",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1776,12 +1670,8 @@
           "name": "flight_listId_list_id_fk",
           "tableFrom": "flight",
           "tableTo": "list",
-          "columnsFrom": [
-            "listId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -1901,12 +1791,8 @@
           "name": "hotel_userId_user_id_fk",
           "tableFrom": "hotel",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -1914,12 +1800,8 @@
           "name": "hotel_listId_list_id_fk",
           "tableFrom": "hotel",
           "tableTo": "list",
-          "columnsFrom": [
-            "listId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -2027,12 +1909,8 @@
           "name": "transport_userId_user_id_fk",
           "tableFrom": "transport",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -2040,12 +1918,8 @@
           "name": "transport_listId_list_id_fk",
           "tableFrom": "transport",
           "tableTo": "list",
-          "columnsFrom": [
-            "listId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -2161,12 +2035,8 @@
           "name": "account_userId_user_id_fk",
           "tableFrom": "account",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -2292,9 +2162,7 @@
         "users_clerk_id_unique": {
           "name": "users_clerk_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "clerk_id"
-          ]
+          "columns": ["clerk_id"]
         }
       },
       "policies": {},
@@ -2306,18 +2174,12 @@
     "public.TokenType": {
       "name": "TokenType",
       "schema": "public",
-      "values": [
-        "EMAIL",
-        "API"
-      ]
+      "values": ["EMAIL", "API"]
     },
     "public.ItemType": {
       "name": "ItemType",
       "schema": "public",
-      "values": [
-        "FLIGHT",
-        "PLACE"
-      ]
+      "values": ["FLIGHT", "PLACE"]
     }
   },
   "schemas": {},

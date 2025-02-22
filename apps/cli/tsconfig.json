@@ -8,7 +8,7 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/lib/*": ["./lib/*"],
-      "@/components/*": ["./components/*"],
+      "@/components/*": ["./components/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

@@ -1,22 +1,20 @@
-import { useAuth } from "@clerk/nextjs";
-import { createContext, useContext, type ReactNode } from "react";
+import { useAuth } from '@clerk/nextjs'
+import { createContext, useContext, type ReactNode } from 'react'
 
 interface UserContextValue {
-	auth?: ReturnType<typeof useAuth>;
+  auth?: ReturnType<typeof useAuth>
 }
 
-const UserContext = createContext<UserContextValue>({});
+const UserContext = createContext<UserContextValue>({})
 
 interface UserProviderProps {
-	children: ReactNode;
+  children: ReactNode
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-	const auth = useAuth();
+  const auth = useAuth()
 
-	return (
-		<UserContext.Provider value={{ auth }}>{children}</UserContext.Provider>
-	);
-};
+  return <UserContext.Provider value={{ auth }}>{children}</UserContext.Provider>
+}
 
-export const useUserContext = () => useContext(UserContext);
+export const useUserContext = () => useContext(UserContext)

@@ -4,10 +4,10 @@
  *
  * This is also the number of times the indexOfMinimum function will run
  * inside of a SelectionSort
- * 
+ *
  * @param {Number} n
  */
-function summation (n) {
+function summation(n) {
   return (n / 2) * (n + 1)
 }
 

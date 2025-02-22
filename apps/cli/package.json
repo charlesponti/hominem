@@ -1,60 +1,60 @@
 {
-	"name": "cli",
-	"version": "1.0.0",
-	"main": "src/index.ts",
-	"bin": {
-		"hominem": "src/index.ts"
-	},
-	"scripts": {
-		"start": "bun run src/index.ts"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"description": "",
-	"dependencies": {
-		"@ai-sdk/google": "^1.1.10",
-		"@ai-sdk/openai": "^1.1.9",
-		"@google-cloud/local-auth": "^3.0.1",
-		"@langchain/community": "^0.3.29",
-		"@langchain/core": "0.3.39",
-		"@langchain/langgraph": "0.2.45",
-		"@langchain/openai": "^0.4.3",
-		"@libsql/client": "^0.14.0",
-		"@pinecone-database/pinecone": "^4.1.0",
-		"@ponti/utils": "*",
-		"@tanstack/react-query": "^5.66.0",
-		"ai": "^4.1.26",
-		"ansi-colors": "^4.1.3",
-		"axios": "1.7.9",
-		"chalk": "^5.4.1",
-		"cli-progress": "^3.12.0",
-		"commander": "^13.1.0",
-		"csv-parse": "^5.6.0",
-		"csv-parser": "^3.2.0",
-		"dotenv": "^16.4.7",
-		"drizzle-orm": "^0.39.2",
-		"fs-extra": "^11.3.0",
-		"googleapis": "^144.0.0",
-		"jsdom": "^26.0.0",
-		"ollama-ai-provider": "^1.2.0",
-		"openai": "^4.83.0",
-		"pino": "^9.6.0",
-		"sqlite": "^5.1.1",
-		"sqlite3": "^5.1.7",
-		"unified": "^11.0.3",
-		"remark-parse": "^11.0.0",
-		"remark-stringify": "^11.0.0",
-		"mdast-util-to-string": "^4.0.0",
-		"mdast-util-from-markdown": "^2.0.0"
-	},
-	"devDependencies": {
-		"@types/cli-progress": "^3.11.6",
-		"@types/jsdom": "^21.1.7",
-		"drizzle-kit": "^0.30.4",
-		"tsx": "^4.19.2"
-	},
-	"resolutions": {
-		"@langchain/core": "0.3.37"
-	}
+  "name": "cli",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "bin": {
+    "hominem": "src/index.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@ai-sdk/google": "^1.1.10",
+    "@ai-sdk/openai": "^1.1.9",
+    "@google-cloud/local-auth": "^3.0.1",
+    "@langchain/community": "^0.3.29",
+    "@langchain/core": "0.3.39",
+    "@langchain/langgraph": "0.2.45",
+    "@langchain/openai": "^0.4.3",
+    "@libsql/client": "^0.14.0",
+    "@pinecone-database/pinecone": "^4.1.0",
+    "@ponti/utils": "*",
+    "@tanstack/react-query": "^5.66.0",
+    "ai": "^4.1.26",
+    "ansi-colors": "^4.1.3",
+    "axios": "1.7.9",
+    "chalk": "^5.4.1",
+    "cli-progress": "^3.12.0",
+    "commander": "^13.1.0",
+    "csv-parse": "^5.6.0",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.39.2",
+    "fs-extra": "^11.3.0",
+    "googleapis": "^144.0.0",
+    "jsdom": "^26.0.0",
+    "ollama-ai-provider": "^1.2.0",
+    "openai": "^4.83.0",
+    "pino": "^9.6.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "unified": "^11.0.3",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "mdast-util-to-string": "^4.0.0",
+    "mdast-util-from-markdown": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/cli-progress": "^3.11.6",
+    "@types/jsdom": "^21.1.7",
+    "drizzle-kit": "^0.30.4",
+    "tsx": "^4.19.2"
+  },
+  "resolutions": {
+    "@langchain/core": "0.3.37"
+  }
 }

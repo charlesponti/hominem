@@ -1,9 +1,9 @@
-import PropTypes from 'prop-types';
-import React, { useCallback } from 'react';
-import styled from 'styled-components';
-import { streamPropType } from '../constants/commonPropTypes';
-import VideoCam from '../icons/VideoCam';
-import VideoCamOff from '../icons/VideoCamOff';
+import PropTypes from 'prop-types'
+import React, { useCallback } from 'react'
+import styled from 'styled-components'
+import { streamPropType } from '../constants/commonPropTypes'
+import VideoCam from '../icons/VideoCam'
+import VideoCamOff from '../icons/VideoCamOff'
 
 const Wrap = styled.div`
 	width: 100%;
@@ -13,12 +13,12 @@ const Wrap = styled.div`
 	align-items: center;
 	border: 1px solid #d3d3d3;
 	border-radius: 5px;
-`;
+`
 
 const Name = styled.span`
 	flex: 1;
 	margin-right: 16px;
-`;
+`
 
 const CameraButton = styled.button`
 	width: 36px;
@@ -32,27 +32,27 @@ const CameraButton = styled.button`
 	border: none;
 	outline: none;
 	cursor: pointer;
-`;
+`
 
 const StreamControls = ({ stream, updateStream }) => {
-	const onCameraClick = useCallback(
-		() => updateStream({ ...stream, isVideoOn: !stream.isVideoOn }),
-		[stream, updateStream],
-	);
+  const onCameraClick = useCallback(
+    () => updateStream({ ...stream, isVideoOn: !stream.isVideoOn }),
+    [stream, updateStream]
+  )
 
-	return (
-		<Wrap>
-			<Name>{stream.name}</Name>
-			<CameraButton onClick={onCameraClick}>
-				{stream.isVideoOn ? <VideoCam /> : <VideoCamOff />}
-			</CameraButton>
-		</Wrap>
-	);
-};
+  return (
+    <Wrap>
+      <Name>{stream.name}</Name>
+      <CameraButton onClick={onCameraClick}>
+        {stream.isVideoOn ? <VideoCam /> : <VideoCamOff />}
+      </CameraButton>
+    </Wrap>
+  )
+}
 
 StreamControls.propTypes = {
-	stream: streamPropType.isRequired,
-	updateStream: PropTypes.func.isRequired,
-};
+  stream: streamPropType.isRequired,
+  updateStream: PropTypes.func.isRequired,
+}
 
-export default StreamControls;
+export default StreamControls

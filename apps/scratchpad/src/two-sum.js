@@ -3,16 +3,16 @@
  * @param {number} target
  * @return {number[]}
  */
-exports.twoSum = function(nums, target) {
-  const map = new Map();
+exports.twoSum = function (nums, target) {
+  const map = new Map()
 
   for (let i = 0; i < nums.length; i++) {
-    const diff = target - nums[i];
+    const diff = target - nums[i]
 
-    if (map.get(diff) !== undefined) return [map.get(diff), i];
+    if (map.get(diff) !== undefined) return [map.get(diff), i]
 
-    map.set(nums[i], i);
+    map.set(nums[i], i)
   }
 
-  return 'No two sum solution';
-};
+  return 'No two sum solution'
+}

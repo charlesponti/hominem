@@ -2,13 +2,13 @@ const argv = require('minimist')(process.argv.slice(2))
 
 /**
  * Calculate the logarithm of `n` (lg(n))
- * 
+ *
  * ## Definition
  * The `logarithm` of `n` number is the amount of times that
  * number can be halved before it reaches 1
- * @param {Number} n 
+ * @param {Number} n
  */
-function logarithm (n) {
+function logarithm(n) {
   let count = 0
   let current = n
 

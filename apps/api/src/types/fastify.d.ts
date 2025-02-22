@@ -1,7 +1,7 @@
-import type { Redis } from "ioredis";
+import type { Redis } from 'ioredis'
 
-declare module "fastify" {
-	interface FastifyInstance {
-		redis: Redis;
-	}
+declare module 'fastify' {
+  interface FastifyInstance {
+    redis: Redis
+  }
 }

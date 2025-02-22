@@ -1,4 +1,3 @@
-nixpacks
 autobuild
 autoincrement
 biomejs
@@ -12,12 +11,14 @@ cmdk
 fastify
 googleauth
 healthcheck
+ilike
 initdb
 isready
 langchain
 langgraph
 libsql
 linestring
+nixpacks
 ollama
 onnxruntime
 openai

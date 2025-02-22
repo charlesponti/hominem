@@ -124,13 +124,7 @@
       "indexes": {
         "transactions_date_name_amount_type_account_unique": {
           "name": "transactions_date_name_amount_type_account_unique",
-          "columns": [
-            "date",
-            "name",
-            "amount",
-            "type",
-            "account"
-          ],
+          "columns": ["date", "name", "amount", "type", "account"],
           "isUnique": true
         }
       },

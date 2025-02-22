@@ -17,56 +17,56 @@
  */
 
 class Stack {
-    count = 0;
+  count = 0
 
-    items = {}
+  items = {}
 
-    constructor(items?: any[]) {
-      if (items) items.forEach(item => this.push(item))
-    }
+  constructor(items?: any[]) {
+    if (items) items.forEach((item) => this.push(item))
+  }
 
-    /**
-     * @description Add item to the Stack
-     * @param {*} item
-     */
-    push(item: any) {
-      this.items[this.count] = item;
-      this.count += 1;
-    }
+  /**
+   * @description Add item to the Stack
+   * @param {*} item
+   */
+  push(item: any) {
+    this.items[this.count] = item
+    this.count += 1
+  }
 
-    /**
-     * @description Remove and return the last element in the Stack
-     * @returns {*}
-     */
-    pop(): any {
-      // Retrieve last item added to stack
-      const item = this.items[this.count - 1];
-      
-      // Remove item
-      delete this.items[this.count - 1];
+  /**
+   * @description Remove and return the last element in the Stack
+   * @returns {*}
+   */
+  pop(): any {
+    // Retrieve last item added to stack
+    const item = this.items[this.count - 1]
 
-      // Decrease count now that item has been removed
-      this.count -= 1
+    // Remove item
+    delete this.items[this.count - 1]
 
-      // Return item
-      return item;
-    }
+    // Decrease count now that item has been removed
+    this.count -= 1
 
-    /**
-     * @description Retrieve the first element in the Stack
-     * @returns {*}
-     */
-    peek(index?: number): any {
-      return this.items[index || 0];
-    }
+    // Return item
+    return item
+  }
 
-    /**
-     * @description Return the number of items in the Stack
-     * @returns {*}
-     */
-    length(): any {
-      return this.count;
-    }
+  /**
+   * @description Retrieve the first element in the Stack
+   * @returns {*}
+   */
+  peek(index?: number): any {
+    return this.items[index || 0]
+  }
+
+  /**
+   * @description Return the number of items in the Stack
+   * @returns {*}
+   */
+  length(): any {
+    return this.count
+  }
 }
 
 /**
@@ -74,15 +74,15 @@ class Stack {
  * @param {string} word - Word to check
  */
 export function isPalindrome(word: string) {
-  let test = '';
-  const letters = new Stack(word.split(''));
+  let test = ''
+  const letters = new Stack(word.split(''))
 
   for (let i = 0; i < word.length; i++) {
     let letter = letters.pop()
-    test += letter;
+    test += letter
   }
 
-  return test === word;
+  return test === word
 }
 
-export default Stack;
+export default Stack

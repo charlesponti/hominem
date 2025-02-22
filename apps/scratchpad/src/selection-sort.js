@@ -2,15 +2,15 @@ const chai = require('chai')
 const equal = chai.assert.deepEqual
 
 /**
- * Selection sort loops over positions in the array. 
- * 
- * For each position, it finds the index of the minimum value in the subarray 
- * starting at that position. 
- * 
- * Then it swaps the values at the position and at the minimum index. 
- * @param {*} array 
- * @param {*} firstIndex 
- * @param {*} secondIndex 
+ * Selection sort loops over positions in the array.
+ *
+ * For each position, it finds the index of the minimum value in the subarray
+ * starting at that position.
+ *
+ * Then it swaps the values at the position and at the minimum index.
+ * @param {*} array
+ * @param {*} firstIndex
+ * @param {*} secondIndex
  */
 var swap = function (array, firstIndex, secondIndex) {
   var temp = array[firstIndex]
@@ -23,7 +23,7 @@ var swap = function (array, firstIndex, secondIndex) {
  * @param {Array} array
  * @param {Number} startIndex
  */
-var indexOfMinimum = function indexOfMinimum (array, startIndex) {
+var indexOfMinimum = function indexOfMinimum(array, startIndex) {
   var minValue = array[startIndex]
   var minIndex = startIndex
 
@@ -54,23 +54,8 @@ var selectionSort = function (array) {
   return array
 }
 
-console.log(
-  equal(
-    selectionSort([22, 11, 99, 88, 9, 7, 42]),
-    [7, 9, 11, 22, 42, 88, 99]
-  ) === void 0
-)
+console.log(equal(selectionSort([22, 11, 99, 88, 9, 7, 42]), [7, 9, 11, 22, 42, 88, 99]) === void 0)
 
-console.log(
-  equal(
-    selectionSort([22, 0, 99, 88, 9, 7, 42]),
-    [0, 7, 9, 22, 42, 88, 99]
-  ) === void 0
-)
+console.log(equal(selectionSort([22, 0, 99, 88, 9, 7, 42]), [0, 7, 9, 22, 42, 88, 99]) === void 0)
 
-console.log(
-  equal(
-    selectionSort([-22, 0, 99, 88, 9, 7, 42]),
-    [-22, 0, 7, 9, 42, 88, 99]
-  ) === void 0
-)
+console.log(equal(selectionSort([-22, 0, 99, 88, 9, 7, 42]), [-22, 0, 7, 9, 42, 88, 99]) === void 0)
