@@ -52,35 +52,3 @@ app.hominem.localhost {
 	import common
 	reverse_proxy localhost:4444
 }
-
-data.hominem.localhost {
-	import common
-	listener_wrappers {
-		tcp
-		proxy_protocol
-	}
-	tls {
-		protocols tls1.2 tls1.3
-	}
-	servers {
-		protocol {
-			tcp
-			proxy_protocol
-		}
-	}
-	proxy {
-		tcp
-		upstream localhost:4432
-		max_connections 100
-		read_timeout 10s
-		write_timeout 10s
-		# Consider adding health check configurations to ensure backend availability.
-		health_check {
-			interval 10s
-			timeout 2s
-		}
-		max_connections 100
-		read_timeout 10s
-		write_timeout 10s
-	}
-}
