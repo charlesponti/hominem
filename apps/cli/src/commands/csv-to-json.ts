@@ -1,84 +1,72 @@
-import { parse } from 'csv-parse'
-import { format } from 'date-fns'
-import * as fs from 'node:fs/promises'
-import * as path from 'node:path' // Added import for path module
+import { logger } from '@ponti/utils/logger'
 import { Command } from 'commander'
+import csv from 'csv-parser'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 
-async function convertCsv(inputFile: string, outputFile: string): Promise<void> {
+type CsvRow = Record<string, string>
+/**
+ * Convert a CSV file to JSON.
+ *
+ * @param inputFile - Path to the input CSV file
+ * @returns A promise that resolves with the JSON data
+ */
+export async function convertCsv(inputFile: string): Promise<CsvRow[] | null> {
   try {
-    const fileContent = await fs.readFile(inputFile, 'utf-8')
+    return await new Promise<CsvRow[]>((resolve, reject) => {
+      const results: CsvRow[] = []
+      const stream = fs.createReadStream(inputFile, 'utf-8').pipe(csv())
+      stream.on('data', (data) => {
+        const keys = Object.keys(data).map((key) => key.trim().replace(/\s/g, '_').toLowerCase())
+        const values = Object.values(data) as string[]
 
-    const results: Record<string, string>[] = []
-
-    const parser = parse(fileContent, {
-      columns: true, // Use the header row to determine columns
-      skip_empty_lines: true,
-    })
-
-    for await (const row of parser) {
-      const inputRow = row
-      const keys = Object.keys(inputRow).map((key) => key.trim().replace(/\s/g, '_').toLowerCase())
-      const values = Object.values(inputRow) as string[]
-
-      const outputRow = keys.reduce(
-        (acc, key, index) => {
+        const outputRow = keys.reduce((acc, key, index) => {
           acc[key] = values[index]
           return acc
-        },
-        {} as Record<string, string>
-      )
+        }, {} as CsvRow)
 
-      results.push(outputRow)
-    }
+        results.push(outputRow)
+      })
 
-    await fs.writeFile(outputFile, JSON.stringify(results, null, 2), 'utf-8')
-    console.log(`JSON conversion complete. Output written to ${outputFile}`)
-    return
+      stream.on('error', (error) => {
+        console.error('Error reading CSV file:', error)
+      })
+
+      stream.on('end', () => {
+        resolve(results)
+      })
+    })
   } catch (error) {
     console.error('Error during CSV conversion:', error)
+    return null
   }
 }
 
-function formatDate(dateString: string): string {
-  if (!dateString) return '' // Handle empty date strings
-  try {
-    const parsedDate = new Date(dateString)
-    return format(parsedDate, 'yyyy-MM-dd') // Customize date format as needed
-  } catch (error) {
-    console.warn(`Invalid date format: ${dateString}.  Returning original string.`, error)
-    return dateString // Return original string if parsing fails
-  }
-}
+export const command = new Command()
 
-function parseNumber(numString: string): number {
-  const num = Number(numString)
-  return Number.isNaN(num) ? 0 : num // Return 0 if parsing fails
-}
-
-function convertToCsv(data: Record<string, string>[]): string {
-  if (data.length === 0) return ''
-
-  const header = Object.keys(data).join(',')
-  const rows = data.map((row) => Object.values(row).join(','))
-  return `${header}\n${rows.join('\n')}`
-}
-
-const program = new Command()
-
-program
+command
   .version('1.0.0')
+  .name('csv-to-json')
   .description('Convert CSV file with date and number formatting.')
   .requiredOption('-i, --input <file>', 'Input CSV file')
-  // Removed the output option
-  //	.requiredOption("-o, --output <file>", "Output CSV file")
   .action(async (options) => {
     const inputFile = options.input
+
     // Compute output file path: same directory as the CSV with '.json' extension
     const outputFile = path.join(
       path.dirname(inputFile),
       `${path.basename(inputFile, path.extname(inputFile))}.json`
     )
-    await convertCsv(inputFile, outputFile)
-  })
 
-program.parse(process.argv)
+    try {
+      const jsonData = await convertCsv(inputFile)
+      if (jsonData) {
+        fs.writeFileSync(outputFile, JSON.stringify(jsonData, null, 2))
+        logger.info(`Successfully converted ${inputFile} to ${outputFile}`)
+      } else {
+        logger.warn(`No data converted from ${inputFile}.`)
+      }
+    } catch (error) {
+      logger.error('Failed to convert CSV to JSON:', error)
+    }
+  })

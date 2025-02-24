@@ -1,4 +1,4 @@
-export * from './logger'
+export * from './logging/logger'
 
 // Utils
 export * from './rate-limit'

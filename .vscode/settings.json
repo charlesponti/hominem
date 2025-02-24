@@ -25,7 +25,7 @@
   "editor.formatOnType": true,
   "github.copilot.chat.codeGeneration.instructions": [
     {
-      "file": "${workspaceFolder}/.vscode/.copilot-codeGeneration-instructions.md"
+      "file": "${workspaceFolder}/.cursor/rules/javascript.mdc"
     }
   ],
   "github.copilot.chat.followUps": "always",

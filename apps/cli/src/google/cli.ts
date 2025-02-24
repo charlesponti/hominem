@@ -1,15 +1,14 @@
-import { Command } from 'commander'
-import type { calendar_v3 } from 'googleapis'
-import inquirer from 'inquirer'
-
-import { logger } from '@ponti/utils/logger'
-import { getSpreadsheetData } from '@ponti/utils/google-sheets'
 import {
   getCalendarEvents,
   getEventDateTime,
   getEventDuration,
   listCalendars,
 } from '@ponti/utils/google-calendar'
+import { getSpreadsheetData } from '@ponti/utils/google-sheets'
+import { logger } from '@ponti/utils/logger'
+import { Command } from 'commander'
+import type { calendar_v3 } from 'googleapis'
+import inquirer from 'inquirer'
 
 const program = new Command()
 
@@ -23,7 +22,7 @@ program
   .action(async (options) => {
     try {
       const data = await getSpreadsheetData(options)
-      console.log('Spreadsheet data:', data)
+      logger.info('Spreadsheet data:', data)
     } catch (error) {
       logger.error('Error fetching spreadsheet data:', error)
     }
@@ -37,8 +36,8 @@ calendarProgram
   .command('get-events')
   .description('Fetch events from Google Calendar')
   .requiredOption('-c, --calendarId <calendarId>', 'Calendar ID')
-  .option('-tmin, --timeMin <timeMin>', 'Start time (ISO format)')
-  .option('-tmax, --timeMax <timeMax>', 'End time (ISO format)')
+  .option('--tmin, --timeMin <timeMin>', 'Start time (ISO format)')
+  .option('--tmax, --timeMax <timeMax>', 'End time (ISO format)')
   .option('-q, --q <q>', 'Query string')
   .action(async (options) => {
     try {
@@ -100,7 +99,7 @@ calendarProgram
         },
       ])
 
-      console.log('Selected calendar ID:', calendarId)
+      logger.info('Selected calendar ID:', calendarId)
     } catch (error) {
       logger.error('Error listing calendars:', error)
     }

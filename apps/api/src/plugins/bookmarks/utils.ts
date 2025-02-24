@@ -61,28 +61,6 @@ function extractDomain(url: string): string {
   return domain.split(/[/?#]/)[0]
 }
 
-// try {
-// 	const html = await ky(url);
-// 	const text = await html.text();
-// 	const $ = cheerio.load(text);
-// 	const recommendation = {
-// 		image: $('meta[property="og:image"]').attr('content'),
-// 		title: $('meta[property="og:title"]').attr('content') || url,
-// 		description: $('meta[property="og:description"]').attr('content'),
-// 		url: $('meta[property="og:url"]').attr('content') || url,
-// 		siteName: $('meta[property="og:site_name"]').attr('content') || url,
-// 		imageWidth: $('meta[property="og:image:width"]').attr('content'),
-// 		imageHeight: $('meta[property="og:image:height"]').attr('content'),
-// 	};
-
-// 	const obj = await db.insert(Bookmark).values({
-// 		...recommendation,
-// 		userId,
-// 	});
-// 	return { recommendation: obj };
-// } catch (err) {
-// 	reply.status(500).send({ error: "Recommendation could not be created" });
-// }
 export async function getOpenGraphData({ url }: GetOpenGraphDataParams): Promise<OpenGraphData> {
   const trimmedUrl = url.trim()
   const isTwitter = twitterRegex.test(trimmedUrl)

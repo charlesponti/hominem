@@ -2,7 +2,7 @@
   "name": "api-v2",
   "version": "0.0.0",
   "scripts": {
-    "dev": "tsx watch src/index.ts"
+    "dev": "bun run src/index.ts --watch"
   },
   "dependencies": {
     "@babel/core": "^7.26.9",

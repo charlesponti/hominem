@@ -4,7 +4,7 @@ import { google } from 'googleapis'
 import { readFile, writeFile } from 'node:fs/promises'
 import * as path from 'node:path'
 
-import { logger } from '../logger'
+import { logger } from '../logging/logger'
 
 type JSONClient = ReturnType<typeof google.auth.fromJSON>
 type AuthClient = OAuth2Client | GoogleAuth<JSONClient> | null

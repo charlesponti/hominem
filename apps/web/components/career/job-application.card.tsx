@@ -34,7 +34,7 @@ export const JobApplicationCard = ({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="md:grid md:grid-cols-2 gap-4 space-y-4">
-          <div className="col-span-2 flex justify-between">
+          <div className="col-span-2 flex items-center justify-end gap-2">
             <p className="font-medium">Current Status:</p>
             <div className="flex gap-2">
               <JobApplicationStatusDropdown status={app.status} onSelect={onStatusSelect} />

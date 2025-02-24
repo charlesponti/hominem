@@ -3,14 +3,14 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "module": "Node16",
-    "moduleResolution": "node16",
-    "plugins": [{ "name": "next" }],
-    "paths": {
-      "@/lib/*": ["./lib/*"],
-      "@/components/*": ["./components/*"]
-    }
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

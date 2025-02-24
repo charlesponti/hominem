@@ -1,47 +1,45 @@
-// import type { Collection, ObjectId } from "mongodb";
-// import { db } from "../lib/data/mongodb";
-// import type { Venue } from "../lib/data/schema";
+import { logger } from '@ponti/utils/logger'
+import { desc, eq, sql } from 'drizzle-orm'
+import { db } from '../db'
+import { venues } from '../db/schema'
 
-// type MongoVenue = Venue & { _id: ObjectId };
-// export async function removeDuplicateVenues() {
-//   const collection: Collection<MongoVenue> = db.collection("venues");
-//   const pipeline = [
-//     {
-//       $group: {
-//         _id: { title: "$title", address: "$address" },
-//         docs: { $push: "$$ROOT" },
-//         count: { $sum: 1 },
-//       },
-//     },
-//     {
-//       $match: {
-//         count: { $gt: 1 },
-//       },
-//     },
-//   ];
+export async function removeDuplicateVenues() {
+  // Find duplicates based on title and address
+  const duplicates = await db
+    .select({
+      title: venues.title,
+      address: venues.address,
+      count: sql<number>`count(*)`.as('count'),
+    })
+    .from(venues)
+    .groupBy(venues.title, venues.address)
+    .having(sql`count(*) > 1`)
 
-//   const duplicates = await db
-//     .collection("venues")
-//     .aggregate(pipeline)
-//     .toArray();
+  let totalDeleted = 0
 
-//   let count = 0;
+  for (const dup of duplicates) {
+    // Get all matching venues ordered by creation date
+    const matches = await db
+      .select()
+      .from(venues)
+      .where(sql`${venues.title} = ${dup.title} AND ${venues.address} = ${dup.address}`)
+      .orderBy(desc(venues.createdAt))
 
-//   for (const group of duplicates) {
-//     // Keep the first (most recent) document and delete the rest
-//     const [, ...duplicateDocs] = group.docs;
-//     const duplicateIds = duplicateDocs.map((doc: MongoVenue) => doc._id);
+    // Keep the newest one, delete the rest
+    const [keep, ...toDelete] = matches
+    const deleteIds = toDelete.map((v) => v.id)
 
-//     const results = await collection.deleteMany({
-//       _id: { $in: duplicateIds },
-//     });
-//     count += results.deletedCount;
-//   }
+    if (deleteIds.length > 0) {
+      const result = await db.delete(venues).where(sql`${venues.id} = ANY(${deleteIds})`)
 
-//   return count;
-// }
+      totalDeleted += deleteIds.length
+    }
+  }
 
-// removeDuplicateVenues().then((count) => {
-//   console.log(`Removed ${count} duplicate venues`);
-//   process.exit(1);
-// });
+  return totalDeleted
+}
+
+removeDuplicateVenues().then((count) => {
+  logger.info(`Removed ${count} duplicate venues`)
+  process.exit(0)
+})
