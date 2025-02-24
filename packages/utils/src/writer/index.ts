@@ -1,3 +1,3 @@
 export { enhanceBulletPoint, enhanceBulletPoints } from './enhance-bullet-point'
 export { parseNoteDetails } from './notes'
-export { BulletPoint, NoteDetails } from './text'
+export type { BulletPoint, NoteDetails } from './text.d.ts'

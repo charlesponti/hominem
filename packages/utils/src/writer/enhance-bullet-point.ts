@@ -1,19 +1,20 @@
 import { generateObject } from 'ai'
 import { createOllama } from 'ollama-ai-provider'
 import { z } from 'zod'
-import type { BulletPoint, EnhancedBulletPoint } from './text'
+import type { BulletPoint } from './text'
 
 export const ollama = createOllama()
 
-const BulletPointSchema = z.object({
+const EnhancedBulletPointSchema = z.object({
   improvedText: z.string(),
   categories: z.array(z.string()),
 })
+type EnhancedBulletPoint = z.infer<typeof EnhancedBulletPointSchema>
 
 export async function enhanceBulletPoint(
   content: string,
   model = 'llama3.2'
-): Promise<z.infer<typeof BulletPointSchema>> {
+): Promise<EnhancedBulletPoint> {
   const response = await generateObject({
     model: ollama(model),
     prompt: `
@@ -38,7 +39,7 @@ export async function enhanceBulletPoint(
       ${content}
       <|eot_id|><|start_header_id|>assistant<|end_header_id|>
     `,
-    schema: BulletPointSchema,
+    schema: EnhancedBulletPointSchema,
   })
 
   return response.object
