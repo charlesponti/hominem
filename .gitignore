@@ -16,7 +16,8 @@ dist
 # misc
 .DS_Store
 *.pem
-db.sqlite
+*.sqlite
+*.sqlite3
 tsconfig.tsbuildinfo
 
 # Google credentials

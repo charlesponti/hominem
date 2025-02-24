@@ -1,15 +1,15 @@
 export interface BulletPoint {
-	text: string;
-	subPoints?: BulletPoint[];
+  text: string
+  subPoints?: BulletPoint[]
 }
 
 export interface EnhancedBulletPoint extends BulletPoint {
-	improvedText: string;
-	categories: string[];
+  improvedText: string
+  categories: string[]
 }
 
-declare module "*.md" {
-	const content: string;
+declare module '*.md' {
+  const content: string
 
-	export default content;
+  export default content
 }

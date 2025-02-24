@@ -1,53 +1,53 @@
-const dotenv = require("dotenv");
+const dotenv = require('dotenv')
 
-dotenv.config();
+dotenv.config()
 
-const fetch_embeddings = require("./fetch_embeddings");
-const { query, upsertProfile } = require("./vector_db");
-const crypto = require("node:crypto");
+const fetch_embeddings = require('./fetch_embeddings')
+const { query, upsertProfile } = require('./vector_db')
+const crypto = require('node:crypto')
 
-const fs = require("fs-extra");
+const fs = require('fs-extra')
 
-const user_profiles = fs.readJsonSync("profiles.json");
+const user_profiles = fs.readJsonSync('profiles.json')
 
 interface User {
-  id: string;
-  description: string;
+  id: string
+  description: string
 }
 async function setProfile(user: User) {
-  const embeddings = await fetch_embeddings(user.description);
+  const embeddings = await fetch_embeddings(user.description)
 
   // In case of security concerns of sending SY user ids to Pinecone, we can hash the ids
-  const hashed_id = crypto.createHash("md5").update(user.id).digest("hex");
+  const hashed_id = crypto.createHash('md5').update(user.id).digest('hex')
 
-  return await upsertProfile(hashed_id, embeddings);
+  return await upsertProfile(hashed_id, embeddings)
 }
 
 async function findMatches(user: User) {
-  const embeddings = await fetch_embeddings(user.description);
+  const embeddings = await fetch_embeddings(user.description)
 
-  return await query(embeddings, 5);
+  return await query(embeddings, 5)
 }
 
 async function upload_everything() {
   for (let i = 0; i < user_profiles.length; i += 5) {
-    console.log(`Inserting profiles ${i} to ${i + 5}`);
-    await Promise.all(user_profiles.slice(i, i + 5).map(setProfile));
+    console.log(`Inserting profiles ${i} to ${i + 5}`)
+    await Promise.all(user_profiles.slice(i, i + 5).map(setProfile))
   }
 }
 
 async function demo(i: number) {
   try {
-    console.log("Inserting profile");
-    await setProfile(user_profiles[i]);
+    console.log('Inserting profile')
+    await setProfile(user_profiles[i])
 
-    console.log("Finding matches");
-    const matches = await findMatches(user_profiles[i]);
+    console.log('Finding matches')
+    const matches = await findMatches(user_profiles[i])
 
-    console.log(matches);
+    console.log(matches)
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
 }
 
-demo(4);
+demo(4)

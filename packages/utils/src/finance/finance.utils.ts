@@ -1,32 +1,32 @@
-import type { Company } from "../db/schema/company.schema";
-import type { User } from "../db/schema/users.schema";
+import type { Company } from '../db/schema/company.schema'
+import type { User } from '../db/schema/users.schema'
 
 interface ItemCategory {
-	id: number;
-	name: string;
-	userId: number;
-	parentId: number | null;
+  id: number
+  name: string
+  userId: number
+  parentId: number | null
 }
 
 interface Item {
-	name: string;
-	description: string;
-	date_acquired: Date;
-	date_sold: Date | null;
-	brand: Company;
-	category: ItemCategory;
-	sub_category?: ItemCategory;
-	purchase_price: number;
-	sale_price: number | null;
-	url: string | null;
-	color: string | null;
-	image_url: string | null;
-	model_name: string | null;
-	model_number: string | null;
-	serial_number: string | null;
-	notes: string | null;
-	size: string | null;
-	from: User["id"];
+  name: string
+  description: string
+  date_acquired: Date
+  date_sold: Date | null
+  brand: Company
+  category: ItemCategory
+  sub_category?: ItemCategory
+  purchase_price: number
+  sale_price: number | null
+  url: string | null
+  color: string | null
+  image_url: string | null
+  model_name: string | null
+  model_number: string | null
+  serial_number: string | null
+  notes: string | null
+  size: string | null
+  from: User['id']
 }
 
 /**
@@ -42,5 +42,5 @@ interface Item {
  *  5. Determine how much of a user's time is required to purchase the item
  */
 export function calculateCostPerTimeUnit(item: Item): number {
-	return +(item.purchase_price / 3 / 365).toPrecision(4);
+  return +(item.purchase_price / 3 / 365).toPrecision(4)
 }

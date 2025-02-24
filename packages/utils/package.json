@@ -9,11 +9,13 @@
 		"./career": "./src/career/index.ts",
 		"./finance": "./src/finance/index.ts",
 		"./time": "./src/time.ts",
+		"./location": "./src/location/index.ts",
 		"./logger": "./src/logger.ts",
 		"./notes": "./src/writer/notes.ts",
 		"./google-sheets": "./src/google/sheets.ts",
 		"./google-calendar": "./src/google/calendar.ts",
 		"./google-maps": "./src/google/maps.ts",
+		"./redis": "./src/redis.ts",
 		"./schema": "./src/db/schema/index.ts",
 		"./types": "./src/types/index.ts",
 		"./writer": "./src/writer/index.ts"
@@ -41,8 +43,6 @@
 		"ollama-ai-provider": "^1.2.0",
 		"openai": "4.83.0",
 		"postgres": "^3.4.5",
-		"ts-node": "^10.9.2",
-		"uuid": "^11.0.5",
 		"vite": "^6.1.1",
 		"winston": "3.17.0",
 		"zod": "^3.24.1"

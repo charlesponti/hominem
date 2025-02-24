@@ -1,11 +1,11 @@
 export const budget = {
   types: [
-    {name: 'fixed', amount: 0.5},
-    {name: 'flexible', amount: 0.3},
-    {name: 'goals', amount: 0.2},
+    { name: 'fixed', amount: 0.5 },
+    { name: 'flexible', amount: 0.3 },
+    { name: 'goals', amount: 0.2 },
   ],
   categories: {
-    Housing: {amount: 0.3, type: 'fixed'},
+    Housing: { amount: 0.3, type: 'fixed' },
     'Living Expenses': {
       amount: 0.1,
       type: 'fixed',
@@ -16,12 +16,12 @@ export const budget = {
       type: 'fixed',
       includes: ['groceries', 'dining out'],
     },
-    Savings: {amount: 0.2, type: 'goals'},
-    Debt: {amount: 0.1, type: 'goals'},
-    Transportation: {amount: 0.05, type: 'fixed'},
-    Personal: {amount: 0.15, type: 'flexible'},
+    Savings: { amount: 0.2, type: 'goals' },
+    Debt: { amount: 0.1, type: 'goals' },
+    Transportation: { amount: 0.05, type: 'fixed' },
+    Personal: { amount: 0.15, type: 'flexible' },
   },
-};
+}
 
 /**
  * Often called the 'One Number' Budget, this budgeting method is
@@ -37,9 +37,6 @@ export const budget = {
  * @param {number} monthlyFixedCosts - The sum of all costs that are fixed
  * @return {number}
  */
-export function getFlexBudget(
-  monthlyIncome: number,
-  monthlyFixedCosts: number
-) {
-  return (monthlyIncome - monthlyFixedCosts) / 4.3;
+export function getFlexBudget(monthlyIncome: number, monthlyFixedCosts: number) {
+  return (monthlyIncome - monthlyFixedCosts) / 4.3
 }

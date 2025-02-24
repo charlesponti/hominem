@@ -1,10 +1,12 @@
-import { helloRouter } from "./routes";
-import { surveysRouter } from "./routes/surveys.router";
-import { router } from "./trpc";
+import { applicationsRouter } from './routers/applications'
+import { companyRouter } from './routers/company.router'
+import { surveysRouter } from './routers/surveys.router'
+import { router } from './trpc'
 
 export const appRouter = router({
-	hello: helloRouter,
-	surveys: surveysRouter,
-});
+  surveys: surveysRouter,
+  applications: applicationsRouter,
+  company: companyRouter,
+})
 
-export type AppRouter = typeof appRouter;
+export type AppRouter = typeof appRouter
