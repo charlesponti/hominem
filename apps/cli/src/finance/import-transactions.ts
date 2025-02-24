@@ -7,7 +7,7 @@ import * as path from 'node:path'
 import { finished } from 'node:stream'
 import { db } from '../db'
 import { transactions } from '../db/schema'
-import { type CopilotTransaction, processCopilotTransaction } from './utils/copilot'
+import { processCopilotTransaction, type CopilotTransaction } from './utils/copilot'
 
 const PROCESSORS = {
   copilot: processCopilotTransaction,
@@ -36,10 +36,9 @@ importTransactions
         .readdirSync(directory)
         .filter((file) => path.extname(file).toLowerCase() === '.csv')
 
-      const initialCount = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(transactions)
-        .get()
+      // Get the number of transactions currently in the database.
+      const initialCount = db.select({ count: sql<number>`count(*)` }).from(transactions).get()
+
       let processedCount = 0
 
       for (const file of files) {

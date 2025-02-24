@@ -12,7 +12,7 @@ export interface DateFromText {
 }
 
 export interface ProcessedContent {
-  headings: string[]
+  headings: { text: string; tag: 'heading' }[]
   paragraphs: Note[]
   bulletPoints: Note[]
   others: Note[]

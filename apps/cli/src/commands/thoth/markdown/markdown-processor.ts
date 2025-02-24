@@ -1,9 +1,11 @@
+import { logger } from '@ponti/utils/logger'
 import * as mdast from 'mdast-util-to-string'
+import * as fs from 'node:fs/promises'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'
 import type { Node } from 'unist'
-import type { Note, ProcessedContent } from './types'
-import { getDateFromText, sanitizeText } from './utils'
+import type { ProcessedContent } from './types'
+import { getDateFromText, normalizeWhitespace } from './utils'
 
 interface MarkdownNode extends Node {
   type: string
@@ -25,28 +27,31 @@ export class MarkdownProcessor {
     }
   }
 
-  async processFile(filepath: string, content: string): Promise<ProcessedContent> {
-    const tree = await unified().use(remarkParse).parse(content)
+  async processFile(filepath: string): Promise<ProcessedContent> {
+    const content = await fs.readFile(filepath, 'utf-8')
+    const tree = unified().use(remarkParse).parse(content)
 
     this.traverseNodes(tree as MarkdownNode, filepath)
     return this.content
   }
 
   private traverseNodes(node: MarkdownNode, filename: string): void {
+    const text = mdast.toString(node)
+    const { fullDate } = getDateFromText(text)
+
     if (node.type === 'heading') {
-      const text = mdast.toString(node)
-      this.currentHeading = sanitizeText(text)
-      this.content.headings.push(this.currentHeading)
+      this.currentHeading = normalizeWhitespace(text)
+      this.content.headings.push({
+        text: this.currentHeading,
+        tag: 'heading',
+      })
     }
 
     if (node.type === 'paragraph') {
-      const text = mdast.toString(node)
-      const { fullDate } = getDateFromText(text)
-
       this.content.paragraphs.push({
         file: filename,
         heading: this.currentHeading,
-        text: sanitizeText(text),
+        text: normalizeWhitespace(text),
         tag: 'paragraph',
         date: fullDate,
       })
@@ -61,7 +66,7 @@ export class MarkdownProcessor {
           this.content.bulletPoints.push({
             file: filename,
             heading: this.currentHeading,
-            text: sanitizeText(text),
+            text: normalizeWhitespace(text),
             tag: 'bullet_point',
             date: fullDate,
           })

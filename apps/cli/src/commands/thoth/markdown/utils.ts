@@ -2,7 +2,7 @@ import type { DateFromText } from './types.ts'
 
 export function getDateFromText(text: string): DateFromText {
   const fullDate = text.match(/\d{4}-\d{2}-\d{2}/)
-  const year = text.match(/\d{4}/)
+  const year = text.match(/(?<![\d.])\d{4}(?![\d.])/)
 
   return {
     fullDate: fullDate?.[0],
@@ -10,6 +10,6 @@ export function getDateFromText(text: string): DateFromText {
   }
 }
 
-export function sanitizeText(text: string): string {
+export function normalizeWhitespace(text: string): string {
   return text.trim().replace(/\s+/g, ' ')
 }

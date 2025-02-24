@@ -1,10 +1,10 @@
-import path from 'node:path'
-import fs from 'node:fs/promises'
-import { Command } from 'commander'
-import cliProgress from 'cli-progress'
+import { logger } from '@ponti/utils/logger'
+import { enhanceBulletPoints, type BulletPoint } from '@ponti/utils/writer'
 import colors from 'ansi-colors'
-import { enhanceBulletPoints } from '../../utils/openai'
-import type { BulletPoint } from '../../types'
+import cliProgress from 'cli-progress'
+import { Command } from 'commander'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
 export const enhanceCommand = new Command('enhance')
   .description('Enhance bullet points with OpenAI')
@@ -16,15 +16,15 @@ export const enhanceCommand = new Command('enhance')
         {
           format: `Progress | ${colors.cyan('{bar}')} | {percentage}% | ETA: {eta}s | {value}/{total}`,
         },
-        cliProgress.Presets.shades_classic
+        cliProgress.Presets.rect
       )
       const content = await fs.readFile(file, 'utf-8')
       const bullets: BulletPoint[] = JSON.parse(content)
 
+      logger.info(`Processing ${bullets.length} bullet points...`)
       bar.start(bullets.length, 0)
-      console.log(`Processing ${bullets.length} bullet points...`)
 
-      const enhanced = await enhanceBulletPoints(bullets, (current, total) => {
+      const enhanced = await enhanceBulletPoints(bullets, () => {
         bar.increment()
       })
 
@@ -35,9 +35,9 @@ export const enhanceCommand = new Command('enhance')
       await fs.writeFile(outputFile, JSON.stringify(enhanced, null, 2))
 
       bar.stop()
-      console.log(`Successfully enhanced ${enhanced.length} bullet points`)
+      logger.info(`Successfully enhanced ${enhanced.length} bullet points`)
     } catch (error) {
-      console.error('Error enhancing bullet points:', error)
+      logger.error(`Error enhancing bullet points: ${error}`)
       process.exit(1)
     }
   })
