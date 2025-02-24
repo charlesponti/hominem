@@ -1,7 +1,7 @@
 import { generateObject } from 'ai'
 import { createOllama } from 'ollama-ai-provider'
 import { z } from 'zod'
-import type { BulletPoint } from './text'
+import type { BulletPoint } from '../types/notes'
 
 export const ollama = createOllama()
 

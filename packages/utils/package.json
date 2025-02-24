@@ -11,7 +11,6 @@
     "./time": "./src/time.ts",
     "./location": "./src/location/index.ts",
     "./logger": "./src/logging/logger.ts",
-    "./notes": "./src/writer/notes.ts",
     "./google-sheets": "./src/google/sheets.ts",
     "./google-calendar": "./src/google/calendar.ts",
     "./google-maps": "./src/google/maps.ts",

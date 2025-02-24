@@ -3,12 +3,6 @@ export interface BulletPoint {
   subPoints?: BulletPoint[]
 }
 
-declare module '*.md' {
-  const content: string
-
-  export default content
-}
-
 export interface NoteDetails {
   content: string
   dates?: {

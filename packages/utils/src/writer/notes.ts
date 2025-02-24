@@ -1,6 +1,6 @@
 import * as chrono from 'chrono-node'
 import nlp from 'compromise'
-import type { NoteDetails } from './text'
+import type { NoteDetails } from '../types/notes.types'
 
 export function parseNoteDetails(userInput: string): NoteDetails {
   // Parse the input text with compromise
