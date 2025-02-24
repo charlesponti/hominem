@@ -1,3 +1,4 @@
+import delay from './delay'
 import { redis } from './redis'
 import { TIME_UNITS } from './time'
 
@@ -15,8 +16,6 @@ export async function checkRateLimit(key: string): Promise<boolean> {
   const requestCount = await redis.zcard(key)
   return requestCount <= MAX_REQUESTS
 }
-
-export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export async function waitForRateLimit(key: string) {
   while (!(await checkRateLimit(key))) {
