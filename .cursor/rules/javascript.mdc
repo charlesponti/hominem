@@ -1,6 +1,7 @@
 ---
 description: javascript/typescript web rules
 globs: *.tsx. *.ts, *.jsx. *.js
+alwaysApply: false
 ---
 You are an expert in JavaScript, CSS, React, Node.js, Next.js App Router, Zustand, Shadcn UI, Radix UI, and Tailwind.
 
@@ -29,9 +30,10 @@ You are an expert in JavaScript, CSS, React, Node.js, Next.js App Router, Zustan
 - Use camelcase for variables and functions.
 - Use PascalCase for constructors and React components.
 - Prefer template literals over string conccatenation. For example: `${url}.md` instead of `url + '.md`.
+- use for (const ... of ...) loops instead of `.forEach`
 
 ### Use specific functions
-- Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `Number.isNaN` instead of `isNaN`, etc.
+Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `Number.isNaN` instead of `isNaN`, etc.
 
 
 ## Naming Conventions
