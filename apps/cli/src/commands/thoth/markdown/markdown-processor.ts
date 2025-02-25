@@ -15,7 +15,16 @@ export interface ProcessedMarkdownFileEntry {
   content: EntryContent[]
   date: string | undefined
   filename: string
-  heading: string | undefined
+  heading: string
+}
+
+export interface EntryContent {
+  tag: string
+  type: 'thought' | 'activity' | 'quote' | 'dream'
+  text: string
+  section: string | null
+  sentiment?: 'positive' | 'negative' | 'neutral'
+  subItems?: EntryContent[]
   metadata?: {
     location?: string
     people?: string[]
@@ -29,15 +38,6 @@ export interface ProcessedMarkdownFileEntry {
     decisions: Decisions
     habits: Habits
   }
-}
-
-export interface EntryContent {
-  tag: string
-  type: 'thought' | 'activity' | 'quote' | 'dream'
-  text: string
-  section: string | null
-  sentiment?: 'positive' | 'negative' | 'neutral'
-  subItems?: EntryContent[]
 }
 
 export interface ProcessedMarkdownFile {
@@ -216,13 +216,8 @@ export class MarkdownProcessor {
         currentEntry = {
           date: undefined,
           filename,
-          heading: undefined,
+          heading: filename.split('/').pop() || '',
           content: [],
-          metadata: {
-            location: undefined,
-            people: [],
-            tags: [],
-          },
         }
 
         journalData.entries.push(currentEntry)
@@ -257,11 +252,6 @@ export class MarkdownProcessor {
             filename,
             heading: currentHeading,
             content: [],
-            metadata: {
-              location: undefined,
-              people: [],
-              tags: [],
-            },
           }
           journalData.entries.push(currentEntry)
           break
@@ -276,13 +266,8 @@ export class MarkdownProcessor {
                   currentEntry = {
                     date: undefined,
                     filename,
-                    heading: undefined,
+                    heading: currentHeading || filename.split('/').pop() || '',
                     content: [],
-                    metadata: {
-                      location: undefined,
-                      people: [],
-                      tags: [],
-                    },
                   }
                   journalData.entries.push(currentEntry)
                 }
@@ -290,15 +275,6 @@ export class MarkdownProcessor {
                 const processedItem = processListItem(item)
                 if (processedItem) {
                   currentEntry.content.push(processedItem)
-                  // Extract metadata from the main item and subitems
-                  const doc = nlp(processedItem.text)
-                  this.extractMetadata(doc, processedItem.text, currentEntry)
-
-                  // Also process metadata from subitems
-                  for (const subItem of processedItem.subItems || []) {
-                    const subDoc = nlp(subItem.text)
-                    this.extractMetadata(subDoc, subItem.text, currentEntry)
-                  }
                 }
               }
             }
@@ -312,21 +288,20 @@ export class MarkdownProcessor {
             currentEntry = {
               date: undefined,
               filename,
-              heading: undefined,
+              heading: currentHeading || filename.split('/').pop() || '',
               content: [],
-              metadata: {
-                location: undefined,
-                people: [],
-                tags: [],
-              },
             }
             journalData.entries.push(currentEntry)
           }
 
           const normalizedText = normalizeWhitespace(text)
+          const section = currentHeading?.toLowerCase() || null
+          if (normalizedText.trim() === section) {
+            // skip this entry
+            break
+          }
+
           if (normalizedText.trim()) {
-            const doc = nlp(normalizedText)
-            this.extractMetadata(doc, normalizedText, currentEntry)
             this.processContent({
               tag: node.type,
               text: normalizedText,
@@ -348,8 +323,6 @@ export class MarkdownProcessor {
 
     // Start processing from root
     processNode(ast as MarkdownNode)
-
-    logger.info(`Processed ${journalData.entries.length} entries in ${filename.split('/').pop()}`)
     return journalData
   }
 
@@ -375,9 +348,6 @@ export class MarkdownProcessor {
     // Use compromise for basic NLP analysis
     const doc = nlp(text)
 
-    // Extract potential metadata
-    this.extractMetadata(doc, text, entry)
-
     // Detect content type
     let contentType: 'thought' | 'activity' | 'quote' | 'dream' = 'thought'
 
@@ -390,6 +360,7 @@ export class MarkdownProcessor {
     else if (
       processedText.toLowerCase().includes('dream:') ||
       processedText.toLowerCase().includes('dream -') ||
+      section?.toLowerCase().includes('dream') ||
       doc.has('I dreamed') ||
       doc.has('my dream')
     ) {
@@ -421,11 +392,53 @@ export class MarkdownProcessor {
       sentiment = 'negative'
     }
 
+    // Extract metadata
+    const metadata = {
+      location: undefined,
+      people: [] as string[],
+      tags: [] as string[],
+    }
+
+    // Extract locations
+    const locations = doc.places().out('array')
+    if (locations.length > 0) {
+      metadata.location = locations[0]
+    }
+
+    // Extract people
+    const people = doc.people().out('array')
+    for (const person of people) {
+      if (!metadata.people.includes(person)) {
+        metadata.people.push(person)
+      }
+    }
+
+    // Extract potential tags (words with # or prominent concepts)
+    const hashtagMatch = text.match(/#\w+/g)
+    if (hashtagMatch) {
+      for (const tag of hashtagMatch) {
+        const cleanTag = tag.substring(1).toLowerCase()
+        if (!metadata.tags.includes(cleanTag)) {
+          metadata.tags.push(cleanTag)
+        }
+      }
+    }
+
+    // Look for key concepts that could be tags
+    const topics = doc.topics().out('array')
+    for (const topic of topics) {
+      const cleanTopic = topic.toLowerCase()
+      if (!metadata.tags.includes(cleanTopic)) {
+        metadata.tags.push(cleanTopic)
+      }
+    }
+
     // If we have a content object, update it directly
     if (contentObj) {
       contentObj.type = contentType
       contentObj.sentiment = sentiment
       contentObj.section = section
+      contentObj.metadata = metadata
     } else {
       const previousContent = entry.content[entry.content.length - 1]
 
@@ -440,59 +453,15 @@ export class MarkdownProcessor {
           text,
           section,
           sentiment,
+          metadata,
         })
-      }
-    }
-  }
-
-  // Helper function to extract metadata
-  extractMetadata(
-    doc: ReturnType<typeof nlp>,
-    text: string,
-    entry: ProcessedMarkdownFileEntry
-  ): void {
-    if (!entry.metadata) {
-      entry.metadata = { location: undefined, people: [], tags: [] }
-    }
-
-    // Extract locations
-    const locations = doc.places().out('array')
-    if (locations.length > 0 && !entry.metadata.location) {
-      entry.metadata.location = locations[0]
-    }
-
-    // Extract people
-    const people = doc.people().out('array')
-    for (const person of people) {
-      if (!entry.metadata.people?.includes(person)) {
-        entry.metadata.people?.push(person)
-      }
-    }
-
-    // Extract potential tags (words with # or prominent concepts)
-    const hashtagMatch = text.match(/#\w+/g)
-    if (hashtagMatch) {
-      for (const tag of hashtagMatch) {
-        const cleanTag = tag.substring(1).toLowerCase()
-        if (!entry.metadata.tags?.includes(cleanTag)) {
-          entry.metadata.tags?.push(cleanTag)
-        }
-      }
-    }
-
-    // Look for key concepts that could be tags
-    const topics = doc.topics().out('array')
-    for (const topic of topics) {
-      const cleanTopic = topic.toLowerCase()
-      if (!entry.metadata.tags?.includes(cleanTopic)) {
-        entry.metadata.tags?.push(cleanTopic)
       }
     }
   }
 }
 
 // Integration with MarkdownProcessor
-class EnhancedMarkdownProcessor extends MarkdownProcessor {
+export class EnhancedMarkdownProcessor extends MarkdownProcessor {
   private nlpProcessor = new EnhancedNLPProcessor()
 
   processContent(params: {
@@ -504,15 +473,22 @@ class EnhancedMarkdownProcessor extends MarkdownProcessor {
   }): void {
     super.processContent(params)
 
-    // Add NLP analysis to the entry
-    if (!params.entry.nlpAnalysis) {
-      params.entry.nlpAnalysis = {
-        textAnalysis: this.nlpProcessor.analyzeText(params.text),
-        emotionalJourney: this.nlpProcessor.analyzeEmotionalJourney(params.text),
-        actionItems: this.nlpProcessor.findActionItems(params.text),
-        socialContext: this.nlpProcessor.analyzeSocialInteractions(params.text),
-        decisions: this.nlpProcessor.analyzeDecisions(params.text),
-        habits: this.nlpProcessor.analyzeHabits(params.text),
+    // Add NLP analysis to the content object
+    const nlpAnalysis = {
+      textAnalysis: this.nlpProcessor.analyzeText(params.text),
+      emotionalJourney: this.nlpProcessor.analyzeEmotionalJourney(params.text),
+      actionItems: this.nlpProcessor.findActionItems(params.text),
+      socialContext: this.nlpProcessor.analyzeSocialInteractions(params.text),
+      decisions: this.nlpProcessor.analyzeDecisions(params.text),
+      habits: this.nlpProcessor.analyzeHabits(params.text),
+    }
+
+    if (params.contentObj) {
+      params.contentObj.nlpAnalysis = nlpAnalysis
+    } else {
+      const content = params.entry.content[params.entry.content.length - 1]
+      if (content) {
+        content.nlpAnalysis = nlpAnalysis
       }
     }
   }
