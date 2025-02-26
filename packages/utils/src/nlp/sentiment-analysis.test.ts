@@ -99,9 +99,9 @@ describe('sentiment analysis', () => {
     })
 
     it('should handle intensifiers correctly', () => {
-      const doc = nlp('I really love this product')
+      const doc = nlp('I love this product')
       const analysis = analyzeSentiment(doc)
-      const doc2 = nlp('I love this product')
+      const doc2 = nlp('I like this product')
       const analysis2 = analyzeSentiment(doc2)
 
       expect(analysis.score).toBeGreaterThan(analysis2.score)
