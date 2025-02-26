@@ -1,5 +1,11 @@
 import { logger } from '@ponti/utils/logger'
-import { EnhancedNLPProcessor, type EmotionalJourney, type NLPAnalysis } from '@ponti/utils/nlp'
+import {
+  EnhancedNLPProcessor,
+  getSentiment,
+  type EmotionalJourney,
+  type NLPAnalysis,
+  type Sentiment,
+} from '@ponti/utils/nlp'
 import * as chrono from 'chrono-node'
 import nlp from 'compromise'
 import * as mdast from 'mdast-util-to-string'
@@ -24,7 +30,7 @@ export interface EntryContent {
   type: 'thought' | 'activity' | 'quote' | 'dream' | 'task'
   text: string
   section: string | null
-  sentiment?: 'positive' | 'negative' | 'neutral'
+  sentiment?: Sentiment
   subItems?: EntryContent[]
   isComplete?: boolean
   metadata?: {
@@ -475,12 +481,7 @@ export class MarkdownProcessor {
     }
 
     // Determine rough sentiment
-    let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral'
-    if (doc.has('(good|great|happy|excited|love|enjoy|excellent|wonderful|fantastic)')) {
-      sentiment = 'positive'
-    } else if (doc.has('(bad|sad|angry|upset|hate|terrible|awful|disappointing|annoying)')) {
-      sentiment = 'negative'
-    }
+    const sentiment = getSentiment(doc)
 
     // Extract metadata
     const metadata = {
