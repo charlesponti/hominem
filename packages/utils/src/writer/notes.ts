@@ -1,18 +1,6 @@
 import * as chrono from 'chrono-node'
 import nlp from 'compromise'
-
-export interface NoteDetails {
-  content: string
-  dates?: {
-    start: string
-    end?: string
-  }[]
-  category?: string[]
-  labels?: string[]
-  people?: string[]
-  place?: string
-  date_time?: string
-}
+import type { NoteDetails } from '../types/notes'
 
 export function parseNoteDetails(userInput: string): NoteDetails {
   // Parse the input text with compromise

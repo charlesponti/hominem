@@ -1,12 +1,13 @@
 import { openai } from '@ai-sdk/openai'
+import { logger } from '@ponti/utils/logger'
 import { generateText } from 'ai'
 import { Command } from 'commander'
 
-const program = new Command()
+export const command = new Command()
 
-program.name('ai')
+command.name('ai')
 
-program
+command
   .command('tool-call')
   .description('AI tools')
   .requiredOption('-t, --text <text>', 'Text to analyze')
@@ -20,7 +21,5 @@ program
       `,
     })
 
-    console.log(`FINAL TOOL CALLS: ${JSON.stringify(response.toolCalls, null, 2)}`)
+    logger.info(`FINAL TOOL CALLS: ${JSON.stringify(response.toolCalls, null, 2)}`)
   })
-
-export default program

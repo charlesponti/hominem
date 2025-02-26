@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { parseNoteDetails, type NoteDetails } from '@ponti/utils/notes'
+import { parseNoteDetails, type NoteDetails } from '@ponti/utils/writer'
 import { Calendar, Hash, Tag } from 'lucide-react'
 import { useState, type ChangeEvent } from 'react'
 

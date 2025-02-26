@@ -1,3 +1,5 @@
+import { logger } from '@ponti/utils/logger'
+
 const dotenv = require('dotenv')
 
 dotenv.config()
@@ -31,22 +33,22 @@ async function findMatches(user: User) {
 
 async function upload_everything() {
   for (let i = 0; i < user_profiles.length; i += 5) {
-    console.log(`Inserting profiles ${i} to ${i + 5}`)
+    logger.info(`Inserting profiles ${i} to ${i + 5}`)
     await Promise.all(user_profiles.slice(i, i + 5).map(setProfile))
   }
 }
 
 async function demo(i: number) {
   try {
-    console.log('Inserting profile')
+    logger.info('Inserting profile')
     await setProfile(user_profiles[i])
 
-    console.log('Finding matches')
+    logger.info('Finding matches')
     const matches = await findMatches(user_profiles[i])
 
-    console.log(matches)
+    logger.info(matches)
   } catch (error) {
-    console.log(error)
+    logger.info(error)
   }
 }
 

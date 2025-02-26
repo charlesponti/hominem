@@ -1,5 +1,3 @@
-import type { tags } from '../db/schema/tags.schema'
-
 export interface Note {
   id: string
   content: string
@@ -10,5 +8,23 @@ export interface Note {
 
 export interface NoteTag {
   noteId: string
-  tagId: (typeof tags.$inferSelect)['id']
+  tagId: string
+}
+
+export interface BulletPoint {
+  text: string
+  subPoints?: BulletPoint[]
+}
+
+export interface NoteDetails {
+  content: string
+  dates?: {
+    start: string
+    end?: string
+  }[]
+  category?: string[]
+  labels?: string[]
+  people?: string[]
+  place?: string
+  date_time?: string
 }
