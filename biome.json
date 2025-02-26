@@ -1,7 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
   "files": {
-    "ignore": ["coverage", "dist", "build", "node_modules", ".next", ".turbo", ".vercel"]
+    "ignore": ["coverage", "dist", "build", "node_modules", ".next", ".turbo", ".vercel"],
+    "maxSize": 2000000
   },
   "formatter": {
     "enabled": true,
