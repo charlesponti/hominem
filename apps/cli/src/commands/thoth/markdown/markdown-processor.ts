@@ -8,7 +8,7 @@ import remarkParse from 'remark-parse'
 import { unified } from 'unified'
 import type { Node } from 'unist'
 import type { ProcessedContent } from './types'
-import { getDateFromText, normalizeWhitespace } from './utils'
+import { detectDream, detectTask, getDateFromText, normalizeWhitespace } from './utils'
 
 // Define the structure for our resulting JSON
 export interface ProcessedMarkdownFileEntry {
@@ -16,15 +16,17 @@ export interface ProcessedMarkdownFileEntry {
   date: string | undefined
   filename: string
   heading: string
+  frontmatter?: Record<string, unknown>
 }
 
 export interface EntryContent {
   tag: string
-  type: 'thought' | 'activity' | 'quote' | 'dream'
+  type: 'thought' | 'activity' | 'quote' | 'dream' | 'task'
   text: string
   section: string | null
   sentiment?: 'positive' | 'negative' | 'neutral'
   subItems?: EntryContent[]
+  isComplete?: boolean
   metadata?: {
     location?: string
     people?: string[]
@@ -157,6 +159,39 @@ export class MarkdownProcessor {
     }
   }
 
+  processFrontmatter(content: string): { content: string; frontmatter?: Record<string, unknown> } {
+    // Find the frontmatter content at the start of the file
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
+    let frontmatter: Record<string, unknown> | undefined
+    let processableContent = content
+
+    if (frontmatterMatch) {
+      try {
+        // Parse the frontmatter content (assuming YAML format)
+        const frontmatterContent = frontmatterMatch[1]
+        // For now, we'll do a simple key-value extraction
+        // You might want to add a proper YAML parser like 'js-yaml' for more complex frontmatter
+        frontmatter = Object.fromEntries(
+          frontmatterContent
+            .split('\n')
+            .filter((line) => line.includes(':'))
+            .map((line) => {
+              const [key, ...valueParts] = line.split(':')
+              const value = valueParts.join(':').trim()
+              // Remove quotes if present
+              return [key.trim(), value.replace(/^['"]|['"]$/g, '')]
+            })
+        )
+        // Remove the frontmatter from the content
+        processableContent = content.slice(frontmatterMatch[0].length)
+      } catch (error) {
+        logger.warn('Failed to parse frontmatter:', error)
+      }
+    }
+
+    return { content: processableContent, frontmatter }
+  }
+
   // Main function to convert markdown to structured JSON
   async convertMarkdownToJSON(
     markdownContent: string,
@@ -166,8 +201,10 @@ export class MarkdownProcessor {
       entries: [],
     }
 
+    // Extract frontmatter if present
+    const { content: processableContent, frontmatter } = this.processFrontmatter(markdownContent)
     const processor = unified().use(remarkParse)
-    const ast = processor.parse(markdownContent)
+    const ast = processor.parse(processableContent)
 
     let currentEntry: ProcessedMarkdownFileEntry | null = null
     let currentHeading: string | undefined
@@ -186,15 +223,17 @@ export class MarkdownProcessor {
       if (!directText) return null
 
       const normalizedText = normalizeWhitespace(directText)
-      const doc = nlp(normalizedText)
+
+      const { isTask, isComplete, taskText } = detectTask(normalizedText)
 
       // Create the content entry
       const content: EntryContent = {
         tag: item.type,
-        type: 'thought', // Will be updated by processContent
-        text: normalizedText,
+        type: isTask ? 'task' : 'thought', // Will be updated by processContent if not a task
+        text: taskText,
         section: currentHeading?.toLowerCase() || null,
         subItems: [],
+        ...(isTask && { isComplete }),
       }
 
       // Process sublists if they exist
@@ -218,6 +257,7 @@ export class MarkdownProcessor {
           filename,
           heading: filename.split('/').pop() || '',
           content: [],
+          frontmatter,
         }
 
         journalData.entries.push(currentEntry)
@@ -235,6 +275,17 @@ export class MarkdownProcessor {
     }
 
     const processNode = (node: MarkdownNode) => {
+      // Skip the root node's direct text content as it might contain frontmatter remnants
+      if (node.type === 'root') {
+        // Only process children of root, not its direct content
+        if (node.children) {
+          for (const child of node.children) {
+            processNode(child)
+          }
+        }
+        return
+      }
+
       const text = mdast.toString(node)
       const { fullDate } = getDateFromText(text)
 
@@ -252,6 +303,7 @@ export class MarkdownProcessor {
             filename,
             heading: currentHeading,
             content: [],
+            frontmatter,
           }
           journalData.entries.push(currentEntry)
           break
@@ -268,6 +320,7 @@ export class MarkdownProcessor {
                     filename,
                     heading: currentHeading || filename.split('/').pop() || '',
                     content: [],
+                    frontmatter,
                   }
                   journalData.entries.push(currentEntry)
                 }
@@ -282,6 +335,25 @@ export class MarkdownProcessor {
           break
         }
 
+        case 'listItem': {
+          // If the previous node ends with `:`, we should add this and all subsequent list items to the previous node
+          // as they are likely sub-items
+          const previousNode = getPreviousEntry(currentEntry)
+
+          if (previousNode?.text.endsWith(':')) {
+            const processedItem = processListItem(node)
+            if (processedItem) {
+              previousNode.subItems?.push(processedItem)
+            }
+          } else {
+            // Otherwise, process this list item as a standalone entry
+            const processedItem = processListItem(node)
+            if (processedItem) {
+              currentEntry?.content.push(processedItem)
+            }
+          }
+          break
+        }
         default: {
           // Ensure we have an entry to add content to
           if (!currentEntry) {
@@ -290,6 +362,7 @@ export class MarkdownProcessor {
               filename,
               heading: currentHeading || filename.split('/').pop() || '',
               content: [],
+              frontmatter,
             }
             journalData.entries.push(currentEntry)
           }
@@ -323,6 +396,18 @@ export class MarkdownProcessor {
 
     // Start processing from root
     processNode(ast as MarkdownNode)
+
+    // If no entries were created but we have frontmatter, create a default entry
+    if (journalData.entries.length === 0 && frontmatter) {
+      journalData.entries.push({
+        date: undefined,
+        filename,
+        heading: filename.split('/').pop() || '',
+        content: [],
+        frontmatter,
+      })
+    }
+
     return journalData
   }
 
@@ -348,38 +433,43 @@ export class MarkdownProcessor {
     // Use compromise for basic NLP analysis
     const doc = nlp(text)
 
-    // Detect content type
-    let contentType: 'thought' | 'activity' | 'quote' | 'dream' = 'thought'
+    // Check if this is a task item
+    const { isTask, isComplete, taskMatch } = detectTask(processedText)
 
-    // If it's wrapped in underscores, it's a quote
-    if (/^_.*_$/.test(text)) {
-      contentType = 'quote'
-      processedText = text.replace(/^_|_$/g, '')
+    if (isTask && taskMatch?.[2]) {
+      processedText = taskMatch[2]
     }
-    // If it mentions a dream, it's a dream
-    else if (
-      processedText.toLowerCase().includes('dream:') ||
-      processedText.toLowerCase().includes('dream -') ||
-      section?.toLowerCase().includes('dream') ||
-      doc.has('I dreamed') ||
-      doc.has('my dream')
-    ) {
-      contentType = 'dream'
-    }
-    // If the section is "Did" or if it has multiple verbs in past tense, likely an activity
-    else if (section === 'did' || doc.has('#PastTense+')) {
-      // Additional check for activity-like statements
-      if (doc.has('(drove|got|checked|browsed|dinner|went|bought|visited|attended)')) {
-        contentType = 'activity'
-      } else {
-        // Check if the sentence starts with a verb in past tense
-        const firstWord = processedText.split(' ')[0].toLowerCase()
-        if (
-          ['drove', 'got', 'checked', 'browsed', 'ate', 'visited', 'bought', 'went'].includes(
-            firstWord
-          )
-        ) {
+
+    // Detect content type (skip if it's already a task)
+    let contentType: 'thought' | 'activity' | 'quote' | 'dream' | 'task' = isTask
+      ? 'task'
+      : 'thought'
+
+    if (!isTask) {
+      // If it's wrapped in underscores, it's a quote
+      if (/^_.*_$/.test(text)) {
+        contentType = 'quote'
+        processedText = text.replace(/^_|_$/g, '')
+      }
+      // If it mentions a dream, it's a dream
+      else if (detectDream(doc.out('array')) || section?.toLowerCase().includes('dream')) {
+        contentType = 'dream'
+      }
+      // If the section is "Did" or if it has multiple verbs in past tense, likely an activity
+      else if (section === 'did' || doc.has('#PastTense+')) {
+        // Additional check for activity-like statements
+        if (doc.has('(drove|got|checked|browsed|dinner|went|bought|visited|attended)')) {
           contentType = 'activity'
+        } else {
+          // Check if the sentence starts with a verb in past tense
+          const firstWord = processedText.split(' ')[0].toLowerCase()
+          if (
+            ['drove', 'got', 'checked', 'browsed', 'ate', 'visited', 'bought', 'went'].includes(
+              firstWord
+            )
+          ) {
+            contentType = 'activity'
+          }
         }
       }
     }
@@ -435,12 +525,18 @@ export class MarkdownProcessor {
 
     // If we have a content object, update it directly
     if (contentObj) {
-      contentObj.type = contentType
+      if (!isTask) {
+        // Only update type if it's not already a task
+        contentObj.type = contentType
+      }
       contentObj.sentiment = sentiment
       contentObj.section = section
       contentObj.metadata = metadata
+      if (isTask) {
+        contentObj.isComplete = isComplete
+      }
     } else {
-      const previousContent = entry.content[entry.content.length - 1]
+      const previousContent = getPreviousEntry(entry)
 
       if (previousContent && previousContent.tag === 'paragraph' && tag === 'paragraph') {
         // Add current content to the previous paragraph
@@ -450,10 +546,11 @@ export class MarkdownProcessor {
         entry.content.push({
           tag,
           type: contentType,
-          text,
+          text: processedText,
           section,
           sentiment,
           metadata,
+          ...(isTask && { isComplete }),
         })
       }
     }
@@ -486,10 +583,15 @@ export class EnhancedMarkdownProcessor extends MarkdownProcessor {
     if (params.contentObj) {
       params.contentObj.nlpAnalysis = nlpAnalysis
     } else {
-      const content = params.entry.content[params.entry.content.length - 1]
+      const content = getPreviousEntry(params.entry)
       if (content) {
         content.nlpAnalysis = nlpAnalysis
       }
     }
   }
+}
+
+function getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {
+  if (!entry) return undefined
+  return entry.content[entry.content.length - 1]
 }
