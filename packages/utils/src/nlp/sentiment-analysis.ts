@@ -39,7 +39,7 @@ export function analyzeSentiment(doc: ReturnType<typeof nlp>): SentimentAnalysis
           score *= -1
         }
         // Apply strength modifications
-        strength = Math.max(0, Math.min(1, strength + modifier.strength))
+        strength = strength + modifier.strength
       }
 
       totalScore += score * strength
