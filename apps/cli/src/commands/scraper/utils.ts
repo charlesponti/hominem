@@ -18,6 +18,7 @@ async function removeHiddenElements(page: Page) {
     return clone.innerHTML
   })
 }
+
 export async function getSiteHTML(url: string, query?: string): Promise<string> {
   try {
     // Launch the browser

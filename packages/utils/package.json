@@ -27,6 +27,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.1.10",
+    "@ai-sdk/openai": "^1.1.9",
     "@google-cloud/local-auth": "^3.0.1",
     "ai": "^4.1.26",
     "axios": "^1.7.9",
