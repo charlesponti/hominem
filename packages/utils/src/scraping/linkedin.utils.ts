@@ -6,7 +6,7 @@ interface LinkedinJobUrlInfo {
 export function parseLinkedinJobUrl(url: string): LinkedinJobUrlInfo {
   let query: string | undefined
   const isSingleJobPostingURL = url.indexOf('linkedin') !== -1 && url.indexOf('jobs/view') !== -1
-  const isCollections = /linkedin.com\/jobs\/collections\/similar-jobs\/\?currentJobId=\d+/
+  const isCollections = /linkedin.com\/jobs\/collections\/.*currentJobId=\d+/
   const isJobPosting = isCollections.test(url) || isSingleJobPostingURL
 
   if (isCollections.test(url)) {

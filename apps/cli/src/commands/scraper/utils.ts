@@ -1,4 +1,8 @@
 import { chromium, type Page } from 'playwright'
+import rehypeParse from 'rehype-parse'
+import rehypeRemark from 'rehype-remark'
+import remarkStringify from 'remark-stringify'
+import { unified } from 'unified'
 
 async function removeHiddenElements(page: Page) {
   return await page.evaluate(() => {
@@ -55,4 +59,15 @@ export async function getSiteHTML(url: string, query?: string): Promise<string> 
     console.error('Error getting site HTML:', error)
     throw error
   }
+}
+
+export type MarkdownFromURL = ReturnType<typeof getMarkdownFromURL>
+export async function getMarkdownFromURL(url: string, query: string) {
+  const processor = unified().use(rehypeParse).use(rehypeRemark).use(remarkStringify)
+
+  // Use Playwright to get the HTML of the website
+  const html = await getSiteHTML(url)
+
+  // Convert the HTML to markdown
+  return processor.process(html)
 }

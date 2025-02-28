@@ -9,19 +9,9 @@ import {
 import { Command } from 'commander'
 import * as fs from 'node:fs'
 import ora from 'ora'
-import rehypeParse from 'rehype-parse'
-import rehypeRemark from 'rehype-remark'
-import remarkStringify from 'remark-stringify'
-import { unified } from 'unified'
-import { getSiteHTML } from './utils'
+import { getMarkdownFromURL, type MarkdownFromURL } from './utils'
 
 const program = new Command()
-
-async function getMarkdownFromURL(url: string, query: string) {
-  const processor = unified().use(rehypeParse).use(rehypeRemark).use(remarkStringify)
-  const html = await getSiteHTML(url, query)
-  return processor.process(html)
-}
 
 interface ScrapeOptions {
   url: string
@@ -54,6 +44,7 @@ program
       return
     }
 
+    // If the user does not provide an output, use the last part of the URL
     if (!output) {
       output = `${url.split('/').pop()}.md`
     }
@@ -65,7 +56,7 @@ program
       query = query ?? jobQuery
     }
 
-    let markdown: Awaited<ReturnType<typeof getMarkdownFromURL>>
+    let markdown: Awaited<MarkdownFromURL>
     const scraperSpinner = ora('Scraping website').start()
     try {
       markdown = await getMarkdownFromURL(url, query)
@@ -73,6 +64,11 @@ program
     } catch (error) {
       scraperSpinner.fail('Scraping failed')
       logger.error('Error scraping website:', error)
+      process.exit(1)
+    }
+
+    if (markdown.toString().length === 0) {
+      logger.error('No content found on the website')
       process.exit(1)
     }
 
@@ -119,9 +115,8 @@ program
       saveMarkdownFile(output, markdown.toString())
     }
 
-    ora().succeed(
-      `Scraping completed successfully. Total duration: ${Date.now() - commandStartTime} ms`
-    )
+    const seconds = ((Date.now() - commandStartTime) / 1000).toFixed(2)
+    ora().succeed(`Scraping completed successfully. Total duration: ${seconds} seconds`)
   })
 
 export default program
