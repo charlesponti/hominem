@@ -25,12 +25,26 @@ async function removeHiddenElements(page: Page) {
 
 export async function getSiteHTML(url: string, query?: string): Promise<string> {
   try {
-    // Launch the browser
-    const browser = await chromium.launch()
+    // Launch the browser with non-headless mode and args to bypass automation detections
+    const browser = await chromium.launch({
+      // headless: false,
+      args: [
+        '--disable-blink-features=AutomationControlled',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+      ],
+    })
     // Open a new tab
-    const page = await browser.newPage()
+    const page = await browser.newPage({
+      // Set a realistic User-Agent
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
+    })
+
     // Navigate to the page provided by the user
     await page.goto(url)
+    // Wait a random delay to mimic human browsing
+    await page.waitForTimeout(Math.random() * 2000 + 1000)
     // Wait for the page to be fully loaded
     await page.waitForLoadState('domcontentloaded')
 
