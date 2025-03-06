@@ -91,7 +91,7 @@ program
             const res = await getJobPostingFromHTML(markdown.toString())
             object = res.object
             duration = res.duration
-            transformedOutputPath = `${res.object.companyName}-${res.object.jobTitle}.json`
+            transformedOutputPath = `${res.object.companyName} - ${res.object.jobTitle}.json`
             break
           }
           case 'airbnb-listing': {
