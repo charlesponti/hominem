@@ -46,7 +46,13 @@ program
 
     // If the user does not provide an output, use the last part of the URL
     if (!output) {
-      output = `${url.split('/').pop()}.md`
+      const urlObj = new URL(url)
+      const pathname = urlObj.pathname;
+      
+      // Remove empty strings from the array. This can occur if the URL ends with a slash.
+      const urlParts = pathname.split('/').filter(Boolean);
+
+      output = `${urlObj.hostname.replace(/^www\./ig, "")} - ${urlParts.pop()}.md`
     }
 
     const { isJobPosting, query: jobQuery } = parseLinkedinJobUrl(url)
