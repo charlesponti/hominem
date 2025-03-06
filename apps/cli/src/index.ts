@@ -1,11 +1,12 @@
 #! /usr/bin/env bun
 
-import { Command } from 'commander'
-import 'dotenv/config'
+import "./env.ts"
 
+import { Command } from 'commander'
 import { command as aiCommand } from './ai/index.ts'
 import { command as csvToJSONCommand } from './commands/csv-to-json.ts'
 import { program as flattenDirectory } from './commands/flatten-directory.ts'
+import { command as initCommand } from './commands/init.ts'
 import scrapeCommand from './commands/scraper/scrape.ts'
 import thothCommand from './commands/thoth'
 import financeCommand from './finance/index.ts'
@@ -22,5 +23,6 @@ program.addCommand(googleCommand)
 program.addCommand(thothCommand)
 program.addCommand(flattenDirectory)
 program.addCommand(csvToJSONCommand)
+program.addCommand(initCommand)
 
 program.parse(Bun.argv)
