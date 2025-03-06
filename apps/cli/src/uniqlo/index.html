@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNIQLO Products</title>
+  <style>
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+    }
+
+    .product-card {
+      border: 1px solid #eee;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-image {
+      width: 100%;
+      height: auto;
+      margin-bottom: 1rem;
+    }
+
+    .product-title {
+      font-size: 0.9rem;
+      margin: 0.5rem 0;
+      min-height: 2.7em;
+      line-height: 1.3;
+    }
+
+    .product-price {
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <div class="product-grid" id="productGrid"></div>
+
+  <script>
+    async function loadProducts() {
+      try {
+        const response = await fetch('./results.json');
+        const data = await response.json();
+
+        const productGrid = document.getElementById('productGrid');
+
+        data.forEach(product => {
+          const card = document.createElement('div');
+          card.className = 'card product-card';
+          const formattedPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(product.price);
+
+          card.innerHTML = `
+                        <img class="product-image" src="${product.image}" alt="${product.productTitle}">
+                        <h3 class="product-title">${product.productTitle}</h3>
+                        <p class="product-price">${formattedPrice}</p>
+                    `;
+
+          productGrid.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('productGrid').innerHTML = 'Error loading products';
+      }
+    }
+
+    loadProducts();
+  </script>
+</body>
+
+</html>
