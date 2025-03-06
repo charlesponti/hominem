@@ -1,5 +1,4 @@
 import { logger } from '@ponti/utils/logger'
-import { readableStreamToText } from 'bun'
 import { Command } from 'commander'
 import fs from 'node:fs/promises'
 import os from 'node:os'
