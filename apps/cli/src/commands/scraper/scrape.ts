@@ -2,14 +2,15 @@ import { logger } from '@ponti/utils/logger'
 import {
   SITE_SCHEMAS,
   getJobPostingFromHTML,
+  getMarkdownFromURL,
   parseLinkedinJobUrl,
   transformHTMLToSchema,
   type AVAILABLE_SCHEMAS,
+  type MarkdownFromURL,
 } from '@ponti/utils/scraping'
 import { Command } from 'commander'
 import * as fs from 'node:fs'
 import ora from 'ora'
-import { getMarkdownFromURL, type MarkdownFromURL } from './utils'
 
 const program = new Command()
 

@@ -47,6 +47,10 @@
     "ollama-ai-provider": "^1.2.0",
     "openai": "4.83.0",
     "postgres": "^3.4.5",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
     "vite": "^6.1.1",
     "winston": "3.17.0",
     "zod": "^3.24.1"
