@@ -1,11 +1,5 @@
 import { logger } from '@ponti/utils/logger'
-import {
-  EnhancedNLPProcessor,
-  getSentiment,
-  type EmotionalJourney,
-  type NLPAnalysis,
-  type Sentiment,
-} from '@ponti/utils/nlp'
+import { EnhancedNLPProcessor, type TextAnalysis, type TextAnalysisEmotion } from '@ponti/utils/nlp'
 import * as chrono from 'chrono-node'
 import nlp from 'compromise'
 import * as mdast from 'mdast-util-to-string'
@@ -30,7 +24,6 @@ export interface EntryContent {
   type: 'thought' | 'activity' | 'quote' | 'dream' | 'task'
   text: string
   section: string | null
-  sentiment?: Sentiment
   subItems?: EntryContent[]
   isComplete?: boolean
   metadata?: {
@@ -39,8 +32,8 @@ export interface EntryContent {
     tags?: string[]
   }
   nlpAnalysis?: {
-    textAnalysis: NLPAnalysis
-    emotionalJourney: EmotionalJourney[]
+    textAnalysis: TextAnalysis
+    emotionalJourney: TextAnalysisEmotion[]
     actionItems: ActionItems
     socialContext: SocialContext
     decisions: Decisions
@@ -280,13 +273,13 @@ export class MarkdownProcessor {
       return content
     }
 
-    const processNode = (node: MarkdownNode) => {
+    const processNode = async (node: MarkdownNode) => {
       // Skip the root node's direct text content as it might contain frontmatter remnants
       if (node.type === 'root') {
         // Only process children of root, not its direct content
         if (node.children) {
           for (const child of node.children) {
-            processNode(child)
+            await processNode(child)
           }
         }
         return
@@ -381,7 +374,7 @@ export class MarkdownProcessor {
           }
 
           if (normalizedText.trim()) {
-            this.processContent({
+            await this.processContent({
               tag: node.type,
               text: normalizedText,
               entry: currentEntry,
@@ -418,7 +411,7 @@ export class MarkdownProcessor {
   }
 
   // Helper function to process content and categorize it using NLP
-  processContent({
+  async processContent({
     tag,
     text,
     entry,
@@ -430,7 +423,7 @@ export class MarkdownProcessor {
     entry: ProcessedMarkdownFileEntry
     section: string | null
     contentObj?: EntryContent
-  }): void {
+  }): Promise<void> {
     if (!text) return
 
     // Remove leading dashes from bullet points
@@ -480,9 +473,6 @@ export class MarkdownProcessor {
       }
     }
 
-    // Determine rough sentiment
-    const sentiment = getSentiment(doc)
-
     // Extract metadata
     const metadata = {
       location: undefined,
@@ -530,7 +520,6 @@ export class MarkdownProcessor {
         // Only update type if it's not already a task
         contentObj.type = contentType
       }
-      contentObj.sentiment = sentiment
       contentObj.section = section
       contentObj.metadata = metadata
       if (isTask) {
@@ -549,7 +538,6 @@ export class MarkdownProcessor {
           type: contentType,
           text: processedText,
           section,
-          sentiment,
           metadata,
           ...(isTask && { isComplete }),
         })
@@ -562,23 +550,23 @@ export class MarkdownProcessor {
 export class EnhancedMarkdownProcessor extends MarkdownProcessor {
   private nlpProcessor = new EnhancedNLPProcessor()
 
-  processContent(params: {
+  async processContent(params: {
     tag: string
     text: string
     entry: ProcessedMarkdownFileEntry
     section: string | null
     contentObj?: EntryContent
-  }): void {
-    super.processContent(params)
+  }): Promise<void> {
+    await super.processContent(params)
 
     // Add NLP analysis to the content object
     const nlpAnalysis = {
-      textAnalysis: this.nlpProcessor.analyzeText(params.text),
-      emotionalJourney: this.nlpProcessor.analyzeEmotionalJourney(params.text),
-      actionItems: this.nlpProcessor.findActionItems(params.text),
-      socialContext: this.nlpProcessor.analyzeSocialInteractions(params.text),
-      decisions: this.nlpProcessor.analyzeDecisions(params.text),
-      habits: this.nlpProcessor.analyzeHabits(params.text),
+      textAnalysis: await this.nlpProcessor.analyzeText(params.text),
+      emotionalJourney: await this.nlpProcessor.analyzeEmotionalJourney(params.text),
+      actionItems: await this.nlpProcessor.findActionItems(params.text),
+      socialContext: await this.nlpProcessor.analyzeSocialInteractions(params.text),
+      decisions: await this.nlpProcessor.analyzeDecisions(params.text),
+      habits: await this.nlpProcessor.analyzeHabits(params.text),
     }
 
     if (params.contentObj) {

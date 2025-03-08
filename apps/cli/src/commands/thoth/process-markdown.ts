@@ -50,7 +50,11 @@ export default new Command('process-markdown')
       }
       processorSpinner.succeed(`Processed ${files.length} files`)
 
-      const outputDir = path.resolve(options.output)
+      let outputDir = path.resolve(options.output)
+      if (!(await fs.exists(outputDir))) {
+        outputDir = path.dirname(processPath)
+      }
+
       await fs.writeFile(
         path.join(outputDir, 'output.json'),
         JSON.stringify(
