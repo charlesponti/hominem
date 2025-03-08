@@ -1,5 +1,5 @@
 import { logger } from '@ponti/utils/logger'
-import { desc, eq, sql } from 'drizzle-orm'
+import { desc, sql } from 'drizzle-orm'
 import { db } from '../db'
 import { venues } from '../db/schema'
 

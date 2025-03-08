@@ -1,29 +1,26 @@
 // Load environment variables
 import 'dotenv/config'
 
+import { logger } from '@ponti/utils/logger'
+import { findChildMatchingQuery, getBrowser, getContext } from '@ponti/utils/scraping'
 import readline from 'node:readline/promises'
-import type { ElementHandle, Page } from 'playwright'
-import { chromium } from 'playwright'
+import type { Page } from 'playwright'
+import type { Order } from './uber-eats.types'
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 })
-
 ;(async () => {
-  const browser = await chromium.launch({
-    headless: false,
-  })
-  const context = await browser.newContext()
+  const browser = await getBrowser()
+  const context = await getContext(browser)
   const page = await context.newPage()
-  await page.goto(
-    'https://www.ubereats.com/?mod=feedLocationRequestModal&modctx=%257B%2522mode%2522%253A%2522REQUEST%2522%257D&ps=1'
-  )
+  await page.goto('https://www.ubereats.com')
 
   try {
     await page.getByRole('button', { name: 'Close' }).click()
   } catch (error) {
-    console.log('Close button not found, continuing...')
+    logger.info('Close button not found, continuing...')
   }
 
   await page.getByTestId('header-v2-wrapper').getByRole('link', { name: 'Log in' }).click()
@@ -69,7 +66,7 @@ const rl = readline.createInterface({
       await page.locator(`#PHONE_SMS_OTP-${i}`).fill(smsDigits[i])
     }
   } catch (error) {
-    console.log('SMS code not required, continuing...')
+    logger.error('SMS code not required, continuing...')
   }
 
   // Uber often displays a modal when logging in, so we must close it.
@@ -93,44 +90,12 @@ const rl = readline.createInterface({
 
   const results = await scrapeUberEatsOrders(page)
 
-  console.log('Total spent on Uber Eats: $', results)
+  logger.log('Total spent on Uber Eats: $', results)
 
   // ---------------------
   await context.close()
   await browser.close()
 })()
-
-type Order = {
-  restaurant: string
-  numOfItems: number
-  price: string
-  date: string
-}
-
-type PlaywrightElement = ElementHandle<SVGElement | HTMLElement>
-async function findChildMatchingQuery(
-  parentEl: PlaywrightElement,
-  query: (element: PlaywrightElement) => Promise<boolean>
-): Promise<PlaywrightElement[]> {
-  // Get all elements within the parent element
-  const elements = await parentEl.$$('*')
-  const results: PlaywrightElement[] = []
-
-  for (const element of elements) {
-    // Get all children of the current element
-    const children = await element.$$('*')
-
-    if (children) {
-      const hasMatchingChild = children.some(query)
-
-      if (!hasMatchingChild) {
-        results.push(element)
-      }
-    }
-  }
-
-  return results
-}
 
 export async function scrapeUberEatsOrders(page: Page) {
   const main = await page.$('main')
@@ -194,8 +159,8 @@ export async function scrapeUberEatsOrders(page: Page) {
     result.orders.push({
       restaurant,
       numOfItems,
-      price: itemsAndPrice[1],
-      date: info[1],
+      price: Number(itemsAndPrice[1]),
+      date: new Date(info[1]),
     })
   }
 
