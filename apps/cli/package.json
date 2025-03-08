@@ -6,7 +6,8 @@
     "hominem": "src/index.ts"
   },
   "scripts": {
-    "start": "bun run src/index.ts"
+    "start": "bun run src/index.ts",
+    "test": "NODE_ENV=test vitest --run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -57,7 +58,7 @@
     "@types/jsdom": "^21.1.7",
     "drizzle-kit": "^0.30.4",
     "tsx": "^4.19.2",
-    "vitest": "^3.0.6"
+    "vitest": "^3.0.8"
   },
   "resolutions": {
     "@langchain/core": "0.3.37"

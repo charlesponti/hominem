@@ -4,21 +4,21 @@ import { createLogger, format, transports } from 'winston'
 
 const LOG_FILE = path.resolve(cwd(), './logs/error.log')
 const logTransports = [
-  new transports.File({
-    level: 'error',
-    filename: LOG_FILE,
-    format: format.json({
-      replacer: (key, value) => {
-        if (key === 'error') {
-          return {
-            message: (value as Error).message,
-            stack: (value as Error).stack,
-          }
-        }
-        return value
-      },
-    }),
-  }),
+  // new transports.File({
+  //   level: 'error',
+  //   filename: LOG_FILE,
+  //   format: format.json({
+  //     replacer: (key, value) => {
+  //       if (key === 'error') {
+  //         return {
+  //           message: (value as Error).message,
+  //           stack: (value as Error).stack,
+  //         }
+  //       }
+  //       return value
+  //     },
+  //   }),
+  // }),
   new transports.Console({
     level: 'debug',
     format: format.combine(

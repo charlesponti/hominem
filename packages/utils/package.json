@@ -19,6 +19,7 @@
     "./redis": "./src/redis.ts",
     "./scraping": "./src/scraping/index.ts",
     "./schema": "./src/db/schema/index.ts",
+    "./services": "./src/services/index.ts",
     "./types": "./src/types/index.ts",
     "./writer": "./src/writer/index.ts"
   },
