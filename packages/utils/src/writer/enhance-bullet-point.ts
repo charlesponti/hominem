@@ -1,7 +1,7 @@
-import { ollama } from '@/ai-models/ollama'
-import type { BulletPoint } from '@/types/notes'
 import { generateObject } from 'ai'
 import { z } from 'zod'
+import { ollama } from '../ai-models/ollama'
+import type { BulletPoint } from '../types/notes'
 
 const EnhancedBulletPointSchema = z.object({
   improvedText: z.string(),
