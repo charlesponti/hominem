@@ -2,6 +2,30 @@ import { openai } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 
+// Social Context Schema
+export const SocialContextSchema = z.object({
+  people: z.array(z.string()),
+  activities: z.array(z.string()),
+  communications: z.array(z.string()),
+})
+export type SocialContext = z.infer<typeof SocialContextSchema>
+
+// Decisions Schema
+export const DecisionsSchema = z.object({
+  decisions: z.array(z.string()),
+  alternatives: z.array(z.string()),
+  reasoning: z.array(z.string()),
+})
+export type Decisions = z.infer<typeof DecisionsSchema>
+
+// Habits Schema
+export const HabitsSchema = z.object({
+  routines: z.array(z.string()),
+  frequency: z.array(z.string()),
+  timePatterns: z.array(z.string()),
+})
+export type Habits = z.infer<typeof HabitsSchema>
+
 export const ActionItemsSchema = z.object({
   todos: z.array(z.string()),
   commitments: z.array(z.string()),
@@ -24,14 +48,23 @@ export const TextAnalysisSchema = z.object({
   questions: z.array(z.string()),
   conditions: z.array(z.string()),
   comparisons: z.array(z.string()),
-  quantities: z.array(z.string()),
+  items: z.array(
+    z.object({
+      name: z.string(),
+      quantity: z.number(),
+    })
+  ),
   emphasis: z.array(z.string()),
-  emotion: z.array(TextAnalysisEmotionSchema),
+  emotions: z.array(TextAnalysisEmotionSchema),
+  socialContext: SocialContextSchema,
+  decisions: DecisionsSchema,
+  habits: HabitsSchema,
   topics: z.object({
     tech: z.array(z.string()),
     personal: z.array(z.string()),
     work: z.array(z.string()),
   }),
+  timestamp: z.string(),
 })
 export type TextAnalysis = z.infer<typeof TextAnalysisSchema>
 

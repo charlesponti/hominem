@@ -31,14 +31,7 @@ export interface EntryContent {
     people?: string[]
     tags?: string[]
   }
-  nlpAnalysis?: {
-    textAnalysis: TextAnalysis
-    emotionalJourney: TextAnalysisEmotion[]
-    actionItems: ActionItems
-    socialContext: SocialContext
-    decisions: Decisions
-    habits: Habits
-  }
+  textAnalysis?: TextAnalysis
 }
 
 export interface ProcessedMarkdownFile {
@@ -50,30 +43,6 @@ export interface MarkdownNode extends Node {
   children?: MarkdownNode[]
   value?: string
   depth?: number
-}
-
-interface ActionItems {
-  todos: string[]
-  commitments: string[]
-  deadlines: string[]
-}
-
-interface SocialContext {
-  people: string[]
-  activities: string[]
-  communications: string[]
-}
-
-interface Decisions {
-  decisions: string[]
-  alternatives: string[]
-  reasoning: string[]
-}
-
-interface Habits {
-  routines: string[]
-  frequency: string[]
-  timePatterns: string[]
 }
 
 export class MarkdownProcessor {
@@ -546,7 +515,6 @@ export class MarkdownProcessor {
   }
 }
 
-// Integration with MarkdownProcessor
 export class EnhancedMarkdownProcessor extends MarkdownProcessor {
   private nlpProcessor = new EnhancedNLPProcessor()
 
@@ -560,22 +528,16 @@ export class EnhancedMarkdownProcessor extends MarkdownProcessor {
     await super.processContent(params)
 
     // Add NLP analysis to the content object
-    const nlpAnalysis = {
-      textAnalysis: await this.nlpProcessor.analyzeText(params.text),
-      emotionalJourney: await this.nlpProcessor.analyzeEmotionalJourney(params.text),
-      actionItems: await this.nlpProcessor.findActionItems(params.text),
-      socialContext: await this.nlpProcessor.analyzeSocialInteractions(params.text),
-      decisions: await this.nlpProcessor.analyzeDecisions(params.text),
-      habits: await this.nlpProcessor.analyzeHabits(params.text),
-    }
+    const textAnalysis = await this.nlpProcessor.analyzeText(params.text)
 
     if (params.contentObj) {
-      params.contentObj.nlpAnalysis = nlpAnalysis
-    } else {
-      const content = getPreviousEntry(params.entry)
-      if (content) {
-        content.nlpAnalysis = nlpAnalysis
-      }
+      params.contentObj.textAnalysis = textAnalysis
+      return
+    }
+
+    const content = getPreviousEntry(params.entry)
+    if (content) {
+      content.textAnalysis = textAnalysis
     }
   }
 }
