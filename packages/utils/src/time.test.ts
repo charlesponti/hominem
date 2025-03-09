@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { TIME_UNITS, getDaysBetweenDates, getNumberOfDays } from './time'
+import { TIME_UNITS, getDatesFromText, getDaysBetweenDates, getNumberOfDays } from './time'
 
 describe('TIME_UNITS', () => {
   test('should have correct millisecond values', () => {
@@ -68,5 +68,74 @@ describe('getDaysBetweenDates', () => {
     const date1 = new Date('2023-01-01T00:00:00')
     const date2 = new Date('2023-01-01T12:00:00')
     expect(getDaysBetweenDates(date1, date2)).toBe(0.5)
+  })
+})
+
+describe('getDatesFromText', () => {
+  test('extracts full date in YYYY-MM-DD format', () => {
+    const dates = getDatesFromText('Document created on 2023-05-15')
+    expect(dates.dates[0].start.split('T')[0]).toBe('2023-05-15')
+    expect(dates.fullDate).toBe('2023-05-15')
+    expect(dates.year).toBe('2023')
+  })
+
+  test('extracts only year when no full date is present', () => {
+    expect(getDatesFromText('Published in 2023')).toEqual({
+      dates: [],
+      fullDate: undefined,
+      year: '2023',
+    })
+  })
+
+  test('handles multiple dates and returns the first occurrence', () => {
+    const dates = getDatesFromText('Created on 2023-01-01, updated on 2023-12-31')
+    expect(dates.dates[0].start.split('T')[0]).toBe('2023-01-01')
+    expect(dates.fullDate).toBe('2023-01-01')
+    expect(dates.year).toBe('2023')
+  })
+
+  test('returns undefined for both properties when no date is found', () => {
+    expect(getDatesFromText('No date information here')).toEqual({
+      dates: [],
+      fullDate: undefined,
+      year: undefined,
+    })
+  })
+
+  test('handles dates within other numbers', () => {
+    expect(getDatesFromText('Reference: 123 2023 456')).toEqual({
+      dates: [],
+      fullDate: undefined,
+      year: '2023',
+    })
+  })
+
+  test('handles text with special characters', () => {
+    const dates = getDatesFromText('Date: 2023-05-15! (important)')
+    expect(dates.dates[0].start.split('T')[0]).toBe('2023-05-15')
+    expect(dates.fullDate).toBe('2023-05-15')
+    expect(dates.year).toBe('2023')
+  })
+
+  test('ignores years that are part of larger numbers', () => {
+    expect(getDatesFromText('Number: 12023 or 20235')).toEqual({
+      dates: [],
+      fullDate: undefined,
+      year: undefined,
+    })
+  })
+
+  test('handles dates at the beginning of text', () => {
+    const dates = getDatesFromText('2023-05-15 is the date')
+    expect(dates.dates[0].start.split('T')[0]).toBe('2023-05-15')
+    expect(dates.fullDate).toBe('2023-05-15')
+    expect(dates.year).toBe('2023')
+  })
+
+  test('handles dates at the end of text', () => {
+    const dates = getDatesFromText('The date is 2023-05-15')
+    expect(dates.dates[0].start.split('T')[0]).toBe('2023-05-15')
+    expect(dates.fullDate).toBe('2023-05-15')
+    expect(dates.year).toBe('2023')
   })
 })

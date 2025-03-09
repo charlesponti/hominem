@@ -14,7 +14,7 @@ describe('MarkdownProcessor', () => {
   - reinforces personal beliefs instead of increasing objective truth
 - **Fear of judgement**
   - desire to be seen as correct instead of desire to be effective
-  - many judgements should be ignored because they lack sincerity`
+  - many judgments should be ignored because they lack sincerity`
 
       const result = await processor.convertMarkdownToJSON(markdown, 'personal-reflections.md')
 
@@ -48,12 +48,8 @@ describe('MarkdownProcessor', () => {
       expect(fearOfJudgement.subItems).toHaveLength(2)
       expect(fearOfJudgement.subItems?.map((item) => item.text)).toEqual([
         'desire to be seen as correct instead of desire to be effective',
-        'many judgements should be ignored because they lack sincerity',
+        'many judgments should be ignored because they lack sincerity',
       ])
-
-      // Test metadata and sentiment analysis
-      expect(overthinking.sentiment).toBe('negative')
-      expect(fearOfJudgement.sentiment).toBe('negative')
     })
   })
 })

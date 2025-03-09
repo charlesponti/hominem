@@ -1,6 +1,6 @@
 import { logger } from '@ponti/utils/logger'
-import { EnhancedNLPProcessor, type TextAnalysis, type TextAnalysisEmotion } from '@ponti/utils/nlp'
-import * as chrono from 'chrono-node'
+import { NLPProcessor, type TextAnalysis, type TextAnalysisEmotion } from '@ponti/utils/nlp'
+import { getDatesFromText } from '@ponti/utils/time'
 import nlp from 'compromise'
 import * as mdast from 'mdast-util-to-string'
 import * as fs from 'node:fs/promises'
@@ -8,7 +8,7 @@ import remarkParse from 'remark-parse'
 import { unified } from 'unified'
 import type { Node } from 'unist'
 import type { ProcessedContent } from './types'
-import { detectDream, detectTask, getDateFromText, normalizeWhitespace } from './utils'
+import { detectTask, getContentType, normalizeWhitespace } from './utils'
 
 // Define the structure for our resulting JSON
 export interface ProcessedMarkdownFileEntry {
@@ -21,7 +21,7 @@ export interface ProcessedMarkdownFileEntry {
 
 export interface EntryContent {
   tag: string
-  type: 'thought' | 'activity' | 'quote' | 'dream' | 'task'
+  type: string
   text: string
   section: string | null
   subItems?: EntryContent[]
@@ -58,14 +58,6 @@ export class MarkdownProcessor {
     }
   }
 
-  async processFile(filepath: string): Promise<ProcessedContent> {
-    const content = await fs.readFile(filepath, 'utf-8')
-    const tree = unified().use(remarkParse).parse(content)
-
-    this.traverseNodes(tree as MarkdownNode, filepath)
-    return this.content
-  }
-
   async processFileWithAst(filepath: string): Promise<ProcessedMarkdownFile> {
     // Check that the file exists
     if (!(await fs.stat(filepath)).isFile()) {
@@ -74,57 +66,6 @@ export class MarkdownProcessor {
 
     const content = await fs.readFile(filepath, 'utf-8')
     return this.convertMarkdownToJSON(content, filepath)
-  }
-
-  private traverseNodes(node: MarkdownNode, filename: string): void {
-    const text = mdast.toString(node)
-    const { fullDate } = getDateFromText(text)
-
-    switch (node.type) {
-      case 'heading': {
-        this.currentHeading = normalizeWhitespace(text)
-        this.content.headings.push({
-          text: this.currentHeading,
-          tag: 'heading',
-        })
-        break
-      }
-      case 'list': {
-        for (const item of node.children as MarkdownNode[]) {
-          if (item.type === 'listItem') {
-            const text = mdast.toString(item)
-            const { fullDate } = getDateFromText(text)
-
-            this.content.bulletPoints.push({
-              file: filename,
-              heading: this.currentHeading,
-              text: normalizeWhitespace(text),
-              tag: 'bullet_point',
-              date: fullDate,
-            })
-          }
-        }
-        break
-      }
-      case 'paragraph':
-      default: {
-        this.content.paragraphs.push({
-          file: filename,
-          heading: this.currentHeading,
-          text: normalizeWhitespace(text),
-          tag: 'paragraph',
-          date: fullDate,
-        })
-        break
-      }
-    }
-
-    // Traverse children
-    if (node.children) {
-      for (const child of node.children) {
-        this.traverseNodes(child, filename)
-      }
-    }
   }
 
   processFrontmatter(content: string): { content: string; frontmatter?: Record<string, unknown> } {
@@ -160,24 +101,29 @@ export class MarkdownProcessor {
     return { content: processableContent, frontmatter }
   }
 
-  // Main function to convert markdown to structured JSON
+  convertMarkdownToAST(content: string) {
+    const processor = unified().use(remarkParse)
+    return processor.parse(content)
+  }
+
   async convertMarkdownToJSON(
     markdownContent: string,
     filename: string
   ): Promise<ProcessedMarkdownFile> {
-    const journalData: ProcessedMarkdownFile = {
+    const result: ProcessedMarkdownFile = {
       entries: [],
     }
 
     // Extract frontmatter if present
     const { content: processableContent, frontmatter } = this.processFrontmatter(markdownContent)
-    const processor = unified().use(remarkParse)
-    const ast = processor.parse(processableContent)
+
+    // Convert the markdown content to an AST
+    const ast = this.convertMarkdownToAST(processableContent)
 
     let currentEntry: ProcessedMarkdownFileEntry | null = null
     let currentHeading: string | undefined
 
-    const processListItem = (item: MarkdownNode): EntryContent | null => {
+    const processListItem = async (item: MarkdownNode): Promise<EntryContent | null> => {
       const itemText = mdast.toString(item)
       if (!itemText.trim()) return null
 
@@ -210,7 +156,7 @@ export class MarkdownProcessor {
         for (const sublist of sublists) {
           for (const subItem of sublist.children || []) {
             if (subItem.type === 'listItem') {
-              const processedSubItem = processListItem(subItem)
+              const processedSubItem = await processListItem(subItem)
               if (processedSubItem) {
                 content.subItems?.push(processedSubItem)
               }
@@ -228,17 +174,18 @@ export class MarkdownProcessor {
           frontmatter,
         }
 
-        journalData.entries.push(currentEntry)
+        result.entries.push(currentEntry)
       }
 
       // Process the content type and sentiment
-      this.processContent({
+      await this.processContent({
         tag: item.type,
         text: normalizedText,
         entry: currentEntry,
         section: currentHeading?.toLowerCase() || null,
-        contentObj: content,
+        content,
       })
+
       return content
     }
 
@@ -255,16 +202,13 @@ export class MarkdownProcessor {
       }
 
       const text = mdast.toString(node)
-      const { fullDate } = getDateFromText(text)
+      const normalizedText = normalizeWhitespace(text)
 
       switch (node.type) {
         case 'heading': {
           currentHeading = normalizeWhitespace(text)
-          const parsedDates = chrono.parse(text)
-          const parsedDate =
-            parsedDates.length > 0
-              ? parsedDates[0].start.date()?.toISOString().split('T')[0]
-              : fullDate
+          const { dates, fullDate } = getDatesFromText(text)
+          const parsedDate = dates.length > 0 ? dates[0].start.split('T')[0] : fullDate
 
           currentEntry = {
             date: parsedDate,
@@ -273,7 +217,7 @@ export class MarkdownProcessor {
             content: [],
             frontmatter,
           }
-          journalData.entries.push(currentEntry)
+          result.entries.push(currentEntry)
           break
         }
 
@@ -290,10 +234,10 @@ export class MarkdownProcessor {
                     content: [],
                     frontmatter,
                   }
-                  journalData.entries.push(currentEntry)
+                  result.entries.push(currentEntry)
                 }
 
-                const processedItem = processListItem(item)
+                const processedItem = await processListItem(item)
                 if (processedItem) {
                   currentEntry.content.push(processedItem)
                 }
@@ -304,18 +248,18 @@ export class MarkdownProcessor {
         }
 
         case 'listItem': {
-          // If the previous node ends with `:`, we should add this and all subsequent list items to the previous node
-          // as they are likely sub-items
-          const previousNode = getPreviousEntry(currentEntry)
+          const previousNode = this.getPreviousEntry(currentEntry)
 
           if (previousNode?.text.endsWith(':')) {
-            const processedItem = processListItem(node)
+            // If the previous node ends with `:`, we should add this and all subsequent list items to the previous node
+            // as they are likely sub-items
+            const processedItem = await processListItem(node)
             if (processedItem) {
               previousNode.subItems?.push(processedItem)
             }
           } else {
             // Otherwise, process this list item as a standalone entry
-            const processedItem = processListItem(node)
+            const processedItem = await processListItem(node)
             if (processedItem) {
               currentEntry?.content.push(processedItem)
             }
@@ -332,42 +276,40 @@ export class MarkdownProcessor {
               content: [],
               frontmatter,
             }
-            journalData.entries.push(currentEntry)
+            result.entries.push(currentEntry)
           }
 
-          const normalizedText = normalizeWhitespace(text)
-          const section = currentHeading?.toLowerCase() || null
-          if (normalizedText.trim() === section) {
-            // skip this entry
+          // Skip if this is the same as the current heading
+          if (!normalizedText.trim() || normalizedText.trim() === currentHeading?.toLowerCase()) {
             break
           }
 
-          if (normalizedText.trim()) {
-            await this.processContent({
-              tag: node.type,
-              text: normalizedText,
-              entry: currentEntry,
-              section: currentHeading?.toLowerCase() || null,
-            })
-          }
+          await this.processContent({
+            tag: node.type,
+            text: normalizedText,
+            entry: currentEntry,
+            section: currentHeading?.toLowerCase() || null,
+          })
+
           break
         }
       }
 
-      // Process children recursively (except for list, which we handle specially)
-      if (node.children && node.type !== 'list') {
+      // Process children recursively (except for list and paragraph, which we handle specially)
+      // Paragraphs only contain text, which is already processed
+      if (node.children && node.type !== 'list' && node.type !== 'paragraph') {
         for (const child of node.children) {
-          processNode(child)
+          await processNode(child)
         }
       }
     }
 
     // Start processing from root
-    processNode(ast as MarkdownNode)
+    await processNode(ast as MarkdownNode)
 
     // If no entries were created but we have frontmatter, create a default entry
-    if (journalData.entries.length === 0 && frontmatter) {
-      journalData.entries.push({
+    if (result.entries.length === 0 && frontmatter) {
+      result.entries.push({
         date: undefined,
         filename,
         heading: filename.split('/').pop() || '',
@@ -376,7 +318,7 @@ export class MarkdownProcessor {
       })
     }
 
-    return journalData
+    return result
   }
 
   // Helper function to process content and categorize it using NLP
@@ -385,13 +327,13 @@ export class MarkdownProcessor {
     text,
     entry,
     section,
-    contentObj,
+    content,
   }: {
     tag: string
     text: string
     entry: ProcessedMarkdownFileEntry
     section: string | null
-    contentObj?: EntryContent
+    content?: EntryContent
   }): Promise<void> {
     if (!text) return
 
@@ -408,39 +350,7 @@ export class MarkdownProcessor {
       processedText = taskMatch[2]
     }
 
-    // Detect content type (skip if it's already a task)
-    let contentType: 'thought' | 'activity' | 'quote' | 'dream' | 'task' = isTask
-      ? 'task'
-      : 'thought'
-
-    if (!isTask) {
-      // If it's wrapped in underscores, it's a quote
-      if (/^_.*_$/.test(text)) {
-        contentType = 'quote'
-        processedText = text.replace(/^_|_$/g, '')
-      }
-      // If it mentions a dream, it's a dream
-      else if (detectDream(doc.out('array')) || section?.toLowerCase().includes('dream')) {
-        contentType = 'dream'
-      }
-      // If the section is "Did" or if it has multiple verbs in past tense, likely an activity
-      else if (section === 'did' || doc.has('#PastTense+')) {
-        // Additional check for activity-like statements
-        if (doc.has('(drove|got|checked|browsed|dinner|went|bought|visited|attended)')) {
-          contentType = 'activity'
-        } else {
-          // Check if the sentence starts with a verb in past tense
-          const firstWord = processedText.split(' ')[0].toLowerCase()
-          if (
-            ['drove', 'got', 'checked', 'browsed', 'ate', 'visited', 'bought', 'went'].includes(
-              firstWord
-            )
-          ) {
-            contentType = 'activity'
-          }
-        }
-      }
-    }
+    const contentType = getContentType(doc, processedText, isTask)
 
     // Extract metadata
     const metadata = {
@@ -484,18 +394,18 @@ export class MarkdownProcessor {
     }
 
     // If we have a content object, update it directly
-    if (contentObj) {
+    if (content) {
       if (!isTask) {
         // Only update type if it's not already a task
-        contentObj.type = contentType
+        content.type = contentType
       }
-      contentObj.section = section
-      contentObj.metadata = metadata
+      content.section = section
+      content.metadata = metadata
       if (isTask) {
-        contentObj.isComplete = isComplete
+        content.isComplete = isComplete
       }
     } else {
-      const previousContent = getPreviousEntry(entry)
+      const previousContent = this.getPreviousEntry(entry)
 
       if (previousContent && previousContent.tag === 'paragraph' && tag === 'paragraph') {
         // Add current content to the previous paragraph
@@ -513,36 +423,39 @@ export class MarkdownProcessor {
       }
     }
   }
+
+  getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {
+    if (!entry) return undefined
+    return entry.content[entry.content.length - 1]
+  }
 }
 
 export class EnhancedMarkdownProcessor extends MarkdownProcessor {
-  private nlpProcessor = new EnhancedNLPProcessor()
+  private nlpProcessor = new NLPProcessor({
+    provider: 'ollama',
+    model: 'llama3.2',
+  })
 
   async processContent(params: {
     tag: string
     text: string
     entry: ProcessedMarkdownFileEntry
     section: string | null
-    contentObj?: EntryContent
+    content?: EntryContent
   }): Promise<void> {
     await super.processContent(params)
 
     // Add NLP analysis to the content object
-    const textAnalysis = await this.nlpProcessor.analyzeText(params.text)
-
-    if (params.contentObj) {
-      params.contentObj.textAnalysis = textAnalysis
+    if (params.content) {
+      const textAnalysis = await this.nlpProcessor.analyzeText(params.text)
+      params.content.textAnalysis = textAnalysis
       return
     }
 
-    const content = getPreviousEntry(params.entry)
-    if (content) {
-      content.textAnalysis = textAnalysis
+    const previousContent = this.getPreviousEntry(params.entry)
+    if (previousContent) {
+      const textAnalysis = await this.nlpProcessor.analyzeText(params.text)
+      previousContent.textAnalysis = textAnalysis
     }
   }
-}
-
-function getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {
-  if (!entry) return undefined
-  return entry.content[entry.content.length - 1]
 }

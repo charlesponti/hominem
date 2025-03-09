@@ -1,14 +1,4 @@
-import type { DateFromText } from './types.ts'
-
-export function getDateFromText(text: string): DateFromText {
-  const fullDate = text.match(/\d{4}-\d{2}-\d{2}/)
-  const year = text.match(/(?<![\d.])\d{4}(?![\d.])/)
-
-  return {
-    fullDate: fullDate?.[0],
-    year: year?.[0],
-  }
-}
+import type nlp from 'compromise'
 
 export function normalizeWhitespace(text: string): string {
   return text.trim().replace(/\s+/g, ' ')
@@ -29,14 +19,19 @@ export function detectTask(content: string): {
   return { taskMatch, isTask, isComplete, taskText }
 }
 
-export function detectDream(strings: string[]): boolean {
-  const content = strings.join(' ').toLowerCase()
+export function getContentType(doc: ReturnType<typeof nlp>, text: string, isTask: boolean): string {
+  if (isTask) {
+    return 'task'
+  }
 
-  return (
-    content.includes('dream:') ||
-    content.includes('dream -') ||
-    content.includes('dream') ||
-    content.includes('I dreamed') ||
-    content.includes('my dream')
-  )
+  if (doc.has('#PastTense+')) {
+    return 'activity'
+  }
+
+  // Detect quotes
+  if (/^".*"\s*-\s*.+/.test(text)) {
+    return 'quote'
+  }
+
+  return 'thought'
 }

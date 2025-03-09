@@ -1,5 +1,5 @@
 {
-  "name": "cli",
+  "name": "@hominem/cli",
   "version": "1.0.0",
   "main": "src/index.ts",
   "bin": {
@@ -40,10 +40,6 @@
     "mdast-util-to-string": "^4.0.0",
     "ollama-ai-provider": "^1.2.0",
     "openai": "^4.83.0",
-    "puppeteer": "^24.2.1",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-proxy": "^1.0.2",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "rehype-parse": "^9.0.1",
     "rehype-remark": "^10.0.0",
     "remark-parse": "^11.0.0",
