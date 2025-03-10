@@ -1,49 +1,50 @@
 {
-	"name": "hominem",
-	"version": "1.0.0",
-	"description": "hominem",
-	"author": {
-		"name": "chase bridges",
-		"email": "code@ponti.io",
-		"url": "https://ponti.io/"
-	},
-	"homepage": "https://github.com/charlesponti/hominem#readme",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/charlesponti/hominem.git"
-	},
-	"private": true,
-	"bugs": {
-		"url": "https://github.com/charlesponti/hominem/issues"
-	},
-	"scripts": {
-		"build": "turbo run build",
-		"dev": "turbo run dev --parallel",
-		"lint": "turbo run lint --parallel",
-		"migrate": "turbo run migrate",
-		"prepush": "bun run test",
-		"prerelease": "bun run test",
-		"start:api": "cd apps/api && bun run start",
-		"start:web": "cd apps/web && bun run start",
-		"test": "turbo run test",
-		"test:ci": "turbo run test",
-		"test:e2e:ci": "turbo run test:e2e:ci",
-		"test:update": "turbo run test:update"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"@eslint/js": "^9.20.0",
-		"@turbo/gen": "^1.9.7",
-		"eslint": "^9.20.1",
-		"eslint-plugin-react": "^7.37.4",
-		"globals": "^15.15.0",
-		"husky": "^7.0.0",
-		"turbo": "^2.4.4",
-		"typescript": "5.4.3",
-		"typescript-eslint": "^8.24.1"
-	},
-	"keywords": [],
-	"license": "ISC",
-	"workspaces": ["apps/*", "packages/*"],
-	"packageManager": "bun@1.2.2"
+  "name": "hominem",
+  "version": "1.0.0",
+  "description": "hominem",
+  "author": {
+    "name": "chase bridges",
+    "email": "code@ponti.io",
+    "url": "https://ponti.io/"
+  },
+  "homepage": "https://github.com/charlesponti/hominem#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charlesponti/hominem.git"
+  },
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/charlesponti/hominem/issues"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint --parallel",
+    "migrate": "turbo run migrate",
+    "prepush": "bun run test",
+    "prerelease": "bun run test",
+    "start:api": "cd apps/api && bun run start",
+    "start:web": "cd apps/web && bun run start",
+    "test": "turbo run test",
+    "test:ci": "turbo run test",
+    "test:e2e:ci": "turbo run test:e2e:ci",
+    "test:update": "turbo run test:update"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@eslint/js": "^9.20.0",
+    "@turbo/gen": "^1.9.7",
+    "eslint": "^9.20.1",
+    "eslint-plugin-react": "^7.37.4",
+    "globals": "^15.15.0",
+    "husky": "^7.0.0",
+    "turbo": "^2.4.4",
+    "typescript": "5.4.3",
+    "typescript-eslint": "^8.24.1",
+    "@types/bun": "latest"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "workspaces": ["apps/*", "packages/*"],
+  "packageManager": "bun@1.2.2"
 }

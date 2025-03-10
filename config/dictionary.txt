@@ -8,12 +8,15 @@ checkpointer
 chromadb
 chrono
 cmdk
+davinci
+domcontentloaded
 fastify
 googleauth
 healthcheck
 ilike
 initdb
 isready
+KHTML
 langchain
 langgraph
 libsql
@@ -43,6 +46,7 @@ sublists
 supabase
 tavily
 typecheck
+typingmind
 Uniqlo
 vectorstores
 vercel

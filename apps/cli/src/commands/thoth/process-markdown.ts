@@ -15,6 +15,10 @@ interface ProcessMarkdownOptions {
   enhanced: boolean
 }
 
+function getFileShortPath(filePath: string) {
+  return filePath.split('/').slice(-2).join('/')
+}
+
 export default new Command('process-markdown')
   .command('process-markdown')
   .description('Process markdown files and create JSON files for bullet points')
@@ -25,16 +29,16 @@ export default new Command('process-markdown')
     try {
       const processor = options.enhanced ? new EnhancedMarkdownProcessor() : new MarkdownProcessor()
       const files = await getPathFiles(processPath, { extension: '.md' })
+      const shortPath = path.dirname(processPath).split('/').slice(-1).join('/')
 
-      const processorSpinner = ora().start(
-        `Processing markdown ${files.length} files in ${processPath
-          .split('/')
-          .slice(processPath.split('/').length - 2, processPath.split('/').length)
-          .join('/')}\n`
-      )
-
+      logger.info(`Processing ${files.length} files in ${shortPath}`)
       const headings = new Map<string, ProcessedMarkdownFileEntry[]>()
+
+      let index = 0
+      const processorSpinner = ora().start()
       for (const file of files) {
+        const fileShortPath = getFileShortPath(file)
+        processorSpinner.text = `Processing (${++index} / ${files.length}) ${fileShortPath}`
         const content = await processor.processFileWithAst(file)
 
         for (const entry of content.entries) {
@@ -50,9 +54,14 @@ export default new Command('process-markdown')
       }
       processorSpinner.succeed(`Processed ${files.length} files`)
 
-      const outputDir = path.resolve(options.output)
+      let outputDir = path.resolve(options.output)
+      if (!(await fs.exists(outputDir))) {
+        outputDir = path.dirname(processPath)
+      }
+
+      const outputFilePath = path.join(outputDir, 'output.json')
       await fs.writeFile(
-        path.join(outputDir, 'output.json'),
+        outputFilePath,
         JSON.stringify(
           Array.from(headings.entries()).map(([heading, entries]) => ({
             heading,
@@ -62,6 +71,7 @@ export default new Command('process-markdown')
           2
         )
       )
+      logger.info(`Output written to ${outputFilePath}`)
     } catch (error) {
       logger.error('Error processing markdown file:', error)
       process.exit(1)

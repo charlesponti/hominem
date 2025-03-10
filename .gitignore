@@ -13,6 +13,7 @@ output/
 build
 logs
 dist
+results.json
 
 # misc
 .DS_Store
