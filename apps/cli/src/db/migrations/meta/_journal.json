@@ -22,6 +22,13 @@
       "when": 1737835135328,
       "tag": "0002_unique_amazoness",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1741629149875,
+      "tag": "0003_supreme_husk",
+      "breakpoints": true
     }
   ]
 }

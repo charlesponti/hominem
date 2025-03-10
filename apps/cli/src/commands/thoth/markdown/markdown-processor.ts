@@ -1,16 +1,32 @@
 import { logger } from '@ponti/utils/logger'
-import { NLPProcessor, type TextAnalysis, type TextAnalysisEmotion } from '@ponti/utils/nlp'
+import { NLPProcessor, type TextAnalysis } from '@ponti/utils/nlp'
 import { getDatesFromText } from '@ponti/utils/time'
-import nlp from 'compromise'
-import * as mdast from 'mdast-util-to-string'
+import * as cheerio from 'cheerio'
 import * as fs from 'node:fs/promises'
+import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
+import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
-import type { Node } from 'unist'
-import type { ProcessedContent } from './types'
-import { detectTask, getContentType, normalizeWhitespace } from './utils'
+import { detectTask, normalizeWhitespace, taskRegex } from './utils'
 
-// Define the structure for our resulting JSON
+interface GetProcessedEntryParams {
+  $: ReturnType<typeof cheerio.load>
+  elem: ReturnType<ReturnType<typeof cheerio.load>>[0]
+  entry: ProcessedMarkdownFileEntry
+  section: string | null
+  tag: string
+}
+
+export interface EntryContent {
+  tag: string
+  text: string
+  section: string | null
+  isTask?: boolean
+  isComplete?: boolean
+  textAnalysis?: TextAnalysis
+  subentries?: EntryContent[]
+}
+
 export interface ProcessedMarkdownFileEntry {
   content: EntryContent[]
   date: string | undefined
@@ -19,45 +35,11 @@ export interface ProcessedMarkdownFileEntry {
   frontmatter?: Record<string, unknown>
 }
 
-export interface EntryContent {
-  tag: string
-  type: string
-  text: string
-  section: string | null
-  subItems?: EntryContent[]
-  isComplete?: boolean
-  metadata?: {
-    location?: string
-    people?: string[]
-    tags?: string[]
-  }
-  textAnalysis?: TextAnalysis
-}
-
 export interface ProcessedMarkdownFile {
   entries: ProcessedMarkdownFileEntry[]
 }
 
-export interface MarkdownNode extends Node {
-  type: string
-  children?: MarkdownNode[]
-  value?: string
-  depth?: number
-}
-
 export class MarkdownProcessor {
-  private currentHeading: string | undefined
-  private content: ProcessedContent
-
-  constructor() {
-    this.content = {
-      headings: [],
-      paragraphs: [],
-      bulletPoints: [],
-      others: [],
-    }
-  }
-
   async processFileWithAst(filepath: string): Promise<ProcessedMarkdownFile> {
     // Check that the file exists
     if (!(await fs.stat(filepath)).isFile()) {
@@ -65,7 +47,8 @@ export class MarkdownProcessor {
     }
 
     const content = await fs.readFile(filepath, 'utf-8')
-    return this.convertMarkdownToJSON(content, filepath)
+    const { result } = await this.convertMarkdownToJSON(content, filepath)
+    return result
   }
 
   processFrontmatter(content: string): { content: string; frontmatter?: Record<string, unknown> } {
@@ -100,6 +83,16 @@ export class MarkdownProcessor {
     return { content: processableContent, frontmatter }
   }
 
+  async convertMarkdownToHTML(content: string) {
+    const file = await unified()
+      .use(remarkParse)
+      .use(remarkRehype)
+      .use(rehypeStringify)
+      .process(content)
+
+    return cheerio.load(String(file))
+  }
+
   convertMarkdownToAST(content: string) {
     const processor = unified().use(remarkParse)
     return processor.parse(content)
@@ -128,318 +121,155 @@ export class MarkdownProcessor {
   async convertMarkdownToJSON(
     markdownContent: string,
     filename: string
-  ): Promise<ProcessedMarkdownFile> {
-    const result: ProcessedMarkdownFile = {
-      entries: [],
-    }
+  ): Promise<{ result: ProcessedMarkdownFile; html: string }> {
+    const result: ProcessedMarkdownFile = { entries: [] }
 
     // Extract frontmatter if present
     const { content: processableContent, frontmatter } = this.processFrontmatter(markdownContent)
 
-    // Convert the markdown content to an AST
-    const ast = this.convertMarkdownToAST(processableContent)
+    // Convert markdown to HTML for fancy querying
+    const $ = await this.convertMarkdownToHTML(processableContent)
 
-    let currentEntry: ProcessedMarkdownFileEntry | null = null
     let currentHeading: string | undefined
+    let currentEntry: ProcessedMarkdownFileEntry | null = null
 
-    const processListItem = async (item: MarkdownNode): Promise<EntryContent | null> => {
-      const itemText = mdast.toString(item)
-      if (!itemText.trim()) return null
+    const elements = $('body').children().toArray()
+    for (const elem of elements) {
+      const tag = elem.tagName.toLowerCase()
+      const text = $(elem).text().trim()
+      if (!text) continue
 
-      // Find the direct text content of this list item (excluding sublists)
-      const directTextNodes =
-        item.children?.filter((child) => child.type === 'text' || child.type === 'paragraph') || []
+      const { taskText } = detectTask(text)
 
-      const directText = directTextNodes
-        .map((child) => mdast.toString(child))
-        .join(' ')
-        .trim()
+      const processedText =
+        taskText ||
+        text
+          .replace(/^(-|\*)\s+/, '')
+          .replace(taskRegex, '')
+          .trim()
 
-      if (!directText) return null
-
-      const normalizedText = normalizeWhitespace(directText)
-      const { isTask, isComplete, taskText } = detectTask(normalizedText)
-
-      // Create the content entry
-      const content: EntryContent = {
-        tag: item.type,
-        type: isTask ? 'task' : 'thought',
-        text: taskText,
-        section: currentHeading?.toLowerCase() || null,
-        subItems: [],
-        ...(isTask && { isComplete }),
+      if (/^h[1-6]$/.test(tag)) {
+        // New entry on headings
+        currentHeading = text
+        currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
+        const { dates, fullDate } = getDatesFromText(text)
+        currentEntry.date = dates.length > 0 ? dates[0].start.split('T')[0] : fullDate
       }
 
-      // Process sublists recursively
-      const sublists = item.children?.filter((child) => child.type === 'list') || []
+      if (tag === 'paragraph') {
+        const previousContent = this.getPreviousEntry(currentEntry)
 
-      for (const sublist of sublists) {
-        const subItems = await Promise.all(
-          (sublist.children || [])
-            .filter((subItem) => subItem.type === 'listItem')
-            .map((subItem) => processListItem(subItem))
-        )
+        if (previousContent && previousContent.tag === 'paragraph') {
+          // Add to previous paragraph
+          previousContent.text += `\n ${processedText}`
+        }
 
-        content.subItems?.push(...(subItems.filter(Boolean) as EntryContent[]))
+        continue
       }
 
-      // Ensure we have an entry to add the content to
       if (!currentEntry) {
         currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
       }
 
-      // Process the content type and sentiment
-      await this.processContent({
-        tag: item.type,
-        text: normalizedText,
-        entry: currentEntry,
-        section: currentHeading?.toLowerCase() || null,
-        content,
-      })
-
-      return content
-    }
-
-    const processNode = async (node: MarkdownNode) => {
-      if (node.type === 'root') {
-        // Only process children of root
-        if (node.children) {
-          for (const child of node.children) {
-            await processNode(child)
-          }
-        }
-        return
-      }
-
-      const text = mdast.toString(node)
-      const normalizedText = normalizeWhitespace(text)
-
-      switch (node.type) {
-        case 'heading': {
-          currentHeading = normalizedText
-          const { dates, fullDate } = getDatesFromText(text)
-          const parsedDate = dates.length > 0 ? dates[0].start.split('T')[0] : fullDate
-
-          currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
-          currentEntry.date = parsedDate
-          break
-        }
-
-        case 'list': {
-          if (!currentEntry) {
-            currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
-          }
-
-          const previousNode = this.getPreviousEntry(currentEntry)
-          if (node.children) {
-            const listItems = await Promise.all(
-              node.children
-                .filter((item) => item.type === 'listItem')
-                .map((item) => processListItem(item))
-            )
-
-            currentEntry.content.push(...(listItems.filter(Boolean) as EntryContent[]))
-          }
-          break
-        }
-
-        case 'listItem': {
-          if (!currentEntry) {
-            currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
-          }
-
-          const previousNode = this.getPreviousEntry(currentEntry)
-
-          if (previousNode?.text.endsWith(':')) {
-            // Add as sub-item to previous node
-            const processedItem = await processListItem(node)
-            if (processedItem) {
-              previousNode.subItems = previousNode.subItems || []
-              previousNode.subItems.push(processedItem)
-            }
-          } else {
-            // Process as standalone entry
-            const processedItem = await processListItem(node)
-
-            if (processedItem) {
-              currentEntry.content.push(processedItem)
-            }
-          }
-          break
-        }
-
-        default: {
-          // Skip empty nodes or those matching the heading
-          if (!normalizedText.trim() || normalizedText.trim() === currentHeading?.toLowerCase()) {
-            break
-          }
-
-          if (!currentEntry) {
-            currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
-          }
-
-          await this.processContent({
-            tag: node.type,
-            text: normalizedText,
+      if (tag === 'ul' || tag === 'ol') {
+        const listItems = $(elem).find('> li').toArray()
+        for (const li of listItems) {
+          await this.processListItem({
+            $,
+            elem: li,
             entry: currentEntry,
-            section: currentHeading?.toLowerCase() || null,
+            section: currentHeading ? currentHeading.toLowerCase() : null,
+            tag,
           })
-          break
         }
+
+        continue
       }
 
-      // Process children recursively (except for list and paragraph)
-      if (node.children && node.type !== 'list' && node.type !== 'paragraph') {
-        for (const child of node.children) {
-          await processNode(child)
-        }
+      const processedContent = await this.getProcessedEntry({
+        $,
+        elem,
+        entry: currentEntry,
+        section: currentHeading ? currentHeading.toLowerCase() : null,
+        tag,
+      })
+      if (processedContent) {
+        currentEntry.content.push(processedContent)
       }
     }
 
-    // Start processing from root
-    await processNode(ast as MarkdownNode)
-
-    // Create default entry if none exists but we have frontmatter
     if (result.entries.length === 0 && frontmatter) {
       this.ensureEntry(filename, undefined, frontmatter, result.entries)
     }
 
-    return result
+    return { result, html: $.html() }
   }
 
-  // Helper function to process content and categorize it using NLP
-  async processContent({
-    tag,
-    text,
-    entry,
-    section,
-    content,
-  }: {
-    tag: string
-    text: string
-    entry: ProcessedMarkdownFileEntry
-    section: string | null
-    content?: EntryContent
-  }): Promise<void> {
+  async getProcessedEntry(params: GetProcessedEntryParams): Promise<EntryContent | undefined> {
+    const { $, elem, section, tag } = params
+    const text = $(elem).contents().first().text().trim()
     if (!text) return
+    const normalizedText = normalizeWhitespace(text)
+    const { isTask, isComplete, taskText } = detectTask(normalizedText)
 
-    // Remove leading dashes from bullet points
-    let processedText = text.replace(/^- /, '')
-
-    // Use compromise for basic NLP analysis
-    const doc = nlp(text)
-
-    // Check if this is a task item
-    const { isTask, isComplete, taskMatch } = detectTask(processedText)
-    if (isTask && taskMatch?.[2]) {
-      processedText = taskMatch[2]
-    }
-
-    const contentType = getContentType(doc, processedText, isTask)
-
-    // Extract metadata with helper method
-    const metadata = this.extractMetadata(doc, text)
-
-    // Handle content update
-    if (content) {
-      if (!isTask) {
-        content.type = contentType
-      }
-      content.section = section
-      content.metadata = metadata
-      if (isTask) {
-        content.isComplete = isComplete
-      }
-    } else {
-      const previousContent = this.getPreviousEntry(entry)
-
-      if (previousContent && previousContent.tag === 'paragraph' && tag === 'paragraph') {
-        // Add to previous paragraph
-        previousContent.text += `\n ${processedText}`
-      } else {
-        // Create new content entry
-        entry.content.push({
-          tag,
-          type: contentType,
-          text: processedText,
-          section,
-          metadata,
-          ...(isTask && { isComplete }),
-        })
-      }
+    return {
+      tag,
+      text: taskText || normalizedText,
+      section,
+      isTask,
+      isComplete,
+      subentries: [],
     }
   }
 
-  private extractMetadata(doc: ReturnType<typeof nlp>, text: string) {
-    const metadata = {
-      location: undefined,
-      people: [] as string[],
-      tags: [] as string[],
+  async processListItem(params: GetProcessedEntryParams) {
+    const { $, elem, entry } = params
+    const processedContent = await this.getProcessedEntry(params)
+    if (!processedContent) return
+
+    entry.content.push(processedContent)
+
+    // Refactored nested lists recursion
+    const subentries = await this.processNestedLists($, elem, entry, processedContent.tag)
+    if (subentries.length > 0) {
+      processedContent.subentries = subentries
     }
+  }
 
-    // Extract locations
-    const locations = doc.places().out('array')
-    if (locations.length > 0) {
-      metadata.location = locations[0]
-    }
+  private async processNestedLists(
+    $: ReturnType<typeof cheerio.load>,
+    liElem: ReturnType<ReturnType<typeof cheerio.load>>[0],
+    entry: ProcessedMarkdownFileEntry,
+    tag: string
+  ): Promise<EntryContent[]> {
+    const subentries: EntryContent[] = []
 
-    // Extract people
-    const people = doc.people().out('array')
-    metadata.people = Array.from(new Set(people))
-
-    // Extract hashtags
-    const hashtagMatch = text.match(/#\w+/g)
-    if (hashtagMatch) {
-      for (const tag of hashtagMatch) {
-        const cleanTag = tag.substring(1).toLowerCase()
-        metadata.tags.push(cleanTag)
+    // Process immediate nested lists (ul or ol) inside the current li element
+    const nestedLists = $(liElem).find('> ul, > ol').toArray()
+    for (const nestedList of nestedLists) {
+      // Use the text of the current li as section
+      const parentText = $(liElem).contents().first().text().trim()
+      const nestedListItems = $(nestedList).find('> li').toArray()
+      for (const nestedListItem of nestedListItems) {
+        const nestedContent = await this.getProcessedEntry({
+          $,
+          elem: nestedListItem,
+          entry,
+          section: parentText,
+          tag,
+        })
+        if (nestedContent) {
+          // Process deeper nested lists recursively
+          nestedContent.subentries = await this.processNestedLists($, nestedListItem, entry, tag)
+          subentries.push(nestedContent)
+        }
       }
     }
-
-    // Add key concepts as tags
-    const topics = doc.topics().out('array')
-    for (const topic of topics) {
-      const cleanTopic = topic.toLowerCase()
-      if (!metadata.tags.includes(cleanTopic)) {
-        metadata.tags.push(cleanTopic)
-      }
-    }
-
-    return metadata
+    return subentries
   }
 
   getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {
     if (!entry) return undefined
     return entry.content[entry.content.length - 1]
-  }
-}
-
-export class EnhancedMarkdownProcessor extends MarkdownProcessor {
-  private nlpProcessor = new NLPProcessor({
-    provider: 'ollama',
-    model: 'llama3.2',
-  })
-
-  async processContent(params: {
-    tag: string
-    text: string
-    entry: ProcessedMarkdownFileEntry
-    section: string | null
-    content?: EntryContent
-  }): Promise<void> {
-    await super.processContent(params)
-
-    // Add NLP analysis to the content object
-    if (params.content) {
-      const textAnalysis = await this.nlpProcessor.analyzeText(params.text)
-      params.content.textAnalysis = textAnalysis
-      return
-    }
-
-    const previousContent = this.getPreviousEntry(params.entry)
-    if (previousContent) {
-      const textAnalysis = await this.nlpProcessor.analyzeText(params.text)
-      previousContent.textAnalysis = textAnalysis
-    }
   }
 }

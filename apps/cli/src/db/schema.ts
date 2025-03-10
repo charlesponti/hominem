@@ -35,3 +35,25 @@ export const venues = sqliteTable('venues', {
 })
 
 export type Venue = typeof venues.$inferSelect
+
+// Define the schema for markdown entries
+export const markdownEntries = sqliteTable('markdown_entries', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  filePath: text('file_path').notNull(),
+  processingDate: integer('processing_date', { mode: 'timestamp' }).notNull(),
+  text: text('text').notNull(),
+  section: text('section').notNull(),
+  isTask: integer('is_task', { mode: 'boolean' }),
+  isComplete: integer('is_complete', { mode: 'boolean' }),
+  textAnalysis: text('text_analysis', { mode: 'json' }),
+  // Add additional columns as needed
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
+
+// You can add more tables as needed
+// export const otherTable = sqliteTable(...)
