@@ -1,8 +1,9 @@
-import { chromium, type Page } from 'playwright'
+import type { Page } from 'playwright'
 import rehypeParse from 'rehype-parse'
 import rehypeRemark from 'rehype-remark'
 import remarkStringify from 'remark-stringify'
 import { unified } from 'unified'
+import { getBrowser } from './browser'
 
 async function removeHiddenElements(page: Page) {
   return await page.evaluate(() => {
@@ -26,14 +27,7 @@ async function removeHiddenElements(page: Page) {
 export async function getSiteHTML(url: string, query?: string): Promise<string> {
   try {
     // Launch the browser with non-headless mode and args to bypass automation detections
-    const browser = await chromium.launch({
-      // headless: false,
-      args: [
-        '--disable-blink-features=AutomationControlled',
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-      ],
-    })
+    const browser = await getBrowser()
     // Open a new tab
     const page = await browser.newPage({
       // Set a realistic User-Agent

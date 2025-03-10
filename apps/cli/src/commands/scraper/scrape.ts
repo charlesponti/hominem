@@ -19,6 +19,7 @@ interface ScrapeOptions {
   query: string
   output: string
   type: AVAILABLE_SCHEMAS
+  images?: boolean
 }
 
 program
@@ -28,6 +29,7 @@ program
   .option('-o, --output <output>', 'The output file')
   .option('-t, --type <type>', 'the type of website (airbnb-listing, job, etc)')
   .option('-q, --query <query>', 'The query selector')
+  .option('-i, --images', 'Extract and save image URLs')
   .action(async (options: ScrapeOptions) => {
     const commandStartTime = Date.now()
     const { url } = options
@@ -48,12 +50,12 @@ program
     // If the user does not provide an output, use the last part of the URL
     if (!output) {
       const urlObj = new URL(url)
-      const pathname = urlObj.pathname;
-      
-      // Remove empty strings from the array. This can occur if the URL ends with a slash.
-      const urlParts = pathname.split('/').filter(Boolean);
+      const pathname = urlObj.pathname
 
-      output = `${urlObj.hostname.replace(/^www\./ig, "")} - ${urlParts.pop()}.md`
+      // Remove empty strings from the array. This can occur if the URL ends with a slash.
+      const urlParts = pathname.split('/').filter(Boolean)
+
+      output = `${urlObj.hostname.replace(/^www\./gi, '')} - ${urlParts.pop()}.md`
     }
 
     const { isJobPosting, query: jobQuery } = parseLinkedinJobUrl(url)
@@ -68,6 +70,21 @@ program
     try {
       markdown = await getMarkdownFromURL(url, query)
       scraperSpinner.succeed('Scraping completed')
+
+      if (options.images) {
+        const imageUrls = markdown
+          .toString()
+          .split('\n')
+          .filter((line) => line.includes('![Image]'))
+          .map((line) => {
+            // Extract image URL from markdown link format
+            const match = line.match(/\!\[Image\]\(([^)]+)\)/)
+            return (match ? match[1] : '').replace('\\', '')
+          })
+        const imagesOutputPath = output.replace(/\.(md|json)$/, '-images.json')
+        fs.writeFileSync(imagesOutputPath, JSON.stringify({ images: imageUrls }, null, 2))
+        logger.info(`Image URLs saved to ${imagesOutputPath}`)
+      }
     } catch (error) {
       scraperSpinner.fail('Scraping failed')
       logger.error('Error scraping website:', error)
