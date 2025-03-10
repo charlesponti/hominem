@@ -79,7 +79,6 @@ export class MarkdownProcessor {
         // Parse the frontmatter content (assuming YAML format)
         const frontmatterContent = frontmatterMatch[1]
         // For now, we'll do a simple key-value extraction
-        // You might want to add a proper YAML parser like 'js-yaml' for more complex frontmatter
         frontmatter = Object.fromEntries(
           frontmatterContent
             .split('\n')
@@ -106,6 +105,26 @@ export class MarkdownProcessor {
     return processor.parse(content)
   }
 
+  // Helper method to create or retrieve an entry
+  private ensureEntry(
+    filename: string,
+    heading: string | undefined,
+    frontmatter?: Record<string, unknown>,
+    entries: ProcessedMarkdownFileEntry[] = []
+  ): ProcessedMarkdownFileEntry {
+    // If no entry exists or we're at a new heading, create a new entry
+    const entry: ProcessedMarkdownFileEntry = {
+      date: undefined,
+      filename,
+      heading: heading || filename.split('/').pop() || '',
+      content: [],
+      frontmatter,
+    }
+
+    entries.push(entry)
+    return entry
+  }
+
   async convertMarkdownToJSON(
     markdownContent: string,
     filename: string
@@ -128,8 +147,10 @@ export class MarkdownProcessor {
       if (!itemText.trim()) return null
 
       // Find the direct text content of this list item (excluding sublists)
-      const directText = item.children
-        ?.filter((child) => child.type === 'text' || child.type === 'paragraph')
+      const directTextNodes =
+        item.children?.filter((child) => child.type === 'text' || child.type === 'paragraph') || []
+
+      const directText = directTextNodes
         .map((child) => mdast.toString(child))
         .join(' ')
         .trim()
@@ -137,44 +158,34 @@ export class MarkdownProcessor {
       if (!directText) return null
 
       const normalizedText = normalizeWhitespace(directText)
-
       const { isTask, isComplete, taskText } = detectTask(normalizedText)
 
       // Create the content entry
       const content: EntryContent = {
         tag: item.type,
-        type: isTask ? 'task' : 'thought', // Will be updated by processContent if not a task
+        type: isTask ? 'task' : 'thought',
         text: taskText,
         section: currentHeading?.toLowerCase() || null,
         subItems: [],
         ...(isTask && { isComplete }),
       }
 
-      // Process sublists if they exist
-      const sublists = item.children?.filter((child) => child.type === 'list')
-      if (sublists && sublists.length > 0) {
-        for (const sublist of sublists) {
-          for (const subItem of sublist.children || []) {
-            if (subItem.type === 'listItem') {
-              const processedSubItem = await processListItem(subItem)
-              if (processedSubItem) {
-                content.subItems?.push(processedSubItem)
-              }
-            }
-          }
-        }
+      // Process sublists recursively
+      const sublists = item.children?.filter((child) => child.type === 'list') || []
+
+      for (const sublist of sublists) {
+        const subItems = await Promise.all(
+          (sublist.children || [])
+            .filter((subItem) => subItem.type === 'listItem')
+            .map((subItem) => processListItem(subItem))
+        )
+
+        content.subItems?.push(...(subItems.filter(Boolean) as EntryContent[]))
       }
 
+      // Ensure we have an entry to add the content to
       if (!currentEntry) {
-        currentEntry = {
-          date: undefined,
-          filename,
-          heading: filename.split('/').pop() || '',
-          content: [],
-          frontmatter,
-        }
-
-        result.entries.push(currentEntry)
+        currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
       }
 
       // Process the content type and sentiment
@@ -190,9 +201,8 @@ export class MarkdownProcessor {
     }
 
     const processNode = async (node: MarkdownNode) => {
-      // Skip the root node's direct text content as it might contain frontmatter remnants
       if (node.type === 'root') {
-        // Only process children of root, not its direct content
+        // Only process children of root
         if (node.children) {
           for (const child of node.children) {
             await processNode(child)
@@ -206,82 +216,66 @@ export class MarkdownProcessor {
 
       switch (node.type) {
         case 'heading': {
-          currentHeading = normalizeWhitespace(text)
+          currentHeading = normalizedText
           const { dates, fullDate } = getDatesFromText(text)
           const parsedDate = dates.length > 0 ? dates[0].start.split('T')[0] : fullDate
 
-          currentEntry = {
-            date: parsedDate,
-            filename,
-            heading: currentHeading,
-            content: [],
-            frontmatter,
-          }
-          result.entries.push(currentEntry)
+          currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
+          currentEntry.date = parsedDate
           break
         }
 
         case 'list': {
-          if (node.children) {
-            for (const item of node.children) {
-              if (item.type === 'listItem') {
-                // Ensure we have an entry to add content to
-                if (!currentEntry) {
-                  currentEntry = {
-                    date: undefined,
-                    filename,
-                    heading: currentHeading || filename.split('/').pop() || '',
-                    content: [],
-                    frontmatter,
-                  }
-                  result.entries.push(currentEntry)
-                }
+          if (!currentEntry) {
+            currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
+          }
 
-                const processedItem = await processListItem(item)
-                if (processedItem) {
-                  currentEntry.content.push(processedItem)
-                }
-              }
-            }
+          const previousNode = this.getPreviousEntry(currentEntry)
+          if (node.children) {
+            const listItems = await Promise.all(
+              node.children
+                .filter((item) => item.type === 'listItem')
+                .map((item) => processListItem(item))
+            )
+
+            currentEntry.content.push(...(listItems.filter(Boolean) as EntryContent[]))
           }
           break
         }
 
         case 'listItem': {
+          if (!currentEntry) {
+            currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
+          }
+
           const previousNode = this.getPreviousEntry(currentEntry)
 
           if (previousNode?.text.endsWith(':')) {
-            // If the previous node ends with `:`, we should add this and all subsequent list items to the previous node
-            // as they are likely sub-items
+            // Add as sub-item to previous node
             const processedItem = await processListItem(node)
             if (processedItem) {
-              previousNode.subItems?.push(processedItem)
+              previousNode.subItems = previousNode.subItems || []
+              previousNode.subItems.push(processedItem)
             }
           } else {
-            // Otherwise, process this list item as a standalone entry
+            // Process as standalone entry
             const processedItem = await processListItem(node)
+
             if (processedItem) {
-              currentEntry?.content.push(processedItem)
+              currentEntry.content.push(processedItem)
             }
           }
           break
         }
-        default: {
-          // Ensure we have an entry to add content to
-          if (!currentEntry) {
-            currentEntry = {
-              date: undefined,
-              filename,
-              heading: currentHeading || filename.split('/').pop() || '',
-              content: [],
-              frontmatter,
-            }
-            result.entries.push(currentEntry)
-          }
 
-          // Skip if this is the same as the current heading
+        default: {
+          // Skip empty nodes or those matching the heading
           if (!normalizedText.trim() || normalizedText.trim() === currentHeading?.toLowerCase()) {
             break
+          }
+
+          if (!currentEntry) {
+            currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
           }
 
           await this.processContent({
@@ -290,13 +284,11 @@ export class MarkdownProcessor {
             entry: currentEntry,
             section: currentHeading?.toLowerCase() || null,
           })
-
           break
         }
       }
 
-      // Process children recursively (except for list and paragraph, which we handle specially)
-      // Paragraphs only contain text, which is already processed
+      // Process children recursively (except for list and paragraph)
       if (node.children && node.type !== 'list' && node.type !== 'paragraph') {
         for (const child of node.children) {
           await processNode(child)
@@ -307,15 +299,9 @@ export class MarkdownProcessor {
     // Start processing from root
     await processNode(ast as MarkdownNode)
 
-    // If no entries were created but we have frontmatter, create a default entry
+    // Create default entry if none exists but we have frontmatter
     if (result.entries.length === 0 && frontmatter) {
-      result.entries.push({
-        date: undefined,
-        filename,
-        heading: filename.split('/').pop() || '',
-        content: [],
-        frontmatter,
-      })
+      this.ensureEntry(filename, undefined, frontmatter, result.entries)
     }
 
     return result
@@ -345,14 +331,46 @@ export class MarkdownProcessor {
 
     // Check if this is a task item
     const { isTask, isComplete, taskMatch } = detectTask(processedText)
-
     if (isTask && taskMatch?.[2]) {
       processedText = taskMatch[2]
     }
 
     const contentType = getContentType(doc, processedText, isTask)
 
-    // Extract metadata
+    // Extract metadata with helper method
+    const metadata = this.extractMetadata(doc, text)
+
+    // Handle content update
+    if (content) {
+      if (!isTask) {
+        content.type = contentType
+      }
+      content.section = section
+      content.metadata = metadata
+      if (isTask) {
+        content.isComplete = isComplete
+      }
+    } else {
+      const previousContent = this.getPreviousEntry(entry)
+
+      if (previousContent && previousContent.tag === 'paragraph' && tag === 'paragraph') {
+        // Add to previous paragraph
+        previousContent.text += `\n ${processedText}`
+      } else {
+        // Create new content entry
+        entry.content.push({
+          tag,
+          type: contentType,
+          text: processedText,
+          section,
+          metadata,
+          ...(isTask && { isComplete }),
+        })
+      }
+    }
+  }
+
+  private extractMetadata(doc: ReturnType<typeof nlp>, text: string) {
     const metadata = {
       location: undefined,
       people: [] as string[],
@@ -367,24 +385,18 @@ export class MarkdownProcessor {
 
     // Extract people
     const people = doc.people().out('array')
-    for (const person of people) {
-      if (!metadata.people.includes(person)) {
-        metadata.people.push(person)
-      }
-    }
+    metadata.people = Array.from(new Set(people))
 
-    // Extract potential tags (words with # or prominent concepts)
+    // Extract hashtags
     const hashtagMatch = text.match(/#\w+/g)
     if (hashtagMatch) {
       for (const tag of hashtagMatch) {
         const cleanTag = tag.substring(1).toLowerCase()
-        if (!metadata.tags.includes(cleanTag)) {
-          metadata.tags.push(cleanTag)
-        }
+        metadata.tags.push(cleanTag)
       }
     }
 
-    // Look for key concepts that could be tags
+    // Add key concepts as tags
     const topics = doc.topics().out('array')
     for (const topic of topics) {
       const cleanTopic = topic.toLowerCase()
@@ -393,35 +405,7 @@ export class MarkdownProcessor {
       }
     }
 
-    // If we have a content object, update it directly
-    if (content) {
-      if (!isTask) {
-        // Only update type if it's not already a task
-        content.type = contentType
-      }
-      content.section = section
-      content.metadata = metadata
-      if (isTask) {
-        content.isComplete = isComplete
-      }
-    } else {
-      const previousContent = this.getPreviousEntry(entry)
-
-      if (previousContent && previousContent.tag === 'paragraph' && tag === 'paragraph') {
-        // Add current content to the previous paragraph
-        previousContent.text += `\n ${processedText}`
-      } else {
-        // Otherwise create a new content entry (for non-list content)
-        entry.content.push({
-          tag,
-          type: contentType,
-          text: processedText,
-          section,
-          metadata,
-          ...(isTask && { isComplete }),
-        })
-      }
-    }
+    return metadata
   }
 
   getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {
