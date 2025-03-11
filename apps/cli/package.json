@@ -6,7 +6,6 @@
     "hominem": "src/index.ts"
   },
   "scripts": {
-    "start": "bun run src/index.ts",
     "test": "NODE_ENV=test vitest --run --coverage"
   },
   "keywords": [],
