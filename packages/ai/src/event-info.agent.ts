@@ -5,7 +5,7 @@ import {
   get_performance_finances_by_id,
   get_performance_ticket_sales_by_id,
   get_performances,
-} from '../tour.tools'
+} from '../../../apps/web/lib/tour.tools'
 
 export async function eventInfoToolCall({ prompt }: { prompt: string }) {
   const response = await generateText({

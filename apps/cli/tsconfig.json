@@ -1,5 +1,5 @@
 {
-  "extends": "tsconfig/base.json",
+  "extends": "@ponti/tsconfigs/base.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "noEmit": true,
