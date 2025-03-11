@@ -12,12 +12,14 @@
     "./location": "./src/location/index.ts",
     "./logger": "./src/logging/logger.ts",
     "./nlp": "./src/nlp/index.ts",
+    "./ollama": "./src/ai-models/ollama.ts",
     "./google-sheets": "./src/google/sheets.ts",
     "./google-calendar": "./src/google/calendar.ts",
     "./google-maps": "./src/google/maps.ts",
     "./redis": "./src/redis.ts",
     "./scraping": "./src/scraping/index.ts",
     "./schema": "./src/db/schema/index.ts",
+    "./services": "./src/services/index.ts",
     "./types": "./src/types/index.ts",
     "./writer": "./src/writer/index.ts"
   },
@@ -27,6 +29,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.1.10",
+    "@ai-sdk/openai": "^1.1.9",
     "@google-cloud/local-auth": "^3.0.1",
     "ai": "^4.1.26",
     "axios": "^1.7.9",
@@ -43,12 +47,18 @@
     "mongodb": "^6.13.0",
     "ollama-ai-provider": "^1.2.0",
     "openai": "4.83.0",
+    "playwright": "^1.51.0",
     "postgres": "^3.4.5",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
     "vite": "^6.1.1",
     "winston": "3.17.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.51.0",
     "@types/node": "^22.13.1",
     "@vitest/coverage-v8": "^3.0.5",
     "drizzle-kit": "^0.30.4",

@@ -1,16 +1,11 @@
-import 'dotenv/config'
 import { defineConfig } from 'drizzle-kit'
-import assert from 'node:assert'
-
-const { DATABASE_URL } = Bun.env
-
-assert(DATABASE_URL, 'Missing DATABASE_URL')
+import { env } from './src/env'
 
 export default defineConfig({
   out: './src/db/migrations',
   schema: './src/db/schema.ts',
   dialect: 'sqlite',
   dbCredentials: {
-    url: DATABASE_URL,
+    url: env.DB_PATH,
   },
 })

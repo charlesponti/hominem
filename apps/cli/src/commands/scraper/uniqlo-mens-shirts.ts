@@ -1,16 +1,22 @@
 import { logger } from '@ponti/utils/logger'
+import { getBrowser, getContext } from '@ponti/utils/scraping'
 import * as fs from 'node:fs'
+import path from 'node:path'
 import ora from 'ora'
-import { chromium } from 'playwright'
 
 async function scrapeUniqlo() {
+  const SCRATCHPAD_DIR = process.env.SCRATCHPAD_DIR
+  
+  if (!SCRATCHPAD_DIR) {
+    logger.error('SCRATCHPAD_DIR environment variable is required')
+    process.exit(1)
+  }
+
   logger.info('🚀 Starting Uniqlo scraper...')
 
   const spinner = ora('Launching browser').start()
-  const browser = await chromium.launch({
-    headless: false,
-  })
-  const context = await browser.newContext()
+  const browser = await getBrowser()
+  const context = await getContext(browser)
   const page = await context.newPage()
   spinner.succeed()
 
@@ -65,18 +71,21 @@ async function scrapeUniqlo() {
   spinner.succeed()
 
   spinner.start('Saving results to file')
-  fs.writeFileSync('./results.json', JSON.stringify(results, null, 2))
+  fs.writeFileSync(path.resolve(SCRATCHPAD_DIR, './results.json'), JSON.stringify(results, null, 2))
   spinner.succeed('Results saved to results.json')
 
   logger.info('✨ Scraping completed successfully!')
 
   return results
 }
-
 ;(async () => {
-  const results = await scrapeUniqlo()
-  console.log('Scraping results:', results)
-})().catch((error) => {
-  console.error('❌ Error during scraping:', error)
-  process.exit(1)
-})
+  try {
+    const results = await scrapeUniqlo()
+    logger.info('Scraping results:', results)
+  } catch (error) {
+    logger.error('❌ Error during scraping:', error)
+    process.exit(1)
+  } finally {
+    logger.info('🛑 Scraping process has ended.')
+  }
+})()

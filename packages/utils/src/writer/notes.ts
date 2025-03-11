@@ -1,5 +1,5 @@
-import * as chrono from 'chrono-node'
 import nlp from 'compromise'
+import { getDatesFromText } from '../time'
 import type { NoteDetails } from '../types/notes'
 
 export function parseNoteDetails(userInput: string): NoteDetails {
@@ -8,9 +8,9 @@ export function parseNoteDetails(userInput: string): NoteDetails {
 
   // Initialize default values
   let place = ''
-  let dateTime: string | null = null
   let category: string[] = []
   let labels: string[] = []
+  const { dates } = getDatesFromText(userInput)
 
   // Extract possible title
   const titleTokens = doc.match('#Verb+ #Noun+').out('array')
@@ -27,10 +27,6 @@ export function parseNoteDetails(userInput: string): NoteDetails {
   // ! TODO Search user's contacts to find the appropriate people
 
   // Extract and parse date/time
-  const dates = chrono.parse(userInput)
-  if (dates.length > 0 && dates[0]) {
-    dateTime = dates[0].start.date().toISOString()
-  }
 
   // Extract category (#tag)
   const categoryMatch = title.match(/#(\w+)/g)
@@ -47,13 +43,10 @@ export function parseNoteDetails(userInput: string): NoteDetails {
   return {
     content: doc.all().out('array'),
     people,
-    dates: dates.map((date) => ({
-      start: date.start.date().toISOString(),
-      end: date.end?.date().toISOString(),
-    })),
+    dates,
     category,
     labels,
     place: place || 'No Place Found',
-    date_time: dateTime || 'No Date/Time Found',
+    date_time: dates[0]?.start || 'No Date/Time Found',
   }
 }

@@ -1,175 +1,167 @@
-import nlp from 'compromise'
+import { openai } from '@ai-sdk/openai'
+import { generateObject } from 'ai'
+import { z } from 'zod'
+import { ollama } from '../ai-models/ollama'
 
-export interface EmotionalJourney {
-  text: string
-  emotion: string
-  intensity: number
+export const PeopleSchema = z.array(z.object({ firstName: z.string(), lastName: z.string() }))
+export type People = z.infer<typeof PeopleSchema>
+
+// Decisions Schema
+export const DecisionsSchema = z
+  .object({
+    decisions: z.array(z.string()).describe('Decisions made in the text'),
+    alternatives: z
+      .array(z.string())
+      .describe('Alternatives considered and other possible decisions'),
+    reasoning: z.array(z.string()).describe('Reasoning behind the decisions'),
+  })
+  .optional()
+export type Decisions = z.infer<typeof DecisionsSchema>
+
+// Habits Schema
+export const HabitsSchema = z
+  .object({
+    routines: z.array(z.string()),
+    frequency: z.array(z.string()),
+    timePatterns: z.array(z.string().describe('Time patterns in the cron format')),
+  })
+  .optional()
+export type Habits = z.infer<typeof HabitsSchema>
+
+export const ActionItemsSchema = z
+  .object({
+    todos: z.array(z.string()),
+    commitments: z.array(z.string()),
+    deadlines: z.array(z.string()),
+  })
+  .optional()
+export type ActionItems = z.infer<typeof ActionItemsSchema>
+
+export const TextAnalysisEmotionSchema = z.object({
+  emotion: z.string(),
+  intensity: z.number(),
+})
+export type TextAnalysisEmotion = z.infer<typeof TextAnalysisEmotionSchema>
+
+export const LocationSchema = z.object({
+  name: z.string().describe('Specific name of the location (e.g., "Eiffel Tower", "Central Park")'),
+  city: z.string().describe('City where the location is situated (e.g., "Paris", "New York")'),
+  state: z.string().describe('State or province of the location (e.g., "California", "Ontario")'),
+  region: z
+    .string()
+    .describe('Broader geographical region (e.g., "Midwest", "Alps", "Silicon Valley")'),
+  country: z.string().describe('Full country name (e.g., "United States", "Japan")'),
+  continent: z
+    .string()
+    .describe('One of seven continents (e.g., "Europe", "North America", "Asia")'),
+})
+
+export const TextAnalysisSchema = z.object({
+  questions: z.array(z.string()).optional(),
+  comparisons: z
+    .array(z.array(z.string()))
+    .optional()
+    .describe(
+      'Comparisons between items. Example output: [["item1", "item2", "item3"], ["item4", "item5"]'
+    ),
+  items: z
+    .array(
+      z.object({
+        name: z.string(),
+        quantity: z.number(),
+      })
+    )
+    .describe('Physical items mentioned in the text')
+    .optional(),
+  locations: z.array(LocationSchema).describe('Locations mentioned in the text').optional(),
+  emotions: z.array(TextAnalysisEmotionSchema),
+  people: z.array(z.string()).describe('People mentioned in the text'),
+  activities: z.array(z.string()).describe('Activities mentioned in the text'),
+  decisions: DecisionsSchema.optional(),
+  habits: HabitsSchema.optional(),
+  topics: z.array(z.string()).describe('Topics mentioned in the text'),
+  timestamp: z
+    .string()
+    .describe('Timestamp of the analysis in ISO format, e.g. 2022-01-01T00:00:00Z'),
+})
+export type TextAnalysis = z.infer<typeof TextAnalysisSchema>
+
+export interface NLPProcessorConfig {
+  provider: 'openai' | 'ollama'
+  model?: string
 }
 
-export interface NLPAnalysis {
-  verbs: {
-    future: string[] // Planning to do
-    past: string[] // Already done
-    present: string[] // Currently doing
-  }
-  questions: string[] // Questions asked
-  conditions: string[] // "if/then" statements
-  comparisons: string[] // Comparisons made
-  quantities: string[] // Numbers and amounts
-  emphasis: string[] // Strongly emphasized statements
-  topics: {
-    // Topic categorization
-    tech: string[]
-    personal: string[]
-    work: string[]
-    // etc
-  }
+const DEFAULT_CONFIG: NLPProcessorConfig = {
+  provider: 'openai',
+  model: 'gpt-4o-mini',
 }
 
-export class EnhancedNLPProcessor {
-  analyzeText(text: string): NLPAnalysis {
-    const doc = nlp(text)
+export class NLPProcessor {
+  private config: NLPProcessorConfig
+  private defaultOllamaModel = 'llama3.2'
+  private defaultOpenaiModel = 'gpt-4o-mini'
 
-    return {
-      // Find all verbs by tense
-      verbs: {
-        future: doc.match('#Verb').if('#Future').out('array'),
-        past: doc.match('#Verb').if('#PastTense').out('array'),
-        present: doc.match('#Verb').if('#PresentTense').out('array'),
-      },
-
-      // Find all questions asked
-      questions: doc.questions().out('array'),
-
-      // Find conditional statements
-      conditions: doc
-        .match('if * then *')
-        .concat(doc.match('unless *'))
-        .concat(doc.match('* would *'))
-        .out('array'),
-
-      // Find comparisons
-      comparisons: doc.match('* (better|worse|more|less|greater|smaller) than *').out('array'),
-
-      // Find quantities and measurements
-      quantities: doc.numbers().concat(doc.match('#Value #Unit')).out('array'),
-
-      // Find emphasized statements
-      emphasis: doc.match('(really|very|absolutely|definitely|extremely) *').out('array'),
-
-      // Categorize topics
-      topics: {
-        tech: doc.match('(computer|software|code|program|app|website) *').out('array'),
-        personal: doc.match('(feel|think|believe|want|need) *').out('array'),
-        work: doc.match('(meeting|project|deadline|client|work) *').out('array'),
-      },
-    }
+  constructor(config: Partial<NLPProcessorConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config }
   }
 
-  private detectEmotion(sentence: ReturnType<typeof nlp>): string {
-    const text = sentence.out('text')
-    // Basic emotion detection based on keywords
-    if (/(happy|joy|excited|wonderful|great|love)/i.test(text)) return 'joy'
-    if (/(sad|depressed|unhappy|miserable)/i.test(text)) return 'sadness'
-    if (/(angry|mad|furious|annoyed)/i.test(text)) return 'anger'
-    if (/(afraid|scared|worried|anxious)/i.test(text)) return 'fear'
-    if (/(surprised|amazed|astonished)/i.test(text)) return 'surprise'
-    return 'neutral'
+  private getModel() {
+    return this.config.provider === 'openai'
+      ? openai(this.config.model || this.defaultOpenaiModel, { structuredOutputs: true })
+      : ollama(this.config.model || this.defaultOllamaModel, { structuredOutputs: true })
   }
 
-  private measureIntensity(sentence: ReturnType<typeof nlp>): number {
-    // Count intensity modifiers and exclamations
-    const intensifierCount = sentence.match(
-      '(very|really|extremely|absolutely|totally|completely)'
-    ).length
-    const exclamationCount = (sentence.out('text').match(/!/g) || []).length
-
-    // Base intensity is 1, each intensifier adds 0.2, each exclamation adds 0.1
-    return 1 + intensifierCount * 0.2 + exclamationCount * 0.1
-  }
-
-  // Analyze the emotional journey in a text
-  analyzeEmotionalJourney(text: string): EmotionalJourney[] {
-    const doc = nlp(text)
-    const sentences = doc.sentences().out('array')
-
-    return sentences.map((sentenceText: string) => {
-      const sentenceDoc = nlp(sentenceText)
-      return {
-        text: sentenceText,
-        emotion: this.detectEmotion(sentenceDoc),
-        intensity: this.measureIntensity(sentenceDoc),
-      }
+  async analyzeText(text: string): Promise<TextAnalysis> {
+    const response = await generateObject({
+      model: this.getModel(),
+      prompt: `Analyze the following text and extract linguistic patterns, emotions, and topics: "${text}"`,
+      schema: TextAnalysisSchema,
     })
+    return response.object
   }
 
-  // Find action items and commitments
-  findActionItems(text: string) {
-    const doc = nlp(text)
-
-    return {
-      // Find explicit todos
-      todos: doc.match('(need to|must|should|have to) #Verb').out('array'),
-
-      // Find commitments
-      commitments: doc.match('(will|going to|planning to) #Verb').out('array'),
-
-      // Find deadlines
-      deadlines: doc.match('(by|before|due) #Date').out('array'),
-    }
+  async analyzeEmotionalJourney(text: string): Promise<TextAnalysisEmotion[]> {
+    const response = await generateObject({
+      model: this.getModel(),
+      prompt: `Analyze the emotional journey in this text, breaking it down by sentences: "${text}"`,
+      schema: z.array(TextAnalysisEmotionSchema),
+    })
+    return response.object
   }
 
-  // Analyze social interactions
-  analyzeSocialInteractions(text: string) {
-    const doc = nlp(text)
-
-    return {
-      // Find mentioned people
-      people: doc.people().out('array'),
-
-      // Find social activities
-      activities: doc
-        .match('(met|talked|spoke|discussed|lunch|dinner) (with|to) #Person')
-        .out('array'),
-
-      // Find communication verbs
-      communications: doc.match('#Person? (said|mentioned|told|asked|suggested)').out('array'),
-    }
+  async findActionItems(text: string): Promise<ActionItems> {
+    const response = await generateObject({
+      model: this.getModel(),
+      prompt: `Find action items, commitments, and deadlines in this text: "${text}"`,
+      schema: ActionItemsSchema,
+    })
+    return response.object
   }
 
-  // Analyze decision making
-  analyzeDecisions(text: string) {
-    const doc = nlp(text)
-
-    return {
-      // Find decisions made
-      decisions: doc.match('(decided|chose|picked|selected|opted) to? #Verb').out('array'),
-
-      // Find alternatives considered
-      alternatives: doc.match('(either|or|versus|vs) *').out('array'),
-
-      // Find reasoning
-      reasoning: doc
-        .match('because *')
-        .concat(doc.match('since *'))
-        .concat(doc.match('due to *'))
-        .out('array'),
-    }
+  async analyzePeople(text: string): Promise<People> {
+    const response = await generateObject({
+      model: this.getModel(),
+      prompt: `Return the people mentioned in the following text: "${text}"`,
+      schema: PeopleSchema,
+    })
+    return response.object
   }
 
-  // Track habits and routines
-  analyzeHabits(text: string) {
-    const doc = nlp(text)
+  async analyzeDecisions(text: string): Promise<Decisions> {
+    const response = await generateObject({
+      model: this.getModel(),
+      prompt: `Analyze decisions, alternatives, and reasoning in this text: "${text}"`,
+      schema: DecisionsSchema,
+    })
+    return response.object
+  }
 
-    return {
-      // Find regular activities
-      routines: doc.match('(usually|always|every|each) #Verb').out('array'),
-
-      // Find frequency indicators
-      frequency: doc.match('(daily|weekly|monthly|regularly|often) *').out('array'),
-
-      // Find time-based patterns
-      timePatterns: doc.match('(morning|afternoon|evening|night) *').out('array'),
-    }
+  async analyzeHabits(text: string): Promise<Habits> {
+    const response = await generateObject({
+      model: this.getModel(),
+      prompt: `Analyze habits, routines, and time patterns in this text: "${text}"`,
+      schema: HabitsSchema,
+    })
+    return response.object
   }
 }
