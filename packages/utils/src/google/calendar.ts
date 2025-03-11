@@ -1,67 +1,105 @@
-import { type calendar_v3, google } from 'googleapis'
+import { google, type calendar_v3 } from 'googleapis'
 import { DEFAULT_SCOPES, GoogleOAuthService } from './auth'
 
-export async function listCalendars() {
-  const service = new GoogleOAuthService({
-    scopes: DEFAULT_SCOPES,
-  })
-  const client = await service.authorize()
+export class GoogleCalendarService {
+  clientId: string
 
-  if (!client) {
-    throw new Error('No client found')
+  constructor(clientId: string) {
+    this.clientId = clientId
   }
 
-  try {
-    const calendar = google.calendar({ version: 'v3', auth: client })
-    const response = await calendar.calendarList.list()
+  private async getAuthorizedClient() {
+    const service = new GoogleOAuthService({
+      scopes: DEFAULT_SCOPES,
+    })
 
-    return response.data.items
-  } catch (error) {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    const response = (error as { response: { data: Record<string, any> } }).response
-    console.error('Error listing calendars:', response.data)
-
-    if (response.data.error === 'invalid_grant') {
-      console.error('Invalid grant. Please re-authenticate.')
-      await service.reauth()
-      return listCalendars()
+    try {
+      return await service.authorize()
+    } catch (error) {
+      throw new Error(`Failed to authorize: ${(error as Error).message}`)
     }
+  }
 
-    return null
+  async listCalendars() {
+    const client = await this.getAuthorizedClient()
+    const calendar = google.calendar({ version: 'v3', auth: client })
+
+    try {
+      const response = await calendar.calendarList.list()
+      return response.data.items
+    } catch (error) {
+      const err = error as { response?: { data?: { error?: string } } }
+      if (err.response?.data?.error === 'invalid_grant') {
+        throw new Error('Authentication expired. Please authenticate again.')
+      }
+      throw error
+    }
+  }
+
+  async getCalendarEvents({
+    calendarId,
+    q,
+    timeMin,
+    timeMax,
+  }: {
+    calendarId: string
+    timeMin?: string
+    timeMax?: string
+    q?: string
+  }) {
+    const client = await this.getAuthorizedClient()
+    const calendar = google.calendar({ version: 'v3', auth: client })
+
+    try {
+      const response = await calendar.events.list({
+        q,
+        calendarId,
+        timeMin,
+        timeMax,
+        singleEvents: true,
+        orderBy: 'startTime',
+        fields:
+          'items(description,end,start,summary,id,attendees,hangoutLink,creator,location,organizer,recurrence,recurringEventId,htmlLink)',
+      })
+      return response.data.items
+    } catch (error) {
+      const err = error as { response?: { data?: { error?: string } } }
+      if (err.response?.data?.error === 'invalid_grant') {
+        throw new Error('Authentication expired. Please authenticate again.')
+      }
+      throw error
+    }
   }
 }
 
+// Singleton instance management
+let calendarService: GoogleCalendarService | null = null
+let currentClientId: string | null = null
+
+// Exported functions that match the previous API
+export async function listCalendars({ clientId }: { clientId: string }) {
+  if (!calendarService || currentClientId !== clientId) {
+    calendarService = new GoogleCalendarService(clientId)
+    currentClientId = clientId
+  }
+  return calendarService.listCalendars()
+}
+
 export async function getCalendarEvents({
-  calendarId,
-  q,
-  timeMin,
-  timeMax,
+  clientId,
+  ...params
 }: {
+  clientId: string
   calendarId: string
   timeMin?: string
   timeMax?: string
   q?: string
 }) {
-  const service = new GoogleOAuthService({
-    scopes: DEFAULT_SCOPES,
-  })
-  const client = await service.authorize()
-
-  if (!client) {
-    throw new Error('No client found')
+  if (!calendarService || currentClientId !== clientId) {
+    calendarService = new GoogleCalendarService(clientId)
+    currentClientId = clientId
   }
-
-  const calendar = google.calendar({ version: 'v3', auth: client })
-  const response = await calendar.events.list({
-    q,
-    calendarId,
-    timeMin,
-    timeMax,
-    singleEvents: true,
-    orderBy: 'startTime',
-  })
-
-  return response.data.items
+  return calendarService.getCalendarEvents(params)
 }
 
 export const getEventDateTime = (event: calendar_v3.Schema$Event): Date | null => {

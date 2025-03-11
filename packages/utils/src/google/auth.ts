@@ -2,15 +2,15 @@ import { authenticate as googleAuthenticate } from '@google-cloud/local-auth'
 import type { Credentials, GoogleAuth, JWTInput, OAuth2Client } from 'google-auth-library'
 import { google } from 'googleapis'
 import { readFile, writeFile } from 'node:fs/promises'
+import * as os from 'node:os'
 import * as path from 'node:path'
-
 import { logger } from '../logging/logger'
 
 type JSONClient = ReturnType<typeof google.auth.fromJSON>
 type AuthClient = OAuth2Client | GoogleAuth<JSONClient> | null
 
 export const TOKEN_PATH = path.join(__dirname, 'token.json')
-export const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json')
+export const CREDENTIALS_PATH = path.join(os.homedir(), '.hominem', 'google-credentials.json')
 export const DEFAULT_SCOPES = [
   'https://www.googleapis.com/auth/contacts',
   'https://www.googleapis.com/auth/drive',
@@ -35,7 +35,7 @@ type FileCredentials = { installed: any; web: any }
 export class GoogleOAuthService {
   private options: GoogleOAuthServiceOptions
 
-  constructor(options: GoogleOAuthServiceOptions) {
+  constructor(options: GoogleOAuthServiceOptions = { scopes: DEFAULT_SCOPES }) {
     this.options = options
   }
 
