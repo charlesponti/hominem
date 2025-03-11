@@ -3,6 +3,7 @@ import {
   getEventDateTime,
   getEventDuration,
   listCalendars,
+  updateEventName,
 } from '@ponti/utils/google-calendar'
 import { logger } from '@ponti/utils/logger'
 import { Command } from 'commander'
@@ -61,9 +62,7 @@ const exportToCsv = async (events: ReturnType<typeof formatEvents>, filePath: st
 }
 
 const selectCalendar = async (message = 'Select a calendar'): Promise<string | null> => {
-  const calendars = await listCalendars({
-    clientId: env.GOOGLE_CLIENT_ID,
-  })
+  const calendars = await listCalendars()
   if (!calendars) {
     logger.error('No calendars found')
     return null
@@ -104,7 +103,6 @@ calendarProgram
 
       const events = await getCalendarEvents({
         ...options,
-        clientId: env.GOOGLE_CLIENT_ID,
         calendarId,
       })
 
@@ -143,7 +141,6 @@ calendarProgram
       if (!calendarId) return
 
       const events = await getCalendarEvents({
-        clientId: env.GOOGLE_CLIENT_ID,
         calendarId,
         q: options.query,
         timeMin: options.timeMin,
@@ -183,5 +180,46 @@ calendarProgram
       logger.info('Selected calendar ID:', calendarId)
     } catch (error) {
       logger.error('Error listing calendars:', error)
+    }
+  })
+
+calendarProgram
+  .command('update-summary')
+  .description('Update the name of an event in Google Calendar')
+  .requiredOption('--oldSummary <oldSummary>', 'Old summary for the event')
+  .requiredOption('--newSummary <newSummary>', 'New summary for the event')
+  .action(async (options) => {
+    try {
+      const calendarId = await selectCalendar()
+      if (!calendarId) return
+
+      const events = await getCalendarEvents({ calendarId, q: options.oldSummary })
+      if (!events || events.length === 0) {
+        logger.error('No events found with the old summary provided')
+        return
+      }
+
+      for (const event of events) {
+        if (!event.id) {
+          logger.error('Event ID not found')
+          continue
+        }
+        const newSummary = options.oldSummary.replace(options.oldSummary, options.newSummary)
+
+        if (newSummary.length === 0) {
+          logger.error('New summary cannot be empty')
+          continue
+        }
+
+        await updateEventName({
+          calendarId,
+          eventId: event.id,
+          newSummary,
+        })
+      }
+
+      logger.info(`Event ${options.eventId} name updated to ${options.newSummary}`)
+    } catch (error) {
+      logger.error('Error updating event name:', error)
     }
   })
