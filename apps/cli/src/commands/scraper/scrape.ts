@@ -79,7 +79,7 @@ program
           .map((line) => {
             // Extract image URL from markdown link format
             const match = line.match(/\!\[Image\]\(([^)]+)\)/)
-            return (match ? match[1] : '').replace('\\', '')
+            return match ? match[1].replace(/\\/g, '') : ''
           })
         const imagesOutputPath = output.replace(/\.(md|json)$/, '-images.json')
         fs.writeFileSync(imagesOutputPath, JSON.stringify({ images: imageUrls }, null, 2))
