@@ -20,4 +20,4 @@ jobs:
       - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v4
       - name: Deploy
-        run: railway up --service ${{ env.SERVICE_ID }}
+        run: railway up --service ${{ env.SERVICE_ID }} --detach
