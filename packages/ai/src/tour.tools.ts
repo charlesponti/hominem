@@ -1,7 +1,6 @@
-import { z } from 'zod'
-import { tool } from 'ai'
-
 import { getDaysBetweenDates } from '@ponti/utils/time'
+import { tool } from 'ai'
+import { z } from 'zod'
 
 const PERFORMANCES = [
   { id: '1', date: '2023-10-01', event: 'Coachella', tourId: 1 },
@@ -12,11 +11,11 @@ const PERFORMANCES = [
 ]
 
 const TICKET_SALES = [
-  { date: '2023-10-01', ticketsSold: 100, eventId: PERFORMANCES[0].id },
-  { date: '2023-10-02', ticketsSold: 150, eventId: PERFORMANCES[1].id },
-  { date: '2023-10-03', ticketsSold: 200, eventId: PERFORMANCES[1].id },
-  { date: '2023-10-04', ticketsSold: 250, eventId: PERFORMANCES[1].id },
-  { date: '2023-10-05', ticketsSold: 300, eventId: PERFORMANCES[1].id },
+  { date: '2023-10-01', ticketsSold: 100, eventId: PERFORMANCES[0]?.id },
+  { date: '2023-10-02', ticketsSold: 150, eventId: PERFORMANCES[1]?.id },
+  { date: '2023-10-03', ticketsSold: 200, eventId: PERFORMANCES[1]?.id },
+  { date: '2023-10-04', ticketsSold: 250, eventId: PERFORMANCES[1]?.id },
+  { date: '2023-10-05', ticketsSold: 300, eventId: PERFORMANCES[1]?.id },
 ]
 
 const PERFORMANCE_FINANCES = [
@@ -24,40 +23,40 @@ const PERFORMANCE_FINANCES = [
     date: '2023-10-01',
     revenue: 1000,
     expenses: 500,
-    eventId: PERFORMANCES[0].id,
+    eventId: PERFORMANCES[0]?.id,
   },
   {
     date: '2023-10-02',
     revenue: 1500,
     expenses: 700,
-    eventId: PERFORMANCES[0].id,
+    eventId: PERFORMANCES[1]?.id,
   },
   {
     date: '2023-10-03',
     revenue: 2000,
     expenses: 800,
-    eventId: PERFORMANCES[0].id,
+    eventId: PERFORMANCES[1]?.id,
   },
   {
     date: '2023-10-04',
     revenue: 2500,
     expenses: 900,
-    eventId: PERFORMANCES[2].id,
+    eventId: PERFORMANCES[2]?.id,
   },
   {
     date: '2023-10-05',
     revenue: 3000,
     expenses: 1000,
-    eventId: PERFORMANCES[2].id,
+    eventId: PERFORMANCES[2]?.id,
   },
 ]
 
 const PERFORMANCE_MERCHANDISE_SALES = [
-  { date: '2023-10-01', merchandiseSold: 100, eventId: PERFORMANCES[0].id },
-  { date: '2023-10-02', merchandiseSold: 150, eventId: PERFORMANCES[1].id },
-  { date: '2023-10-03', merchandiseSold: 200, eventId: PERFORMANCES[1].id },
-  { date: '2023-10-04', merchandiseSold: 250, eventId: PERFORMANCES[1].id },
-  { date: '2023-10-05', merchandiseSold: 300, eventId: PERFORMANCES[1].id },
+  { date: '2023-10-01', merchandiseSold: 100, eventId: PERFORMANCES[0]?.id },
+  { date: '2023-10-02', merchandiseSold: 150, eventId: PERFORMANCES[1]?.id },
+  { date: '2023-10-03', merchandiseSold: 200, eventId: PERFORMANCES[1]?.id },
+  { date: '2023-10-04', merchandiseSold: 250, eventId: PERFORMANCES[1]?.id },
+  { date: '2023-10-05', merchandiseSold: 300, eventId: PERFORMANCES[1]?.id },
 ]
 
 export const revenueCalculatorSchema = z.object({

@@ -1,11 +1,35 @@
 {
-  "extends": "@ponti/tsconfigs/base.json",
+  "compilerOptions": {
+    "outDir": "./build",
+    "rootDir": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "strictFunctionTypes": true,
+    "noUncheckedIndexedAccess": true
+  },
   "include": [
-    "."
+    "src/**/*"
   ],
   "exclude": [
-    "dist",
-    "build",
-    "node_modules"
+    "node_modules",
+    "**/*.test.ts"
   ]
 }
