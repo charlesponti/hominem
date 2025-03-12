@@ -1,4 +1,5 @@
-import { logger } from '@ponti/utils'
+import { logger } from '@ponti/utils/logger'
+import { downloadImage } from '@ponti/utils/scraping'
 import * as cheerio from 'cheerio'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -6,6 +7,13 @@ import * as process from 'node:process'
 import ora from 'ora'
 
 const plantFiles = fs.readdirSync(path.join(__dirname, 'output'))
+
+// Create the parsed_images directory if it doesn't exist
+const imagesDir = path.join(process.cwd(), 'parsed_images')
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true })
+  logger.info(`Created image directory: ${imagesDir}`)
+}
 
 // Create a write stream to write the JSON to
 const outputPath = path.join(process.cwd(), 'plants.json')
@@ -117,6 +125,18 @@ for (const file of plantFiles) {
     }
 
     plantData.description = description
+
+    // Download the image if available
+    if (imageUrl) {
+      const localImagePath = await downloadImage({
+        imagesDir,
+        imageUrl,
+        name: botanicalName,
+      })
+      if (localImagePath) {
+        plantData.img = localImagePath
+      }
+    }
 
     // Write to file
     const jsonString = JSON.stringify(plantData, null, 2)

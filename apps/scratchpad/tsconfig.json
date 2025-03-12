@@ -26,7 +26,8 @@
     "noUncheckedIndexedAccess": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "../../packages/utils/src/scraping/utils/download-image.ts"
   ],
   "exclude": [
     "node_modules",
