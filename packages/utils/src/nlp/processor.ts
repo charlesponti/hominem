@@ -1,4 +1,5 @@
 import { openai } from '@ai-sdk/openai'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { ollama } from '../ai-models/ollama'
@@ -87,7 +88,7 @@ export const TextAnalysisSchema = z.object({
 export type TextAnalysis = z.infer<typeof TextAnalysisSchema>
 
 export interface NLPProcessorConfig {
-  provider: 'openai' | 'ollama'
+  provider: 'openai' | 'ollama' | 'lmstudio'
   model?: string
 }
 
@@ -100,15 +101,28 @@ export class NLPProcessor {
   private config: NLPProcessorConfig
   private defaultOllamaModel = 'llama3.2'
   private defaultOpenaiModel = 'gpt-4o-mini'
+  private defaultLmStudioModel = 'qwen2.5-7b-instruct-1m'
 
   constructor(config: Partial<NLPProcessorConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
   }
 
   private getModel() {
-    return this.config.provider === 'openai'
-      ? openai(this.config.model || this.defaultOpenaiModel, { structuredOutputs: true })
-      : ollama(this.config.model || this.defaultOllamaModel, { structuredOutputs: true })
+    switch (this.config.provider) {
+      case 'openai':
+        return openai(this.config.model || this.defaultOpenaiModel, { structuredOutputs: true })
+      case 'ollama':
+        return ollama(this.config.model || this.defaultOllamaModel, { structuredOutputs: true })
+      case 'lmstudio': {
+        const lmstudio = createOpenAICompatible({
+          name: 'lmstudio',
+          baseURL: 'http://localhost:1234/v1',
+        })
+        return lmstudio(this.config.model || this.defaultLmStudioModel)
+      }
+      default:
+        return openai(this.defaultOpenaiModel, { structuredOutputs: true })
+    }
   }
 
   async analyzeText(text: string): Promise<TextAnalysis> {

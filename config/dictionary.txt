@@ -21,6 +21,7 @@ langchain
 langgraph
 libsql
 linestring
+lmstudio
 mdast
 modelcontextprotocol
 nixpacks
