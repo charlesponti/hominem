@@ -1,0 +1,29 @@
+{
+  "name": "@ponti-mcp/health",
+  "version": "0.1.0",
+  "description": "A Model Context Protocol server",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ponti-mcp-health": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^0.1.13",
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "@ponti/utils": "*",
+    "ai": "^4.1.54"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+}

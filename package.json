@@ -45,6 +45,9 @@
   },
   "keywords": [],
   "license": "ISC",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "packageManager": "bun@1.2.2"
 }

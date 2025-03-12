@@ -5,6 +5,7 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./ai": "./src/db/index.ts",
     "./db": "./src/db/index.ts",
     "./career": "./src/career/index.ts",
     "./finance": "./src/finance/index.ts",
@@ -20,6 +21,7 @@
     "./scraping": "./src/scraping/index.ts",
     "./schema": "./src/db/schema/index.ts",
     "./services": "./src/services/index.ts",
+    "./text": "./src/text.utils.ts",
     "./types": "./src/types/index.ts",
     "./writer": "./src/writer/index.ts"
   },

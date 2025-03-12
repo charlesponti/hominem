@@ -1,4 +1,5 @@
 // Comprehensive User Profile Type Definition
+import type { HealthProfile } from '@ponti/utils/types'
 
 // Fundamental Personal Identification
 type PersonalIdentity = {
@@ -177,31 +178,6 @@ type FinancialProfile = {
     investmentTypes?: string[]
   }
   financialGoals?: string[]
-}
-
-// Health and Wellness
-type HealthProfile = {
-  physicalHealth?: {
-    height?: number
-    weight?: number
-    bodyMassIndex?: number
-    chronicConditions?: string[]
-    fitnessLevel?: number // 0-100 scale
-  }
-  nutritionalPreferences?: {
-    diet: 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'keto' | 'paleo'
-    allergies?: string[]
-    nutritionalGoals?: string[]
-  }
-  sleepPatterns?: {
-    averageHoursPerNight?: number
-    qualityOfSleep?: number // 0-100 scale
-    preferredSleepCycle?: 'early bird' | 'night owl'
-  }
-  mentalWellness?: {
-    meditationPractice?: boolean
-    stressManagementTechniques?: string[]
-  }
 }
 
 // Technological Engagement

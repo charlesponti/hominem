@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { formatCurrency } from '@/lib/finance'
+import { useIndexedDBCollection } from '@/lib/hooks/use-indexdb-collection'
+import { formatPercent } from '@/lib/number.utils'
 import { Plus, Trash2 } from 'lucide-react'
 import React, { useState } from 'react'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatCurrency } from '../../../../lib/finance'
-import { useIndexedDBCollection } from '../../../../lib/hooks/use-indexdb-collection'
-import { formatPercent } from '../../../../lib/number.tools'
 
 const INITIAL_LOCATIONS = [
   {
@@ -282,7 +282,7 @@ const LocationComparison = () => {
                     <BarChart data={getChartData('taxRate')}>
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={formatPercent} />
+                      <Tooltip formatter={(number) => formatPercent(number as number, 1)} />
                       <Bar dataKey="value" fill="#ef4444" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -294,8 +294,19 @@ const LocationComparison = () => {
                     <BarChart data={getChartData('savingsRate')}>
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={formatPercent} />
+                      <Tooltip formatter={(number) => formatPercent(number as number, 1)} />
                       <Bar dataKey="value" fill="#22c55e" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="h-80">
+                  <p className="mb-2 font-medium">Housing Comparison</p>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={getChartData('housing')}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(number) => formatPercent(number as number, 1)} />
+                      <Bar dataKey="value" fill="#3b82f6" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -317,7 +328,7 @@ const LocationComparison = () => {
                     <BarChart data={getChartData('costIndex')}>
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={formatPercent} />
+                      <Tooltip formatter={(number) => formatPercent(number as number, 1)} />
                       <Bar dataKey="value" fill="#8b5cf6" />
                     </BarChart>
                   </ResponsiveContainer>

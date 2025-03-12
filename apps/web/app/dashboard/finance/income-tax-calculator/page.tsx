@@ -11,13 +11,13 @@ import {
 import { Slider } from '@/components/ui/slider'
 import React, { useState } from 'react'
 import {
-  formatCurrency,
-  stateTaxRates,
   calculateFederalTax,
   calculateStateTax,
   calculateTakeHome,
+  formatCurrency,
+  stateTaxRates,
 } from '../../../../lib/finance'
-import { formatPercent } from '../../../../lib/number.tools'
+import { formatPercent } from '../../../../lib/number.utils'
 
 const IncomeTaxCalculator = () => {
   const [income, setIncome] = useState(50000)
