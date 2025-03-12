@@ -8,7 +8,8 @@ export class GoogleCalendarService {
     })
 
     try {
-      return await service.authorize()
+      const client = await service.authorize()
+      return client
     } catch (error) {
       throw new Error(`Failed to authorize: ${(error as Error).message}`)
     }
@@ -110,6 +111,7 @@ export async function getCalendarEvents({
   timeMin?: string
   timeMax?: string
   q?: string
+  headers?: { [key: string]: string }
 }) {
   if (!calendarService) {
     calendarService = new GoogleCalendarService()
