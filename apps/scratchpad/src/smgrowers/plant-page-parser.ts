@@ -1,3 +1,4 @@
+import { logger } from '@ponti/utils'
 import * as cheerio from 'cheerio'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -8,146 +9,146 @@ const plantFiles = fs.readdirSync(path.join(__dirname, 'output'))
 
 // Create a write stream to write the JSON to
 const outputPath = path.join(process.cwd(), 'plants.json')
-console.log(`Writing JSON to: ${outputPath}`)
 const writeStream = fs.createWriteStream(outputPath)
 writeStream.write('[\n')
+
+// Helper function to convert field names to standardized keys
+const createFieldKey = (fieldName: string): string => {
+  return fieldName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_') // Replace non-alphanumeric with underscore
+    .replace(/^_+|_+$/g, '') // Remove leading/trailing underscores
+}
+
+// Helper function to clean text content
+const cleanText = (text: string): string => {
+  return text
+    .replace(/\s+/g, ' ') // Replace multiple spaces, tabs, newlines with single space
+    .trim() // Remove leading/trailing whitespace
+}
 
 let index = 0
 const spinner = ora('Parsing plant pages').start()
 const totalFiles = plantFiles.length
 
-for (const file of plantFiles) {
-  index++
-  spinner.text = `(${index} / ${totalFiles}) Parsing: ${file.replace(/\.html$/, '')}`
-  const html = fs.readFileSync(path.join(__dirname, 'output', file), 'utf-8')
-  const $ = cheerio.load(html)
-
-  // Extract plant data
-  const fullName = $('td[bgcolor="#e9ebce"].largeheader').text().trim()
-  const [botanicalName, commonName] = fullName.split('-').map((s) => s.trim())
-  const imageUrl = $("img[alt*='Image of']").attr('src')
-  const habitAndCulturalInfoTable = $('table[bgcolor="#669999"]')
-  const category = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Category:")')
-    .text()
-    .replace('Category: ', '')
-    .trim()
-  const family = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Family:")')
-    .text()
-    .replace('Family: ', '')
-    .trim()
-  const origin = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Origin:")')
-    .text()
-    .replace('Origin: ', '')
-    .trim()
-  const evergreen = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Evergreen:")')
-    .text()
-    .replace('Evergreen: ', '')
-    .trim()
-  const yellowFoliage = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Yellow/Chartreuse Foliage:")')
-    .text()
-    .replace('Yellow/Chartreuse Foliage: ', '')
-    .trim()
-  const flowerColor = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Flower Color:")')
-    .text()
-    .replace('Flower Color: ', '')
-    .trim()
-  const bloomtime = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Bloomtime:")')
-    .text()
-    .replace('Bloomtime: ', '')
-    .trim()
-  const parentage = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Parentage:")')
-    .text()
-    .replace('Parentage: ', '')
-    .trim()
-  const height = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Height:")')
-    .text()
-    .replace('Height: ', '')
-    .trim()
-  const width = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Width:")')
-    .text()
-    .replace('Width: ', '')
-    .trim()
-  const exposure = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Exposure:")')
-    .text()
-    .replace('Exposure: ', '')
-    .trim()
-  const seaside = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Seaside:")')
-    .text()
-    .replace('Seaside: ', '')
-    .trim()
-  const irrigation = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Irrigation")')
-    .text()
-    .replace('Irrigation', '')
-    .replace('(H2O Info):', '')
-    .trim()
-  const winterHardiness = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("Winter Hardiness:")')
-    .text()
-    .replace('Winter Hardiness: ', '')
-    .trim()
-  const poisonous = habitAndCulturalInfoTable
-    .find('td.lighttext:contains("May be Poisonous")')
-    .text()
-    .replace('Poisonous: ', '')
-    .replace('(More Info)', '')
-    .trim()
-  const description = $(
-    'table:has(td > img[src="https://www.smgrowers.com/images/spacer.gif"][width="13"][height="1"])'
-  )
-    .text()
-    .trim()
-
-  // Create JSON object
-  const plantData = {
-    fullName,
-    botanicalName,
-    commonName,
-    imageUrl: imageUrl,
-    category: category,
-    family: family,
-    origin: origin,
-    evergreen: evergreen,
-    yellowFoliage: yellowFoliage,
-    flowerColor: flowerColor,
-    bloomtime: bloomtime,
-    parentage: parentage,
-    height: height,
-    width: width,
-    winterHardiness,
-    poisonous: poisonous,
-    exposure: exposure,
-    seaside: seaside,
-    irrigation: irrigation,
-    description: description,
+function getNames($: ReturnType<typeof cheerio.load>): {
+  fullName: string
+  botanicalName: string
+  commonName: string
+} {
+  const fullName = cleanText($('td[bgcolor="#e9ebce"].largeheader').first().text())
+  let [botanicalName, commonName] = ['', '']
+  if (fullName.includes('-')) {
+    const splitName = fullName.split('-', 2).map((s) => s.trim())
+    if (splitName[0] && splitName[1]) {
+      botanicalName = splitName[0]
+      commonName = splitName[1]
+    } else {
+      botanicalName = fullName
+    }
+  } else {
+    botanicalName = fullName
   }
 
-  // Write to file
-  const jsonString = JSON.stringify(plantData, null, 2)
-  writeStream.write(jsonString)
+  return { fullName, botanicalName, commonName }
+}
 
-  // Add comma if not the last file
-  if (index < totalFiles) {
-    writeStream.write(',\n')
-  } else {
-    writeStream.write('\n')
+for (const file of plantFiles) {
+  try {
+    index++
+    spinner.text = `(${index} / ${totalFiles}) Parsing: ${file.replace(/\.html$/, '')}`
+    const html = fs.readFileSync(path.join(__dirname, 'output', file), 'utf-8')
+    const $ = cheerio.load(html)
+
+    // Extract plant data
+    const { fullName, botanicalName, commonName } = getNames($)
+
+    // Clean up image URL
+    const imageUrl = $("img[alt*='Image of']").attr('src')?.trim() || ''
+
+    // Create base plant data object
+    const plantData: Record<string, string> = {
+      fullName,
+      botanicalName,
+      commonName,
+      imageUrl,
+    }
+
+    // Dynamically extract all fields from the habit and cultural information table
+    const habitAndCulturalInfoTable = $('table[bgcolor="#669999"]')
+    const infoRows = habitAndCulturalInfoTable.find('td.lighttext')
+
+    infoRows.each((_, element) => {
+      const text = cleanText($(element).text())
+      if (text.includes(':')) {
+        const [fieldName, ...valueParts] = text.split(':')
+        const fieldValue = cleanText(
+          valueParts
+            .join(':')
+            .replace(/\(H2O\s*Info\)/, '')
+            .replace(/\(More\s*Info\)/, '')
+        )
+
+        if (fieldName && fieldValue) {
+          const key = createFieldKey(fieldName)
+          plantData[key] = fieldValue
+        }
+      }
+    })
+
+    // Extract description more reliably
+    const descriptionTable = $('table:has(td > img[src*="spacer.gif"][width="13"][height="1"])')
+    let description = ''
+
+    // First try to get each paragraph separately and join them with proper spacing
+    const paragraphs: string[] = []
+    descriptionTable.find('p').each((_, elem) => {
+      const paragraphText = cleanText($(elem).text())
+      if (paragraphText) {
+        paragraphs.push(paragraphText)
+      }
+    })
+
+    if (paragraphs.length > 0) {
+      description = paragraphs.join(' ')
+    } else {
+      // Fallback: Get all text and clean it
+      description = cleanText(descriptionTable.text())
+    }
+
+    plantData.description = description
+
+    // Write to file
+    const jsonString = JSON.stringify(plantData, null, 2)
+    writeStream.write(jsonString)
+
+    // Add comma if not the last file
+    if (index < totalFiles) {
+      writeStream.write(',\n')
+    } else {
+      writeStream.write('\n')
+    }
+  } catch (error) {
+    spinner.fail(`Error parsing file ${file}: ${error}`)
+    // Continue with next file instead of failing completely
+    logger.error(`Error parsing file ${file}: ${error}`)
+    // if (index < totalFiles) {
+    //   writeStream.write(JSON.stringify({ error: `Failed to parse ${file}` }) + ',\n')
+    // }
   }
 }
 
 writeStream.write(']') // Close the array
+
 writeStream.end() // Close the stream
 
-spinner.succeed('Parsing complete!')
-process.exit(0)
+writeStream.on('finish', () => {
+  spinner.succeed(`JSON written successfully to ${outputPath}!`)
+  spinner.succeed('Parsing complete!')
+  process.exit(0)
+})
+
+writeStream.on('error', (error) => {
+  spinner.fail(`Error writing JSON: ${error}`)
+  process.exit(1)
+})
