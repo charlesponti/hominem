@@ -24,6 +24,7 @@
     "./writer": "./src/writer/index.ts"
   },
   "scripts": {
+    "migrate": "bunx drizzle-kit migrate",
     "test": "vitest --run --passWithNoTests",
     "test:watch": "vitest"
   },
