@@ -18,6 +18,10 @@ export const createAppLogger = (
       filename: LOG_FILE,
       format: format.json({
         replacer: (key, value) => {
+          if (!value) {
+            return undefined
+          }
+
           if (key === 'error') {
             return {
               message: (value as Error).message,

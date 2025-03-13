@@ -2,8 +2,10 @@ import dotenv from 'dotenv'
 import os from 'node:os'
 import path from 'node:path'
 
-dotenv.config({ path: path.resolve(os.homedir(), '.hominem/.env') })
+const CONFIG_PATH = path.resolve(os.homedir(), '.hominem')
+dotenv.config({ path: path.resolve(CONFIG_PATH, '.env') })
 
 export const env = {
-  DB_PATH: path.resolve(`${os.homedir()}/.hominem/db.sqlite`),
+  CONFIG_PATH,
+  DB_PATH: path.resolve(CONFIG_PATH, 'db.sqlite'),
 }
