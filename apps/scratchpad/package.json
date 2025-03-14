@@ -1,10 +1,6 @@
 {
   "name": "scratchpad",
   "version": "1.0.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
