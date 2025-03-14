@@ -54,6 +54,3 @@ export const markdownEntries = sqliteTable('markdown_entries', {
     .notNull()
     .$defaultFn(() => new Date()),
 })
-
-// You can add more tables as needed
-// export const otherTable = sqliteTable(...)

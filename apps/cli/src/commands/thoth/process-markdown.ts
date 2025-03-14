@@ -14,11 +14,8 @@ interface ProcessMarkdownOptions {
   output: string
   enhanced: boolean
   model: string
+  provider: string
   store: boolean // New option to store in database
-}
-
-function getFileShortPath(filePath: string) {
-  return filePath.split('/').slice(-2).join('/')
 }
 
 export default new Command('process-markdown')
@@ -27,7 +24,8 @@ export default new Command('process-markdown')
   .argument('<path>', 'Path to process markdown files')
   .option('-o, --output <dir>', 'Output directory', './output')
   .option('-e, --enhanced', 'Should the output be enhanced')
-  .option('-m, --model <model>', 'Should the output be enhanced')
+  .option('-m, --model <model>', 'Model to use for enhancement')
+  .option('-p, --provider <provider>', 'NLP provider to use', 'lmstudio')
   .option('-s, --store', 'Store processed entries in database', false) // Add store option
   .action(async (processPath: string, options: ProcessMarkdownOptions) => {
     try {
@@ -67,7 +65,8 @@ export default new Command('process-markdown')
 
           if (options.enhanced) {
             const nlpProcessor = new NLPProcessor({
-              provider: 'ollama',
+              // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+              provider: options.provider as any,
               model: options.model,
             })
             let contentIndex = 0
@@ -83,6 +82,7 @@ export default new Command('process-markdown')
               })
 
               // write to output file
+              const isLast = index === files.length && entryIndex === content.entries.length
               outputStream.write(
                 `${JSON.stringify(
                   {
@@ -91,7 +91,7 @@ export default new Command('process-markdown')
                   },
                   null,
                   2
-                )},\n`
+                )}${isLast ? '' : ',\n'}`
               )
               // If store option is enabled, save to database
               if (options.store) {

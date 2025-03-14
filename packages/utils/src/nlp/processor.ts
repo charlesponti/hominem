@@ -8,34 +8,28 @@ export const PeopleSchema = z.array(z.object({ firstName: z.string(), lastName: 
 export type People = z.infer<typeof PeopleSchema>
 
 // Decisions Schema
-export const DecisionsSchema = z
-  .object({
-    decisions: z.array(z.string()).describe('Decisions made in the text'),
-    alternatives: z
-      .array(z.string())
-      .describe('Alternatives considered and other possible decisions'),
-    reasoning: z.array(z.string()).describe('Reasoning behind the decisions'),
-  })
-  .optional()
+export const DecisionsSchema = z.object({
+  decisions: z.array(z.string()).describe('Decisions made in the text'),
+  alternatives: z
+    .array(z.string())
+    .describe('Alternatives considered and other possible decisions'),
+  reasoning: z.array(z.string()).describe('Reasoning behind the decisions'),
+})
 export type Decisions = z.infer<typeof DecisionsSchema>
 
 // Habits Schema
-export const HabitsSchema = z
-  .object({
-    routines: z.array(z.string()),
-    frequency: z.array(z.string()),
-    timePatterns: z.array(z.string().describe('Time patterns in the cron format')),
-  })
-  .optional()
+export const HabitsSchema = z.object({
+  routines: z.array(z.string()),
+  frequency: z.array(z.string()),
+  timePatterns: z.array(z.string().describe('Time patterns in the cron format')),
+})
 export type Habits = z.infer<typeof HabitsSchema>
 
-export const ActionItemsSchema = z
-  .object({
-    todos: z.array(z.string()),
-    commitments: z.array(z.string()),
-    deadlines: z.array(z.string()),
-  })
-  .optional()
+export const ActionItemsSchema = z.object({
+  todos: z.array(z.string()),
+  commitments: z.array(z.string()),
+  deadlines: z.array(z.string()),
+})
 export type ActionItems = z.infer<typeof ActionItemsSchema>
 
 export const TextAnalysisEmotionSchema = z.object({
@@ -58,10 +52,10 @@ export const LocationSchema = z.object({
 })
 
 export const TextAnalysisSchema = z.object({
-  questions: z.array(z.string()).optional(),
+  questions: z.array(z.string()).nullable(),
   comparisons: z
     .array(z.array(z.string()))
-    .optional()
+    .nullable()
     .describe(
       'Comparisons between items. Example output: [["item1", "item2", "item3"], ["item4", "item5"]'
     ),
@@ -73,13 +67,13 @@ export const TextAnalysisSchema = z.object({
       })
     )
     .describe('Physical items mentioned in the text')
-    .optional(),
-  locations: z.array(LocationSchema).describe('Locations mentioned in the text').optional(),
+    .nullable(),
+  locations: z.array(LocationSchema).describe('Locations mentioned in the text').nullable(),
   emotions: z.array(TextAnalysisEmotionSchema),
   people: z.array(z.string()).describe('People mentioned in the text'),
   activities: z.array(z.string()).describe('Activities mentioned in the text'),
-  decisions: DecisionsSchema.optional(),
-  habits: HabitsSchema.optional(),
+  decisions: DecisionsSchema.nullable(),
+  habits: HabitsSchema.nullable(),
   topics: z.array(z.string()).describe('Topics mentioned in the text'),
   timestamp: z
     .string()

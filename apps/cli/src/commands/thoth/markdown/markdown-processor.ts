@@ -1,5 +1,5 @@
 import { logger } from '@ponti/utils/logger'
-import { NLPProcessor, type TextAnalysis } from '@ponti/utils/nlp'
+import type { TextAnalysis } from '@ponti/utils/nlp'
 import { getDatesFromText } from '@ponti/utils/time'
 import * as cheerio from 'cheerio'
 import * as fs from 'node:fs/promises'
