@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
+    "@duckdb/node-api": "^1.2.1-alpha.16",
     "@langchain/langgraph": "0.2.45",
     "@langchain/openai": "^0.4.3",
     "@pinecone-database/pinecone": "^4.1.0",
@@ -35,6 +36,7 @@
     "csv-writer": "^1.6.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.3",
+    "duckdb": "^1.2.0",
     "fs-extra": "^11.3.0",
     "googleapis": "^144.0.0",
     "jsdom": "^26.0.0",
