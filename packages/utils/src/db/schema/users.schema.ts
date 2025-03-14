@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
+import { createInsertSchema } from 'drizzle-zod'
 
 export const users = pgTable(
   'users',
@@ -32,6 +33,7 @@ export const users = pgTable(
 )
 export type UserInsert = typeof users.$inferInsert
 export type User = typeof users.$inferSelect
+export const UserSchema = createInsertSchema(users)
 
 export const account = pgTable(
   'account',
@@ -66,10 +68,3 @@ export const account = pgTable(
       .onDelete('cascade'),
   ]
 )
-
-// export const accountRelations = relations(account, ({ one }) => ({
-// 	user: one(users, {
-// 		fields: [account.userId],
-// 		references: [users.id],
-// 	}),
-// }));

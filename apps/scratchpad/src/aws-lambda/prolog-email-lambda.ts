@@ -1,128 +1,81 @@
-const AWS = require('aws-sdk')
-const { ZodError, z } = require('zod')
-const axios = require('axios')
-const { simpleParser } = require('mailparser')
-const pdf = require('pdf-parse')
+import 'dotenv/config'
 
-const s3 = new AWS.S3()
-const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY
-const S3_BUCKET = process.env.S3_BUCKET
+import { logger } from '@ponti/utils'
+import { ZodError } from 'zod'
+import { processAttachments } from './services/attachment.service'
+import { parseEmail, processEmailBody, validateEmailBody } from './services/email.service'
+import type { Candidates, SubmissionAttachment } from './writer.schema'
 
-// Define Zod schema for writer data
-const WriterSchema = z.object({
-  name: z.string(),
-  genre: z.string(),
-  notableWorks: z.array(z.string()),
-  awards: z.array(z.string()).optional(),
-  background: z.string(),
-})
-
-async function callClaudeAPI(prompt) {
-  try {
-    const response = await axios.post(
-      'https://api.anthropic.com/v1/chat/completions',
-      {
-        model: 'claude-3-sonnet-20240229',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY,
-        },
+export interface LambdaEvent {
+  Records: [
+    {
+      ses: {
+        mail: {
+          content: string
+        }
       }
-    )
-    return response.data.choices[0].message.content
-  } catch (error) {
-    console.error('Error calling Claude API:', error)
-    throw error
-  }
+    },
+  ]
 }
 
-async function processEmailBody(emailBody) {
-  const prompt = `Based on the following email content, extract information about a TV show or movie writer and format it as a JSON object with the following properties: name, genre, notableWorks (array), awards (array, optional), and background. Here's the email content:\n\n${emailBody}`
+export function mergeWriterData(writerData: Candidates, attachmentResults: SubmissionAttachment[]) {
+  logger.info('Starting mergeWriterData', {
+    writerCount: writerData.candidates.length,
+    attachmentCount: attachmentResults.length,
+  })
+  const results = []
 
-  const claudeResponse = await callClaudeAPI(prompt)
-  const writerData = JSON.parse(claudeResponse)
-
-  return WriterSchema.parse(writerData)
-}
-
-async function processAttachment(attachment) {
-  const { content, filename } = attachment
-  const fileExtension = filename.split('.').pop().toLowerCase()
-
-  let textContent = ''
-  if (fileExtension === 'pdf') {
-    const pdfData = await pdf(content)
-    textContent = pdfData.text.slice(0, 1000) // Approximate first two pages
-  } else if (fileExtension === 'txt') {
-    textContent = content.toString('utf-8').slice(0, 1000) // Approximate first two pages
-  }
-
-  if (textContent) {
-    const prompt = `Based on the following text from an attachment, extract any relevant information that could be added to the writer's profile. Focus on additional notable works, awards, or background information:\n\n${textContent}`
-    return await callClaudeAPI(prompt)
-  }
-
-  return null
-}
-
-async function uploadToS3(attachment: { content: Buffer; filename: string }) {
-  const { content, filename } = attachment
-  const key = `attachments/${Date.now()}-${filename}`
-
-  await s3
-    .putObject({
-      Bucket: S3_BUCKET,
-      Key: key,
-      Body: content,
-    })
-    .promise()
-
-  return `https://${S3_BUCKET}.s3.amazonaws.com/${key}`
-}
-
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-exports.handler = async (event: any) => {
-  try {
-    const email = await simpleParser(event.Records[0].ses.mail.content)
-
-    // Process email body
-    const writerData = await processEmailBody(email.text)
-
-    // Process attachments
-    const attachmentPromises = email.attachments.map(async (attachment) => {
-      const additionalInfo = await processAttachment(attachment)
-      const s3Link = await uploadToS3(attachment)
-
-      return { additionalInfo, s3Link }
-    })
-
-    const attachmentResults = await Promise.all(attachmentPromises)
-
-    // Update writer data with additional information from attachments
-    for (const result of attachmentResults) {
-      const { additionalInfo } = result
-      if (additionalInfo) {
-        const info = JSON.parse(additionalInfo)
-        Object.assign(writerData, info)
+  for (const writer of writerData.candidates) {
+    logger.debug('Processing writer', { writerName: writer.name })
+    for (const attachment of attachmentResults) {
+      if (writer.name === attachment.candidateName) {
+        logger.debug('Found matching attachment', { writerName: writer.name })
+        results.push({ ...writer, ...attachment })
       }
     }
+  }
 
-    // Prepare the response
-    const response = {
-      writerData,
-      attachments: attachmentResults.map(({ s3Link }) => s3Link),
-    }
+  logger.info('Completed mergeWriterData', { resultCount: results.length })
+  return results
+}
+
+export const handler = async (event: LambdaEvent) => {
+  try {
+    logger.info('Starting Lambda handler', { eventRecords: event.Records.length })
+
+    logger.info('Starting email parsing...')
+    const email = await parseEmail(event)
+    logger.info('Email parsed successfully', { attachmentCount: email.attachments?.length })
+
+    logger.info('Starting email body validation...')
+    const emailBody = await validateEmailBody(email)
+    logger.info('Email body validated successfully')
+
+    logger.info('Starting email body processing...')
+    const writerData = await processEmailBody(emailBody)
+    logger.info('Email body processed successfully', {
+      candidateCount: writerData.candidates.length,
+    })
+
+    logger.info('Starting attachment processing...')
+    const candidateNames = writerData.candidates.map((c) => c.name)
+    logger.debug('Processing attachments for candidates', { candidateNames })
+    const attachmentResults = await processAttachments(email.attachments, candidateNames)
+    logger.info('Attachments processed successfully', { resultCount: attachmentResults.length })
+
+    const writerDataWithAttachments = mergeWriterData(writerData, attachmentResults)
+    logger.info('Writer data merged with attachments', {
+      finalResultCount: writerDataWithAttachments.length,
+    })
 
     return {
       statusCode: 200,
-      body: JSON.stringify(response),
+      body: JSON.stringify({
+        writerDataWithAttachments,
+      }),
     }
   } catch (error) {
-    console.error('Error processing email:', error)
+    logger.error('Lambda handler error', { error })
 
     if (error instanceof ZodError) {
       return {

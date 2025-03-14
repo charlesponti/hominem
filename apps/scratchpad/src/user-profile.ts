@@ -1,4 +1,3 @@
-// Comprehensive User Profile Type Definition
 import type { HealthProfile } from '@ponti/utils/types'
 
 // Fundamental Personal Identification

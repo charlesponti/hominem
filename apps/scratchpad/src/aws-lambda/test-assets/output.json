@@ -1,0 +1,62 @@
+{
+  "result": [
+    {
+      "name": "Mike Haukom",
+      "bio": "Mike was Executive Producer on ABC's LAST MAN STANDING and developed a pilot for CBS last season. Previously, he was a Co-Executive Producer on CBS's RULES OF ENGAGEMENT where he had been on staff for the entire run of the series. Mike's previous credits include THE LATE SHOW WITH DAVID LETTERMAN and EVERYBODY LOVES RAYMOND.",
+      "email": null,
+      "phone_number": null,
+      "position": "writer",
+      "tags": [
+        "executive producer",
+        "comedy",
+        "television",
+        "CBS",
+        "ABC"
+      ],
+      "credits": [
+        {
+          "role": "executive producer",
+          "type": "tv",
+          "production": "LAST MAN STANDING",
+          "network": "ABC"
+        },
+        {
+          "role": "co-executive producer",
+          "type": "tv",
+          "production": "RULES OF ENGAGEMENT",
+          "network": "CBS"
+        },
+        {
+          "role": "writer",
+          "type": "tv",
+          "production": "THE LATE SHOW WITH DAVID LETTERMAN",
+          "network": null
+        },
+        {
+          "role": "writer",
+          "type": "tv",
+          "production": "EVERYBODY LOVES RAYMOND",
+          "network": null
+        }
+      ],
+      "organizations": [
+        {
+          "name": "ABC",
+          "type": "network"
+        },
+        {
+          "name": "CBS",
+          "type": "network"
+        }
+      ],
+      "associates": null,
+      "links": null,
+      "representatives": null,
+      "candidateName": "Mike Haukom",
+      "summary": "Mike Haukom is a writer known for his work on the animated pilot 'Amanda Stone: Illuminati PR Lady', which features a comedic narrative involving a public relations expert and the Illuminati, with notable characters including Nicolas Cage and a council of world leaders. The script showcases Haukom's ability to blend humor with contemporary themes and pop culture references.",
+      "storage_key": "mike_haukom_illuminati_pr_lady",
+      "title": "Writer of 'Amanda Stone: Illuminati PR Lady'",
+      "page_count": 49
+    }
+  ]
+}

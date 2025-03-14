@@ -4,6 +4,17 @@ import { createLogger, format, transports } from 'winston'
 
 const LOG_FILE = path.resolve(cwd(), './logs/error.log')
 
+// Helper to format error objects
+const formatError = (error: unknown) => {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      stack: error.stack,
+    }
+  }
+  return { message: String(error), stack: 'No stack available' }
+}
+
 // Create a base logger factory for customization
 export const createAppLogger = (
   options: {
@@ -18,16 +29,8 @@ export const createAppLogger = (
       filename: LOG_FILE,
       format: format.json({
         replacer: (key, value) => {
-          if (!value) {
-            return undefined
-          }
-
-          if (key === 'error') {
-            return {
-              message: (value as Error).message,
-              stack: (value as Error).stack,
-            }
-          }
+          if (!value) return undefined
+          if (key === 'error') return formatError(value)
           return value
         },
       }),

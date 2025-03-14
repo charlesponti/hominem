@@ -1,0 +1,11 @@
+{
+  "Records": [
+    {
+      "ses": {
+        "mail": {
+          "content": "From: sender@example.com\nTo: recipient@example.com\nSubject: Writer Profile\n\nJohn Smith is a science fiction author known for his groundbreaking work in cyberpunk literature. His notable works include 'Digital Dreams' and 'Neural Networks'. He won the Hugo Award in 2022. With a background in computer science, he brings technical authenticity to his stories."
+        }
+      }
+    }
+  ]
+}

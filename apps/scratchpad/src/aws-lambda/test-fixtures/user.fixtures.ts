@@ -1,0 +1,28 @@
+export const sampleUsers = [
+  {
+    id: '1',
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john@example.com',
+    phone: '+1234567890',
+    birthDate: '1990-01-01',
+    address: '123 Main St',
+    city: 'New York',
+    state: 'NY',
+    zip: '10001',
+    country: 'USA',
+  },
+  {
+    id: '2',
+    firstName: 'Jane',
+    lastName: 'Smith',
+    email: 'jane@example.com',
+    phone: '+1987654321',
+    birthDate: '1992-02-02',
+    address: '456 Oak Ave',
+    city: 'Los Angeles',
+    state: 'CA',
+    zip: '90001',
+    country: 'USA',
+  },
+]

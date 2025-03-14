@@ -22,6 +22,7 @@ langgraph
 libsql
 linestring
 lmstudio
+mailparser
 mdast
 modelcontextprotocol
 nixpacks

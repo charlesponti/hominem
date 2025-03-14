@@ -1,0 +1,3 @@
+id,firstName,lastName,email,phone,birthDate,address,city,state,zip,country
+1,John,Doe,john@example.com,+1234567890,1990-01-01,123 Main St,New York,NY,10001,USA
+2,Jane,Smith,jane@example.com,+1987654321,1992-02-02,456 Oak Ave,Los Angeles,CA,90001,USA
