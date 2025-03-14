@@ -3,7 +3,7 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { McpServer as Server } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { generateObject, generateText } from 'ai'
+import { generateObject } from 'ai'
 import { z } from 'zod'
 
 const llm = createOpenAICompatible({

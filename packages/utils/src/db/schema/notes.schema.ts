@@ -1,5 +1,7 @@
 import { foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm/relations'
+import type { z } from 'zod'
+import type { TextAnalysisSchema } from '../../nlp/processor'
 import { users } from './users.schema'
 
 export const notes = pgTable(
@@ -7,8 +9,9 @@ export const notes = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     content: text('content').notNull(),
-    title: text('title').notNull(),
-    tags: json('tags').notNull().$type<Record<string, string>[]>().default([]),
+    title: text('title'),
+    tags: json('tags').$type<Record<string, string>[]>().default([]),
+    analysis: json('analysis').$type<z.infer<typeof TextAnalysisSchema>>(),
     userId: uuid('userId').notNull(),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),

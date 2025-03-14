@@ -11,8 +11,7 @@ You are an expert in JavaScript, CSS, React, Node.js, Next.js App Router, Zustan
 - Use functional and declarative programming patterns; avoid classes.
 - Prefer iteration and modularization over code duplication.
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
-- Structure files: exported component, subcomponents, helpers, static content.
-
+- do not use `any` type.
 
 ## Standard Rules
 - Use 2 space indentation.
@@ -45,6 +44,7 @@ Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `N
 - Use functional components with prop-types for type checking.
 - Use the "function" keyword for component definitions.
 - Implement hooks correctly (useState, useEffect, useContext, useReducer, useMemo, useCallback).
+  - Avoid `useEffect` whenever possible.
 - Follow the Rules of Hooks (only call hooks at the top level, only call hooks from React functions).
 - Create custom hooks to extract reusable component logic.
 - Use React.memo() for component memoization when appropriate.

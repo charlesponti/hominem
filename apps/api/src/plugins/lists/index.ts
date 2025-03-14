@@ -1,11 +1,9 @@
 import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { list, users } from '@ponti/utils/schema'
 import { desc, eq } from 'drizzle-orm'
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import fastifyPlugin from 'fastify-plugin'
 import { EVENTS, track } from '../../analytics'
-import type { RequestWithSession } from '../../typings'
-import { verifySession } from '../auth/utils'
 import acceptListInviteRoute from './accept-invite/route'
 import getListInvitesRoute from './invites'
 import { deleteListItemRoute, getListRoute } from './list'
@@ -18,11 +16,9 @@ import { getUserLists } from './lists.service'
 const listsPlugin: FastifyPluginAsync = async (server) => {
   server.get(
     '/lists',
-    {
-      preValidation: verifySession,
-    },
-    async (request: RequestWithSession) => {
-      const { userId } = request.session.get('data')
+    {},
+    async (request: FastifyRequest) => {
+      const { userId } = request
       const lists = await db
         .select()
         .from(list)
@@ -46,7 +42,6 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
   server.post(
     '/lists',
     {
-      preValidation: verifySession,
       schema: {
         body: {
           type: 'object',
@@ -77,9 +72,9 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         },
       },
     },
-    async (request: RequestWithSession): Promise<{ list: typeof list.$inferInsert }> => {
+    async (request: FastifyRequest): Promise<{ list: typeof list.$inferInsert }> => {
       const { name } = request.body as { name: string }
-      const { userId } = request.session.get('data')
+      const { userId } = request
       const found = await db
         .insert(list)
         .values({
@@ -99,7 +94,6 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
   server.put(
     '/lists/:id',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -149,7 +143,6 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
   server.delete(
     '/lists/:id',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',

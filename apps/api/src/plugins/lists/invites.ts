@@ -1,15 +1,12 @@
 import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { list, listInvite, users } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
-import type { FastifyInstance } from 'fastify'
-import type { RequestWithSession } from '../../typings'
-import { verifySession } from '../auth/utils'
+import type { FastifyInstance, FastifyRequest } from 'fastify'
 
 const getListInvitesRoute = (server: FastifyInstance) => {
   server.get(
     '/lists/:id/invites',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -57,7 +54,6 @@ const getListInvitesRoute = (server: FastifyInstance) => {
   server.post(
     '/lists/:id/invites',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -97,10 +93,10 @@ const getListInvitesRoute = (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession, reply) => {
+    async (request: FastifyRequest, reply) => {
       const { id } = request.params as { id: string }
       const { email } = request.body as { email: string }
-      const { userId } = request.session.get('data')
+      const { userId } = request
       const found = await db.select().from(list).where(eq(list.id, id)).then(takeUniqueOrThrow)
 
       if (!found) {

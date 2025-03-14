@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit --incremental false"
   },
   "dependencies": {
+    "@clerk/fastify": "^2.1.26",
     "@fastify/circuit-breaker": "^4.0.2",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^10.0.2",

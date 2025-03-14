@@ -2,7 +2,6 @@ import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { item, list, place } from '@ponti/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
-import { verifySession } from '../auth/utils'
 
 /**
  * Fetches all places associated with a specific list
@@ -32,7 +31,6 @@ export const getListRoute = (server: FastifyInstance) => {
   server.get(
     '/lists/:id',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -96,7 +94,6 @@ export const deleteListItemRoute = (server: FastifyInstance) => {
   server.delete(
     '/lists/:listId/items/:itemId',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',

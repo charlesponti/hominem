@@ -1,8 +1,25 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { JobApplicationStatus, type JobApplicationStage } from '../../types/career.types'
 import { companies } from './company.schema'
 import { notes } from './notes.schema'
 import { users } from './users.schema'
+
+export enum JobApplicationStage {
+  APPLICATION = 'Application',
+  PHONE_SCREEN = 'Phone Screen',
+  TECHNICAL_SCREEN_CALL = 'Technical Screen (Call)',
+  TECHNICAL_SCREEN_EXERCISE = 'Technical Screen (Exercise)',
+  INTERVIEW = 'Interview',
+  IN_PERSON = 'In Person',
+  OFFER = 'Offer',
+}
+
+export enum JobApplicationStatus {
+  APPLIED = 'Applied',
+  HIRED = 'Hired',
+  WITHDREW = 'Withdrew',
+  REJECTED = 'Rejected',
+  OFFER = 'Offer',
+}
 
 export const jobs = pgTable('jobs', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -1,10 +1,8 @@
 import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { item, list, place as places } from '@ponti/utils/schema'
 import { and, eq, inArray } from 'drizzle-orm'
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
+import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { EVENTS, track } from '../../analytics'
-import type { RequestWithSession } from '../../typings'
-import { verifySession } from '../auth/utils'
 import {
   getPlaceDetails,
   getPlacePhotos,
@@ -49,7 +47,6 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.post(
     '/lists/place',
     {
-      preValidation: verifySession,
       schema: {
         body: {
           type: 'object',
@@ -92,8 +89,8 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession) => {
-      const { userId } = request.session.get('data')
+    async (request: FastifyRequest) => {
+      const { userId } = request
       const { listIds, place } = request.body as PlacePostBody
       const filteredListTypes = place.types.filter((type) => {
         return !/point_of_interest|establishment|political/.test(type)
@@ -151,7 +148,6 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.delete(
     '/lists/:listId/place/:placeId',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -163,8 +159,8 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession) => {
-      const { userId } = request.session.get('data')
+    async (request: FastifyRequest) => {
+      const { userId } = request
       const { listId, placeId } = request.params as {
         listId: string
         placeId: string
@@ -187,7 +183,6 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.get(
     '/places/:id',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -238,7 +233,7 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession, reply) => {
+    async (request: FastifyRequest, reply) => {
       const { id } = request.params as { id: string }
       let photos: PhotoMedia[] | undefined
       let lists: { id: string; name: string }[] = []

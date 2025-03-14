@@ -1,9 +1,7 @@
 import { db } from '@ponti/utils/db'
 import { notes } from '@ponti/utils/schema'
 import { and, desc, eq } from 'drizzle-orm'
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
-import type { RequestWithSession } from '../../typings'
-import { verifySession } from '../auth/utils'
+import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 
 const ideaSchema = {
   type: 'object',
@@ -18,7 +16,6 @@ const ideasPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.get(
     '/ideas',
     {
-      preValidation: verifySession,
       schema: {
         response: {
           200: {
@@ -28,8 +25,8 @@ const ideasPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession) => {
-      const { userId } = request.session.get('data')
+    async (request: FastifyRequest) => {
+      const { userId } = request
       const ideas = await db
         .select()
         .from(notes)
@@ -42,7 +39,6 @@ const ideasPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.post(
     '/ideas',
     {
-      preValidation: verifySession,
       schema: {
         body: {
           type: 'object',
@@ -56,13 +52,13 @@ const ideasPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession) => {
+    async (request: FastifyRequest) => {
       const { content, description, title } = request.body as {
         content: string
         description: string
         title: string
       }
-      const { userId } = request.session.get('data')
+      const { userId } = request
       const newIdea = await db.insert(notes).values({
         id: crypto.randomUUID(),
         content,
@@ -76,7 +72,6 @@ const ideasPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.delete(
     '/ideas/:id',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -90,9 +85,9 @@ const ideasPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession) => {
+    async (request: FastifyRequest) => {
       const { id } = request.params as { id: string }
-      const { userId } = request.session.get('data')
+      const { userId } = request
       await db.delete(notes).where(and(eq(notes.userId, userId), eq(notes.id, id)))
       return true
     }

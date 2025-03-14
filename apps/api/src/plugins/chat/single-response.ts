@@ -36,12 +36,6 @@ const chatSingleResponsePlugin: FastifyPluginAsync<ChatPluginOptions> = async (
       },
     },
     async (request, reply) => {
-      // const session = request.session.get('data')
-
-      // if (!session) {
-      //   return reply.code(401).send({ error: 'Unauthorized' })
-      // }
-
       try {
         const { messages } = request.body as { messages: Message[] }
 

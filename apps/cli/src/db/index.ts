@@ -1,14 +1,12 @@
 import { logger } from '@ponti/utils/logger'
-import Database from 'bun:sqlite'
-import { drizzle, type BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite'
+import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql'
 import fs from 'node:fs'
 import path from 'node:path'
 import { env } from '../env'
 import * as schema from './schema'
 
 const { DB_PATH } = env
-export let sqlite: Database
-export let db: BunSQLiteDatabase<typeof schema>
+export let db: LibSQLDatabase<typeof schema>
 
 export function initDb() {
   // Check if database file exists
@@ -30,10 +28,9 @@ export function initDb() {
     }
   }
 
-  logger.info('Creating database connection...')
   // Create database connection
-  sqlite = new Database(DB_PATH)
-  db = drizzle({ client: sqlite, schema })
+  logger.info('Creating database connection...')
+  db = drizzle(`file:${DB_PATH}`, { schema })
   return db
 }
 

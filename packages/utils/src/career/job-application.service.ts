@@ -3,11 +3,11 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import z from 'zod'
 import { db } from '../db'
 import {
+  JobApplicationStage,
   job_applications,
   type JobApplication,
   type JobApplicationInsert,
 } from '../db/schema/job.schema'
-import { JobApplicationStage } from '../types/career.types'
 
 export const JobApplicationSchema = createSelectSchema(job_applications)
 export const JobApplicationInsertSchema = createInsertSchema(job_applications, {

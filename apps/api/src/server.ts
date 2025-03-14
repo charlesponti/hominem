@@ -2,25 +2,23 @@ import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastif
 import assert from 'node:assert'
 import type { ZodSchema } from 'zod'
 import adminPlugin from './plugins/admin'
-import authPlugin from './plugins/auth'
 import bookmarksPlugin from './plugins/bookmarks'
 import chatSingleResponsePlugin from './plugins/chat/single-response'
 import circuitBreaker from './plugins/circuit-breaker'
+import clerkPlugin from './plugins/clerk'
 import emailPlugin from './plugins/email'
 import ideasPlugin from './plugins/ideas'
 import invites from './plugins/invites'
 import listsPlugin from './plugins/lists'
 import PlacesPlugin from './plugins/places'
 import rateLimitPlugin from './plugins/rate-limit'
-import sessionPlugin from './plugins/session'
 import shutdownPlugin from './plugins/shutdown'
 import statusPlugin from './plugins/status'
 import usersPlugin from './plugins/user'
 
-const { APP_URL, JWT_SECRET, PORT } = process.env
+const { APP_URL, PORT } = process.env
 
 assert(APP_URL, 'Missing APP_URL env var')
-assert(JWT_SECRET, 'Missing JWT_SECRET env var')
 
 export async function createServer(
   opts: FastifyServerOptions = {}
@@ -33,16 +31,12 @@ export async function createServer(
       credentials: true,
     })
     await server.register(shutdownPlugin)
-    await server.register(sessionPlugin)
     await server.register(require('@fastify/multipart'))
-    await server.register(require('@fastify/csrf-protection'), {
-      sessionPlugin: '@fastify/secure-session',
-    })
     await server.register(require('@fastify/helmet'))
-    await server.register(require('@fastify/jwt'), {
-      secret: JWT_SECRET,
-    })
     await server.register(circuitBreaker)
+
+    // Register Clerk authentication
+    await server.register(clerkPlugin)
 
     // Register rate limit plugin with Redis client
     await server.register(rateLimitPlugin, {
@@ -55,7 +49,6 @@ export async function createServer(
     await server.register(statusPlugin)
     await server.register(emailPlugin)
     await server.register(adminPlugin)
-    await server.register(authPlugin)
     await server.register(usersPlugin)
     await server.register(listsPlugin)
     await server.register(PlacesPlugin)

@@ -1,9 +1,7 @@
 import { db } from '@ponti/utils/db'
 import { bookmark } from '@ponti/utils/schema'
 import { and, desc, eq } from 'drizzle-orm'
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
-import type { RequestWithSession } from '../../typings'
-import { verifySession } from '../auth/utils'
+import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { convertOGContentToBookmark, getOpenGraphData } from './utils'
 
 type LinkType = {
@@ -49,7 +47,6 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.get(
     '/bookmarks',
     {
-      preValidation: verifySession,
       schema: {
         response: {
           200: {
@@ -59,13 +56,13 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession, reply) => {
-      const session = request.session.get('data')
+    async (request: FastifyRequest, reply) => {
+      const { userId } = request
 
       const bookmarks = await db
         .select()
         .from(bookmark)
-        .where(eq(bookmark.userId, session.userId))
+        .where(eq(bookmark.userId, userId))
         .orderBy(desc(bookmark.createdAt))
 
       return bookmarks
@@ -75,7 +72,6 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.post(
     '/bookmarks',
     {
-      preValidation: verifySession,
       schema: {
         body: {
           type: 'object',
@@ -89,9 +85,9 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession, reply) => {
+    async (request: FastifyRequest, reply) => {
       const { url } = request.body as { url: string }
-      const { userId } = request.session.get('data')
+      const { userId } = request
 
       try {
         const ogContent = await getOpenGraphData({ url })
@@ -116,7 +112,6 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.put(
     '/bookmarks/:id',
     {
-      preValidation: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -137,10 +132,10 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession, reply) => {
+    async (request: FastifyRequest, reply) => {
       const { id } = request.params as { id: string }
       const { url } = request.body as { url: string }
-      const { userId } = request.session.get('data')
+      const { userId } = request
 
       try {
         const ogContent = await getOpenGraphData({ url })
@@ -163,7 +158,6 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.delete(
     '/bookmarks/:id',
     {
-      preHandler: verifySession,
       schema: {
         params: {
           type: 'object',
@@ -177,9 +171,9 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession, reply) => {
+    async (request: FastifyRequest, reply) => {
       const { id } = request.params as { id: string }
-      const { userId } = request.session.get('data')
+      const { userId } = request
 
       await db.delete(bookmark).where(and(eq(bookmark.id, id), eq(bookmark.userId, userId)))
 
