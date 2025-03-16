@@ -1,20 +1,8 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
 import { db } from '@ponti/utils/db'
 import { users } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
-
-export interface AuthUser {
-  id: string
-  email: string
-  clerkId: string
-}
-
-declare module 'fastify' {
-  interface FastifyRequest {
-    user?: AuthUser
-    userId?: string
-  }
-}
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import type { AuthUser } from 'src/typings'
 
 export async function getHominemUser(clerkId: string): Promise<AuthUser | null> {
   if (!clerkId) return null
@@ -32,7 +20,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
     }
 
     const token = authHeader.split(' ')[1]
-    
+
     // This is a placeholder for Clerk authentication
     // In a real implementation, you would validate the token with Clerk
     // For now, we'll assume the token is the clerkId and look up the user

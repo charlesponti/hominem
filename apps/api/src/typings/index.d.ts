@@ -12,6 +12,12 @@ export type RequestWithSession = FastifyRequest & {
   }
 }
 
+interface AuthUser {
+  id: string
+  email: string
+  clerkId: string
+}
+
 declare module '@fastify/secure-session' {
   interface SessionData {
     data: {
@@ -24,6 +30,12 @@ declare module '@fastify/secure-session' {
 }
 
 declare module 'fastify' {
+  import type { Redis } from 'ioredis'
+
+  interface FastifyInstance {
+    redis: Redis
+  }
+
   interface FastifyInstance extends FastifyServerFactory {
     getUserId: (FastifyRequest) => string
     sendgrid: MailService
@@ -38,5 +50,6 @@ declare module 'fastify' {
   interface FastifyRequest {
     file: MultipartFile
     user?: typeof User.$inferSelect
+    userId?: string | null
   }
 }

@@ -1,15 +1,19 @@
-import { FastifyInstance } from 'fastify'
 import { JobApplicationInsertSchema } from '@ponti/utils/career'
 import { db } from '@ponti/utils/db'
 import { companies, job_applications } from '@ponti/utils/schema'
 import { desc, eq } from 'drizzle-orm'
+import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
-import { NotFoundError, ForbiddenError, handleError } from '../utils/errors'
+import { ForbiddenError, NotFoundError, handleError } from '../utils/errors'
 
 export async function applicationRoutes(fastify: FastifyInstance) {
   // Get all applications for authenticated user
   fastify.get('/', { preHandler: verifyAuth }, async (request, reply) => {
+    if (!request.userId) {
+      throw ForbiddenError('Not authorized to view applications')
+    }
+
     try {
       const results = await db
         .select({
@@ -17,7 +21,7 @@ export async function applicationRoutes(fastify: FastifyInstance) {
           application: job_applications,
         })
         .from(job_applications)
-        .where(eq(job_applications.userId, request.userId!))
+        .where(eq(job_applications.userId, request.userId))
         .leftJoin(companies, eq(companies.id, job_applications.companyId))
         .orderBy(desc(job_applications.createdAt))
 
@@ -55,12 +59,16 @@ export async function applicationRoutes(fastify: FastifyInstance) {
 
   // Create a new application
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
+    if (!request.userId) {
+      throw ForbiddenError('Not authorized to create an application')
+    }
+
     try {
       const validated = JobApplicationInsertSchema.omit({ userId: true }).parse(request.body)
-      
+
       const result = await db.insert(job_applications).values({
         ...validated,
-        userId: request.userId!,
+        userId: request.userId,
       })
 
       return result
@@ -74,7 +82,7 @@ export async function applicationRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string }
       const validated = JobApplicationInsertSchema.partial().parse(request.body)
-      
+
       const [application] = await db
         .select()
         .from(job_applications)
@@ -118,7 +126,7 @@ export async function applicationRoutes(fastify: FastifyInstance) {
       }
 
       await db.delete(job_applications).where(eq(job_applications.id, id))
-      
+
       return { success: true }
     } catch (error) {
       handleError(error as Error, reply)
@@ -127,9 +135,14 @@ export async function applicationRoutes(fastify: FastifyInstance) {
 
   // Bulk create/update applications
   fastify.put('/bulk', { preHandler: verifyAuth }, async (request, reply) => {
+    const userId = request.userId
+    if (!userId) {
+      throw ForbiddenError('Not authorized to create applications')
+    }
+
     try {
       const validated = z.array(JobApplicationInsertSchema).parse(request.body)
-      
+
       const results = await db.transaction(async (tx) => {
         return Promise.all(
           validated.map((application) =>
@@ -137,7 +150,7 @@ export async function applicationRoutes(fastify: FastifyInstance) {
               .insert(job_applications)
               .values({
                 ...application,
-                userId: request.userId!,
+                userId,
               })
               .onConflictDoUpdate({
                 target: [job_applications.position, job_applications.companyId],
