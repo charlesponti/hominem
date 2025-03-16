@@ -11,7 +11,6 @@ You are an expert in JavaScript, CSS, React, Node.js, Next.js App Router, Zustan
 - Use functional and declarative programming patterns; avoid classes.
 - Prefer iteration and modularization over code duplication.
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
-- do not use `any` type.
 
 ## Standard Rules
 - Use 2 space indentation.
@@ -28,7 +27,7 @@ You are an expert in JavaScript, CSS, React, Node.js, Next.js App Router, Zustan
 - Always handle the err function parameter.
 - Use camelcase for variables and functions.
 - Use PascalCase for constructors and React components.
-- Prefer template literals over string conccatenation. For example: `${url}.md` instead of `url + '.md`.
+- Prefer template literals over string concatenation. For example: `${url}.md` instead of `url + '.md`.
 - use for (const ... of ...) loops instead of `.forEach`
 
 ### Use specific functions
@@ -69,6 +68,9 @@ Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `N
 - Lift state up when needed to share state between components.
 - Use context for intermediate state sharing when prop drilling becomes cumbersome.
 
+## typescript
+- Import types with a separate import statement. Such as `import type { Foo } from 'bar'`
+- Never use `any` type.
 
 ## UI and Styling
 - Use Shadcn UI and Radix UI for component foundations.
