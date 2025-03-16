@@ -3,32 +3,44 @@
 import { useEffect, useState } from 'react'
 
 export function BackgroundElements() {
-  const [, setLeft] = useState(Math.random() * 100)
+  return (
+    <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
+      {[...Array(20)].map((_, i) => (
+        <BackgroundElement
+          key={crypto.getRandomValues(new Uint32Array(1))[0]}
+          icon={['404', '❌', '🤔', '💫'][i % 4]}
+        />
+      ))}
+    </div>
+  )
+}
+
+const BackgroundElement = ({ icon }: { icon: string }) => {
+  const [left, setLeft] = useState(100)
+  const [top, setTop] = useState(100)
+  const [animationDelay, setAnimationDelay] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
       setLeft(Math.random() * 100)
+      setTop(Math.random() * 100)
+      setAnimationDelay(Math.random() * 5)
     }, 2000)
 
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={crypto.getRandomValues(new Uint32Array(1))[0]}
-          className="absolute animate-fade-in"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            opacity: 0.1,
-          }}
-        >
-          {['404', '❌', '🤔', '💫'][i % 4]}
-        </div>
-      ))}
+    <div
+      className="absolute animate-fade-in"
+      style={{
+        left: `${left}%`,
+        top: `${top}%`,
+        animationDelay: `${animationDelay}s`,
+        opacity: 0.1,
+      }}
+    >
+      {icon}
     </div>
   )
 }

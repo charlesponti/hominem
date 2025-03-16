@@ -3,7 +3,6 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -15,12 +14,17 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
-import { CheckCircle, DollarSign, FilePen, User } from 'lucide-react'
+import { CheckCircle, DollarSign, FilePen, LogOut, User } from 'lucide-react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import { Button } from './ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 
 const data = {
   navMain: [
@@ -73,27 +77,60 @@ export function SiteNavigation() {
           <h1 className="text-2xl font-bold">ominem</h1>
         </div>
         <div>
-          <div className="flex gap-2 items-center border-input border rounded-md px-3 h-12">
-            {isLoaded && isLoggedIn ? (
-              <>
-                <div className="rounded-full border border-gray-600">
-                  <User size={13} />
-                </div>
-                <Link href="/dashboard/profile" className="text-sm font-medium">
-                  {user.fullName}
-                </Link>
-              </>
-            ) : (
-              <div className="w-full flex items-center justify-center">
-                <span className="loading loading-dots text-gray-300" />
-              </div>
-            )}
-          </div>
-          {isLoaded && !isLoggedIn ? (
+          {!isLoaded ? (
+            <div className="w-full flex items-center justify-center border-input border rounded-md px-3 h-12">
+              <span className="loading loading-dots text-gray-300" />
+            </div>
+          ) : isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full flex justify-between items-center gap-2 h-12"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full p-1 bg-gray-100">
+                      <User size={14} />
+                    </div>
+                    <span>{user.fullName}</span>
+                  </div>
+                  {/* <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 15 15"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M4.18179 6.18181C4.35753 6.00608 4.64245 6.00608 4.81819 6.18181L7.49999 8.86362L10.1818 6.18181C10.3575 6.00608 10.6424 6.00608 10.8182 6.18181C10.9939 6.35755 10.9939 6.64247 10.8182 6.81821L7.81819 9.81821C7.73379 9.9026 7.61934 9.95001 7.49999 9.95001C7.38064 9.95001 7.26618 9.9026 7.18179 9.81821L4.18179 6.81821C4.00605 6.64247 4.00605 6.35755 4.18179 6.18181Z"
+                      fill="currentColor"
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg> */}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[200px]">
+                <DropdownMenuItem>
+                  <SignOutButton>
+                    <Button
+                      variant="ghost"
+                      className="w-full flex items-center justify-start gap-2 p-0"
+                    >
+                      <LogOut size={14} />
+                      Sign Out
+                    </Button>
+                  </SignOutButton>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
             <SignInButton>
-              <Button size="lg">Sign in</Button>
+              <Button size="lg" className="w-full h-12">
+                Sign in
+              </Button>
             </SignInButton>
-          ) : null}
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent className="max-w-full">
@@ -119,13 +156,6 @@ export function SiteNavigation() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      {isLoaded && isLoggedIn ? (
-        <SidebarFooter>
-          <SignOutButton>
-            <span className="btn bg-black text-white max-h-fit">Sign Out</span>
-          </SignOutButton>
-        </SidebarFooter>
-      ) : null}
     </Sidebar>
   )
 }

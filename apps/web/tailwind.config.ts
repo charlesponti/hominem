@@ -17,6 +17,9 @@ const config: Omit<Config, 'content'> = {
         'glow-conic':
           'conic-gradient(from 180deg at 50% 50%, #2a8af6 0deg, #a853ba 180deg, #e92a67 360deg)',
       },
+      animate: {
+        'fade-in': 'fade-in 0.5s ease-out',
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
