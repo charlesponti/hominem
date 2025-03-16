@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState } from 'react'
 
-import { useMutation } from '@tanstack/react-query'
 import { Textarea } from '@/components/ui/textarea'
+import { useMutation } from '@tanstack/react-query'
 
 export default function WordToolPage() {
   const [word, setWord] = useState('')
@@ -52,7 +52,7 @@ export default function WordToolPage() {
             type="button"
             className="btn btn-primary"
             onClick={() => mutation.mutate({ word, action: 'describe_word' })}
-            disabled={!word || mutation.isPending}
+            disabled={!word || mutation.isLoading}
           >
             Get Description
           </button>
@@ -67,7 +67,7 @@ export default function WordToolPage() {
           />
           <Button
             onClick={() => mutation.mutate({ sentence, word, action: 'rewrite' })}
-            disabled={!word || !sentence || mutation.isPending}
+            disabled={!word || !sentence || mutation.isLoading}
           >
             Rewrite Sentence
           </Button>

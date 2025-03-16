@@ -1,9 +1,9 @@
-import { useApplications } from '@/hooks/useApplications'
+import { useUpdateApplication } from '@/hooks/useApplications'
 import type { JobApplication } from '@ponti/utils/schema'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { StagesDialog } from './job-application-stages.dialog'
 import { JobApplicationStatusDropdown } from './job-application-status-dropdown'
-import { StagesDialog } from './stages-dialog'
 
 export const JobApplicationCard = ({
   application: app,
@@ -12,14 +12,10 @@ export const JobApplicationCard = ({
   setSelectedApp: (app: JobApplication) => void
   application: JobApplication & { company?: string }
 }) => {
-  const { updateApplication } = useApplications()
-
-  async function handleUpdate(id: string, data: Partial<JobApplication>) {
-    updateApplication({ data, id })
-  }
+  const { updateApplication } = useUpdateApplication()
 
   async function onStatusSelect(status: JobApplication['status']) {
-    await handleUpdate(app.id.toString(), { status })
+    await updateApplication.mutateAsync({ status, id: app.id })
   }
 
   return (

@@ -56,28 +56,46 @@ export class FinanceRouter {
           const buffer = Buffer.from(input.csvFile, 'base64')
           await fs.writeFile(filePath, buffer)
 
-          // Process the uploaded file
-          const result = await processTransactions(tmpDir, input.deduplicateThreshold)
-
           // Create a detailed summary
           const summary = {
             success: true,
             originalFileName: input.fileName,
             processedFileName: formattedFileName,
             fileDate: date,
-            processed: result.processed,
-            skipped: result.skipped,
-            merged: result.merged,
-            total: result.processed + result.skipped,
-            newTransactions: result.processed,
-            duplicatesSkipped: result.skipped,
-            mergedNames: result.merged,
-            deduplicationPercentage:
-              result.processed + result.skipped > 0
-                ? Math.round((result.skipped / (result.processed + result.skipped)) * 100)
-                : 0,
+            created: 0,
+            updated: 0,
+            skipped: 0,
+            merged: 0,
+            total: 0,
             timestamp: new Date().toISOString(),
+            deduplicationPercentage: 0,
           }
+
+          // Process the uploaded file
+          const result = processTransactions(tmpDir, input.deduplicateThreshold)
+          for await (const tx of result) {
+            switch (tx.action) {
+              case 'updated':
+                summary.updated++
+                break
+              case 'created':
+                summary.created++
+                break
+              case 'skipped':
+                summary.skipped++
+                break
+              case 'merged':
+                summary.merged++
+                break
+            }
+            summary.total++
+          }
+
+          const processed = summary.created + summary.updated + summary.merged
+          summary.deduplicationPercentage =
+            processed + summary.skipped > 0
+              ? Math.round((summary.skipped / (processed + summary.skipped)) * 100)
+              : 0
 
           return summary
         } catch (error) {

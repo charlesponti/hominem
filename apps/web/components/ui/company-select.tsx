@@ -48,8 +48,8 @@ export function CompanySelect({ value, onSelectAction }: CompanySelectProps) {
             }}
             onCreateCompany={async () => {
               const company = await createCompany(search)
-              if (company[0]) {
-                onSelectAction(company[0].id)
+              if (company) {
+                onSelectAction(company.id)
                 setOpen(false)
               }
             }}
@@ -75,8 +75,8 @@ export function CompanySelect({ value, onSelectAction }: CompanySelectProps) {
             }}
             onCreateCompany={async () => {
               const company = await createCompany(search)
-              if (company[0]) {
-                onSelectAction(company[0].id)
+              if (company) {
+                onSelectAction(company.id)
                 setOpen(false)
               }
             }}

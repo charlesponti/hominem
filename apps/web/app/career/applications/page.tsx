@@ -7,15 +7,17 @@ import {
 } from '@/components/career/job-application.form'
 import { Input } from '@/components/ui/input'
 import { useApplications } from '@/hooks/useApplications'
-import { useAuth } from '@clerk/nextjs'
 import type { JobApplication } from '@ponti/utils/career'
 import { useState } from 'react'
 
 export default function ApplicationsPage() {
-  const { userId } = useAuth()
   const [search, setSearch] = useState('')
-  const { applications } = useApplications(userId)
+  const { data: applications } = useApplications()
   const [selectedApp, setSelectedApp] = useState<JobApplication | null>(null)
+
+  const filteredApplications = applications?.filter((app) =>
+    app.position.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className="container mx-auto py-10">
@@ -33,7 +35,7 @@ export default function ApplicationsPage() {
       </div>
 
       <div className="md:grid md:grid-cols-2 gap-4">
-        {applications?.map((app) => (
+        {filteredApplications?.map((app) => (
           <JobApplicationCard key={app.id} application={app} setSelectedApp={setSelectedApp} />
         ))}
       </div>

@@ -14,16 +14,16 @@ interface StagesDialogProps {
 
 export function StagesDialog({ applicationId, stages }: StagesDialogProps) {
   const [isAddingStage, setIsAddingStage] = useState(false)
-  const updateApplication = useUpdateApplication()
+  const { updateApplication } = useUpdateApplication()
 
   async function handleAddStage(status: JobApplication['stages'][number]['stage']) {
     const newStages = [...stages, { stage: status, date: new Date().toISOString() }]
-    await updateApplication.mutateAsync({ id: applicationId, data: { stages: newStages } })
+    await updateApplication.mutateAsync({ id: applicationId, stages: newStages })
   }
 
   async function handleDeleteStage(index: number) {
     const newStages = stages.filter((_, i) => i !== index)
-    await updateApplication.mutateAsync({ id: applicationId, data: { stages: newStages } })
+    await updateApplication.mutateAsync({ id: applicationId, stages: newStages })
   }
 
   return (

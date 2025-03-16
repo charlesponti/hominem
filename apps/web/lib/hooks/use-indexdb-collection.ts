@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 interface Item {
   id: string
@@ -176,9 +176,9 @@ export const useIndexedDBCollection = <T extends Item>({
     import: importMutation.mutate,
     importAsync: importMutation.mutateAsync,
     exportData,
-    isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending,
-    isImporting: importMutation.isPending,
+    isCreating: createMutation.isLoading,
+    isUpdating: updateMutation.isLoading,
+    isDeleting: deleteMutation.isLoading,
+    isImporting: importMutation.isLoading,
   }
 }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { trpc } from '@/lib/trpc'
+import { useAnalyzeNote, useCreateNote, useDeleteNote, useNotes } from '@/hooks/use-notes'
 import type { Decisions, Habits, TextAnalysis, TextAnalysisEmotion } from '@ponti/utils/nlp'
 import { motion } from 'framer-motion'
 import {
@@ -361,17 +361,10 @@ const SmartTaskInput = () => {
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null)
   const [analysisDialogOpen, setAnalysisDialogOpen] = useState(false)
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
-
-  const { data: notes, refetch } = trpc.notes.list.useQuery()
-  const createNote = trpc.notes.create.useMutation({
-    onSuccess: () => refetch(),
-  })
-  const deleteNote = trpc.notes.delete.useMutation({
-    onSuccess: () => refetch(),
-  })
-  const analyzeNote = trpc.notes.analyze.useMutation({
-    onSuccess: () => refetch(),
-  })
+  const { createNote } = useCreateNote()
+  const { deleteNote } = useDeleteNote()
+  const { analyzeNote } = useAnalyzeNote()
+  const { notes } = useNotes()
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -385,12 +378,12 @@ const SmartTaskInput = () => {
   }
 
   const handleDelete = async (id: string) => {
-    await deleteNote.mutateAsync({ id })
+    await deleteNote.mutateAsync(id)
   }
 
   const handleAnalyze = async (id: string) => {
     setSelectedNoteId(id)
-    await analyzeNote.mutateAsync({ id })
+    await analyzeNote.mutateAsync(id)
     setAnalysisDialogOpen(true)
   }
 
@@ -444,9 +437,9 @@ const SmartTaskInput = () => {
                             size="sm"
                             onClick={() => handleAnalyze(note.id)}
                             className="text-violet-600 hover:bg-violet-100 hover:text-violet-700"
-                            disabled={analyzeNote.isPending && selectedNoteId === note.id}
+                            disabled={analyzeNote.isLoading && selectedNoteId === note.id}
                           >
-                            {analyzeNote.isPending && selectedNoteId === note.id ? (
+                            {analyzeNote.isLoading && selectedNoteId === note.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <BarChart2 className="w-4 h-4" />

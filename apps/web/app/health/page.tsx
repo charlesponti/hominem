@@ -18,9 +18,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  useCreateHealthData,
+  useDeleteHealthData,
+  useHealth,
+  useUpdateHealthData,
+} from '@/hooks/use-health'
 import { format } from 'date-fns'
 import { useState, type FormEvent } from 'react'
-import { trpc } from '../../lib/trpc'
 
 const DEFAULT_FORM_DATA = {
   userId: '',
@@ -45,7 +50,11 @@ const ACTIVITY_TYPES = [
 ]
 
 export default function HealthPage() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    startDate: Date | undefined
+    endDate: Date | undefined
+    activityType: string
+  }>({
     startDate: undefined,
     endDate: undefined,
     activityType: '',
@@ -55,17 +64,14 @@ export default function HealthPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
-  // Queries and mutations
-  const utils = trpc.useUtils()
-  const { data, isLoading } = trpc.health.getHealthData.useQuery(filters)
-  const addHealthData = trpc.health.addHealthData.useMutation({
-    onSuccess: () => utils.health.getHealthData.invalidate(),
-  })
-  const updateHealthData = trpc.health.updateHealthData.useMutation({
-    onSuccess: () => utils.health.getHealthData.invalidate(),
-  })
-  const deleteHealthData = trpc.health.deleteHealthData.useMutation({
-    onSuccess: () => utils.health.getHealthData.invalidate(),
+  // Use React Query hooks for health data
+  const { deleteHealthData } = useDeleteHealthData()
+  const { updateHealthData } = useUpdateHealthData()
+  const { createHealthData } = useCreateHealthData()
+  const { data, isLoading } = useHealth({
+    startDate: filters.startDate?.toISOString(),
+    endDate: filters.endDate?.toISOString(),
+    activityType: filters.activityType,
   })
 
   // Form handling
@@ -93,7 +99,7 @@ export default function HealthPage() {
         ...formData,
       })
     } else {
-      await addHealthData.mutateAsync({
+      await createHealthData.mutateAsync({
         ...formData,
         userId: formData.userId || 'current-user', // Replace with actual auth user ID
       })
@@ -106,7 +112,7 @@ export default function HealthPage() {
 
   const handleEdit = (item: {
     userId: string
-    date: Date
+    date: string
     activityType: string
     duration: number
     caloriesBurned: number

@@ -1,6 +1,6 @@
 'use client'
 
-import { trpc } from '@/lib/trpc'
+import { useCreateSurvey, useSurveys, useVoteSurvey } from '@/hooks/use-surveys'
 import { useState } from 'react'
 
 export default function SurveysPage() {
@@ -9,18 +9,13 @@ export default function SurveysPage() {
     description: '',
     options: [{ title: '', description: '' }],
   })
-
-  const { data: surveys, refetch } = trpc.surveys.list.useQuery()
-  const createMutation = trpc.surveys.create.useMutation({
-    onSuccess: () => refetch(),
-  })
-  const voteMutation = trpc.surveys.vote.useMutation({
-    onSuccess: () => refetch(),
-  })
+  const { createSurvey } = useCreateSurvey()
+  const { voteSurvey } = useVoteSurvey()
+  const { surveys } = useSurveys()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await createMutation.mutateAsync(newSurvey)
+    await createSurvey.mutateAsync(newSurvey)
     setNewSurvey({
       name: '',
       description: '',
@@ -112,7 +107,7 @@ export default function SurveysPage() {
                     <button
                       type="submit"
                       onClick={() =>
-                        voteMutation.mutateAsync({
+                        voteSurvey.mutateAsync({
                           surveyId: survey.id,
                           optionId: option.id,
                         })

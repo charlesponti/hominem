@@ -1,4 +1,4 @@
-import { useApplications } from '@/hooks/useApplications'
+import { useCreateApplication, useDeleteApplication } from '@/hooks/useApplications'
 import { useAuth } from '@clerk/nextjs'
 import type { JobApplication } from '@ponti/utils/career'
 import { JobApplicationStage, JobApplicationStatus } from '@ponti/utils/types'
@@ -45,7 +45,8 @@ export function CreateApplicationDialog() {
 
 export function JobApplicationForm({ application }: { application?: JobApplication }) {
   const { userId } = useAuth()
-  const { createApplication, deleteApplication } = useApplications(userId)
+  const { createApplication } = useCreateApplication()
+  const deleteApplication = useDeleteApplication()
   const [position, setPosition] = useState(application?.position ?? '')
   const [companyId, setCompanyId] = useState(application?.companyId ?? '')
   const [date, setDate] = useState(
@@ -59,15 +60,15 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
 
   const onDeleteClick = useCallback(() => {
     if (application) {
-      deleteApplication(application.id)
+      deleteApplication.mutateAsync(application.id)
     }
   }, [application, deleteApplication])
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     if (!userId) return
     e.preventDefault()
     if (position && companyId) {
-      createApplication({
+      await createApplication.mutateAsync({
         position,
         companyId,
         status,
@@ -89,12 +90,13 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
         jobId: null,
         link: null,
         phoneScreen: null,
+        userId,
       })
 
       // Reset form
       setPosition('')
       setCompanyId('')
-      setDate(new Date().toISOString().split('T')[0])
+      setDate(new Date().toISOString())
       setStatus(JobApplicationStage.APPLICATION)
       setLocation('')
       setJobPosting('')

@@ -28,7 +28,7 @@
   "editor.formatOnType": true,
   "editor.lineHeight": 2,
   "editor.fontFamily": "Anonymous Pro for Powerline",
-  "editor.fontSize": 11,
+  "editor.fontSize": 12,
   "editor.cursorBlinking": "smooth",
   "editor.minimap.enabled": true,
   "github.copilot.chat.codeGeneration.instructions": [

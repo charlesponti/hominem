@@ -16,6 +16,14 @@ import shutdownPlugin from './plugins/shutdown'
 import statusPlugin from './plugins/status'
 import usersPlugin from './plugins/user'
 
+// Import migrated routes
+import { applicationRoutes } from './routes/applications'
+import { healthRoutes } from './routes/health'
+import { companyRoutes } from './routes/company'
+import { jobApplicationRoutes } from './routes/job-applications'
+import { surveyRoutes } from './routes/surveys'
+import { notesRoutes } from './routes/notes'
+
 const { APP_URL, PORT } = process.env
 
 assert(APP_URL, 'Missing APP_URL env var')
@@ -56,6 +64,14 @@ export async function createServer(
     await server.register(bookmarksPlugin)
     await server.register(ideasPlugin)
     await server.register(chatSingleResponsePlugin)
+
+    // Register migrated routes
+    server.register(applicationRoutes, { prefix: '/api/applications' })
+    server.register(healthRoutes, { prefix: '/api/health' })
+    server.register(companyRoutes, { prefix: '/api/companies' })
+    server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })
+    server.register(surveyRoutes, { prefix: '/api/surveys' })
+    server.register(notesRoutes, { prefix: '/api/notes' })
 
     server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
       return (data) => schema.parse(data)
