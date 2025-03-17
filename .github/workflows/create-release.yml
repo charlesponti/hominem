@@ -1,10 +1,10 @@
-name: 📦 Create new release
+name: create-release
 
 on:
   workflow_run:
     workflows: ["deploy-api-prod"]
     branches: [main]
-    # Requied to run only on successful completion of the code-quality workflow
+    # Required to run only on successful completion of the code-quality workflow
     types:
       - completed
 

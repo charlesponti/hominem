@@ -1,11 +1,11 @@
-name: 🎋 Create Branch from Issue
+name: create-issue-branch
 
 on:
   issues:
     types: [assigned]
 
 jobs:
-  create_issue_branch_job:
+  create-issue-branch:
     runs-on: ubuntu-latest
     steps:
       - name: Create Issue Branch
