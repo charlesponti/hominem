@@ -10,7 +10,9 @@ export namespace HominemVectorStore {
   const imageCollectionName = 'images'
   const documentCollectionName = 'documents'
 
-  export const chroma = new ChromaClient()
+  export const chroma = new ChromaClient({
+    path: process.env.CHROMA_URL,
+  })
 
   async function getDocumentCollection() {
     return chroma.getOrCreateCollection({
