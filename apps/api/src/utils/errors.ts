@@ -1,9 +1,9 @@
-import { FastifyReply } from 'fastify'
+import type { FastifyReply } from 'fastify'
 import { ZodError } from 'zod'
 
 export class ApiError extends Error {
   statusCode: number
-  
+
   constructor(statusCode: number, message: string) {
     super(message)
     this.statusCode = statusCode
@@ -14,22 +14,22 @@ export class ApiError extends Error {
 export function handleError(error: Error, reply: FastifyReply) {
   if (error instanceof ApiError) {
     return reply.status(error.statusCode).send({
-      error: error.message
+      error: error.message,
     })
   }
-  
+
   if (error instanceof ZodError) {
     return reply.status(400).send({
       error: 'Validation Error',
-      details: error.errors
+      details: error.errors,
     })
   }
-  
+
   // Log unknown errors
   console.error(error)
-  
+
   return reply.status(500).send({
-    error: 'Internal Server Error'
+    error: 'Internal Server Error',
   })
 }
 

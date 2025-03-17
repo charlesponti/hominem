@@ -1,10 +1,10 @@
+import { getAuth } from '@clerk/fastify'
 import { db } from '@ponti/utils/db'
 import { users } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import type { AuthUser } from 'src/typings'
 
-export async function getHominemUser(clerkId: string): Promise<AuthUser | null> {
+export async function getHominemUser(clerkId: string): Promise<typeof users.$inferSelect | null> {
   if (!clerkId) return null
 
   const [user] = await db.select().from(users).where(eq(users.clerkId, clerkId))
@@ -13,24 +13,18 @@ export async function getHominemUser(clerkId: string): Promise<AuthUser | null> 
 
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
   try {
-    // Get the auth token from the header
-    const authHeader = request.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return reply.status(401).send({ error: 'Unauthorized' })
+    const auth = getAuth(request)
+
+    if (!auth.userId) {
+      return reply.code(401).send({ error: 'Unauthorized' })
     }
 
-    const token = authHeader.split(' ')[1]
-
-    // This is a placeholder for Clerk authentication
-    // In a real implementation, you would validate the token with Clerk
-    // For now, we'll assume the token is the clerkId and look up the user
-    const user = await getHominemUser(token)
+    const user = await getHominemUser(auth.userId)
 
     if (!user) {
       return reply.status(401).send({ error: 'Unauthorized' })
     }
 
-    // Add the user to the request
     request.user = user
     request.userId = user.id
   } catch (error) {

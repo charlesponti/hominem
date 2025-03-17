@@ -21,7 +21,6 @@
     "@langchain/langgraph": "0.2.45",
     "@langchain/openai": "^0.4.3",
     "@libsql/client": "^0.14.0",
-    "@pinecone-database/pinecone": "^4.1.0",
     "@ponti/utils": "*",
     "@tanstack/react-query": "^5.66.0",
     "@trpc/server": "^10.45.2",

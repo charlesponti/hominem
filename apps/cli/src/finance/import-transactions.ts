@@ -37,7 +37,10 @@ importTransactions
         .filter((file) => path.extname(file).toLowerCase() === '.csv')
 
       // Get the number of transactions currently in the database.
-      const initialCount = db.select({ count: sql<number>`count(*)` }).from(transactions).get()
+      const initialCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(transactions)
+        .get()
 
       let processedCount = 0
 

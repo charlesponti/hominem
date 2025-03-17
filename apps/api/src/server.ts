@@ -1,28 +1,28 @@
+import { clerkPlugin } from '@clerk/fastify'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import assert from 'node:assert'
 import type { ZodSchema } from 'zod'
+import { getEnv } from './lib/env'
 import adminPlugin from './plugins/admin'
 import bookmarksPlugin from './plugins/bookmarks'
 import chatSingleResponsePlugin from './plugins/chat/single-response'
 import circuitBreaker from './plugins/circuit-breaker'
-import clerkPlugin from './plugins/clerk'
 import emailPlugin from './plugins/email'
 import ideasPlugin from './plugins/ideas'
 import invites from './plugins/invites'
 import listsPlugin from './plugins/lists'
-import PlacesPlugin from './plugins/places'
+import placesPlugin from './plugins/places'
 import rateLimitPlugin from './plugins/rate-limit'
 import shutdownPlugin from './plugins/shutdown'
 import statusPlugin from './plugins/status'
 import usersPlugin from './plugins/user'
-
-// Import migrated routes
 import { applicationRoutes } from './routes/applications'
-import { healthRoutes } from './routes/health'
 import { companyRoutes } from './routes/company'
+import { healthRoutes } from './routes/health'
 import { jobApplicationRoutes } from './routes/job-applications'
-import { surveyRoutes } from './routes/surveys'
 import { notesRoutes } from './routes/notes'
+import { surveyRoutes } from './routes/surveys'
+import { vectorRoutes } from './routes/vector.router'
 
 const { APP_URL, PORT } = process.env
 
@@ -43,9 +43,11 @@ export async function createServer(
     await server.register(require('@fastify/helmet'))
     await server.register(circuitBreaker)
 
-    // Register Clerk authentication
-    await server.register(clerkPlugin)
-
+    // Register Clerk plugin
+    await server.register(clerkPlugin, {
+      secretKey: getEnv('CLERK_SECRET_KEY'),
+      publishableKey: getEnv('CLERK_PUBLISHABLE_KEY'),
+    })
     // Register rate limit plugin with Redis client
     await server.register(rateLimitPlugin, {
       redis: server.redis,
@@ -59,19 +61,18 @@ export async function createServer(
     await server.register(adminPlugin)
     await server.register(usersPlugin)
     await server.register(listsPlugin)
-    await server.register(PlacesPlugin)
+    await server.register(placesPlugin)
     await server.register(invites)
     await server.register(bookmarksPlugin)
     await server.register(ideasPlugin)
     await server.register(chatSingleResponsePlugin)
-
-    // Register migrated routes
-    server.register(applicationRoutes, { prefix: '/api/applications' })
-    server.register(healthRoutes, { prefix: '/api/health' })
-    server.register(companyRoutes, { prefix: '/api/companies' })
-    server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })
-    server.register(surveyRoutes, { prefix: '/api/surveys' })
-    server.register(notesRoutes, { prefix: '/api/notes' })
+    await server.register(applicationRoutes, { prefix: '/api/applications' })
+    await server.register(healthRoutes, { prefix: '/api/health' })
+    await server.register(companyRoutes, { prefix: '/api/companies' })
+    await server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })
+    await server.register(surveyRoutes, { prefix: '/api/surveys' })
+    await server.register(notesRoutes, { prefix: '/api/notes' })
+    await server.register(vectorRoutes, { prefix: '/api/vectors' })
 
     server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
       return (data) => schema.parse(data)
@@ -79,11 +80,6 @@ export async function createServer(
 
     server.setSerializerCompiler(({ schema }: { schema: ZodSchema }) => {
       return (data) => schema.parse(data)
-    })
-
-    server.setErrorHandler((error, request, reply) => {
-      console.error(error)
-      reply.status(500).send({ error: 'Internal server error' })
     })
 
     return server

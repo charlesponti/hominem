@@ -12,12 +12,6 @@ export type RequestWithSession = FastifyRequest & {
   }
 }
 
-interface AuthUser {
-  id: string
-  email: string
-  clerkId: string
-}
-
 declare module '@fastify/secure-session' {
   interface SessionData {
     data: {
@@ -51,5 +45,6 @@ declare module 'fastify' {
     file: MultipartFile
     user?: typeof User.$inferSelect
     userId?: string | null
+    clerkId?: string | null
   }
 }

@@ -1,10 +1,10 @@
-import { FastifyInstance } from 'fastify'
 import { db } from '@ponti/utils/db'
 import { surveyOptions, surveyVotes, surveys } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
+import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
-import { handleError } from '../utils/errors'
+import { ForbiddenError, handleError } from '../utils/errors'
 
 const createSurveySchema = z.object({
   name: z.string(),
@@ -25,15 +25,20 @@ const voteSchema = z.object({
 export async function surveyRoutes(fastify: FastifyInstance) {
   // Create a new survey
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      throw ForbiddenError('Not authorized to create a survey')
+    }
+
     try {
       const validated = createSurveySchema.parse(request.body)
-      
+
       const [survey] = await db
         .insert(surveys)
         .values({
           name: validated.name,
           description: validated.description,
-          userId: request.userId!,
+          userId,
         })
         .returning()
 
@@ -52,15 +57,20 @@ export async function surveyRoutes(fastify: FastifyInstance) {
 
   // List all surveys for authenticated user
   fastify.get('/', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      throw ForbiddenError('Not authorized to create a survey')
+    }
+
     try {
       const results = await db.query.surveys.findMany({
-        where: eq(surveys.userId, request.userId!),
+        where: eq(surveys.userId, userId),
         with: {
           options: true,
           votes: true,
         },
       })
-      
+
       return results
     } catch (error) {
       handleError(error as Error, reply)
@@ -69,15 +79,20 @@ export async function surveyRoutes(fastify: FastifyInstance) {
 
   // Vote on a survey
   fastify.post('/vote', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      throw ForbiddenError('Not authorized to create a survey')
+    }
+
     try {
       const validated = voteSchema.parse(request.body)
-      
-      const result = await db.insert(surveyVotes).values({
+
+      await db.insert(surveyVotes).values({
         surveyId: validated.surveyId,
         optionId: validated.optionId,
-        userId: request.userId!,
+        userId,
       })
-      
+
       return { success: true }
     } catch (error) {
       handleError(error as Error, reply)

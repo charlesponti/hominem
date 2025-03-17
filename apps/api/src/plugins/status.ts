@@ -5,7 +5,6 @@ import fp from 'fastify-plugin'
 const statusPlugin: FastifyPluginAsync = async (server) => {
   server.get('/status', async (request) => {
     const isAuth = !!request.userId
-
     const serverTime = new Date().toISOString()
     const uptime = process.uptime()
 

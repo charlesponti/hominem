@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/nextjs'
 import { useCallback, useState } from 'react'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 type FetchOptions<T> = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'

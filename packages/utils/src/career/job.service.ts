@@ -32,8 +32,9 @@ export class JobService {
       .from(jobs)
       .where(eq(jobs.id, id))
       .leftJoin(companies, eq(jobs.companyId, companies.id))
+      .limit(1)
 
-    return result
+    return result[0]
   }
 
   async findMany(query: SQL<Job>) {

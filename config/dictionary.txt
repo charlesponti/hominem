@@ -24,6 +24,7 @@ linestring
 lmstudio
 mailparser
 mdast
+metadatas
 modelcontextprotocol
 nixpacks
 ollama

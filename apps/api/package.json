@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf build",
-    "dev": "bun run src/index.ts --watch | pino-pretty",
+    "dev": "bun --watch src/index.ts | pino-pretty",
     "lint": "bunx biome lint ./src",
     "start": "bun run build/src/index | pino-pretty",
     "test": "NODE_ENV=test vitest --run --coverage",
@@ -36,7 +36,7 @@
     "@supabase/supabase-js": "^2.48.1",
     "@total-typescript/ts-reset": "^0.6.1",
     "ai": "^4.1.26",
-    "chromadb": "^1.10.4",
+    "chromadb": "^2.0.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",

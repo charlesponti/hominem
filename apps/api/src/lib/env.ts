@@ -7,11 +7,6 @@ export const getEnv = (key: string): string => {
 }
 
 export const validateEnvironmentVariables = () => {
-  getEnv('PINECONE_API_KEY')
-  getEnv('PINECONE_INDEX')
-  getEnv('PINECONE_CLOUD')
-  getEnv('PINECONE_REGION')
-  
   // Clerk
   getEnv('CLERK_SECRET_KEY')
   getEnv('CLERK_PUBLISHABLE_KEY')

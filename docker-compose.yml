@@ -61,21 +61,14 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
-
+  
   chroma:
-    image: chromadb/chroma:latest
+    image: chromadb/chroma:0.6.3
     container_name: hominem-chroma
     volumes:
       - hominem-chroma:/chroma/.chroma/index 
     ports:
-      - "8000:8000" # Expose ChromaDB on port 8000 on the host
-    environment:
-      CHROMA_DB: postgres
-      CHROMA_DB_HOST: postgres # The service name of the PostgreSQL container
-      CHROMA_DB_PORT: 5432 # The port on which PostgreSQL runs inside the Docker network
-      CHROMA_DB_USER: root
-      CHROMA_DB_PASSWORD: password
-      CHROMA_DB_DATABASE: main
+      - "8000:8000"
     depends_on:
       - postgres
 

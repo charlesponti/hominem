@@ -3,16 +3,14 @@ import type { Message } from 'ai'
 import type { FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
 import { HttpResponseOutputParser } from 'langchain/output_parsers'
+import logger from 'src/logger'
 import { openaiModel } from '../../lib/openai'
 import { verifySession } from '../auth/utils'
 
 // biome-ignore lint/complexity/noBannedTypes: <explanation>
 type ChatPluginOptions = {}
 
-const chatSingleResponsePlugin: FastifyPluginAsync<ChatPluginOptions> = async (
-  fastify,
-  options
-) => {
+const chatSingleResponsePlugin: FastifyPluginAsync<ChatPluginOptions> = async (fastify) => {
   fastify.post(
     '/chat/single-response',
     {
@@ -66,9 +64,9 @@ const chatSingleResponsePlugin: FastifyPluginAsync<ChatPluginOptions> = async (
         }
 
         reply.raw.end()
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      } catch (e: any) {
-        reply.code(e.status ?? 500).send({ error: e.message })
+      } catch (e) {
+        logger.error(`Chat single response error: ${e}`)
+        reply.code(500).send({ error: 'An error occurred while processing the request' })
       }
     }
   )
