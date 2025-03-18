@@ -1,4 +1,4 @@
-import { useUpdateApplication } from '@/hooks/useApplications'
+import { useUpdateApplication } from '@/lib/hooks/useApplications'
 import type { JobApplication } from '@ponti/utils/schema'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'

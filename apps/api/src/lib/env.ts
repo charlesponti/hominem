@@ -11,3 +11,10 @@ export const validateEnvironmentVariables = () => {
   getEnv('CLERK_SECRET_KEY')
   getEnv('CLERK_PUBLISHABLE_KEY')
 }
+
+export const env = {
+  PORT: Number.parseInt(getEnv('PORT'), 10),
+  NODE_ENV: getEnv('NODE_ENV'),
+  APP_URL: getEnv('APP_URL'),
+  COOKIE_SECRET: getEnv('COOKIE_SECRET'),
+}

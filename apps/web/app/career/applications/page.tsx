@@ -6,7 +6,7 @@ import {
   EditApplicationDialog,
 } from '@/components/career/job-application.form'
 import { Input } from '@/components/ui/input'
-import { useApplications } from '@/hooks/useApplications'
+import { useApplications } from '@/lib/hooks/useApplications'
 import type { JobApplication } from '@ponti/utils/career'
 import { useState } from 'react'
 

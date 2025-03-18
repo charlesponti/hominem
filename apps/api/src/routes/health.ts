@@ -1,14 +1,20 @@
-import { FastifyInstance } from 'fastify'
 import { db } from '@ponti/utils/db'
 import { health } from '@ponti/utils/schema'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
+import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../utils/errors'
 
 const healthQuerySchema = z.object({
   userId: z.string().optional(),
-  startDate: z.string().transform((str) => new Date(str)).optional(),
-  endDate: z.string().transform((str) => new Date(str)).optional(),
+  startDate: z
+    .string()
+    .transform((str) => new Date(str))
+    .optional(),
+  endDate: z
+    .string()
+    .transform((str) => new Date(str))
+    .optional(),
   activityType: z.string().optional(),
 })
 
@@ -22,7 +28,10 @@ const healthDataSchema = z.object({
 })
 
 const updateHealthDataSchema = z.object({
-  date: z.string().transform((str) => new Date(str)).optional(),
+  date: z
+    .string()
+    .transform((str) => new Date(str))
+    .optional(),
   activityType: z.string().optional(),
   duration: z.number().optional(),
   caloriesBurned: z.number().optional(),
@@ -72,9 +81,9 @@ export async function healthRoutes(fastify: FastifyInstance) {
   fastify.get('/:id', async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-      const numericId = parseInt(id, 10)
+      const numericId = Number.parseInt(id, 10)
 
-      if (isNaN(numericId)) {
+      if (Number.isNaN(numericId)) {
         return reply.status(400).send({ error: 'Invalid ID format' })
       }
 
@@ -94,7 +103,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     try {
       const validated = healthDataSchema.parse(request.body)
-      
+
       const result = await db.insert(health).values(validated).returning()
       return result[0]
     } catch (error) {
@@ -106,14 +115,14 @@ export async function healthRoutes(fastify: FastifyInstance) {
   fastify.put('/:id', async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-      const numericId = parseInt(id, 10)
+      const numericId = Number.parseInt(id, 10)
 
-      if (isNaN(numericId)) {
+      if (Number.isNaN(numericId)) {
         return reply.status(400).send({ error: 'Invalid ID format' })
       }
 
       const validated = updateHealthDataSchema.parse(request.body)
-      
+
       const result = await db
         .update(health)
         .set(validated)
@@ -134,14 +143,17 @@ export async function healthRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-      const numericId = parseInt(id, 10)
+      const numericId = Number.parseInt(id, 10)
 
-      if (isNaN(numericId)) {
+      if (Number.isNaN(numericId)) {
         return reply.status(400).send({ error: 'Invalid ID format' })
       }
 
-      await db.delete(health).where(eq(health.id, numericId))
-      
+      const result = await db.delete(health).where(eq(health.id, numericId))
+      if (result.count === 0) {
+        return reply.status(404).send({ error: 'Health record not found' })
+      }
+
       return { success: true }
     } catch (error) {
       handleError(error as Error, reply)

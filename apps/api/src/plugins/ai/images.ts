@@ -53,7 +53,7 @@ export const imagePlugin: FastifyPluginAsync = async (server) => {
     }
   })
 
-  server.get('/ai/images/get', async (req, reply) => {
+  server.get('/', async (req, reply) => {
     const params = req.query as { page: string; pageSize: string }
     const page = Number.parseInt(params.page || '1', 10)
     const pageSize = Number.parseInt(params.pageSize || '10', 10)
@@ -80,7 +80,7 @@ export const imagePlugin: FastifyPluginAsync = async (server) => {
     }
   })
 
-  server.get('/ai/images/search', async (req, reply) => {
+  server.get('/search', async (req, reply) => {
     const image = await req.file()
 
     if (!image) {
@@ -114,7 +114,7 @@ export const imagePlugin: FastifyPluginAsync = async (server) => {
     }
   })
 
-  server.delete('/ai/images/delete/:imageId', async (req, reply) => {
+  server.delete('/:imageId', async (req, reply) => {
     const { imageId } = req.params as { imageId: string }
 
     if (!imageId) {

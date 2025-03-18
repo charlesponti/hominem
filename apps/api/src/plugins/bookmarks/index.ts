@@ -58,6 +58,9 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
     },
     async (request: FastifyRequest, reply) => {
       const { userId } = request
+      if (!userId) {
+        return reply.code(401).send({ message: 'Unauthorized' })
+      }
 
       const bookmarks = await db
         .select()
@@ -86,8 +89,12 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
       },
     },
     async (request: FastifyRequest, reply) => {
-      const { url } = request.body as { url: string }
       const { userId } = request
+      if (!userId) {
+        return reply.code(401).send({ message: 'Unauthorized' })
+      }
+
+      const { url } = request.body as { url: string }
 
       try {
         const ogContent = await getOpenGraphData({ url })
@@ -133,10 +140,13 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
       },
     },
     async (request: FastifyRequest, reply) => {
+      const { userId } = request
+      if (!userId) {
+        return reply.code(401).send({ message: 'Unauthorized' })
+      }
+
       const { id } = request.params as { id: string }
       const { url } = request.body as { url: string }
-      const { userId } = request
-
       try {
         const ogContent = await getOpenGraphData({ url })
         const converted = convertOGContentToBookmark({
@@ -172,8 +182,12 @@ const bookmarksPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
       },
     },
     async (request: FastifyRequest, reply) => {
-      const { id } = request.params as { id: string }
       const { userId } = request
+      if (!userId) {
+        return reply.code(401).send({ message: 'Unauthorized' })
+      }
+
+      const { id } = request.params as { id: string }
 
       await db.delete(bookmark).where(and(eq(bookmark.id, id), eq(bookmark.userId, userId)))
 

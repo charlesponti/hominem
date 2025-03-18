@@ -7,6 +7,7 @@ type FetchOptions<T> = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   body?: T
   headers?: Record<string, string>
+  stream?: boolean
 }
 
 type ApiState = {
@@ -29,7 +30,7 @@ export function useApiClient() {
    */
   const fetchApi = useCallback(
     async <T, S>(endpoint: string, options: FetchOptions<T> = {}): Promise<S> => {
-      const { method = 'GET', body, headers = {} } = options
+      const { method = 'GET', body, headers = {}, stream = false } = options
       setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
       try {
@@ -59,6 +60,11 @@ export function useApiClient() {
           throw new Error(error.message || 'An error occurred')
         }
 
+        if (stream) {
+          setState((prev) => ({ ...prev, isLoading: false }))
+          return res as unknown as S
+        }
+
         const data = (await res.json()) as S
         setState((prev) => ({ ...prev, isLoading: false }))
         return data
@@ -83,8 +89,14 @@ export function useApiClient() {
       options?: Omit<FetchOptions<body>, 'method' | 'body'>
     ) => fetchApi<body, returnType>(endpoint, { ...options, method: 'GET' }),
 
-    post: <T, S>(endpoint: string, data: T, options?: Omit<FetchOptions<T>, 'method'>) =>
+    post: <T, S>(endpoint: string, data?: T, options?: Omit<FetchOptions<T>, 'method'>) =>
       fetchApi<T, S>(endpoint, { ...options, method: 'POST', body: data }),
+
+    postStream: <T>(
+      endpoint: string,
+      data: T,
+      options?: Omit<FetchOptions<T>, 'method' | 'stream'>
+    ) => fetchApi<T, Response>(endpoint, { ...options, method: 'POST', body: data, stream: true }),
 
     put: <T, S>(endpoint: string, data: T, options?: Omit<FetchOptions<T>, 'method'>) =>
       fetchApi<T, S>(endpoint, { ...options, method: 'PUT', body: data }),

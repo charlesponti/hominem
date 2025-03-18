@@ -8,27 +8,26 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Budget Calculator', href: '/dashboard/finance/budget-adjuster' },
+  { name: 'budget', href: '/finance/budget' },
   {
-    name: 'Income Tax Calculator',
-    href: '/dashboard/finance/income-tax-calculator',
-  },
-  {
-    name: 'State Tax Calculator',
-    href: '/dashboard/finance/state-tax-calculator',
-  },
-  {
-    name: 'Sales Tax Calculator',
-    href: '/dashboard/finance/sales-tax-calculator',
+    name: 'location comparison',
+    href: '/finance/location-comparison',
   },
   {
     name: 'Music Streaming Calculator',
-    href: '/dashboard/finance/music-streaming-calculator',
+    href: '/finance/music-streaming-calculator',
   },
   {
-    name: 'Travel Cost Summary',
-    href: '/dashboard/finance/travel-cost-summary',
+    name: 'runway',
+    href: '/finance/runway',
+  },
+  {
+    name: 'sales tax',
+    href: '/finance/sales-tax-calculator',
+  },
+  {
+    name: 'Travel Cost',
+    href: '/finance/travel-cost',
   },
 ]
 

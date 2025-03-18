@@ -2,6 +2,7 @@ import { openai } from '@ai-sdk/openai'
 import { generateObject, generateText } from 'ai'
 import { z } from 'zod'
 import { get_location_info } from './tools'
+export * from './tools'
 
 export async function getAnswer({ prompt }: { prompt: string }) {
   const response = await generateObject({

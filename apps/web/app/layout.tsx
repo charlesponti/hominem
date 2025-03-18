@@ -21,7 +21,7 @@ export default function RootLayout({
                   <Menu size={24} />
                 </div>
               </SidebarTrigger>
-              <main className="px-2">{children}</main>
+              <main className="h-full px-2">{children}</main>
             </div>
           </div>
         </Providers>

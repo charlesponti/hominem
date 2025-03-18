@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/command'
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useMediaQuery } from '@/hooks/use-media-query'
-import { useCompanySearch } from '@/hooks/useCompanySearch'
+import { useMediaQuery } from '@/lib/hooks/use-media-query'
+import { useCompanySearch } from '@/lib/hooks/useCompanySearch'
 import type { Company } from '@ponti/utils/schema'
 import * as React from 'react'
 
@@ -118,7 +118,7 @@ function CompanyList({
         <CommandEmpty>
           {showCreate ? (
             <div className="p-2">
-              <Button onClick={onCreateCompany}>Create "{search}"</Button>
+              <Button onClick={onCreateCompany}>Create `${search}`</Button>
             </div>
           ) : (
             <span>No companies found.</span>

@@ -1,4 +1,4 @@
-import { BackgroundElements } from '@/components/404-background-elements'
+import { BackgroundElements } from '@/components/background-elements'
 import { Home } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'

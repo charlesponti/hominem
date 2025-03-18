@@ -23,7 +23,7 @@ import {
   useDeleteHealthData,
   useHealth,
   useUpdateHealthData,
-} from '@/hooks/use-health'
+} from '@/lib/hooks/use-health'
 import { format } from 'date-fns'
 import { useState, type FormEvent } from 'react'
 

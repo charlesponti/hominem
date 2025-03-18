@@ -45,6 +45,7 @@
     "jsdom": "^26.0.0",
     "mdast-util-from-markdown": "^2.0.0",
     "ollama-ai-provider": "^1.2.0",
+    "open": "^10.1.0",
     "openai": "^4.83.0",
     "ora": "^8.2.0",
     "rehype-parse": "^9.0.1",

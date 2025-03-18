@@ -14,7 +14,15 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
-import { CheckCircle, DollarSign, FilePen, LogOut, User } from 'lucide-react'
+import {
+  CheckCircle,
+  ChevronDown,
+  DollarSign,
+  FilePen,
+  LogOut,
+  MessageCircle,
+  User,
+} from 'lucide-react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
@@ -29,19 +37,8 @@ import {
 const data = {
   navMain: [
     {
-      title: 'Dashboard',
-      icon: CheckCircle,
-      url: '/dashboard',
-    },
-    {
-      title: 'Finance',
-      icon: DollarSign,
-      url: '/finance/billing',
-    },
-    {
       title: 'Career',
       icon: FilePen,
-      url: '/career',
       items: [
         {
           title: 'Applications',
@@ -50,6 +47,11 @@ const data = {
           isActive: false,
         },
       ],
+    },
+    {
+      title: 'Chats',
+      icon: MessageCircle,
+      url: '/chat',
     },
   ],
 }
@@ -94,20 +96,7 @@ export function SiteNavigation() {
                     </div>
                     <span>{user.fullName}</span>
                   </div>
-                  {/* <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 15 15"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4.18179 6.18181C4.35753 6.00608 4.64245 6.00608 4.81819 6.18181L7.49999 8.86362L10.1818 6.18181C10.3575 6.00608 10.6424 6.00608 10.8182 6.18181C10.9939 6.35755 10.9939 6.64247 10.8182 6.81821L7.81819 9.81821C7.73379 9.9026 7.61934 9.95001 7.49999 9.95001C7.38064 9.95001 7.26618 9.9026 7.18179 9.81821L4.18179 6.81821C4.00605 6.64247 4.00605 6.35755 4.18179 6.18181Z"
-                      fill="currentColor"
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg> */}
+                  <ChevronDown size={14} className="text-gray-500" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-[200px]">
@@ -136,7 +125,26 @@ export function SiteNavigation() {
       <SidebarContent className="max-w-full">
         {data.navMain.map((item) => (
           <SidebarGroup key={item.title} className={cn('max-w-full', { 'my-0 pb-0': !item.items })}>
-            <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+            <SidebarGroupLabel
+              className={cn({
+                'hover:bg-gray-300/20 rounded-md transition-all ease-in-out duration-300': item.url,
+                'bg-gray-300/20': item.url && pathname.startsWith(item.url),
+              })}
+            >
+              {item.url ? (
+                <a href={item.url} className="w-full flex items-center">
+                  <div className="flex items-center w-full">
+                    {item.icon ? <item.icon size={14} /> : null}
+                    <span className="ml-2">{item.title}</span>
+                  </div>
+                </a>
+              ) : (
+                <div className="flex items-center w-full">
+                  {item.icon ? <item.icon size={14} /> : null}
+                  <span className="ml-2">{item.title}</span>
+                </div>
+              )}
+            </SidebarGroupLabel>
             {item.items ? (
               <SidebarGroupContent className="pl-6 w-full">
                 <SidebarMenu>

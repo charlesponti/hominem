@@ -1,11 +1,13 @@
-import { Command } from 'commander'
+import { logger } from '@ponti/utils/logger'
 import axios from 'axios'
+import { Command } from 'commander'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import open from 'open'
 import ora from 'ora'
-import Table from 'cli-table3'
 
-const command = new Command()
-  .name('api')
-  .description('Client for interacting with the API server')
+const command = new Command().name('api').description('Client for interacting with the API server')
 
 command
   .command('health')
@@ -15,14 +17,40 @@ command
   .action(async (options) => {
     const spinner = ora('Checking API health').start()
     try {
-      const response = await axios.get(`http://${options.host}:${options.port}/health`)
-      spinner.succeed('API is healthy')
-      console.log(JSON.stringify(response.data, null, 2))
-    } catch (error) {
-      spinner.fail(`Failed to connect to API: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
+      // Try to get auth token if available
+      let token: ReturnType<typeof getAuthToken>
+      try {
+        token = getAuthToken()
+      } catch (e) {
+        // Continue without token for health check
       }
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const response = await axios.get(`http://${options.host}:${options.port}/health`, { headers })
+
+      spinner.succeed('API is healthy')
+      logger.info(JSON.stringify(response.data, null, 2))
+
+      // If we have a token, verify it
+      if (token) {
+        try {
+          const authResponse = await axios.get(
+            `http://${options.host}:${options.port}/auth/verify`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          )
+          logger.info('\nAuthentication status:')
+          logger.info(JSON.stringify(authResponse.data, null, 2))
+        } catch (err) {
+          logger.info('\nAuthentication failed. Please re-authenticate with `hominem api auth`')
+        }
+      } else {
+        logger.info('\nTip: Authenticate with `hominem api auth` to access more features')
+      }
+    } catch (error) {
+      logger.error('Error checking API health:', error)
+      spinner.fail('Failed to connect to API')
       process.exit(1)
     }
   })
@@ -35,17 +63,27 @@ command
   .action(async (options) => {
     const spinner = ora('Fetching notes').start()
     try {
+      // Get auth token if available
+      let token: ReturnType<typeof getAuthToken>
+      try {
+        token = getAuthToken()
+      } catch (e) {
+        spinner.warn('Not authenticated. Some features may be limited.')
+      }
+
+      // Include auth token in headers if available
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
       const response = await axios.post(
         `http://${options.host}:${options.port}/trpc/notes.list`,
-        {}
+        {},
+        { headers }
       )
       spinner.succeed('Notes fetched successfully')
-      console.log(JSON.stringify(response.data.result.data, null, 2))
+      logger.info(JSON.stringify(response.data.result.data, null, 2))
     } catch (error) {
-      spinner.fail(`Failed to fetch notes: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-      }
+      logger.error('Error fetching notes:', error)
+      spinner.fail('Failed to fetch notes')
       process.exit(1)
     }
   })
@@ -59,23 +97,34 @@ command
   .action(async (options) => {
     const spinner = ora('Creating note').start()
     try {
+      // Get auth token if available
+      let token: ReturnType<typeof getAuthToken>
+      try {
+        token = getAuthToken()
+      } catch (e) {
+        spinner.fail('Authentication required. Please run `hominem api auth` first.')
+        process.exit(1)
+      }
+
+      // Include auth token in headers
+      const headers = { Authorization: `Bearer ${token}` }
+
       const response = await axios.post(
         `http://${options.host}:${options.port}/trpc/notes.create`,
         {
           json: {
             details: {
-              content: options.content
-            }
-          }
-        }
+              content: options.content,
+            },
+          },
+        },
+        { headers }
       )
       spinner.succeed('Note created successfully')
-      console.log(JSON.stringify(response.data.result.data, null, 2))
+      logger.info(JSON.stringify(response.data.result.data, null, 2))
     } catch (error) {
-      spinner.fail(`Failed to create note: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-      }
+      logger.error('Error creating note:', error)
+      spinner.fail('Failed to create note')
       process.exit(1)
     }
   })
@@ -89,288 +138,147 @@ command
   .action(async (options) => {
     const spinner = ora('Generating masked email').start()
     try {
+      // Get auth token if available
+      let token: ReturnType<typeof getAuthToken>
+      try {
+        token = getAuthToken()
+      } catch (e) {
+        spinner.fail('Authentication required. Please run `hominem api auth` first.')
+        process.exit(1)
+      }
+
+      // Include auth token in headers
+      const headers = { Authorization: `Bearer ${token}` }
+
       const response = await axios.post(
         `http://${options.host}:${options.port}/trpc/email.generateEmail`,
         {
           json: {
-            userId: options.userId
-          }
-        }
+            userId: options.userId,
+          },
+        },
+        { headers }
       )
       spinner.succeed('Masked email generated successfully')
-      console.log(JSON.stringify(response.data.result.data, null, 2))
+      logger.info(JSON.stringify(response.data.result.data, null, 2))
     } catch (error) {
-      spinner.fail(`Failed to generate masked email: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-      }
+      logger.error('Error generating masked email:', error)
+      spinner.fail('Failed to generate masked email')
       process.exit(1)
     }
   })
 
-// Finance API Commands
-const finance = command.command('finance')
-  .description('Finance-related API commands')
-
-// Get accounts
-finance
-  .command('accounts')
-  .description('List all financial accounts')
-  .option('-h, --host <host>', 'API host', 'localhost')
-  .option('-p, --port <port>', 'API port', '4445')
-  .option('--active-only', 'Show only active accounts', false)
-  .option('--json', 'Output in JSON format', false)
+// Auth command for the CLI
+command
+  .command('auth')
+  .description('Authenticate the CLI with your Hominem account')
+  .option('-t, --token <token>', 'Directly provide an authentication token')
+  .option('-w, --web-url <url>', 'Web app URL', 'http://localhost:4444')
+  .option('-o, --open', 'Open the authentication page in a browser', false)
   .action(async (options) => {
-    const spinner = ora('Fetching accounts').start()
-    try {
-      const url = `http://${options.host}:${options.port}/trpc/finance.getAccounts?input=${encodeURIComponent(
-        JSON.stringify({ activeOnly: options.activeOnly })
-      )}`;
-      
-      const response = await axios.get(url)
-      
-      spinner.succeed('Accounts fetched successfully')
-      
-      const accounts = response.data.result.data
-      
-      if (options.json) {
-        console.log(JSON.stringify(accounts, null, 2))
-      } else {
-        const table = new Table({
-          head: ['ID', 'Name', 'Mask', 'Type', 'Institution', 'Active'],
-          style: { head: ['cyan'] }
-        })
-        
-        accounts.forEach(account => {
-          table.push([
-            account.id,
-            account.name,
-            account.mask || '-',
-            account.type || '-',
-            account.institution || '-',
-            account.isActive ? 'Yes' : 'No'
-          ])
-        })
-        
-        console.log(table.toString())
+    const configDir = path.join(os.homedir(), '.hominem')
+    const configFile = path.join(configDir, 'config.json')
+
+    // Create config directory if it doesn't exist
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true })
+    }
+
+    // If token is provided directly, save it
+    if (options.token) {
+      const spinner = ora('Saving authentication token').start()
+
+      try {
+        const config = {
+          token: options.token,
+          timestamp: new Date().toISOString(),
+        }
+
+        fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
+        spinner.succeed('Authentication token saved successfully')
+        logger.info(`Token saved to ${configFile}`)
+
+        // Try to fetch Google tokens from the web API using the token
+        spinner.start('Checking for Google account integration')
+        try {
+          const url = new URL(options.webUrl)
+          const response = await axios.get(
+            `${url.protocol}//${url.hostname}:${url.port || '3000'}/api/auth/cli`,
+            {
+              headers: {
+                Authorization: `Bearer ${options.token}`,
+              },
+            }
+          )
+
+          if (response.data.googleTokens) {
+            // Save Google tokens to a separate file
+            const googleTokensPath = path.join(configDir, 'google-token.json')
+            fs.writeFileSync(googleTokensPath, JSON.stringify(response.data.googleTokens, null, 2))
+            spinner.succeed('Google authentication tokens saved successfully')
+            logger.info(`Google tokens saved to ${googleTokensPath}`)
+            logger.info('You can now use Google commands in the CLI!')
+          } else {
+            spinner.info('No Google account connected. Google commands may not work.')
+            logger.info('Connect your Google account in the web app to use Google commands.')
+          }
+        } catch (err) {
+          spinner.warn('Could not retrieve Google tokens')
+          logger.info('To use Google commands, connect your Google account in the web app.')
+        }
+
+        process.exit(0)
+      } catch (error) {
+        logger.error('Error saving token', error)
+        spinner.fail('Failed to save token')
+        process.exit(1)
       }
-    } catch (error) {
-      spinner.fail(`Failed to fetch accounts: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-      }
-      process.exit(1)
+    }
+
+    // Otherwise, open the web authentication flow
+    const authUrl = `${options.webUrl}/auth/cli?from=cli`
+    logger.info(`\nPlease authenticate in your browser at: ${authUrl}`)
+    logger.info(
+      'After authentication, copy the token and run this command again with --token option'
+    )
+
+    if (options.open) {
+      await open(authUrl)
     }
   })
 
-// Query transactions
-finance
-  .command('transactions')
-  .description('Query financial transactions')
-  .option('-h, --host <host>', 'API host', 'localhost')
-  .option('-p, --port <port>', 'API port', '4445')
-  .option('--from <date>', 'Start date (YYYY-MM-DD)')
-  .option('--to <date>', 'End date (YYYY-MM-DD)')
-  .option('--category <category>', 'Filter by category')
-  .option('--search <text>', 'Search term')
-  .option('--min <amount>', 'Minimum amount', parseFloat)
-  .option('--max <amount>', 'Maximum amount', parseFloat)
-  .option('--account <name>', 'Filter by account name')
-  .option('--limit <n>', 'Limit results', '100')
-  .option('--json', 'Output in JSON format', false)
-  .action(async (options) => {
-    const spinner = ora('Querying transactions').start()
-    try {
-      const params = {
-        from: options.from,
-        to: options.to,
-        category: options.category,
-        search: options.search,
-        minAmount: options.min,
-        maxAmount: options.max,
-        account: options.account,
-        limit: parseInt(options.limit, 10)
-      };
-      
-      const url = `http://${options.host}:${options.port}/trpc/finance.queryTransactions?input=${encodeURIComponent(
-        JSON.stringify(params)
-      )}`;
-      
-      const response = await axios.get(url)
-      
-      spinner.succeed('Transactions retrieved successfully')
-      
-      const transactions = response.data.result.data
-      
-      if (options.json) {
-        console.log(JSON.stringify(transactions, null, 2))
-      } else {
-        const table = new Table({
-          head: ['Date', 'Name', 'Amount', 'Category', 'Account'],
-          style: { head: ['cyan'] },
-          colWidths: [12, 40, 12, 20, 25]
-        })
-        
-        transactions.forEach(tx => {
-          const amount = tx.amount.toFixed(2)
-          const amountStr = tx.amount >= 0 ? `$${amount}` : `-$${Math.abs(tx.amount).toFixed(2)}`
-          
-          table.push([
-            tx.date,
-            tx.name.length > 37 ? tx.name.substring(0, 37) + '...' : tx.name,
-            amountStr,
-            tx.category || '-',
-            tx.account || '-'
-          ])
-        })
-        
-        console.log(table.toString())
-        console.log(`\nTotal: ${transactions.length} transactions`)
-      }
-    } catch (error) {
-      spinner.fail(`Failed to query transactions: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-      }
-      process.exit(1)
-    }
+// Helper function to get the auth token - to be used by other commands
+export function getAuthToken() {
+  const configFile = path.join(os.homedir(), '.hominem', 'config.json')
+
+  if (!fs.existsSync(configFile)) {
+    console.error('Not authenticated. Please run `hominem api auth` first')
+    process.exit(1)
+  }
+
+  try {
+    const config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
+    return config.token
+  } catch (error) {
+    logger.error('Error reading auth token', error)
+    process.exit(1)
+  }
+}
+
+// Helper function to create an authenticated axios client
+export function getAuthenticatedClient(host = 'localhost', port = '4445') {
+  // Get auth token
+  const token = getAuthToken()
+
+  // Create an axios instance with the auth token
+  const client = axios.create({
+    baseURL: `http://${host}:${port}`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   })
 
-// Analyze transactions
-finance
-  .command('analyze')
-  .description('Analyze financial transactions')
-  .option('-h, --host <host>', 'API host', 'localhost')
-  .option('-p, --port <port>', 'API port', '4445')
-  .option('--from <date>', 'Start date (YYYY-MM-DD)')
-  .option('--to <date>', 'End date (YYYY-MM-DD)')
-  .option('--dimension <dim>', 'Analysis dimension (category, month, merchant, account)', 'category')
-  .option('--top <n>', 'Show top N results', '10')
-  .option('--json', 'Output in JSON format', false)
-  .action(async (options) => {
-    if (!['category', 'month', 'merchant', 'account'].includes(options.dimension)) {
-      console.error(`Invalid dimension: ${options.dimension}. Must be one of: category, month, merchant, account`)
-      process.exit(1)
-    }
-    
-    const spinner = ora(`Analyzing transactions by ${options.dimension}`).start()
-    try {
-      const params = {
-        from: options.from,
-        to: options.to,
-        dimension: options.dimension,
-        top: parseInt(options.top, 10)
-      };
-      
-      const url = `http://${options.host}:${options.port}/trpc/finance.analyzeTransactions?input=${encodeURIComponent(
-        JSON.stringify(params)
-      )}`;
-      
-      const response = await axios.get(url)
-      
-      spinner.succeed('Analysis complete')
-      
-      const result = response.data.result.data
-      
-      if (options.json) {
-        console.log(JSON.stringify(result, null, 2))
-      } else {
-        console.log(`\nTotal transactions: ${result.totalTransactions}`)
-        console.log(`Total amount: $${Math.abs(result.totalAmount).toFixed(2)}`)
-        console.log(`\nBreakdown by ${options.dimension}:`)
-        
-        const table = new Table({
-          head: [options.dimension.charAt(0).toUpperCase() + options.dimension.slice(1), 'Amount', 'Count', '% of Total'],
-          style: { head: ['cyan'] }
-        })
-        
-        result.results.forEach(item => {
-          const name = options.dimension === 'category' ? item.category :
-                     options.dimension === 'month' ? item.month :
-                     options.dimension === 'merchant' ? item.merchant : item.account
-          
-          const amount = Math.abs(item.totalAmount).toFixed(2)
-          const percentage = ((Math.abs(item.totalAmount) / Math.abs(result.totalAmount)) * 100).toFixed(1)
-          
-          table.push([
-            name,
-            `$${amount}`,
-            item.count,
-            `${percentage}%`
-          ])
-        })
-        
-        console.log(table.toString())
-      }
-    } catch (error) {
-      spinner.fail(`Failed to analyze transactions: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-      }
-      process.exit(1)
-    }
-  })
-
-// Get finance summary
-finance
-  .command('summary')
-  .description('Get financial summary')
-  .option('-h, --host <host>', 'API host', 'localhost')
-  .option('-p, --port <port>', 'API port', '4445')
-  .option('--from <date>', 'Start date (YYYY-MM-DD)')
-  .option('--to <date>', 'End date (YYYY-MM-DD)')
-  .option('--json', 'Output in JSON format', false)
-  .action(async (options) => {
-    const spinner = ora('Fetching financial summary').start()
-    try {
-      const params = {
-        from: options.from,
-        to: options.to
-      };
-      
-      const url = `http://${options.host}:${options.port}/trpc/finance.getFinanceSummary?input=${encodeURIComponent(
-        JSON.stringify(params)
-      )}`;
-      
-      const response = await axios.get(url)
-      
-      spinner.succeed('Summary retrieved successfully')
-      
-      const summary = response.data.result.data
-      
-      if (options.json) {
-        console.log(JSON.stringify(summary, null, 2))
-      } else {
-        // Print summary table
-        console.log('\n=== FINANCIAL SUMMARY ===')
-        console.log(`Transactions: ${summary.transactionCount}`)
-        console.log(`Accounts: ${summary.accountCount}`)
-        console.log(`Income: $${summary.income.toFixed(2)}`)
-        console.log(`Expenses: -$${Math.abs(summary.expenses).toFixed(2)}`)
-        console.log(`Net Cashflow: ${summary.netCashflow >= 0 ? '+' : '-'}$${Math.abs(summary.netCashflow).toFixed(2)}`)
-        
-        console.log('\n=== TOP EXPENSE CATEGORIES ===')
-        const table = new Table({
-          head: ['Category', 'Amount'],
-          style: { head: ['cyan'] }
-        })
-        
-        summary.topExpenseCategories.forEach(cat => {
-          table.push([
-            cat.category,
-            `$${cat.amount.toFixed(2)}`
-          ])
-        })
-        
-        console.log(table.toString())
-      }
-    } catch (error) {
-      spinner.fail(`Failed to retrieve financial summary: ${error.message}`)
-      if (error.response) {
-        console.error('Response data:', error.response.data)
-      }
-      process.exit(1)
-    }
-  })
+  return client
+}
 
 export default command

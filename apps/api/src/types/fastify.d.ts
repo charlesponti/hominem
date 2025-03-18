@@ -4,13 +4,8 @@ import type { Session, SessionData } from '@fastify/secure-session'
 import type { User } from '@ponti/utils/schema'
 import type { MailService } from '@sendgrid/mail'
 import type { FastifyRequest } from 'fastify'
-
-export type RequestWithSession = FastifyRequest & {
-  session: {
-    get(key: 'data'): SessionData['data']
-    delete(): void
-  }
-}
+import type { Redis } from 'ioredis'
+import type { PerformanceService } from '../services/performance.service'
 
 declare module '@fastify/secure-session' {
   interface SessionData {
@@ -26,11 +21,9 @@ declare module '@fastify/secure-session' {
 declare module 'fastify' {
   import type { Redis } from 'ioredis'
 
-  interface FastifyInstance {
-    redis: Redis
-  }
-
   interface FastifyInstance extends FastifyServerFactory {
+    redis: Redis
+    performanceService: PerformanceService
     getUserId: (FastifyRequest) => string
     sendgrid: MailService
     sendEmail: (email: string, subject: string, text: string, html: string) => Promise<void>
@@ -43,7 +36,7 @@ declare module 'fastify' {
 
   interface FastifyRequest {
     file: MultipartFile
-    user?: typeof User.$inferSelect
+    user?: User
     userId?: string | null
     clerkId?: string | null
   }

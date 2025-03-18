@@ -8,7 +8,7 @@
     "dev": "bun --watch src/index.ts | pino-pretty",
     "lint": "bunx biome lint ./src",
     "start": "bun run build/src/index | pino-pretty",
-    "test": "NODE_ENV=test vitest --run --coverage",
+    "test": "NODE_ENV=test vitest --run --coverage --passWithNoTests",
     "test:coverage": "NODE_ENV=test vitest --run --coverage",
     "test:watch": "NODE_ENV=test nx vitest",
     "typecheck": "tsc --noEmit --incremental false"
@@ -17,7 +17,7 @@
     "@clerk/fastify": "^2.1.26",
     "@fastify/circuit-breaker": "^4.0.2",
     "@fastify/cookie": "^11.0.2",
-    "@fastify/cors": "^10.0.2",
+    "@fastify/cors": "^11.0.0",
     "@fastify/csrf-protection": "^7.0.2",
     "@fastify/helmet": "^13.0.1",
     "@fastify/jwt": "^9.0.3",
@@ -44,6 +44,7 @@
     "fastify": "^5.2.1",
     "fastify-plugin": "^5.0.1",
     "googleapis": "^144.0.0",
+    "gpt-tokenizer": "^2.9.0",
     "ioredis": "^5.5.0",
     "multer": "^1.4.5-lts.1",
     "open-graph-scraper": "^6.9.0",
@@ -62,8 +63,7 @@
     "@vitest/coverage-v8": "^3.0.5",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.6",
-    "@fastify/type-provider-json-schema-to-ts": "^2.2.2"
+    "vitest": "^3.0.6"
   },
   "resolutions": {
     "@langchain/core": "0.3.37"

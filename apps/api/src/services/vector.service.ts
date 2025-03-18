@@ -3,6 +3,8 @@ import { ChromaClient, IncludeEnum, OpenAIEmbeddingFunction } from 'chromadb'
 import csv from 'csv-parser'
 import crypto, { createHash } from 'node:crypto'
 import fs from 'node:fs'
+import { openaiEmbeddings } from 'src/lib/openai'
+import { supabaseClient } from 'src/lib/supabase'
 import logger from 'src/logger'
 
 const embeddingFunction = new OpenAIEmbeddingFunction({
@@ -180,5 +182,28 @@ export namespace HominemVectorStore {
           }
         })
     })
+  }
+
+  // Define types for document search results
+  export interface DocumentSearchResult {
+    content: string
+    metadata: Record<string, string>
+  }
+
+  export interface DocumentSearchResponse {
+    data: DocumentSearchResult[]
+  }
+
+  /**
+   * Search documents using embeddings
+   */
+  export const searchDocuments = async (query: string): Promise<DocumentSearchResult[]> => {
+    const { data: documents } = (await supabaseClient.rpc('match_documents', {
+      query_embedding: await openaiEmbeddings.embedQuery(query),
+      match_threshold: 0.7,
+      match_count: 5,
+    })) as DocumentSearchResponse
+
+    return documents
   }
 }

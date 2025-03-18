@@ -51,7 +51,7 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
     request.id = randomUUID()
     request.log.info({ requestId: request.id }, 'Incoming authentication request')
   })
-  const fo = '1234'
+
   server.post<{
     Body: AuthenticateInput
     Reply: AuthenticateResponse | { error: string }
@@ -59,14 +59,6 @@ const authenticatePlugin: FastifyPluginAsync = async (server) => {
     '/authenticate',
     {
       schema: {
-        // body: {
-        // 	type: "object",
-        // 	required: ["email", "emailToken"],
-        // 	properties: {
-        // 		email: { type: "string" },
-        // 		emailToken: { type: "string" },
-        // 	},
-        // },
         response: {
           200: {
             type: 'object',

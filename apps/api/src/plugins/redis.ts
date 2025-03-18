@@ -1,6 +1,8 @@
+import { logger } from '@ponti/utils/logger'
+import { redis } from '@ponti/utils/redis'
 import type { FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
-import Redis from 'ioredis'
+import type Redis from 'ioredis'
 
 interface RedisPluginOptions {
   url?: string
@@ -12,39 +14,44 @@ interface RedisPluginOptions {
   enableReadyCheck?: boolean
 }
 
-const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (fastify, opts) => {
-  const config = {
-    host: opts.host,
-    port: opts.port,
-    // password: opts.password,
-    db: opts.db || 0,
-    maxRetriesPerRequest: opts.maxRetriesPerRequest || 3,
-    enableReadyCheck: opts.enableReadyCheck || true,
-    retryStrategy(times: number) {
-      const delay = Math.min(times * 50, 2000)
-      return delay
-    },
-  }
+/**
+ * Redis cache helpers
+ */
+export const redisCache = {
+  async get(redis: Redis, key: string): Promise<string | null> {
+    try {
+      return await redis.get(key)
+    } catch (error) {
+      logger.error('Redis get error:', error)
+      return null
+    }
+  },
 
-  const client = opts.url ? new Redis(opts.url) : new Redis(config)
+  async set(redis: Redis, key: string, value: string, ttlSeconds: number): Promise<void> {
+    try {
+      await redis.set(key, value, 'EX', ttlSeconds)
+    } catch (error) {
+      logger.error('Redis set error:', error)
+    }
+  },
+}
 
-  client.on('error', (err) => {
+const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (fastify) => {
+  redis.on('error', (err) => {
     fastify.log.error({ err }, 'Redis client error')
   })
 
-  client.on('connect', () => {
+  redis.on('connect', () => {
     fastify.log.info('Redis client connected')
   })
 
-  client.on('ready', () => {
+  redis.on('ready', () => {
     fastify.log.info('Redis client ready')
   })
 
-  fastify.decorate('redis', client)
-
   fastify.addHook('onClose', async (instance) => {
-    if (client.status === 'end') return
-    await client.quit()
+    if (redis.status === 'end') return
+    await redis.quit()
   })
 }
 
