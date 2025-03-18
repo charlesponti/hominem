@@ -53,7 +53,7 @@ export function ChatInterface({
     }
   }, [])
 
-  // Auto-resize textarea as user types
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Auto-resize textarea as user types
   useEffect(() => {
     const textarea = textareaRef.current
     if (!textarea) return
@@ -65,9 +65,7 @@ export function ChatInterface({
 
     adjustHeight()
 
-    return () => {
-      // Clean up if needed
-    }
+    return () => {}
   }, [inputValue])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: This effect should run when messages change.
@@ -162,7 +160,8 @@ export function ChatInterface({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Type your message..."
-                className="resize-none min-h-[40px] max-h-[200px] py-3 pr-12 rounded-full border shadow-sm focus-visible:ring-offset-0"
+                style={{ scrollbarWidth: 'none' }}
+                className="resize-none min-h-[40px] max-h-[200px] py-3 pr-12 rounded-full border shadow-sm focus-visible:ring-offset-0 bg-white"
                 disabled={isLoading}
                 rows={1}
                 onKeyDown={(e) => {
@@ -173,12 +172,13 @@ export function ChatInterface({
                 }}
               />
               <Button
-                className="absolute right-2 bottom-1 h-8 w-8 p-0 rounded-full"
+                className="absolute right-2 bottom-[5px] h-8 w-8 p-0 rounded-full"
                 type="submit"
                 disabled={isLoading || !inputValue.trim()}
                 size="icon"
               >
-                <Send size={16} />
+                {/* Add margin due to shape of Send icon */}
+                <Send size={16} className="mt-[2px] mr-[2px]" />
               </Button>
             </div>
             <Button
