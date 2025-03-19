@@ -1,9 +1,8 @@
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { loadPrompt } from '../utils/prompts'
-import { lmstudio } from './llm'
+import { lmstudio } from '../utils/llm.ts'
+import { loadPrompt } from '../utils/prompts.ts'
 
 // Mental wellness assessment schema
 export const MentalWellnessSchema = z.object({

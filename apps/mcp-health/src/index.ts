@@ -7,7 +7,7 @@ import {
   registerNutritionTool,
   registerSleepTool,
   registerWorkoutTool,
-} from './tools'
+} from './tools/index.ts'
 
 // Create an MCP server
 const server = new Server({
@@ -23,4 +23,6 @@ registerMentalWellnessTool(server)
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport()
-await server.connect(transport)
+server.connect(transport).catch((error) => {
+  throw new Error('Failed to connect to MCP server', { cause: error })
+})
