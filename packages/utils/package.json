@@ -4,7 +4,6 @@
   "description": "Random utilities",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
     "./ai": "./src/db/index.ts",
     "./career": "./src/career/index.ts",
     "./db": "./src/db/index.ts",
@@ -24,6 +23,7 @@
     "./writer": "./src/writer/index.ts"
   },
   "scripts": {
+    "db:generate": "bunx drizzle-kit generate",
     "migrate": "bunx drizzle-kit migrate",
     "test": "vitest --run --passWithNoTests",
     "test:watch": "vitest"
