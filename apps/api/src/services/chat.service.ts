@@ -3,6 +3,7 @@ import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { chat, chatMessage } from '@ponti/utils/schema'
 import { generateText, type ToolSet } from 'ai'
 import { desc, eq } from 'drizzle-orm'
+import { writeFileSync } from 'node:fs'
 import logger from 'src/logger'
 
 type GenerateTextResponse = Awaited<ReturnType<typeof generateText>>['response']
@@ -96,47 +97,73 @@ export class ChatService {
       .where(eq(chatMessage.chatId, chatId))
       .limit(limit)
       .offset(offset)
-
-    if (orderBy === 'desc') {
-      query.orderBy(desc(chatMessage.createdAt))
-    } else {
-      query.orderBy(chatMessage.createdAt)
-    }
+      .orderBy(orderBy === 'desc' ? desc(chatMessage.createdAt) : chatMessage.createdAt)
 
     return query
   }
 
   /**
-   * Save a user message and AI response in a transaction
+   * Save a complete AI interaction with tool calls in a transaction
    */
-  async saveConversation(userId: string, chatId: string, userMessage: string, aiResponse: string) {
+  async saveCompleteConversation<T extends ToolSet>(
+    userId: string,
+    chatId: string,
+    userMessage: string,
+    response: Awaited<ReturnType<typeof generateText<T>>>
+  ) {
+    const userMessageId = crypto.randomUUID()
+    const assistantMessageId = crypto.randomUUID()
+
     return db.transaction(async (t) => {
-      return [
-        // Insert user message
-        await t
-          .insert(chatMessage)
-          .values({
-            id: crypto.randomUUID(),
-            userId,
-            chatId,
-            role: 'user',
-            content: userMessage,
-          })
-          .returning()
-          .then(takeUniqueOrThrow),
-        // Insert assistant message
-        await t
-          .insert(chatMessage)
-          .values({
-            id: crypto.randomUUID(),
-            userId,
-            chatId,
-            role: 'assistant',
-            content: aiResponse,
-          })
-          .returning()
-          .then(takeUniqueOrThrow),
-      ]
+      const currentDate = new Date()
+      const userDate = currentDate.toISOString()
+      // Add 1 second to the assistant date to ensure correct ordering
+      // This is a workaround for the issue where the assistant message appears before the user message
+      const assistantDate = new Date(currentDate.getTime() + 1000).toISOString()
+
+      // Insert user message
+      await t
+        .insert(chatMessage)
+        .values({
+          id: userMessageId,
+          userId,
+          chatId,
+          role: 'user',
+          content: userMessage,
+          messageIndex: '0',
+          createdAt: userDate,
+          updatedAt: userDate,
+        })
+        .returning()
+        .then(takeUniqueOrThrow)
+
+      // Insert assistant response with tool calls
+      const aiContent = this.getLastAssistantMessage(response.response.messages)
+      const toolCalls = response.toolCalls?.length ? response.toolCalls : []
+      const toolResults = response.toolResults?.length ? response.toolResults : []
+
+      for (const step of response.steps) {
+        if (step.toolCalls) toolCalls.push(...step.toolCalls)
+        if (step.toolResults) toolResults.push(...step.toolResults)
+      }
+
+      return await t
+        .insert(chatMessage)
+        .values({
+          id: assistantMessageId,
+          userId,
+          chatId,
+          role: 'assistant',
+          content: aiContent,
+          toolCalls: toolCalls,
+          toolResults: toolResults,
+          parentMessageId: userMessageId,
+          messageIndex: '1',
+          createdAt: assistantDate,
+          updatedAt: assistantDate,
+        })
+        .returning()
+        .then(takeUniqueOrThrow)
     })
   }
 
@@ -261,5 +288,70 @@ export class ChatService {
       system: systemPrompt,
       messages,
     })
+  }
+
+  /**
+   * Reconstruct the full conversation history with tool calls
+   * This is useful for replaying a conversation with all tool calls and results
+   */
+  async getConversationWithToolCalls(chatId: string, options: ChatMessagesOptions = {}) {
+    const messages = await this.getChatMessages(chatId, options)
+    return messages
+  }
+
+  /**
+   * Get nested conversation history organized by parent-child relationships
+   * This creates a tree structure that shows the flow of conversation with tool calls
+   */
+  async getNestedConversation(chatId: string, options: ChatMessagesOptions = {}) {
+    const flatMessages = await this.getConversationWithToolCalls(chatId, options)
+
+    // Create a map of messages by their IDs
+    const messageMap = new Map<
+      string,
+      (typeof flatMessages)[number] & { children: (typeof flatMessages)[number][] }
+    >()
+    for (const message of flatMessages) {
+      messageMap.set(message.id, {
+        ...message,
+        children: [],
+      })
+    }
+
+    // Build the tree structure
+    const rootMessages = []
+
+    for (const message of flatMessages) {
+      const messageWithChildren = messageMap.get(message.id)
+      if (!messageWithChildren) {
+        continue
+      }
+
+      if (message.parentMessageId && messageMap.has(message.parentMessageId)) {
+        // This message has a parent, add it as a child to the parent
+        const parent = messageMap.get(message.parentMessageId)
+        if (!parent) {
+          continue
+        }
+
+        parent.children.push(messageWithChildren)
+      } else {
+        // This is a root message
+        rootMessages.push(messageWithChildren)
+      }
+    }
+
+    // Sort root messages by messageIndex or createdAt
+    rootMessages.sort((a, b) => {
+      if (a.messageIndex && b.messageIndex) {
+        return Number.parseInt(a.messageIndex) - Number.parseInt(b.messageIndex)
+      }
+
+      const dateA = new Date(a.createdAt).getTime()
+      const dateB = new Date(b.createdAt).getTime()
+      return dateA - dateB
+    })
+
+    return rootMessages
   }
 }

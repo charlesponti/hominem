@@ -18,6 +18,11 @@ export type Message = {
   id?: string
   role: 'user' | 'assistant' | 'system'
   content: UserContent | AssistantContent | ToolContent
+  toolCalls?: ToolCalls
+  toolResults?: ToolResults
+  parentMessageId?: string
+  messageIndex?: string
+  createdAt?: string
 }
 
 type ChatOptions = {
@@ -32,6 +37,9 @@ interface ChatResponse {
   steps?: ToolSet[]
   results?: ToolContent[]
   toolCalls?: ToolSet[]
+  toolResults?: ToolContent[]
+  parentMessageId?: string
+  messageIndex?: string
 }
 
 interface SendMessageRequest {
@@ -88,7 +96,12 @@ export function useChat({
   // Helper to add a single message
   const addMessage = useCallback(
     (message: Message) => {
-      const newMessage = { ...message, id: message.id || Date.now().toString() }
+      const newMessage = { 
+        ...message, 
+        id: message.id || Date.now().toString(),
+        messageIndex: message.messageIndex || String(Date.now()),
+        createdAt: message.createdAt || new Date().toISOString()
+      }
       queryClient.setQueryData(['chat', endpoint], (oldMessages: Message[] = []) => [
         ...oldMessages,
         newMessage,
@@ -174,6 +187,10 @@ export function useChat({
               role: 'assistant',
               content: assistantMessage.content,
               id: Date.now().toString(),
+              toolCalls: assistantMessage.toolCalls,
+              toolResults: assistantMessage.toolResults,
+              parentMessageId: assistantMessage.parentMessageId,
+              messageIndex: assistantMessage.messageIndex,
             })
           }
 

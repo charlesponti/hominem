@@ -33,7 +33,12 @@
 - Prefer template literals over string concatenation
 - Use for (const ... of ...) loops instead of .forEach
 - Use specific functions like Number.parseFloat instead of parseFloat
-- Import types with a separate import statement (e.g., import type { Foo } from 'bar')
+- Import types with a separate import statement (e.g., import type { Foo } from 'bar').
+ - If values and types are imported use the following pattern:
+  ```js
+  import type { Bar } from 'bar'
+  import { bar } from 'bar'
+  ```
 - Never use any type in TypeScript
 
 ## React Best Practices

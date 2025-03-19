@@ -74,6 +74,10 @@ const chatMessagesSchema = z.object({
     z.object({
       role: z.enum(['user', 'assistant', 'system']),
       content: z.string(),
+      toolCalls: z.any().optional(),
+      toolResults: z.any().optional(),
+      parentMessageId: z.string().uuid().optional(),
+      messageIndex: z.string().optional()
     })
   ),
 })
@@ -216,19 +220,98 @@ export async function chatPlugin(fastify: FastifyInstance) {
         return reply.code(404).send({ error: 'Chat not found' })
       }
 
-      // Get last 20 messages
-      const messages = await chatService.getChatMessages(activeChat.id, {
-        limit: 20,
-        orderBy: 'desc',
+      // Get last 20 messages with processed tool calls and results
+      const history = await chatService.getConversationWithToolCalls(activeChat.id, { 
+        limit: 20, 
+        orderBy: 'desc' 
       })
 
-      const sortedMessages = messages.sort(
+      // Sort by creation time
+      const sortedMessages = history.sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       )
+      
       return reply.send({
         success: true,
         chatId: activeChat.id,
         messages: sortedMessages,
+      })
+    } catch (error) {
+      logger.error(error)
+      return handleError(error instanceof Error ? error : new Error(String(error)), reply)
+    }
+  })
+
+  // Get complete conversation history with tool calls
+  fastify.get('/history/:chatId', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Unauthorized' })
+    }
+
+    const { chatId } = request.params as { chatId: string }
+    if (!chatId) {
+      return reply.code(400).send({ error: 'Chat ID is required' })
+    }
+
+    try {
+      // Get the chat to verify ownership
+      const chatData = await chatService.getChatById(chatId)
+      if (!chatData) {
+        return reply.code(404).send({ error: 'Chat not found' })
+      }
+
+      if (chatData.userId !== userId) {
+        return reply.code(403).send({ error: 'Not authorized to access this chat' })
+      }
+
+      // Get the complete conversation history with tool calls
+      const history = await chatService.getConversationWithToolCalls(chatId)
+      
+      return reply.send({
+        success: true,
+        chatId,
+        messages: history,
+      })
+    } catch (error) {
+      logger.error(error)
+      return handleError(error instanceof Error ? error : new Error(String(error)), reply)
+    }
+  })
+  
+  // Get nested conversation history organized in a tree structure
+  fastify.get('/nested-history/:chatId', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Unauthorized' })
+    }
+
+    const { chatId } = request.params as { chatId: string }
+    if (!chatId) {
+      return reply.code(400).send({ error: 'Chat ID is required' })
+    }
+
+    try {
+      // Get the chat to verify ownership
+      const chatData = await chatService.getChatById(chatId)
+      if (!chatData) {
+        return reply.code(404).send({ error: 'Chat not found' })
+      }
+
+      if (chatData.userId !== userId) {
+        return reply.code(403).send({ error: 'Not authorized to access this chat' })
+      }
+
+      // Get the nested conversation history
+      const nestedHistory = await chatService.getNestedConversation(chatId, {
+        limit: 100,
+        orderBy: 'asc'
+      })
+      
+      return reply.send({
+        success: true,
+        chatId,
+        messages: nestedHistory,
       })
     } catch (error) {
       logger.error(error)
@@ -323,12 +406,12 @@ export async function chatPlugin(fastify: FastifyInstance) {
 
       timer.mark('aiComplete')
 
-      // Save the conversation to the database
-      await chatService.saveConversation(
+      // Save the complete conversation with tool calls to the database
+      await chatService.saveCompleteConversation(
         userId,
         activeChat.id,
         message,
-        chatService.getLastAssistantMessage(response.response.messages)
+        response
       )
 
       timer.stop()
@@ -486,6 +569,23 @@ export async function chatPlugin(fastify: FastifyInstance) {
         },
         maxSteps: 5,
       })
+      
+      // Save the complete conversation with tool calls to the database
+      if (request.userId) {
+        const activeChatId = request.cookies.activeChat
+        if (activeChatId) {
+          try {
+            await chatService.saveCompleteConversation(
+              request.userId,
+              activeChatId,
+              currentMessageContent,
+              result
+            )
+          } catch (error) {
+            logger.error('Failed to save conversation:', error)
+          }
+        }
+      }
 
       return reply.status(200).send({
         messages: result.response.messages,
@@ -528,6 +628,24 @@ export async function chatPlugin(fastify: FastifyInstance) {
         tools: allTools,
         maxSteps: 5,
       })
+      
+      // Save the complete conversation with tool calls to the database
+      if (request.userId) {
+        const activeChatId = request.cookies.activeChat
+        if (activeChatId) {
+          try {
+            const currentMessageContent = messages[messages.length - 1].content
+            await chatService.saveCompleteConversation(
+              request.userId,
+              activeChatId,
+              currentMessageContent,
+              response
+            )
+          } catch (error) {
+            logger.error('Failed to save conversation:', error)
+          }
+        }
+      }
 
       return reply.status(200).send(chatService.formatTextResponse(response))
     } catch (error) {
@@ -539,7 +657,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
     const { input } = request.body as { input: string }
 
     try {
-      const { response, toolCalls } = await generateText({
+      const result = await generateText({
         model: google('gemini-1.5-pro-latest'),
         tools: allTools,
         system:
@@ -547,10 +665,27 @@ export async function chatPlugin(fastify: FastifyInstance) {
         prompt: input,
         maxSteps: 5,
       })
+      
+      // Save the complete conversation with tool calls to the database
+      if (request.userId) {
+        const activeChatId = request.cookies.activeChat
+        if (activeChatId) {
+          try {
+            await chatService.saveCompleteConversation(
+              request.userId,
+              activeChatId,
+              input,
+              result
+            )
+          } catch (error) {
+            logger.error('Failed to save conversation:', error)
+          }
+        }
+      }
 
       return reply.status(200).send({
-        toolCalls,
-        messages: response.messages.map((message) => ({
+        toolCalls: result.toolCalls,
+        messages: result.response.messages.map((message) => ({
           role: message.role,
           content: message.content,
         })),

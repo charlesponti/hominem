@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai'
-import { logger } from '@ponti/utils'
+import { logger } from '@ponti/utils/logger'
 import { generateObject } from 'ai'
 import { simpleParser, type ParsedMail } from 'mailparser'
 import type { LambdaEvent } from '../prolog-email-lambda'

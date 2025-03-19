@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai'
-import { logger } from '@ponti/utils'
+import { logger } from '@ponti/utils/logger'
 import { UserSchema } from '@ponti/utils/schema'
 import { generateObject } from 'ai'
 import { S3 } from 'aws-sdk'

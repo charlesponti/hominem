@@ -1,3 +1,4 @@
+import { logger } from '@ponti/utils/logger'
 import { tool } from 'ai'
 import { z } from 'zod'
 
@@ -376,9 +377,13 @@ export const create_bookmark = tool({
     siteName: z.string().describe('Name of the website'),
   }),
   async execute(args) {
-    return {
+    logger.info(`Creating bookmark: ${args.title} (${args.url})`)
+    const result = {
       message: `Created bookmark: ${args.title} (${args.url})`,
     }
+    logger.info(`Created bookmark: ${args.title} (${args.url})`)
+
+    return result
   },
 })
 

@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai'
-import { logger } from '@ponti/utils'
+import { logger } from '@ponti/utils/logger'
 import { generateObject } from 'ai'
 import type { Attachment } from 'mailparser'
 import { getAttachmentText } from '../process-email-attachment'

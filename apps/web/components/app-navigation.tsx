@@ -14,15 +14,7 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
-import {
-  CheckCircle,
-  ChevronDown,
-  DollarSign,
-  FilePen,
-  LogOut,
-  MessageCircle,
-  User,
-} from 'lucide-react'
+import { ChevronDown, FilePen, LogOut, MessageCircle, User } from 'lucide-react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'

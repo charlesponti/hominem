@@ -1,6 +1,6 @@
 import 'dotenv/config'
 
-import { logger } from '@ponti/utils'
+import { logger } from '@ponti/utils/logger'
 import { ZodError } from 'zod'
 import { processAttachments } from './services/attachment.service'
 import { parseEmail, processEmailBody, validateEmailBody } from './services/email.service'
