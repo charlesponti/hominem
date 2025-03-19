@@ -1,17 +1,14 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { z } from 'zod'
 import { companies } from './company.schema'
 import { notes } from './notes.schema'
 import { users } from './users.schema'
 
-export enum JobApplicationStage {
-  APPLICATION = 'Application',
-  PHONE_SCREEN = 'Phone Screen',
-  TECHNICAL_SCREEN_CALL = 'Technical Screen (Call)',
-  TECHNICAL_SCREEN_EXERCISE = 'Technical Screen (Exercise)',
-  INTERVIEW = 'Interview',
-  IN_PERSON = 'In Person',
-  OFFER = 'Offer',
-}
+const JobApplicationStageSchema = z.object({
+  stage: z.string(),
+  date: z.string(),
+})
+const JobApplicationStagesSchema = z.array(JobApplicationStageSchema)
 
 export enum JobApplicationStatus {
   APPLIED = 'Applied',
@@ -34,11 +31,9 @@ export const jobs = pgTable('jobs', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   version: integer('version').notNull().default(1),
 })
-
 export type Job = typeof jobs.$inferSelect
 export type NewJob = typeof jobs.$inferInsert
 
-export type JosApplicationStages = { stage: JobApplicationStage; date: string }[]
 export const job_applications = pgTable('job_applications', {
   id: uuid('id').primaryKey().defaultRandom(),
   position: text('position').notNull(),
@@ -49,7 +44,7 @@ export const job_applications = pgTable('job_applications', {
   link: text('link'),
   location: text('location').notNull().default('Remote'),
   reference: boolean('reference').notNull().default(false),
-  stages: jsonb('stages').notNull().$type<JosApplicationStages>(),
+  stages: jsonb('stages').notNull().$type<z.infer<typeof JobApplicationStagesSchema>>(),
   status: text('status').notNull().default(JobApplicationStatus.APPLIED),
   salaryQuoted: text('salary_quoted'),
   salaryAccepted: text('salary_accepted'),

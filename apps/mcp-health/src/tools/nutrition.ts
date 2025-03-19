@@ -45,7 +45,7 @@ export function registerNutritionTool(server: McpServer) {
         })
 
         const response = await generateObject({
-          model: lmstudio('qwen2.5-7b-instruct-1m'),
+          model: lmstudio('gemma-3-12b-it'),
           prompt,
           schema: NutritionAnalysisSchema,
         })

@@ -1,56 +1,6 @@
 import { google } from '@ai-sdk/google'
 import { openai } from '@ai-sdk/openai'
-import {
-  accept_list_invite,
-  calculatorTool,
-  chat as chatTool,
-  create_bookmark,
-  create_chat,
-  create_finance_account,
-  create_job_application,
-  create_list,
-  create_note,
-  create_place,
-  create_tasks,
-  create_transaction,
-  delete_bookmark,
-  delete_chat,
-  delete_finance_account,
-  delete_health_activity,
-  delete_job_application,
-  delete_list,
-  delete_note,
-  delete_place,
-  delete_transaction,
-  edit_tasks,
-  get_bookmarks,
-  get_driving_directions,
-  get_finance_accounts,
-  get_health_activities,
-  get_job_applications,
-  get_lists,
-  get_location_info,
-  get_notes,
-  get_places,
-  get_transactions,
-  get_user_profile,
-  get_weather,
-  invite_to_list,
-  list_chats,
-  log_health_activity,
-  search_tasks,
-  searchTool,
-  update_bookmark,
-  update_chat,
-  update_finance_account,
-  update_health_activity,
-  update_job_application,
-  update_list,
-  update_note,
-  update_place,
-  update_transaction,
-  update_user_profile,
-} from '@ponti/ai'
+import { allTools, calculatorTool, searchTool } from '@ponti/ai'
 import type { CoreMessage, Message as VercelChatMessage } from 'ai'
 import { generateText, streamText, tool } from 'ai'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
@@ -77,110 +27,12 @@ const chatMessagesSchema = z.object({
       toolCalls: z.any().optional(),
       toolResults: z.any().optional(),
       parentMessageId: z.string().uuid().optional(),
-      messageIndex: z.string().optional()
+      messageIndex: z.string().optional(),
     })
   ),
 })
 
-// Organize tools by category for better management
-const userTools = {
-  get_user_profile,
-  update_user_profile,
-}
-
-const chatTools = {
-  chatTool,
-  create_chat,
-  list_chats,
-  update_chat,
-  delete_chat,
-}
-
-const noteTools = {
-  create_note,
-  get_notes,
-  update_note,
-  delete_note,
-}
-
-const jobTools = {
-  create_job_application,
-  update_job_application,
-  get_job_applications,
-  delete_job_application,
-}
-
-const bookmarkTools = {
-  create_bookmark,
-  get_bookmarks,
-  update_bookmark,
-  delete_bookmark,
-}
-
-const listTools = {
-  create_list,
-  get_lists,
-  update_list,
-  delete_list,
-  invite_to_list,
-  accept_list_invite,
-}
-
-const placeTools = {
-  create_place,
-  get_places,
-  update_place,
-  delete_place,
-  get_location_info,
-  get_driving_directions,
-  get_weather,
-}
-
-const healthTools = {
-  log_health_activity,
-  get_health_activities,
-  update_health_activity,
-  delete_health_activity,
-}
-
-const financeTools = {
-  create_finance_account,
-  get_finance_accounts,
-  update_finance_account,
-  delete_finance_account,
-  create_transaction,
-  get_transactions,
-  update_transaction,
-  delete_transaction,
-}
-
-const taskTools = {
-  create_tasks,
-  edit_tasks,
-  search_tasks,
-}
-
-const utilityTools = {
-  calculatorTool,
-  searchTool,
-}
-
-// Combine all tools into one comprehensive toolset
-const allTools = {
-  ...userTools,
-  ...chatTools,
-  ...noteTools,
-  ...jobTools,
-  ...bookmarkTools,
-  ...listTools,
-  ...placeTools,
-  ...healthTools,
-  ...financeTools,
-  ...taskTools,
-  ...utilityTools,
-}
-
-// Use retrieval-agent endpoint with tools
+// Create a custom tool for search
 const searchDocumentsTool = tool({
   parameters: z.object({ query: z.string() }),
   description: 'Search the database for information',
@@ -188,6 +40,21 @@ const searchDocumentsTool = tool({
     return await HominemVectorStore.searchDocuments(query)
   },
 })
+
+// Define any utility tools that aren't part of the imported collections
+const utilityTools = {
+  calculatorTool,
+  searchTool,
+}
+
+// Use these to customize tool collections if needed
+// const customTools = {
+//   ...userManagementTools,
+//   ...productivityTools,
+//   ...utilityTools
+// }
+
+// Remove the local tool collection definitions - using imported ones instead
 
 export async function chatPlugin(fastify: FastifyInstance) {
   const chatService = new ChatService()
@@ -221,16 +88,16 @@ export async function chatPlugin(fastify: FastifyInstance) {
       }
 
       // Get last 20 messages with processed tool calls and results
-      const history = await chatService.getConversationWithToolCalls(activeChat.id, { 
-        limit: 20, 
-        orderBy: 'desc' 
+      const history = await chatService.getConversationWithToolCalls(activeChat.id, {
+        limit: 20,
+        orderBy: 'desc',
       })
 
       // Sort by creation time
       const sortedMessages = history.sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       )
-      
+
       return reply.send({
         success: true,
         chatId: activeChat.id,
@@ -267,7 +134,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
 
       // Get the complete conversation history with tool calls
       const history = await chatService.getConversationWithToolCalls(chatId)
-      
+
       return reply.send({
         success: true,
         chatId,
@@ -278,7 +145,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       return handleError(error instanceof Error ? error : new Error(String(error)), reply)
     }
   })
-  
+
   // Get nested conversation history organized in a tree structure
   fastify.get('/nested-history/:chatId', { preHandler: verifyAuth }, async (request, reply) => {
     const { userId } = request
@@ -305,9 +172,9 @@ export async function chatPlugin(fastify: FastifyInstance) {
       // Get the nested conversation history
       const nestedHistory = await chatService.getNestedConversation(chatId, {
         limit: 100,
-        orderBy: 'asc'
+        orderBy: 'asc',
       })
-      
+
       return reply.send({
         success: true,
         chatId,
@@ -399,7 +266,8 @@ export async function chatPlugin(fastify: FastifyInstance) {
         messages: fullMessages,
         tools: {
           search: searchDocumentsTool,
-          ...allTools,
+          ...allTools, // Using imported allTools collection
+          ...utilityTools,
         },
         maxSteps: 5,
       })
@@ -407,12 +275,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       timer.mark('aiComplete')
 
       // Save the complete conversation with tool calls to the database
-      await chatService.saveCompleteConversation(
-        userId,
-        activeChat.id,
-        message,
-        response
-      )
+      await chatService.saveCompleteConversation(userId, activeChat.id, message, response)
 
       timer.stop()
 
@@ -543,15 +406,6 @@ export async function chatPlugin(fastify: FastifyInstance) {
       // Load the prompt
       const assistantPrompt = await promptService.getPrompt('assistant')
 
-      // Create a custom tool for search
-      const searchDocumentsTool = tool({
-        parameters: z.object({ query: z.string() }),
-        description: 'Search the database for information',
-        execute: async ({ query }: { query: string }) => {
-          return await HominemVectorStore.searchDocuments(query)
-        },
-      })
-
       const result = await generateText({
         model: openai('gpt-4o-mini'),
         temperature: 0.2,
@@ -565,11 +419,12 @@ export async function chatPlugin(fastify: FastifyInstance) {
         ],
         tools: {
           search: searchDocumentsTool,
-          ...allTools,
+          ...allTools, // Using imported allTools collection
+          ...utilityTools,
         },
         maxSteps: 5,
       })
-      
+
       // Save the complete conversation with tool calls to the database
       if (request.userId) {
         const activeChatId = request.cookies.activeChat
@@ -625,10 +480,13 @@ export async function chatPlugin(fastify: FastifyInstance) {
         system:
           "You are a helpful AI assistant called Hominem that can manage all aspects of a user's digital life. Use the appropriate tools to help the user accomplish their tasks.",
         messages,
-        tools: allTools,
+        tools: {
+          ...allTools, // Using imported allTools collection
+          ...utilityTools,
+        },
         maxSteps: 5,
       })
-      
+
       // Save the complete conversation with tool calls to the database
       if (request.userId) {
         const activeChatId = request.cookies.activeChat
@@ -659,24 +517,22 @@ export async function chatPlugin(fastify: FastifyInstance) {
     try {
       const result = await generateText({
         model: google('gemini-1.5-pro-latest'),
-        tools: allTools,
+        tools: {
+          ...allTools, // Using imported allTools collection
+          ...utilityTools,
+        },
         system:
           "You are a helpful assistant called Hominem that can manage all aspects of a user's digital life. Use the appropriate tools to help the user accomplish their tasks.",
         prompt: input,
         maxSteps: 5,
       })
-      
+
       // Save the complete conversation with tool calls to the database
       if (request.userId) {
         const activeChatId = request.cookies.activeChat
         if (activeChatId) {
           try {
-            await chatService.saveCompleteConversation(
-              request.userId,
-              activeChatId,
-              input,
-              result
-            )
+            await chatService.saveCompleteConversation(request.userId, activeChatId, input, result)
           } catch (error) {
             logger.error('Failed to save conversation:', error)
           }

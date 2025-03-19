@@ -3,7 +3,6 @@ import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { chat, chatMessage } from '@ponti/utils/schema'
 import { generateText, type ToolSet } from 'ai'
 import { desc, eq } from 'drizzle-orm'
-import { writeFileSync } from 'node:fs'
 import logger from 'src/logger'
 
 type GenerateTextResponse = Awaited<ReturnType<typeof generateText>>['response']

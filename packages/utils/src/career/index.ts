@@ -1,6 +1,6 @@
 // Schemas
+export * from '../db/schema/career.schema'
 export * from '../db/schema/company.schema'
-export * from '../db/schema/job.schema'
 
 // Services
 export * from './company.service'

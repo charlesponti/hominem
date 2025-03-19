@@ -1,6 +1,6 @@
-import { JobApplicationInsertSchema } from '@ponti/utils/career'
+import { ApplicationService, JobApplicationInsertSchema } from '@ponti/utils/career'
 import { db } from '@ponti/utils/db'
-import { companies, job_applications } from '@ponti/utils/schema'
+import { companies, job_applications, type JobApplicationInsert } from '@ponti/utils/schema'
 import { desc, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
@@ -12,6 +12,8 @@ const updateSchema = z.object({
 })
 
 export async function jobApplicationRoutes(fastify: FastifyInstance) {
+  const applicationService = new ApplicationService()
+
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
     if (!request.userId) {
       throw ForbiddenError('Not authorized to create an application')
@@ -29,13 +31,11 @@ export async function jobApplicationRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ error: 'Company not found' })
       }
 
-      const [result] = await db
-        .insert(job_applications)
-        .values({
-          ...validated,
-          userId: request.userId,
-        })
-        .returning()
+      const result = await applicationService.create({
+        ...validated,
+        stages: validated.stages as JobApplicationInsert['stages'],
+        userId: request.userId,
+      })
 
       return result
     } catch (error) {
@@ -49,9 +49,8 @@ export async function jobApplicationRoutes(fastify: FastifyInstance) {
       const { id } = request.params as { id: string }
       const { data } = updateSchema.parse(request.body)
 
-      const application = await db.query.job_applications.findFirst({
-        where: eq(job_applications.id, id),
-      })
+      const applications = await applicationService.findById(id)
+      const application = applications[0]
 
       if (!application) {
         throw NotFoundError('Application not found')
@@ -61,11 +60,10 @@ export async function jobApplicationRoutes(fastify: FastifyInstance) {
         throw ForbiddenError('Not authorized to update this application')
       }
 
-      const [result] = await db
-        .update(job_applications)
-        .set(data)
-        .where(eq(job_applications.id, id))
-        .returning()
+      const result = await applicationService.update(id, {
+        ...data,
+        stages: data.stages as JobApplicationInsert['stages'],
+      })
 
       return result
     } catch (error) {
@@ -78,9 +76,8 @@ export async function jobApplicationRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string }
 
-      const application = await db.query.job_applications.findFirst({
-        where: eq(job_applications.id, id),
-      })
+      const applications = await applicationService.findById(id)
+      const application = applications[0]
 
       if (!application) {
         throw NotFoundError('Application not found')
@@ -127,9 +124,8 @@ export async function jobApplicationRoutes(fastify: FastifyInstance) {
     try {
       const { id } = request.params as { id: string }
 
-      const application = await db.query.job_applications.findFirst({
-        where: eq(job_applications.id, id),
-      })
+      const applications = await applicationService.findById(id)
+      const application = applications[0]
 
       if (!application) {
         throw NotFoundError('Application not found')
@@ -139,7 +135,7 @@ export async function jobApplicationRoutes(fastify: FastifyInstance) {
         throw ForbiddenError('Not authorized to delete this application')
       }
 
-      await db.delete(job_applications).where(eq(job_applications.id, id))
+      await applicationService.delete(id)
 
       return { success: true }
     } catch (error) {
@@ -164,11 +160,15 @@ export async function jobApplicationRoutes(fastify: FastifyInstance) {
               .insert(job_applications)
               .values({
                 ...application,
+                stages: application.stages as JobApplicationInsert['stages'],
                 userId,
               })
               .onConflictDoUpdate({
                 target: [job_applications.position, job_applications.companyId],
-                set: application,
+                set: {
+                  ...application,
+                  stages: application.stages as JobApplicationInsert['stages'],
+                },
               })
           )
         )
