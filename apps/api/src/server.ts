@@ -5,7 +5,7 @@ import { LOGGER_OPTIONS } from '@ponti/utils/logger'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
 
-import { env, getEnv } from './lib/env'
+import { env } from './lib/env'
 import adminPlugin from './plugins/admin'
 import bookmarksPlugin from './plugins/bookmarks'
 import { chatPlugin } from './plugins/chat'
@@ -47,8 +47,8 @@ export async function createServer(
 
     // Register Clerk plugin
     await server.register(clerkPlugin, {
-      secretKey: getEnv('CLERK_SECRET_KEY'),
-      publishableKey: getEnv('CLERK_PUBLISHABLE_KEY'),
+      secretKey: env.CLERK_SECRET_KEY,
+      publishableKey: env.CLERK_PUBLISHABLE_KEY,
     })
 
     // Register rate limit plugin with Redis client
@@ -102,7 +102,7 @@ export async function startServer() {
   }
 
   try {
-    await server.listen({ port: env.PORT, host: '0.0.0.0' })
+    await server.listen({ port: Number.parseInt(env.PORT, 10), host: '0.0.0.0' })
   } catch (err) {
     server.log.error(err)
     process.exit(1)

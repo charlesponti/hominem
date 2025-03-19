@@ -1,4 +1,5 @@
-import type { Message, ToolCalls, ToolResults } from '@/lib/hooks/use-chat'
+import type { ToolCalls, ToolResults } from '@/lib/hooks/use-chat'
+import type { ChatMessage } from '@ponti/utils/schema'
 import { Eraser, NotebookPen, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
@@ -7,7 +8,7 @@ import { Message as MessageComponent } from './ui/message'
 import { Textarea } from './ui/textarea'
 
 type ChatInterfaceProps = {
-  messages: Message[]
+  messages: ChatMessage[]
   onSendMessage: (message: string) => void
   isLoading: boolean
   error: boolean
@@ -109,9 +110,7 @@ export function ChatInterface({
             Send a message to start the conversation
           </div>
         ) : (
-          messages.map((message) => (
-            <MessageComponent key={message.id} role={message.role} content={message.content} />
-          ))
+          messages.map((message) => <MessageComponent key={message.id} message={message} />)
         )}
 
         {error && (

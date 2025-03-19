@@ -21,7 +21,7 @@ export default function UnifiedChatPage() {
     toolResults,
   } = useChat({
     endpoint: CHAT_ENDPOINTS.CHAT,
-    showIntermediateSteps: showDebugInfo,
+    showDebugInfo,
     initialMessages: [],
   })
 

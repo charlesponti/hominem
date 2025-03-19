@@ -1,4 +1,6 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
+import { useAuth } from '@clerk/nextjs'
+import type { ChatMessage } from '@ponti/utils/schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ToolContent, ToolSet } from 'ai'
 import { useCallback, useState } from 'react'
@@ -14,56 +16,32 @@ export enum CHAT_ENDPOINTS {
   RETRIEVAL_AGENT = '/api/chat/retrieval-agent',
 }
 
-export type Message = {
-  id?: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  toolCalls?: ToolCalls
-  toolResults?: ToolResults
-  parentMessageId?: string
-  messageIndex?: string
-  createdAt?: string
-}
-
-type ChatOptions = {
-  endpoint: CHAT_ENDPOINTS
-  initialMessages?: Message[]
-  showIntermediateSteps?: boolean
-}
-
 interface ChatResponse {
-  messages?: Message[]
-  response?: string
-  steps?: ToolSet[]
-  results?: ToolContent[]
-  toolCalls?: ToolSet[]
-  toolResults?: ToolContent[]
-  parentMessageId?: string
-  messageIndex?: string
+  messages: ChatMessage[]
 }
 
 interface SendMessageRequest {
   message: string
-  show_intermediate_steps?: boolean
-}
-interface SingleResponseRequest {
-  messages: Message[]
-}
-interface RetrievalRequest {
-  messages: Message[]
-  show_intermediate_steps?: boolean
+  showDebugInfo?: boolean
 }
 
-type ChatRequestBody = SendMessageRequest | SingleResponseRequest | RetrievalRequest
+type UseChatOptions = {
+  endpoint: CHAT_ENDPOINTS
+  initialMessages?: ChatMessage[]
+  showDebugInfo?: boolean
+  stream?: boolean
+}
 
 /**
  * Hook for chat functionality
  */
 export function useChat({
   endpoint,
+  stream,
   initialMessages = [],
-  showIntermediateSteps = false,
-}: ChatOptions) {
+  showDebugInfo = false,
+}: UseChatOptions) {
+  const { userId } = useAuth()
   // Use local state only for tool-related data that doesn't belong in the main message flow
   const [toolCalls, setToolCalls] = useState<ToolSet[]>([])
   const [toolResults, setToolResults] = useState<ToolContent[]>([])
@@ -87,7 +65,7 @@ export function useChat({
 
   // Helper to update message cache
   const updateMessages = useCallback(
-    (newMessages: Message[]) => {
+    (newMessages: ChatMessage[]) => {
       queryClient.setQueryData(['chat', endpoint], newMessages)
     },
     [queryClient, endpoint]
@@ -95,14 +73,14 @@ export function useChat({
 
   // Helper to add a single message
   const addMessage = useCallback(
-    (message: Message) => {
+    (message: ChatMessage) => {
       const newMessage = {
         ...message,
         id: message.id || Date.now().toString(),
         messageIndex: message.messageIndex || String(Date.now()),
         createdAt: message.createdAt || new Date().toISOString(),
       }
-      queryClient.setQueryData(['chat', endpoint], (oldMessages: Message[] = []) => [
+      queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) => [
         ...oldMessages,
         newMessage,
       ])
@@ -114,30 +92,30 @@ export function useChat({
   // Mutation for sending a message
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      if (!userId) return
+
       // Add user message immediately for UI responsiveness
-      const userMessage = addMessage({ role: 'user', content })
-
-      // Prepare request body based on endpoint
-      const allMessages = [...messages, userMessage]
-
-      let requestBody: ChatRequestBody
-      if (endpoint === CHAT_ENDPOINTS.CHAT) {
-        requestBody = {
-          message: content,
-          show_intermediate_steps: showIntermediateSteps,
-        }
-      } else if (endpoint === CHAT_ENDPOINTS.SINGLE_RESPONSE) {
-        requestBody = { messages: allMessages }
-      } else {
-        requestBody = {
-          messages: allMessages,
-          show_intermediate_steps: showIntermediateSteps,
-        }
-      }
+      const userMessage = addMessage({
+        role: 'user',
+        content,
+        toolCalls: [],
+        chatId: crypto.randomUUID(),
+        id: Date.now().toString(),
+        reasoning: null,
+        parentMessageId: null,
+        messageIndex: String(Date.now()),
+        createdAt: new Date().toISOString(),
+        files: [],
+        updatedAt: new Date().toISOString(),
+        userId,
+      })
 
       // Handle streaming endpoints
-      if (endpoint === CHAT_ENDPOINTS.RETRIEVAL || endpoint === CHAT_ENDPOINTS.SINGLE_RESPONSE) {
-        const response = await api.postStream(endpoint, requestBody)
+      if (stream) {
+        const response = await api.postStream(endpoint, {
+          messages: [userMessage],
+          showDebugInfo,
+        })
         const reader = response.body?.getReader()
         if (!reader) throw new Error('Stream reader not available')
 
@@ -146,7 +124,20 @@ export function useChat({
 
         // Create initial streaming message
         const streamId = 'stream-response'
-        addMessage({ role: 'assistant', content: '', id: streamId })
+        addMessage({
+          role: 'assistant',
+          content: '',
+          id: streamId,
+          chatId: crypto.randomUUID(),
+          userId: userId,
+          toolCalls: null,
+          reasoning: null,
+          files: null,
+          parentMessageId: null,
+          messageIndex: String(Date.now()),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
 
         // Process stream
         while (true) {
@@ -156,13 +147,13 @@ export function useChat({
           responseText += decoder.decode(value, { stream: true })
 
           // Update the streaming message in the cache
-          queryClient.setQueryData(['chat', endpoint], (oldMessages: Message[] = []) =>
+          queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) =>
             oldMessages.map((m) => (m.id === streamId ? { ...m, content: responseText } : m))
           )
         }
 
         // Finalize the message with a permanent ID
-        queryClient.setQueryData(['chat', endpoint], (oldMessages: Message[] = []) =>
+        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) =>
           oldMessages.map((m) => (m.id === streamId ? { ...m, id: Date.now().toString() } : m))
         )
 
@@ -170,49 +161,29 @@ export function useChat({
       }
 
       // Handle non-streaming endpoints
-      return api.post<ChatRequestBody, ChatResponse>(endpoint, requestBody)
+      const requestBody = {
+        messages: initialMessages,
+        message: content,
+      }
+      return api.post<SendMessageRequest, ChatResponse>(endpoint, requestBody)
     },
     onSuccess: (data) => {
+      if (!data) return
+
       if ('success' in data) {
-        console.log('Message sent successfully')
         return
       }
 
-      // Only handle non-streaming responses here (streaming is handled in mutationFn)
-      if (endpoint !== CHAT_ENDPOINTS.RETRIEVAL && endpoint !== CHAT_ENDPOINTS.SINGLE_RESPONSE) {
-        if (data.messages) {
-          const assistantMessage = data.messages.find((m: Message) => m.role === 'assistant')
-          if (assistantMessage) {
-            addMessage({
-              role: 'assistant',
-              content: assistantMessage.content,
-              id: Date.now().toString(),
-              toolCalls: assistantMessage.toolCalls,
-              toolResults: assistantMessage.toolResults,
-              parentMessageId: assistantMessage.parentMessageId,
-              messageIndex: assistantMessage.messageIndex,
-            })
-          }
-
-          // Store tool calls and results if needed
-          if (showIntermediateSteps) {
-            if (data.steps) setToolCalls(data.steps)
-            if (data.results) setToolResults(data.results)
-            if (data.toolCalls) setToolCalls(data.toolCalls)
-          }
-        } else if (typeof data === 'string') {
-          addMessage({
-            role: 'assistant',
-            content: data,
-            id: Date.now().toString(),
-          })
-        } else if (data.response) {
-          addMessage({
-            role: 'assistant',
-            content: data.response,
-            id: Date.now().toString(),
-          })
-        }
+      if (data.messages) {
+        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) => [
+          ...oldMessages,
+          ...data.messages.map((message) => ({
+            ...message,
+            id: message.id || Date.now().toString(),
+            messageIndex: message.messageIndex || String(Date.now()),
+            createdAt: message.createdAt || new Date().toISOString(),
+          })),
+        ])
       }
 
       // Invalidate the query to ensure fresh data

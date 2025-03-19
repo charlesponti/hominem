@@ -6,7 +6,6 @@ import { generateText, type ToolSet } from 'ai'
 import { desc, eq } from 'drizzle-orm'
 
 type GenerateTextResponse = Awaited<ReturnType<typeof generateText>>['response']
-type AIModel = Parameters<typeof generateText>[0]['model']
 
 interface ChatMessagesOptions {
   limit?: number
@@ -138,12 +137,11 @@ export class ChatService {
 
       // Insert assistant response with tool calls
       const aiContent = this.getLastAssistantMessage(response.response.messages)
-      const toolCalls = response.toolCalls?.length ? response.toolCalls : []
-      const toolResults = response.toolResults?.length ? response.toolResults : []
 
+      const toolCalls = []
       for (const step of response.steps) {
         if (step.toolCalls) toolCalls.push(...step.toolCalls)
-        if (step.toolResults) toolResults.push(...step.toolResults)
+        if (step.toolResults) toolCalls.push(...step.toolResults)
       }
 
       return await t
@@ -155,7 +153,7 @@ export class ChatService {
           role: 'assistant',
           content: aiContent,
           toolCalls: toolCalls,
-          toolResults: toolResults,
+          reasoning: response.reasoning,
           parentMessageId: userMessageId,
           messageIndex: '1',
           createdAt: assistantDate,

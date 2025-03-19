@@ -3,12 +3,13 @@ import { db } from '@ponti/utils/db'
 import { users } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { getEnv } from 'src/lib/env'
+import { env } from 'src/lib/env'
 
 const client = createClerkClient({
-  publishableKey: getEnv('CLERK_PUBLISHABLE_KEY'),
-  secretKey: getEnv('CLERK_SECRET_KEY'),
+  publishableKey: env.CLERK_PUBLISHABLE_KEY,
+  secretKey: env.CLERK_SECRET_KEY,
 })
+
 export async function getHominemUser(clerkId: string): Promise<typeof users.$inferSelect | null> {
   if (!clerkId) return null
 

@@ -16,7 +16,7 @@ import { redisCache } from '../redis'
 
 const chatMessageSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
-  show_intermediate_steps: z.boolean().optional(),
+  showDebugInfo: z.boolean().optional(),
 })
 
 const chatMessagesSchema = z.object({
@@ -46,15 +46,6 @@ const utilityTools = {
   calculatorTool,
   searchTool,
 }
-
-// Use these to customize tool collections if needed
-// const customTools = {
-//   ...userManagementTools,
-//   ...productivityTools,
-//   ...utilityTools
-// }
-
-// Remove the local tool collection definitions - using imported ones instead
 
 export async function chatPlugin(fastify: FastifyInstance) {
   const chatService = new ChatService()
@@ -239,7 +230,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
         return reply.code(400).send({ errors: error.errors.map((e) => e.path).join(', ') })
       }
 
-      const { message, show_intermediate_steps } = data
+      const { message, showDebugInfo } = data
 
       // Get chat history - with pagination for performance.
       // It is not likely more than 50 messages will be required to provide a valuable response.
@@ -390,13 +381,13 @@ export async function chatPlugin(fastify: FastifyInstance) {
     try {
       const body = request.body as {
         messages: VercelChatMessage[]
-        show_intermediate_steps: boolean
+        showDebugInfo: boolean
       }
 
       const messages = (body.messages ?? []).filter(
         (message: VercelChatMessage) => message.role === 'user' || message.role === 'assistant'
       )
-      const returnIntermediateSteps = body.show_intermediate_steps
+      const returnIntermediateSteps = body.showDebugInfo
       const previousMessages = messages.slice(0, -1)
       const currentMessageContent = messages[messages.length - 1].content
 
@@ -463,7 +454,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
     try {
       const body = request.body as {
         messages: VercelChatMessage[]
-        show_intermediate_steps: boolean
+        showDebugInfo: boolean
       }
 
       // Filter messages to include only user and assistant roles
@@ -509,6 +500,11 @@ export async function chatPlugin(fastify: FastifyInstance) {
   })
 
   fastify.post('/assistant', async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Unauthorized' })
+    }
+
     const { input } = request.body as { input: string }
 
     try {
@@ -525,14 +521,12 @@ export async function chatPlugin(fastify: FastifyInstance) {
       })
 
       // Save the complete conversation with tool calls to the database
-      if (request.userId) {
-        const activeChatId = request.cookies.activeChat
-        if (activeChatId) {
-          try {
-            await chatService.saveCompleteConversation(request.userId, activeChatId, input, result)
-          } catch (error) {
-            logger.error('Failed to save conversation:', error)
-          }
+      const activeChatId = request.cookies.activeChat
+      if (activeChatId) {
+        try {
+          await chatService.saveCompleteConversation(userId, activeChatId, input, result)
+        } catch (error) {
+          logger.error('Failed to save conversation:', error)
         }
       }
 
