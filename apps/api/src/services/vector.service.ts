@@ -1,11 +1,11 @@
 import type { MultipartFile } from '@fastify/multipart'
+import logger from '@ponti/utils/logger'
 import { ChromaClient, IncludeEnum, OpenAIEmbeddingFunction } from 'chromadb'
 import csv from 'csv-parser'
 import crypto, { createHash } from 'node:crypto'
 import fs from 'node:fs'
-import { openaiEmbeddings } from 'src/lib/openai'
+import { openaiClient } from 'src/lib/openai'
 import { supabaseClient } from 'src/lib/supabase'
-import logger from 'src/logger'
 
 const embeddingFunction = new OpenAIEmbeddingFunction({
   openai_api_key: process.env.OPENAI_API_KEY,
@@ -199,7 +199,10 @@ export namespace HominemVectorStore {
    */
   export const searchDocuments = async (query: string): Promise<DocumentSearchResult[]> => {
     const { data: documents } = (await supabaseClient.rpc('match_documents', {
-      query_embedding: await openaiEmbeddings.embedQuery(query),
+      query_embedding: await openaiClient.embeddings.create({
+        model: 'text-embedding-3-small',
+        input: query,
+      }),
       match_threshold: 0.7,
       match_count: 5,
     })) as DocumentSearchResponse

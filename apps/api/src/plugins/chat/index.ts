@@ -1,10 +1,10 @@
 import { google } from '@ai-sdk/google'
 import { openai } from '@ai-sdk/openai'
 import { allTools, calculatorTool, searchTool } from '@ponti/ai'
+import logger from '@ponti/utils/logger'
 import type { CoreMessage, Message as VercelChatMessage } from 'ai'
 import { generateText, streamText, tool } from 'ai'
-import type { FastifyInstance, FastifyRequest } from 'fastify'
-import logger from 'src/logger'
+import type { FastifyInstance } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'
 import { ChatService } from 'src/services/chat.service'
 import { getPerformanceService } from 'src/services/performance.service'
@@ -249,16 +249,12 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const timer = performanceService.startTimer(`chat-${activeChat.id}`)
       timer.mark('routerStart')
 
-      const showIntermediateSteps = show_intermediate_steps === true
-
-      timer.mark('routerDecision')
-
       // Format the AI messages
       const aiMessages = chatService.formatMessagesForAI(messages)
       const fullMessages: CoreMessage[] = [...aiMessages, { role: 'user', content: message }]
 
       // Call model with tools and messages
-      timer.mark('aiStart')
+      timer.mark('ai-start')
       const response = await generateText({
         model: openai('gpt-4o-mini'),
         temperature: 0.2,
@@ -272,11 +268,12 @@ export async function chatPlugin(fastify: FastifyInstance) {
         maxSteps: 5,
       })
 
-      timer.mark('aiComplete')
+      timer.mark('ai-complete')
 
       // Save the complete conversation with tool calls to the database
       await chatService.saveCompleteConversation(userId, activeChat.id, message, response)
 
+      timer.mark('conversation-saved')
       timer.stop()
 
       // Format the response with route type for debugging if needed

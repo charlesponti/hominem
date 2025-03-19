@@ -1,5 +1,5 @@
+import logger from '@ponti/utils/logger'
 import { encode } from 'gpt-tokenizer'
-import logger from '../logger'
 
 /**
  * Statistics for a single AI generation operation

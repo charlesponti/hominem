@@ -1,9 +1,9 @@
 import { openai } from '@ai-sdk/openai'
 import { db, takeUniqueOrThrow } from '@ponti/utils/db'
+import logger from '@ponti/utils/logger'
 import { chat, chatMessage } from '@ponti/utils/schema'
 import { generateText, type ToolSet } from 'ai'
 import { desc, eq } from 'drizzle-orm'
-import logger from 'src/logger'
 
 type GenerateTextResponse = Awaited<ReturnType<typeof generateText>>['response']
 type AIModel = Parameters<typeof generateText>[0]['model']

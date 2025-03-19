@@ -1,6 +1,6 @@
+import logger from '@ponti/utils/logger'
 import type { FastifyPluginAsync } from 'fastify'
 import { APP_USER_ID, EVENTS, track } from '../../../analytics'
-import logger from '../../../logger'
 import { createToken } from '../utils/create-token'
 
 interface LoginInput {

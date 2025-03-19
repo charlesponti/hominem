@@ -110,12 +110,7 @@ export function ChatInterface({
           </div>
         ) : (
           messages.map((message) => (
-            <MessageComponent
-              key={message.id}
-              id={message.id}
-              role={message.role}
-              content={message.content}
-            />
+            <MessageComponent key={message.id} role={message.role} content={message.content} />
           ))
         )}
 

@@ -1,6 +1,6 @@
+import logger from '@ponti/utils/logger'
 import fs from 'node:fs'
 import path from 'node:path'
-import logger from 'src/logger'
 
 /**
  * Service for loading and managing prompts stored as markdown files

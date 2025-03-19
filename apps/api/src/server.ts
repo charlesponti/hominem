@@ -1,6 +1,7 @@
 import { clerkPlugin } from '@clerk/fastify'
 import type { FastifyCookieOptions } from '@fastify/cookie'
 import fastifyCookie from '@fastify/cookie'
+import { LOGGER_OPTIONS } from '@ponti/utils/logger'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
 
@@ -8,7 +9,6 @@ import { env, getEnv } from './lib/env'
 import adminPlugin from './plugins/admin'
 import bookmarksPlugin from './plugins/bookmarks'
 import { chatPlugin } from './plugins/chat'
-import chatSingleResponsePlugin from './plugins/chat/single-response'
 import circuitBreaker from './plugins/circuit-breaker'
 import emailPlugin from './plugins/email'
 import { invitesPlugin } from './plugins/invites'
@@ -72,7 +72,6 @@ export async function createServer(
     await server.register(companyRoutes, { prefix: '/api/companies' })
     await server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })
     await server.register(chatPlugin, { prefix: '/api/chat' })
-    await server.register(chatSingleResponsePlugin, { prefix: '/api/chat' })
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(notesRoutes, { prefix: '/api/notes' })
     await server.register(vectorRoutes, { prefix: '/api/vectors' })
@@ -94,7 +93,7 @@ export async function createServer(
 
 export async function startServer() {
   const server = await createServer({
-    logger: true,
+    logger: LOGGER_OPTIONS,
     disableRequestLogging: process.env.ENABLE_REQUEST_LOGGING !== 'true',
   })
 

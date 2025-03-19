@@ -1,6 +1,6 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { AssistantContent, ToolContent, ToolSet, UserContent } from 'ai'
+import type { ToolContent, ToolSet } from 'ai'
 import { useCallback, useState } from 'react'
 
 export type ToolCalls = ToolSet[]
@@ -17,7 +17,7 @@ export enum CHAT_ENDPOINTS {
 export type Message = {
   id?: string
   role: 'user' | 'assistant' | 'system'
-  content: UserContent | AssistantContent | ToolContent
+  content: string
   toolCalls?: ToolCalls
   toolResults?: ToolResults
   parentMessageId?: string
@@ -96,11 +96,11 @@ export function useChat({
   // Helper to add a single message
   const addMessage = useCallback(
     (message: Message) => {
-      const newMessage = { 
-        ...message, 
+      const newMessage = {
+        ...message,
         id: message.id || Date.now().toString(),
         messageIndex: message.messageIndex || String(Date.now()),
-        createdAt: message.createdAt || new Date().toISOString()
+        createdAt: message.createdAt || new Date().toISOString(),
       }
       queryClient.setQueryData(['chat', endpoint], (oldMessages: Message[] = []) => [
         ...oldMessages,

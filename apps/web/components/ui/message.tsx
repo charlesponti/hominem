@@ -24,7 +24,7 @@ type MessageContent =
   | Array<ToolResultPart>
 
 interface MessageProps {
-  content: MessageContent
+  content: string
   role: 'user' | 'assistant' | 'system' | 'tool'
   id?: string
 }

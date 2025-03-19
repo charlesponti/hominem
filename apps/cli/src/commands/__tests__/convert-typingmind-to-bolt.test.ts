@@ -1,4 +1,5 @@
 import { BoltExportSchema } from '@ponti/utils/services'
+import { mkdirSync } from 'fs-extra'
 import fs from 'node:fs'
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { command } from '../convert/typingmind-to-bolt'
@@ -9,14 +10,20 @@ const PATH = '../convert/typingmind-to-bolt'
 // Update fs mock to handle both named and default exports
 vi.mock('node:fs', () => {
   const actual = vi.importActual('node:fs') as object
+  const existsSync = vi.fn(() => true)
+  const writeFileSync = vi.fn()
+  const readFileSync = vi.fn(() => JSON.stringify(validTypingMindInput))
   return {
     ...actual,
-    readFileSync: vi.fn(),
-    writeFileSync: vi.fn(),
+    readFileSync,
+    writeFileSync,
+    existsSync,
     default: {
       ...actual,
-      readFileSync: vi.fn(),
-      writeFileSync: vi.fn(),
+      readFileSync,
+      writeFileSync,
+      existsSync,
+      mkdirSync: vi.fn(),
     },
   }
 })

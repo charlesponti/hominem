@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { cwd } from 'node:process'
-import pino from 'pino'
+import pino, { type LoggerOptions } from 'pino'
 
 // Create file if it doesn't exist
 const LOG_FILE = path.resolve(cwd(), './logs/error.log')
@@ -10,7 +10,7 @@ if (!fs.existsSync(LOG_FILE)) {
   fs.writeFileSync(LOG_FILE, '')
 }
 
-const logger = pino({
+export const LOGGER_OPTIONS: LoggerOptions = {
   level: process.env.PINO_LOG_LEVEL || 'debug',
   timestamp: pino.stdTimeFunctions.isoTime,
   base: { service: 'api' },
@@ -48,6 +48,8 @@ const logger = pino({
     paths: ['email', '*.email'],
     remove: true,
   },
-})
+}
+
+export const logger = pino(LOGGER_OPTIONS, pino.destination(LOG_FILE))
 
 export default logger

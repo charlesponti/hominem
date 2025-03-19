@@ -1,9 +1,9 @@
+import logger from '@ponti/utils/logger'
 import type { FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
 import multer from 'multer'
 import { supabaseClient } from '../../lib/supabase'
-import logger from '../../logger.js'
-import { HominemVectorStore } from '../../services/vector.service.js'
+import { HominemVectorStore } from '../../services/vector.service'
 
 const IMAGE_COLLECTION = 'image_collection'
 
