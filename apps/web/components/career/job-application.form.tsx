@@ -66,8 +66,9 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
   }, [application, deleteApplication])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    if (!userId) return
     e.preventDefault()
+
+    if (!userId) return
     if (position && companyId) {
       await createApplication.mutateAsync({
         position,
@@ -158,13 +159,15 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
           Add Application
         </Button>
       </form>
-      <Button
-        variant="ghost"
-        className="w-full text-red-500 hover:bg-red-500 hover:text-white"
-        onClick={onDeleteClick}
-      >
-        Delete
-      </Button>
+      {application?.id ? (
+        <Button
+          variant="ghost"
+          className="w-full text-red-500 hover:bg-red-500 hover:text-white"
+          onClick={onDeleteClick}
+        >
+          Delete
+        </Button>
+      ) : null}
     </div>
   )
 }
