@@ -5,9 +5,9 @@ import { initTRPC } from '@trpc/server'
 import { Command } from 'commander'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { jwt } from 'hono/jwt'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
-import { jwt } from 'hono/jwt'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { db } from '../db'
@@ -121,7 +121,11 @@ const command = new Command()
   .option('-p, --port <port>', 'Port to run the server on', '4445')
   .option('-h, --host <host>', 'Host to run the server on', 'localhost')
   .option('--email-domain <domain>', 'Email domain for masked emails', 'myapp.example.com')
-  .option('--jwt-secret <secret>', 'JWT secret for authentication', 'hominem-cli-development-secret')
+  .option(
+    '--jwt-secret <secret>',
+    'JWT secret for authentication',
+    'hominem-cli-development-secret'
+  )
   .action(async (options) => {
     const port = Number.parseInt(options.port, 10)
     const host = options.host
@@ -147,20 +151,15 @@ const command = new Command()
     app.use('*', honoLogger())
     app.use('*', prettyJSON())
     app.use('*', cors())
-    
+
     // JWT authentication for protected routes
-    app.use('/trpc/*', jwt({
-      secret: jwtSecret,
-      cookie: 'auth_token',
-      // Also support bearer token auth for CLI usage
-      header: 'Authorization',
-      parse: (header) => {
-        if (header && header.startsWith('Bearer ')) {
-          return header.slice(7)
-        }
-        return undefined
-      }
-    }))
+    app.use(
+      '/trpc/*',
+      jwt({
+        secret: jwtSecret,
+        cookie: 'auth_token',
+      })
+    )
 
     // Root endpoint
     app.get('/', (c) => {
@@ -221,24 +220,27 @@ const command = new Command()
         db: db ? 'connected' : 'disconnected',
       })
     })
-    
+
     // Auth verification endpoint (used to validate tokens)
     app.get('/auth/verify', async (c) => {
       try {
         // JWT middleware has already verified the token at this point
         const payload = c.get('jwtPayload')
-        
+
         return c.json({
           authenticated: true,
           user: payload,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       } catch (error) {
         logger.error('Auth verification error:', error)
-        return c.json({
-          authenticated: false,
-          error: 'Invalid authentication token'
-        }, 401)
+        return c.json(
+          {
+            authenticated: false,
+            error: 'Invalid authentication token',
+          },
+          401
+        )
       }
     })
 
