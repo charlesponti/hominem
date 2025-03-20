@@ -35,7 +35,7 @@ const data = {
         {
           title: 'Applications',
           icon: User,
-          url: '/career/applications',
+          url: '/career/job-applications',
           isActive: false,
         },
       ],

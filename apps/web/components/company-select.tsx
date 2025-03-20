@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/command'
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useCompanySearch } from '@/lib/hooks/use-company-search'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
-import { useCompanySearch } from '@/lib/hooks/useCompanySearch'
 import type { Company } from '@ponti/utils/schema'
+import { CommandLoading } from 'cmdk'
 import * as React from 'react'
 
 interface CompanySelectProps {
@@ -104,7 +105,7 @@ function CompanyList({
   onSelectAction,
   onCreateCompany,
 }: CompanyListProps) {
-  const showCreate = search && companies?.length === 0
+  const showCreate = !isLoading && search && companies?.length === 0
 
   return (
     <Command>
@@ -114,21 +115,28 @@ function CompanyList({
         value={search}
         onValueChange={setSearch}
       />
-      <CommandList>
-        <CommandEmpty>
+      {search.length > 0 ? (
+        <CommandList>
           {showCreate ? (
-            <div className="p-2">
-              <Button onClick={onCreateCompany}>Create `${search}`</Button>
-            </div>
-          ) : (
-            <span>No companies found.</span>
-          )}
-        </CommandEmpty>
-        <CommandGroup>
+            <CommandEmpty>
+              {showCreate ? (
+                <div className="p-2">
+                  <Button onClick={onCreateCompany}>Create &quot;{search}&quot;</Button>
+                </div>
+              ) : (
+                <span>No companies found.</span>
+              )}
+            </CommandEmpty>
+          ) : null}
           {isLoading ? (
-            <CommandItem disabled>Loading...</CommandItem>
-          ) : (
-            companies?.map((company) => (
+            <CommandLoading>
+              <div className="p-2">
+                <span className="loading loading-dots text-gray-300" />
+              </div>
+            </CommandLoading>
+          ) : null}
+          <CommandGroup>
+            {companies?.map((company) => (
               <CommandItem
                 key={company.id}
                 value={company.name}
@@ -136,10 +144,10 @@ function CompanyList({
               >
                 {company.name}
               </CommandItem>
-            ))
-          )}
-        </CommandGroup>
-      </CommandList>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      ) : null}
     </Command>
   )
 }
