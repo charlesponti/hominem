@@ -127,7 +127,6 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const history = await chatService.getConversationWithToolCalls(chatId)
 
       return reply.send({
-        success: true,
         chatId,
         messages: history,
       })
