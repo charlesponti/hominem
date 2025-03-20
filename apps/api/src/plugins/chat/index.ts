@@ -376,7 +376,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
   /**
    * Agent-based retrieval route
    */
-  fastify.post('/retrieval-agent', async (request, reply) => {
+  fastify.post('/retrieval-agent', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const body = request.body as {
         messages: VercelChatMessage[]
@@ -449,7 +449,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
     }
   })
 
-  fastify.post('/agent', async (request, reply) => {
+  fastify.post('/agent', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const body = request.body as {
         messages: VercelChatMessage[]
@@ -498,7 +498,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
     }
   })
 
-  fastify.post('/assistant', async (request, reply) => {
+  fastify.post('/assistant', { preHandler: verifyAuth }, async (request, reply) => {
     const { userId } = request
     if (!userId) {
       return reply.code(401).send({ error: 'Unauthorized' })
