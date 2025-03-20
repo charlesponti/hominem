@@ -50,15 +50,7 @@ export default function Page() {
   }, [])
 
   return (
-    <div className="relative overflow-x-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
-        <div className="absolute -bottom-8 right-20 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-6000" />
-      </div>
-
+    <div className="relative max-w-[100vw]">
       {/* Hero section */}
       <section className="relative py-20 md:py-32">
         <div
@@ -330,13 +322,6 @@ export default function Page() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-100">
                 Get Started Free
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-white border-white hover:bg-white/10"
-              >
-                Watch Demo
               </Button>
             </div>
           </div>
