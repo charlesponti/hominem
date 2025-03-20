@@ -30,7 +30,7 @@ export function useCompanySearch() {
       })
     },
     onSuccess: (data) => {
-      setSearch('')
+      // Add the company to the cache
       queryClient.setQueryData([debouncedSearch], (oldData: Company[] | undefined) => {
         return oldData ? [...oldData, data] : [data]
       })
