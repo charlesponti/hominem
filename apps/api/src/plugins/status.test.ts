@@ -33,7 +33,7 @@ describe('server', () => {
       serverTime: string
       uptime: number
     }
-    expect(response.statusCode).toBe(200)
+    expect(response).toBe(200)
     expect(body.up).toEqual(true)
   })
 })
