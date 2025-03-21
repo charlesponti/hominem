@@ -8,7 +8,7 @@ import ora from 'ora'
 import { db } from '../../db'
 import { markdownEntries } from '../../db/schema'
 import { getPathFiles } from '../../utils/get-path-files'
-import { MarkdownProcessor, type ProcessedMarkdownFileEntry } from './markdown/markdown-processor'
+import { MarkdownProcessor } from './markdown/markdown-processor'
 
 interface ProcessMarkdownOptions {
   output: string
@@ -132,6 +132,7 @@ export default new Command('process-markdown')
       )
       logger.info(`Output streamed to ${outputFilePath}`)
     } catch (error) {
+      console.error(error)
       logger.error('Error processing markdown file:', error)
       process.exit(1)
     }

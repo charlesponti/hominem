@@ -4,7 +4,8 @@
   "description": "Random utilities",
   "main": "./src/index.ts",
   "exports": {
-    "./ai": "./src/db/index.ts",
+    "./llm": "./src/ai/llm.provider.ts",
+    "./ollama": "./src/ai/ollama.ts",
     "./career": "./src/career/index.ts",
     "./db": "./src/db/index.ts",
     "./finance": "./src/finance/index.ts",
@@ -12,7 +13,6 @@
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
     "./nlp": "./src/nlp/index.ts",
-    "./ollama": "./src/ai-models/ollama.ts",
     "./redis": "./src/redis.ts",
     "./schema": "./src/db/schema/index.ts",
     "./scraping": "./src/scraping/index.ts",

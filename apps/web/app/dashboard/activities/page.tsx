@@ -93,7 +93,7 @@ const TopicsAnalysis = ({ topics }: { topics?: string[] }) => {
 }
 
 // People Analysis Component
-const PeopleAnalysis = ({ people }: { people?: string[] }) => {
+const PeopleAnalysis = ({ people }: { people: TextAnalysis['people'] }) => {
   if (!people || people.length === 0) return null
 
   return (
@@ -153,7 +153,7 @@ const LocationsAnalysis = ({ locations }: { locations?: Location[] }) => {
 }
 
 // Emotions Analysis Component
-const EmotionsAnalysis = ({ emotions }: { emotions?: TextAnalysisEmotion[] }) => {
+const EmotionsAnalysis = ({ emotions }: { emotions?: TextAnalysis['emotions'] }) => {
   if (!emotions || emotions.length === 0) return null
 
   return (
@@ -177,7 +177,7 @@ const EmotionsAnalysis = ({ emotions }: { emotions?: TextAnalysisEmotion[] }) =>
 }
 
 // Activities Analysis Component
-const ActivitiesAnalysis = ({ activities }: { activities?: string[] }) => {
+const ActivitiesAnalysis = ({ activities }: { activities?: TextAnalysis['activities'] }) => {
   if (!activities || activities.length === 0) return null
 
   return (
@@ -538,7 +538,7 @@ const SmartTaskInput = () => {
                             )}
 
                             {/* People section */}
-                            {note.analysis.people?.length > 0 && (
+                            {note.analysis.people && note.analysis.people.length > 0 && (
                               <div>
                                 <div className="text-xs text-rose-600 font-medium mb-1 flex items-center gap-1">
                                   <Users className="w-3 h-3" /> PEOPLE
@@ -554,7 +554,7 @@ const SmartTaskInput = () => {
                             )}
 
                             {/* Activities section */}
-                            {note.analysis.activities?.length > 0 && (
+                            {note.analysis.activities && note.analysis.activities.length > 0 && (
                               <div>
                                 <div className="text-xs text-indigo-600 font-medium mb-1 flex items-center gap-1">
                                   <BarChart className="w-3 h-3" /> ACTIVITIES
@@ -570,7 +570,7 @@ const SmartTaskInput = () => {
                             )}
 
                             {/* Emotions section */}
-                            {note.analysis.emotions?.length > 0 && (
+                            {note.analysis.emotions && note.analysis.emotions?.length > 0 && (
                               <div>
                                 <div className="text-xs text-amber-600 font-medium mb-1 flex items-center gap-1">
                                   <LineChart className="w-3 h-3" /> EMOTIONS

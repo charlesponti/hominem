@@ -1,8 +1,6 @@
-import { openai } from '@ai-sdk/openai'
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { ollama } from '../ai-models/ollama'
+import { LLMProvider, type LLMProviderConfig } from '../ai/llm.provider'
 
 export const PeopleSchema = z.array(z.object({ firstName: z.string(), lastName: z.string() }))
 export type People = z.infer<typeof PeopleSchema>
@@ -51,14 +49,15 @@ export const LocationSchema = z.object({
     .describe('One of seven continents (e.g., "Europe", "North America", "Asia")'),
 })
 
+const comparisonsSchema = z
+  .array(z.array(z.string()))
+  .nullable()
+  .describe(
+    'Comparisons between items. Example output: [["item1", "item2", "item3"], ["item4", "item5"]'
+  )
+
 export const TextAnalysisSchema = z.object({
   questions: z.array(z.string()).nullable(),
-  comparisons: z
-    .array(z.array(z.string()))
-    .nullable()
-    .describe(
-      'Comparisons between items. Example output: [["item1", "item2", "item3"], ["item4", "item5"]'
-    ),
   items: z
     .array(
       z.object({
@@ -69,9 +68,13 @@ export const TextAnalysisSchema = z.object({
     .describe('Physical items mentioned in the text')
     .nullable(),
   locations: z.array(LocationSchema).describe('Locations mentioned in the text').nullable(),
-  emotions: z.array(TextAnalysisEmotionSchema),
-  people: z.array(z.string()).describe('People mentioned in the text'),
-  activities: z.array(z.string()).describe('Activities mentioned in the text'),
+  emotions: z.array(TextAnalysisEmotionSchema).nullable().default([]),
+  people: z.array(z.string()).describe('People mentioned in the text').nullable().default([]),
+  activities: z
+    .array(z.string())
+    .describe('Activities mentioned in the text')
+    .nullable()
+    .default([]),
   decisions: DecisionsSchema.nullable(),
   habits: HabitsSchema.nullable(),
   topics: z.array(z.string()).describe('Topics mentioned in the text'),
@@ -81,56 +84,30 @@ export const TextAnalysisSchema = z.object({
 })
 export type TextAnalysis = z.infer<typeof TextAnalysisSchema>
 
-export interface NLPProcessorConfig {
-  provider: 'openai' | 'ollama' | 'lmstudio'
-  model?: string
-}
-
-const DEFAULT_CONFIG: NLPProcessorConfig = {
-  provider: 'openai',
-  model: 'gpt-4o-mini',
-}
-
 export class NLPProcessor {
-  private config: NLPProcessorConfig
-  private defaultOllamaModel = 'llama3.2'
-  private defaultOpenaiModel = 'gpt-4o-mini'
-  private defaultLmStudioModel = 'gemma-3-12b-it'
+  private config: LLMProviderConfig
 
-  constructor(config: Partial<NLPProcessorConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config }
-  }
-
-  private getModel() {
-    switch (this.config.provider) {
-      case 'openai':
-        return openai(this.config.model || this.defaultOpenaiModel, { structuredOutputs: true })
-      case 'ollama':
-        return ollama(this.config.model || this.defaultOllamaModel, { structuredOutputs: true })
-      case 'lmstudio': {
-        const lmstudio = createOpenAICompatible({
-          name: 'lmstudio',
-          baseURL: 'http://localhost:1234/v1',
-        })
-        return lmstudio(this.config.model || this.defaultLmStudioModel)
-      }
-      default:
-        return openai(this.defaultOpenaiModel, { structuredOutputs: true })
+  constructor(config: LLMProviderConfig) {
+    this.config = config || {
+      provider: 'openai',
+      model: 'gpt-4o-mini',
     }
   }
 
   async analyzeText(text: string): Promise<TextAnalysis> {
+    const llmProvider = new LLMProvider(this.config)
     const response = await generateObject({
-      model: this.getModel(),
+      model: llmProvider.getModel(),
       prompt: `Analyze the following text and extract linguistic patterns, emotions, and topics: "${text}"`,
       schema: TextAnalysisSchema,
     })
     return response.object
   }
 
-  async analyzeEmotionalJourney(text: string): Promise<TextAnalysisEmotion[]> {
+  async analyzeEmotion(text: string): Promise<TextAnalysisEmotion[]> {
+    const llmProvider = new LLMProvider(this.config)
     const response = await generateObject({
-      model: this.getModel(),
+      model: llmProvider.getModel(),
       prompt: `Analyze the emotional journey in this text, breaking it down by sentences: "${text}"`,
       schema: z.array(TextAnalysisEmotionSchema),
     })
@@ -138,8 +115,9 @@ export class NLPProcessor {
   }
 
   async findActionItems(text: string): Promise<ActionItems> {
+    const llmProvider = new LLMProvider(this.config)
     const response = await generateObject({
-      model: this.getModel(),
+      model: llmProvider.getModel(),
       prompt: `Find action items, commitments, and deadlines in this text: "${text}"`,
       schema: ActionItemsSchema,
     })
@@ -147,8 +125,9 @@ export class NLPProcessor {
   }
 
   async analyzePeople(text: string): Promise<People> {
+    const llmProvider = new LLMProvider(this.config)
     const response = await generateObject({
-      model: this.getModel(),
+      model: llmProvider.getModel(),
       prompt: `Return the people mentioned in the following text: "${text}"`,
       schema: PeopleSchema,
     })
@@ -156,8 +135,9 @@ export class NLPProcessor {
   }
 
   async analyzeDecisions(text: string): Promise<Decisions> {
+    const llmProvider = new LLMProvider(this.config)
     const response = await generateObject({
-      model: this.getModel(),
+      model: llmProvider.getModel(),
       prompt: `Analyze decisions, alternatives, and reasoning in this text: "${text}"`,
       schema: DecisionsSchema,
     })
@@ -165,8 +145,9 @@ export class NLPProcessor {
   }
 
   async analyzeHabits(text: string): Promise<Habits> {
+    const llmProvider = new LLMProvider(this.config)
     const response = await generateObject({
-      model: this.getModel(),
+      model: llmProvider.getModel(),
       prompt: `Analyze habits, routines, and time patterns in this text: "${text}"`,
       schema: HabitsSchema,
     })
