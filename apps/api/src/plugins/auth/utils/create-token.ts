@@ -47,7 +47,7 @@ async function createToken({
     userId: user.id,
   })
 
-  track(APP_USER_ID, EVENTS.USER_EVENTS.REGISTER_SUCCESS, {})
+  track(APP_USER_ID, EVENTS.REGISTER_SUCCESS, {})
 
   // 👇 Send the email token
   return sendEmailToken(email, emailToken)
