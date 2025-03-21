@@ -14,6 +14,12 @@ const eslintConfig = [
   {
     ignores: ['components/ui/*'],
   },
+  {
+    rules: {
+      // Handled by Biome
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ]
 
 export default eslintConfig

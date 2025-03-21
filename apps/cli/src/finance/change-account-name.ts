@@ -1,8 +1,8 @@
+import { logger } from '@ponti/utils/logger'
 import { Command } from 'commander'
+import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { transactions } from '../db/schema'
-import { logger } from '@ponti/utils/logger'
-import { eq, sql } from 'drizzle-orm'
 
 const changeAccount = new Command()
 changeAccount

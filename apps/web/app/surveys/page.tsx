@@ -1,6 +1,6 @@
 'use client'
 
-import { useCreateSurvey, useSurveys, useVoteSurvey } from '@/hooks/use-surveys'
+import { useCreateSurvey, useSurveys, useVoteSurvey } from '@/lib/hooks/use-surveys'
 import { useState } from 'react'
 
 export default function SurveysPage() {

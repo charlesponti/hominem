@@ -1,7 +1,6 @@
+import logger from '@ponti/utils/logger'
 import sendgrid, { type MailDataRequired } from '@sendgrid/mail'
 import type { FastifyInstance } from 'fastify'
-
-import logger from '../logger'
 
 const { SENDGRID_API_KEY, SENDGRID_SENDER_EMAIL, SENDGRID_SENDER_NAME, NODE_ENV } = process.env
 

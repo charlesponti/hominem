@@ -95,7 +95,7 @@ export class NLPProcessor {
   private config: NLPProcessorConfig
   private defaultOllamaModel = 'llama3.2'
   private defaultOpenaiModel = 'gpt-4o-mini'
-  private defaultLmStudioModel = 'qwen2.5-7b-instruct-1m'
+  private defaultLmStudioModel = 'gemma-3-12b-it'
 
   constructor(config: Partial<NLPProcessorConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }

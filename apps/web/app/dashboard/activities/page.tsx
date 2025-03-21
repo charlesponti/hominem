@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { useAnalyzeNote, useCreateNote, useDeleteNote, useNotes } from '@/hooks/use-notes'
+import { useAnalyzeNote, useCreateNote, useDeleteNote, useNotes } from '@/lib/hooks/use-notes'
 import type { Decisions, Habits, TextAnalysis, TextAnalysisEmotion } from '@ponti/utils/nlp'
 import { motion } from 'framer-motion'
 import {

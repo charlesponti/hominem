@@ -1,9 +1,8 @@
+import { redis } from '@ponti/utils/redis'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
-import type { Redis } from 'ioredis'
 
 interface RateLimitOptions {
-  redis: Redis
   getCustomError?: (request: FastifyRequest, key: string) => Error
   maxHits: number
   onRateLimit?: (request: FastifyRequest, key: string) => void
@@ -14,7 +13,6 @@ interface RateLimitOptions {
 const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, opts) => {
   const noop = () => {}
   const {
-    redis,
     getCustomError,
     maxHits,
     onRateLimit = noop,

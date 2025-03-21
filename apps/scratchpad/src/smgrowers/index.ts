@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils'
+import { logger } from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
 import * as fs from 'node:fs'
 import * as path from 'node:path'

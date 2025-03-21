@@ -63,7 +63,7 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
 
   server.post(
     '/lists',
-    { preValidation: verifyAuth },
+    { preHandler: verifyAuth },
     async (request: FastifyRequest): Promise<{ list: typeof list.$inferInsert }> => {
       const { userId } = request
       if (!userId) {
@@ -92,7 +92,7 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
     }
   )
 
-  server.put('/lists/:id', { preValidation: verifyAuth }, async (request) => {
+  server.put('/lists/:id', { preHandler: verifyAuth }, async (request) => {
     const paramsResult = updateListSchema.params.safeParse(request.params)
     if (!paramsResult.success) {
       throw new Error(paramsResult.error.message)
@@ -115,7 +115,7 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
     return { list: found }
   })
 
-  server.delete('/lists/:id', { preValidation: verifyAuth }, async (request, reply) => {
+  server.delete('/lists/:id', { preHandler: verifyAuth }, async (request, reply) => {
     const result = deleteListSchema.params.safeParse(request.params)
     if (!result.success) {
       throw new Error(result.error.message)

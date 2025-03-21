@@ -1,31 +1,14 @@
 import { eq, type SQL } from 'drizzle-orm'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
-import z from 'zod'
 import { db } from '../db'
 import {
-  JobApplicationStage,
   job_applications,
   type JobApplication,
   type JobApplicationInsert,
-} from '../db/schema/job.schema'
+} from '../db/schema/career.schema'
 
 export const JobApplicationSchema = createSelectSchema(job_applications)
-export const JobApplicationInsertSchema = createInsertSchema(job_applications, {
-  stages: z.array(
-    z.object({
-      stage: z.enum([
-        JobApplicationStage.APPLICATION,
-        JobApplicationStage.PHONE_SCREEN,
-        JobApplicationStage.TECHNICAL_SCREEN_CALL,
-        JobApplicationStage.TECHNICAL_SCREEN_EXERCISE,
-        JobApplicationStage.INTERVIEW,
-        JobApplicationStage.IN_PERSON,
-        JobApplicationStage.OFFER,
-      ]),
-      date: z.string(),
-    })
-  ),
-})
+export const JobApplicationInsertSchema = createInsertSchema(job_applications)
 
 export class ApplicationService {
   async create(data: JobApplicationInsert) {

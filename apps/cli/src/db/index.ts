@@ -8,7 +8,7 @@ import * as schema from './schema'
 const { DB_PATH } = env
 export let db: LibSQLDatabase<typeof schema>
 
-export function initDb() {
+export async function initDb() {
   // Check if database file exists
   if (!fs.existsSync(DB_PATH) && process.argv[2] !== 'init') {
     logger.error(`Database file does not exist at ${DB_PATH}`)
@@ -31,13 +31,6 @@ export function initDb() {
   // Create database connection
   logger.info('Creating database connection...')
   db = drizzle(`file:${DB_PATH}`, { schema })
+  logger.info('Database connection created successfully!')
   return db
-}
-
-// Initialize immediately
-try {
-  initDb()
-} catch (err) {
-  logger.error('Failed to initialize database:', err)
-  process.exit(1)
 }

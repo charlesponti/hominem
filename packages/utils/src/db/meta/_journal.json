@@ -50,6 +50,34 @@
       "when": 1741976876117,
       "tag": "0006_charming_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1742341100095,
+      "tag": "0007_conscious_shinobi_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1742366209189,
+      "tag": "0008_wise_iron_patriot",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1742423261644,
+      "tag": "0009_complex_goliath",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1742424506345,
+      "tag": "0010_confused_radioactive_man",
+      "breakpoints": true
     }
   ]
 }

@@ -1,14 +1,14 @@
-import { FastifyInstance } from 'fastify'
 import { db } from '@ponti/utils/db'
 import { NLPProcessor } from '@ponti/utils/nlp'
 import { notes } from '@ponti/utils/schema'
 import { and, eq } from 'drizzle-orm'
+import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
-import { handleError, NotFoundError } from '../utils/errors'
+import { ForbiddenError, NotFoundError, handleError } from '../utils/errors'
 
-const createNoteSchema = z.object({ 
-  content: z.string() 
+const createNoteSchema = z.object({
+  content: z.string(),
 })
 
 const updateNoteSchema = z.object({
@@ -17,25 +17,29 @@ const updateNoteSchema = z.object({
   tags: z.array(z.record(z.string(), z.string())).optional(),
 })
 
-const noteIdSchema = z.object({ 
-  id: z.string() 
+const noteIdSchema = z.object({
+  id: z.string(),
 })
 
 export async function notesRoutes(fastify: FastifyInstance) {
   // Create a new note
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
     try {
+      const { userId } = request
+      if (!userId) {
+        throw ForbiddenError('Not authorized to create a note')
+      }
       const validated = createNoteSchema.parse(request.body)
-      
+
       const nlpProcessor = new NLPProcessor()
       const analysis = await nlpProcessor.analyzeText(validated.content)
 
       const result = await db.insert(notes).values({
         analysis,
         content: validated.content,
-        userId: request.userId!,
+        userId,
       })
-      
+
       return result
     } catch (error) {
       handleError(error as Error, reply)
@@ -45,7 +49,11 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // List all notes for authenticated user
   fastify.get('/', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const result = await db.select().from(notes).where(eq(notes.userId, request.userId!))
+      const { userId } = request
+      if (!userId) {
+        throw ForbiddenError('Not authorized to list notes')
+      }
+      const result = await db.select().from(notes).where(eq(notes.userId, userId))
       return result
     } catch (error) {
       handleError(error as Error, reply)
@@ -55,9 +63,13 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // Update a note
   fastify.put('/:id', { preHandler: verifyAuth }, async (request, reply) => {
     try {
+      const { userId } = request
+      if (!userId) {
+        throw ForbiddenError('Not authorized to create a note')
+      }
       const { id } = request.params as { id: string }
       const validated = updateNoteSchema.parse(request.body)
-      
+
       const nlpProcessor = new NLPProcessor()
       const analysis = await nlpProcessor.analyzeText(validated.content)
 
@@ -69,13 +81,13 @@ export async function notesRoutes(fastify: FastifyInstance) {
           title: validated.title,
           tags: validated.tags,
         })
-        .where(and(eq(notes.id, id), eq(notes.userId, request.userId!)))
+        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
         .returning()
-      
+
       if (!result.length) {
         throw NotFoundError('Note not found')
       }
-      
+
       return result[0]
     } catch (error) {
       handleError(error as Error, reply)
@@ -85,17 +97,21 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // Delete a note
   fastify.delete('/:id', { preHandler: verifyAuth }, async (request, reply) => {
     try {
+      const { userId } = request
+      if (!userId) {
+        throw ForbiddenError('Not authorized to create a note')
+      }
       const { id } = request.params as { id: string }
-      
+
       const result = await db
         .delete(notes)
-        .where(and(eq(notes.id, id), eq(notes.userId, request.userId!)))
+        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
         .returning()
-      
+
       if (!result.length) {
         throw NotFoundError('Note not found')
       }
-      
+
       return { success: true }
     } catch (error) {
       handleError(error as Error, reply)
@@ -105,13 +121,18 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // Analyze a note
   fastify.post('/:id/analyze', { preHandler: verifyAuth }, async (request, reply) => {
     try {
+      const { userId } = request
+      if (!userId) {
+        throw ForbiddenError('Not authorized to analyze a note')
+      }
+
       const { id } = request.params as { id: string }
-      
+
       // Get the note
       const noteResult = await db
         .select()
         .from(notes)
-        .where(and(eq(notes.id, id), eq(notes.userId, request.userId!)))
+        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
         .limit(1)
 
       if (!noteResult.length) {
@@ -128,7 +149,7 @@ export async function notesRoutes(fastify: FastifyInstance) {
       await db
         .update(notes)
         .set({ analysis })
-        .where(and(eq(notes.id, id), eq(notes.userId, request.userId!)))
+        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
 
       return { analysis }
     } catch (error) {

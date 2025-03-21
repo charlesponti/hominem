@@ -1,15 +1,14 @@
+import type { FastifyCookieOptions } from '@fastify/cookie'
 import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
+import { env } from 'src/lib/env'
 
-// This plugin is kept for compatibility with existing code but will use Clerk for auth
-// You can remove this completely if not needed for other session data
-const sessionPlugin: FastifyPluginAsync = async (server) => {
+const sessionPlugin: FastifyPluginAsync = async (fastify) => {
   // Set up a simple cookie for non-auth session data if needed
-  // Clerk handles the authentication cookies
-  server.register(require('@fastify/cookie'), {
+  await fastify.register(require('@fastify/cookie'), {
+    secret: env.COOKIE_SECRET,
     hook: 'onRequest',
     parseOptions: {},
-  })
+  } as FastifyCookieOptions)
 }
 
-export default fp(sessionPlugin)
+export default sessionPlugin

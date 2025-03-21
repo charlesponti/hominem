@@ -1,11 +1,12 @@
-import { useCreateApplication, useDeleteApplication } from '@/hooks/useApplications'
+import { JobApplicationStage } from '@/lib/career'
+import { useCreateApplication, useDeleteApplication } from '@/lib/hooks/useApplications'
 import { useAuth } from '@clerk/nextjs'
 import type { JobApplication } from '@ponti/utils/career'
-import { JobApplicationStage, JobApplicationStatus } from '@ponti/utils/types'
+import { JobApplicationStatus } from '@ponti/utils/types'
 import { Plus, PlusCircle } from 'lucide-react'
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { CompanySelect } from '../company-select'
 import { Button } from '../ui/button'
-import { CompanySelect } from '../ui/company-select'
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
@@ -65,8 +66,9 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
   }, [application, deleteApplication])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    if (!userId) return
     e.preventDefault()
+
+    if (!userId) return
     if (position && companyId) {
       await createApplication.mutateAsync({
         position,
@@ -157,13 +159,15 @@ export function JobApplicationForm({ application }: { application?: JobApplicati
           Add Application
         </Button>
       </form>
-      <Button
-        variant="ghost"
-        className="w-full text-red-500 hover:bg-red-500 hover:text-white"
-        onClick={onDeleteClick}
-      >
-        Delete
-      </Button>
+      {application?.id ? (
+        <Button
+          variant="ghost"
+          className="w-full text-red-500 hover:bg-red-500 hover:text-white"
+          onClick={onDeleteClick}
+        >
+          Delete
+        </Button>
+      ) : null}
     </div>
   )
 }

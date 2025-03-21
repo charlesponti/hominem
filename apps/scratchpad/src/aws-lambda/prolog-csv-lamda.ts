@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils'
+import { logger } from '@ponti/utils/logger'
 import { ZodError } from 'zod'
 import { getCSVFromS3, processCSVBuffer, writeResultsToS3 } from './services/csv.service'
 

@@ -1,13 +1,15 @@
-export const getEnv = (key: string): string => {
-  const value = process.env[key]
-  if (!value) {
-    throw new Error(`${key} environment variable not set`)
-  }
-  return value
-}
+import 'dotenv/config'
+import { z } from 'zod'
 
-export const validateEnvironmentVariables = () => {
-  // Clerk
-  getEnv('CLERK_SECRET_KEY')
-  getEnv('CLERK_PUBLISHABLE_KEY')
-}
+const envSchema = z.object({
+  PORT: z.string().default('3000'),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  APP_URL: z.string().url().default('http://localhost:3000'),
+  COOKIE_SECRET: z.string().default('supersecret'),
+  CHROMA_URL: z.string().url(),
+  CLERK_SECRET_KEY: z.string().default(''),
+  CLERK_PUBLISHABLE_KEY: z.string().default(''),
+  OPENAI_API_KEY: z.string(),
+})
+
+export const env = envSchema.parse(process.env)

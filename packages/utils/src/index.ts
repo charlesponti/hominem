@@ -1,6 +1,5 @@
-export * from './logging/logger'
+export * from './logger'
 
 // Utils
 export * from './rate-limit'
 export * from './types/index'
-export * from './writer'

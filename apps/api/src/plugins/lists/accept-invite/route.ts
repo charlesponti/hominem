@@ -1,15 +1,14 @@
 import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { listInvite, userLists, type users } from '@ponti/utils/schema'
 import { and, eq } from 'drizzle-orm'
-import type { FastifyInstance } from 'fastify'
-import type { RequestWithSession } from '../../../typings'
-import { verifySession } from '../../auth/utils'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { verifyAuth } from 'src/middleware/auth'
 
 const acceptListInviteRoute = async (server: FastifyInstance) => {
   server.post(
     '/invites/:listId/accept',
     {
-      preValidation: verifySession,
+      preHandler: verifyAuth,
       schema: {
         params: {
           type: 'object',
@@ -35,9 +34,13 @@ const acceptListInviteRoute = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: RequestWithSession, reply) => {
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { userId } = request
+      if (!userId) {
+        return reply.status(401).send({ error: 'Unauthorized' })
+      }
+
       const { listId } = request.params as { listId: string }
-      const { userId } = request.session.get('data')
       const { email } = request.user as typeof users.$inferSelect
 
       const invite = await db

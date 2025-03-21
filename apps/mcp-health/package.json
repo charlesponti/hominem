@@ -11,10 +11,10 @@
     "build"
   ],
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
-    "prepare": "npm run build",
-    "watch": "tsc --watch",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+    "build": "bun build src/index.ts --outfile=build/index.js --target=node",
+    "dev": "bun build src/index.ts --outfile=build/index.js --target=node --watch",
+    "prepare": "bun run build",
+    "inspector": "bunx @modelcontextprotocol/inspector build/index.js"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.1.13",

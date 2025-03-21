@@ -1,6 +1,6 @@
+import logger from '@ponti/utils/logger'
 import type { FastifyPluginAsync } from 'fastify'
 import { APP_USER_ID, EVENTS, track } from '../../../analytics'
-import logger from '../../../logger'
 import { createToken } from '../utils/create-token'
 
 interface LoginInput {
@@ -30,7 +30,7 @@ const loginPlugin: FastifyPluginAsync = async (server) => {
       } catch (error) {
         const message = (error as Error)?.message
         logger.error(message)
-        track(APP_USER_ID, EVENTS.USER_EVENTS.REGISTER_FAILURE, { message })
+        track(APP_USER_ID, EVENTS.REGISTER_FAILURE, { message })
         return reply.code(500).send({ message: 'Could not create account' })
       }
     }

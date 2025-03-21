@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { users } from './users.schema'
 
 export const chat = pgTable(
@@ -21,6 +21,27 @@ export const chat = pgTable(
       .onDelete('cascade'),
   ]
 )
+export type Chat = typeof chat.$inferSelect
+
+type ChatMessageReasoning = {
+  type: 'reasoning' | 'redacted-reasoning'
+  text: string
+  signature?: string
+}
+
+type ChatMessageToolCall = {
+  type: 'tool-call' | 'tool-result'
+  toolName: string
+  args?: Record<string, unknown>
+  result?: unknown
+  isError?: boolean
+}
+
+type ChatMessageFile = {
+  type: 'image' | 'file'
+  filename?: string
+  mimeType?: string
+}
 
 export const chatMessage = pgTable(
   'chat_message',
@@ -30,6 +51,11 @@ export const chatMessage = pgTable(
     userId: uuid('userId').notNull(),
     role: text('role').notNull(),
     content: text('content').notNull(),
+    toolCalls: json('toolCalls').$type<ChatMessageToolCall[]>(),
+    reasoning: text('reasoning'),
+    files: json('files').$type<ChatMessageFile[]>(),
+    parentMessageId: uuid('parentMessageId'),
+    messageIndex: text('messageIndex'),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
@@ -50,6 +76,7 @@ export const chatMessage = pgTable(
       .onDelete('cascade'),
   ]
 )
+export type ChatMessage = typeof chatMessage.$inferSelect
 
 export const chatRelations = relations(chat, ({ one, many }) => ({
   user: one(users, {

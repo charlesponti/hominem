@@ -1,7 +1,7 @@
 import { db, takeUniqueOrThrow } from '@ponti/utils/db'
 import { item, list, place as places } from '@ponti/utils/schema'
 import { and, eq, inArray } from 'drizzle-orm'
-import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
+import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { EVENTS, track } from '../../analytics'
 import {
   getPlaceDetails,
@@ -89,8 +89,12 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
         },
       },
     },
-    async (request: FastifyRequest) => {
+    async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request
+      if (!userId) {
+        return reply.code(401).send({ message: 'Unauthorized' })
+      }
+
       const { listIds, place } = request.body as PlacePostBody
       const filteredListTypes = place.types.filter((type) => {
         return !/point_of_interest|establishment|political/.test(type)
@@ -131,7 +135,7 @@ const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
       const lists = await db.select().from(list).where(inArray(list.id, listIds))
 
       // 👇 Track place creation
-      track(userId, EVENTS.USER_EVENTS.PLACE_ADDED, {
+      track(userId, EVENTS.PLACE_ADDED, {
         types: place.types,
       })
 
