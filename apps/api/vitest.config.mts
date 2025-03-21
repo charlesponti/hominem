@@ -1,5 +1,3 @@
-import 'dotenv/config'
-
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
@@ -11,9 +9,6 @@ export default defineConfig({
     setupFiles: './test/test.setup.ts',
     clearMocks: true,
     exclude: ['**/node_modules/**', '**/build/**'],
-    env: {
-      DATABASE_URL: 'postgres://postgres:postgres@localhost:4433/hominem-test',
-    },
     coverage: {
       provider: 'v8',
       clean: true,

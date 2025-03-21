@@ -46,8 +46,6 @@ export default new Command('process-markdown')
       const outputStream = createWriteStream(outputFilePath)
       outputStream.write('[\n')
 
-      const headingsMap = new Map<string, ProcessedMarkdownFileEntry[]>()
-
       const results = []
       let index = 0
       const processorSpinner = ora().start()

@@ -1,119 +1,14 @@
 import { serve } from '@hono/node-server'
 import { trpcServer } from '@hono/trpc-server'
 import { logger } from '@ponti/utils/logger'
-import { initTRPC } from '@trpc/server'
 import { Command } from 'commander'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { logger as honoLogger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
-import { randomUUID } from 'node:crypto'
-import { z } from 'zod'
-import { db } from '../db'
-import { FinanceRouter } from './routers/finance-router'
-
-// Initialize tRPC
-const t = initTRPC.create()
-
-// Email Mask Router
-class EmailMaskRouter {
-  private emailAddresses: {
-    id: string
-    uuidEmail: string
-    userId: string
-    isActive: boolean
-  }[] = []
-  private emailDomain: string
-
-  constructor(emailDomain: string) {
-    this.emailDomain = emailDomain
-    if (!emailDomain) {
-      throw new Error('Email domain must be provided.')
-    }
-  }
-
-  public router = t.router({
-    generateEmail: t.procedure.input(z.object({ userId: z.string() })).mutation(({ input }) => {
-      const uuid = randomUUID()
-      const newEmail = {
-        id: randomUUID(),
-        uuidEmail: `${uuid}@${this.emailDomain}`,
-        userId: input.userId,
-        isActive: true,
-      }
-      this.emailAddresses.push(newEmail)
-      return newEmail
-    }),
-
-    deactivateEmail: t.procedure.input(z.object({ id: z.string() })).mutation(({ input }) => {
-      const index = this.emailAddresses.findIndex((email) => email.id === input.id)
-      if (index === -1) return false
-      this.emailAddresses[index].isActive = false
-      return true
-    }),
-
-    getEmailById: t.procedure.input(z.object({ id: z.string() })).query(({ input }) => {
-      return this.emailAddresses.find((email) => email.id === input.id)
-    }),
-
-    getEmailsByUserId: t.procedure.input(z.object({ userId: z.string() })).query(({ input }) => {
-      return this.emailAddresses.filter((email) => email.userId === input.userId && email.isActive)
-    }),
-  })
-}
-
-// Notes Router
-class NotesRouter {
-  private notes: {
-    id: string
-    content: string
-    title: string
-    createdAt: Date
-    updatedAt?: Date
-  }[] = []
-
-  public router = t.router({
-    create: t.procedure
-      .input(z.object({ details: z.object({ content: z.string() }) }))
-      .mutation(async ({ input }) => {
-        const note = {
-          id: randomUUID(),
-          content: input.details.content,
-          title: input.details.content.split('\n')[0] || 'Untitled',
-          createdAt: new Date(),
-        }
-        this.notes.push(note)
-        return note
-      }),
-
-    list: t.procedure.query(async () => {
-      return this.notes
-    }),
-
-    update: t.procedure
-      .input(z.object({ id: z.string(), details: z.object({ content: z.string() }) }))
-      .mutation(async ({ input }) => {
-        const index = this.notes.findIndex((n) => n.id === input.id)
-        if (index === -1) throw new Error('Note not found')
-
-        this.notes[index] = {
-          ...this.notes[index],
-          content: input.details.content,
-          title: input.details.content.split('\n')[0] || 'Untitled',
-          updatedAt: new Date(),
-        }
-        return this.notes[index]
-      }),
-
-    delete: t.procedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
-      const index = this.notes.findIndex((n) => n.id === input.id)
-      if (index === -1) throw new Error('Note not found')
-      this.notes.splice(index, 1)
-      return { success: true }
-    }),
-  })
-}
+import { db } from '../../db'
+import { appRouter } from './trpc.server'
 
 const command = new Command()
   .name('serve')
@@ -129,20 +24,7 @@ const command = new Command()
   .action(async (options) => {
     const port = Number.parseInt(options.port, 10)
     const host = options.host
-    const emailDomain = options.emailDomain
     const jwtSecret = options.jwtSecret
-
-    // Create routers
-    const emailRouter = new EmailMaskRouter(emailDomain)
-    const notesRouter = new NotesRouter()
-    const financeRouter = new FinanceRouter()
-
-    // Merge routers
-    const appRouter = t.router({
-      email: emailRouter.router,
-      notes: notesRouter.router,
-      finance: financeRouter.router,
-    })
 
     // Create Hono app
     const app = new Hono()

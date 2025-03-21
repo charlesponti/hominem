@@ -4,9 +4,9 @@ import fs from 'fs-extra'
 import os from 'node:os'
 import path from 'node:path'
 import { z } from 'zod'
-import { db } from '../../db'
-import { accounts, transactionAccounts, transactionNames, transactions } from '../../db/schema'
-import { processTransactions } from '../../finance/transactions/processor'
+import { db } from '../../../db'
+import { accounts, transactionAccounts, transactionNames, transactions } from '../../../db/schema'
+import { processTransactions } from '../../../finance/transactions/processor'
 
 // Initialize tRPC
 const t = initTRPC.create()
