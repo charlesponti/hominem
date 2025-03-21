@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -10,18 +11,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
+import { calculateTakeHome, formatCurrency, stateTaxRates, type StateTaxCode } from '@/lib/finance'
 import { useIndexedDBCollection } from '@/lib/hooks/use-indexdb-collection'
-import {
-  type StateTaxCode,
-  calculateTakeHome,
-  stateTaxRates,
-  formatCurrency,
-} from '@/lib/finance'
 import { formatPercent } from '@/lib/number.utils'
 import { Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 const LocationTaxComparison = () => {
@@ -39,41 +34,40 @@ const LocationTaxComparison = () => {
 
   const removeState = (stateCode: StateTaxCode) => {
     if (selectedStates.length > 1) {
-      setSelectedStates(selectedStates.filter(state => state !== stateCode))
+      setSelectedStates(selectedStates.filter((state) => state !== stateCode))
     }
   }
 
   // Find the state with highest take-home pay
-  const calculations = selectedStates.map(state => ({
+  const calculations = selectedStates.map((state) => ({
     stateCode: state,
-    calculation: calculateTakeHome(income, state)
+    calculation: calculateTakeHome(income, state),
   }))
-  
+
   const bestTakeHome = calculations.reduce(
-    (best, current) => 
-      current.calculation.takeHome > best.calculation.takeHome ? current : best,
+    (best, current) => (current.calculation.takeHome > best.calculation.takeHome ? current : best),
     calculations[0]
   )
 
   // For charts tab
   const getTaxChartData = () => {
-    return selectedStates.map(stateCode => {
+    return selectedStates.map((stateCode) => {
       const calculation = calculateTakeHome(income, stateCode)
       return {
         name: stateTaxRates[stateCode].name,
         'Federal Tax': calculation.federalTax,
         'State Tax': calculation.stateTax,
-        'Take-Home': calculation.takeHome
+        'Take-Home': calculation.takeHome,
       }
     })
   }
 
   const getRateChartData = () => {
-    return selectedStates.map(stateCode => {
+    return selectedStates.map((stateCode) => {
       const calculation = calculateTakeHome(income, stateCode)
       return {
         name: stateTaxRates[stateCode].name,
-        'Effective Tax Rate': calculation.effectiveTaxRate
+        'Effective Tax Rate': calculation.effectiveTaxRate,
       }
     })
   }
@@ -161,7 +155,7 @@ const LocationTaxComparison = () => {
         <TabsTrigger value="tax-charts">Tax Charts</TabsTrigger>
         <TabsTrigger value="cost-of-living">Cost of Living</TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="tax-comparison">
         <Card className="w-full">
           <CardHeader>
@@ -184,13 +178,13 @@ const LocationTaxComparison = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {selectedStates.map(stateCode => {
+                {selectedStates.map((stateCode) => {
                   const calculation = calculateTakeHome(income, stateCode)
                   const isHighestTakeHome = stateCode === bestTakeHome.stateCode
-                  
+
                   return (
-                    <div 
-                      key={stateCode} 
+                    <div
+                      key={stateCode}
                       className={`
                         space-y-3 bg-gray-50 p-4 rounded-lg border-2
                         ${isHighestTakeHome ? 'border-green-500' : 'border-transparent'}
@@ -199,7 +193,8 @@ const LocationTaxComparison = () => {
                       <div className="flex justify-between items-start">
                         <div className="text-lg font-semibold">{stateTaxRates[stateCode].name}</div>
                         {selectedStates.length > 1 && (
-                          <button 
+                          <button
+                            type="button"
                             onClick={() => removeState(stateCode)}
                             className="text-gray-400 hover:text-red-500"
                           >
@@ -207,38 +202,44 @@ const LocationTaxComparison = () => {
                           </button>
                         )}
                       </div>
-                      
+
                       <div className="text-sm text-gray-600 italic mb-2">
                         {stateTaxRates[stateCode].notes}
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Federal Tax:</span>
                           <div className="text-right">
-                            <div className="text-red-600">-{formatCurrency(calculation.federalTax)}</div>
+                            <div className="text-red-600">
+                              -{formatCurrency(calculation.federalTax)}
+                            </div>
                             <div className="text-xs text-gray-500">
                               ({formatPercent(calculation.federalTax / income)} of gross)
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex justify-between">
                           <span className="text-gray-600">State Tax:</span>
                           <div className="text-right">
-                            <div className="text-red-600">-{formatCurrency(calculation.stateTax)}</div>
+                            <div className="text-red-600">
+                              -{formatCurrency(calculation.stateTax)}
+                            </div>
                             <div className="text-xs text-gray-500">
                               ({formatPercent(calculation.stateTax / income)} of gross)
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="h-px bg-gray-200 my-2" />
-                        
+
                         <div className="flex justify-between font-medium">
                           <span>Take-Home Pay:</span>
                           <div className="text-right">
-                            <div className={`text-lg ${isHighestTakeHome ? 'text-green-600 font-bold' : 'text-green-500'}`}>
+                            <div
+                              className={`text-lg ${isHighestTakeHome ? 'text-green-600 font-bold' : 'text-green-500'}`}
+                            >
                               {formatCurrency(calculation.takeHome)}
                             </div>
                             <div className="text-xs text-gray-500">
@@ -246,7 +247,7 @@ const LocationTaxComparison = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         {isHighestTakeHome && selectedStates.length > 1 && (
                           <div className="mt-2 text-center text-sm text-green-600 font-medium">
                             Best take-home pay
@@ -256,7 +257,7 @@ const LocationTaxComparison = () => {
                     </div>
                   )
                 })}
-                
+
                 {showAddState ? (
                   <div className="space-y-3 bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
                     <div className="text-lg font-semibold mb-2">Add State</div>
@@ -275,7 +276,9 @@ const LocationTaxComparison = () => {
                       </SelectContent>
                     </Select>
                     <div className="flex gap-2 mt-4">
-                      <Button size="sm" onClick={addState}>Add</Button>
+                      <Button size="sm" onClick={addState}>
+                        Add
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => setShowAddState(false)}>
                         Cancel
                       </Button>
@@ -283,6 +286,7 @@ const LocationTaxComparison = () => {
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => setShowAddState(true)}
                     className="flex items-center justify-center h-full min-h-[200px] bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300 hover:bg-gray-100 transition-colors"
                     disabled={Object.keys(stateTaxRates).length <= selectedStates.length}
@@ -294,32 +298,37 @@ const LocationTaxComparison = () => {
                   </button>
                 )}
               </div>
-              
+
               {selectedStates.length > 1 && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="text-center">
                     <div className="font-semibold mb-1">Highest Take-Home Pay</div>
                     <div className="text-lg">
-                      {stateTaxRates[bestTakeHome.stateCode].name}: {formatCurrency(bestTakeHome.calculation.takeHome)}
+                      {stateTaxRates[bestTakeHome.stateCode].name}:{' '}
+                      {formatCurrency(bestTakeHome.calculation.takeHome)}
                     </div>
-                    
+
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                       {calculations
-                        .filter(c => c.stateCode !== bestTakeHome.stateCode)
-                        .map(c => {
-                          const difference = bestTakeHome.calculation.takeHome - c.calculation.takeHome
+                        .filter((c) => c.stateCode !== bestTakeHome.stateCode)
+                        .map((c) => {
+                          const difference =
+                            bestTakeHome.calculation.takeHome - c.calculation.takeHome
                           return (
                             <div key={c.stateCode} className="text-sm">
-                              <span className="font-medium">{formatCurrency(difference)}</span> more in{' '}
-                              <span className="font-medium">{stateTaxRates[bestTakeHome.stateCode].name}</span> than{' '}
+                              <span className="font-medium">{formatCurrency(difference)}</span> more
+                              in{' '}
+                              <span className="font-medium">
+                                {stateTaxRates[bestTakeHome.stateCode].name}
+                              </span>{' '}
+                              than{' '}
                               <span className="font-medium">{stateTaxRates[c.stateCode].name}</span>
                               <div className="text-xs text-gray-600">
-                                ({formatPercent(difference/c.calculation.takeHome, 1)} more)
+                                ({formatPercent(difference / c.calculation.takeHome, 1)} more)
                               </div>
                             </div>
                           )
-                        })
-                      }
+                        })}
                     </div>
                   </div>
                 </div>
@@ -328,7 +337,7 @@ const LocationTaxComparison = () => {
           </CardContent>
         </Card>
       </TabsContent>
-      
+
       <TabsContent value="tax-charts">
         <Card>
           <CardHeader>
@@ -349,11 +358,11 @@ const LocationTaxComparison = () => {
                   className="w-full"
                 />
               </div>
-              
+
               <div className="h-80">
                 <p className="mb-2 font-medium">Tax Breakdown Comparison</p>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
+                  <BarChart
                     data={getTaxChartData()}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
@@ -366,11 +375,11 @@ const LocationTaxComparison = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              
+
               <div className="h-80">
                 <p className="mb-2 font-medium">Effective Tax Rate Comparison</p>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
+                  <BarChart
                     data={getRateChartData()}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
@@ -385,7 +394,7 @@ const LocationTaxComparison = () => {
           </CardContent>
         </Card>
       </TabsContent>
-      
+
       <TabsContent value="cost-of-living">
         <Card>
           <CardHeader>
@@ -437,12 +446,7 @@ const LocationTaxComparison = () => {
                         />
                       </td>
                       <td className="p-2">
-                        <Input
-                          type="number"
-                          placeholder="Annual Income"
-                          value={income}
-                          disabled
-                        />
+                        <Input type="number" placeholder="Annual Income" value={income} disabled />
                       </td>
                       <td className="p-2">
                         <Input
@@ -493,14 +497,14 @@ const LocationTaxComparison = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               {locations.length > 0 && (
                 <div className="space-y-8">
                   <div className="h-80">
                     <p className="mb-2 font-medium">Monthly Housing Cost Comparison</p>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={locations.map(loc => ({
+                      <BarChart
+                        data={locations.map((loc) => ({
                           name: loc.place,
                           Housing: loc.housing,
                           Utilities: loc.utilities,
@@ -514,12 +518,12 @@ const LocationTaxComparison = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  
+
                   <div className="h-80">
                     <p className="mb-2 font-medium">Savings Rate Comparison</p>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={locations.map(loc => ({
+                      <BarChart
+                        data={locations.map((loc) => ({
                           name: loc.place,
                           'Savings Rate': loc.savingsRate,
                         }))}
@@ -531,33 +535,35 @@ const LocationTaxComparison = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  
+
                   {locations.length > 1 && (
                     <div className="bg-blue-50 p-4 rounded-lg">
-                      <div className="font-semibold mb-3 text-center">Cost of Living Comparison</div>
+                      <div className="font-semibold mb-3 text-center">
+                        Cost of Living Comparison
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {locations.slice(1).map(loc => {
+                        {locations.slice(1).map((loc) => {
                           const baseLoc = locations[0]
-                          const relativeCOL = (loc.costIndex / baseLoc.costIndex)
+                          const relativeCOL = loc.costIndex / baseLoc.costIndex
                           const equivalentSalary = baseLoc.annualGrossIncome * relativeCOL
                           const difference = equivalentSalary - baseLoc.annualGrossIncome
-                          
+
                           return (
                             <div key={loc.id} className="text-sm">
                               <div className="font-medium">
                                 {loc.place} vs {baseLoc.place}:
                               </div>
                               <div>
-                                Cost of living is {(relativeCOL * 100).toFixed(1)}% 
+                                Cost of living is {(relativeCOL * 100).toFixed(1)}%
                                 {relativeCOL > 1 ? ' higher' : ' lower'}
                               </div>
                               <div>
-                                {formatCurrency(baseLoc.annualGrossIncome)} in {baseLoc.place} is 
+                                {formatCurrency(baseLoc.annualGrossIncome)} in {baseLoc.place} is
                                 equivalent to {formatCurrency(equivalentSalary)} in {loc.place}
                               </div>
                               {difference !== 0 && (
                                 <div className={difference > 0 ? 'text-red-600' : 'text-green-600'}>
-                                  Need to earn {formatCurrency(Math.abs(difference))} 
+                                  Need to earn {formatCurrency(Math.abs(difference))}
                                   {difference > 0 ? ' more' : ' less'} in {loc.place}
                                 </div>
                               )}
