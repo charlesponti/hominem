@@ -14,6 +14,7 @@ jobs:
       APP_URL: ${{ secrets.APP_URL }}
       NEXT_PUBLIC_API_URL: "http://localhost:3000"
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       COOKIE_DOMAIN: ${{ secrets.COOKIE_DOMAIN }}
       COOKIE_NAME: ${{ secrets.COOKIE_NAME }}
