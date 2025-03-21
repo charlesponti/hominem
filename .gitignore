@@ -21,6 +21,9 @@ results.json
 *.sqlite
 *.sqlite3
 tsconfig.tsbuildinfo
+results/
+output/
+
 
 # Google credentials
 credentials.json
