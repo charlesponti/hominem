@@ -33,7 +33,6 @@
     "@sendgrid/mail": "^8.1.4",
     "@sentry/node": "^8.54.0",
     "@sentry/tracing": "^7.120.3",
-    "@supabase/supabase-js": "^2.48.1",
     "@total-typescript/ts-reset": "^0.6.1",
     "ai": "^4.1.26",
     "chromadb": "^2.0.0",

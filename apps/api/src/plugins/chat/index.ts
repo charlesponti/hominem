@@ -1,9 +1,8 @@
 import { google } from '@ai-sdk/google'
-import { openai } from '@ai-sdk/openai'
 import { allTools, calculatorTool, searchTool } from '@ponti/ai'
 import logger from '@ponti/utils/logger'
 import type { CoreMessage, Message as VercelChatMessage } from 'ai'
-import { generateText, streamText, tool } from 'ai'
+import { generateText, streamText } from 'ai'
 import type { FastifyInstance } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'
 import { ChatService } from 'src/services/chat.service'
@@ -30,15 +29,6 @@ const chatMessagesSchema = z.object({
       messageIndex: z.string().optional(),
     })
   ),
-})
-
-// Create a custom tool for search
-const searchDocumentsTool = tool({
-  parameters: z.object({ query: z.string() }),
-  description: 'Search the database for information',
-  execute: async ({ query }: { query: string }) => {
-    return await HominemVectorStore.searchDocuments(query)
-  },
 })
 
 // Define any utility tools that aren't part of the imported collections
@@ -246,13 +236,13 @@ export async function chatPlugin(fastify: FastifyInstance) {
       // Call model with tools and messages
       timer.mark('ai-start')
       const response = await generateText({
-        model: openai('gpt-4o-mini'),
+        model: google('gemini-1.5-flash-latest'),
         temperature: 0.2,
         system: await promptService.getPrompt('assistant'),
         messages: fullMessages,
         tools: {
-          search: searchDocumentsTool,
-          ...allTools, // Using imported allTools collection
+          search: HominemVectorStore.searchDocumentsTool,
+          ...allTools,
           ...utilityTools,
         },
         maxSteps: 5,
@@ -321,17 +311,17 @@ export async function chatPlugin(fastify: FastifyInstance) {
 
       // Search documents using the standalone question
       timer.mark('vectorSearch')
-      const documents = await HominemVectorStore.searchDocuments(queryForRetrieval)
+      const { results } = await HominemVectorStore.searchDocuments(queryForRetrieval)
       timer.mark('vectorSearchComplete')
       logger.debug(
         `Vector search took ${timer.getDurationBetween('vectorSearch', 'vectorSearchComplete')}s`
       )
 
-      const documentsContent = documents.reduce((acc, doc) => `${acc}${doc.content}\n\n`, '')
+      const documentsContent = results.reduce((acc, doc) => `${acc}${doc.document}\n\n`, '')
       const serializedSources = Buffer.from(
         JSON.stringify(
-          documents.map((doc) => ({
-            pageContent: `${doc.content.slice(0, 50)}...`,
+          results.map((doc) => ({
+            pageContent: `${doc.document.slice(0, 50)}...`,
             metadata: doc.metadata,
           }))
         )
@@ -345,7 +335,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       })
 
       const stream = streamText({
-        model: openai('gpt-4o-mini'),
+        model: google('gemini-1.5-flash-latest'),
         temperature: 0.2,
         system: `You are a helpful AI assistant named Hominem.
           
@@ -394,7 +384,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const assistantPrompt = await promptService.getPrompt('assistant')
 
       const result = await generateText({
-        model: openai('gpt-4o-mini'),
+        model: google('gemini-1.5-flash-latest'),
         temperature: 0.2,
         system: assistantPrompt,
         messages: [
@@ -405,8 +395,8 @@ export async function chatPlugin(fastify: FastifyInstance) {
           { role: 'user', content: currentMessageContent },
         ],
         tools: {
-          search: searchDocumentsTool,
-          ...allTools, // Using imported allTools collection
+          search: HominemVectorStore.searchDocumentsTool,
+          ...allTools,
           ...utilityTools,
         },
         maxSteps: 5,
@@ -462,13 +452,13 @@ export async function chatPlugin(fastify: FastifyInstance) {
       )
 
       const response = await generateText({
-        model: openai('gpt-4o-mini'),
+        model: google('gemini-1.5-flash-latest'),
         temperature: 0,
         system:
           "You are a helpful AI assistant called Hominem that can manage all aspects of a user's digital life. Use the appropriate tools to help the user accomplish their tasks.",
         messages,
         tools: {
-          ...allTools, // Using imported allTools collection
+          ...allTools,
           ...utilityTools,
         },
         maxSteps: 5,
@@ -510,7 +500,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const result = await generateText({
         model: google('gemini-1.5-pro-latest'),
         tools: {
-          ...allTools, // Using imported allTools collection
+          ...allTools,
           ...utilityTools,
         },
         system:

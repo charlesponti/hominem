@@ -96,7 +96,6 @@ export const vectorRoutes: FastifyPluginAsync = async (fastify) => {
    * into a vector store for later retrieval. See the following docs for more information:
    *
    * https://js.langchain.com/docs/modules/data_connection/document_transformers/text_splitters/recursive_text_splitter
-   * https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/supabase
    */
   fastify.post('/ingest/markdown', async (request, reply) => {
     const { text } = request.body as { text: string }

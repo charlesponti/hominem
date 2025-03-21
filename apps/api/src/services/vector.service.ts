@@ -1,14 +1,15 @@
 import type { MultipartFile } from '@fastify/multipart'
 import logger from '@ponti/utils/logger'
+import { tool } from 'ai'
 import { ChromaClient, IncludeEnum, OpenAIEmbeddingFunction } from 'chromadb'
 import csv from 'csv-parser'
 import crypto, { createHash } from 'node:crypto'
 import fs from 'node:fs'
-import { openaiClient } from 'src/lib/openai'
-import { supabaseClient } from 'src/lib/supabase'
+import { env } from 'src/lib/env'
+import z from 'zod'
 
 const embeddingFunction = new OpenAIEmbeddingFunction({
-  openai_api_key: process.env.OPENAI_API_KEY,
+  openai_api_key: env.OPENAI_API_KEY,
   openai_model: 'text-embedding-3-small',
 })
 
@@ -16,7 +17,16 @@ export namespace HominemVectorStore {
   export const embeddings = embeddingFunction
 
   export const chroma = new ChromaClient({
-    path: process.env.CHROMA_URL,
+    path: env.CHROMA_URL,
+  })
+
+  // Create a custom tool for search
+  export const searchDocumentsTool = tool({
+    parameters: z.object({ query: z.string() }),
+    description: 'Search the database for information',
+    execute: async ({ query }: { query: string }) => {
+      return await HominemVectorStore.searchDocuments(query)
+    },
   })
 
   export async function getDocumentCollection(indexName: string) {
@@ -197,16 +207,15 @@ export namespace HominemVectorStore {
   /**
    * Search documents using embeddings
    */
-  export const searchDocuments = async (query: string): Promise<DocumentSearchResult[]> => {
-    const { data: documents } = (await supabaseClient.rpc('match_documents', {
-      query_embedding: await openaiClient.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: query,
-      }),
-      match_threshold: 0.7,
-      match_count: 5,
-    })) as DocumentSearchResponse
+  export const searchDocuments = async (
+    query: string
+  ): Promise<Awaited<ReturnType<typeof HominemVectorStore.query>>> => {
+    const response = await HominemVectorStore.query({
+      q: query,
+      indexName: 'documents',
+      limit: 5,
+    })
 
-    return documents
+    return response
   }
 }

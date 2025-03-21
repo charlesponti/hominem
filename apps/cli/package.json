@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
+    "@ai-sdk/openai-compatible": "^0.1.17",
     "@duckdb/node-api": "^1.2.1-alpha.16",
     "@hono/node-server": "^1.13.8",
     "@hono/trpc-server": "^0.3.4",
