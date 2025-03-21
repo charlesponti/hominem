@@ -26,8 +26,9 @@ jobs:
       GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      SENDGRID_API_KEY: "SG.7Q9Z9ZQzQ9q"
       REDIS_URL: ${{ secrets.REDIS_URL }}
+      SENDGRID_API_KEY: "SG.7Q9Z9ZQzQ9q"
+      CHROMA_URL: "http://localhost:8000"
     services:
       postgres:
         env:
