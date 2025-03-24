@@ -12,6 +12,7 @@ You are an expert in JavaScript, CSS, React, Node.js, Next.js App Router, Zustan
 - Prefer iteration and modularization over code duplication.
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
 
+
 ## Standard Rules
 - Use 2 space indentation.
 - Use single quotes for strings except to avoid escaping.
@@ -30,13 +31,15 @@ You are an expert in JavaScript, CSS, React, Node.js, Next.js App Router, Zustan
 - Prefer template literals over string concatenation. For example: `${url}.md` instead of `url + '.md`.
 - use for (const ... of ...) loops instead of `.forEach`
 
+
 ### Use specific functions
 Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `Number.isNaN` instead of `isNaN`, etc.
 
 
 ## Naming Conventions
 - Use lowercase with dashes for directories (e.g., components/auth-wizard).
-- Favor named exports for components.
+- Use lowercase with dashes for files (e.g., components/personal-calendar.tsx).
+- Favor named exports.
 
 
 ## React Best Practices
@@ -63,27 +66,27 @@ Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `N
 ## State Management
 - Use `zustand` for global state management.
 - Use `react-query` and `IndexedDB` for data management.
-  - Changes to data should be saved to IndexedDB and synced to exteranl APIs.
+  - Changes to data should be saved to IndexedDB and synced to external APIs.
   - Use optimistic values.
+  - Invalidate associated queries when data is modified.
+  - Practice `local-first` approach
 - Lift state up when needed to share state between components.
 - Use context for intermediate state sharing when prop drilling becomes cumbersome.
+
 
 ## typescript
 - Import types with a separate import statement. Such as `import type { Foo } from 'bar'`
 - Never use `any` type.
 
+
 ## UI and Styling
+- Use mobile-first responsive design.
+- Use a consistent naming convention for CSS classes (e.g., BEM).
 - Use Shadcn UI and Radix UI for component foundations.
-- Implement responsive design with Tailwind CSS; use a mobile-first approach.
-- Use Stylus as CSS Modules for component-specific styles:
-  - Create a .module.styl file for each component that needs custom styling.
-  - Use camelCase for class names in Stylus files.
-  - Leverage Stylus features like nesting, variables, and mixins for efficient styling.
-- Implement a consistent naming convention for CSS classes (e.g., BEM) within Stylus modules.
 - Use Tailwind for utility classes and rapid prototyping.
-- Combine Tailwind utility classes with Stylus modules for a hybrid approach:
+- Combine Tailwind utility classes with CSS modules for a hybrid approach:
   - Use Tailwind for common utilities and layout.
-  - Use Stylus modules for complex, component-specific styles.
+  - Use CSS modules for complex, component-specific styles.
   - Never use the @apply directive
 
 
@@ -96,11 +99,13 @@ Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `N
 - Minimize the use of global styles; prefer modular, scoped styles.
 - Use PurgeCSS with Tailwind to remove unused styles in production.
 
+
 ## Forms and Validation
 - Use controlled components for form inputs.
 - Implement form validation (client-side and server-side).
 - Consider using libraries like react-hook-form for complex forms.
 - Use Zod or Joi for schema validation.
+
 
 ## Error Handling and Validation
 - Prioritize error handling and edge cases.
@@ -112,22 +117,27 @@ Use specific functions, such `Number.parseFloat` instead of `parseFloat`, use `N
 - Implement proper error logging and user-friendly error messages.
 - Model expected errors as return values in Server Actions.
 
+
 ## Accessibility (a11y)
 - Use semantic HTML elements.
 - Implement proper ARIA attributes.
 - Ensure keyboard navigation support.
+
 
 ## Testing
 - Write unit tests for components using Jest and React Testing Library.
 - Implement integration tests for critical user flows.
 - Use snapshot testing judiciously.
 
+
 ## Security
 - Sanitize user inputs to prevent XSS attacks.
 - Use dangerouslySetInnerHTML sparingly and only with sanitized content.
 
+
 ## Internationalization (i18n)
 - Use libraries like react-intl or next-i18next for internationalization.
+
 
 ## Key Conventions
 - Optimize Web Vitals (LCP, CLS, FID).

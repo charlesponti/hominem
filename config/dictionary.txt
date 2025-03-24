@@ -10,6 +10,7 @@ chrono
 cmdk
 davinci
 domcontentloaded
+enneagram
 fastify
 googleauth
 healthcheck

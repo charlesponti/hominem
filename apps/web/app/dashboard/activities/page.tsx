@@ -1,360 +1,17 @@
 'use client'
 
+import { AnalysisPanel } from '@/components/analysis'
+import { getBadgeStyles } from '@/components/analysis/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useAnalyzeNote, useCreateNote, useDeleteNote, useNotes } from '@/lib/hooks/use-notes'
-import type { Decisions, Habits, TextAnalysis, TextAnalysisEmotion } from '@ponti/utils/nlp'
+import type { TextAnalysisEmotion } from '@ponti/utils/nlp'
 import { motion } from 'framer-motion'
-import {
-  BarChart,
-  BarChart2,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  LineChart,
-  Loader2,
-  MapPin,
-  Repeat,
-  Tag,
-  Trash2,
-  Users,
-} from 'lucide-react'
+import { BarChart2, ChevronDown, ChevronUp, Loader2, Tag, Trash2, Users } from 'lucide-react'
 import { useState, type ChangeEvent } from 'react'
-
-// Utility function to get badge styles based on analysis key
-const getBadgeStyles = (key: string) => {
-  switch (key) {
-    case 'topics':
-      return 'bg-violet-100 text-violet-700 hover:bg-violet-200'
-    case 'entities':
-      return 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-    case 'sentiment':
-      return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-    case 'keywords':
-      return 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-    case 'categories':
-      return 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-    case 'dates':
-    case 'time':
-      return 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-    case 'persons':
-      return 'bg-rose-100 text-rose-700 hover:bg-rose-200'
-    case 'locations':
-      return 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'
-    case 'organizations':
-      return 'bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200'
-    default:
-      return 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-  }
-}
-
-// Analysis Card component to provide consistent styling
-interface AnalysisCardProps {
-  title: string
-  icon: React.ReactNode
-  children: React.ReactNode
-  className?: string
-}
-
-const AnalysisCard = ({ title, icon, children, className = '' }: AnalysisCardProps) => (
-  <motion.div
-    className={`bg-white p-4 rounded-lg shadow-sm border border-gray-100 ${className}`}
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-  >
-    <div className="flex items-center gap-2 text-sm font-medium mb-3 uppercase tracking-wider">
-      {icon}
-      <span className="text-violet-600">{title}</span>
-    </div>
-    <div className="text-gray-800">{children}</div>
-  </motion.div>
-)
-
-// Topic Analysis Component
-const TopicsAnalysis = ({ topics }: { topics?: string[] }) => {
-  if (!topics || topics.length === 0) return null
-
-  return (
-    <AnalysisCard title="Topics" icon={<Tag className="w-4 h-4 text-violet-500" />}>
-      <div className="flex flex-wrap gap-2">
-        {topics.map((topic) => (
-          <Badge key={topic} className={getBadgeStyles('topics')}>
-            #{topic}
-          </Badge>
-        ))}
-      </div>
-    </AnalysisCard>
-  )
-}
-
-// People Analysis Component
-const PeopleAnalysis = ({ people }: { people: TextAnalysis['people'] }) => {
-  if (!people || people.length === 0) return null
-
-  return (
-    <AnalysisCard title="People" icon={<Users className="w-4 h-4 text-rose-500" />}>
-      <div className="flex flex-wrap gap-2">
-        {people.map((person) => (
-          <Badge key={person} className={getBadgeStyles('persons')}>
-            @{person}
-          </Badge>
-        ))}
-      </div>
-    </AnalysisCard>
-  )
-}
-
-// Define interfaces based on schema from nlp/processor.ts
-interface Location {
-  name?: string
-  city?: string
-  state?: string
-  region?: string
-  country?: string
-  continent?: string
-}
-
-interface Item {
-  name: string
-  quantity?: number
-}
-
-// Locations Analysis Component
-const LocationsAnalysis = ({ locations }: { locations?: Location[] }) => {
-  if (!locations || locations.length === 0) return null
-
-  return (
-    <AnalysisCard title="Locations" icon={<MapPin className="w-4 h-4 text-cyan-500" />}>
-      <div className="flex flex-col gap-2">
-        {locations.map((location) => (
-          <div
-            key={`${location.name || ''}-${location.city || ''}-${location.country || ''}`}
-            className="bg-cyan-50 p-2 rounded"
-          >
-            {location.name && <div className="font-medium text-cyan-700">{location.name}</div>}
-            <div className="text-xs text-cyan-600 flex flex-wrap gap-1 mt-1">
-              {location.city && (
-                <Badge className={getBadgeStyles('locations')}>📍 {location.city}</Badge>
-              )}
-              {location.country && (
-                <Badge className={getBadgeStyles('locations')}>{location.country}</Badge>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </AnalysisCard>
-  )
-}
-
-// Emotions Analysis Component
-const EmotionsAnalysis = ({ emotions }: { emotions?: TextAnalysis['emotions'] }) => {
-  if (!emotions || emotions.length === 0) return null
-
-  return (
-    <AnalysisCard title="Emotions" icon={<LineChart className="w-4 h-4 text-amber-500" />}>
-      <div className="flex flex-wrap gap-2">
-        {emotions.map((emotion) => {
-          // Create color intensity based on emotion intensity
-          const intensity = emotion.intensity || 5
-          const key = `${emotion.emotion}-${intensity}`
-
-          return (
-            <Badge key={key} className="bg-amber-100 text-amber-800">
-              {emotion.emotion}
-              {intensity && <span className="ml-1 opacity-70">({intensity}/10)</span>}
-            </Badge>
-          )
-        })}
-      </div>
-    </AnalysisCard>
-  )
-}
-
-// Activities Analysis Component
-const ActivitiesAnalysis = ({ activities }: { activities?: TextAnalysis['activities'] }) => {
-  if (!activities || activities.length === 0) return null
-
-  return (
-    <AnalysisCard title="Activities" icon={<BarChart className="w-4 h-4 text-indigo-500" />}>
-      <div className="flex flex-wrap gap-2">
-        {activities.map((activity) => (
-          <Badge key={activity} className={getBadgeStyles('activities')}>
-            {activity}
-          </Badge>
-        ))}
-      </div>
-    </AnalysisCard>
-  )
-}
-
-// Habits Analysis Component
-const HabitsAnalysis = ({ habits }: { habits?: Habits }) => {
-  if (!habits) return null
-
-  return (
-    <AnalysisCard title="Habits & Routines" icon={<Repeat className="w-4 h-4 text-teal-500" />}>
-      <div className="space-y-2">
-        {habits.routines && habits.routines.length > 0 && (
-          <div>
-            <div className="text-xs text-gray-500 mb-1">Routines:</div>
-            <div className="flex flex-wrap gap-2">
-              {habits.routines.map((routine: string) => (
-                <Badge key={routine} className={getBadgeStyles('habits')}>
-                  {routine}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {habits.frequency && habits.frequency.length > 0 && (
-          <div>
-            <div className="text-xs text-gray-500 mb-1">Frequency:</div>
-            <div className="flex flex-wrap gap-2">
-              {habits.frequency.map((freq: string) => (
-                <Badge key={freq} className="bg-blue-100 text-blue-700">
-                  {freq}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {habits.timePatterns && habits.timePatterns.length > 0 && (
-          <div>
-            <div className="text-xs text-gray-500 mb-1">Time Patterns:</div>
-            <div className="flex flex-wrap gap-2">
-              {habits.timePatterns.map((pattern: string) => (
-                <Badge key={pattern} className="bg-teal-100 text-teal-700">
-                  <Clock className="w-3 h-3 mr-1" /> {pattern}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </AnalysisCard>
-  )
-}
-
-// Decisions Analysis Component
-const DecisionsAnalysis = ({ decisions }: { decisions?: Decisions }) => {
-  if (!decisions) return null
-
-  return (
-    <AnalysisCard
-      title="Decisions"
-      icon={<CheckCircle className="w-4 h-4 text-green-500" />}
-      className="col-span-2"
-    >
-      <div className="space-y-3">
-        {decisions.decisions && decisions.decisions.length > 0 && (
-          <div>
-            <div className="text-xs font-medium text-gray-500 mb-1">Decisions Made:</div>
-            <ul className="list-disc pl-5 space-y-1">
-              {decisions.decisions.map((decision: string) => (
-                <li key={decision} className="text-green-700">
-                  {decision}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {decisions.alternatives && decisions.alternatives.length > 0 && (
-          <div>
-            <div className="text-xs font-medium text-gray-500 mb-1">Alternatives Considered:</div>
-            <ul className="list-disc pl-5 space-y-1">
-              {decisions.alternatives.map((alt: string) => (
-                <li key={alt} className="text-orange-600">
-                  {alt}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {decisions.reasoning && decisions.reasoning.length > 0 && (
-          <div>
-            <div className="text-xs font-medium text-gray-500 mb-1">Reasoning:</div>
-            <ul className="list-disc pl-5 space-y-1">
-              {decisions.reasoning.map((reason: string) => (
-                <li key={reason} className="text-blue-600">
-                  {reason}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    </AnalysisCard>
-  )
-}
-
-// Questions Analysis Component
-const QuestionsAnalysis = ({ questions }: { questions?: string[] }) => {
-  if (!questions || questions.length === 0) return null
-
-  return (
-    <AnalysisCard title="Questions" icon={<div className="text-purple-500">?</div>}>
-      <ul className="list-disc pl-5 space-y-1">
-        {questions.map((question) => (
-          <li key={question} className="text-purple-700">
-            {question}
-          </li>
-        ))}
-      </ul>
-    </AnalysisCard>
-  )
-}
-
-// Items Analysis Component
-const ItemsAnalysis = ({ items }: { items?: Item[] }) => {
-  if (!items || items.length === 0) return null
-
-  return (
-    <AnalysisCard title="Items" icon={<div className="text-gray-500">📦</div>}>
-      <ul className="space-y-2">
-        {items.map((item) => {
-          const key = `${item.name}-${item.quantity || 'undefined'}`
-          return (
-            <li key={key} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-              <span>{item.name}</span>
-              {item.quantity && (
-                <Badge className="bg-gray-200 text-gray-700">x{item.quantity}</Badge>
-              )}
-            </li>
-          )
-        })}
-      </ul>
-    </AnalysisCard>
-  )
-}
-
-// Main Analysis Panel Component
-const AnalysisPanel = ({ analysis }: { analysis: TextAnalysis }) => {
-  if (!analysis) return null
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      <TopicsAnalysis topics={analysis.topics} />
-      <PeopleAnalysis people={analysis.people} />
-      {analysis.locations ? <LocationsAnalysis locations={analysis.locations} /> : null}
-      <EmotionsAnalysis emotions={analysis.emotions} />
-      <ActivitiesAnalysis activities={analysis.activities} />
-      {analysis.habits ? <HabitsAnalysis habits={analysis.habits} /> : null}
-      {analysis.decisions ? <DecisionsAnalysis decisions={analysis.decisions} /> : null}
-      {analysis.questions ? <QuestionsAnalysis questions={analysis.questions} /> : null}
-      {analysis.items ? <ItemsAnalysis items={analysis.items} /> : null}
-    </div>
-  )
-}
 
 const SmartTaskInput = () => {
   const [inputValue, setInputValue] = useState('')
@@ -485,13 +142,13 @@ const SmartTaskInput = () => {
                           ))}
 
                           {/* People badges */}
-                          {note.analysis.people?.slice(0, 2).map((person: string) => (
+                          {note.analysis.people?.slice(0, 2).map((person) => (
                             <Badge
-                              key={person}
+                              key={person.fullName}
                               variant="secondary"
                               className={getBadgeStyles('persons')}
                             >
-                              @{person}
+                              @{person.fullName}
                             </Badge>
                           ))}
 
@@ -544,9 +201,12 @@ const SmartTaskInput = () => {
                                   <Users className="w-3 h-3" /> PEOPLE
                                 </div>
                                 <div className="flex flex-wrap gap-1">
-                                  {note.analysis.people.map((person: string) => (
-                                    <Badge key={person} className={getBadgeStyles('persons')}>
-                                      @{person}
+                                  {note.analysis.people.map((person) => (
+                                    <Badge
+                                      key={person.fullName}
+                                      className={getBadgeStyles('persons')}
+                                    >
+                                      @{person.fullName}
                                     </Badge>
                                   ))}
                                 </div>
@@ -557,12 +217,15 @@ const SmartTaskInput = () => {
                             {note.analysis.activities && note.analysis.activities.length > 0 && (
                               <div>
                                 <div className="text-xs text-indigo-600 font-medium mb-1 flex items-center gap-1">
-                                  <BarChart className="w-3 h-3" /> ACTIVITIES
+                                  <BarChart2 className="w-3 h-3" /> ACTIVITIES
                                 </div>
                                 <div className="flex flex-wrap gap-1">
-                                  {note.analysis.activities.map((activity: string) => (
-                                    <Badge key={activity} className={getBadgeStyles('activities')}>
-                                      {activity}
+                                  {note.analysis.activities.map((activity) => (
+                                    <Badge
+                                      key={activity.description}
+                                      className={getBadgeStyles('activities')}
+                                    >
+                                      {activity.description}
                                     </Badge>
                                   ))}
                                 </div>
@@ -573,7 +236,7 @@ const SmartTaskInput = () => {
                             {note.analysis.emotions && note.analysis.emotions?.length > 0 && (
                               <div>
                                 <div className="text-xs text-amber-600 font-medium mb-1 flex items-center gap-1">
-                                  <LineChart className="w-3 h-3" /> EMOTIONS
+                                  <BarChart2 className="w-3 h-3" /> EMOTIONS
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                   {note.analysis.emotions.map((emotion: TextAnalysisEmotion) => {

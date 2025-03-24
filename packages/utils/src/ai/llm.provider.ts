@@ -3,7 +3,7 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { ollama } from './ollama'
 
 export interface LLMProviderConfig {
-  provider: 'openai' | 'ollama' | 'lmstudio'
+  provider: 'openai' | 'ollama' | 'lmstudio' | 'google'
   model?: string
 }
 
@@ -22,9 +22,12 @@ export class LLMProvider {
   private defaultOllamaModel = 'llama3.2'
   private defaultOpenaiModel = 'gpt-4o-mini'
   private defaultLmStudioModel = 'gemma-3-12b-it'
+  private defaultGoogleModel = 'gemini-1.5-flash-latest'
 
   getModel() {
     switch (this.config.provider) {
+      case 'google':
+        return openai(this.config.model || this.defaultGoogleModel, { structuredOutputs: true })
       case 'openai':
         return openai(this.config.model || this.defaultOpenaiModel, { structuredOutputs: true })
       case 'ollama':

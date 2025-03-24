@@ -15,6 +15,7 @@
     "./nlp": "./src/nlp/index.ts",
     "./redis": "./src/redis.ts",
     "./schema": "./src/db/schema/index.ts",
+    "./schemas": "./src/schemas/index.ts",
     "./scraping": "./src/scraping/index.ts",
     "./services": "./src/services/index.ts",
     "./text": "./src/text.utils.ts",
