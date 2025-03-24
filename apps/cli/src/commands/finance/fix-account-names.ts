@@ -1,9 +1,9 @@
 import { Command } from 'commander'
 import { and, eq, isNull, like, sql } from 'drizzle-orm'
 import ora from 'ora'
-import { db } from '../../../db'
-import { accounts, transactionAccounts, transactions } from '../../../db/schema'
-import logger from '../logger'
+import { db } from '../../db'
+import { accounts, transactionAccounts, transactions } from '../../db/schema'
+import logger from './transactions/logger'
 
 interface CommandOptions {
   oldName: string

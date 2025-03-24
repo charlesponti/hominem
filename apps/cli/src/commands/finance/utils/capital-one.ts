@@ -1,4 +1,4 @@
-import type { TransactionInsert, TransactionType } from '../../db/schema'
+import type { TransactionInsert, TransactionType } from '../../../db/schema'
 
 export interface CapitalOneTransaction {
   'Account Number': string

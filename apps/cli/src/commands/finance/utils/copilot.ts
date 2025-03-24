@@ -1,6 +1,6 @@
 import { logger } from '@ponti/utils/logger'
-import { db } from '../../db'
-import { transactions } from '../../db/schema'
+import { db } from '../../../db'
+import { transactions } from '../../../db/schema'
 
 export interface CopilotTransaction {
   date: string

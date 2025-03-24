@@ -1,6 +1,6 @@
 import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
-import { db } from '../../db'
-import { transactionAccounts, transactionNames, transactions } from '../../db/schema'
+import { db } from '../../../db'
+import { transactionAccounts, transactionNames, transactions } from '../../../db/schema'
 import logger from './logger'
 
 export interface QueryOptions {

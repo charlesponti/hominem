@@ -1,8 +1,8 @@
 import { Command } from 'commander'
 import fs from 'fs-extra'
 import ora from 'ora'
-import logger from '../logger'
-import { processTransactions } from '../processor'
+import logger from './transactions/logger'
+import { processTransactions } from './transactions/processor'
 
 const command = new Command()
 

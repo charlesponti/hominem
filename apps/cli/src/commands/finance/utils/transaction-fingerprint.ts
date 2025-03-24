@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import type { Transaction } from '../../db/schema'
+import type { Transaction } from '../../../db/schema'
 
 // Transaction without account info for fingerprinting
 type TransactionFingerprint = Omit<Transaction, 'account' | 'accountMask'>

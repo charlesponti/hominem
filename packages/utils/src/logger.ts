@@ -15,7 +15,7 @@ export const LOGGER_OPTIONS: LoggerOptions = {
   timestamp: pino.stdTimeFunctions.isoTime,
   base: { service: 'api' },
   hooks: {
-    logMethod(inputArgs, method, level) {
+    logMethod(inputArgs, method) {
       if (inputArgs.length === 2 && inputArgs[1].error instanceof Error) {
         const err = inputArgs[1].error
         inputArgs[1].error = {
@@ -35,6 +35,7 @@ export const LOGGER_OPTIONS: LoggerOptions = {
           colorize: true,
           translateTime: 'SYS:standard',
           messageFormat: '{service} - {msg}',
+          singleLine: true,
         },
       },
       {

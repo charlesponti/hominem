@@ -5,8 +5,8 @@ import { DrizzleError, sql } from 'drizzle-orm'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { finished } from 'node:stream'
-import { db } from '../db'
-import { transactions } from '../db/schema'
+import { db } from '../../db'
+import { transactions } from '../../db/schema'
 import { processCopilotTransaction, type CopilotTransaction } from './utils/copilot'
 
 const PROCESSORS = {

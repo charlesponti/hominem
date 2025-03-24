@@ -1,11 +1,11 @@
 import { Command } from 'commander'
-import accountsCommand from './commands/accounts'
-import analyzeCommand from './commands/analyze'
-import buildCommand from './commands/build'
-import cleanupCommand from './commands/cleanup'
-import exportCommand from './commands/export'
-import fixAccountNamesCommand from './commands/fix-account-names'
-import queryCommand from './commands/query'
+import accountsCommand from '../accounts'
+import analyzeCommand from '../analyze'
+import buildCommand from '../build'
+import cleanupCommand from '../cleanup'
+import exportCommand from '../export'
+import fixAccountNamesCommand from '../fix-account-names'
+import queryCommand from '../query'
 
 const program = new Command()
 program.version('1.0.0')

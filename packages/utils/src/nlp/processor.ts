@@ -2,16 +2,45 @@ import { generateObject } from 'ai'
 import { z } from 'zod'
 import { LLMProvider, type LLMProviderConfig } from '../ai/llm.provider'
 
-export const PeopleSchema = z.array(z.object({ firstName: z.string(), lastName: z.string() }))
+export const PersonSchema = z
+  .object({
+    firstName: z.string(),
+    lastName: z.string().nullable(),
+    fullName: z.string().describe('Name of the person'),
+    role: z.string().describe('Role of the person in the context'),
+  })
+  .describe('people mentioned in the text')
+export const PeopleSchema = z.array(PersonSchema)
 export type People = z.infer<typeof PeopleSchema>
+
+// Event Schema
+export const EventSchema = z
+  .array(
+    z.object({
+      type: z.string().describe('Type of event'),
+      description: z.string().describe('Description of the event'),
+      raw: z.string().describe('Raw event content'),
+      timestamp: z.string().nullable(),
+    })
+  )
+  .describe('Activity mentioned in the text')
+export const ActivitiesSchema = z.array(EventSchema)
+
+export const ThoughtsSchema = z
+  .array(
+    z.object({
+      type: z.string().describe('Type of thought'),
+      description: z.string().describe('the thought mentioned'),
+    })
+  )
+  .describe('thoughts that the person had')
 
 // Decisions Schema
 export const DecisionsSchema = z.object({
-  decisions: z.array(z.string()).describe('Decisions made in the text'),
-  alternatives: z
-    .array(z.string())
-    .describe('Alternatives considered and other possible decisions'),
-  reasoning: z.array(z.string()).describe('Reasoning behind the decisions'),
+  decision: z.array(z.string()).describe('Decision made in the text'),
+  alternatives: z.array(z.string()).describe('possible positive alternatives'),
+  reasoning: z.array(z.string()).describe('Reasoning behind the decision'),
+  context: z.string().describe('Context in which the decision was made'),
 })
 export type Decisions = z.infer<typeof DecisionsSchema>
 
@@ -20,6 +49,7 @@ export const HabitsSchema = z.object({
   routines: z.array(z.string()),
   frequency: z.array(z.string()),
   timePatterns: z.array(z.string().describe('Time patterns in the cron format')),
+  triggers: z.array(z.string()).describe('Triggers for the habits'),
 })
 export type Habits = z.infer<typeof HabitsSchema>
 
@@ -48,39 +78,36 @@ export const LocationSchema = z.object({
     .string()
     .describe('One of seven continents (e.g., "Europe", "North America", "Asia")'),
 })
+export const LocationsSchema = z.array(LocationSchema).describe('Locations mentioned in the text')
 
-const comparisonsSchema = z
+export const TimestampSchema = z
+  .string()
+  .describe('Timestamp of the analysis in ISO format, e.g. 2022-01-01T00:00:00Z')
+
+export const comparisonsSchema = z
   .array(z.array(z.string()))
-  .nullable()
   .describe(
     'Comparisons between items. Example output: [["item1", "item2", "item3"], ["item4", "item5"]'
   )
 
 export const TextAnalysisSchema = z.object({
   questions: z.array(z.string()).nullable(),
-  items: z
-    .array(
-      z.object({
-        name: z.string(),
-        quantity: z.number(),
-      })
-    )
-    .describe('Physical items mentioned in the text')
-    .nullable(),
-  locations: z.array(LocationSchema).describe('Locations mentioned in the text').nullable(),
-  emotions: z.array(TextAnalysisEmotionSchema).nullable().default([]),
-  people: z.array(z.string()).describe('People mentioned in the text').nullable().default([]),
-  activities: z
-    .array(z.string())
-    .describe('Activities mentioned in the text')
-    .nullable()
-    .default([]),
+  // items: z
+  //   .array(
+  //     z.object({
+  //       name: z.string(),
+  //       quantity: z.number(),
+  //     })
+  //   )
+  //   .describe('Physical items mentioned in the text')
+  //   .nullable(),
+  locations: LocationsSchema.nullable(),
+  emotions: z.array(TextAnalysisEmotionSchema).nullable(),
+  people: PeopleSchema,
+  activities: ActivitiesSchema.nullable(),
   decisions: DecisionsSchema.nullable(),
-  habits: HabitsSchema.nullable(),
   topics: z.array(z.string()).describe('Topics mentioned in the text'),
-  timestamp: z
-    .string()
-    .describe('Timestamp of the analysis in ISO format, e.g. 2022-01-01T00:00:00Z'),
+  timestamp: TimestampSchema.nullable(),
 })
 export type TextAnalysis = z.infer<typeof TextAnalysisSchema>
 
@@ -89,8 +116,8 @@ export class NLPProcessor {
 
   constructor(config: LLMProviderConfig) {
     this.config = config || {
-      provider: 'openai',
-      model: 'gpt-4o-mini',
+      provider: 'google',
+      model: 'gemini-1.5-flash-latest',
     }
   }
 

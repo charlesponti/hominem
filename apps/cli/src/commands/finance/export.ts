@@ -1,8 +1,8 @@
 import { Command } from 'commander'
 import ora from 'ora'
 import path from 'path'
-import { exportTransactionsToCSV } from '../exporter'
-import logger from '../logger'
+import { exportTransactionsToCSV } from './transactions/exporter'
+import logger from './transactions/logger'
 
 const command = new Command()
 
@@ -15,23 +15,25 @@ command
   .option('--category <category>', 'Filter by category')
   .action(async (options) => {
     const spinner = ora('Exporting transactions').start()
-    
+
     try {
-      const outputPath = path.isAbsolute(options.output) 
-        ? options.output 
+      const outputPath = path.isAbsolute(options.output)
+        ? options.output
         : path.join(process.cwd(), options.output)
-        
+
       const count = await exportTransactionsToCSV(outputPath, {
         fromDate: options.from,
         toDate: options.to,
-        category: options.category
+        category: options.category,
       })
-      
+
       spinner.succeed(`Exported ${count} transactions to ${outputPath}`)
     } catch (error) {
       spinner.fail('Export failed')
       logger.error(error)
-      console.error(`Error exporting transactions: ${error instanceof Error ? error.message : error}`)
+      console.error(
+        `Error exporting transactions: ${error instanceof Error ? error.message : error}`
+      )
       process.exit(1)
     }
   })

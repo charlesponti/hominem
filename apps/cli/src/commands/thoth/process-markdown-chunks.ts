@@ -1,23 +1,22 @@
 import { LLMProvider } from '@ponti/utils/llm'
 import logger from '@ponti/utils/logger'
+import { TextAnalysisSchema } from '@ponti/utils/nlp'
 import { generateObject } from 'ai'
 import { Command } from 'commander'
 import { createWriteStream } from 'fs-extra'
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import process from 'node:process'
 import ora from 'ora'
-import { nullable, z } from 'zod'
 import { getPathFiles } from '../../utils/get-path-files'
+import { MarkdownProcessor } from './markdown/markdown-processor'
 
-// New interface for chunk processing options
 interface ProcessMarkdownChunksOptions {
   output: string
   model: string
   provider: LLMProvider['config']['provider']
 }
 
-// New command for processing markdown chunks
 export const processMarkdownChunksCommand = new Command('process-markdown-chunks')
   .description('Process markdown files by chunks and create JSON files with NLP analysis')
   .argument('<path>', 'Path to process markdown files or directory')
@@ -26,13 +25,13 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
   .option('-p, --provider <provider>', 'NLP provider to use', 'lmstudio')
   .action(async (processPath: string, options: ProcessMarkdownChunksOptions) => {
     // Prepare output file and stream
-    const outputDir = path.resolve(__dirname, options.output)
+    const outputDir = path.resolve(process.cwd(), options.output)
     if (!(await fs.exists(outputDir))) {
       fs.mkdir(outputDir, { recursive: true })
     }
     const outputFilePath = path.join(outputDir, 'output_chunks.json')
 
-    // Initialize the JSON structure
+    // Create write stream for output file
     const outputStream = createWriteStream(outputFilePath)
     outputStream.write('[\n')
 
@@ -50,15 +49,8 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
         const fileCountText = `File: ${index} / ${files.length}`
         processorSpinner.text = `Processing ${fileCountText}`
 
-        const fileContent = await fs.readFile(file, 'utf-8')
-
-        const splitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
-          separators: ['\n\n', '#', '##', '###', '####', '#####', '######'],
-          chunkSize: 1000,
-          chunkOverlap: 20,
-        })
-
-        const splitDocuments = await splitter.createDocuments([fileContent])
+        const processor = new MarkdownProcessor()
+        const chunks = await processor.getChunks(file)
 
         const llmProvider = new LLMProvider({
           provider: options.provider,
@@ -66,68 +58,26 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
         })
 
         let chunkIndex = 0
-        for (const doc of splitDocuments) {
+        for (const chunk of chunks) {
           chunkIndex++
-          const chunkCountText = `Chunk: ${chunkIndex} / ${splitDocuments.length}`
+          const isLast = index === files.length && chunkIndex === chunks.length
+          const chunkCountText = `Chunk: ${chunkIndex} / ${chunks.length}`
           processorSpinner.text = `Processing ${fileCountText} | ${chunkCountText}`
 
           const response = await generateObject({
             model: llmProvider.getModel(),
             prompt: `
               Analyze the following journal entry and extract the elements matching the provided JSON schema.
-              
-              The user wants to know the following elements that are mentioned in the text:
-              - events: things that the person did
-              - thoughts: things that the person thought
-              - places: places that the person visited
-              - people: people mentioned
-              
-              "${doc.pageContent}"
+              "${chunk}"
               `,
-            schema: z.object({
-              events: z
-                .array(
-                  z.object({
-                    type: z.string().describe('Type of event'),
-                    description: z.string().describe('Description of the event'),
-                    raw: z.string().describe('Raw event content'),
-                    timestamp: z.string().nullable(),
-                  })
-                )
-                .describe('things that the person did'),
-              thoughts: z
-                .array(
-                  z.object({
-                    type: z.string().describe('Type of thought'),
-                    description: z.string().describe('the thought mentioned'),
-                  })
-                )
-                .describe('thoughts that the person had'),
-              places: z
-                .array(
-                  z.object({
-                    type: z.string().describe('Type of place'),
-                    name: z.string().describe('n of the place'),
-                  })
-                )
-                .describe('places that the person visited'),
-              people: z
-                .array(
-                  z.object({
-                    name: z.string().describe('Name of the person'),
-                    role: z.string().describe('Role of the person in the context'),
-                  })
-                )
-                .describe('people mentioned in the text'),
-            }),
+            schema: TextAnalysisSchema,
           })
-          const isLast = index === files.length && chunkIndex === splitDocuments.length
+
           outputStream.write(
             `${JSON.stringify(
               {
                 filePath: file,
-                chunk: doc.pageContent,
-                metadata: doc.metadata,
+                chunk: chunk,
                 ...response,
               },
               null,

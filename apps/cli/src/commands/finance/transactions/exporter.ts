@@ -1,7 +1,7 @@
 import { createObjectCsvWriter } from 'csv-writer'
 import { and, eq, gte, lte, sql } from 'drizzle-orm'
-import { db } from '../../db'
-import { transactionAccounts, transactions } from '../../db/schema'
+import { db } from '../../../db'
+import { transactionAccounts, transactions } from '../../../db/schema'
 import logger from './logger'
 
 export interface ExportOptions {

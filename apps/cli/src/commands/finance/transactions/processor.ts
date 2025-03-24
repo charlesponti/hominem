@@ -3,14 +3,14 @@ import { and, eq, isNull, or } from 'drizzle-orm'
 import fs from 'fs-extra'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
-import { db } from '../../db'
+import { db } from '../../../db'
 import {
   accounts,
   transactionAccounts,
   transactionNames,
   transactions,
   type Transaction,
-} from '../../db/schema'
+} from '../../../db/schema'
 import logger from './logger'
 
 export type TransactionInsert = typeof transactions.$inferInsert

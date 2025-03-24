@@ -1,6 +1,6 @@
 import type { BoltExport } from '@ponti/utils/services'
 import fs from 'node:fs'
-import { expect, vi, type Mock } from 'vitest'
+import { expect, vi } from 'vitest'
 
 export function mockFileSystem(inputData: unknown) {
   const mockData = JSON.stringify(inputData)

@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import processMarkdownCommand from './process-markdown'
-import processMarkdownChunkCommand from './process-markdown-chunk'
+import processMarkdownChunkCommand from './process-markdown-chunks'
 import { queryJsonCommand } from './query-json'
 
 const program = new Command()

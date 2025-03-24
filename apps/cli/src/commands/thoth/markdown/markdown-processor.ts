@@ -2,6 +2,10 @@ import { logger } from '@ponti/utils/logger'
 import type { TextAnalysis } from '@ponti/utils/nlp'
 import { getDatesFromText } from '@ponti/utils/time'
 import * as cheerio from 'cheerio'
+import {
+  MarkdownTextSplitter,
+  type RecursiveCharacterTextSplitterParams,
+} from 'langchain/text_splitter'
 import * as fs from 'node:fs/promises'
 import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
@@ -40,6 +44,17 @@ export interface ProcessedMarkdownFile {
 }
 
 export class MarkdownProcessor {
+  async getChunks(filepath: string, options?: Partial<RecursiveCharacterTextSplitterParams>) {
+    const content = await fs.readFile(filepath, 'utf-8')
+    const splitter = MarkdownTextSplitter.fromLanguage('markdown', {
+      separators: ['#', '##', '###', '####', '#####', '######'],
+      chunkSize: options?.chunkSize || 2000,
+      chunkOverlap: options?.chunkOverlap || 20,
+    })
+    const chunks = await splitter.splitText(content)
+    return chunks
+  }
+
   async processFileWithAst(filepath: string): Promise<ProcessedMarkdownFile> {
     // Check that the file exists
     if (!(await fs.stat(filepath)).isFile()) {

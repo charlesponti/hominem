@@ -1,9 +1,9 @@
 import { Command } from 'commander'
 
 // Commands
-import importTransactions from './import-transactions'
 import changeAccount from './change-account-name.ts'
-import transactionsCommand from './transactions'
+import importTransactions from './import-transactions.ts'
+import transactionsCommand from './transactions/index.ts'
 
 const program = new Command()
 program.version('1.0.0')
