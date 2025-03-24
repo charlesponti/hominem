@@ -1,11 +1,9 @@
 'use client'
 
-import type { TextAnalysis } from '@ponti/utils/nlp'
+import type { TextAnalysis } from '@ponti/utils/schemas'
 import { ActivitiesAnalysis } from './activities-analysis'
 import { DecisionsAnalysis } from './decisions-analysis'
 import { EmotionsAnalysis } from './emotions-analysis'
-// import { HabitsAnalysis } from './HabitsAnalysis'
-// import { ItemsAnalysis } from './ItemsAnalysis'
 import { LocationsAnalysis } from './locations-analysis'
 import { PeopleAnalysis } from './people-analysis'
 import { QuestionsAnalysis } from './questions-analysis'
@@ -21,10 +19,8 @@ export const AnalysisPanel = ({ analysis }: { analysis: TextAnalysis }) => {
       {analysis.locations ? <LocationsAnalysis locations={analysis.locations} /> : null}
       <EmotionsAnalysis emotions={analysis.emotions} />
       <ActivitiesAnalysis activities={analysis.activities} />
-      {/* {analysis.habits ? <HabitsAnalysis habits={analysis.habits} /> : null} */}
       {analysis.decisions ? <DecisionsAnalysis decisions={analysis.decisions} /> : null}
       {analysis.questions ? <QuestionsAnalysis questions={analysis.questions} /> : null}
-      {/* {analysis.items ? <ItemsAnalysis items={analysis.items} /> : null} */}
     </div>
   )
 }

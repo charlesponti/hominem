@@ -1,7 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import type { Locations } from '@ponti/utils/nlp'
+import type { Locations } from '@ponti/utils/schemas'
 import { MapPin } from 'lucide-react'
 import { AnalysisCard } from './analysis-card'
 import { getBadgeStyles } from './utils'

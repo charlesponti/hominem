@@ -1,121 +1,149 @@
-type TransportMethod = 'car' | 'bus' | 'train' | 'plane'
+import { tool } from 'ai'
+import { z } from 'zod'
+
+export type TransportMethod = 'car' | 'bus' | 'train' | 'plane'
 
 interface TripCost {
   type: 'transportation' | 'accommodation'
   cost: number
 }
 
-interface CalculateTripCostsParams {
-  needsTransportation: boolean
-  needsAccommodation: boolean
-  startingPoint: string
-  destination: string
-  method: TransportMethod
-  location: string
-}
-async function calculateTripCosts({
-  needsTransportation,
-  needsAccommodation,
-  startingPoint,
-  destination,
-  method,
-  location,
-}: CalculateTripCostsParams): Promise<TripCost[]> {
-  const results: TripCost[] = []
+export const calculate_trip_costs = tool({
+  description:
+    'Calculate the costs for a trip, including transportation and accommodation if needed',
+  parameters: z.object({
+    needsTransportation: z.boolean().describe('Whether transportation is needed'),
+    needsAccommodation: z.boolean().describe('Whether accommodation is needed'),
+    startingPoint: z.string().describe('Starting location'),
+    destination: z.string().describe('Destination location'),
+    method: z.enum(['car', 'bus', 'train', 'plane']).describe('Transportation method'),
+    location: z.string().describe('Location for accommodation'),
+  }),
+  async execute({
+    needsTransportation,
+    needsAccommodation,
+    startingPoint,
+    destination,
+    method,
+    location,
+  }) {
+    const results: TripCost[] = []
 
-  if (needsTransportation) {
-    const transportationCost = await calculateTransportationCosts({
-      startingPoint,
-      destination,
-      method,
-    })
-    results.push(transportationCost)
-  }
-
-  if (needsAccommodation) {
-    const accommodationCost = await calculateAccommodationCosts({ location })
-    results.push(accommodationCost)
-  }
-
-  return results
-}
-
-interface CalculateTransportationCostsParams {
-  startingPoint: string
-  destination: string
-  method: TransportMethod
-}
-async function calculateTransportationCosts(
-  params: CalculateTransportationCostsParams
-): Promise<TripCost> {
-  return new Promise((resolve, reject) => {
-    let cost = 0
-
-    switch (params.method) {
-      case 'car':
-        cost = 100
-        break
-      case 'bus':
-        cost = 300
-        break
-      case 'train':
-        cost = 200
-        break
-      case 'plane':
-        break
+    if (needsTransportation) {
+      const transportationCost = await calculate_transportation_costs.execute(
+        {
+          startingPoint,
+          destination,
+          method,
+        },
+        { messages: [], toolCallId: 'transportation_costs' }
+      )
+      results.push(transportationCost)
     }
 
-    setTimeout(() => {
-      resolve({ type: 'transportation', cost: 1000 })
-    }, 1000)
-  })
-}
+    if (needsAccommodation) {
+      const accommodationCost = await calculate_accommodation_costs.execute(
+        {
+          location,
+        },
+        { messages: [], toolCallId: 'accommodation_costs' }
+      )
+      results.push(accommodationCost)
+    }
 
-interface CalculateAccommodationCostsParams {
-  location: string
-}
-function calculateAccommodationCosts(params: CalculateAccommodationCostsParams): Promise<TripCost> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve({ type: 'accommodation', cost: 500 })
-    }, 1000)
-  })
-}
+    return results
+  },
+})
 
-interface FareDetectiveFlightData {
-  airportname: string
-  // [{year: "Jan↵2024", price: "707.9"}, {year: "Feb↵2024", price: "578.2"},…]
-  chart_data: { year: string; price: string }[]
-}
+export const calculate_transportation_costs = tool({
+  description: 'Calculate the costs of transportation based on method and route',
+  parameters: z.object({
+    startingPoint: z.string().describe('Starting location'),
+    destination: z.string().describe('Destination location'),
+    method: z.enum(['car', 'bus', 'train', 'plane']).describe('Transportation method'),
+  }),
+  async execute({ startingPoint, destination, method }) {
+    return new Promise<TripCost>((resolve) => {
+      let cost = 0
 
-interface GetHistoricalFlightDataParams {
-  origin: string
-  departure: string
-}
-async function getHistoricalFlightData({ origin, departure }: GetHistoricalFlightDataParams) {
-  const response = await fetch('https://www.faredetective.com/faredetective/chart_data', {
-    headers: {
-      accept: 'application/json, text/javascript, */*; q=0.01',
-      'accept-language': 'en-US,en;q=0.9',
-      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      priority: 'u=1, i',
-      'sec-ch-ua': '"Chromium";v="131", "Not_A Brand";v="24"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"macOS"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-origin',
-      'x-requested-with': 'XMLHttpRequest',
-      cookie: 'ci_session=8679afd5368ce911aef15e29f9bb21a7738c6acd',
-      Referer:
-        'https://www.faredetective.com/farehistory/flights-from-Los_Angeles-LAX-to-London-LHR.html',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-    },
-    body: new URLSearchParams({ arrival: origin, departure }).toString(),
-    method: 'POST',
-  })
+      switch (method) {
+        case 'car':
+          cost = 100
+          break
+        case 'bus':
+          cost = 300
+          break
+        case 'train':
+          cost = 200
+          break
+        case 'plane':
+          cost = 1000 // Adding default cost for plane
+          break
+      }
 
-  const body = (await response.json()) as FareDetectiveFlightData
+      setTimeout(() => {
+        resolve({ type: 'transportation', cost })
+      }, 200)
+    })
+  },
+})
 
-  return body
-}
+export const calculate_accommodation_costs = tool({
+  description: 'Calculate the accommodation costs for a location',
+  parameters: z.object({
+    location: z.string().describe('Location for accommodation'),
+  }),
+  async execute({ location }) {
+    return new Promise<TripCost>((resolve) => {
+      setTimeout(() => {
+        resolve({ type: 'accommodation', cost: 500 })
+      }, 1000)
+    })
+  },
+})
+
+export const get_historical_flight_data = tool({
+  description: 'Get historical flight price data between airports',
+  parameters: z.object({
+    origin: z.string().describe('Origin airport code'),
+    departure: z.string().describe('Departure airport code'),
+  }),
+  async execute({ origin, departure }) {
+    const response = await fetch('https://www.faredetective.com/faredetective/chart_data', {
+      headers: {
+        accept: 'application/json, text/javascript, */*; q=0.01',
+        'accept-language': 'en-US,en;q=0.9',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        priority: 'u=1, i',
+        'sec-ch-ua': '"Chromium";v="131", "Not_A Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'x-requested-with': 'XMLHttpRequest',
+        cookie: 'ci_session=8679afd5368ce911aef15e29f9bb21a7738c6acd',
+        Referer:
+          'https://www.faredetective.com/farehistory/flights-from-Los_Angeles-LAX-to-London-LHR.html',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+      },
+      body: new URLSearchParams({ arrival: origin, departure }).toString(),
+      method: 'POST',
+    })
+
+    interface FareDetectiveFlightData {
+      airportname: string
+      chart_data: { year: string; price: string }[]
+    }
+
+    const body = (await response.json()) as FareDetectiveFlightData
+
+    return {
+      airportName: body.airportname,
+      priceHistory: body.chart_data.map((item) => ({
+        date: item.year,
+        price: Number.parseFloat(item.price),
+      })),
+    }
+  },
+})

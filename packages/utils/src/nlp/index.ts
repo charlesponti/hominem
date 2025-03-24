@@ -1,2 +1,2 @@
-export * from './processor'
-export * from './schemas'
+export * from './processor';
+

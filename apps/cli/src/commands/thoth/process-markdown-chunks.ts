@@ -1,6 +1,6 @@
 import { LLMProvider } from '@ponti/utils/llm'
 import logger from '@ponti/utils/logger'
-import { TextAnalysisSchema } from '@ponti/utils/nlp'
+import { TextAnalysisSchema } from '@ponti/utils/schemas'
 import { generateObject } from 'ai'
 import { Command } from 'commander'
 import { createWriteStream } from 'fs-extra'

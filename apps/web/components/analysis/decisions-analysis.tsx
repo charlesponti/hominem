@@ -1,6 +1,6 @@
 'use client'
 
-import type { Decisions } from '@ponti/utils/nlp'
+import type { Decisions } from '@ponti/utils/schemas'
 import { CheckCircle } from 'lucide-react'
 import { AnalysisCard } from './analysis-card'
 

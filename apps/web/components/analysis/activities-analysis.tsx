@@ -1,7 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import type { TextAnalysis } from '@ponti/utils/nlp'
+import type { TextAnalysis } from '@ponti/utils/schemas'
 import { BarChart } from 'lucide-react'
 import { AnalysisCard } from './analysis-card'
 import { getBadgeStyles } from './utils'
