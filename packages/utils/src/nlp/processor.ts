@@ -14,7 +14,7 @@ import {
   type People,
   type TextAnalysis,
   type TextAnalysisEmotion,
-} from './schemas'
+} from '../schemas'
 
 export class NLPProcessor {
   private config: LLMProviderConfig
