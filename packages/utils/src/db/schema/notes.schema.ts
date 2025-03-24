@@ -1,7 +1,7 @@
 import { foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm/relations'
 import type { z } from 'zod'
-import type { TextAnalysisSchema } from '../../nlp/processor'
+import type { TextAnalysisSchema } from '../../schemas'
 import { users } from './users.schema'
 
 export const notes = pgTable(
