@@ -102,6 +102,11 @@ export const calculate_accommodation_costs = tool({
   },
 })
 
+interface HistoricalFlightData {
+  airportname: string
+  chart_data: { year: string; price: string }[]
+}
+
 export const get_historical_flight_data = tool({
   description: 'Get historical flight price data between airports',
   parameters: z.object({
@@ -123,27 +128,15 @@ export const get_historical_flight_data = tool({
         'sec-fetch-site': 'same-origin',
         'x-requested-with': 'XMLHttpRequest',
         cookie: 'ci_session=8679afd5368ce911aef15e29f9bb21a7738c6acd',
-        Referer:
-          'https://www.faredetective.com/farehistory/flights-from-Los_Angeles-LAX-to-London-LHR.html',
+        Referer: 'https://www.faredetective.com/farehistory',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
       },
       body: new URLSearchParams({ arrival: origin, departure }).toString(),
       method: 'POST',
     })
 
-    interface FareDetectiveFlightData {
-      airportname: string
-      chart_data: { year: string; price: string }[]
-    }
+    const body = (await response.json()) as HistoricalFlightData
 
-    const body = (await response.json()) as FareDetectiveFlightData
-
-    return {
-      airportName: body.airportname,
-      priceHistory: body.chart_data.map((item) => ({
-        date: item.year,
-        price: Number.parseFloat(item.price),
-      })),
-    }
+    return body
   },
 })

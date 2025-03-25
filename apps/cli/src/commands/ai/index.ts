@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import * as fs from 'node:fs'
 import { z } from 'zod'
 import { lmstudio } from '../../utils/lmstudio'
+import { get_historical_flight_data } from './transportation.tools'
 
 export const command = new Command()
 
@@ -45,4 +46,49 @@ command
     } catch (error) {
       logger.error(`Error reading or processing PDF: ${error}`)
     }
+  })
+
+command
+  .command('flights')
+  .requiredOption('--origin <origin city>', 'Origin city')
+  .requiredOption('--destination <destination city>', 'Destination city')
+  .action(async (options) => {
+    const response = await generateObject({
+      model: lmstudio('gemma-3-12b-it'),
+      prompt: `
+        Based on the following, return the primary airport code for these locations: 
+        
+        Origin: ${options.origin}
+        Destination: ${options.destination}
+
+        For instance, New York City would return JFK, and Los Angeles would return LAX.
+        If there are multiple airports, return the one that is most commonly used for international flights.
+        If you cannot find the airport code, return "unknown".
+        If you are unsure, return "unknown".
+      `,
+      schema: z.object({
+        originCode: z.string(),
+        departureCode: z.string(),
+      }),
+    })
+    const { originCode, departureCode } = response.object
+    logger.info(`Finding flights from ${originCode} to ${departureCode}`)
+
+    const flightData = await get_historical_flight_data.execute(
+      {
+        origin: originCode,
+        departure: departureCode,
+      },
+      { messages: [], toolCallId: 'get_flights' }
+    )
+    const { chart_data: prices } = flightData
+    if (prices.length === 0) {
+      logger.info('No flight data found.')
+      return
+    }
+    const avgPrice =
+      prices.reduce((acc, data) => acc + Number.parseFloat(data.price), 0) / prices.length
+    logger.info(
+      `The average price to fly from ${originCode} to ${departureCode} is $${avgPrice.toFixed(2)}`
+    )
   })

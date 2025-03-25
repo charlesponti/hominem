@@ -26,9 +26,7 @@
     "noUncheckedIndexedAccess": true
   },
   "include": [
-    "src/**/*",
-    "../../apps/cli/src/commands/ai/event-info.agent.ts",
-    "../../apps/cli/src/commands/ai/tour.tools.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
