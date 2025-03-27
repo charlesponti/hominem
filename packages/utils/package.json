@@ -40,7 +40,7 @@
     "compromise": "^14.14.4",
     "csvtojson": "^2.0.10",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.39.2",
+    "drizzle-orm": "^0.40.0",
     "drizzle-zod": "^0.7.0",
     "google-auth-library": "9.15.1",
     "googleapis": "144.0.0",
