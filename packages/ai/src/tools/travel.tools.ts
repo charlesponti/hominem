@@ -4,7 +4,6 @@ import { tool } from 'ai'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
-// Flight tools
 export const create_flight = tool({
   description: 'Create a new flight record',
   parameters: z.object({
@@ -115,7 +114,6 @@ export const delete_flight = tool({
   },
 })
 
-// Hotel tools
 export const create_hotel = tool({
   description: 'Create a new hotel booking record',
   parameters: z.object({
@@ -236,7 +234,6 @@ export const delete_hotel = tool({
   },
 })
 
-// Transport tools
 export const create_transport = tool({
   description: 'Create a new transport record (taxi, train, bus, etc.)',
   parameters: z.object({
@@ -349,7 +346,6 @@ export const delete_transport = tool({
   },
 })
 
-// Activity tools
 export const create_activity = tool({
   description: 'Create a new activity record (tour, attraction, event, etc.)',
   parameters: z.object({
@@ -457,5 +453,149 @@ export const delete_activity = tool({
     } catch (error) {
       return { success: false, error: String(error) }
     }
+  },
+})
+
+export interface TripCost {
+  type: 'transportation' | 'accommodation'
+  cost: number
+}
+
+export const calculate_trip_costs = tool({
+  description:
+    'Calculate the costs for a trip, including transportation and accommodation if needed',
+  parameters: z.object({
+    needsTransportation: z.boolean().describe('Whether transportation is needed'),
+    needsAccommodation: z.boolean().describe('Whether accommodation is needed'),
+    origin: z.string().describe('Starting location'),
+    destination: z.string().describe('Destination location'),
+    method: z.enum(['car', 'bus', 'train', 'plane']).describe('Transportation method'),
+    location: z.string().describe('Location for accommodation'),
+  }),
+  async execute({
+    needsTransportation,
+    needsAccommodation,
+    origin,
+    destination,
+    method,
+    location,
+  }) {
+    const results: TripCost[] = []
+
+    if (needsTransportation) {
+      const transportationCost = await calculate_transportation_costs.execute(
+        {
+          origin,
+          destination,
+          method,
+        },
+        { messages: [], toolCallId: 'transportation_costs' }
+      )
+      results.push(transportationCost)
+    }
+
+    if (needsAccommodation) {
+      const accommodationCost = await calculate_accommodation_costs.execute(
+        {
+          location,
+        },
+        { messages: [], toolCallId: 'accommodation_costs' }
+      )
+      results.push(accommodationCost)
+    }
+
+    return results
+  },
+})
+
+export const calculate_transportation_costs = tool({
+  description: 'Calculate the costs of transportation based on method and route',
+  parameters: z.object({
+    origin: z.string().describe('Starting location'),
+    destination: z.string().describe('Destination location'),
+    method: z.enum(['car', 'bus', 'train', 'plane']).describe('Transportation method'),
+  }),
+  async execute({ origin, destination, method }) {
+    let cost = 0
+
+    switch (method) {
+      case 'car':
+        cost = 100
+        break
+      case 'bus':
+        cost = 300
+        break
+      case 'train':
+        cost = 200
+        break
+      case 'plane':
+        cost = await get_historical_flight_data
+          .execute({ origin, destination }, { messages: [], toolCallId: 'historical_flight_data' })
+          .then((data) => {
+            // Calculate average price from historical data
+            const prices = data.chart_data.map((item) => Number.parseFloat(item.price))
+            return prices.reduce((total, price) => total + price, 0) / prices.length
+          })
+        break
+    }
+
+    return new Promise<TripCost>((resolve) => {
+      setTimeout(() => {
+        resolve({ type: 'transportation', cost })
+      }, 200)
+    })
+  },
+})
+
+export const calculate_accommodation_costs = tool({
+  description: 'Calculate the accommodation costs for a location',
+  parameters: z.object({
+    location: z.string().describe('Location for accommodation'),
+  }),
+  async execute({ location }) {
+    return new Promise<TripCost>((resolve) => {
+      setTimeout(() => {
+        resolve({ type: 'accommodation', cost: 500 })
+      }, 1000)
+    })
+  },
+})
+
+export interface HistoricalFlightData {
+  airportname: string
+  chart_data: { year: string; price: string }[]
+}
+
+export const get_historical_flight_data = tool({
+  description: 'Get historical flight price data between airports',
+  parameters: z.object({
+    origin: z.string().describe('The airport code of the start location (LAX, JFK, etc.).'),
+    destination: z.string().describe('The airport code of the destination (LAX, JFK, etc.).'),
+  }),
+  async execute({ origin, destination }) {
+    const response = await fetch('https://www.faredetective.com/faredetective/chart_data', {
+      headers: {
+        accept: 'application/json, text/javascript, */*; q=0.01',
+        'accept-language': 'en-US,en;q=0.9',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        priority: 'u=1, i',
+        'sec-ch-ua': '"Chromium";v="131", "Not_A Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'x-requested-with': 'XMLHttpRequest',
+        cookie: 'ci_session=8679afd5368ce911aef15e29f9bb21a7738c6acd',
+        Referer: 'https://www.faredetective.com/farehistory',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+      },
+      body: new URLSearchParams({ arrival: destination, departure: origin }).toString(),
+      method: 'POST',
+    })
+
+    const body = (await response.json()) as HistoricalFlightData
+
+    return body
   },
 })
