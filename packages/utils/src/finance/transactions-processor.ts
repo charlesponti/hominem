@@ -11,7 +11,7 @@ import {
 } from '../db/schema'
 import { logger } from '../logger'
 import { withRetry } from '../with-retry'
-import { convertCopilotTransaction } from './banks/copilot'
+import { CopilotTransactionSchema, convertCopilotTransaction } from './banks/copilot'
 import {
   createNewTransaction,
   findExistingTransaction,
@@ -179,7 +179,12 @@ export async function processTransaction(
     return await withRetry({
       operation: async () => {
         // Check if transaction already exists
-        const existingTransaction = await findExistingTransaction(tx)
+        const existingTransaction = await findExistingTransaction({
+          date: tx.date,
+          amount: tx.amount,
+          type: tx.type,
+          accountMask: tx.accountMask,
+        })
 
         if (existingTransaction) {
           // Handle duplicate transaction
@@ -297,35 +302,30 @@ async function* processTransactions(
 
 // Add dry run functionality to allow validation without saving
 export async function* validateTransactions(
-  transactions: TransactionInsert[],
+  transactions: Record<string, string | null | Date | unknown>[],
   fileName: string
 ): AsyncGenerator<{
   valid: boolean
-  transaction: TransactionInsert
+  transaction: Record<string, string | null | Date | unknown>
   issue?: string
 }> {
   logger.info(`Validating ${transactions.length} transactions from ${fileName}`)
 
   for (const tx of transactions) {
     try {
-      // Basic validation checks
-      if (!tx.date) {
-        yield { valid: false, transaction: tx, issue: 'Missing date' }
-        continue
-      }
-
-      if (Number.isNaN(Number(tx.amount))) {
-        yield { valid: false, transaction: tx, issue: 'Invalid amount format' }
-        continue
-      }
-
-      if (!tx.accountId) {
-        yield { valid: false, transaction: tx, issue: 'Missing account ID' }
+      const validatedTx = CopilotTransactionSchema.safeParse(tx)
+      if (!validatedTx.success) {
+        yield { valid: false, transaction: tx, issue: validatedTx.error.errors.join(', ') }
         continue
       }
 
       // Check for existing transaction without saving
-      const existingTransaction = await findExistingTransaction(tx)
+      const existingTransaction = await findExistingTransaction({
+        date: new Date(validatedTx.data.date),
+        amount: validatedTx.data.amount,
+        type: validatedTx.data.type,
+        accountMask: validatedTx.data.account_mask,
+      })
       if (existingTransaction) {
         yield {
           valid: true,
@@ -394,7 +394,7 @@ export async function* processTransactionsFromFile({
 }
 
 type ParsedTransactions = [string, TransactionInsert][]
-async function parseTransactionString(csvString: string): Promise<ParsedTransactions> {
+export async function parseTransactionString(csvString: string): Promise<ParsedTransactions> {
   return new Promise((resolve, reject) => {
     try {
       const transactions: ParsedTransactions = []

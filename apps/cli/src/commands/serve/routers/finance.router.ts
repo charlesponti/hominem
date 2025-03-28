@@ -4,6 +4,7 @@ import {
   aggregateByMonth,
   buildWhereConditions,
   parseAmount,
+  parseTransactionString,
   processTransactionsFromString,
   progressEmitter,
   validateTransactions,
@@ -134,32 +135,16 @@ export class FinanceRouter {
 
       const startTime = Date.now()
       const decodedContent = Buffer.from(input.csvFile, 'base64').toString('utf-8')
+      const parsedCSV = await parseTransactionString(decodedContent)
 
       try {
         // When in dry run mode, do validation only
         if (input.dryRun) {
-          // Parse CSV content (simplified version)
-          const csvRows: {
-            date: string
-            amount: number
-            description: string
-            accountId: string
-          }[] = []
-          // Simple parsing implementation for validation
-          for (const line of decodedContent.split('\n').slice(1)) {
-            if (line.trim()) {
-              const values = line.split(',')
-              csvRows.push({
-                date: values[0] || '',
-                amount: Number.parseFloat(values[1] || '0'),
-                description: values[2] || '',
-                accountId: values[3] || '',
-              })
-            }
-          }
-
           // Validate transactions
-          const validator = validateTransactions(csvRows, input.fileName)
+          const validator = validateTransactions(
+            parsedCSV.map(([, tx]) => ({ ...tx, date: tx.date.toISOString() })),
+            input.fileName
+          )
           for await (const result of validator) {
             if (!result.valid) {
               summary.invalid++

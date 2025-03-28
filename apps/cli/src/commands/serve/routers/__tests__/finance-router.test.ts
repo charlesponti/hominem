@@ -1,6 +1,6 @@
 import { db } from '@ponti/utils/db'
 import { financeAccounts, transactions } from '@ponti/utils/schema'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { FinanceRouter } from '../finance.router'
 
 describe('FinanceRouter', () => {
@@ -145,11 +145,11 @@ describe('FinanceRouter', () => {
 
   describe('importTransactions', () => {
     it('should process CSV file and return summary', async () => {
-      const csvContent = `Date,Description,Amount,Category
-2023-01-03,Test Import,-25.00,Food`
+      const csvContent = `date,name,amount,status,category,parent_category,excluded,tags,type,account,account_mask,note,recurring
+2023-01-03,Test Import,-25.00,posted,Food,Dining,false,,regular,Test Account,,Test note,false`
 
       const result = await caller.importTransactions({
-        csvFiles: [Buffer.from(csvContent).toString('base64')],
+        csvFile: Buffer.from(csvContent).toString('base64'),
         fileName: 'test.csv',
       })
 

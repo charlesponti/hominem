@@ -282,12 +282,17 @@ export async function findTransactionFiles(directory: string): Promise<string[]>
   return csvFiles
 }
 
-export async function findExistingTransaction(tx: TransactionInsert) {
+export async function findExistingTransaction(tx: {
+  date: Date
+  accountMask?: string | null
+  amount: string
+  type: string
+}) {
   return await db.query.transactions.findFirst({
     where: and(
       eq(transactions.date, tx.date),
       eq(transactions.amount, tx.amount),
-      eq(transactions.type, tx.type),
+      eq(transactions.type, tx.type as TransactionInsert['type']),
       tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined
     ),
   })

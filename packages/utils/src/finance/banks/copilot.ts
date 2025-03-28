@@ -1,24 +1,26 @@
 import type { TransactionInsert } from '@/db/schema/finance.schema'
-import { logger } from '@/logger'
 import { createNewTransaction } from '@/finance/finance.service'
+import { logger } from '@/logger'
+import { z } from 'zod'
 
-export interface CopilotTransaction {
-  date: string
-  name: string
-  amount: string
-  status: string
-  category: string
-  parent_category: string | null
-  'parent category': string | null
-  excluded: 'true' | 'false' | string
-  tags: string
-  type: string
-  account: string
-  account_mask: string | null
-  'account mask': string | null
-  note: string
-  recurring: string
-}
+export const CopilotTransactionSchema = z.object({
+  date: z.string(),
+  name: z.string(),
+  amount: z.string(),
+  status: z.string(),
+  category: z.string(),
+  parent_category: z.string().nullable(),
+  'parent category': z.string().nullable(),
+  excluded: z.union([z.literal('true'), z.literal('false'), z.string()]),
+  tags: z.string(),
+  type: z.string(),
+  account: z.string(),
+  account_mask: z.string(),
+  'account mask': z.string(),
+  note: z.string(),
+  recurring: z.string(),
+})
+export type CopilotTransaction = z.infer<typeof CopilotTransactionSchema>
 
 export function translateTransactionType(type: string, amount: number): TransactionInsert['type'] {
   if (type === 'regular' && amount > 0) {
