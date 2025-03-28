@@ -44,3 +44,10 @@ interface Item {
 export function calculateCostPerTimeUnit(item: Item): number {
   return +(item.purchase_price / 3 / 365).toPrecision(4)
 }
+
+/**
+ * Parses the amount to a number.
+ */
+export function parseAmount(amount: string | number): number {
+  return typeof amount === 'string' ? Number.parseFloat(amount) : amount
+}

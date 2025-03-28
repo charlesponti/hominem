@@ -11,7 +11,15 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "composite": true
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ponti/utils/*": ["packages/utils/src/*"],
+      "@ponti/ai/*": ["packages/ai/src/*"],
+      "@cli/*": ["apps/cli/src/*"],
+      "@api/*": ["apps/api/src/*"],
+      "@web/*": ["apps/web/*"]
+    }
   },
   "include": [
     "apps/**/*.ts",
