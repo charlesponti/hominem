@@ -18,10 +18,26 @@ import rateLimitPlugin from './plugins/rate-limit'
 import shutdownPlugin from './plugins/shutdown'
 import statusPlugin from './plugins/status'
 import usersPlugin from './plugins/user'
+import { webSocketPlugin } from './websocket'
 import { companyRoutes } from './routes/company'
+import { emailMaskRoutes } from './routes/email-mask'
+import { financeRoutes } from './routes/finance-router'
 import { healthRoutes } from './routes/health'
 import { jobApplicationRoutes } from './routes/job-applications'
 import { notesRoutes } from './routes/notes'
+import { personalFinanceRoutes } from './routes/personal-finance'
+import { FastifyPluginCallback } from 'fastify'
+
+// Add cache declaration to extend Fastify types
+declare module 'fastify' {
+  interface FastifyInstance {
+    cache?: {
+      get: (key: string) => Promise<string | null>
+      set: (key: string, value: string, ttl?: number) => Promise<void>
+      del: (key: string) => Promise<void>
+    }
+  }
+}
 import { surveyRoutes } from './routes/surveys'
 import { vectorRoutes } from './routes/vector.router'
 
@@ -75,6 +91,10 @@ export async function createServer(
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(notesRoutes, { prefix: '/api/notes' })
     await server.register(vectorRoutes, { prefix: '/api/vectors' })
+    await server.register(emailMaskRoutes, { prefix: '/api/email-mask' })
+    await server.register(financeRoutes, { prefix: '/api/finance' })
+    await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })
+    await server.register(webSocketPlugin)
 
     server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
       return (data) => schema.parse(data)

@@ -274,12 +274,12 @@ export function isSimilarTransaction(tx1: TransactionInsert, tx2: TransactionIns
 export async function findTransactionFiles(directory: string): Promise<string[]> {
   logger.info(`Scanning directory: ${directory}`)
   const files = await fs.readdir(directory)
-  const csvFiles = files
+  const csvContents = files
     .filter((file) => file.endsWith('.csv') && file.startsWith('transactions-'))
     .sort() // Process files in chronological order
 
-  logger.info(`Found ${csvFiles.length} CSV files to process`)
-  return csvFiles
+  logger.info(`Found ${csvContents.length} CSV files to process`)
+  return csvContents
 }
 
 export async function findExistingTransaction(tx: {

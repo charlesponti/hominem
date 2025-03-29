@@ -1,0 +1,17 @@
+{
+  "name": "@hominem/workers",
+  "version": "0.1.0",
+  "description": "collection of worker functions",
+  "private": true,
+  "type": "module",
+  "files": [
+    "build"
+  ],
+  "dependencies": {
+    "@ponti/utils": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "5.7.3"
+  }
+}

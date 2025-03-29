@@ -6,15 +6,30 @@
     "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "downlevelIteration": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@ponti/utils/*": ["../../packages/utils/src/*"],
-      "@ponti/ai/*": ["../../packages/ai/src/*"],
-      "@/db": ["../../packages/utils/src/db"],
-      "@/logger": ["../../packages/utils/src/logger"],
-      "@/finance": ["../../packages/utils/src/finance"],
-      "@/schema": ["../../packages/utils/src/db/schema"]
+      "@/*": [
+        "src/*"
+      ],
+      "@ponti/utils/*": [
+        "../../packages/utils/src/*"
+      ],
+      "@ponti/ai/*": [
+        "../../packages/ai/src/*"
+      ],
+      "@/db": [
+        "../../packages/utils/src/db"
+      ],
+      "@/logger": [
+        "../../packages/utils/src/logger"
+      ],
+      "@/finance": [
+        "../../packages/utils/src/finance"
+      ],
+      "@/schema": [
+        "../../packages/utils/src/db/schema"
+      ]
     }
   },
   "references": [

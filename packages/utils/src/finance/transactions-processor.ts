@@ -289,7 +289,7 @@ async function* processTransactions(
       : 0
 
   // Emit completion event
-  progressEmitter.emit('complete', {
+  progressEmitter.emit('progress', {
     file: fileName,
     total: transactions.length,
     stats,
@@ -420,6 +420,15 @@ export async function parseTransactionString(csvString: string): Promise<ParsedT
   })
 }
 
+export type ProcessTransactionOptions = {
+  fileName: string
+  csvContent: string
+  deduplicateThreshold?: number
+  batchSize?: number
+  batchDelay?: number
+  maxRetries?: number
+  retryDelay?: number
+}
 export async function* processTransactionsFromString({
   fileName,
   csvContent,
