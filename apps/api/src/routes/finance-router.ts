@@ -1,11 +1,8 @@
-import { db } from '@ponti/utils/db'
 import { queryTransactions, type ProcessTransactionOptions } from '@ponti/utils/finance'
 import logger from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
-import { financeAccounts, transactions } from '@ponti/utils/schema'
 import type { ImportJob } from '@ponti/utils/types'
 import type { FastifyInstance } from 'fastify'
-import WebSocket from 'ws'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
 import { handleError } from '../utils/errors'
@@ -42,51 +39,59 @@ export async function financeRoutes(fastify: FastifyInstance) {
   })
 
   // Import transactions endpoint
-  fastify.post('/import', { preHandler: verifyAuth }, async (request, reply) => {
-    try {
-      const { userId } = request
-      if (!userId) {
-        reply.code(401)
-        return { error: 'Not authorized' }
-      }
-
-      const validated = importTransactionsSchema.parse(request.body)
-      const jobId = crypto.randomUUID()
-
+  fastify.post(
+    '/import',
+    {
+      // Increase file size limit to 5MB to account for CSV files
+      bodyLimit: 5 * 1024 * 1024,
+      preHandler: verifyAuth,
+    },
+    async (request, reply) => {
       try {
-        // Queue job in Redis-based worker system
-        const job = await queueImportJob(jobId, validated.fileName, {
-          fileName: validated.fileName,
-          csvContent: validated.csvContent, // Base64 encoded from client
-          deduplicateThreshold: validated.deduplicateThreshold,
-          batchSize: validated.batchSize || 20,
-          batchDelay: validated.batchDelay || 200,
-          maxRetries: 3,
-          retryDelay: 1000,
-        })
-
-        fastify.log.info(`Queued import job ${jobId} for ${validated.fileName}`)
-
-        return {
-          success: true,
-          jobId: job.jobId,
-          fileName: job.fileName,
-          status: job.status,
+        const { userId } = request
+        if (!userId) {
+          reply.code(401)
+          return { error: 'Not authorized' }
         }
-      } catch (workerError) {
-        fastify.log.error(`Failed to queue import job: ${workerError}`)
-        reply
-          .send({
-            success: false,
-            error: 'Failed to queue import job',
-            details: workerError instanceof Error ? workerError.message : String(workerError),
+
+        const validated = importTransactionsSchema.parse(request.body)
+        const jobId = crypto.randomUUID()
+
+        try {
+          // Queue job in Redis-based worker system
+          const job = await queueImportJob(jobId, validated.fileName, {
+            fileName: validated.fileName,
+            csvContent: validated.csvContent, // Base64 encoded from client
+            deduplicateThreshold: validated.deduplicateThreshold,
+            batchSize: validated.batchSize || 20,
+            batchDelay: validated.batchDelay || 200,
+            maxRetries: 3,
+            retryDelay: 1000,
           })
-          .code(500)
+
+          fastify.log.info(`Queued import job ${jobId} for ${validated.fileName}`)
+
+          return {
+            success: true,
+            jobId: job.jobId,
+            fileName: job.fileName,
+            status: job.status,
+          }
+        } catch (workerError) {
+          fastify.log.error(`Failed to queue import job: ${workerError}`)
+          reply
+            .send({
+              success: false,
+              error: 'Failed to queue import job',
+              details: workerError instanceof Error ? workerError.message : String(workerError),
+            })
+            .code(500)
+        }
+      } catch (error) {
+        handleError(error as Error, reply)
       }
-    } catch (error) {
-      handleError(error as Error, reply)
     }
-  })
+  )
 
   // Check import status endpoint
   fastify.get('/import/:jobId', { preHandler: verifyAuth }, async (request, reply) => {
@@ -158,43 +163,6 @@ export async function financeRoutes(fastify: FastifyInstance) {
       handleError(error as Error, reply)
     }
   })
-}
-
-// Setup WebSocket listener for real-time updates
-export function setupImportProgressWebSocket(wss: WebSocket.Server) {
-  // Subscribe to Redis channel for import progress
-  const redisSubscriber = redis.duplicate()
-
-  redisSubscriber.on('message', (channel, message) => {
-    if (channel === 'import:progress') {
-      try {
-        const progress = JSON.parse(message)
-
-        // Broadcast progress to all connected WebSocket clients
-        for (const client of wss.clients as Set<WebSocket.WebSocket>) {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(
-              JSON.stringify({
-                type: 'import:progress',
-                data: progress,
-              })
-            )
-          }
-        }
-      } catch (error) {
-        console.error('Error broadcasting WebSocket message:', error)
-      }
-    }
-  })
-
-  // Subscribe to the progress channel
-  redisSubscriber.subscribe('import:progress')
-
-  return () => {
-    // Return cleanup function
-    redisSubscriber.unsubscribe('import:progress')
-    redisSubscriber.quit()
-  }
 }
 
 /**

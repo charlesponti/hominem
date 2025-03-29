@@ -1,8 +1,10 @@
-import { IMPORT_PROGRESS_CHANNEL } from '@hominem/workers/src/import-transactions-worker'
 import { logger } from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
 import type { FastifyInstance } from 'fastify'
 import { WebSocketServer } from 'ws'
+
+// !TODO Move to @ponti/utils/consts
+const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
 // Create a WebSocket plugin
 export async function webSocketPlugin(fastify: FastifyInstance) {
@@ -23,7 +25,7 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
           if (client.readyState === WebSocket.OPEN) {
             client.send(
               JSON.stringify({
-                type: 'import:progress',
+                type: IMPORT_PROGRESS_CHANNEL,
                 data: progressData,
               })
             )
@@ -46,7 +48,10 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
     // Message handler
     ws.on('message', (message) => {
       try {
-        const data = JSON.parse(message.toString())
+        const data = JSON.parse(message.toString()) as {
+          type: string
+          message?: string
+        }
 
         // Handle different message types
         switch (data.type) {
