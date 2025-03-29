@@ -1,3 +1,4 @@
+import type { Transaction } from '@ponti/utils/schema'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
@@ -23,30 +24,24 @@ export async function financeExportRoutes(fastify: FastifyInstance) {
       }
 
       const validated = exportTransactionsSchema.parse(request.body)
-      
+
       // Export logic would go here
       // This is a placeholder implementation
       const format = validated.format
-      let exportData
-      
+
       if (format === 'csv') {
         // Create CSV data
-        exportData = 'Date,Description,Amount,Category\n'
-        // Add transaction rows
-      } else {
-        // Create JSON data
-        exportData = []
-        // Add transaction objects
-      }
-      
-      if (format === 'csv') {
+        const exportData = 'Date,Description,Amount,Category\n'
         reply.header('Content-Type', 'text/csv')
         reply.header('Content-Disposition', 'attachment; filename=transactions.csv')
-      } else {
-        reply.header('Content-Type', 'application/json')
-        reply.header('Content-Disposition', 'attachment; filename=transactions.json')
+        //!TODO Add transaction rows
+        return exportData
       }
-      
+
+      //!TODO Add transaction objects
+      const exportData: Transaction[] = []
+      reply.header('Content-Type', 'application/json')
+      reply.header('Content-Disposition', 'attachment; filename=transactions.json')
       return exportData
     } catch (error) {
       handleError(error as Error, reply)
@@ -63,34 +58,30 @@ export async function financeExportRoutes(fastify: FastifyInstance) {
       }
 
       const validated = exportTransactionsSchema.parse(request.body)
-      
+
       // Generate summary report
       // This is a placeholder implementation
       const format = validated.format
-      let summaryData
-      
+
       if (format === 'csv') {
-        // Create CSV summary data
-        summaryData = 'Category,Total Amount\n'
-        // Add category summaries
-      } else {
-        // Create JSON summary data
-        summaryData = {
-          totalIncome: 0,
-          totalExpenses: 0,
-          netCashflow: 0,
-          categorySummary: []
-        }
-      }
-      
-      if (format === 'csv') {
+        //!TODO Create CSV summary data
+        const summaryData = 'Category,Total Amount\n'
         reply.header('Content-Type', 'text/csv')
         reply.header('Content-Disposition', 'attachment; filename=summary.csv')
-      } else {
-        reply.header('Content-Type', 'application/json')
-        reply.header('Content-Disposition', 'attachment; filename=summary.json')
+        return summaryData
       }
-      
+
+      // Create JSON summary data
+      const summaryData = {
+        totalIncome: 0,
+        totalExpenses: 0,
+        netCashflow: 0,
+        categorySummary: [],
+      }
+
+      reply.header('Content-Type', 'application/json')
+      reply.header('Content-Disposition', 'attachment; filename=summary.json')
+
       return summaryData
     } catch (error) {
       handleError(error as Error, reply)
