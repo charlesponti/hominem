@@ -1,3 +1,6 @@
+/**
+ * !TODO Enable worker to set the batch progress to enable picking up where it left off
+ */
 import {
   parseTransactionString,
   processTransactionsFromCSV,
@@ -161,6 +164,12 @@ export async function processImportJob(
       endTime,
       stats: finalStats,
     })
+
+    // Remove import job from Redis
+    await redis.del(`${IMPORT_JOB_PREFIX}${jobId}`)
+    await redis.del(`${IMPORT_JOB_PREFIX}${jobId}:csv`)
+    await redis.srem(IMPORT_JOBS_LIST, jobId)
+    logger.info(`Job ${jobId} removed from Redis`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error(`Job ${jobId} failed:`, error)
