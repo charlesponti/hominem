@@ -10,16 +10,33 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 interface DatePickerProps {
+  date?: Date
+  setDate(date: Date | undefined): void
+  placeholder?: string
   value?: Date
-  onDateSelect(date: Date | undefined): void
+  onDateSelect?(date: Date | undefined): void
 }
-export function DatePicker({ value, onDateSelect }: DatePickerProps) {
-  const [date, setDate] = React.useState<Date | undefined>(value)
+export function DatePicker({
+  date,
+  setDate,
+  placeholder = 'Pick a date',
+  value,
+  onDateSelect,
+}: DatePickerProps) {
+  // For backward compatibility
+  const [internalDate, setInternalDate] = React.useState<Date | undefined>(value)
 
-  const handleDateSelect = (date: Date | undefined) => {
-    setDate(date)
-    onDateSelect(date)
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    if (onDateSelect) {
+      setInternalDate(selectedDate)
+      onDateSelect(selectedDate)
+    } else {
+      setDate(selectedDate)
+    }
   }
+
+  // Determine which date to use
+  const displayDate = date !== undefined ? date : internalDate
 
   return (
     <Popover>
@@ -28,15 +45,15 @@ export function DatePicker({ value, onDateSelect }: DatePickerProps) {
           variant={'outline'}
           className={cn(
             'w-full justify-start text-left font-normal gap-2',
-            !date && 'text-muted-foreground'
+            !displayDate && 'text-muted-foreground'
           )}
         >
           <CalendarIcon />
-          {date ? format(date, 'PPP') : <span>Pick a date</span>}
+          {displayDate ? format(displayDate, 'PPP') : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={date} onSelect={handleDateSelect} initialFocus />
+        <Calendar mode="single" selected={displayDate} onSelect={handleDateSelect} initialFocus />
       </PopoverContent>
     </Popover>
   )

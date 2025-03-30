@@ -4,6 +4,7 @@ import { auth } from '@clerk/nextjs/server'
 import { Menu } from 'lucide-react'
 import Head from 'next/head'
 import { SiteNavigation } from '../components/app-navigation'
+import './animations.css'
 import './globals.css'
 
 export default async function RootLayout({

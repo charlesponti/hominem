@@ -1,29 +1,11 @@
+import type { FileStatus, ImportJob } from '@ponti/utils/types'
 import { useState } from 'react'
-
-export type FileStatus = {
-  file: File
-  status: 'pending' | 'uploading' | 'processing' | 'done' | 'error'
-  error?: string
-  stats?: {
-    progress?: number
-    processingTime?: number
-    total?: number
-    created?: number
-    updated?: number
-    skipped?: number
-    merged?: number
-    invalid?: number
-    errors?: string[]
-  }
-}
 
 export function useImportFiles() {
   const [statuses, setStatuses] = useState<FileStatus[]>([])
 
-  const updateStatus = (file: File, status: FileStatus['status'], error?: string) => {
-    setStatuses((prev) =>
-      prev.map((item) => (item.file === file ? { ...item, status, error } : item))
-    )
+  const updateStatus = (file: File, status: Partial<FileStatus>) => {
+    setStatuses((prev) => prev.map((item) => (item.file === file ? { ...item, ...status } : item)))
   }
 
   const fileToBase64 = (file: File): Promise<string> => {
@@ -39,32 +21,50 @@ export function useImportFiles() {
     })
   }
 
-  const importFiles = async (files: File[]) => {
+  const importFiles = async (files: File[]): Promise<ImportJob[]> => {
     // Initialize statuses
-    setStatuses(files.map((f) => ({ file: f, status: 'pending' })))
-    for (const file of files) {
-      try {
-        updateStatus(file, 'uploading')
-        const base64 = await fileToBase64(file)
-        updateStatus(file, 'processing')
-        // Call the API route (assumes POST /api/finance/import exists and maps to FinanceRouter.importTransactions)
-        const response = await fetch('http://localhost:4445/trpc/finance.importTransactions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            csvFile: base64,
-            fileName: file.name,
-            deduplicateThreshold: 60,
-          }),
-        })
-        const result = await response.json()
-        updateStatus(file, 'done', result)
-      } catch (error) {
-        console.error(error)
-        updateStatus(file, 'error', "Couldn't import file")
-      }
-    }
+    setStatuses(
+      files.map((f) => ({
+        file: f,
+        status: 'uploading',
+        stats: {
+          progress: 0,
+          processingTime: 0,
+        },
+      }))
+    )
+
+    const results = await Promise.all(
+      files.map(async (file) => {
+        try {
+          const base64 = await fileToBase64(file)
+
+          const response = await fetch('/api/trpc/finance.importTransactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              csvContent: base64,
+              fileName: file.name,
+              deduplicateThreshold: 60,
+            }),
+          })
+
+          const result = (await response.json()) as ImportJob
+          updateStatus(file, { status: 'processing' })
+          return result
+        } catch (error) {
+          console.error(error)
+          updateStatus(file, {
+            status: 'error',
+            error: error instanceof Error ? error.message : "Couldn't import file",
+          })
+          throw error
+        }
+      })
+    )
+
+    return results
   }
 
-  return { statuses, importFiles }
+  return { setStatuses, statuses, importFiles, updateStatus }
 }

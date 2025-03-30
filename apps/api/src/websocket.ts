@@ -121,7 +121,7 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
 
   // Upgrade HTTP connection to WebSocket
   fastify.server.on('upgrade', (request, socket, head) => {
-    // You can add authentication/validation here
+    //!TODO Add authentication/validation
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
     })

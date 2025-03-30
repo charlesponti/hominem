@@ -1,96 +1,23 @@
 'use client'
 
 import { useFileInput } from '@/hooks/use-file-input'
-import { useImportFiles } from '@/hooks/use-import-files'
-import { useInterval } from '@/hooks/use-interval'
+import { useWebSocketImports } from '@/hooks/use-websocket-imports'
 import type { FileStatus } from '@ponti/utils/types'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, X as XIcon } from 'lucide-react'
+import { Check, X as XIcon, Wifi, WifiOff } from 'lucide-react'
 import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
-export default function ImportPage() {
+export default function SocketImportPage() {
   const { files, handleFileChange } = useFileInput()
-  const { statuses, importFiles, updateStatus, getActiveImports, checkJobStatus } = useImportFiles()
+  const { isConnected, statuses, startImport, activeJobIds } = useWebSocketImports()
   const [importStarted, setImportStarted] = useState(false)
-  const [jobIds, setJobIds] = useState<string[]>([])
-
-  // Poll for updates every second
-  useInterval(
-    async () => {
-      if (jobIds.length === 0) return
-
-      try {
-        // Fetch active imports using the updated API
-        const activeImports = await getActiveImports()
-
-        if (!activeImports || activeImports.length === 0) {
-          return
-        }
-
-        // Update statuses for each active job
-        for (const jobId of jobIds) {
-          const job = activeImports.find((j) => j.jobId === jobId)
-
-          if (job) {
-            const file = files.find((f) => f.name === job.fileName)
-            if (file) {
-              // Calculate processing time in seconds
-              const processingTime = job.endTime
-                ? (job.endTime - job.startTime) / 1000
-                : (Date.now() - job.startTime) / 1000
-
-              // Update file status with latest information
-              updateStatus(file, {
-                status: job.status,
-                stats: {
-                  ...job.stats,
-                  processingTime,
-                },
-                error: job.error,
-              })
-            }
-          } else {
-            // If job is not found in active imports, check individual status
-            try {
-              const jobStatus = await checkJobStatus(jobId)
-
-              // Update file status if found
-              const file = files.find((f) => jobStatus.fileName === f.name)
-              if (file) {
-                updateStatus(file, {
-                  status: jobStatus.status,
-                  stats: jobStatus.stats,
-                  error: jobStatus.error,
-                })
-              }
-            } catch (err) {
-              console.error(err)
-              console.warn(`Job ${jobId} not found, may have completed`)
-            }
-          }
-        }
-
-        // Stop polling if all jobs are complete or errored
-        if (
-          activeImports.every(
-            (job) => jobIds.includes(job.jobId) && (job.status === 'done' || job.status === 'error')
-          )
-        ) {
-          // Add small delay to show final stats before stopping
-          setTimeout(() => setJobIds([]), 2000)
-        }
-      } catch (error) {
-        console.error('Failed to fetch import status:', error)
-      }
-    },
-    jobIds.length > 0 ? 1000 : null // Poll every second when jobs are active
-  )
 
   const handleImport = async () => {
     setImportStarted(true)
     try {
-      const results = await importFiles(files)
-      setJobIds(results.map((r) => r.jobId))
+      await startImport(files)
     } catch (error) {
       console.error('Failed to start import:', error)
       setImportStarted(false)
@@ -99,7 +26,22 @@ export default function ImportPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
-      {/* Shadcn styled file input */}
+      {/* Connection status indicator */}
+      <div className="absolute top-2 right-2">
+        {isConnected ? (
+          <Badge variant="outline" className="flex items-center gap-1 bg-green-50">
+            <Wifi className="h-3 w-3 text-green-600" />
+            <span className="text-green-600">Connected</span>
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="flex items-center gap-1 bg-red-50">
+            <WifiOff className="h-3 w-3 text-red-600" />
+            <span className="text-red-600">Disconnected</span>
+          </Badge>
+        )}
+      </div>
+
+      {/* File upload area */}
       <div className="w-full max-w-md p-8 border-2 border-dashed rounded-lg">
         <label
           htmlFor="file-upload"
@@ -116,16 +58,27 @@ export default function ImportPage() {
           className="hidden"
         />
       </div>
-      {/* Show Import button if files are selected and not yet imported */}
+
+      {/* Import button */}
       {!importStarted && files.length > 0 && (
-        <button
+        <Button
           type="button"
           onClick={handleImport}
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+          disabled={!isConnected}
         >
-          Start Import
-        </button>
+          {isConnected ? 'Start Import' : 'Connecting...'}
+        </Button>
       )}
+
+      {/* Active imports indicator */}
+      {activeJobIds.length > 0 && (
+        <div className="mt-2 text-sm text-blue-500">
+          Processing {activeJobIds.length} active import job{activeJobIds.length > 1 ? 's' : ''}
+        </div>
+      )}
+
+      {/* Status list */}
       <AnimatePresence>
         {files.length > 0 ? (
           <motion.div
@@ -243,7 +196,7 @@ function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
   return (
     <div className="text-xs mt-1 space-y-1 text-gray-600">
       {stats.processingTime !== undefined ? (
-        <div>Time: {stats.processingTime.toFixed(1)}s</div>
+        <div>Time: {(stats.processingTime / 1000).toFixed(1)}s</div>
       ) : null}
       {stats.total !== undefined ? (
         <div className="grid grid-cols-2 gap-x-2">

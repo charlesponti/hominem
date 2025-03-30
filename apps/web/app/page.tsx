@@ -13,7 +13,6 @@ import {
   Star,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import '../app/animations.css'
 
 export default function Page() {
   const [isVisible, setIsVisible] = useState(false)
