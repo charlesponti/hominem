@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
-import { handleError } from '../utils/errors'
+import { handleError } from '../lib/errors'
 
 export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
   // Schema definitions

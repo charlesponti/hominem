@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
-import { ForbiddenError, handleError } from '../utils/errors'
+import { ForbiddenError, handleError } from '../lib/errors'
 
 const createSurveySchema = z.object({
   name: z.string(),

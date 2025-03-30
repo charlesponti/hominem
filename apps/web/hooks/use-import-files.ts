@@ -1,5 +1,5 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
-import type { FileStatus, ImportJob, ImportRequestResponse } from '@ponti/utils/types'
+import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@ponti/utils/types'
 import { useState } from 'react'
 
 export function useImportFiles() {
@@ -75,7 +75,7 @@ export function useImportFiles() {
   }
 
   // Check status of an import job
-  const checkJobStatus = async (jobId: string): Promise<ImportJob> => {
+  const checkJobStatus = async (jobId: string): Promise<ImportTransactionsJob> => {
     const response = await fetch(`/api/finance/import/${jobId}`)
     if (!response.ok) {
       throw new Error(`Failed to fetch job status: ${response.status}`)
@@ -84,7 +84,7 @@ export function useImportFiles() {
   }
 
   // Get all active import jobs
-  const getActiveImports = async (): Promise<ImportJob[]> => {
+  const getActiveImports = async (): Promise<ImportTransactionsJob[]> => {
     const response = await fetch('/api/finance/imports/active')
     if (!response.ok) {
       throw new Error(`Failed to fetch active imports: ${response.status}`)

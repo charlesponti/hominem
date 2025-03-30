@@ -4,7 +4,6 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf build",
     "dev": "bun --watch src/index.ts | pino-pretty",
     "lint": "bunx biome lint ./src",
     "start": "bun run build/src/index | pino-pretty",

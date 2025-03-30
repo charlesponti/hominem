@@ -4,7 +4,7 @@ import fp from 'fastify-plugin'
 
 const { SENTRY_DSN, SENTRY_DEBUG, NODE_ENV } = process.env as Record<string, string>
 
-const shutdownPlugin: FastifyPluginAsync = fp(async (server) => {
+const sentryPlugin: FastifyPluginAsync = fp(async (server) => {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: NODE_ENV,
@@ -42,4 +42,4 @@ const shutdownPlugin: FastifyPluginAsync = fp(async (server) => {
   })
 })
 
-export default shutdownPlugin
+export default sentryPlugin

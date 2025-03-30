@@ -56,7 +56,7 @@ export function SiteNavigation() {
 
   useEffect(() => {
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'i' && event.metaKey) {
+      if (event.key === 'i' && event.metaKey && event.shiftKey) {
         event.preventDefault()
         toggleSidebar()
       }

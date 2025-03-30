@@ -3,7 +3,7 @@ import { companies } from '@ponti/utils/schema'
 import { ilike } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../utils/errors'
+import { handleError } from '../lib/errors'
 
 const searchParamSchema = z.object({
   query: z.string().min(1),

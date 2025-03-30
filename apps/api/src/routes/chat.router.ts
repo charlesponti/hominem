@@ -9,9 +9,9 @@ import { ChatService } from 'src/services/chat.service'
 import { getPerformanceService } from 'src/services/performance.service'
 import { promptService } from 'src/services/prompt.service'
 import { HominemVectorStore } from 'src/services/vector.service'
-import { ApiError, BadRequestError, handleError } from 'src/utils/errors'
 import z from 'zod'
-import { redisCache } from '../redis'
+import { ApiError, BadRequestError, handleError } from '../lib/errors'
+import { redisCache } from '../plugins/redis'
 
 const chatMessageSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),

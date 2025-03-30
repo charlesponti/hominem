@@ -1,13 +1,23 @@
-import { useState, type ChangeEvent } from 'react'
+import { useCallback, useState, type ChangeEvent } from 'react'
 
 export function useFileInput() {
   const [files, setFiles] = useState<File[]>([])
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files))
-    }
-  }
+  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files
+    if (!fileList) return
 
-  return { files, handleFileChange }
+    const filesArray = Array.from(fileList)
+    setFiles(filesArray)
+  }, [])
+
+  const resetFiles = useCallback(() => {
+    setFiles([])
+  }, [])
+
+  return {
+    files,
+    handleFileChange,
+    resetFiles,
+  }
 }

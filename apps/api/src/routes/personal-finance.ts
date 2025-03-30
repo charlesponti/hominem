@@ -1,7 +1,22 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { handleError } from '../lib/errors'
 import { verifyAuth } from '../middleware/auth'
-import { handleError } from '../utils/errors'
+
+// Mock cost of living indices for demo
+// In production, this would use real cost of living data APIs
+const costOfLivingIndices = {
+  'New York': 100,
+  'San Francisco': 110,
+  Austin: 65,
+  Chicago: 75,
+  London: 85,
+  Tokyo: 95,
+  Berlin: 70,
+  Seattle: 90,
+  Boston: 85,
+  // Add more cities as needed
+}
 
 // Mock destination costs for demo
 // In production, this would use real travel cost APIs
@@ -307,21 +322,6 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
       if (!userId) {
         reply.code(401)
         return { error: 'Not authorized' }
-      }
-
-      // Mock cost of living indices for demo
-      // In production, this would use real cost of living data APIs
-      const costOfLivingIndices = {
-        'New York': 100,
-        'San Francisco': 110,
-        Austin: 65,
-        Chicago: 75,
-        London: 85,
-        Tokyo: 95,
-        Berlin: 70,
-        Seattle: 90,
-        Boston: 85,
-        // Add more cities as needed
       }
 
       const validated = locationComparisonSchema.parse(request.body) as {

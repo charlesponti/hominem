@@ -2,7 +2,7 @@ import type { Transaction } from '@ponti/utils/schema'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
-import { handleError } from '../utils/errors'
+import { handleError } from '../lib/errors'
 
 export async function financeExportRoutes(fastify: FastifyInstance) {
   // Schema definitions

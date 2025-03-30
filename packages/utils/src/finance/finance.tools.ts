@@ -1,4 +1,5 @@
 import { db } from '@ponti/utils/db'
+import { FinancialAccountService } from '@ponti/utils/finance'
 import { budgetCategories } from '@ponti/utils/schema'
 import { tool } from 'ai'
 import { and, eq, like } from 'drizzle-orm'
@@ -11,14 +12,12 @@ export const create_finance_account = tool({
     type: z
       .enum(['checking', 'savings', 'investment', 'credit', 'loan', 'retirement'])
       .describe('Type of account'),
-    balance: z.number().describe('Initial balance'),
-    interestRate: z.number().optional().describe('Interest rate (if applicable)'),
-    minimumPayment: z.number().optional().describe('Minimum payment (if applicable)'),
+    balance: z.string().describe('Initial balance'),
+    interestRate: z.string().optional().describe('Interest rate (if applicable)'),
+    minimumPayment: z.string().optional().describe('Minimum payment (if applicable)'),
   }),
   async execute(args) {
-    return {
-      message: `Created ${args.type} account: ${args.name} with balance ${args.balance}`,
-    }
+    return FinancialAccountService.createAccount(args)
   },
 })
 

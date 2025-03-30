@@ -1,4 +1,4 @@
-import type { FileStatus, ImportJob } from '@ponti/utils/types'
+import type { FileStatus, ImportTransactionsJob } from '@ponti/utils/types'
 import { useState } from 'react'
 
 export function useImportFiles() {
@@ -21,7 +21,7 @@ export function useImportFiles() {
     })
   }
 
-  const importFiles = async (files: File[]): Promise<ImportJob[]> => {
+  const importFiles = async (files: File[]): Promise<ImportTransactionsJob[]> => {
     // Initialize statuses
     setStatuses(
       files.map((f) => ({
@@ -49,7 +49,7 @@ export function useImportFiles() {
             }),
           })
 
-          const result = (await response.json()) as ImportJob
+          const result = (await response.json()) as ImportTransactionsJob
           updateStatus(file, { status: 'processing' })
           return result
         } catch (error) {

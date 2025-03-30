@@ -1,6 +1,4 @@
-export * from '../db/schema/activity.schema'
-export * from '../db/schema/career.schema'
-export * from '../db/schema/music.schema'
+import type { ProcessTransactionOptions } from '../finance/transactions-processor'
 
 export interface FileStatus {
   file: File
@@ -19,12 +17,20 @@ export interface FileStatus {
   }
 }
 
-export interface ImportJob {
+export interface ImportTransactionsJob {
   jobId: string
   fileName: string
   status: FileStatus['status']
   error?: string
+  options: Omit<ProcessTransactionOptions, 'fileName' | 'csvContent'>
   stats: FileStatus['stats']
   startTime: number
   endTime?: number
+}
+
+export type ImportRequestResponse = {
+  success: boolean
+  jobId: string
+  fileName: string
+  status: FileStatus['status']
 }

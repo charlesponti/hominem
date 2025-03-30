@@ -196,25 +196,7 @@ function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }) {
 function Processing({ progress }: { progress?: number }) {
   return (
     <div className="flex items-center">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{
-          repeat: Number.POSITIVE_INFINITY,
-          duration: 1,
-          ease: 'linear',
-        }}
-        className="mr-2"
-      >
-        <svg
-          className="w-5 h-5 text-blue-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <title>Processing</title>
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v16h16" />
-        </svg>
-      </motion.div>
+      <div className="loading-spinner loading h-8" />
       <div className="flex flex-col">
         <span className="text-blue-500">
           Processing {progress !== undefined ? `(${Math.round(progress)}%)` : ''}

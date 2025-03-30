@@ -1,6 +1,6 @@
-import delay from './delay'
 import { redis } from './redis'
 import { TIME_UNITS } from './time'
+import delay from './utils/delay.utils'
 
 const MAX_REQUESTS = 50
 

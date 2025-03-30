@@ -1,22 +1,15 @@
 import { parse } from 'csv-parse'
-import csvParser from 'csv-parser'
 import { EventEmitter } from 'node:events'
-import fs from 'node:fs'
-import { db } from '../db'
-import {
-  financeAccounts,
-  type FinanceAccount,
-  type FinanceAccountInsert,
-  type TransactionInsert,
-} from '../db/schema'
+import type { FinanceAccount, TransactionInsert } from '../db/schema'
 import { logger } from '../logger'
-import { withRetry } from '../with-retry'
+import { withRetry } from '../utils/retry.utils'
 import { CopilotTransactionSchema, convertCopilotTransaction } from './banks/copilot'
 import {
   createNewTransaction,
   findExistingTransaction,
   updateTransactionIfNeeded,
 } from './finance.service'
+import FinancialAccountService from './financial-account.service'
 
 // Configuration for processing
 interface ProcessingConfig {
@@ -60,33 +53,6 @@ class TransactionProcessingError extends Error {
   }
 }
 
-// Retry utility function with exponential backoff
-
-async function getAccountsMap() {
-  try {
-    const accounts = await db.select().from(financeAccounts)
-    return new Map(accounts.map((acc) => [acc.name, acc]))
-  } catch (error) {
-    logger.error('Failed to fetch accounts', error)
-    throw new Error('Failed to fetch accounts from database')
-  }
-}
-
-async function createAccount(account: FinanceAccountInsert) {
-  try {
-    const [createdAccount] = await db.insert(financeAccounts).values(account).returning()
-
-    if (!createdAccount) {
-      throw Error(`Failed to create account: ${account.name}`)
-    }
-
-    return createdAccount
-  } catch (error) {
-    logger.error(`Error creating account ${account.name}:`, error)
-    throw new Error(`Failed to create account: ${account.name}`)
-  }
-}
-
 async function processTransactionRow({
   data,
   account,
@@ -104,8 +70,7 @@ async function processTransactionRow({
 
   if (!accountsMap.get(account)) {
     try {
-      const createdAccount = await createAccount({
-        id: crypto.randomUUID(),
+      const createdAccount = await FinancialAccountService.createAccount({
         type: 'checking',
         balance: '0',
         name: account,
@@ -116,8 +81,9 @@ async function processTransactionRow({
       logger.info(`Created new account: ${account}`)
     } catch (error) {
       logger.error(`Failed to create account ${account}:`, error)
-      throw new Error(
-        `Failed to create account ${account}: ${error instanceof Error ? error.message : String(error)}`
+      throw new TransactionProcessingError(
+        `Failed to create account ${account}: ${error instanceof Error ? error.message : String(error)}`,
+        { account, error }
       )
     }
   }
@@ -125,44 +91,10 @@ async function processTransactionRow({
   return data
 }
 
-export async function parseTransactionFile(filePath: string): Promise<TransactionInsert[]> {
-  logger.info(`Parsing file: ${filePath}`)
-  try {
-    const accountsMap = await getAccountsMap()
-
-    return new Promise((resolve, reject) => {
-      const results: TransactionInsert[] = []
-
-      fs.createReadStream(filePath)
-        .pipe(csvParser())
-        .on('data', async (data) => {
-          try {
-            const transactionRow = await processTransactionRow({
-              data,
-              account: data.account,
-              accountsMap,
-            })
-            if (transactionRow) {
-              results.push(transactionRow)
-            }
-          } catch (error) {
-            logger.warn(`Skipping invalid row: ${JSON.stringify(data)}`, error)
-          }
-        })
-        .on('end', () => resolve(results))
-        .on('error', (err) => reject(err))
-    })
-  } catch (error) {
-    logger.error(`Failed to parse file ${filePath}:`, error)
-    throw error
-  }
-}
-
 type ProcessedTransaction = {
   action: 'created' | 'skipped' | 'merged' | 'updated'
   transaction: TransactionInsert
 }
-
 export async function processTransaction(
   tx: TransactionInsert,
   config: Pick<ProcessingConfig, 'maxRetries' | 'retryDelay'> = DEFAULT_PROCESSING_CONFIG
@@ -295,102 +227,14 @@ async function* processTransactions(
     stats,
   })
 
-  logger.info(
-    `Completed processing ${fileName}: ${stats.success} succeeded, ${stats.failed} failed, ${stats.retried} retried, took ${durationSeconds.toFixed(2)}s (${stats.transactionsPerSecond} tx/sec)`
-  )
-}
-
-// Add dry run functionality to allow validation without saving
-export async function* validateTransactions(
-  transactions: Record<string, string | null | Date | unknown>[],
-  fileName: string
-): AsyncGenerator<{
-  valid: boolean
-  transaction: Record<string, string | null | Date | unknown>
-  issue?: string
-}> {
-  logger.info(`Validating ${transactions.length} transactions from ${fileName}`)
-
-  for (const tx of transactions) {
-    try {
-      const validatedTx = CopilotTransactionSchema.safeParse(tx)
-      if (!validatedTx.success) {
-        yield { valid: false, transaction: tx, issue: validatedTx.error.errors.join(', ') }
-        continue
-      }
-
-      // Check for existing transaction without saving
-      const existingTransaction = await findExistingTransaction({
-        date: new Date(validatedTx.data.date),
-        amount: validatedTx.data.amount,
-        type: validatedTx.data.type,
-        accountMask: validatedTx.data.account_mask,
-      })
-      if (existingTransaction) {
-        yield {
-          valid: true,
-          transaction: tx,
-          issue: `Duplicate of transaction from ${existingTransaction.date}`,
-        }
-        continue
-      }
-
-      yield { valid: true, transaction: tx }
-    } catch (error) {
-      logger.warn(`Validation error for transaction: ${tx.description}`, error)
-      yield {
-        valid: false,
-        transaction: tx,
-        issue: error instanceof Error ? error.message : String(error),
-      }
-    }
-  }
-
-  logger.info(`Validation completed for ${fileName}`)
-}
-
-export async function* processTransactionsFromFile({
-  filePath,
-  deduplicateThreshold = DEFAULT_PROCESSING_CONFIG.deduplicateThreshold,
-  batchSize = DEFAULT_PROCESSING_CONFIG.batchSize,
-  batchDelay = DEFAULT_PROCESSING_CONFIG.batchDelay,
-}: {
-  filePath: string
-  deduplicateThreshold?: number
-  batchSize?: number
-  batchDelay?: number
-}): AsyncGenerator<
-  ProcessedTransaction & {
-    file: string
-  }
-> {
-  logger.info({
-    msg: 'Starting transaction processing',
-    filePath,
-    deduplicateThreshold,
-    batchSize,
-    batchDelay,
+  logger.info('Transaction processing completed', {
+    fileName,
+    success: stats.success,
+    failed: stats.failed,
+    retried: stats.retried,
+    duration: durationSeconds,
+    transactionsPerSecond: stats.transactionsPerSecond,
   })
-
-  try {
-    const transactions = await parseTransactionFile(filePath)
-    logger.info(`Successfully parsed ${transactions.length} transactions from ${filePath}`)
-
-    for await (const result of processTransactions(transactions, filePath, {
-      deduplicateThreshold,
-      batchSize,
-      batchDelay,
-    })) {
-      yield { ...result, file: filePath }
-    }
-  } catch (error) {
-    logger.error(`Error processing file ${filePath}:`, error)
-    throw new Error(
-      `Failed to process file ${filePath}: ${error instanceof Error ? error.message : String(error)}`
-    )
-  }
-
-  logger.info({ msg: 'Processing completed', filePath })
 }
 
 type ParsedTransactions = [string, TransactionInsert][]
@@ -404,7 +248,7 @@ export async function parseTransactionString(csvString: string): Promise<ParsedT
           reject(err)
           return
         }
-        logger.info(`Parsed ${data.length} transactions from CSV string`)
+
         for (const row of data) {
           transactions.push([row.account, convertCopilotTransaction(row)])
         }
@@ -412,12 +256,17 @@ export async function parseTransactionString(csvString: string): Promise<ParsedT
         resolve(transactions)
       })
     } catch (error) {
-      logger.error('Failed to parse transaction string:', error)
       reject(
         new Error(`CSV parsing error: ${error instanceof Error ? error.message : String(error)}`)
       )
     }
   })
+}
+
+export type ProcessTransactionResult = {
+  action: 'created' | 'skipped' | 'merged' | 'updated'
+  transaction: TransactionInsert
+  file: string
 }
 
 export type ProcessTransactionOptions = {
@@ -429,7 +278,11 @@ export type ProcessTransactionOptions = {
   maxRetries?: number
   retryDelay?: number
 }
-export async function* processTransactionsFromString({
+
+/**
+ * Convert a CSV of transactions into an array of valid transactions.
+ */
+export async function* processTransactionsFromCSV({
   fileName,
   csvContent,
   deduplicateThreshold = DEFAULT_PROCESSING_CONFIG.deduplicateThreshold,
@@ -437,19 +290,7 @@ export async function* processTransactionsFromString({
   batchDelay = DEFAULT_PROCESSING_CONFIG.batchDelay,
   maxRetries = DEFAULT_PROCESSING_CONFIG.maxRetries,
   retryDelay = DEFAULT_PROCESSING_CONFIG.retryDelay,
-}: {
-  fileName: string
-  csvContent: string
-  deduplicateThreshold?: number
-  batchSize?: number
-  batchDelay?: number
-  maxRetries?: number
-  retryDelay?: number
-}): AsyncGenerator<{
-  action: 'created' | 'skipped' | 'merged' | 'updated'
-  transaction: TransactionInsert
-  file: string
-}> {
+}: ProcessTransactionOptions): AsyncGenerator<ProcessTransactionResult> {
   logger.info({
     msg: 'Starting transaction processing from string',
     fileName,
@@ -461,11 +302,12 @@ export async function* processTransactionsFromString({
   try {
     // Parse CSV string into [account, transaction] pairs.
     const parsed = await parseTransactionString(csvContent)
-    // Get existing accountsMap.
-    const accountsMap = await getAccountsMap()
+
+    // Get existing accounts.
+    const accountsMap = await FinancialAccountService.getAccountsMap()
     logger.info(`Parsed ${parsed.length} transactions from string input`)
 
-    // Process each parsed row with processTransactionRow.
+    // Process each row.
     const transactions: TransactionInsert[] = []
     for (const [account, tx] of parsed) {
       try {

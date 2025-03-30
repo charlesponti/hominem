@@ -1,36 +1,23 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@ponti/tsconfigs/base.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
-    "composite": false,
-    "declaration": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "inlineSources": false,
-    "isolatedModules": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "noEmit": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "outDir": "build",
-    "preserveWatchOutput": true,
-    "rootDir": ".",
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "target": "ESNext"
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "downlevelIteration": true,
+    "baseUrl": ".",
   },
+  "references": [
+    {
+      "path": "../../packages/utils",
+    }
+  ],
   "include": [
-    "src/**/*"
+    "**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "**/*.spec.ts"
+    "node_modules"
   ]
 }

@@ -9,6 +9,7 @@ import {
 import type { SQLWrapper } from 'drizzle-orm'
 import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
 import fs from 'fs-extra'
+import { CopilotTransactionSchema } from './banks/copilot'
 import { parseAmount } from './finance.utils'
 import type { CategoryAggregate, DateRangeInput } from './types'
 
@@ -367,4 +368,52 @@ export async function updateTransactionIfNeeded(
   }
 
   return false
+}
+
+export async function* validateTransactions(
+  transactions: Record<string, string | null | Date | unknown>[],
+  fileName: string
+): AsyncGenerator<{
+  valid: boolean
+  transaction: Record<string, string | null | Date | unknown>
+  issue?: string
+}> {
+  logger.info(`Validating ${transactions.length} transactions from ${fileName}`)
+
+  for (const tx of transactions) {
+    try {
+      const validatedTx = CopilotTransactionSchema.safeParse(tx)
+      if (!validatedTx.success) {
+        yield { valid: false, transaction: tx, issue: validatedTx.error.errors.join(', ') }
+        continue
+      }
+
+      // Check for existing transaction without saving
+      const existingTransaction = await findExistingTransaction({
+        date: new Date(validatedTx.data.date),
+        amount: validatedTx.data.amount,
+        type: validatedTx.data.type,
+        accountMask: validatedTx.data.account_mask,
+      })
+      if (existingTransaction) {
+        yield {
+          valid: true,
+          transaction: tx,
+          issue: `Duplicate of transaction from ${existingTransaction.date}`,
+        }
+        continue
+      }
+
+      yield { valid: true, transaction: tx }
+    } catch (error) {
+      logger.warn(`Validation error for transaction: ${tx.description}`, error)
+      yield {
+        valid: false,
+        transaction: tx,
+        issue: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
+  logger.info(`Validation completed for ${fileName}`)
 }
