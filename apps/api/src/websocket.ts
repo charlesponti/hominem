@@ -1,26 +1,15 @@
-import { getActiveJobs, getQueuedJobs } from '@ponti/utils/imports'
 import { logger } from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
 import type { FastifyInstance } from 'fastify'
 import { WebSocket, WebSocketServer } from 'ws'
-
-async function handleImportsSubscribe(ws: WebSocket) {
-  const [activeJobs, queuedJobs] = await Promise.all([getActiveJobs(), getQueuedJobs()])
-  ws.send(
-    JSON.stringify({
-      type: 'import:subscribed',
-      channel: IMPORT_PROGRESS_CHANNEL,
-      data: [...activeJobs, ...queuedJobs],
-    })
-  )
-}
+import { client, getHominemUser } from './middleware/auth'
+import { wsHandlers } from './websocket/handlers'
 
 // !TODO Move to @ponti/utils/consts
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
-// Create a WebSocket plugin
 export async function webSocketPlugin(fastify: FastifyInstance) {
-  // Create WebSocket server
+  // WebSocket server. Do not need a server since this is handled by Fastify.
   const wss = new WebSocketServer({ noServer: true })
 
   // Setup Redis subscriber for real-time updates
@@ -57,54 +46,18 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
   wss.on('connection', async (ws) => {
     fastify.log.info('WebSocket client connected')
 
-    // handleImportsSubscribe(ws)
+    // Send welcome message
+    ws.send(
+      JSON.stringify({
+        type: 'info',
+        message: 'Connected to server',
+        serverTime: new Date().toISOString(),
+      })
+    )
 
-    // Message handler
+    // Message handler - now using our registry
     ws.on('message', async (message) => {
-      try {
-        const data = JSON.parse(message.toString()) as {
-          type: string
-          message?: string
-        }
-
-        fastify.log.info('Received WebSocket message:', data.type)
-        // Handle different message types
-        switch (data.type) {
-          case 'ping':
-            ws.send(JSON.stringify({ type: 'pong' }))
-            break
-
-          case 'imports:subscribe':
-            await handleImportsSubscribe(ws)
-            break
-
-          case 'chat':
-            // Handle chat messages
-            ws.send(
-              JSON.stringify({
-                type: 'chat',
-                message: `Received: ${data.message}`,
-              })
-            )
-            break
-
-          default:
-            ws.send(
-              JSON.stringify({
-                type: 'error',
-                message: 'Unknown message type',
-              })
-            )
-        }
-      } catch (error) {
-        fastify.log.error('Error processing WebSocket message:', error)
-        ws.send(
-          JSON.stringify({
-            type: 'error',
-            message: 'Invalid message format',
-          })
-        )
-      }
+      await wsHandlers.process(ws, message.toString())
     })
 
     // Error handler
@@ -116,27 +69,32 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
     ws.on('close', () => {
       fastify.log.info('WebSocket client disconnected')
     })
-
-    // Send welcome message
-    ws.send(
-      JSON.stringify({
-        type: 'info',
-        message: 'Connected to server',
-        serverTime: new Date().toISOString(),
-      })
-    )
   })
 
   // Upgrade HTTP connection to WebSocket
-  fastify.server.on('upgrade', (request, socket, head) => {
-    //!TODO Add authentication/validation
-    wss.handleUpgrade(request, socket, head, (ws) => {
+  fastify.server.on('upgrade', async (request, socket, head) => {
+    wss.handleUpgrade(request, socket, head, async (ws) => {
+      if (!request.url) return
+
+      // Authenticate the request
+      const headers = new Headers()
+      headers.append('Authorization', `Bearer ${request.url.split('token=')[1]}`)
+      const req = new Request(`http://localhost:4040${request.url}`, { headers })
+      const auth = await client.authenticateRequest(req)
+      const u = auth.toAuth()
+      const user = u?.userId ? await getHominemUser(u.userId) : null
+      if (!user) {
+        fastify.log.error('WebSocket authentication failed')
+        socket.destroy()
+        return
+      }
+
       wss.emit('connection', ws, request)
     })
   })
 
   // Clean shutdown
-  fastify.addHook('onClose', (instance, done) => {
+  fastify.addHook('onClose', (_instance, done) => {
     // Clean up Redis subscription
     redisSubscriber.unsubscribe(IMPORT_PROGRESS_CHANNEL)
     redisSubscriber.quit().finally(() => {

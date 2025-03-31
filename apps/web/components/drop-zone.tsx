@@ -11,6 +11,7 @@ interface DropZoneProps {
   onChange?: (files: File[]) => void
   accept?: string
   multiple?: boolean
+  className?: string
 }
 
 export function DropZone({
@@ -22,6 +23,7 @@ export function DropZone({
   onChange,
   accept = '.csv',
   multiple = true,
+  className,
 }: DropZoneProps) {
   // Handler for drop events - memoized to prevent recreations on each render
   const handleDrop = useCallback(
@@ -111,7 +113,8 @@ export function DropZone({
         {
           'opacity-50 pointer-events-none cursor-not-allowed': isImporting,
           'cursor-pointer': !isImporting,
-        }
+        },
+        className
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

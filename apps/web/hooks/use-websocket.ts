@@ -9,8 +9,6 @@ export type WebSocketMessage<T> = {
   message?: string
 }
 
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-const wsUrl = `${protocol}//${process.env.NEXT_PUBLIC_API_URL?.split('/')[2]}`
 let connection: WebSocket | null = null
 
 export function useWebsocket<T>() {
@@ -18,15 +16,16 @@ export function useWebsocket<T>() {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    const token = getToken()
-    const wsUrlWithAuth = token ? `${wsUrl}?token=${token}` : wsUrl
-
-    const connectWebSocket = () => {
+    const connectWebSocket = async () => {
       if (connection) {
         console.log('reusing existing websocket')
         return
       }
 
+      const token = await getToken()
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const wsUrl = `${protocol}//${process.env.NEXT_PUBLIC_API_URL?.split('/')[2]}`
+      const wsUrlWithAuth = token ? `${wsUrl}?token=${token}` : wsUrl
       const ws = new WebSocket(wsUrlWithAuth)
 
       ws.onopen = () => {

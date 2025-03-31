@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { env } from 'src/lib/env'
 
-const client = createClerkClient({
+export const client = createClerkClient({
   publishableKey: env.CLERK_PUBLISHABLE_KEY,
   secretKey: env.CLERK_SECRET_KEY,
 })

@@ -37,6 +37,9 @@
       },
       "suspicious": {
         "noConsoleLog": "warn"
+      },
+      "correctness": {
+        "noUnusedImports": "error"
       }
     }
   },

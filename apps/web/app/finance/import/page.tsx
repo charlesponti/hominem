@@ -1,17 +1,36 @@
 'use client'
 
 import { DropZone } from '@/components/drop-zone'
-import { ProgressBar } from '@/components/progress-bar'
-import { Badge } from '@/components/ui/badge'
+import { FileUploadStatus } from '@/components/file-upload-status'
+import { FileUploadStatusBadge } from '@/components/file-upload-status-badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { useFileInput } from '@/hooks/use-file-input'
 import { useImportTransactions } from '@/hooks/use-import-transactions'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 import type { FileStatus } from '@ponti/utils/types'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Wifi, WifiOff, X as XIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+
+function getStructuredStatuses(statuses: FileStatus[]) {
+  return statuses.reduce(
+    (acc, status) => {
+      if (status.status === 'processing' || status.status === 'uploading') {
+        acc.processingFiles.push(status)
+      } else if (status.status === 'queued') {
+        acc.queuedFiles.push(status)
+      } else if (status.status === 'done' || status.status === 'error') {
+        acc.completedFiles.push(status)
+      }
+      return acc
+    },
+    {
+      processingFiles: [] as typeof statuses,
+      queuedFiles: [] as typeof statuses,
+      completedFiles: [] as typeof statuses,
+    }
+  )
+}
 
 export default function TransactionImportPage() {
   const { files, handleFileChange } = useFileInput()
@@ -25,12 +44,9 @@ export default function TransactionImportPage() {
   )
 
   // Separate status entries into different categories for better UI representation
-  const processingFiles = statuses.filter(
-    (status) => status.status === 'processing' || status.status === 'uploading'
-  )
-  const queuedFiles = statuses.filter((status) => status.status === 'queued')
-  const completedFiles = statuses.filter(
-    (status) => status.status === 'done' || status.status === 'error'
+  const { processingFiles, queuedFiles, completedFiles } = useMemo(
+    () => getStructuredStatuses(statuses),
+    [statuses]
   )
 
   useEffect(() => {
@@ -68,28 +84,45 @@ export default function TransactionImportPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 relative">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8">
       {/* Connection status indicator */}
-      <div className="fixed top-4 right-4">
-        {isConnected ? (
-          <Badge variant="outline" className="flex items-center gap-1 bg-green-50">
-            <Wifi className="h-3 w-3 text-green-600" aria-hidden="true" />
-            <span className="text-green-600">Connected</span>
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="flex items-center gap-1 bg-red-50">
-            <WifiOff className="h-3 w-3 text-red-600" aria-hidden="true" />
-            <span className="text-red-600">Disconnected</span>
-          </Badge>
-        )}
-      </div>
 
-      <Card className="w-full max-w-2xl p-8 space-y-6" aria-label="File import interface">
+      <div
+        className={cn(
+          'w-full max-w-2xl mx-auto p-8 space-y-6',
+          'transition-all duration-500 ease-in-out'
+        )}
+        aria-label="File import interface"
+      >
+        {/* Title */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-2"
+        >
+          <h1 className="text-2xl font-bold text-gray-900">Import Transactions</h1>
+          <p className="text-gray-500">Drag and drop your CSV files or click to browse</p>
+        </motion.div>
+
         {/* File upload area */}
-        <div>
+        <motion.div
+          className="w-full flex justify-center"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            type: 'spring',
+            stiffness: 500,
+            damping: 30,
+            delay: 0.1,
+          }}
+        >
           <DropZone
             isImporting={isImporting}
             dragActive={dragActive}
+            className={cn(
+              'transition-all duration-300',
+              dragActive && 'scale-[1.02] border-blue-400'
+            )}
             onDrop={(files: File[]) => {
               if (files.length) {
                 handleFileChange(files)
@@ -107,31 +140,73 @@ export default function TransactionImportPage() {
             accept=".csv"
             multiple={true}
           />
-        </div>
+        </motion.div>
 
         {/* Import progress indicators */}
-        {activeJobIds.length > 0 && (
-          <output className="w-full text-sm text-primary font-medium">
-            Processing {activeJobIds.length} active import{activeJobIds.length > 1 ? 's' : ''}
-          </output>
-        )}
+        <div className="space-y-3">
+          {activeJobIds.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <output className="block w-full text-sm font-medium bg-blue-50 text-blue-700 p-3 rounded-md">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+                  Processing {activeJobIds.length} active import{activeJobIds.length > 1 ? 's' : ''}
+                </div>
+              </output>
+            </motion.div>
+          )}
 
-        {queuedFiles.length > 0 && (
-          <output className="w-full text-sm text-amber-600 font-medium">
-            {queuedFiles.length} file{queuedFiles.length > 1 ? 's' : ''} queued for processing
-          </output>
-        )}
+          {queuedFiles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <output className="block w-full text-sm font-medium bg-amber-50 text-amber-700 p-3 rounded-md">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-amber-500 rounded-full" />
+                  {queuedFiles.length} file{queuedFiles.length > 1 ? 's' : ''} queued for processing
+                </div>
+              </output>
+            </motion.div>
+          )}
+        </div>
 
         {/* Import button with loading state */}
-        <Button
-          type="button"
-          onClick={handleImport}
-          className="w-full"
-          disabled={!isConnected || isImporting || !files.length}
-          aria-busy={isImporting}
-        >
-          {isImporting ? 'Importing...' : isConnected ? 'Start Import' : 'Connecting...'}
-        </Button>
+        {files.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Button
+              type="button"
+              onClick={handleImport}
+              className={cn(
+                'w-full h-12 text-base font-medium transition-all duration-200',
+                'bg-gradient-to-r from-blue-600 to-indigo-600',
+                'hover:from-blue-700 hover:to-indigo-700',
+                'disabled:from-gray-400 disabled:to-gray-400'
+              )}
+              disabled={!isConnected || isImporting || !files.length}
+              aria-busy={isImporting}
+            >
+              {isImporting ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Importing...</span>
+                </div>
+              ) : isConnected ? (
+                <span>Start Import</span>
+              ) : (
+                <span>Connecting...</span>
+              )}
+            </Button>
+          </motion.div>
+        ) : null}
 
         <AnimatePresence>
           {/* Display queued files if any exist */}
@@ -218,7 +293,7 @@ export default function TransactionImportPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </Card>
+      </div>
     </div>
   )
 }
@@ -226,110 +301,29 @@ export default function TransactionImportPage() {
 function FileImport({ fileName, status }: { fileName: string; status?: FileStatus }) {
   return (
     <motion.li
-      className="p-4 border rounded-lg bg-gray-50"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2 }}
+      className={cn(
+        'p-4 rounded-lg',
+        'bg-white/50 backdrop-blur-sm',
+        'border border-gray-200/50',
+        'shadow-sm hover:shadow-md',
+        'transition-all duration-200 ease-in-out'
+      )}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      transition={{
+        type: 'spring',
+        stiffness: 500,
+        damping: 30,
+      }}
     >
-      <div className="flex flex-col justify-center gap-2 mb-2">
-        <span className="font-medium truncate">{fileName}</span>
+      <div className="flex flex-col justify-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="font-medium truncate flex-1">{fileName}</span>
+          <FileUploadStatusBadge status={status?.status} />
+        </div>
         {status ? <FileUploadStatus uploadStatus={status} /> : null}
       </div>
     </motion.li>
-  )
-}
-
-// Update the FileUploadStatus component to handle 'queued' status
-function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }) {
-  if (!uploadStatus) return null
-  const { status, error, stats } = uploadStatus
-
-  if (status === 'uploading' || status === 'processing') {
-    const progress = stats?.progress
-
-    return (
-      <output className="w-full flex flex-col justify-center">
-        <span className="text-blue-500 text-sm text-right">
-          Processing {progress !== undefined ? `(${Math.round(progress)}%)` : ''}
-        </span>
-        {progress ? <ProgressBar progress={progress} /> : null}
-      </output>
-    )
-  }
-
-  if (status === 'queued') {
-    return (
-      <output className="w-full flex flex-col justify-center">
-        <span className="text-amber-500 text-sm text-right">Waiting in queue</span>
-        <ProgressBar progress={0} className="bg-amber-200" />
-      </output>
-    )
-  }
-
-  if (status === 'done') {
-    return (
-      <output className="flex flex-col">
-        <ProgressBar progress={100} />
-        {stats && <ProcessingStats stats={stats} />}
-      </output>
-    )
-  }
-
-  if (status === 'error') {
-    return (
-      <output className="flex flex-col" role="alert">
-        <span className="text-red-500 flex items-center">
-          <XIcon className="w-4 h-4 mr-1" aria-hidden="true" />
-          Error: {error}
-        </span>
-      </output>
-    )
-  }
-
-  return <output>{status}</output>
-}
-
-function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
-  if (!stats || typeof stats !== 'object') return null
-
-  return (
-    <dl className="text-xs mt-1 space-y-1 text-gray-600">
-      {stats.processingTime !== undefined ? (
-        <>
-          <dt className="sr-only">Processing time</dt>
-          <dd>Time: {(stats.processingTime / 1000).toFixed(1)}s</dd>
-        </>
-      ) : null}
-      {stats.total !== undefined && Object.values(stats).length ? (
-        <div className="grid grid-cols-2 gap-x-2">
-          <ProcessingStat label="Total" value={stats.total} />
-          <ProcessingStat label="Created" value={stats.created} />
-          <ProcessingStat label="Updated" value={stats.updated} />
-          <ProcessingStat label="Skipped" value={stats.skipped} />
-          <ProcessingStat label="Merged" value={stats.merged} />
-          <ProcessingStat label="Invalid" value={stats.invalid} />
-        </div>
-      ) : null}
-
-      {stats.errors?.length && stats.errors.length > 0 ? (
-        <div>
-          <dt className="sr-only">Error count</dt>
-          <dd className="text-red-500">Errors: {stats.errors.length}</dd>
-        </div>
-      ) : null}
-    </dl>
-  )
-}
-
-function ProcessingStat({ label, value }: { label: string; value?: number }) {
-  if (value === undefined) return null
-  return (
-    <div className="flex items-center justify-between">
-      <dt className="sr-only">{label}</dt>
-      <dd className="text-primary text-xs">
-        {label}: {value}
-      </dd>
-    </div>
   )
 }
