@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { useTasks } from '@/lib/hooks/use-tasks'
 import { TaskSchema } from '@/lib/tasks/types'
 import { ListChecks, StopCircle, Timer } from 'lucide-react'
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 const TaskTimerApp = () => {
   const [currentTask, setCurrentTask] = useState('')

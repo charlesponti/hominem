@@ -8,22 +8,36 @@ import type { ZodSchema } from 'zod'
 import { env } from './lib/env'
 import adminPlugin from './plugins/admin'
 import bookmarksPlugin from './plugins/bookmarks'
-import { chatPlugin } from './plugins/chat'
-import circuitBreaker from './plugins/circuit-breaker'
 import emailPlugin from './plugins/email'
 import { invitesPlugin } from './plugins/invites'
 import listsPlugin from './plugins/lists'
 import placesPlugin from './plugins/places'
 import rateLimitPlugin from './plugins/rate-limit'
 import shutdownPlugin from './plugins/shutdown'
-import statusPlugin from './plugins/status'
-import usersPlugin from './plugins/user'
+import { chatPlugin } from './routes/chat.router'
 import { companyRoutes } from './routes/company'
+import { emailMaskRoutes } from './routes/email-mask'
+import { financeRoutes } from './routes/finance.router'
 import { healthRoutes } from './routes/health'
 import { jobApplicationRoutes } from './routes/job-applications'
 import { notesRoutes } from './routes/notes'
+import { personalFinanceRoutes } from './routes/personal-finance'
+import statusPlugin from './routes/status'
 import { surveyRoutes } from './routes/surveys'
+import usersPlugin from './routes/user.router'
 import { vectorRoutes } from './routes/vector.router'
+import { webSocketPlugin } from './websocket'
+
+// Add cache declaration to extend Fastify types
+declare module 'fastify' {
+  interface FastifyInstance {
+    cache?: {
+      get: (key: string) => Promise<string | null>
+      set: (key: string, value: string, ttl?: number) => Promise<void>
+      del: (key: string) => Promise<void>
+    }
+  }
+}
 
 export async function createServer(
   opts: FastifyServerOptions = {}
@@ -42,6 +56,7 @@ export async function createServer(
       parseOptions: {},
     } as FastifyCookieOptions)
 
+    await server.register(require('@fastify/circuit-breaker'))
     await server.register(require('@fastify/multipart'))
     await server.register(require('@fastify/helmet'))
 
@@ -59,7 +74,6 @@ export async function createServer(
     })
 
     await server.register(shutdownPlugin)
-    await server.register(circuitBreaker)
     await server.register(statusPlugin)
     await server.register(emailPlugin)
     await server.register(adminPlugin)
@@ -75,6 +89,10 @@ export async function createServer(
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(notesRoutes, { prefix: '/api/notes' })
     await server.register(vectorRoutes, { prefix: '/api/vectors' })
+    await server.register(emailMaskRoutes, { prefix: '/api/email-mask' })
+    await server.register(financeRoutes, { prefix: '/api/finance' })
+    await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })
+    await server.register(webSocketPlugin)
 
     server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
       return (data) => schema.parse(data)

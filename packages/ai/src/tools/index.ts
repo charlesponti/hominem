@@ -31,9 +31,6 @@ export * from './place.tools'
 // Health tracking tools
 export * from './health.tools'
 
-// Finance tools
-export * from './finance.tools'
-
 // Travel management tools
 export * from './travel.tools'
 
@@ -41,7 +38,6 @@ export * from './travel.tools'
 import * as bookmarkTools from './bookmarks.tools'
 import * as careerTools from './career.tools'
 import * as chatTools from './chat.tools'
-import * as financeTools from './finance.tools'
 import * as generalTools from './general'
 import * as healthTools from './health.tools'
 import * as listTools from './lists.tools'
@@ -72,7 +68,6 @@ export const locationBasedTools = {
 export const lifestyleTools = {
   ...careerTools,
   ...healthTools,
-  ...financeTools,
   ...bookmarkTools,
 }
 
@@ -94,6 +89,5 @@ export const allTools = {
   ...listTools,
   ...placeTools,
   ...healthTools,
-  ...financeTools,
   ...travelTools,
 }

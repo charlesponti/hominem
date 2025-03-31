@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
 import { DollarSign, Music } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 const calculateEarnings = (rate: number, streams: number): number => {
   return rate * streams

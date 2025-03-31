@@ -10,15 +10,9 @@ const compat = new FlatCompat({
 })
 
 const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...compat.extends('next/core-web-vitals'),
   {
     ignores: ['components/ui/*'],
-  },
-  {
-    rules: {
-      // Handled by Biome
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
   },
 ]
 

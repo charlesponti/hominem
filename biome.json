@@ -1,7 +1,15 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
   "files": {
-    "ignore": ["coverage", "dist", "build", "node_modules", ".next", ".turbo", ".vercel"],
+    "ignore": [
+      "coverage",
+      "dist",
+      "build",
+      "node_modules",
+      ".next",
+      ".turbo",
+      ".vercel"
+    ],
     "maxSize": 2000000
   },
   "formatter": {
@@ -15,13 +23,24 @@
   },
   "organizeImports": {
     "enabled": true,
-    "include": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "scratchpad/**/*.{ts,tsx}"]
+    "include": [
+      "apps/**/*.{ts,tsx}",
+      "packages/**/*.{ts,tsx}",
+      "scratchpad/**/*.{ts,tsx}"
+    ]
   },
   "linter": {
     "rules": {
       "recommended": true,
-      "complexity": { "noUselessSwitchCase": "off" },
-      "suspicious": { "noConsoleLog": "warn" }
+      "complexity": {
+        "noUselessSwitchCase": "off"
+      },
+      "suspicious": {
+        "noConsoleLog": "warn"
+      },
+      "correctness": {
+        "noUnusedImports": "error"
+      }
     }
   },
   "javascript": {
@@ -47,10 +66,25 @@
     }
   },
   "overrides": [
-    { "include": ["**/package.json"], "formatter": { "lineWidth": 1 } },
     {
-      "include": ["**/vite.config.ts"],
-      "linter": { "rules": { "suspicious": { "noConsoleLog": "off" } } }
+      "include": [
+        "**/package.json"
+      ],
+      "formatter": {
+        "lineWidth": 1
+      }
+    },
+    {
+      "include": [
+        "**/vite.config.ts"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsoleLog": "off"
+          }
+        }
+      }
     }
   ]
 }

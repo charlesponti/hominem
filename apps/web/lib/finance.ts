@@ -6,6 +6,7 @@ export const formatCurrency = (amount: number | string) => {
   }).format(typeof amount === 'string' ? Number.parseFloat(amount) : amount)
 }
 
+//!TODO Migrate to `api`
 // 2024 Federal Tax Brackets (simplified)
 export const federalBrackets = [
   { min: 0, max: 11600, rate: 0.1 },

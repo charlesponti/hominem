@@ -1,0 +1,20 @@
+.glimmer {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  background: linear-gradient(90deg, rgba(150, 150, 150, 0.4), rgba(255, 255, 255, 0.9), rgba(150, 150, 150, 0.4));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; /* Ensure text is visible with the gradient */
+  color: transparent; /* Fallback for unsupported browsers */
+  animation: glimmer 0.5s ease-in-out infinite; /* Adjusted animation duration and easing */
+}
+
+@keyframes glimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

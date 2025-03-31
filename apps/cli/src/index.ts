@@ -7,7 +7,6 @@ import { command as aiCommand } from './commands/ai/index.ts'
 import apiCommand from './commands/api-client'
 import convertCommand from './commands/convert'
 import { command as csvToJSONCommand } from './commands/csv-to-json.ts'
-import financeCommand from './commands/finance/index.ts'
 import { program as flattenDirectory } from './commands/flatten-directory.ts'
 import { command as initCommand } from './commands/init.ts'
 import scrapeCommand from './commands/scraper/scrape.ts'
@@ -27,7 +26,6 @@ async function init() {
   program.addCommand(initCommand)
   program.addCommand(scrapeCommand)
   program.addCommand(aiCommand)
-  program.addCommand(financeCommand)
   program.addCommand(googleCommand)
   program.addCommand(thothCommand)
   program.addCommand(flattenDirectory)

@@ -12,7 +12,12 @@ interface RedisPluginOptions {
   db?: number
   maxRetriesPerRequest?: number
   enableReadyCheck?: boolean
+  prefix?: string
+  ttl?: number
 }
+
+// Default TTL for cache entries
+const DEFAULT_TTL = 3600 // 1 hour
 
 /**
  * Redis cache helpers
@@ -34,9 +39,22 @@ export const redisCache = {
       logger.error('Redis set error:', error)
     }
   },
+
+  async del(redis: Redis, key: string): Promise<void> {
+    try {
+      await redis.del(key)
+    } catch (error) {
+      logger.error('Redis del error:', error)
+    }
+  },
 }
 
-const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (fastify) => {
+const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (fastify, options) => {
+  // Get prefix for cache keys
+  const prefix = options.prefix || 'api:'
+  // Get default TTL
+  const defaultTtl = options.ttl || DEFAULT_TTL
+
   redis.on('error', (err) => {
     fastify.log.error({ err }, 'Redis client error')
   })
@@ -48,6 +66,24 @@ const redisPlugin: FastifyPluginAsync<RedisPluginOptions> = async (fastify) => {
   redis.on('ready', () => {
     fastify.log.info('Redis client ready')
   })
+
+  // Initialize cache object
+  const cache = {
+    async get(key: string): Promise<string | null> {
+      return await redisCache.get(redis, `${prefix}${key}`)
+    },
+
+    async set(key: string, value: string, ttl = defaultTtl): Promise<void> {
+      await redisCache.set(redis, `${prefix}${key}`, value, ttl)
+    },
+
+    async del(key: string): Promise<void> {
+      await redisCache.del(redis, `${prefix}${key}`)
+    },
+  }
+
+  // Decorate fastify instance with cache
+  fastify.decorate('cache', cache)
 
   fastify.addHook('onClose', async (instance) => {
     if (redis.status === 'end') return

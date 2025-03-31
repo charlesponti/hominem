@@ -5,7 +5,7 @@ import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../middleware/auth'
-import { ForbiddenError, NotFoundError, handleError } from '../utils/errors'
+import { ForbiddenError, NotFoundError, handleError } from '../lib/errors'
 
 const createNoteSchema = z.object({
   content: z.string(),

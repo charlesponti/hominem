@@ -1,10 +1,6 @@
-import * as FastifyJwt from '@fastify/jwt'
 import type { MultipartFile } from '@fastify/multipart'
-import type { Session, SessionData } from '@fastify/secure-session'
 import type { User } from '@ponti/utils/schema'
 import type { MailService } from '@sendgrid/mail'
-import type { FastifyRequest } from 'fastify'
-import type { Redis } from 'ioredis'
 import type { PerformanceService } from '../services/performance.service'
 
 declare module '@fastify/secure-session' {

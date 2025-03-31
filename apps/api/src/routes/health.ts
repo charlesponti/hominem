@@ -3,7 +3,7 @@ import { health } from '@ponti/utils/schema'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../utils/errors'
+import { handleError } from '../lib/errors'
 
 const healthQuerySchema = z.object({
   userId: z.string().optional(),

@@ -2,8 +2,9 @@ import Providers from '@/components/providers'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { auth } from '@clerk/nextjs/server'
 import { Menu } from 'lucide-react'
-import Head from 'next/head';
+import Head from 'next/head'
 import { SiteNavigation } from '../components/app-navigation'
+import './animations.css'
 import './globals.css'
 
 export default async function RootLayout({
@@ -23,16 +24,19 @@ export default async function RootLayout({
         <meta name="author" content="ponti-studios" />
 
         {/* Viewport */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
       </Head>
       <body>
         <Providers>
           <div className="bg-background text-foreground min-h-screen min-w-full flex max-h-screen">
-            {userId ? <SiteNavigation /> : null}
+            <SiteNavigation />
             {/* Sidebar */}
             <div className="flex-1 flex flex-col">
               {userId ? (
-                <SidebarTrigger className="md:hidden">
+                <SidebarTrigger className="md:hidden mt-2 ml-1">
                   <div className="border border-gray-500 rounded-full">
                     <Menu size={24} />
                   </div>

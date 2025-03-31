@@ -1,26 +1,35 @@
 {
   "name": "scratchpad",
   "version": "1.0.0",
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "vitest --run"
+  },
   "devDependencies": {
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.6",
+    "@tanstack/react-router": "^1.114.27",
+    "@tanstack/router-vite-plugin": "^1.114.27",
     "@types/aws-lambda": "^8.10.134",
     "@types/mailparser": "^3.4.4",
     "@types/node": "^20.11.24",
-    "typescript": "^5.3.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "5.7.3",
     "vite": "^6.2.1",
-    "vite-plugin-node": "^3.1.0"
+    "vite-plugin-node": "^3.1.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.0.6"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.2.5",
     "@ponti/utils": "*",
     "ai": "^4.1.61",
     "aws-sdk": "^2.1574.0",
-    "axios": "^1.8.3",
+    "axios": "^1.8.4",
     "cheerio": "^1.0.0",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.4.7",
@@ -30,6 +39,7 @@
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
     "playwright": "^1.50.1",
+    "react-dom": "^19.0.0",
     "zod": "^3.24.1"
   }
 }
