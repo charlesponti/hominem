@@ -1,7 +1,6 @@
 import { queryTransactions } from '@ponti/utils/finance'
 import { getActiveJobs, getJobStatus, queueImportJob } from '@ponti/utils/imports'
-import { ImportRequestResponse } from '@ponti/utils/types'
-import type { FastifyInstance, FastifyRequest } from 'fastify'
+import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
 import { verifyAuth } from '../middleware/auth'
@@ -35,7 +34,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     min: z.string().optional(),
     max: z.string().optional(),
     account: z.string().optional(),
-    limit: z.number().optional(),
+    limit: z.coerce.number().optional(),
   })
 
   fastify.post(

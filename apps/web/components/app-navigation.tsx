@@ -14,7 +14,15 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
-import { ChevronDown, FilePen, LogOut, MessageCircle, User } from 'lucide-react'
+import {
+  ChevronDown,
+  CircleDollarSign,
+  FilePen,
+  LogOut,
+  MessageCircle,
+  UploadCloudIcon,
+  User,
+} from 'lucide-react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
@@ -36,7 +44,22 @@ const data = {
           title: 'Applications',
           icon: User,
           url: '/career/job-applications',
-          isActive: false,
+        },
+      ],
+    },
+    {
+      title: 'Finance',
+      icon: CircleDollarSign,
+      items: [
+        {
+          title: 'Transactions',
+          icon: CircleDollarSign,
+          url: '/finance/transactions',
+        },
+        {
+          title: 'Import',
+          icon: UploadCloudIcon,
+          url: '/finance/import',
         },
       ],
     },

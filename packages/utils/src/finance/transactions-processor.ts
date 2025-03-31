@@ -55,31 +55,28 @@ class TransactionProcessingError extends Error {
 }
 
 async function processTransactionRow({
-  data,
   account,
   accountsMap,
+  userId,
 }: {
-  data: TransactionInsert
   account: string
   accountsMap: Map<string, FinanceAccount>
-}) {
-  // Validate that amount is a valid number
-  if (Number.isNaN(data.amount)) {
-    logger.warn(`Invalid amount in row: ${JSON.stringify(data)}`)
-    throw Error('Invalid amount')
-  }
+  userId: string
+}): Promise<FinanceAccount> {
+  let accountEntity = accountsMap.get(account)
 
-  if (!accountsMap.get(account)) {
+  if (!accountEntity) {
     try {
-      const createdAccount = await FinancialAccountService.createAccount({
+      accountEntity = await FinancialAccountService.createAccount({
         type: 'checking',
         balance: '0',
         name: account,
         institutionId: null,
         meta: null,
+        userId,
       })
-      accountsMap.set(account, createdAccount)
-      logger.info(`Created new account: ${account}`)
+      accountsMap.set(account, accountEntity)
+      logger.info(`Created new account: ${account} for user ${userId}`)
     } catch (error) {
       logger.error(`Failed to create account ${account}:`, error)
       throw new TransactionProcessingError(
@@ -89,7 +86,7 @@ async function processTransactionRow({
     }
   }
 
-  return data
+  return accountEntity
 }
 
 type ProcessedTransaction = {
@@ -238,8 +235,11 @@ async function* processTransactions(
   })
 }
 
-type ParsedTransactions = [string, TransactionInsert][]
-export async function parseTransactionString(csvString: string): Promise<ParsedTransactions> {
+type ParsedTransactions = [string, Omit<TransactionInsert, 'accountId'>][]
+export async function parseTransactionString(
+  csvString: string,
+  userId: string
+): Promise<ParsedTransactions> {
   return new Promise((resolve, reject) => {
     try {
       const transactions: ParsedTransactions = []
@@ -251,7 +251,9 @@ export async function parseTransactionString(csvString: string): Promise<ParsedT
         }
 
         for (const row of data) {
-          transactions.push([row.account, convertCopilotTransaction(row)])
+          // Always pass the required userId
+          const transaction = convertCopilotTransaction(row, userId)
+          transactions.push([row.account, transaction])
         }
 
         resolve(transactions)
@@ -270,6 +272,7 @@ export type ProcessTransactionResult = {
   file: string
 }
 
+// Update ProcessTransactionOptions type to require userId
 /**
  * Convert a CSV of transactions into an array of valid transactions.
  */
@@ -281,7 +284,8 @@ export async function* processTransactionsFromCSV({
   batchDelay = DEFAULT_PROCESSING_CONFIG.batchDelay,
   maxRetries = DEFAULT_PROCESSING_CONFIG.maxRetries,
   retryDelay = DEFAULT_PROCESSING_CONFIG.retryDelay,
-}: ProcessTransactionOptions): AsyncGenerator<ProcessTransactionResult> {
+  userId,
+}: ProcessTransactionOptions & { userId: string }): AsyncGenerator<ProcessTransactionResult> {
   logger.info({
     msg: 'Starting transaction processing from string',
     fileName,
@@ -291,19 +295,25 @@ export async function* processTransactionsFromCSV({
   })
 
   try {
-    // Parse CSV string into [account, transaction] pairs.
-    const parsed = await parseTransactionString(csvContent)
+    const transactions: TransactionInsert[] = []
 
-    // Get existing accounts.
-    const accountsMap = await FinancialAccountService.getAccountsMap()
+    // Parse CSV string into [account, transaction] pairs.
+    const parsed = await parseTransactionString(csvContent, userId)
     logger.info(`Parsed ${parsed.length} transactions from string input`)
 
-    // Process each row.
-    const transactions: TransactionInsert[] = []
+    // Get or create account for each transaction.
+    const accountsMap = await FinancialAccountService.getAccountsMap()
     for (const [account, tx] of parsed) {
       try {
-        const processedTx = await processTransactionRow({ data: tx, account, accountsMap })
-        transactions.push(processedTx)
+        const accountEntity = await processTransactionRow({
+          account,
+          accountsMap,
+          userId,
+        })
+        transactions.push({
+          ...tx,
+          accountId: accountEntity.id,
+        })
       } catch (error) {
         logger.warn(`Skipping invalid transaction for account ${account}:`, error)
       }

@@ -28,6 +28,7 @@
   "scripts": {
     "db:generate": "bunx drizzle-kit generate",
     "migrate": "bunx drizzle-kit migrate",
+    "db:update": "bunx drizzle-kit generate && bunx drizzle-kit migrate",
     "test": "vitest --run --passWithNoTests",
     "test:watch": "vitest"
   },

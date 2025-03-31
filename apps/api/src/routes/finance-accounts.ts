@@ -1,4 +1,6 @@
-import type { FinanceAccount } from '@ponti/utils/schema'
+import { db } from '@ponti/utils/db'
+import { financeAccounts } from '@ponti/utils/schema'
+import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
@@ -35,17 +37,32 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
 
       const validated = createAccountSchema.parse(request.body)
 
-      //TODO: Implement account creation in database
-      //TODO: Validate that account with same name doesn't already exist for user
-      //TODO: Return created account from database
-      const newAccount = {
-        id: crypto.randomUUID(),
-        ...validated,
-        userId,
-        createdAt: new Date(),
+      // Check if account with same name already exists for user
+      const existingAccount = await db.query.financeAccounts.findFirst({
+        where: and(eq(financeAccounts.userId, userId), eq(financeAccounts.name, validated.name)),
+      })
+
+      if (existingAccount) {
+        reply.code(409)
+        return { error: 'Account with this name already exists' }
       }
 
-      return newAccount
+      // Create new account in database
+      const newAccount = await db
+        .insert(financeAccounts)
+        .values({
+          id: crypto.randomUUID(),
+          userId,
+          name: validated.name,
+          type: validated.type,
+          balance: validated.balance?.toString() || '0',
+          institutionId: validated.institution || null,
+          // createdAt: new Date(),
+          // updatedAt: new Date(),
+        })
+        .returning()
+
+      return newAccount[0]
     } catch (error) {
       handleError(error as Error, reply)
     }
@@ -60,11 +77,11 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
         return { error: 'Not authorized' }
       }
 
-      //!TODO Fetch accounts logic goes here
-      //TODO: Implement database query to fetch all accounts for userId
-      //TODO: Add pagination support
-      //TODO: Add filtering by account type
-      const accounts: FinanceAccount[] = []
+      // Fetch accounts from database for the user
+      const accounts = await db.query.financeAccounts.findMany({
+        where: eq(financeAccounts.userId, userId),
+        orderBy: (accounts) => accounts.name,
+      })
 
       return accounts
     } catch (error) {
@@ -83,10 +100,10 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
 
       const { id } = request.params as { id: string }
 
-      // Fetch account logic goes here
-      //TODO: Implement database query to fetch account by id
-      //TODO: Verify account belongs to userId
-      const account = null
+      // Fetch account from database
+      const account = await db.query.financeAccounts.findFirst({
+        where: and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)),
+      })
 
       if (!account) {
         reply.code(404)
@@ -111,18 +128,44 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
       const { id } = request.params as { id: string }
       const validated = updateAccountSchema.parse(request.body)
 
-      // Update account logic goes here
-      //TODO: Verify account exists and belongs to userId
-      //TODO: Implement database update for account
-      //TODO: Return updated account from database
-      const updatedAccount = {
-        id,
-        ...validated,
-        userId,
-        updatedAt: new Date(),
+      // Check if account exists and belongs to user
+      const existingAccount = await db.query.financeAccounts.findFirst({
+        where: and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)),
+      })
+
+      if (!existingAccount) {
+        reply.code(404)
+        return { error: 'Account not found' }
       }
 
-      return updatedAccount
+      // If name is being changed, check if new name conflicts with existing account
+      if (validated.name && validated.name !== existingAccount.name) {
+        const nameConflict = await db.query.financeAccounts.findFirst({
+          where: and(
+            eq(financeAccounts.userId, userId),
+            eq(financeAccounts.name, validated.name),
+            eq(financeAccounts.id, id)
+          ),
+        })
+
+        if (nameConflict) {
+          reply.code(409)
+          return { error: 'Another account with this name already exists' }
+        }
+      }
+
+      // Update account in database
+      const updatedAccount = await db
+        .update(financeAccounts)
+        .set({
+          ...validated,
+          balance: validated.balance?.toString() || existingAccount.balance,
+          // updatedAt: new Date(),s
+        })
+        .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)))
+        .returning()
+
+      return updatedAccount[0]
     } catch (error) {
       handleError(error as Error, reply)
     }
@@ -139,12 +182,25 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
 
       const { id } = request.params as { id: string }
 
-      // Delete account logic goes here
-      //TODO: Verify account exists and belongs to userId
-      //TODO: Implement database deletion
-      //TODO: Handle cascading deletions if needed (e.g., related transactions)
+      // Verify account exists and belongs to user
+      const existingAccount = await db.query.financeAccounts.findFirst({
+        where: and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)),
+      })
 
-      return { success: true }
+      if (!existingAccount) {
+        reply.code(404)
+        return { error: 'Account not found' }
+      }
+
+      // Delete account
+      await db
+        .delete(financeAccounts)
+        .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)))
+
+      // Note: To handle cascade deletion of transactions, you would need to also
+      // delete related transactions in the transactions table
+
+      return { success: true, message: 'Account deleted successfully' }
     } catch (error) {
       handleError(error as Error, reply)
     }

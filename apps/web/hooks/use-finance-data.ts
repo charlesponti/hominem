@@ -1,30 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
-export interface Transaction {
-  id: string
-  date: string
-  description: string
-  amount: string
-  category: string
-  type: 'debit' | 'credit' | string
-  accountName?: string
-  accountMask?: string
-  status?: string
-}
-
-export interface Account {
-  id: string
-  name: string
-  balance: string
-  type: string
-  institution?: string
-}
+import { useApiClient } from '@/lib/hooks/use-api-client'
+import type { FinanceAccount, Transaction } from '@ponti/utils/schema'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 
 interface FinanceData {
   transactions: Transaction[]
-  accounts: Account[]
+  accounts: FinanceAccount[]
+  accountsMap: Map<string, FinanceAccount>
   loading: boolean
   error: string | null
 
@@ -56,10 +40,7 @@ interface FinanceData {
 }
 
 export function useFinanceData(): FinanceData {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [accounts, setAccounts] = useState<Account[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const api = useApiClient()
 
   // Filtering state
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
@@ -70,49 +51,6 @@ export function useFinanceData(): FinanceData {
   // Sorting state
   const [sortField, setSortField] = useState<string>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-
-  // Fetch data function
-  const fetchData = async () => {
-    setLoading(true)
-    try {
-      // Build query string for filters
-      const queryString = getFilterQueryString()
-
-      // Fetch accounts
-      const accountsResponse = await fetch('/api/finance/accounts')
-      if (!accountsResponse.ok) {
-        throw new Error(`Failed to fetch accounts: ${accountsResponse.status}`)
-      }
-      const accountsData = await accountsResponse.json()
-      setAccounts(accountsData)
-
-      // Fetch transactions with filters
-      const transactionsResponse = await fetch(`/api/finance/transactions${queryString}`)
-      if (!transactionsResponse.ok) {
-        throw new Error(`Failed to fetch transactions: ${transactionsResponse.status}`)
-      }
-      const transactionsData = await transactionsResponse.json()
-      setTransactions(transactionsData)
-
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      console.error('Error fetching finance data:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Initial data load
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  // Refresh data with current filters when they change
-  useEffect(() => {
-    fetchData()
-    // Exclude sortField and sortDirection since we do client-side sorting
-  }, [selectedAccount, dateFrom, dateTo, searchQuery])
 
   // Generate query string from filters
   const getFilterQueryString = () => {
@@ -141,14 +79,48 @@ export function useFinanceData(): FinanceData {
     return queryString ? `?${queryString}` : ''
   }
 
+  // Query for accounts
+  const accountsQuery = useQuery({
+    queryKey: ['finance', 'accounts'],
+    queryFn: async () => {
+      return await api.get<unknown, FinanceAccount[]>('/api/finance/accounts')
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Query for transactions with dependencies on filters
+  const transactionsQuery = useQuery({
+    queryKey: ['finance', 'transactions', { selectedAccount, dateFrom, dateTo, searchQuery }],
+    queryFn: async () => {
+      const queryString = getFilterQueryString()
+      return await api.get<unknown, Transaction[]>(`/api/finance/transactions${queryString}`)
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Combine loading and error states
+  const loading = accountsQuery.isLoading || transactionsQuery.isLoading
+  const error =
+    (accountsQuery.error && accountsQuery.error instanceof Error
+      ? accountsQuery.error.message
+      : null) ||
+    (transactionsQuery.error && transactionsQuery.error instanceof Error
+      ? transactionsQuery.error.message
+      : null) ||
+    null
+
+  // Extract data with fallbacks
+  const accounts = accountsQuery.data || []
+  const transactions = transactionsQuery.data || []
+  const accountsMap = new Map(accounts.map((account) => [account.id, account]))
   // Calculate filtered and sorted transactions
   const filteredTransactions = transactions
     .filter((transaction) => {
-      // Client-side additional filtering (in case server didn't apply all filters)
-      // Most filtering should happen on the server, but we do a second pass here
-
-      // Filter by account
-      if (selectedAccount !== 'all' && transaction.accountName !== selectedAccount) {
+      // Client-side additional filtering
+      if (
+        selectedAccount !== 'all' &&
+        accountsMap.get(transaction.accountId)?.type !== selectedAccount
+      ) {
         return false
       }
 
@@ -167,7 +139,10 @@ export function useFinanceData(): FinanceData {
       // Filter by search term
       if (
         searchQuery &&
-        !transaction.description.toLowerCase().includes(searchQuery.toLowerCase())
+        ![transaction.description, transaction.note]
+          .join(' ')
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
       ) {
         return false
       }
@@ -182,10 +157,10 @@ export function useFinanceData(): FinanceData {
           comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
           break
         case 'description':
-          comparison = a.description.localeCompare(b.description)
+          comparison = (b.description && a.description?.localeCompare(b.description)) || 0
           break
         case 'amount':
-          comparison = parseFloat(a.amount) - parseFloat(b.amount)
+          comparison = Number.parseFloat(a.amount) - Number.parseFloat(b.amount)
           break
         case 'category':
           comparison = (a.category || '').localeCompare(b.category || '')
@@ -200,12 +175,15 @@ export function useFinanceData(): FinanceData {
 
   // Helper functions
   const getTotalBalance = () => {
-    return accounts.reduce((sum, account) => sum + parseFloat(account.balance || '0'), 0)
+    return accounts.reduce((sum, account) => sum + Number.parseFloat(account.balance || '0'), 0)
   }
 
   const getRecentTransactions = (accountName: string, limit = 3) => {
     return transactions
-      .filter((tx) => tx.accountName === accountName)
+      .filter((tx) => {
+        const account = accountsMap.get(tx.accountId)
+        return account?.name === accountName
+      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, limit)
   }
@@ -217,16 +195,21 @@ export function useFinanceData(): FinanceData {
 
     const csvRows = [
       headers.join(','),
-      ...filteredTransactions.map((tx) =>
-        [
+      ...filteredTransactions.map((tx) => {
+        const account = accountsMap.get(tx.accountId)
+        if (!account) {
+          return ''
+        }
+
+        return [
           tx.date,
-          `"${tx.description.replace(/"/g, '""')}"`, // Handle quotes in description
+          `"${tx.description?.replace(/"/g, '""')}"`, // Handle quotes in description
           tx.amount,
-          tx.category || 'Uncategorized',
+          tx.category || 'Other',
           tx.type,
-          tx.accountName || 'Unknown',
+          account.name || 'Unknown',
         ].join(',')
-      ),
+      }),
     ]
 
     const csvContent = csvRows.join('\n')
@@ -244,14 +227,15 @@ export function useFinanceData(): FinanceData {
     URL.revokeObjectURL(url)
   }
 
-  // Public refresh method
+  // Public refresh method using React Query's refetch
   const refreshData = async () => {
-    await fetchData()
+    await Promise.all([accountsQuery.refetch(), transactionsQuery.refetch()])
   }
 
   return {
     transactions,
     accounts,
+    accountsMap,
     loading,
     error,
     selectedAccount,

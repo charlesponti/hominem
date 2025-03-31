@@ -35,6 +35,7 @@ import { ArrowUpDown, Download, RefreshCcw, Search } from 'lucide-react'
 export default function TransactionsPage() {
   const {
     accounts,
+    accountsMap,
     transactions,
     loading,
     error,
@@ -257,7 +258,9 @@ export default function TransactionsPage() {
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell>{transaction.accountName || 'Unknown'}</TableCell>
+                          <TableCell>
+                            {accountsMap.get(transaction.accountId)?.name || 'Unknown'}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -301,7 +304,6 @@ export default function TransactionsPage() {
                     <CardTitle>{account.name}</CardTitle>
                     <CardDescription>
                       {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                      {account.institution ? ` · ${account.institution}` : ''}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

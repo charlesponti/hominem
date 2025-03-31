@@ -1,6 +1,4 @@
 import type { TransactionInsert } from '@/db/schema/finance.schema'
-import { createNewTransaction } from '@/finance/finance.service'
-import { logger } from '@/logger'
 import { z } from 'zod'
 
 export const CopilotTransactionSchema = z.object({
@@ -38,10 +36,18 @@ export function translateTransactionType(type: string, amount: number): Transact
   return 'expense'
 }
 
-export function convertCopilotTransaction(data: CopilotTransaction) {
+export function convertCopilotTransaction(
+  data: CopilotTransaction,
+  userId: string
+): Omit<TransactionInsert, 'accountId'> {
   // Clean the amount field - remove quotes and other non-numeric chars except decimal point
   const cleanAmount = data.amount.toString().replace(/[^0-9.-]/g, '')
   const type = translateTransactionType(data.type, Number.parseFloat(cleanAmount))
+
+  // Validate that amount is a valid number
+  if (Number.isNaN(cleanAmount)) {
+    throw Error('Invalid amount')
+  }
 
   return {
     id: crypto.randomUUID(),
@@ -57,33 +63,8 @@ export function convertCopilotTransaction(data: CopilotTransaction) {
     accountMask: data['account mask'] || data.account_mask || '',
     note: data.note,
     recurring: !!data.recurring,
+    userId,
     createdAt: new Date(),
     updatedAt: new Date(),
-  }
-}
-
-export async function processCopilotTransaction(
-  data: CopilotTransaction,
-  accountId: string
-): Promise<boolean> {
-  try {
-    // Validate required fields
-    if (!data.date || !data.amount || !data.name) {
-      logger.warn('Missing required fields', { data })
-      return false
-    }
-
-    await createNewTransaction({
-      ...convertCopilotTransaction(data),
-      accountId,
-    })
-
-    return true
-  } catch (error) {
-    logger.error('Error processing transaction', {
-      error: error instanceof Error ? error.message : String(error),
-      data,
-    })
-    return false
   }
 }

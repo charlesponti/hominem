@@ -10,6 +10,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 import { events } from './calendar.schema'
+import { users } from './users.schema'
 
 // Enums
 export const transactionTypeEnum = pgEnum('transaction_type', [
@@ -46,6 +47,9 @@ export const financeAccounts = pgTable('finance_accounts', {
   // !TODO Create `institutions` table for financial institutions, such as "American Express", "Chase", etc.
   institutionId: text('institution_id'),
   meta: jsonb('meta'),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
 })
 export type FinanceAccountInsert = typeof financeAccounts.$inferInsert
 export type FinanceAccount = typeof financeAccounts.$inferSelect
@@ -56,7 +60,9 @@ export const transactions = pgTable('transactions', {
   amount: numeric('amount').notNull(),
   date: timestamp('date').notNull(),
   description: text('description'),
-  accountId: uuid('account_id').references(() => financeAccounts.id),
+  accountId: uuid('account_id')
+    .references(() => financeAccounts.id)
+    .notNull(),
   fromAccountId: uuid('from_account_id').references(() => financeAccounts.id),
   toAccountId: uuid('to_account_id').references(() => financeAccounts.id),
   eventId: uuid('event_id').references(() => events.id),
@@ -71,6 +77,9 @@ export const transactions = pgTable('transactions', {
   recurring: boolean('recurring').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
 })
 export type Transaction = typeof transactions.$inferSelect
 export type TransactionInsert = typeof transactions.$inferInsert
@@ -81,6 +90,9 @@ export const budgetCategories = pgTable('budget_categories', {
   type: text('type').notNull(),
   budgetId: uuid('budget_id'),
   averageMonthlyExpense: numeric('average_monthly_expense'),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
 })
 
 export const budgetGoals = pgTable('budget_goals', {
@@ -91,6 +103,9 @@ export const budgetGoals = pgTable('budget_goals', {
   startDate: timestamp('start_date').notNull(),
   endDate: timestamp('end_date'),
   categoryId: uuid('category_id').references(() => budgetCategories.id),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
 })
 
 // Relations

@@ -35,12 +35,13 @@ export type ProcessTransactionOptions = {
   batchDelay?: number
   maxRetries?: number
   retryDelay?: number
+  userId: string
 }
 
 export interface ImportTransactionsJob extends BaseJob {
   fileName: string
   error?: string
-  options: Omit<ProcessTransactionOptions, 'fileName' | 'csvContent'>
+  options: Omit<ProcessTransactionOptions, 'fileName' | 'csvContent' | 'userId'>
   stats: UploadStats
   startTime: number
   endTime?: number

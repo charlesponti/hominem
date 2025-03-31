@@ -65,7 +65,30 @@ export async function updateJobStatus<T>(
  */
 export async function processImportJob(job: ImportTransactionsJob) {
   const { jobId, fileName, userId } = job
-  logger.info(`Starting import job ${jobId} for file ${fileName}`)
+
+  // Check that userId exists
+  if (!userId) {
+    logger.error(`Job ${jobId} has no userId, cannot process`)
+    await updateJobStatus<ImportTransactionsJob>(jobId, {
+      status: 'error',
+      endTime: Date.now(),
+      error: 'Missing userId in job',
+      stats: {
+        progress: 0,
+        processingTime: 0,
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        merged: 0,
+        total: 0,
+        invalid: 0,
+        errors: ['Missing userId in job'],
+      },
+    })
+    return
+  }
+
+  logger.info(`Starting import job ${jobId} for file ${fileName} for user ${userId}`)
 
   try {
     // Update job to prevent other workers from processing it
@@ -81,12 +104,15 @@ export async function processImportJob(job: ImportTransactionsJob) {
       throw new Error(`CSV content not found for job ${jobId}`)
     }
 
-    // Decode and parse CSV content
+    // Decode and parse CSV content with required userId
     const decodedContent = Buffer.from(csvContent, 'base64').toString('utf-8')
-    const transactions = await retryWithBackoff(() => parseTransactionString(decodedContent), {
-      retries: MAX_RETRIES,
-      delay: RETRY_DELAY,
-    })
+    const transactions = await retryWithBackoff(
+      () => parseTransactionString(decodedContent, userId),
+      {
+        retries: MAX_RETRIES,
+        delay: RETRY_DELAY,
+      }
+    )
     const totalTransactions = transactions.length
     logger.info(`Job ${jobId}: Parsed ${totalTransactions} transactions from CSV`)
 
@@ -112,6 +138,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
       batchDelay: job.options.batchDelay || 200,
       maxRetries: MAX_RETRIES,
       retryDelay: RETRY_DELAY,
+      userId,
     })) {
       if (result.action) stats[result.action]++
       stats.total++

@@ -1,7 +1,11 @@
+import { db } from '@ponti/utils/db'
+import { transactions } from '@ponti/utils/schema'
+import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { verifyAuth } from '../middleware/auth'
 import { handleError } from '../lib/errors'
+import { verifyAuth } from '../middleware/auth'
+import { generateTimeSeriesData } from '../services/finance-analyze.service'
 
 export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
   // Schema definitions
@@ -31,7 +35,7 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
       }
 
       const validated = analyzeTransactionsSchema.parse(request.body)
-      
+
       // Analysis logic would go here
       // This is a placeholder implementation
       const analysisResult = {
@@ -39,9 +43,9 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
         averageTransaction: 0,
         largestTransaction: 0,
         categories: [],
-        trends: []
+        trends: [],
       }
-      
+
       return analysisResult
     } catch (error) {
       handleError(error as Error, reply)
@@ -58,15 +62,16 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
       }
 
       const validated = aggregateTransactionsSchema.parse(request.body)
-      
+
       // Aggregation logic would go here
       // This is a placeholder implementation
       const aggregationType = validated.type || 'monthly'
-      const aggregatedData = []
-      
+      // !TODO Implement aggregation logic
+      // const aggregatedData = []
+
       return {
         type: aggregationType,
-        data: aggregatedData
+        // data: aggregatedData,
       }
     } catch (error) {
       handleError(error as Error, reply)
@@ -81,15 +86,34 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
         reply.code(401)
         return { error: 'Not authorized' }
       }
-      
+
       // Logic to get spending categories
-      // This is a placeholder implementation
-      const categories = []
-      
+      const categories = await db
+        .select({
+          category: transactions.category,
+        })
+        .from(transactions)
+        .where(eq(transactions.userId, userId))
+        .groupBy(transactions.category)
+        .orderBy(transactions.category)
+
+      // !TODO: Implement logic to analyze spending categories
       return categories
     } catch (error) {
       handleError(error as Error, reply)
     }
+  })
+
+  // Parse query parameters
+  const timeSeriesQuerySchema = z.object({
+    from: z.string().optional(),
+    to: z.string().optional(),
+    account: z.string().optional(),
+    category: z.string().optional(),
+    limit: z.string().transform(Number).optional(),
+    groupBy: z.enum(['month', 'week', 'day']).optional().default('month'),
+    includeStats: z.boolean().optional().default(false),
+    compareToPrevious: z.boolean().optional().default(false),
   })
 
   // Get spending over time
@@ -100,12 +124,22 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
         reply.code(401)
         return { error: 'Not authorized' }
       }
-      
-      // Logic to get spending over time
-      // This is a placeholder implementation
-      const timeSeries = []
-      
-      return timeSeries
+
+      const query = timeSeriesQuerySchema.parse(request.query)
+
+      // Use the service to generate time series data
+      const result = await generateTimeSeriesData({
+        from: query.from,
+        to: query.to,
+        account: query.account,
+        category: query.category,
+        limit: query.limit,
+        groupBy: query.groupBy,
+        includeStats: query.includeStats,
+        compareToPrevious: query.compareToPrevious,
+      })
+
+      return result
     } catch (error) {
       handleError(error as Error, reply)
     }

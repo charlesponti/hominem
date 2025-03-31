@@ -73,9 +73,11 @@ export async function queryTransactions(options: QueryOptions) {
       type: transactions.type,
       accountMask: transactions.accountMask,
       note: transactions.note,
+      accountId: transactions.accountId,
+      account: financeAccounts,
     })
     .from(transactions)
-    .leftJoin(financeAccounts, eq(transactions.fromAccountId, financeAccounts.id))
+    .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .where(whereConditions)
     .orderBy(sql`${transactions.date} DESC`)
     .limit(limit)
@@ -305,18 +307,20 @@ export async function createNewTransaction(tx: TransactionInsert): Promise<Trans
       .insert(transactions)
       .values({
         id: crypto.randomUUID(),
+        accountId: tx.accountId,
+        accountMask: tx.accountMask,
+        amount: tx.amount,
+        category: tx.category || '',
         date: tx.date,
         description: tx.description,
-        amount: tx.amount,
-        status: tx.status,
-        category: tx.category || '',
-        parentCategory: tx.parentCategory || '',
         excluded: tx.excluded,
+        note: tx.note,
+        parentCategory: tx.parentCategory || '',
+        recurring: tx.recurring || false,
+        status: tx.status,
         tags: tx.tags,
         type: tx.type,
-        accountMask: tx.accountMask,
-        note: tx.note,
-        recurring: tx.recurring || false,
+        userId: tx.userId,
       })
       .returning()
 

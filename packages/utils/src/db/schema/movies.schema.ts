@@ -8,7 +8,6 @@ export const movie = pgTable('movie', {
   description: text('description').notNull(),
   image: text('image').notNull(),
   director: text('director'),
-  userId: uuid('userId').notNull(),
   createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
 })

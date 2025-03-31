@@ -62,12 +62,12 @@ export async function emailMaskRoutes(fastify: FastifyInstance) {
 
       const { id } = request.params as { id: string }
       const index = emailAddresses.findIndex((email) => email.id === id)
-      
+
       if (index === -1) {
         reply.code(404)
         return { success: false, error: 'Email mask not found' }
       }
-      
+
       emailAddresses[index].isActive = false
       return { success: true }
     } catch (error) {
@@ -86,12 +86,12 @@ export async function emailMaskRoutes(fastify: FastifyInstance) {
 
       const { id } = request.params as { id: string }
       const email = emailAddresses.find((email) => email.id === id)
-      
+
       if (!email) {
         reply.code(404)
         return { error: 'Email mask not found' }
       }
-      
+
       return email
     } catch (error) {
       handleError(error as Error, reply)
@@ -109,11 +109,11 @@ export async function emailMaskRoutes(fastify: FastifyInstance) {
 
       const params = request.params as { userId: string }
       const validatedParams = userIdSchema.parse(params)
-      
+
       const emails = emailAddresses.filter(
         (email) => email.userId === validatedParams.userId && email.isActive
       )
-      
+
       return emails
     } catch (error) {
       handleError(error as Error, reply)
