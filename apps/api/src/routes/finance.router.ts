@@ -46,6 +46,11 @@ export async function financeRoutes(fastify: FastifyInstance) {
       preHandler: [verifyAuth, rateLimitImport],
     },
     async (request, reply) => {
+      const { userId } = request
+      if (!userId) {
+        return reply.code(401).send({ error: 'Not authorized' })
+      }
+
       try {
         const validated = ImportTransactionsSchema.safeParse(request.body)
         if (!validated.success) {
@@ -59,6 +64,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
         // Queue job in Redis-based worker system
         const job = await queueImportJob({
           ...validated.data,
+          userId,
           maxRetries: 3,
           retryDelay: 1000,
         })
@@ -121,6 +127,11 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
   // List active imports endpoint
   fastify.get('/imports/active', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Not authorized' })
+    }
+
     try {
       const activeJobs = await getActiveJobs()
       return activeJobs

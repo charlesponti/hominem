@@ -1,11 +1,17 @@
 /**
  * !TODO Enable worker to set the batch progress to enable picking up where it left off
+ * !TODO Use Redis subscription to listen for job updates
  */
 import { parseTransactionString, processTransactionsFromCSV } from '@ponti/utils/finance'
-import { getActiveJobs, IMPORT_JOB_PREFIX, IMPORT_JOBS_LIST } from '@ponti/utils/imports'
+import {
+  getActiveJobs,
+  getImportFileContent,
+  IMPORT_JOB_PREFIX,
+  removeJobFromQueue,
+} from '@ponti/utils/imports'
 import { logger } from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
-import type { BaseJob, ImportTransactionsJob, ProcessTransactionOptions } from '@ponti/utils/types'
+import type { BaseJob, ImportTransactionsJob } from '@ponti/utils/types'
 import { retryWithBackoff } from '@ponti/utils/utils'
 
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
@@ -57,11 +63,9 @@ export async function updateJobStatus<T>(
 /**
  * Process an import job in the background with retry logic
  */
-export async function processImportJob(
-  jobId: string,
-  input: Omit<ProcessTransactionOptions, 'csvContent'>
-) {
-  logger.info(`Starting import job ${jobId} for file ${input.fileName}`)
+export async function processImportJob(job: ImportTransactionsJob) {
+  const { jobId, fileName } = job
+  logger.info(`Starting import job ${jobId} for file ${fileName}`)
 
   try {
     // Update job to prevent other workers from processing it
@@ -72,7 +76,7 @@ export async function processImportJob(
     })
 
     // Get CSV content
-    const csvContent = await redis.get(`${IMPORT_JOB_PREFIX}${jobId}:csv`)
+    const csvContent = await getImportFileContent(jobId)
     if (!csvContent) {
       throw new Error(`CSV content not found for job ${jobId}`)
     }
@@ -101,13 +105,13 @@ export async function processImportJob(
 
     // Process transactions in chunks
     for await (const result of processTransactionsFromCSV({
+      fileName,
       csvContent: decodedContent,
-      deduplicateThreshold: input.deduplicateThreshold,
-      batchSize: input.batchSize || 20,
-      batchDelay: input.batchDelay || 200,
+      deduplicateThreshold: job.options.deduplicateThreshold,
+      batchSize: job.options.batchSize || 20,
+      batchDelay: job.options.batchDelay || 200,
       maxRetries: MAX_RETRIES,
       retryDelay: RETRY_DELAY,
-      fileName: input.fileName,
     })) {
       if (result.action) stats[result.action]++
       stats.total++
@@ -145,9 +149,7 @@ export async function processImportJob(
     })
 
     // Remove import job from Redis
-    await redis.del(`${IMPORT_JOB_PREFIX}${jobId}`)
-    await redis.del(`${IMPORT_JOB_PREFIX}${jobId}:csv`)
-    await redis.srem(IMPORT_JOBS_LIST, jobId)
+    await removeJobFromQueue(jobId)
     logger.info(`Job ${jobId} removed from Redis`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -186,23 +188,19 @@ setInterval(async () => {
 
   try {
     isProcessing = true
-    const activeJobs = await getActiveJobs()
+    const activeJobs = await getActiveJobs<ImportTransactionsJob>()
 
     // Process each active job
     for (const job of activeJobs) {
       if (!job.options) {
         logger.warn(`Job ${job.jobId} has no options, removing from queue`)
-        await redis.del(`${IMPORT_JOB_PREFIX}${job.jobId}`)
-        await redis.srem(
-          IMPORT_JOBS_LIST,
-          activeJobs.filter((j) => j.jobId === job.jobId).map((j) => j.jobId)
-        )
+        await removeJobFromQueue(job.jobId)
         continue
       }
 
       try {
         logger.info(`Processing job ${job.jobId} (${job.fileName})`)
-        await processImportJob(job.jobId, { ...job.options, fileName: job.fileName })
+        await processImportJob(job)
         logger.info(`Job ${job.jobId} processed successfully`)
       } catch (error) {
         logger.error(`Failed to process job ${job.jobId}:`, error)
@@ -219,7 +217,7 @@ setInterval(async () => {
 process.on('SIGTERM', async () => {
   logger.info('Received SIGTERM, cleaning up...')
   try {
-    const activeJobs = await getActiveJobs()
+    const activeJobs = await getActiveJobs<ImportTransactionsJob>()
     for (const job of activeJobs) {
       await updateJobStatus<ImportTransactionsJob>(job.jobId, { status: 'queued' })
     }

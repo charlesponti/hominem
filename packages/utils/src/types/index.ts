@@ -13,6 +13,10 @@ export interface UploadStats {
 }
 
 export type BaseJob = {
+  jobId: string
+  userId: string
+  endTime?: number
+  status: UploadStatus
   stats?: UploadStats
 }
 
@@ -33,10 +37,8 @@ export type ProcessTransactionOptions = {
   retryDelay?: number
 }
 
-export interface ImportTransactionsJob {
-  jobId: string
+export interface ImportTransactionsJob extends BaseJob {
   fileName: string
-  status: UploadStatus
   error?: string
   options: Omit<ProcessTransactionOptions, 'fileName' | 'csvContent'>
   stats: UploadStats
