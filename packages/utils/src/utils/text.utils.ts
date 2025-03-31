@@ -1,4 +1,3 @@
-// Function to extract numeric values from text input
 /**
  * Extracts a numeric value from a string.
  *
@@ -6,16 +5,13 @@
  * @returns The extracted numeric value as a number, or null if no numeric value is found
  *
  * @example
- * // returns 123
- * extractNumericValue('The price is 123')
+ * extractNumericValue('The price is 123') -> 123
  *
  * @example
- * // returns 123.45
- * extractNumericValue('The price is 123.45')
+ * extractNumericValue('The price is 123.45') -> 123.45
  *
  * @example
- * // returns null
- * extractNumericValue('No numbers here')
+ * extractNumericValue('No numbers here') -> null
  */
 export function extractNumericValue(input: string): number | null {
   const matches = input.match(/\d+(\.\d+)?/)

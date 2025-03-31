@@ -1,6 +1,7 @@
 import { queryTransactions } from '@ponti/utils/finance'
 import { getActiveJobs, getJobStatus, queueImportJob } from '@ponti/utils/imports'
-import type { FastifyInstance } from 'fastify'
+import { ImportRequestResponse } from '@ponti/utils/types'
+import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
 import { verifyAuth } from '../middleware/auth'
@@ -15,16 +16,16 @@ export async function financeRoutes(fastify: FastifyInstance) {
   await fastify.register(financeAnalyzeRoutes, { prefix: '/analyze' })
   await fastify.register(financeExportRoutes, { prefix: '/export' })
 
-  // Schema definitions
-  const importTransactionsSchema = z.object({
+  const ImportTransactionsSchema = z.object({
+    // Base64 encoded from client
     csvContent: z.string().min(1, 'CSV content cannot be empty'),
     fileName: z
       .string()
       .min(1, 'Filename is required')
       .regex(/\.csv$/i, 'File must be a CSV'),
     deduplicateThreshold: z.number().min(0).max(100).default(60),
-    batchSize: z.number().min(1).max(100).optional(),
-    batchDelay: z.number().min(100).max(1000).optional(),
+    batchSize: z.number().min(1).max(100).optional().default(20),
+    batchDelay: z.number().min(100).max(1000).optional().default(200),
   })
 
   const queryOptionsSchema = z.object({
@@ -37,7 +38,6 @@ export async function financeRoutes(fastify: FastifyInstance) {
     limit: z.number().optional(),
   })
 
-  // Import transactions endpoint
   fastify.post(
     '/import',
     {
@@ -47,8 +47,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const validated = importTransactionsSchema.safeParse(request.body)
-
+        const validated = ImportTransactionsSchema.safeParse(request.body)
         if (!validated.success) {
           reply.code(400)
           return {
@@ -59,11 +58,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
         // Queue job in Redis-based worker system
         const job = await queueImportJob({
-          fileName: validated.data.fileName,
-          csvContent: validated.data.csvContent, // Base64 encoded from client
-          deduplicateThreshold: validated.data.deduplicateThreshold,
-          batchSize: validated.data.batchSize || 20,
-          batchDelay: validated.data.batchDelay || 200,
+          ...validated.data,
           maxRetries: 3,
           retryDelay: 1000,
         })

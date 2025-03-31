@@ -1,11 +1,9 @@
-import type { ProcessTransactionOptions } from './finance'
 import logger from './logger'
 import { redis } from './redis'
-import type { ImportTransactionsJob } from './types'
+import type { ImportTransactionsJob, ProcessTransactionOptions } from './types'
 
 export const IMPORT_JOB_PREFIX = 'import:job:'
 export const IMPORT_JOBS_LIST = 'import:active-jobs'
-export const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 export const JOB_EXPIRATION_TIME = 60 * 60 // 1 hour expiration time for jobs
 
 /**

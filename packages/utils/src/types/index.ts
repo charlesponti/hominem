@@ -1,29 +1,45 @@
-import type { ProcessTransactionOptions } from '../finance/transactions-processor'
+export type UploadStatus = 'queued' | 'uploading' | 'processing' | 'done' | 'error'
+
+export interface UploadStats {
+  progress?: number
+  processingTime?: number
+  total?: number
+  created?: number
+  updated?: number
+  skipped?: number
+  merged?: number
+  invalid?: number
+  errors?: string[]
+}
+
+export type BaseJob = {
+  stats?: UploadStats
+}
 
 export interface FileStatus {
   file: File
-  status: 'queued' | 'uploading' | 'processing' | 'done' | 'error'
+  status: UploadStatus
   error?: string
-  stats?: {
-    progress?: number
-    processingTime?: number
-    total?: number
-    created?: number
-    updated?: number
-    skipped?: number
-    merged?: number
-    invalid?: number
-    errors?: string[]
-  }
+  stats?: UploadStats
+}
+
+export type ProcessTransactionOptions = {
+  csvContent: string
+  fileName: string
+  deduplicateThreshold?: number
+  batchSize?: number
+  batchDelay?: number
+  maxRetries?: number
+  retryDelay?: number
 }
 
 export interface ImportTransactionsJob {
   jobId: string
   fileName: string
-  status: FileStatus['status']
+  status: UploadStatus
   error?: string
   options: Omit<ProcessTransactionOptions, 'fileName' | 'csvContent'>
-  stats: FileStatus['stats']
+  stats: UploadStats
   startTime: number
   endTime?: number
 }
@@ -32,5 +48,5 @@ export type ImportRequestResponse = {
   success: boolean
   jobId: string
   fileName: string
-  status: FileStatus['status']
+  status: UploadStatus
 }

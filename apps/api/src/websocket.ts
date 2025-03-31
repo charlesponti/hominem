@@ -1,3 +1,4 @@
+import { getActiveJobs } from '@ponti/utils/imports'
 import { logger } from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
 import type { FastifyInstance } from 'fastify'
@@ -46,7 +47,7 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
     fastify.log.info('WebSocket client connected')
 
     // Message handler
-    ws.on('message', (message) => {
+    ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString()) as {
           type: string
@@ -60,12 +61,11 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
             break
 
           case 'subscribe:imports':
-            // Client is interested in import updates - could track this
-            // in a Set if we want to target specific clients later
             ws.send(
               JSON.stringify({
                 type: 'subscribed',
-                channel: 'imports',
+                channel: IMPORT_PROGRESS_CHANNEL,
+                data: await getActiveJobs(),
               })
             )
             break

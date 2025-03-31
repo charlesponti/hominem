@@ -2,8 +2,9 @@ import { parse } from 'csv-parse'
 import { EventEmitter } from 'node:events'
 import type { FinanceAccount, TransactionInsert } from '../db/schema'
 import { logger } from '../logger'
+import type { ProcessTransactionOptions } from '../types'
 import { withRetry } from '../utils/retry.utils'
-import { CopilotTransactionSchema, convertCopilotTransaction } from './banks/copilot'
+import { convertCopilotTransaction } from './banks/copilot'
 import {
   createNewTransaction,
   findExistingTransaction,
@@ -267,16 +268,6 @@ export type ProcessTransactionResult = {
   action: 'created' | 'skipped' | 'merged' | 'updated'
   transaction: TransactionInsert
   file: string
-}
-
-export type ProcessTransactionOptions = {
-  fileName: string
-  csvContent: string
-  deduplicateThreshold?: number
-  batchSize?: number
-  batchDelay?: number
-  maxRetries?: number
-  retryDelay?: number
 }
 
 /**

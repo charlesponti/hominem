@@ -1,159 +1,182 @@
 'use client'
 
+import { ProgressBar } from '@/components/progress-bar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useFileInput } from '@/hooks/use-file-input'
-import { useImportFiles } from '@/hooks/use-import-files'
-import { useInterval } from '@/hooks/use-interval'
+import { useToast } from '@/hooks/use-toast'
+import { useWebSocketImports } from '@/hooks/use-websocket-imports'
 import type { FileStatus } from '@ponti/utils/types'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, X as XIcon } from 'lucide-react'
-import React, { useState } from 'react'
+import { Check, Wifi, WifiOff, X as XIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { DropZone } from '../../../components/drop-zone'
 
-export default function ImportPage() {
+export default function SocketImportPage() {
   const { files, handleFileChange } = useFileInput()
-  const { statuses, importFiles, updateStatus, getActiveImports, checkJobStatus } = useImportFiles()
-  const [importStarted, setImportStarted] = useState(false)
-  const [jobIds, setJobIds] = useState<string[]>([])
+  const { isConnected, statuses, startImport, activeJobIds } = useWebSocketImports()
+  const { toast } = useToast()
+  const [isImporting, setIsImporting] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
 
-  // Poll for updates every second
-  useInterval(
-    async () => {
-      if (jobIds.length === 0) return
-
-      try {
-        // Fetch active imports using the updated API
-        const activeImports = await getActiveImports()
-
-        if (!activeImports || activeImports.length === 0) {
-          return
-        }
-
-        // Update statuses for each active job
-        for (const jobId of jobIds) {
-          const job = activeImports.find((j) => j.jobId === jobId)
-
-          if (job) {
-            const file = files.find((f) => f.name === job.fileName)
-            if (file) {
-              // Calculate processing time in seconds
-              const processingTime = job.endTime
-                ? (job.endTime - job.startTime) / 1000
-                : (Date.now() - job.startTime) / 1000
-
-              // Update file status with latest information
-              updateStatus(file, {
-                status: job.status,
-                stats: {
-                  ...job.stats,
-                  processingTime,
-                },
-                error: job.error,
-              })
-            }
-          } else {
-            // If job is not found in active imports, check individual status
-            try {
-              const jobStatus = await checkJobStatus(jobId)
-
-              // Update file status if found
-              const file = files.find((f) => jobStatus.fileName === f.name)
-              if (file) {
-                updateStatus(file, {
-                  status: jobStatus.status,
-                  stats: jobStatus.stats,
-                  error: jobStatus.error,
-                })
-              }
-            } catch (err) {
-              console.error(err)
-              console.warn(`Job ${jobId} not found, may have completed`)
-            }
-          }
-        }
-
-        // Stop polling if all jobs are complete or errored
-        if (
-          activeImports.every(
-            (job) => jobIds.includes(job.jobId) && (job.status === 'done' || job.status === 'error')
-          )
-        ) {
-          // Add small delay to show final stats before stopping
-          setTimeout(() => setJobIds([]), 2000)
-        }
-      } catch (error) {
-        console.error('Failed to fetch import status:', error)
+  useEffect(() => {
+    // Reset import state when all jobs are complete
+    if (isImporting && activeJobIds.length === 0) {
+      setIsImporting(false)
+      if (files.length > 0) {
+        toast({
+          title: 'Import completed',
+          description: `Successfully processed ${files.length} file(s)`,
+          variant: 'default',
+        })
       }
-    },
-    jobIds.length > 0 ? 1000 : null // Poll every second when jobs are active
-  )
+    }
+  }, [activeJobIds.length, isImporting, files.length, toast])
 
   const handleImport = async () => {
-    setImportStarted(true)
+    if (!files.length) return
+
+    setIsImporting(true)
     try {
-      const results = await importFiles(files)
-      setJobIds(results.map((r) => r.jobId))
+      await startImport(files)
+      toast({
+        title: 'Import started',
+        description: `Processing ${files.length} file(s)`,
+      })
     } catch (error) {
-      console.error('Failed to start import:', error)
-      setImportStarted(false)
+      setIsImporting(false)
+      toast({
+        title: 'Import failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      })
     }
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4">
-      {/* Shadcn styled file input */}
-      <div className="w-full max-w-md p-8 border-2 border-dashed rounded-lg">
-        <label
-          htmlFor="file-upload"
-          className="block text-center text-lg cursor-pointer text-gray-700"
-        >
-          Drag &amp; drop CSV files here, or click to select
-        </label>
-        <input
-          id="file-upload"
-          type="file"
-          multiple
-          accept=".csv"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 relative">
+      {/* Connection status indicator */}
+      <div className="fixed top-4 right-4">
+        {isConnected ? (
+          <Badge variant="outline" className="flex items-center gap-1 bg-green-50">
+            <Wifi className="h-3 w-3 text-green-600" aria-hidden="true" />
+            <span className="text-green-600">Connected</span>
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="flex items-center gap-1 bg-red-50">
+            <WifiOff className="h-3 w-3 text-red-600" aria-hidden="true" />
+            <span className="text-red-600">Disconnected</span>
+          </Badge>
+        )}
       </div>
-      {/* Show Import button if files are selected and not yet imported */}
-      {!importStarted && files.length > 0 && (
-        <button
+
+      <Card className="w-full max-w-2xl p-8 space-y-6" aria-label="File import interface">
+        {/* File upload area */}
+        <div>
+          <DropZone
+            isImporting={isImporting}
+            dragActive={dragActive}
+            onDrop={(files: File[]) => {
+              if (files.length) {
+                const dataTransfer = new DataTransfer()
+                for (const file of files) {
+                  dataTransfer.items.add(file)
+                }
+                handleFileChange({
+                  target: { files: dataTransfer.files },
+                  currentTarget: { files: dataTransfer.files },
+                  type: 'change',
+                  nativeEvent: new Event('change', { bubbles: true }),
+                } as React.ChangeEvent<HTMLInputElement>)
+              } else {
+                toast({
+                  title: 'Invalid files',
+                  description: 'Please select only CSV files',
+                  variant: 'destructive',
+                })
+              }
+            }}
+            onDragOver={() => setDragActive(true)}
+            onDragLeave={() => setDragActive(false)}
+            onClick={() => document.getElementById('file-upload')?.click()}
+          />
+          <input
+            id="file-upload"
+            type="file"
+            multiple
+            accept=".csv"
+            onChange={handleFileChange}
+            className="sr-only"
+            disabled={isImporting}
+            aria-label="File input for CSV files"
+          />
+        </div>
+
+        {/* Active imports indicator */}
+        {activeJobIds.length > 0 && (
+          <output className="w-full text-sm text-primary font-medium">
+            Processing {activeJobIds.length} active import{activeJobIds.length > 1 ? 's' : ''}
+          </output>
+        )}
+
+        {/* Import button with loading state */}
+        <Button
           type="button"
           onClick={handleImport}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+          className="w-full"
+          disabled={!isConnected || isImporting || !files.length}
+          aria-busy={isImporting}
         >
-          Start Import
-        </button>
-      )}
-      <AnimatePresence>
-        {files.length > 0 ? (
-          <motion.div
-            className="mt-8 w-full max-w-md space-y-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <h2 className="text-md text-gray-400 font-bold">Processing Status:</h2>
-            <ul>
-              {files.map((file) => (
-                <motion.li
-                  key={file.name}
-                  className="p-2 border rounded mb-2 flex items-center"
-                  initial={{ x: -100, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 100, opacity: 0 }}
-                >
-                  <span>{file.name}</span>
-                  <div className="ml-auto">
-                    <FileUploadStatus uploadStatus={statuses.find((s) => s.file === file)} />
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+          {isImporting ? 'Importing...' : isConnected ? 'Start Import' : 'Connecting...'}
+        </Button>
+
+        {/* Status list */}
+        <AnimatePresence>
+          {statuses.map((status) => (
+            <motion.div
+              key={status.file.name}
+              className="p-4 border rounded-lg bg-gray-50"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium truncate">{status.file.name}</span>
+              </div>
+              <FileUploadStatus uploadStatus={status} />
+            </motion.div>
+          ))}
+          {files.length > 0 && (
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <h2 className="text-lg font-semibold text-gray-700">Upload Status</h2>
+              <ul className="space-y-3">
+                {files.map((file) => (
+                  <motion.li
+                    key={file.name}
+                    className="p-4 border rounded-lg bg-gray-50"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex flex-col justify-center gap-2 mb-2">
+                      <span className="font-medium truncate">{file.name}</span>
+                      <FileUploadStatus uploadStatus={statuses.find((s) => s.file === file)} />
+                    </div>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
     </div>
   )
 }
@@ -163,85 +186,81 @@ function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }) {
   const { status, error, stats } = uploadStatus
 
   if (status === 'uploading' || status === 'processing') {
-    return <Processing progress={stats?.progress} />
+    const progress = stats?.progress
+
+    return (
+      <output className="w-full flex flex-col justify-center">
+        <span className="text-blue-500 text-sm text-right">
+          Processing {progress !== undefined ? `(${Math.round(progress)}%)` : ''}
+        </span>
+        <ProgressBar progress={progress} />
+      </output>
+    )
   }
 
   if (status === 'done') {
     return (
-      <div className="flex flex-col">
-        <span className="text-green-500 flex items-center">
-          <Check size={16} className="w-4 h-4 mr-1" />
-          Done
-        </span>
+      <output className="flex flex-col">
+        <ProgressBar progress={100} />
         {stats && <ProcessingStats stats={stats} />}
-      </div>
+      </output>
     )
   }
 
   if (status === 'error') {
     return (
-      <div className="flex flex-col">
+      <output className="flex flex-col" role="alert">
         <span className="text-red-500 flex items-center">
-          <XIcon className="w-4 h-4 mr-1" />
+          <XIcon className="w-4 h-4 mr-1" aria-hidden="true" />
           Error: {error}
         </span>
-      </div>
+      </output>
     )
   }
 
-  return <span>{status}</span>
+  return <output>{status}</output>
 }
 
-// Processing animation with optional progress
-function Processing({ progress }: { progress?: number }) {
-  return (
-    <div className="flex items-center">
-      <div className="loading-spinner loading h-8" />
-      <div className="flex flex-col">
-        <span className="text-blue-500">
-          Processing {progress !== undefined ? `(${Math.round(progress)}%)` : ''}
-        </span>
-
-        {/* Progress bar */}
-        {progress !== undefined && (
-          <div className="w-24 h-1.5 mt-1 bg-gray-200 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-blue-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// Display detailed processing statistics
 function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
   if (!stats || typeof stats !== 'object') return null
 
   return (
-    <div className="text-xs mt-1 space-y-1 text-gray-600">
+    <dl className="text-xs mt-1 space-y-1 text-gray-600">
       {stats.processingTime !== undefined ? (
-        <div>Time: {stats.processingTime.toFixed(1)}s</div>
+        <>
+          <dt className="sr-only">Processing time</dt>
+          <dd>Time: {(stats.processingTime / 1000).toFixed(1)}s</dd>
+        </>
       ) : null}
-      {stats.total !== undefined ? (
+      {stats.total !== undefined && Object.values(stats).length ? (
         <div className="grid grid-cols-2 gap-x-2">
-          <div>Total: {stats.total}</div>
-          <div>Created: {stats.created || 0}</div>
-          <div>Updated: {stats.updated || 0}</div>
-          <div>Skipped: {stats.skipped || 0}</div>
-          {stats.merged !== undefined && <div>Merged: {stats.merged}</div>}
-          {stats.invalid !== undefined && stats.invalid > 0 && (
-            <div className="text-amber-600">Invalid: {stats.invalid}</div>
-          )}
+          <ProcessingStat label="Total" value={stats.total} />
+          <ProcessingStat label="Created" value={stats.created} />
+          <ProcessingStat label="Updated" value={stats.updated} />
+          <ProcessingStat label="Skipped" value={stats.skipped} />
+          <ProcessingStat label="Merged" value={stats.merged} />
+          <ProcessingStat label="Invalid" value={stats.invalid} />
         </div>
       ) : null}
+
       {stats.errors?.length && stats.errors.length > 0 ? (
-        <div className="text-red-500">Errors: {stats.errors.length}</div>
+        <div>
+          <dt className="sr-only">Error count</dt>
+          <dd className="text-red-500">Errors: {stats.errors.length}</dd>
+        </div>
       ) : null}
+    </dl>
+  )
+}
+
+function ProcessingStat({ label, value }: { label: string; value?: number }) {
+  if (value === undefined) return null
+  return (
+    <div className="flex items-center justify-between">
+      <dt className="sr-only">{label}</dt>
+      <dd className="text-primary text-xs">
+        {label}: {value}
+      </dd>
     </div>
   )
 }

@@ -2,7 +2,10 @@
 
 import type { ImportTransactionsJob } from '@ponti/utils/types'
 import { useEffect, useRef, useState } from 'react'
-import { useImportFiles } from './use-import-files'
+import { useImportTransactions } from './use-import-transactions'
+
+const IMPORT_PROGRESS_CHANNEL = 'import:progress'
+const IMPORT_PROGRESS_CHANNEL_TYPE = 'subscribe:imports'
 
 type WebSocketMessage = {
   type: string
@@ -11,8 +14,7 @@ type WebSocketMessage = {
 }
 
 export function useWebSocketImports() {
-  const { statuses, importFiles, updateStatus, checkJobStatus, getActiveImports, setStatuses } =
-    useImportFiles()
+  const { statuses, importFiles, updateStatus, setStatuses } = useImportTransactions()
 
   const [isConnected, setIsConnected] = useState(false)
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
@@ -28,11 +30,12 @@ export function useWebSocketImports() {
       const wsUrlWithAuth = token ? `${wsUrl}?token=${token}` : wsUrl
       const ws = new WebSocket(wsUrlWithAuth)
       ws.onopen = () => {
+        // biome-ignore lint/suspicious/noConsoleLog: <explanation>
         console.log(`WebSocket connected ${wsUrl}`)
         setIsConnected(true)
 
         // Request import updates
-        ws.send(JSON.stringify({ type: 'subscribe:imports' }))
+        ws.send(JSON.stringify({ type: IMPORT_PROGRESS_CHANNEL_TYPE }))
       }
 
       ws.onmessage = (event) => {
@@ -40,23 +43,24 @@ export function useWebSocketImports() {
           const message = JSON.parse(event.data) as WebSocketMessage
 
           // Handle real-time import progress updates
-          if (message.type === 'import:progress' && message.data) {
+          if (message.type === IMPORT_PROGRESS_CHANNEL && message.data) {
             const jobData = message.data
             updateImportProgress(jobData)
           }
 
-          if (statuses.length === 0) {
-            setStatuses([
-              {
-                file: new File([], message.data?.fileName || ''),
-                status: message.data?.status || 'queued',
-                stats: message.data?.stats,
-                error: message.data?.error,
-              },
-            ])
-          }
-
           setStatuses((prev) => {
+            // If users is first visiting the page, set statuses to initial uploads
+            if (prev.length === 0 && message.data) {
+              return [
+                {
+                  file: new File([], message.data.fileName),
+                  status: message.data.status,
+                  stats: message.data.stats,
+                  error: message.data.error,
+                },
+              ]
+            }
+
             const updatedStatuses = prev.map((status) => {
               if (status.file.name === message.data?.fileName) {
                 return {
@@ -158,24 +162,6 @@ export function useWebSocketImports() {
       throw error
     }
   }
-
-  // Load active imports on initial connection
-  useEffect(() => {
-    if (isConnected) {
-      // getActiveImports()
-      //   .then((jobs) => {
-      //     if (jobs && jobs.length > 0) {
-      //       // Process any active jobs that are already running
-      //       for (const job of jobs) {
-      //         console.log(`Processing active job: ${job.jobId} ${job.stats?.progress}`)
-      //       }
-      //     }
-      //   })
-      //   .catch((err) => {
-      //     console.error('Failed to fetch active imports:', err)
-      //   })
-    }
-  }, [getActiveImports, isConnected])
 
   return {
     isConnected,

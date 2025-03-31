@@ -1,21 +1,14 @@
 /**
  * !TODO Enable worker to set the batch progress to enable picking up where it left off
  */
-import {
-  parseTransactionString,
-  processTransactionsFromCSV,
-  type ProcessTransactionOptions,
-} from '@ponti/utils/finance'
-import {
-  getActiveJobs,
-  IMPORT_JOB_PREFIX,
-  IMPORT_JOBS_LIST,
-  IMPORT_PROGRESS_CHANNEL,
-} from '@ponti/utils/imports'
+import { parseTransactionString, processTransactionsFromCSV } from '@ponti/utils/finance'
+import { getActiveJobs, IMPORT_JOB_PREFIX, IMPORT_JOBS_LIST } from '@ponti/utils/imports'
 import { logger } from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
-import type { ImportTransactionsJob } from '@ponti/utils/types'
+import type { BaseJob, ImportTransactionsJob, ProcessTransactionOptions } from '@ponti/utils/types'
 import { retryWithBackoff } from '@ponti/utils/utils'
+
+const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
 // Configuration
 const IMPORT_JOB_TTL = 60 * 60 // 1 hour
@@ -23,20 +16,6 @@ const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
 const POLLING_INTERVAL = 30 * 1000 // 30 seconds
 const CHUNK_SIZE = 1000 // Process 1000 transactions at a time
-
-type BaseJob = {
-  stats?: {
-    progress?: number
-    processingTime?: number
-    total?: number
-    created?: number
-    updated?: number
-    skipped?: number
-    merged?: number
-    invalid?: number
-    errors?: string[]
-  }
-}
 
 /**
  * Update job status in Redis with retry logic
@@ -208,7 +187,6 @@ setInterval(async () => {
   try {
     isProcessing = true
     const activeJobs = await getActiveJobs()
-    logger.info(`Found ${activeJobs.length} active import jobs`)
 
     // Process each active job
     for (const job of activeJobs) {

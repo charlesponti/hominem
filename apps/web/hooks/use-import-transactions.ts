@@ -1,7 +1,9 @@
-import type { FileStatus, ImportTransactionsJob } from '@ponti/utils/types'
+import { useApiClient } from '@/lib/hooks/use-api-client'
+import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@ponti/utils/types'
 import { useState } from 'react'
 
-export function useImportFiles() {
+export function useImportTransactions() {
+  const apiClient = useApiClient()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
 
   const updateStatus = (file: File, status: Partial<FileStatus>) => {
@@ -21,7 +23,7 @@ export function useImportFiles() {
     })
   }
 
-  const importFiles = async (files: File[]): Promise<ImportTransactionsJob[]> => {
+  const importFiles = async (files: File[]): Promise<ImportRequestResponse[]> => {
     // Initialize statuses
     setStatuses(
       files.map((f) => ({
@@ -39,19 +41,25 @@ export function useImportFiles() {
         try {
           const base64 = await fileToBase64(file)
 
-          const response = await fetch('/api/trpc/finance.importTransactions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              csvContent: base64,
-              fileName: file.name,
-              deduplicateThreshold: 60,
-            }),
+          const response = await apiClient.post<
+            {
+              csvContent: string
+              fileName: string
+              deduplicateThreshold: number
+            },
+            ImportRequestResponse
+          >('/api/finance/import', {
+            csvContent: base64,
+            fileName: file.name,
+            deduplicateThreshold: 60,
           })
 
-          const result = (await response.json()) as ImportTransactionsJob
+          if (!response.success) {
+            throw new Error('Server error')
+          }
+
           updateStatus(file, { status: 'processing' })
-          return result
+          return response
         } catch (error) {
           console.error(error)
           updateStatus(file, {
@@ -66,5 +74,30 @@ export function useImportFiles() {
     return results
   }
 
-  return { setStatuses, statuses, importFiles, updateStatus }
+  // Check status of an import job
+  const checkJobStatus = async (jobId: string): Promise<ImportTransactionsJob> => {
+    const response = await fetch(`/api/finance/import/${jobId}`)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch job status: ${response.status}`)
+    }
+    return await response.json()
+  }
+
+  // Get all active import jobs
+  const getActiveImports = async (): Promise<ImportTransactionsJob[]> => {
+    const response = await fetch('/api/finance/imports/active')
+    if (!response.ok) {
+      throw new Error(`Failed to fetch active imports: ${response.status}`)
+    }
+    return await response.json()
+  }
+
+  return {
+    statuses,
+    setStatuses,
+    importFiles,
+    updateStatus,
+    checkJobStatus,
+    getActiveImports,
+  }
 }
