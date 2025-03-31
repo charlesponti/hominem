@@ -1,18 +1,11 @@
-import type { Transaction } from '@ponti/utils/schema'
+import type { FinanceData } from '@/hooks/use-finance-data'
 import { AccountCard } from './account-card'
 
-interface Account {
-  id: string
-  name: string
-  type: string
-  balance: string
-}
-
 interface AccountsListProps {
-  accounts: Account[]
+  accounts: FinanceData['accounts']
   loading: boolean
   error: string | null
-  getRecentTransactions: (accountName: string, limit: number) => Transaction[]
+  getRecentTransactions: (accountName: string, limit: number) => FinanceData['transactions']
 }
 
 export function AccountsList({

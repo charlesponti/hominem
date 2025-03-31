@@ -5,7 +5,7 @@ import type { FinanceAccount, Transaction } from '@ponti/utils/schema'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
-interface FinanceData {
+export interface FinanceData {
   transactions: Transaction[]
   accounts: FinanceAccount[]
   accountsMap: Map<string, FinanceAccount>

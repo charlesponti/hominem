@@ -7,20 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import type { Transaction } from '@ponti/utils/schema'
+import type { FinanceData } from '@/hooks/use-finance-data'
 
 interface AccountCardProps {
-  account: {
-    id: string
-    name: string
-    type: string
-    balance: string
-  }
-  recentTransactions: Array<{
-    id: string
-    description: Transaction['description']
-    amount: string
-  }>
+  account: FinanceData['accounts'][number]
+  recentTransactions: FinanceData['transactions']
 }
 
 export function AccountCard({ account, recentTransactions }: AccountCardProps) {
