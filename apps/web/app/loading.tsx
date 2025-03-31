@@ -1,5 +1,4 @@
-import React from 'react'
-import './loading.css' // Import CSS for the glimmer effect
+import './loading.css'
 
 const Loading = () => {
   return (

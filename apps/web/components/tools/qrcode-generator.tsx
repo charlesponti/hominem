@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import * as qrcode from 'qrcode'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 const QRCodeGenerator = () => {
   const [text, setText] = useState('')
