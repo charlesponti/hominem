@@ -24,6 +24,15 @@ export default function TransactionImportPage() {
     (file) => !statuses.some((status) => status.file.name === file.name)
   )
 
+  // Separate status entries into different categories for better UI representation
+  const processingFiles = statuses.filter(
+    (status) => status.status === 'processing' || status.status === 'uploading'
+  )
+  const queuedFiles = statuses.filter((status) => status.status === 'queued')
+  const completedFiles = statuses.filter(
+    (status) => status.status === 'done' || status.status === 'error'
+  )
+
   useEffect(() => {
     // Reset import state when all jobs are complete
     if (isImporting && activeJobIds.length === 0) {
@@ -83,16 +92,7 @@ export default function TransactionImportPage() {
             dragActive={dragActive}
             onDrop={(files: File[]) => {
               if (files.length) {
-                const dataTransfer = new DataTransfer()
-                for (const file of files) {
-                  dataTransfer.items.add(file)
-                }
-                handleFileChange({
-                  target: { files: dataTransfer.files },
-                  currentTarget: { files: dataTransfer.files },
-                  type: 'change',
-                  nativeEvent: new Event('change', { bubbles: true }),
-                } as React.ChangeEvent<HTMLInputElement>)
+                handleFileChange(files)
               } else {
                 toast({
                   title: 'Invalid files',
@@ -103,24 +103,22 @@ export default function TransactionImportPage() {
             }}
             onDragOver={() => setDragActive(true)}
             onDragLeave={() => setDragActive(false)}
-            onClick={() => document.getElementById('file-upload')?.click()}
-          />
-          <input
-            id="file-upload"
-            type="file"
-            multiple
-            accept=".csv"
             onChange={handleFileChange}
-            className="sr-only"
-            disabled={isImporting}
-            aria-label="File input for CSV files"
+            accept=".csv"
+            multiple={true}
           />
         </div>
 
-        {/* Active imports indicator */}
+        {/* Import progress indicators */}
         {activeJobIds.length > 0 && (
           <output className="w-full text-sm text-primary font-medium">
             Processing {activeJobIds.length} active import{activeJobIds.length > 1 ? 's' : ''}
+          </output>
+        )}
+
+        {queuedFiles.length > 0 && (
+          <output className="w-full text-sm text-amber-600 font-medium">
+            {queuedFiles.length} file{queuedFiles.length > 1 ? 's' : ''} queued for processing
           </output>
         )}
 
@@ -136,21 +134,70 @@ export default function TransactionImportPage() {
         </Button>
 
         <AnimatePresence>
-          {statuses.length > 0 ? (
+          {/* Display queued files if any exist */}
+          {queuedFiles.length > 0 && (
             <motion.div
               className="space-y-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <h2 className="text-lg font-semibold text-gray-700">Upload Status</h2>
+              <h2 className="text-lg font-semibold text-amber-700">Queued Files</h2>
               <ul className="space-y-3">
-                {statuses.map((status) => (
-                  <FileImport key={status.file.name} fileName={status.file.name} status={status} />
+                {queuedFiles.map((status, index) => (
+                  <FileImport
+                    key={`queued-${status.file.name || index}`}
+                    fileName={status.file.name}
+                    status={status}
+                  />
                 ))}
               </ul>
             </motion.div>
-          ) : null}
+          )}
+
+          {/* Display processing files if any exist */}
+          {processingFiles.length > 0 && (
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <h2 className="text-lg font-semibold text-blue-700">Processing</h2>
+              <ul className="space-y-3">
+                {processingFiles.map((status, index) => (
+                  <FileImport
+                    key={`processing-${status.file.name || index}`}
+                    fileName={status.file.name}
+                    status={status}
+                  />
+                ))}
+              </ul>
+            </motion.div>
+          )}
+
+          {/* Display completed files if any exist */}
+          {completedFiles.length > 0 && (
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <h2 className="text-lg font-semibold text-gray-700">Completed</h2>
+              <ul className="space-y-3">
+                {completedFiles.map((status, index) => (
+                  <FileImport
+                    key={`completed-${status.file.name || index}`}
+                    fileName={status.file.name}
+                    status={status}
+                  />
+                ))}
+              </ul>
+            </motion.div>
+          )}
+
+          {/* Display selected files that haven't been imported yet */}
           {filteredFiles.length > 0 && (
             <motion.div
               className="space-y-4"
@@ -158,13 +205,13 @@ export default function TransactionImportPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <h2 className="text-lg font-semibold text-gray-700">Upload Status</h2>
+              <h2 className="text-lg font-semibold text-gray-700">Selected Files</h2>
               <ul className="space-y-3">
-                {filteredFiles.map((file) => (
+                {filteredFiles.map((file, index) => (
                   <FileImport
-                    key={file.name}
+                    key={`file-${file.name || index}`}
                     fileName={file.name}
-                    status={statuses.find((s) => s.file === file)}
+                    status={statuses.find((s) => s.file.name === file.name)}
                   />
                 ))}
               </ul>
@@ -193,6 +240,7 @@ function FileImport({ fileName, status }: { fileName: string; status?: FileStatu
   )
 }
 
+// Update the FileUploadStatus component to handle 'queued' status
 function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }) {
   if (!uploadStatus) return null
   const { status, error, stats } = uploadStatus
@@ -206,6 +254,15 @@ function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }) {
           Processing {progress !== undefined ? `(${Math.round(progress)}%)` : ''}
         </span>
         {progress ? <ProgressBar progress={progress} /> : null}
+      </output>
+    )
+  }
+
+  if (status === 'queued') {
+    return (
+      <output className="w-full flex flex-col justify-center">
+        <span className="text-amber-500 text-sm text-right">Waiting in queue</span>
+        <ProgressBar progress={0} className="bg-amber-200" />
       </output>
     )
   }

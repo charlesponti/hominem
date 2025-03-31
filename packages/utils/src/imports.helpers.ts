@@ -4,6 +4,7 @@ import type { BaseJob, ImportTransactionsJob, ProcessTransactionOptions } from '
 
 export const IMPORT_JOBS_LIST_KEY = 'import:active-jobs'
 export const IMPORT_JOB_PREFIX = 'import:job:'
+export const USER_JOBS_PREFIX = 'import:user:'
 export const JOB_EXPIRATION_TIME = 60 * 60 // 1 hour expiration time for jobs
 
 /**
@@ -22,14 +23,83 @@ export async function getJobStatus<T>(jobId: string): Promise<T | null> {
 /**
  * Remove job from Redis
  * @param jobId - The ID of the job to remove
+ * @param userId - Optional user ID to also remove from user's job list
  */
-export async function removeJobFromQueue(jobId: string) {
+export async function removeJobFromQueue(jobId: string, userId?: string) {
+  let user: string | undefined = userId
+
+  // Get the job to find the userId if not provided
+  if (!user) {
+    const job = await getJobStatus<BaseJob>(jobId)
+    user = job?.userId
+  }
+
+  const pipeline = redis.pipeline()
+
   // Remove file content from cache
-  await redis.del(`${IMPORT_JOB_PREFIX}${jobId}:csv`)
+  pipeline.del(`${IMPORT_JOB_PREFIX}${jobId}:csv`)
+
   // Remove job from Redis
-  await redis.del(`${IMPORT_JOB_PREFIX}${jobId}`)
+  pipeline.del(`${IMPORT_JOB_PREFIX}${jobId}`)
+
   // Remove job from active jobs list
-  await redis.srem(IMPORT_JOBS_LIST_KEY, [jobId])
+  pipeline.srem(IMPORT_JOBS_LIST_KEY, jobId)
+
+  // Remove job from user's jobs list if userId is available
+  if (user) {
+    pipeline.zrem(`${USER_JOBS_PREFIX}${user}`, jobId)
+  }
+
+  await pipeline.exec()
+}
+
+/**
+ * Get jobs by user ID with pagination
+ * @param userId - The user ID to get jobs for
+ * @param page - Page number (1-based)
+ * @param limit - Number of jobs per page
+ * @returns Array of job objects and pagination metadata
+ */
+export async function getUserJobs<T extends BaseJob>(
+  userId: string,
+  page = 1,
+  limit = 20
+): Promise<{ jobs: T[]; total: number; page: number; pages: number }> {
+  try {
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit - 1
+
+    // Get total count of user's jobs
+    const total = await redis.zcard(`${USER_JOBS_PREFIX}${userId}`)
+
+    // No jobs found
+    if (total === 0) {
+      return { jobs: [], total: 0, page, pages: 0 }
+    }
+
+    // Get job IDs for the requested page (sorted by timestamp, newest first)
+    const jobIds = await redis.zrevrange(`${USER_JOBS_PREFIX}${userId}`, startIndex, endIndex)
+
+    if (!jobIds.length) {
+      return { jobs: [], total, page, pages: Math.ceil(total / limit) }
+    }
+
+    // Get job details in parallel
+    const jobResults = await Promise.all(jobIds.map((jobId) => getJobStatus<T>(jobId)))
+
+    // Filter out null values with proper type assertion
+    const validJobs: T[] = jobResults.filter((job): job is Awaited<T> => job !== null)
+
+    return {
+      jobs: validJobs,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    }
+  } catch (error) {
+    logger.error(`Failed to get jobs for user ${userId}:`, error)
+    return { jobs: [], total: 0, page, pages: 0 }
+  }
 }
 
 /**
@@ -78,6 +148,29 @@ export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
 }
 
 /**
+ * Get all queued import jobs
+ */
+export async function getQueuedJobs<T extends BaseJob>(): Promise<T[]> {
+  try {
+    const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY)
+    if (!jobIds.length) return []
+
+    const jobs = await Promise.all(
+      jobIds.map(async (jobId) => {
+        const job = await getJobStatus<T>(jobId)
+        return job
+      })
+    )
+
+    // Filter out null jobs and only return queued jobs
+    return jobs.filter((job): job is Awaited<T> => !!job && job.status === 'queued')
+  } catch (error) {
+    logger.error('Failed to get queued jobs:', error)
+    return []
+  }
+}
+
+/**
  * Queue an import job
  */
 export async function queueImportJob(
@@ -105,17 +198,23 @@ export async function queueImportJob(
       },
     }
 
-    // Save csvContent to Redis.
-    // This must be done before saving the job to Redis to ensure the content is available for processing.
+    const pipeline = redis.pipeline()
+
+    // Save csvContent to Redis
     const csvKey = `${IMPORT_JOB_PREFIX}${jobId}:csv`
-    await redis.set(csvKey, options.csvContent, 'EX', JOB_EXPIRATION_TIME)
+    pipeline.set(csvKey, options.csvContent, 'EX', JOB_EXPIRATION_TIME)
 
     // Save job to Redis
-    await redis.set(`${IMPORT_JOB_PREFIX}${jobId}`, JSON.stringify(job), 'EX', JOB_EXPIRATION_TIME)
+    pipeline.set(`${IMPORT_JOB_PREFIX}${jobId}`, JSON.stringify(job), 'EX', JOB_EXPIRATION_TIME)
 
-    // Add to active jobs list.
-    // The import function will listen for new jobs in the queue.
-    await redis.sadd(IMPORT_JOBS_LIST_KEY, jobId)
+    // Add to active jobs list
+    pipeline.sadd(IMPORT_JOBS_LIST_KEY, jobId)
+
+    // Add to user's jobs list with score as timestamp for sorting
+    pipeline.zadd(`${USER_JOBS_PREFIX}${userId}`, job.startTime, jobId)
+    pipeline.expire(`${USER_JOBS_PREFIX}${userId}`, JOB_EXPIRATION_TIME)
+
+    await pipeline.exec()
 
     return job
   } catch (error) {

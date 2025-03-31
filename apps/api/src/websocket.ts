@@ -1,8 +1,19 @@
-import { getActiveJobs } from '@ponti/utils/imports'
+import { getActiveJobs, getQueuedJobs } from '@ponti/utils/imports'
 import { logger } from '@ponti/utils/logger'
 import { redis } from '@ponti/utils/redis'
 import type { FastifyInstance } from 'fastify'
-import { WebSocketServer } from 'ws'
+import { WebSocket, WebSocketServer } from 'ws'
+
+async function handleImportsSubscribe(ws: WebSocket) {
+  const [activeJobs, queuedJobs] = await Promise.all([getActiveJobs(), getQueuedJobs()])
+  ws.send(
+    JSON.stringify({
+      type: 'import:subscribed',
+      channel: IMPORT_PROGRESS_CHANNEL,
+      data: [...activeJobs, ...queuedJobs],
+    })
+  )
+}
 
 // !TODO Move to @ponti/utils/consts
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
@@ -43,8 +54,10 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
   fastify.log.info(`Subscribed to Redis channel: ${IMPORT_PROGRESS_CHANNEL}`)
 
   // Connection handler
-  wss.on('connection', (ws) => {
+  wss.on('connection', async (ws) => {
     fastify.log.info('WebSocket client connected')
+
+    // handleImportsSubscribe(ws)
 
     // Message handler
     ws.on('message', async (message) => {
@@ -54,6 +67,7 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
           message?: string
         }
 
+        fastify.log.info('Received WebSocket message:', data.type)
         // Handle different message types
         switch (data.type) {
           case 'ping':
@@ -61,13 +75,7 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
             break
 
           case 'imports:subscribe':
-            ws.send(
-              JSON.stringify({
-                type: 'subscribed',
-                channel: IMPORT_PROGRESS_CHANNEL,
-                data: await getActiveJobs(),
-              })
-            )
+            await handleImportsSubscribe(ws)
             break
 
           case 'chat':

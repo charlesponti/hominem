@@ -7,6 +7,7 @@ import {
   getActiveJobs,
   getImportFileContent,
   IMPORT_JOB_PREFIX,
+  JOB_EXPIRATION_TIME,
   removeJobFromQueue,
 } from '@ponti/utils/imports'
 import { logger } from '@ponti/utils/logger'
@@ -17,7 +18,6 @@ import { retryWithBackoff } from '@ponti/utils/utils'
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
 // Configuration
-const IMPORT_JOB_TTL = 60 * 60 // 1 hour
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
 const POLLING_INTERVAL = 30 * 1000 // 30 seconds
@@ -40,7 +40,7 @@ export async function updateJobStatus<T>(
     const updated = { ...current, ...update }
 
     // Update job in Redis with TTL
-    pipeline.set(jobKey, JSON.stringify(updated), 'EX', IMPORT_JOB_TTL)
+    pipeline.set(jobKey, JSON.stringify(updated), 'EX', JOB_EXPIRATION_TIME)
 
     // Publish progress update if provided
     if (update.stats?.progress !== undefined) {
@@ -64,7 +64,7 @@ export async function updateJobStatus<T>(
  * Process an import job in the background with retry logic
  */
 export async function processImportJob(job: ImportTransactionsJob) {
-  const { jobId, fileName } = job
+  const { jobId, fileName, userId } = job
   logger.info(`Starting import job ${jobId} for file ${fileName}`)
 
   try {
@@ -148,8 +148,8 @@ export async function processImportJob(job: ImportTransactionsJob) {
       stats: finalStats,
     })
 
-    // Remove import job from Redis
-    await removeJobFromQueue(jobId)
+    // Remove import job from Redis (pass userId for efficiency)
+    await removeJobFromQueue(jobId, userId)
     logger.info(`Job ${jobId} removed from Redis`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -194,7 +194,7 @@ setInterval(async () => {
     for (const job of activeJobs) {
       if (!job.options) {
         logger.warn(`Job ${job.jobId} has no options, removing from queue`)
-        await removeJobFromQueue(job.jobId)
+        await removeJobFromQueue(job.jobId, job.userId)
         continue
       }
 

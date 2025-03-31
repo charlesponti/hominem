@@ -1,5 +1,6 @@
-import { FileUp } from 'lucide-react'
-import type { DragEvent, KeyboardEvent } from 'react'
+import { cn } from '@/lib/utils'
+import type React from 'react'
+import { useCallback } from 'react'
 
 interface DropZoneProps {
   isImporting: boolean
@@ -7,7 +8,9 @@ interface DropZoneProps {
   onDrop: (files: File[]) => void
   onDragOver: () => void
   onDragLeave: () => void
-  onClick: () => void
+  onChange?: (files: File[]) => void
+  accept?: string
+  multiple?: boolean
 }
 
 export function DropZone({
@@ -16,62 +19,127 @@ export function DropZone({
   onDrop,
   onDragOver,
   onDragLeave,
-  onClick,
+  onChange,
+  accept = '.csv',
+  multiple = true,
 }: DropZoneProps) {
-  const handleDrop = (e: DragEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    onDragLeave()
-
-    if (isImporting) return
-
-    const items = e.dataTransfer.items
-    const files: File[] = []
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i]
-      if (item.kind === 'file' && item.type === 'text/csv') {
-        const file = item.getAsFile()
-        if (file) files.push(file)
-      }
-    }
-
-    onDrop(files)
-  }
-
-  const handleDragOver = (e: DragEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    if (!isImporting) {
-      onDragOver()
-    }
-  }
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+  // Handler for drop events - memoized to prevent recreations on each render
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLButtonElement>) => {
       e.preventDefault()
-      onClick()
+      e.stopPropagation()
+      onDragLeave()
+
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        onDrop(Array.from(e.dataTransfer.files))
+      }
+    },
+    [onDrop, onDragLeave]
+  )
+
+  // Shared handler function to trigger file input - memoized
+  const triggerFileInput = useCallback(() => {
+    if (!isImporting) {
+      document.getElementById('file-input-inside-dropzone')?.click()
     }
-  }
+  }, [isImporting])
+
+  // Handler for drag over - memoized
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onDragOver()
+    },
+    [onDragOver]
+  )
+
+  // Handler for drag leave - memoized
+  const handleDragLeave = useCallback(
+    (e: React.DragEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onDragLeave()
+    },
+    [onDragLeave]
+  )
+
+  // Handler for click events - memoized
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+      triggerFileInput()
+    },
+    [triggerFileInput]
+  )
+
+  // Handler for keyboard events - memoized
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      // Trigger click when Enter or Space is pressed
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault() // Prevent scrolling when Space is pressed
+        e.stopPropagation()
+        triggerFileInput()
+      }
+    },
+    [triggerFileInput]
+  )
+
+  // Handler for file input change - memoized
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.stopPropagation()
+      if (onChange) {
+        onChange(e.target.files ? Array.from(e.target.files) : [])
+      }
+    },
+    [onChange]
+  )
 
   return (
     <button
       type="button"
-      disabled={isImporting}
-      className={`relative w-full h-40 border-2 border-dashed rounded-lg transition-colors outline-none
-        ${dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'}
-        ${!isImporting ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}
-        focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`}
+      className={cn(
+        'relative border-2 border-dashed rounded-lg p-12',
+        {
+          'border-primary bg-primary/5': dragActive,
+          'border-gray-300 bg-gray-50': !dragActive,
+        },
+        'transition-colors duration-200 ease-in-out',
+        'flex flex-col items-center justify-center gap-4',
+        {
+          'opacity-50 pointer-events-none cursor-not-allowed': isImporting,
+          'cursor-pointer': !isImporting,
+        }
+      )}
       onDragOver={handleDragOver}
-      onDragLeave={onDragLeave}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={onClick}
+      onClick={handleClick}
       onKeyDown={handleKeyDown}
-      aria-label="Drop zone for CSV files"
+      tabIndex={isImporting ? -1 : 0} // Make focusable only when not importing
+      aria-disabled={isImporting}
+      aria-label="Upload file area. Press Enter or Space to open file browser"
     >
-      <div className="flex flex-col items-center justify-center h-full space-y-2">
-        <FileUp className="w-8 h-8 text-gray-400" aria-hidden="true" />
-        <label htmlFor="file-upload" className="text-center text-sm text-gray-600">
-          {isImporting ? 'Import in progress...' : 'Drag & drop CSV files here, or click to select'}
-        </label>
+      <input
+        id="file-input-inside-dropzone"
+        type="file"
+        multiple={multiple}
+        accept={accept}
+        onChange={handleInputChange}
+        className="sr-only"
+        disabled={isImporting}
+        aria-label="File input"
+      />
+
+      {/* Your existing UI content here */}
+      <div className="text-center space-y-2">
+        <p className="text-gray-500">
+          Drag and drop files here, or{' '}
+          <span className="text-primary font-medium">click to browse</span>
+        </p>
+        <p className="text-sm text-gray-400">Supported formats: CSV</p>
       </div>
     </button>
   )
