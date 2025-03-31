@@ -1,24 +1,28 @@
 'use client'
 
+import { DropZone } from '@/components/drop-zone'
 import { ProgressBar } from '@/components/progress-bar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useFileInput } from '@/hooks/use-file-input'
+import { useImportTransactions } from '@/hooks/use-import-transactions'
 import { useToast } from '@/hooks/use-toast'
-import { useWebSocketImports } from '@/hooks/use-websocket-imports'
 import type { FileStatus } from '@ponti/utils/types'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Wifi, WifiOff, X as XIcon } from 'lucide-react'
+import { Wifi, WifiOff, X as XIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { DropZone } from '../../../components/drop-zone'
 
-export default function SocketImportPage() {
+export default function TransactionImportPage() {
   const { files, handleFileChange } = useFileInput()
-  const { isConnected, statuses, startImport, activeJobIds } = useWebSocketImports()
+  const { isConnected, statuses, startImport, activeJobIds } = useImportTransactions()
   const { toast } = useToast()
   const [isImporting, setIsImporting] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+
+  const filteredFiles = files.filter(
+    (file) => !statuses.some((status) => status.file.name === file.name)
+  )
 
   useEffect(() => {
     // Reset import state when all jobs are complete
@@ -131,24 +135,8 @@ export default function SocketImportPage() {
           {isImporting ? 'Importing...' : isConnected ? 'Start Import' : 'Connecting...'}
         </Button>
 
-        {/* Status list */}
         <AnimatePresence>
-          {statuses.map((status) => (
-            <motion.div
-              key={status.file.name}
-              className="p-4 border rounded-lg bg-gray-50"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium truncate">{status.file.name}</span>
-              </div>
-              <FileUploadStatus uploadStatus={status} />
-            </motion.div>
-          ))}
-          {files.length > 0 && (
+          {statuses.length > 0 ? (
             <motion.div
               className="space-y-4"
               initial={{ opacity: 0, y: 20 }}
@@ -157,20 +145,27 @@ export default function SocketImportPage() {
             >
               <h2 className="text-lg font-semibold text-gray-700">Upload Status</h2>
               <ul className="space-y-3">
-                {files.map((file) => (
-                  <motion.li
+                {statuses.map((status) => (
+                  <FileImport key={status.file.name} fileName={status.file.name} status={status} />
+                ))}
+              </ul>
+            </motion.div>
+          ) : null}
+          {filteredFiles.length > 0 && (
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <h2 className="text-lg font-semibold text-gray-700">Upload Status</h2>
+              <ul className="space-y-3">
+                {filteredFiles.map((file) => (
+                  <FileImport
                     key={file.name}
-                    className="p-4 border rounded-lg bg-gray-50"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div className="flex flex-col justify-center gap-2 mb-2">
-                      <span className="font-medium truncate">{file.name}</span>
-                      <FileUploadStatus uploadStatus={statuses.find((s) => s.file === file)} />
-                    </div>
-                  </motion.li>
+                    fileName={file.name}
+                    status={statuses.find((s) => s.file === file)}
+                  />
                 ))}
               </ul>
             </motion.div>
@@ -178,6 +173,23 @@ export default function SocketImportPage() {
         </AnimatePresence>
       </Card>
     </div>
+  )
+}
+
+function FileImport({ fileName, status }: { fileName: string; status?: FileStatus }) {
+  return (
+    <motion.li
+      className="p-4 border rounded-lg bg-gray-50"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="flex flex-col justify-center gap-2 mb-2">
+        <span className="font-medium truncate">{fileName}</span>
+        {status ? <FileUploadStatus uploadStatus={status} /> : null}
+      </div>
+    </motion.li>
   )
 }
 
@@ -193,7 +205,7 @@ function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }) {
         <span className="text-blue-500 text-sm text-right">
           Processing {progress !== undefined ? `(${Math.round(progress)}%)` : ''}
         </span>
-        <ProgressBar progress={progress} />
+        {progress ? <ProgressBar progress={progress} /> : null}
       </output>
     )
   }

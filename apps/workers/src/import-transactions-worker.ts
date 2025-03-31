@@ -38,7 +38,7 @@ export async function updateJobStatus<T>(
 
     // Publish progress update if provided
     if (update.stats?.progress !== undefined) {
-      pipeline.publish(IMPORT_PROGRESS_CHANNEL, JSON.stringify(updated))
+      pipeline.publish(IMPORT_PROGRESS_CHANNEL, JSON.stringify([updated]))
     }
 
     await pipeline.exec()

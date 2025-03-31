@@ -60,7 +60,7 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
             ws.send(JSON.stringify({ type: 'pong' }))
             break
 
-          case 'subscribe:imports':
+          case 'imports:subscribe':
             ws.send(
               JSON.stringify({
                 type: 'subscribed',

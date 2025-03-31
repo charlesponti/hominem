@@ -1,15 +1,20 @@
-import { JobApplicationStage } from '@/lib/career'
+import { CompanySelect } from '@/components/company-select'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { JobApplicationStage, JobApplicationStatus } from '@/lib/career'
 import { useCreateApplication, useDeleteApplication } from '@/lib/hooks/useApplications'
 import { useAuth } from '@clerk/nextjs'
 import type { JobApplication } from '@ponti/utils/career'
-import { JobApplicationStatus } from '@ponti/utils/types'
 import { Plus, PlusCircle } from 'lucide-react'
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
-import { CompanySelect } from '../company-select'
-import { Button } from '../ui/button'
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../ui/dialog'
-import { Input } from '../ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 
 export function EditApplicationDialog({
   application,

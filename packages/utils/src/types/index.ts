@@ -44,6 +44,12 @@ export interface ImportTransactionsJob {
   endTime?: number
 }
 
+export type ImportRequestParams = {
+  csvContent: string
+  fileName: string
+  deduplicateThreshold: number
+}
+
 export type ImportRequestResponse = {
   success: boolean
   jobId: string
