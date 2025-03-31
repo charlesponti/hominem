@@ -3,14 +3,7 @@
 import { DatePicker } from '@/components/form/date-picker'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -31,6 +24,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useFinanceData } from '@/hooks/use-finance-data'
 import { format } from 'date-fns'
 import { ArrowUpDown, Download, RefreshCcw, Search } from 'lucide-react'
+import { AccountsList } from '../../../components/finance/accounts-list'
+import { TotalBalance } from '../../../components/finance/total-balance'
 
 export default function TransactionsPage() {
   const {
@@ -280,72 +275,15 @@ export default function TransactionsPage() {
         <TabsContent value="accounts" className="space-y-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Accounts</h1>
-            <div className="text-xl font-semibold">
-              Total Balance:{' '}
-              <span
-                className={Number.parseFloat(totalBalance) >= 0 ? 'text-green-600' : 'text-red-600'}
-              >
-                ${Number.parseFloat(totalBalance).toLocaleString()}
-              </span>
-            </div>
+            <TotalBalance balance={totalBalance} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {loading ? (
-              <div className="col-span-full text-center p-8">Loading accounts...</div>
-            ) : error ? (
-              <div className="col-span-full text-center p-8 text-red-500">{error}</div>
-            ) : accounts.length === 0 ? (
-              <div className="col-span-full text-center p-8">No accounts found.</div>
-            ) : (
-              accounts.map((account) => (
-                <Card key={account.id} className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle>{account.name}</CardTitle>
-                    <CardDescription>
-                      {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      <span
-                        className={
-                          Number.parseFloat(account.balance) >= 0
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                        }
-                      >
-                        ${Number.parseFloat(account.balance).toLocaleString()}
-                      </span>
-                    </div>
-
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium mb-2">Recent Activity</h4>
-                      <div className="space-y-2">
-                        {getRecentTransactions(account.name, 3).map((tx) => (
-                          <div key={tx.id} className="flex justify-between text-sm">
-                            <span className="truncate max-w-[180px]">{tx.description}</span>
-                            <span
-                              className={
-                                Number.parseFloat(tx.amount) < 0 ? 'text-red-500' : 'text-green-500'
-                              }
-                            >
-                              ${Math.abs(Number.parseFloat(tx.amount)).toFixed(2)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="bg-muted/50 p-3">
-                    <Button variant="ghost" size="sm" className="ml-auto">
-                      View Details
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))
-            )}
-          </div>
+          <AccountsList
+            accounts={accounts}
+            loading={loading}
+            error={error}
+            getRecentTransactions={getRecentTransactions}
+          />
         </TabsContent>
       </Tabs>
     </div>
