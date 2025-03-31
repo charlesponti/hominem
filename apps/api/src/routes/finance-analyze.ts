@@ -112,8 +112,8 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
     category: z.string().optional(),
     limit: z.string().transform(Number).optional(),
     groupBy: z.enum(['month', 'week', 'day']).optional().default('month'),
-    includeStats: z.boolean().optional().default(false),
-    compareToPrevious: z.boolean().optional().default(false),
+    includeStats: z.coerce.boolean().optional().default(false),
+    compareToPrevious: z.coerce.boolean().optional().default(false),
   })
 
   // Get spending over time

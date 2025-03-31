@@ -47,7 +47,7 @@ function AnalyticsContent() {
   const [chartType, setChartType] = useState<'area' | 'bar'>('area')
 
   // Get finance data (accounts)
-  const { accounts, loading: financeLoading } = useFinanceData()
+  const { accounts } = useFinanceData()
 
   // Use our custom hook for categories
   const { categories, isLoading: categoriesLoading } = useFinanceCategories()
@@ -118,9 +118,9 @@ function AnalyticsContent() {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categoriesLoading ? (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="disabled" disabled>
                       Loading categories...
                     </SelectItem>
                   ) : (

@@ -90,7 +90,7 @@ export function useTimeSeriesData({
 
     const queryString = params.toString()
     return await apiClient.get<never, TimeSeriesResponse>(
-      `/finance/analyze/spending-time-series?${queryString}`
+      `/api/finance/analyze/spending-time-series?${queryString}`
     )
   }
 

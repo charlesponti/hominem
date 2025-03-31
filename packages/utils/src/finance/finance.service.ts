@@ -48,6 +48,7 @@ export function buildWhereConditions(options: QueryOptions) {
     conditions.push(lte(transactions.amount, options.max))
   }
 
+  // !FIX This breaks because a `leftJoin` is required
   if (options.account) {
     conditions.push(like(financeAccounts.name, `%${options.account}%`))
   }
@@ -142,15 +143,21 @@ export async function summarizeByMonth(options: QueryOptions) {
     .from(transactions)
     .where(whereConditions)
     .groupBy(sql`SUBSTR(${transactions.date}::text, 1, 7)`)
-    .orderBy(sql`month DESC`)
 
   // Format the numeric values
-  return result.map((row) => ({
-    month: row.month,
-    count: row.count,
-    total: Number.parseFloat(row.total.toString()).toFixed(2),
-    average: Number.parseFloat(row.average.toString()).toFixed(2),
-  }))
+  return result
+    .map((row) => ({
+      month: row.month,
+      count: row.count,
+      total: Number.parseFloat(row.total.toString()).toFixed(2),
+      average: Number.parseFloat(row.average.toString()).toFixed(2),
+    }))
+    .sort((a, b) => {
+      const dateA = new Date(a.month)
+      const dateB = new Date(b.month)
+
+      return dateA.getTime() - dateB.getTime()
+    })
 }
 
 export async function findTopMerchants(options: QueryOptions) {
