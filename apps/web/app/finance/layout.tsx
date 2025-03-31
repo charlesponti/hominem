@@ -1,10 +1,13 @@
-'use client'
+import { RedirectToSignIn } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function FinanceLayout({ children }: { children: React.ReactNode }) {
+  const { userId } = await auth()
+
+  if (!userId) {
+    return <RedirectToSignIn />
+  }
+
   return (
     <div className="min-h-screen">
       <div className="flex">
