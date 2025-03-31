@@ -117,19 +117,11 @@ export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY)
     if (!jobIds.length) return []
 
-    const jobs = await Promise.all(
-      jobIds.map(async (jobId) => {
-        const job = await getJobStatus(jobId)
-        return job
-      })
-    )
-
-    // Filter out null jobs and remove completed jobs from active list
-    const validJobs = jobs.filter((job): job is T => !!job)
+    const jobs = await getJobsByIds<T>(jobIds)
 
     // Clean up completed or errored jobs older than 10 minutes
     const now = Date.now()
-    const jobsToRemove = validJobs.filter((job) => {
+    const jobsToRemove = jobs.filter((job) => {
       const isDone = job.status === 'done' || job.status === 'error'
       const isOld = job.endTime && now - job.endTime > 10 * 60 * 1000 // 10 minutes
       return isDone && isOld
@@ -140,9 +132,24 @@ export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
       await redis.srem(IMPORT_JOBS_LIST_KEY, ...jobIdsToRemove)
     }
 
-    return validJobs
+    return jobs
   } catch (error) {
     logger.error('Failed to get active jobs:', error)
+    return []
+  }
+}
+
+export async function getJobsByIds<T extends BaseJob>(jobIds: string[]): Promise<T[]> {
+  try {
+    const jobs = await Promise.all(
+      jobIds.map(async (jobId) => {
+        const job = await getJobStatus<T>(jobId)
+        return job
+      })
+    )
+    // Filter out null jobs
+    return jobs.filter((job): job is Awaited<T> => !!job)
+  } catch (error) {
     return []
   }
 }
@@ -155,15 +162,10 @@ export async function getQueuedJobs<T extends BaseJob>(): Promise<T[]> {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY)
     if (!jobIds.length) return []
 
-    const jobs = await Promise.all(
-      jobIds.map(async (jobId) => {
-        const job = await getJobStatus<T>(jobId)
-        return job
-      })
-    )
+    const jobs = await getJobsByIds<T>(jobIds)
 
     // Filter out null jobs and only return queued jobs
-    return jobs.filter((job): job is Awaited<T> => !!job && job.status === 'queued')
+    return jobs.filter((job) => job.status === 'queued')
   } catch (error) {
     logger.error('Failed to get queued jobs:', error)
     return []
