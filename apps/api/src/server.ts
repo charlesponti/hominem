@@ -1,7 +1,6 @@
 import { clerkPlugin } from '@clerk/fastify'
 import type { FastifyCookieOptions } from '@fastify/cookie'
 import fastifyCookie from '@fastify/cookie'
-import { LOGGER_OPTIONS } from '@ponti/utils/logger'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
 
@@ -111,7 +110,20 @@ export async function createServer(
 
 export async function startServer() {
   const server = await createServer({
-    logger: LOGGER_OPTIONS,
+    logger: {
+      level: process.env.LOG_LEVEL || 'info',
+      transport:
+        env.NODE_ENV === 'production'
+          ? undefined
+          : {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: true,
+                ignore: 'pid,hostname',
+              },
+            },
+    },
     disableRequestLogging: process.env.ENABLE_REQUEST_LOGGING !== 'true',
   })
 
