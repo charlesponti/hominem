@@ -1,4 +1,4 @@
-import logger from '@ponti/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import { encode } from 'gpt-tokenizer'
 
 /**

@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { Command } from 'commander'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -11,7 +11,7 @@ export const command = new Command('init')
       // Create .hominem directory
       const homedir = os.homedir()
       const hominemDir = path.join(homedir, '.hominem')
-      
+
       // Check if directory exists
       try {
         await fs.access(hominemDir)
@@ -36,7 +36,7 @@ export const command = new Command('init')
       // Set environment variable in shell config
       const zshrcPath = path.join(homedir, '.zshrc')
       const envVarLine = `\n# Hominem environment variables\nexport HOMINEM_DB_PATH="${dbPath}"\n`
-      
+
       try {
         // Check if HOMINEM_DB_PATH already exists in .zshrc
         const zshrcContent = await fs.readFile(zshrcPath, 'utf-8')
@@ -48,7 +48,9 @@ export const command = new Command('init')
           logger.info('Added HOMINEM_DB_PATH to .zshrc')
         }
 
-        logger.info('\nInitialization complete! Please run the following command to update your environment:')
+        logger.info(
+          '\nInitialization complete! Please run the following command to update your environment:'
+        )
         logger.info('\n  source ~/.zshrc\n')
         logger.info(`Or restart your terminal and HOMINEM_DB_PATH will be set to: ${dbPath}`)
       } catch (error) {

@@ -4,7 +4,7 @@
  */
 
 import { db } from '@ponti/utils/db'
-import logger from '@ponti/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import { place } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'

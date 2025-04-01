@@ -1,13 +1,12 @@
 'use client'
 
 import { ChatInterface } from '@/components/chat-interface'
-import { Card } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { CHAT_ENDPOINTS, useChat } from '@/lib/hooks/use-chat'
+import { BugIcon } from 'lucide-react'
 import { useState } from 'react'
 
-export default function UnifiedChatPage() {
+export default function ChatPage() {
   const [showDebugInfo, setShowDebugInfo] = useState(false)
 
   const {
@@ -26,25 +25,32 @@ export default function UnifiedChatPage() {
   })
 
   return (
-    <Card className="h-full flex flex-col">
-      <div className="p-4 bg-muted font-medium flex justify-between items-center">
-        <div>Hominem AI Assistant</div>
+    <div className="h-full flex flex-col">
+      <div className="py-3 pr-2 flex sm:flex-row justify-end items-center gap-2 bg-none">
         <div className="flex items-center space-x-2">
-          <Switch id="show-debug" checked={showDebugInfo} onCheckedChange={setShowDebugInfo} />
-          <Label htmlFor="show-debug">Show debug info</Label>
+          <Switch
+            id="show-debug"
+            checked={showDebugInfo}
+            onCheckedChange={setShowDebugInfo}
+            className="data-[state=checked]:bg-primary"
+          />
+          <BugIcon size={16} className="text-primary" />
         </div>
       </div>
-      <ChatInterface
-        messages={messages}
-        onSendMessage={sendMessage.mutate}
-        isLoading={isLoading}
-        error={!!error}
-        onReset={resetConversation.mutate}
-        onNewChat={startNewChat.mutate}
-        toolCalls={toolCalls}
-        toolResults={toolResults}
-        showDebugInfo={showDebugInfo}
-      />
-    </Card>
+
+      <div className="flex-1 overflow-hidden">
+        <ChatInterface
+          messages={messages}
+          onSendMessage={sendMessage.mutate}
+          isLoading={isLoading}
+          error={!!error}
+          onReset={resetConversation.mutate}
+          onNewChat={startNewChat.mutate}
+          toolCalls={toolCalls}
+          toolResults={toolResults}
+          showDebugInfo={showDebugInfo}
+        />
+      </div>
+    </div>
   )
 }

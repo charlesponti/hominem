@@ -30,10 +30,10 @@
   "editor.minimap.enabled": true,
   "github.copilot.chat.codeGeneration.instructions": [
     {
-      "file": "${workspaceFolder}/.cursor/rules/javascript.md"
+      "file": ".cursor/rules/javascript.md"
     },
     {
-      "file": "${workspaceFolder}/.cursor/rules/react-hooks.md"
+      "file": ".cursor/rules/react-hooks.md"
     },
   ],
   "github.copilot.chat.followUps": "always",

@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import axios from 'axios'
 import { Command } from 'commander'
 import fs from 'node:fs'

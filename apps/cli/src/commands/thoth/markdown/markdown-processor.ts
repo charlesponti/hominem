@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import type { TextAnalysis } from '@ponti/utils/schemas'
 import { getDatesFromText } from '@ponti/utils/time'
 import * as cheerio from 'cheerio'

@@ -1,4 +1,4 @@
-import logger from '@ponti/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import sendgrid, { type MailDataRequired } from '@sendgrid/mail'
 import type { FastifyInstance } from 'fastify'
 

@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { NLPProcessor } from '@ponti/utils/nlp'
 import { Command } from 'commander'
 import { createWriteStream } from 'node:fs'

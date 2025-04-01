@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { Command } from 'commander'
 import { google } from 'googleapis'
 import fs from 'node:fs'
@@ -25,13 +25,15 @@ program
         const client = await googleClient.authorize()
         if (client) {
           logger.info('✅ Google authentication is active and working')
-          
+
           // Try to get some basic info to confirm it's working
           try {
             const calendar = google.calendar({ version: 'v3', auth: client })
             const calendars = await calendar.calendarList.list({ maxResults: 1 })
             if (calendars.data.items?.length) {
-              logger.info(`Connected to Google account with access to ${calendars.data.items.length} calendars`)
+              logger.info(
+                `Connected to Google account with access to ${calendars.data.items.length} calendars`
+              )
             }
           } catch (err) {
             logger.warn('Token seems valid but calendar access failed')
@@ -55,7 +57,7 @@ program
       logger.info('To authenticate with Google:')
       logger.info('1. Connect your Google account in the web app settings')
       logger.info('2. Run `hominem api auth` to save your tokens for CLI use')
-      
+
       // Check if we have Clerk tokens
       if (fs.existsSync(CLI_GOOGLE_TOKEN_PATH)) {
         logger.info('\nCurrent status: ✅ Google tokens found')

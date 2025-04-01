@@ -12,9 +12,5 @@ export default async function ChatLayout({
     return <RedirectToSignIn redirectUrl="/chat" />
   }
 
-  return (
-    <div className="h-lvh max-h-lvh overflow-scroll flex flex-col justify-center p-4">
-      {children}
-    </div>
-  )
+  return <div className="h-[100dvh] overflow-hidden">{children}</div>
 }

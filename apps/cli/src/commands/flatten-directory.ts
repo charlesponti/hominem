@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import * as fs from 'node:fs/promises'

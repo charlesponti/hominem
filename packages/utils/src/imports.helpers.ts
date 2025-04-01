@@ -1,4 +1,4 @@
-import logger from './logger'
+import { logger } from './logger'
 import { redis } from './redis'
 import type { BaseJob, ImportTransactionsJob, ProcessTransactionOptions } from './types'
 

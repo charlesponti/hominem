@@ -1,11 +1,11 @@
 import type { ToolCalls, ToolResults } from '@/lib/hooks/use-chat'
+import { cn } from '@/lib/utils'
 import type { ChatMessage } from '@ponti/utils/schema'
 import { Eraser, NotebookPen, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
-import { Message as MessageComponent } from './ui/message'
-import { Textarea } from './ui/textarea'
+import { Message } from './ui/message'
 
 type ChatInterfaceProps = {
   messages: ChatMessage[]
@@ -32,6 +32,18 @@ export function ChatInterface({
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const messageListRef = useRef<HTMLDivElement>(null)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit(e)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,8 +57,6 @@ export function ChatInterface({
     }
   }
 
-  const messageListRef = useRef<HTMLDivElement>(null)
-
   // Auto-focus textarea when component mounts
   useEffect(() => {
     if (textareaRef.current) {
@@ -54,7 +64,7 @@ export function ChatInterface({
     }
   }, [])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Auto-resize textarea as user types
+  // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current
     if (!textarea) return
@@ -66,124 +76,157 @@ export function ChatInterface({
 
     adjustHeight()
 
-    return () => {}
-  }, [inputValue])
+    const resizeObserver = new ResizeObserver(adjustHeight)
+    resizeObserver.observe(textarea)
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: This effect should run when messages change.
-  useEffect(() => {
-    const scrollToBottom = (element: HTMLElement) => {
-      if (messageListRef.current) {
-        // const element = messageListRef.current
-        const targetScroll = element.scrollHeight - element.clientHeight
-        const startScroll = element.scrollTop
-        const duration = 300 // animation duration in ms
-        const startTime = performance.now()
-
-        const animateScroll = (currentTime: number) => {
-          const elapsed = currentTime - startTime
-          const progress = Math.min(elapsed / duration, 1)
-
-          // Easing function for smooth animation
-          const easeOut = (t: number) => 1 - (1 - t) ** 3
-
-          element.scrollTop = startScroll + (targetScroll - startScroll) * easeOut(progress)
-
-          if (progress < 1) {
-            requestAnimationFrame(animateScroll)
-          }
-        }
-
-        requestAnimationFrame(animateScroll)
-      }
+    return () => {
+      resizeObserver.disconnect()
     }
-    scrollToBottom(messageListRef.current as HTMLElement)
-  }, [messageListRef, messages])
+  }, []) // Remove inputValue dependency as we're using ResizeObserver
+
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    const element = messageListRef.current
+    if (!element) return
+
+    const scrollToBottom = () => {
+      const { scrollTop, scrollHeight, clientHeight } = element
+      const wasAtBottom = scrollTop + clientHeight >= scrollHeight - 10
+
+      // Only animate if we were already at the bottom
+      if (!wasAtBottom) return
+
+      const targetScroll = element.scrollHeight - element.clientHeight
+      const startScroll = element.scrollTop
+      const startTime = performance.now()
+      const duration = 300
+
+      const animateScroll = (currentTime: number) => {
+        const elapsed = currentTime - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        const easeOut = (t: number) => 1 - (1 - t) ** 3
+        element.scrollTop = startScroll + (targetScroll - startScroll) * easeOut(progress)
+        if (progress < 1) requestAnimationFrame(animateScroll)
+      }
+
+      requestAnimationFrame(animateScroll)
+    }
+
+    // Use a MutationObserver to detect changes in the messages container
+    const observer = new MutationObserver(scrollToBottom)
+    observer.observe(element, { childList: true, subtree: true })
+
+    // Initial scroll
+    scrollToBottom()
+
+    return () => observer.disconnect()
+  }, []) // Empty dependency array since we're using MutationObserver
 
   return (
-    <div className="flex-1 relative flex flex-col overflow-hidden">
-      <div
-        className="flex-1 flex flex-col justify-start overflow-y-auto p-4 pb-28 space-y-4"
-        ref={messageListRef}
-      >
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            Send a message to start the conversation
-          </div>
-        ) : (
-          messages.map((message) => <MessageComponent key={message.id} message={message} />)
-        )}
+    <div className="relative flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto" ref={messageListRef}>
+        <div className="flex flex-col space-y-4 sm:space-y-6 p-2 sm:p-4 pb-[100px]">
+          {messages.map((message) => (
+            <Message key={message.id} message={message} />
+          ))}
 
-        {error && (
-          <Card className="p-4 bg-destructive/10 text-destructive">
-            <div className="font-semibold mb-1">Error</div>
-            <div>We encountered an issue. Please try again later.</div>
-          </Card>
-        )}
+          {showDebugInfo && toolCalls.length > 0 && (
+            <Card
+              className={cn(
+                'p-3 sm:p-4 bg-muted/50 border-primary/10',
+                'animate-in fade-in slide-in-from-bottom-2',
+                isLoading && 'opacity-50'
+              )}
+            >
+              <div className="font-semibold mb-2 text-primary text-sm">Tool Calls</div>
+              <pre className="text-xs overflow-auto max-h-32 sm:max-h-40 bg-background/50 p-2 rounded-md">
+                {JSON.stringify(toolCalls, null, 2)}
+              </pre>
+            </Card>
+          )}
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-4">
-            <div className="animate-pulse text-sm text-primary">Thinking...</div>
-          </div>
-        )}
+          {showDebugInfo && toolResults.length > 0 && (
+            <Card
+              className={cn(
+                'p-3 sm:p-4 bg-muted/50 border-primary/10',
+                'animate-in fade-in slide-in-from-bottom-2',
+                isLoading && 'opacity-50'
+              )}
+            >
+              <div className="font-semibold mb-2 text-primary text-sm">Tool Results</div>
+              <pre className="text-xs overflow-auto max-h-32 sm:max-h-40 bg-background/50 p-2 rounded-md">
+                {JSON.stringify(toolResults, null, 2)}
+              </pre>
+            </Card>
+          )}
 
-        {showDebugInfo && toolCalls.length > 0 && (
-          <Card className="p-4 bg-muted/80">
-            <div className="font-semibold mb-1">Tool Calls</div>
-            <pre className="text-xs overflow-auto max-h-40">
-              {JSON.stringify(toolCalls, null, 2)}
-            </pre>
-          </Card>
-        )}
-
-        {showDebugInfo && toolResults.length > 0 && (
-          <Card className="p-4 bg-muted/80">
-            <div className="font-semibold mb-1">Tool Results</div>
-            <pre className="text-xs overflow-auto max-h-40">
-              {JSON.stringify(toolResults, null, 2)}
-            </pre>
-          </Card>
-        )}
+          {isLoading && (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary" />
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="absolute bottom-0 w-full flex justify-center bg-gradient-to-t from-background to-transparent pt-6">
-        <div className="w-full max-w-[700px] p-4">
-          <form onSubmit={handleSubmit} className="flex items-end gap-2 relative">
-            <div className="flex-1 relative">
-              <Textarea
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/80 to-transparent">
+        <div className="mx-auto max-w-[400px] px-2 sm:px-4 pb-2 sm:pb-4">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col sm:flex-row gap-2 w-full bg-background border rounded-lg p-2 shadow-lg"
+          >
+            <div className="relative flex-1">
+              <textarea
                 ref={textareaRef}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Type your message..."
-                style={{ scrollbarWidth: 'none' }}
-                className="resize-none min-h-[40px] max-h-[200px] py-3 pr-12 rounded-full border shadow-sm focus-visible:ring-offset-0 bg-white"
-                disabled={isLoading}
-                rows={1}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSubmit(e)
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message..."
+                className="w-full resize-none rounded-md px-3 py-2 text-sm sm:text-base focus-visible:outline-none bg-transparent min-h-[44px] max-h-[200px]"
+                style={{ height: 'auto' }}
+              />
+            </div>
+            <div className="flex gap-2 self-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  onReset()
+                  setInputValue('')
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = 'auto'
                   }
                 }}
-              />
-              <Button
-                className="absolute right-2 bottom-[5px] h-8 w-8 p-0 rounded-full"
-                type="submit"
-                disabled={isLoading || !inputValue.trim()}
-                size="icon"
+                className="h-[38px] w-[38px] shrink-0"
               >
-                {/* Add margin due to shape of Send icon */}
-                <Send size={16} className="mt-[2px] mr-[2px]" />
+                <Eraser className="h-4 w-4" />
+              </Button>
+              {onNewChat && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    onNewChat()
+                    setInputValue('')
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = 'auto'
+                    }
+                  }}
+                  className="h-[38px] w-[38px] shrink-0"
+                >
+                  <NotebookPen className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!inputValue.trim() || isLoading}
+                className="h-[38px] w-[38px] shrink-0"
+              >
+                <Send className="h-4 w-4" />
               </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onNewChat || onReset}
-              className="rounded-full h-10 w-10 p-0 flex items-center justify-center"
-              size="icon"
-            >
-              {onNewChat ? <NotebookPen size={16} /> : <Eraser size={16} />}
-            </Button>
           </form>
         </div>
       </div>

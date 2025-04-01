@@ -7,8 +7,6 @@ const config: Omit<Config, 'content'> = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
-
-    // Or if using `src` directory:
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
@@ -19,6 +17,18 @@ const config: Omit<Config, 'content'> = {
       },
       animate: {
         'fade-in': 'fade-in 0.5s ease-out',
+      },
+      height: {
+        'screen-dynamic': '100dvh',
+      },
+      minHeight: {
+        'screen-dynamic': '100dvh',
+      },
+      maxHeight: {
+        'screen-dynamic': '100dvh',
+      },
+      spacing: {
+        'safe-area-bottom': 'env(safe-area-inset-bottom)',
       },
       borderRadius: {
         lg: 'var(--radius)',

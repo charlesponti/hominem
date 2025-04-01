@@ -1,5 +1,5 @@
+import { logger } from '@/logger'
 import { getAuthToken } from '@/utils/auth.utils'
-import { logger } from '@ponti/utils/logger'
 import axios from 'axios'
 import { Command } from 'commander'
 import ora from 'ora'

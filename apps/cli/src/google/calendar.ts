@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { Command } from 'commander'
 import { createObjectCsvWriter } from 'csv-writer'
 import { google, type calendar_v3 } from 'googleapis'

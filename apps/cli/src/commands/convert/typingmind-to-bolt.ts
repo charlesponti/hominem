@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { BoltExportSchema, TypingMindExportSchema } from '@ponti/utils/services'
 import { Command } from 'commander'
 import fs from 'node:fs'

@@ -1,5 +1,5 @@
+import { logger } from '@/logger'
 import { authenticate as googleAuthenticate } from '@google-cloud/local-auth'
-import { logger } from '@ponti/utils/logger'
 import type { Credentials, GoogleAuth, JWTInput, OAuth2Client } from 'google-auth-library'
 import { google } from 'googleapis'
 import fs from 'node:fs'
@@ -64,12 +64,12 @@ export class GoogleOAuthService {
     logger.info('1. Go to your web app account settings')
     logger.info('2. Disconnect and reconnect your Google account')
     logger.info('3. Run `hominem api auth` to fetch new tokens')
-    
+
     // Remove existing tokens to force re-auth
     if (fs.existsSync(CLI_GOOGLE_TOKEN_PATH)) {
       fs.unlinkSync(CLI_GOOGLE_TOKEN_PATH)
     }
-    
+
     throw new Error('Please reconnect your Google account in the web app')
   }
 
@@ -80,38 +80,38 @@ export class GoogleOAuthService {
         logger.warn('No Google tokens found')
         return null
       }
-      
+
       const content = await readFile(CLI_GOOGLE_TOKEN_PATH)
       const tokens = JSON.parse(content.toString())
-      
+
       if (!tokens.access_token) {
         logger.warn('Invalid Google token format - missing access token')
         return null
       }
-      
+
       // Create an OAuth2 client with the tokens
       const oauth2Client = new google.auth.OAuth2()
       oauth2Client.setCredentials({
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
-        expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : undefined
+        expiry_date: tokens.expires_at ? new Date(tokens.expires_at).getTime() : undefined,
       })
-      
+
       // Set up token refresh handler
       oauth2Client.on('tokens', (tokens) => {
         logger.info('Google token refreshed')
-        
+
         // Update the stored tokens with refreshed access token
         this.updateStoredTokens(tokens)
       })
-      
+
       return oauth2Client
     } catch (err) {
       logger.error('Error getting Google auth from Clerk tokens:', err)
       return null
     }
   }
-  
+
   // Update stored tokens with refreshed ones
   private async updateStoredTokens(newTokens: Credentials): Promise<void> {
     try {
@@ -119,18 +119,20 @@ export class GoogleOAuthService {
       if (!fs.existsSync(CLI_GOOGLE_TOKEN_PATH)) {
         return
       }
-      
+
       // Read current tokens
       const content = await readFile(CLI_GOOGLE_TOKEN_PATH)
       const currentTokens = JSON.parse(content.toString())
-      
+
       // Merge with new tokens
       const updatedTokens = {
         ...currentTokens,
         access_token: newTokens.access_token || currentTokens.access_token,
-        expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : currentTokens.expires_at
+        expires_at: newTokens.expiry_date
+          ? new Date(newTokens.expiry_date).toISOString()
+          : currentTokens.expires_at,
       }
-      
+
       // Save updated tokens
       await writeFile(CLI_GOOGLE_TOKEN_PATH, JSON.stringify(updatedTokens, null, 2))
     } catch (err) {

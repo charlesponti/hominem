@@ -1,4 +1,4 @@
-import logger from '@ponti/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import fs from 'node:fs'
 import path from 'node:path'
 

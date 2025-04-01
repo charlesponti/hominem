@@ -1,5 +1,5 @@
+import { logger } from '@/logger'
 import { DuckDBInstance } from '@duckdb/node-api'
-import { logger } from '@ponti/utils/logger'
 import { Command } from 'commander'
 import fs from 'node:fs/promises'
 import ora from 'ora'

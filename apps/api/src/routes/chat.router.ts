@@ -1,6 +1,7 @@
-import { google } from '@ai-sdk/google'
+import { openai } from '@ai-sdk/openai'
+// import { google } from '@ai-sdk/openai'
 import { allTools, calculatorTool, searchTool } from '@ponti/ai'
-import logger from '@ponti/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import type { CoreMessage, Message as VercelChatMessage } from 'ai'
 import { generateText, streamText } from 'ai'
 import type { FastifyInstance } from 'fastify'
@@ -12,6 +13,9 @@ import { HominemVectorStore } from 'src/services/vector.service'
 import z from 'zod'
 import { ApiError, BadRequestError, handleError } from '../lib/errors'
 import { redisCache } from '../plugins/redis'
+
+const model = openai('gpt-4o-mini')
+// const model = google('gemini-1.5-flash-latest')
 
 const chatMessageSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
@@ -236,7 +240,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       // Call model with tools and messages
       timer.mark('ai-start')
       const response = await generateText({
-        model: google('gemini-1.5-flash-latest'),
+        model,
         temperature: 0.2,
         system: await promptService.getPrompt('assistant'),
         messages: fullMessages,
@@ -335,7 +339,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       })
 
       const stream = streamText({
-        model: google('gemini-1.5-flash-latest'),
+        model,
         temperature: 0.2,
         system: `You are a helpful AI assistant named Hominem.
           
@@ -384,7 +388,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const assistantPrompt = await promptService.getPrompt('assistant')
 
       const result = await generateText({
-        model: google('gemini-1.5-flash-latest'),
+        model,
         temperature: 0.2,
         system: assistantPrompt,
         messages: [
@@ -452,7 +456,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       )
 
       const response = await generateText({
-        model: google('gemini-1.5-flash-latest'),
+        model,
         temperature: 0,
         system:
           "You are a helpful AI assistant called Hominem that can manage all aspects of a user's digital life. Use the appropriate tools to help the user accomplish their tasks.",
@@ -498,7 +502,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
 
     try {
       const result = await generateText({
-        model: google('gemini-1.5-pro-latest'),
+        model,
         tools: {
           ...allTools,
           ...utilityTools,

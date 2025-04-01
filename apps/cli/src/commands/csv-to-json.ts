@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { Command } from 'commander'
 import csv from 'csv-parser'
 import * as fs from 'node:fs'

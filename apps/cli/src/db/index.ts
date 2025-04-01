@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql'
 import fs from 'node:fs'
 import path from 'node:path'

@@ -1,5 +1,5 @@
+import { logger } from '@/logger'
 import { get_historical_flight_data } from '@ponti/ai'
-import { logger } from '@ponti/utils/logger'
 import { generateObject, generateText } from 'ai'
 import { Command } from 'commander'
 import * as fs from 'node:fs'

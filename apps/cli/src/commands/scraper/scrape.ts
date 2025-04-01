@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import {
   SITE_SCHEMAS,
   getJobPostingFromHTML,

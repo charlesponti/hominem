@@ -1,6 +1,6 @@
 import { db } from '../db/index'
 import { type FinanceAccountInsert, financeAccounts } from '../db/schema'
-import logger from '../logger'
+import { logger } from '../logger'
 
 class FinancialAccountService {
   public async getAccountsMap() {

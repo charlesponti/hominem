@@ -53,7 +53,6 @@
     "mongodb": "^6.13.0",
     "ollama-ai-provider": "^1.2.0",
     "openai": "4.83.0",
-    "pino": "^9.6.0",
     "playwright": "^1.51.0",
     "postgres": "^3.4.5",
     "react-syntax-highlighter": "^15.6.1",
@@ -62,6 +61,7 @@
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
     "vite": "^6.1.1",
+    "winston": "^3.11.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

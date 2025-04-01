@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import { getBrowser, getContext } from '@ponti/utils/scraping'
 import * as fs from 'node:fs'
 import path from 'node:path'
@@ -6,7 +6,7 @@ import ora from 'ora'
 
 async function scrapeUniqlo() {
   const SCRATCHPAD_DIR = process.env.SCRATCHPAD_DIR
-  
+
   if (!SCRATCHPAD_DIR) {
     logger.error('SCRATCHPAD_DIR environment variable is required')
     process.exit(1)

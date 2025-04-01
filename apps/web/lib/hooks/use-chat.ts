@@ -76,7 +76,7 @@ export function useChat({
     (message: ChatMessage) => {
       const newMessage = {
         ...message,
-        id: message.id || Date.now().toString(),
+        id: message.id || crypto.randomUUID(),
         messageIndex: message.messageIndex || String(Date.now()),
         createdAt: message.createdAt || new Date().toISOString(),
       }
@@ -97,10 +97,10 @@ export function useChat({
       // Add user message immediately for UI responsiveness
       const userMessage = addMessage({
         role: 'user',
-        content,
+        content: content,
         toolCalls: [],
         chatId: crypto.randomUUID(),
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         reasoning: null,
         parentMessageId: null,
         messageIndex: String(Date.now()),
@@ -124,7 +124,7 @@ export function useChat({
 
         // Create initial streaming message
         const streamId = 'stream-response'
-        addMessage({
+        const streamMessage: ChatMessage = {
           role: 'assistant',
           content: '',
           id: streamId,
@@ -137,7 +137,8 @@ export function useChat({
           messageIndex: String(Date.now()),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        })
+        }
+        addMessage(streamMessage)
 
         // Process stream
         while (true) {
@@ -154,7 +155,7 @@ export function useChat({
 
         // Finalize the message with a permanent ID
         queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) =>
-          oldMessages.map((m) => (m.id === streamId ? { ...m, id: Date.now().toString() } : m))
+          oldMessages.map((m) => (m.id === streamId ? { ...m, id: crypto.randomUUID() } : m))
         )
 
         return { success: true }
@@ -179,7 +180,7 @@ export function useChat({
           ...oldMessages,
           ...data.messages.map((message) => ({
             ...message,
-            id: message.id || Date.now().toString(),
+            id: message.id || crypto.randomUUID(),
             messageIndex: message.messageIndex || String(Date.now()),
             createdAt: message.createdAt || new Date().toISOString(),
           })),

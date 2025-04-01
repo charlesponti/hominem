@@ -1,56 +1,83 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { cwd } from 'node:process'
-import pino, { type LoggerOptions } from 'pino'
+import type { LeveledLogMethod, Logger as WinstonLogger } from 'winston'
+import winston from 'winston'
 
-// Create file if it doesn't exist
 const LOG_FILE = path.resolve(cwd(), './logs/error.log')
 if (!fs.existsSync(LOG_FILE)) {
   fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true })
   fs.writeFileSync(LOG_FILE, '')
 }
 
-export const LOGGER_OPTIONS: LoggerOptions = {
-  level: process.env.PINO_LOG_LEVEL || 'debug',
-  timestamp: pino.stdTimeFunctions.isoTime,
-  base: { service: 'api' },
-  hooks: {
-    logMethod(inputArgs, method) {
-      if (inputArgs.length === 2 && inputArgs[1].error instanceof Error) {
-        const err = inputArgs[1].error
-        inputArgs[1].error = {
-          message: err.message,
-          stack: err.stack,
-        }
+const redactFields = ['email', 'password', 'token'] as const
+
+function redactSensitiveInfo(obj: Record<string, unknown>): Record<string, unknown> {
+  return JSON.parse(
+    JSON.stringify(obj, (key, value) => {
+      if (redactFields.includes(key as (typeof redactFields)[number])) {
+        return '[REDACTED]'
       }
-      return method.apply(this, inputArgs)
-    },
-  },
-  transport: {
-    targets: [
-      {
-        target: 'pino-pretty',
-        level: 'debug',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          messageFormat: '{service} - {msg}',
-          singleLine: true,
-        },
-      },
-      {
-        target: 'pino/file',
-        level: 'error',
-        options: { destination: LOG_FILE },
-      },
-    ],
-  },
-  redact: {
-    paths: ['email', '*.email'],
-    remove: true,
-  },
+      return value
+    })
+  )
 }
 
-export const logger = pino(LOGGER_OPTIONS, pino.destination(LOG_FILE))
+const baselogger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'debug',
+  defaultMeta: { service: 'api' },
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console({
+      level: 'debug',
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple(),
+        winston.format.printf(({ level, message, timestamp, service, ...metadata }) => {
+          let msg = `${timestamp} ${level}: ${service} - ${typeof message === 'string' ? message : JSON.stringify(message)}`
+          if (Object.keys(metadata).length > 0) {
+            msg += ` ${JSON.stringify(metadata)}`
+          }
+          return msg
+        })
+      ),
+    }),
+    new winston.transports.File({
+      filename: LOG_FILE,
+      level: 'error',
+      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+    }),
+  ],
+})
 
-export default logger
+type LoggerWithRedaction = Omit<WinstonLogger, 'log' | 'error' | 'warn' | 'info' | 'debug'> & {
+  [K in 'log' | 'error' | 'warn' | 'info' | 'debug']: LeveledLogMethod
+}
+
+export const logger = baselogger as LoggerWithRedaction
+
+const methods = ['error', 'warn', 'info', 'debug', 'log'] as const
+for (const method of methods) {
+  const original = logger[method].bind(baselogger)
+  logger[method] = ((info: string | object, ...args: unknown[]) => {
+    try {
+      let processedInfo: string
+      if (typeof info === 'object' && info !== null) {
+        processedInfo = JSON.stringify(redactSensitiveInfo(info as Record<string, unknown>))
+      } else {
+        processedInfo = String(info)
+      }
+
+      return original(processedInfo, ...args)
+    } catch (error) {
+      return logger.error('Error processing log message', {
+        originalMessage: typeof info === 'string' ? info : '[Object]',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }) as LeveledLogMethod
+}

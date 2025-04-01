@@ -31,18 +31,17 @@ export default async function RootLayout({
       </Head>
       <body>
         <Providers>
-          <div className="bg-background text-foreground min-h-screen min-w-full flex max-h-screen">
+          <div className="bg-background text-foreground min-h-screen min-w-full flex max-h-screen overflow-x-hidden">
             <SiteNavigation />
-            {/* Sidebar */}
             <div className="flex-1 flex flex-col">
               {userId ? (
-                <SidebarTrigger className="md:hidden mt-2 ml-1">
-                  <div className="border border-gray-500 rounded-full">
-                    <Menu size={24} />
+                <SidebarTrigger className="md:hidden mt-2 ml-2">
+                  <div className="border border-gray-500 rounded-full p-1">
+                    <Menu size={20} />
                   </div>
                 </SidebarTrigger>
               ) : null}
-              <main className="h-full px-2">{children}</main>
+              <main className="h-full pb-safe-area-inset-bottom overflow-y-auto">{children}</main>
             </div>
           </div>
         </Providers>

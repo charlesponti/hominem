@@ -1,6 +1,6 @@
 import { openai } from '@ai-sdk/openai'
 import { db, takeUniqueOrThrow } from '@ponti/utils/db'
-import logger from '@ponti/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import { chat, chatMessage } from '@ponti/utils/schema'
 import { generateText, type ToolSet } from 'ai'
 import { desc, eq } from 'drizzle-orm'

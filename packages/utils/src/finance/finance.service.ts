@@ -1,5 +1,5 @@
 import { db } from '@ponti/utils/db'
-import logger from '@ponti/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import {
   financeAccounts,
   transactions,

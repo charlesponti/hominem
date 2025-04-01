@@ -1,5 +1,5 @@
+import { logger } from '@/logger'
 import { serve } from '@hono/node-server'
-import { logger } from '@ponti/utils/logger'
 import { Command } from 'commander'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'

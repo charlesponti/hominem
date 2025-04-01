@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@/logger'
 import Table from 'cli-table3'
 import { Command } from 'commander'
 import { google } from 'googleapis'

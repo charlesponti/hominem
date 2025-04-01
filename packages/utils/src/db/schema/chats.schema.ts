@@ -37,10 +37,11 @@ type ChatMessageToolCall = {
   isError?: boolean
 }
 
-type ChatMessageFile = {
+export type ChatMessageFile = {
   type: 'image' | 'file'
   filename?: string
   mimeType?: string
+  [key: string]: unknown
 }
 
 export const chatMessage = pgTable(
