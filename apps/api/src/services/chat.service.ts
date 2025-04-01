@@ -281,7 +281,7 @@ export class ChatService {
     systemPrompt: string
   ) {
     return generateText({
-      model: openai('gpt-4-turbo'),
+      model: openai('gpt-4o-mini'),
       system: systemPrompt,
       messages,
     })

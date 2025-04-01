@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     `
 
     const response = await generateObject({
-      model: openai('gpt-4'),
+      model: openai('gpt-4o-mini'),
       prompt,
       schema: TourCostBreakdown,
       temperature: 0.7,

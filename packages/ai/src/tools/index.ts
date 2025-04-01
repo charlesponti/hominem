@@ -10,9 +10,6 @@ export * from './task.tools'
 // User management tools
 export * from './user.tools'
 
-// Chat management tools
-export * from './chat.tools'
-
 // Notes management tools
 export * from './notes.tools'
 
@@ -34,10 +31,12 @@ export * from './health.tools'
 // Travel management tools
 export * from './travel.tools'
 
+// Content generation tools
+export * as contentTools from './content.tools'
+
 // Tool collections for easier importing
 import * as bookmarkTools from './bookmarks.tools'
 import * as careerTools from './career.tools'
-import * as chatTools from './chat.tools'
 import * as generalTools from './general'
 import * as healthTools from './health.tools'
 import * as listTools from './lists.tools'
@@ -57,7 +56,6 @@ export const productivityTools = {
 
 export const userManagementTools = {
   ...userTools,
-  ...chatTools,
 }
 
 export const locationBasedTools = {
@@ -82,7 +80,6 @@ export const allTools = {
   ...locationTools,
   ...taskTools,
   ...userTools,
-  ...chatTools,
   ...notesTools,
   ...careerTools,
   ...bookmarkTools,
