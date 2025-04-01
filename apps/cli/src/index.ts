@@ -4,7 +4,7 @@ import './env.ts'
 
 import { Command } from 'commander'
 import { command as aiCommand } from './commands/ai/index.ts'
-import apiCommand from './commands/api-client'
+import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
 import { command as csvToJSONCommand } from './commands/csv-to-json.ts'
 import { program as flattenDirectory } from './commands/flatten-directory.ts'
@@ -23,6 +23,7 @@ async function init() {
 
   program.version('1.0.0').description('Collection of useful tools')
 
+  program.addCommand(authCommand)
   program.addCommand(initCommand)
   program.addCommand(scrapeCommand)
   program.addCommand(aiCommand)
@@ -32,7 +33,6 @@ async function init() {
   program.addCommand(csvToJSONCommand)
   program.addCommand(convertCommand)
   program.addCommand(serveCommand)
-  program.addCommand(apiCommand)
 
   program.parse(Bun.argv)
 }
