@@ -24,19 +24,22 @@ export async function GET() {
       }
 
       // Check if the user has a Google account
-      const response = await client.users.getUserOauthAccessToken(user.id, 'google')
-      const googleTokens = response.data
-
-      if (!googleTokens.length) {
-        return NextResponse.json({ error: 'No Google token found' }, { status: 404 })
+      let googleTokens: unknown[] = []
+      try {
+        const googleAccount = user.externalAccounts.find(
+          (account) => account.provider === 'oauth_google'
+        )
+        if (googleAccount) {
+          const response = await client.users.getUserOauthAccessToken(user.id, 'google')
+          googleTokens = response.data
+          if (!googleTokens.length) {
+            return NextResponse.json({ error: 'No Google token found' }, { status: 404 })
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching Google tokens:', error)
       }
 
-      const googleAccount = user.externalAccounts.find(
-        (account) => account.provider === 'oauth_google'
-      )
-      if (!googleAccount) {
-        return NextResponse.json({ error: 'No Google account found' }, { status: 404 })
-      }
       // Return the token for CLI to save
       return NextResponse.json({
         userId,
@@ -45,14 +48,7 @@ export async function GET() {
       })
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     } catch (error: any) {
-      if ('errors' in error) {
-        // !TODO - Handle specific errors from Clerk
-        console.error('Error fetching Google tokens:', error.errors)
-      } else {
-        console.error('Error fetching Google tokens:', error)
-      }
-
-      return NextResponse.json({ error: 'Failed to fetch Google tokens' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to fetch tokens' }, { status: 500 })
     }
   } catch (error) {
     console.error('Token generation error:', error)

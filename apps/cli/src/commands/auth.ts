@@ -47,7 +47,7 @@ const command = new Command()
             },
           })
 
-          if (response.data.googleTokens) {
+          if (response.data.googleTokens && response.data.googleTokens.length > 0) {
             // Save Google tokens to a separate file
             const googleTokensPath = path.join(configDir, 'google-token.json')
             fs.writeFileSync(googleTokensPath, JSON.stringify(response.data.googleTokens, null, 2))
