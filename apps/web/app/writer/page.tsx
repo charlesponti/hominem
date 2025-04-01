@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { ResultSkeleton } from '@/components/loading-skeleton'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { WritingActions } from '@/lib/writing'
-import { ResultSkeleton } from './loading-skeleton'
+import { useState } from 'react'
 
 export default function WriterPage() {
   const [sentence, setSentence] = useState('')
