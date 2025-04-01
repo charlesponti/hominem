@@ -29,7 +29,6 @@
     "@ponti/utils": "*",
     "ai": "^4.1.61",
     "aws-sdk": "^2.1574.0",
-    "axios": "^1.8.4",
     "cheerio": "^1.0.0",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.4.7",

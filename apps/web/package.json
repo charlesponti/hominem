@@ -6,7 +6,8 @@
     "dev": "next dev --port 4444",
     "build": "bunx next build",
     "start": "bunx next start",
-    "lint": "bunx biome lint app"
+    "lint": "bunx biome lint app",
+    "test": "vitest --run --passWithNoTests"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
@@ -50,6 +51,7 @@
     "@tanstack/react-form": "^1.0.5",
     "@tanstack/react-query": "^4.36.1",
     "@tanstack/react-query-devtools": "4",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^4.1.26",
     "chart.js": "^4.4.7",
     "class-variance-authority": "^0.7.1",
@@ -67,7 +69,8 @@
     "qrcode": "^1.5.4",
     "react-chartjs-2": "^5.3.0",
     "react-day-picker": "^8.10.1",
-    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.1",
     "recharts": "^2.15.1",
     "server-only": "^0.0.1",
     "superjson": "^2.2.2",
@@ -81,15 +84,27 @@
     "@ponti/tsconfigs": "*",
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/postcss": "^4.0.0",
-    "@types/node": "^22.13.1",
+    "@testing-library/dom": "^9.3.4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.2.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.13.16",
     "@types/qrcode": "^1.5.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.1.1",
     "autoprefixer": "^10.4.20",
     "daisyui": "^4.12.23",
     "eslint": "^9.20.0",
     "eslint-config-next": "^15.1.6",
+    "jsdom": "^26.0.0",
+    "msw": "^2.7.3",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.0",
-    "typescript": "5.7.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.4",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.1.1"
   },
   "resolutions": {
     "@langchain/core": "0.3.37"

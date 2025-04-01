@@ -38,7 +38,6 @@
     "@ai-sdk/openai-compatible": "^0.1.14",
     "@google-cloud/local-auth": "^3.0.1",
     "ai": "^4.1.54",
-    "axios": "^1.7.9",
     "chrono-node": "^2.7.8",
     "compromise": "^14.14.4",
     "csv-parse": "^5.6.0",
@@ -57,6 +56,7 @@
     "pino": "^9.6.0",
     "playwright": "^1.51.0",
     "postgres": "^3.4.5",
+    "react-syntax-highlighter": "^15.6.1",
     "rehype-parse": "^9.0.1",
     "rehype-remark": "^10.0.0",
     "remark-stringify": "^11.0.0",
@@ -66,11 +66,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.51.0",
+    "@ponti/tsconfigs": "*",
     "@types/node": "^22.13.1",
     "@vitest/coverage-v8": "^3.0.5",
-    "drizzle-kit": "^0.30.4",
     "jsdom": "^26.0.0",
-    "@ponti/tsconfigs": "*",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.6"
