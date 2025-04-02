@@ -60,7 +60,7 @@
     "rehype-remark": "^10.0.0",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
-    "vite": "^6.1.1",
+    "vite": "^5.4.11",
     "winston": "^3.11.0",
     "zod": "^3.24.1"
   },
@@ -68,10 +68,7 @@
     "@playwright/test": "^1.51.0",
     "@ponti/tsconfigs": "*",
     "@types/node": "^22.13.1",
-    "@vitest/coverage-v8": "^3.0.5",
     "jsdom": "^26.0.0",
-    "typescript": "5.7.3",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.6"
+    "typescript": "5.7.3"
   }
 }
