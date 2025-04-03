@@ -34,7 +34,6 @@
     "drizzle-orm": "^0.40.0",
     "duckdb": "^1.2.0",
     "fs-extra": "^11.3.0",
-    "googleapis": "^144.0.0",
     "hono": "^4.7.1",
     "ora": "^8.2.0",
     "rehype-parse": "^9.0.1",

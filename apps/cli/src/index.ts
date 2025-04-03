@@ -13,7 +13,6 @@ import scrapeCommand from './commands/scraper/scrape.ts'
 import serveCommand from './commands/serve/index.ts'
 import thothCommand from './commands/thoth'
 import { initDb } from './db/index.ts'
-import googleCommand from './google/cli.js'
 
 async function init() {
   // Initialize the application
@@ -27,7 +26,6 @@ async function init() {
   program.addCommand(initCommand)
   program.addCommand(scrapeCommand)
   program.addCommand(aiCommand)
-  program.addCommand(googleCommand)
   program.addCommand(thothCommand)
   program.addCommand(flattenDirectory)
   program.addCommand(csvToJSONCommand)

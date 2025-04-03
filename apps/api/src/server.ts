@@ -8,6 +8,7 @@ import { env } from './lib/env'
 import adminPlugin from './plugins/admin'
 import bookmarksPlugin from './plugins/bookmarks'
 import emailPlugin from './plugins/email'
+import googlePlugin from './plugins/google'
 import { invitesPlugin } from './plugins/invites'
 import listsPlugin from './plugins/lists'
 import placesPlugin from './plugins/places'
@@ -81,6 +82,7 @@ export async function createServer(
     await server.register(placesPlugin)
     await server.register(invitesPlugin)
     await server.register(bookmarksPlugin)
+    await server.register(googlePlugin, { prefix: '/api/google' })
     await server.register(healthRoutes, { prefix: '/api/health' })
     await server.register(companyRoutes, { prefix: '/api/companies' })
     await server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })
