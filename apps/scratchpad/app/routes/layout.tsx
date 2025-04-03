@@ -1,7 +1,7 @@
-import { Navbar } from 'app/components/Navbar'
-import { ThemeProvider } from 'app/components/ui/theme-provider'
+import { Navbar } from '@/components/Navbar'
+import { ThemeProvider } from '@/components/ui/theme-provider'
+import { AuthProvider } from '@/lib/supabase/auth-context'
 import { Outlet } from 'react-router'
-import { AuthProvider } from '~/lib/supabase/auth-context'
 
 export default function Layout() {
   return (

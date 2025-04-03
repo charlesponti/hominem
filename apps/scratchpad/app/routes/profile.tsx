@@ -1,5 +1,5 @@
-import { ProtectedRoute } from '~/components/auth/protected-route'
-import { Profile } from '~/components/profile'
+import { ProtectedRoute } from '@/components/auth/protected-route'
+import { Profile } from '@/components/profile'
 import type { Route } from './+types/auth'
 
 // Using the proper parameter name without destructuring

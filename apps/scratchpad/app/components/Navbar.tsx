@@ -1,10 +1,10 @@
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useAuth } from '@/lib/supabase/auth-context'
 import { motion } from 'framer-motion'
 import { Menu } from 'lucide-react'
 import { Link } from 'react-router'
-import { useAuth } from '~/lib/supabase/auth-context'
-import { Button } from './ui/button'
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
-import { ThemeToggle } from './ui/theme-toggle'
 
 export function Navbar() {
   const { isAuthenticated } = useAuth()
