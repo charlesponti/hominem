@@ -44,7 +44,6 @@
     "googleapis": "^144.0.0",
     "gpt-tokenizer": "^2.9.0",
     "ioredis": "^5.5.0",
-    "multer": "^1.4.5-lts.1",
     "open-graph-scraper": "^6.9.0",
     "pg": "^8.13.1",
     "pino": "^9.6.0",
@@ -53,12 +52,7 @@
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.24.1"
   },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@types/multer": "^1.4.12",
-    "@types/node": "^22.13.1",
-    "typescript": "5.7.3"
-  },
+  "devDependencies": {},
   "resolutions": {
     "@langchain/core": "0.3.37"
   }

@@ -21,9 +21,5 @@
     "@modelcontextprotocol/sdk": "^1.7.0",
     "@ponti/utils": "*",
     "ai": "^4.1.54"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.24",
-    "typescript": "5.7.3"
   }
 }

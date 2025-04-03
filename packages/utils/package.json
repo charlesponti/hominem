@@ -68,7 +68,6 @@
     "@playwright/test": "^1.51.0",
     "@ponti/tsconfigs": "*",
     "@types/node": "^22.13.1",
-    "jsdom": "^26.0.0",
-    "typescript": "5.7.3"
+    "jsdom": "^26.0.0"
   }
 }

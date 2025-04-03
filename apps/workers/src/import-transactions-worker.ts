@@ -208,6 +208,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
 // Poll for active jobs
 let isProcessing = false
 setInterval(async () => {
+  logger.debug('Polling for active jobs...')
   if (isProcessing) {
     logger.debug('Still processing previous jobs, skipping poll')
     return

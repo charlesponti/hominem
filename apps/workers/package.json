@@ -8,18 +8,12 @@
     "build"
   ],
   "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "start": "bun run build/src/index | pino-pretty"
+    "dev": "bun --watch src/import-transactions-worker.ts",
+    "start": "bun run src/import-transactions-worker.ts",
+    "build": "bun build src/import-transactions-worker.ts --target=bun --outdir=build --minify"
   },
   "dependencies": {
     "@ponti/utils": "*",
-    "dotenv": "^16.4.7",
-    "hono": "^4.7.1",
-    "pino": "^9.6.0",
-    "pino-pretty": "^13.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.24",
-    "typescript": "5.7.3"
+    "dotenv": "^16.4.7"
   }
 }
