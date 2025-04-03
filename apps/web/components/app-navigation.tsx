@@ -50,12 +50,8 @@ const data = {
     {
       title: 'Finance',
       icon: CircleDollarSign,
+      url: '/finance',
       items: [
-        {
-          title: 'Transactions',
-          icon: CircleDollarSign,
-          url: '/finance/transactions',
-        },
         {
           title: 'Import',
           icon: UploadCloudIcon,
