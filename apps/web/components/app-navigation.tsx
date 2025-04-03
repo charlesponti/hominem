@@ -20,6 +20,7 @@ import {
   FilePen,
   LogOut,
   MessageCircle,
+  PaintbrushIcon,
   UploadCloudIcon,
   User,
 } from 'lucide-react'
@@ -34,38 +35,47 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 
-const data = {
-  navMain: [
-    {
-      title: 'Career',
-      icon: FilePen,
-      items: [
-        {
-          title: 'Applications',
-          icon: User,
-          url: '/career/job-applications',
-        },
-      ],
-    },
-    {
-      title: 'Finance',
-      icon: CircleDollarSign,
-      url: '/finance',
-      items: [
-        {
-          title: 'Import',
-          icon: UploadCloudIcon,
-          url: '/finance/import',
-        },
-      ],
-    },
-    {
-      title: 'Chats',
-      icon: MessageCircle,
-      url: '/chat',
-    },
-  ],
-}
+const navItems = [
+  {
+    title: 'Career',
+    icon: FilePen,
+    items: [
+      {
+        title: 'Applications',
+        icon: User,
+        url: '/career/job-applications',
+      },
+    ],
+  },
+  {
+    title: 'Finance',
+    icon: CircleDollarSign,
+    url: '/finance',
+    items: [
+      {
+        title: 'Import',
+        icon: UploadCloudIcon,
+        url: '/finance/import',
+      },
+    ],
+  },
+  {
+    title: 'Chats',
+    icon: MessageCircle,
+    url: '/chat',
+  },
+  {
+    title: 'Creative',
+    icon: PaintbrushIcon,
+    items: [
+      {
+        title: 'Content Strategy',
+        icon: PaintbrushIcon,
+        url: '/creative/content-strategy',
+      },
+    ],
+  },
+]
 
 export function SiteNavigation() {
   const pathname = usePathname()
@@ -134,7 +144,7 @@ export function SiteNavigation() {
         </div>
       </SidebarHeader>
       <SidebarContent className="max-w-full">
-        {data.navMain.map((item) => (
+        {navItems.map((item) => (
           <SidebarGroup key={item.title} className={cn('max-w-full', { 'my-0 pb-0': !item.items })}>
             <SidebarGroupLabel
               className={cn({
