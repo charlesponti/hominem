@@ -51,14 +51,14 @@ export function Navbar() {
 
           <Link to="/" className="flex items-center gap-2 group">
             <motion.div
-              className="w-9 h-9 bg-gradient-to-tr from-primary to-secondary rounded-lg grid place-items-center text-white font-bold text-lg shadow-md"
+              className="w-9 h-9 bg-gradient-to-bl from-primary to-red-500 rounded-lg grid place-items-center text-white font-bold text-lg shadow-md"
               whileHover={{ rotate: [0, -10, 10, -10, 0] }}
               transition={{ duration: 0.5 }}
             >
               S
             </motion.div>
             <motion.span
-              className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent hidden sm:inline-block"
+              className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-red-500 hidden sm:inline-block"
               whileHover={{ scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 400 }}
             >
