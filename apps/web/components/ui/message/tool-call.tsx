@@ -17,7 +17,7 @@ function formatValue(value: unknown): string {
 }
 
 export function ToolCall({ call }: ToolCallProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true)
   const formattedArgs = formatValue(call.args)
   const formattedResult = call.result ? formatValue(call.result) : null
 
@@ -77,6 +77,10 @@ export function ToolCall({ call }: ToolCallProps) {
           >
             <div className="relative group/args">
               <div className="absolute -left-2 -right-2 top-0 bottom-0 bg-muted/30 opacity-0 group-hover/args:opacity-100 transition-opacity rounded-md" />
+              <div className="flex items-center gap-1.5 text-xs text-primary/60 px-1">
+                <Cpu size={12} />
+                <span>Input</span>
+              </div>
               <pre
                 className="relative text-xs font-mono bg-muted/20 p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
                 data-testid="tool-call-args"
