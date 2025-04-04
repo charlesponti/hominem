@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { cwd } from 'node:process'
+import process from 'node:process'
 import type { LeveledLogMethod, Logger as WinstonLogger } from 'winston'
 import winston from 'winston'
 
-const LOG_FILE = path.resolve(cwd(), './logs/error.log')
+const LOG_FILE = path.resolve(process.cwd(), './logs/error.log')
 if (!fs.existsSync(LOG_FILE)) {
   fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true })
   fs.writeFileSync(LOG_FILE, '')
@@ -47,6 +47,7 @@ const baselogger = winston.createLogger({
       ),
     }),
     new winston.transports.File({
+      dirname: path.dirname(LOG_FILE),
       filename: LOG_FILE,
       level: 'error',
       format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
