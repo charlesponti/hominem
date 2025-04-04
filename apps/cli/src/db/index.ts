@@ -29,7 +29,6 @@ export async function initDb() {
   }
 
   // Create database connection
-  logger.info('Creating database connection...')
   db = drizzle(`file:${DB_PATH}`, { schema })
   logger.info('Database connection created successfully!')
   return db
