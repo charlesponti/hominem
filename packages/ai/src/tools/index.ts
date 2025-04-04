@@ -77,7 +77,6 @@ export const travelPlanningTools = {
 // Full collection of all tools
 export const allTools = {
   ...generalTools,
-  ...locationTools,
   ...taskTools,
   ...userTools,
   ...notesTools,
@@ -86,5 +85,5 @@ export const allTools = {
   ...listTools,
   ...placeTools,
   ...healthTools,
-  ...travelTools,
+  ...travelPlanningTools,
 }
