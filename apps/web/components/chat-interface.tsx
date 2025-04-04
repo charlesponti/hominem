@@ -89,12 +89,12 @@ export function ChatInterface({
     const element = messageListRef.current
     if (!element) return
 
-    const scrollToBottom = () => {
-      const { scrollTop, scrollHeight, clientHeight } = element
-      const wasAtBottom = scrollTop + clientHeight >= scrollHeight - 10
+    const scrollToBottom = (force = false) => {
+      const { scrollTop, scrollHeight } = element
+      const wasAtBottom = scrollHeight - scrollTop <= element.clientHeight + 1
 
-      // Only animate if we were already at the bottom
-      if (!wasAtBottom) return
+      // Only animate if we were already at the bottom or if force=true
+      if (wasAtBottom && !force) return
 
       const targetScroll = element.scrollHeight - element.clientHeight
       const startScroll = element.scrollTop
@@ -113,11 +113,11 @@ export function ChatInterface({
     }
 
     // Use a MutationObserver to detect changes in the messages container
-    const observer = new MutationObserver(scrollToBottom)
+    const observer = new MutationObserver(() => scrollToBottom(false))
     observer.observe(element, { childList: true, subtree: true })
 
-    // Initial scroll
-    scrollToBottom()
+    // Initial scroll - force scroll to bottom on mount
+    // scrollToBottom(true)
 
     return () => observer.disconnect()
   }, []) // Empty dependency array since we're using MutationObserver
@@ -128,7 +128,7 @@ export function ChatInterface({
         className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-track]:transparent [&::-webkit-scrollbar-thumb]:bg-primary/10 hover:[&::-webkit-scrollbar-thumb]:bg-primary/20"
         ref={messageListRef}
       >
-        <div className="flex flex-col space-y-4 sm:space-y-6 px-2 sm:px-4 pb-[100px] w-full">
+        <div className="flex flex-col space-y-4 sm:space-y-6 px-2 sm:px-4 pb-[160px] w-full">
           <div className="w-full max-w-[850px] mx-auto">
             {messages.map((message) => (
               <Message key={message.id} message={message} />
