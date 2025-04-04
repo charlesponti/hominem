@@ -1,45 +1,41 @@
-import { db } from '@ponti/utils/db'
-import { NLPProcessor } from '@ponti/utils/nlp'
-import { notes } from '@ponti/utils/schema'
-import { and, eq } from 'drizzle-orm'
+import { NotesService } from '@ponti/utils/notes'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { handleError } from '../lib/errors'
 import { verifyAuth } from '../middleware/auth'
-import { ForbiddenError, NotFoundError, handleError } from '../lib/errors'
 
 const createNoteSchema = z.object({
   content: z.string(),
+  title: z.string().optional(),
+  tags: z.array(z.object({ value: z.string() })).optional(),
 })
 
 const updateNoteSchema = z.object({
-  content: z.string(),
-  title: z.string(),
-  tags: z.array(z.record(z.string(), z.string())).optional(),
+  content: z.string().optional(),
+  title: z.string().optional(),
+  tags: z.array(z.object({ value: z.string() })).optional(),
 })
 
 const noteIdSchema = z.object({
   id: z.string(),
 })
 
+const querySchema = z.object({
+  query: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+})
+
 export async function notesRoutes(fastify: FastifyInstance) {
+  const notesService = new NotesService()
+
   // Create a new note
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const { userId } = request
-      if (!userId) {
-        throw ForbiddenError('Not authorized to create a note')
-      }
+      const userId = request.userId
+      if (!userId) throw new Error('User ID is required')
+
       const validated = createNoteSchema.parse(request.body)
-
-      const nlpProcessor = new NLPProcessor()
-      const analysis = await nlpProcessor.analyzeText(validated.content)
-
-      const result = await db.insert(notes).values({
-        analysis,
-        content: validated.content,
-        userId,
-      })
-
+      const result = await notesService.create({ ...validated, userId })
       return result
     } catch (error) {
       handleError(error as Error, reply)
@@ -49,11 +45,11 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // List all notes for authenticated user
   fastify.get('/', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const { userId } = request
-      if (!userId) {
-        throw ForbiddenError('Not authorized to list notes')
-      }
-      const result = await db.select().from(notes).where(eq(notes.userId, userId))
+      const userId = request.userId
+      if (!userId) throw new Error('User ID is required')
+
+      const { query, tags } = querySchema.parse(request.query)
+      const result = await notesService.list(userId, query, tags)
       return result
     } catch (error) {
       handleError(error as Error, reply)
@@ -63,32 +59,13 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // Update a note
   fastify.put('/:id', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const { userId } = request
-      if (!userId) {
-        throw ForbiddenError('Not authorized to create a note')
-      }
-      const { id } = request.params as { id: string }
+      const userId = request.userId
+      if (!userId) throw new Error('User ID is required')
+
+      const { id } = noteIdSchema.parse(request.params)
       const validated = updateNoteSchema.parse(request.body)
-
-      const nlpProcessor = new NLPProcessor()
-      const analysis = await nlpProcessor.analyzeText(validated.content)
-
-      const result = await db
-        .update(notes)
-        .set({
-          analysis,
-          content: validated.content,
-          title: validated.title,
-          tags: validated.tags,
-        })
-        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
-        .returning()
-
-      if (!result.length) {
-        throw NotFoundError('Note not found')
-      }
-
-      return result[0]
+      const result = await notesService.update({ ...validated, noteId: id, userId })
+      return result
     } catch (error) {
       handleError(error as Error, reply)
     }
@@ -97,22 +74,12 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // Delete a note
   fastify.delete('/:id', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const { userId } = request
-      if (!userId) {
-        throw ForbiddenError('Not authorized to create a note')
-      }
-      const { id } = request.params as { id: string }
+      const userId = request.userId
+      if (!userId) throw new Error('User ID is required')
 
-      const result = await db
-        .delete(notes)
-        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
-        .returning()
-
-      if (!result.length) {
-        throw NotFoundError('Note not found')
-      }
-
-      return { success: true }
+      const { id } = noteIdSchema.parse(request.params)
+      const result = await notesService.delete(id, userId)
+      return result
     } catch (error) {
       handleError(error as Error, reply)
     }
@@ -121,37 +88,12 @@ export async function notesRoutes(fastify: FastifyInstance) {
   // Analyze a note
   fastify.post('/:id/analyze', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const { userId } = request
-      if (!userId) {
-        throw ForbiddenError('Not authorized to analyze a note')
-      }
+      const userId = request.userId
+      if (!userId) throw new Error('User ID is required')
 
-      const { id } = request.params as { id: string }
-
-      // Get the note
-      const noteResult = await db
-        .select()
-        .from(notes)
-        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
-        .limit(1)
-
-      if (!noteResult.length) {
-        throw NotFoundError('Note not found')
-      }
-
-      const note = noteResult[0]
-
-      // Analyze the content
-      const nlpProcessor = new NLPProcessor()
-      const analysis = await nlpProcessor.analyzeText(note.content)
-
-      // Update the note with the analysis
-      await db
-        .update(notes)
-        .set({ analysis })
-        .where(and(eq(notes.id, id), eq(notes.userId, userId)))
-
-      return { analysis }
+      const { id } = noteIdSchema.parse(request.params)
+      const result = await notesService.analyze(id, userId)
+      return result
     } catch (error) {
       handleError(error as Error, reply)
     }
