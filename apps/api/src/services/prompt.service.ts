@@ -16,25 +16,31 @@ export class PromptService {
   /**
    * Load a prompt from a markdown file
    * @param fileName - Name of the prompt file (without .md extension)
+   * @param context - Optional context to replace in the prompt
    * @returns The prompt text or null if not found
    */
-  async getPrompt(fileName: 'assistant' | 'chat'): Promise<string> {
+  async getPrompt(
+    fileName: 'assistant' | 'chat',
+    context?: Record<string, string>
+  ): Promise<string> {
     const DEFAULT_PROMPT =
       'You are a helpful AI assistant. Answer questions to the best of your ability.'
-
+    const contextValues = context ? `\n\nContext: ${JSON.stringify(context)}` : ''
+    let content: string
     try {
       // Check cache first
       if (this.cache.has(fileName)) {
-        return this.cache.get(fileName) || DEFAULT_PROMPT
+        content = this.cache.get(fileName) || DEFAULT_PROMPT
+        return `${content} ${contextValues}`
       }
 
       const filePath = path.join(this.promptsDir, `${fileName}.md`)
-      const content = await fs.promises.readFile(filePath, 'utf-8')
+      content = await fs.promises.readFile(filePath, 'utf-8')
 
       // Store in cache
       this.cache.set(fileName, content)
 
-      return content
+      return `${content}${contextValues}`
     } catch (error) {
       logger.error(`Failed to load prompt '${fileName}':`, error)
       return DEFAULT_PROMPT
