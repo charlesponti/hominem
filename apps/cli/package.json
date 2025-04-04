@@ -36,6 +36,7 @@
     "fs-extra": "^11.3.0",
     "hono": "^4.7.1",
     "ora": "^8.2.0",
+    "pdf-parse": "^1.1.1",
     "rehype-parse": "^9.0.1",
     "rehype-remark": "^10.0.0",
     "rehype-stringify": "^10.0.1",
@@ -49,6 +50,7 @@
   "devDependencies": {
     "@ponti/tsconfigs": "*",
     "@types/bun": "^1.2.3",
-    "@types/fs-extra": "^11.0.4"
+    "@types/fs-extra": "^11.0.4",
+    "@types/pdf-parse": "^1.1.5"
   }
 }
