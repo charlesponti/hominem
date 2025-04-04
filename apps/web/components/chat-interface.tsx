@@ -129,7 +129,7 @@ export function ChatInterface({
         ref={messageListRef}
       >
         <div className="flex flex-col space-y-4 sm:space-y-6 px-2 sm:px-4 pb-[160px] w-full">
-          <div className="w-full max-w-[850px] mx-auto">
+          <div className="w-full max-w-[850px] mx-auto space-y-6">
             {messages.map((message) => (
               <Message key={message.id} message={message} />
             ))}
