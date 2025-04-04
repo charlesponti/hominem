@@ -23,7 +23,7 @@ export const chat = pgTable(
 )
 export type Chat = typeof chat.$inferSelect
 
-type ChatMessageReasoning = {
+export type ChatMessageReasoning = {
   type: 'reasoning' | 'redacted-reasoning'
   text: string
   signature?: string
@@ -32,6 +32,7 @@ type ChatMessageReasoning = {
 type ChatMessageToolCall = {
   type: 'tool-call' | 'tool-result'
   toolName: string
+  toolCallId?: string
   args?: Record<string, unknown>
   result?: unknown
   isError?: boolean

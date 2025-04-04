@@ -14,6 +14,7 @@
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
     "./nlp": "./src/nlp/index.ts",
+    "./notes": "./src/services/notes.service.ts",
     "./redis": "./src/redis.ts",
     "./utils": "./src/utils/index.ts",
     "./schema": "./src/db/schema/index.ts",
