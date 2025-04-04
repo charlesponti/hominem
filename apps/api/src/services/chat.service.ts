@@ -57,15 +57,20 @@ export class ChatService {
   async getOrCreateActiveChat(userId: string, chatId?: string) {
     try {
       if (chatId) {
-        return await db
+        const existingChat = await db
           .select()
           .from(chat)
           .where(eq(chat.id, chatId))
           .limit(1)
           .then(takeUniqueOrThrow)
           .catch(() => null)
+
+        if (existingChat) {
+          return existingChat
+        }
       }
 
+      // Create new chat if chatId wasn't provided or chat wasn't found
       const newChat = await db
         .insert(chat)
         .values({
@@ -78,6 +83,7 @@ export class ChatService {
 
       return newChat
     } catch (error) {
+      console.error('Error creating or fetching chat:', error)
       logger.error(error)
       return null
     }

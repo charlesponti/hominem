@@ -60,32 +60,33 @@ export async function chatPlugin(fastify: FastifyInstance) {
       return reply.code(401).send({ error: 'Unauthorized' })
     }
 
-    const activeChatId = request.cookies.activeChat
-    if (!activeChatId) {
-      return reply.code(400).send({ error: 'No active chat found' })
-    }
-
     try {
-      // Get the active chat
-      const activeChat = await chatService.getChatById(activeChatId)
-      if (!activeChat) {
-        return reply.code(404).send({ error: 'Chat not found' })
+      const activeChatId = request.cookies.activeChat
+      const chat = await chatService.getOrCreateActiveChat(userId, activeChatId)
+
+      if (!chat) {
+        return reply.code(500).send({ error: 'Failed to get or create chat' })
+      }
+
+      // Set cookie for new chats
+      if (!activeChatId || activeChatId !== chat.id) {
+        reply.setCookie('activeChat', chat.id)
       }
 
       // Get last 20 messages with processed tool calls and results
-      const history = await chatService.getConversationWithToolCalls(activeChat.id, {
+      const history = await chatService.getConversationWithToolCalls(chat.id, {
         limit: 20,
         orderBy: 'desc',
       })
 
-      // Sort by creation time
+      // Sort messages by creation time
       const sortedMessages = history.sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       )
 
       return reply.send({
         success: true,
-        chatId: activeChat.id,
+        chatId: chat.id,
         messages: sortedMessages,
       })
     } catch (error) {
