@@ -280,81 +280,11 @@ export class ChatService {
   }
 
   /**
-   * Generate chat response with performance tracking
-   */
-  async generateChatResponse(
-    messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
-    systemPrompt: string
-  ) {
-    return generateText({
-      model: openai('gpt-4o-mini'),
-      system: systemPrompt,
-      messages,
-    })
-  }
-
-  /**
    * Reconstruct the full conversation history with tool calls
    * This is useful for replaying a conversation with all tool calls and results
    */
   async getConversationWithToolCalls(chatId: string, options: ChatMessagesOptions = {}) {
     const messages = await this.getChatMessages(chatId, options)
     return messages
-  }
-
-  /**
-   * Get nested conversation history organized by parent-child relationships
-   * This creates a tree structure that shows the flow of conversation with tool calls
-   */
-  async getNestedConversation(chatId: string, options: ChatMessagesOptions = {}) {
-    const flatMessages = await this.getConversationWithToolCalls(chatId, options)
-
-    // Create a map of messages by their IDs
-    const messageMap = new Map<
-      string,
-      (typeof flatMessages)[number] & { children: (typeof flatMessages)[number][] }
-    >()
-    for (const message of flatMessages) {
-      messageMap.set(message.id, {
-        ...message,
-        children: [],
-      })
-    }
-
-    // Build the tree structure
-    const rootMessages = []
-
-    for (const message of flatMessages) {
-      const messageWithChildren = messageMap.get(message.id)
-      if (!messageWithChildren) {
-        continue
-      }
-
-      if (message.parentMessageId && messageMap.has(message.parentMessageId)) {
-        // This message has a parent, add it as a child to the parent
-        const parent = messageMap.get(message.parentMessageId)
-        if (!parent) {
-          continue
-        }
-
-        parent.children.push(messageWithChildren)
-      } else {
-        // This is a root message
-        rootMessages.push(messageWithChildren)
-      }
-    }
-
-    // Sort root messages by messageIndex or createdAt
-    rootMessages.sort((a, b) => {
-      if (a.messageIndex && b.messageIndex) {
-        return Number.parseInt(a.messageIndex) - Number.parseInt(b.messageIndex)
-      }
-
-      const dateA = new Date(a.createdAt).getTime()
-      const dateB = new Date(b.createdAt).getTime()
-      return dateA - dateB
-    })
-
-    return rootMessages
   }
 }
