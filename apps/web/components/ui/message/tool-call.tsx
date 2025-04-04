@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import type { ChatMessage } from '@ponti/utils/schema'
-import { CircleSlash, Cpu, Terminal } from 'lucide-react'
+import { ChevronDown, CircleSlash, Cpu, Terminal } from 'lucide-react'
+import { useState } from 'react'
 import { Card } from '../card'
 
 interface ToolCallProps {
@@ -16,6 +17,7 @@ function formatValue(value: unknown): string {
 }
 
 export function ToolCall({ call }: ToolCallProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const formattedArgs = formatValue(call.args)
   const formattedResult = call.result ? formatValue(call.result) : null
 
@@ -29,7 +31,11 @@ export function ToolCall({ call }: ToolCallProps) {
         )}
       >
         <div className="p-3 space-y-3">
-          <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="w-full flex items-center justify-between group/header cursor-pointer"
+          >
             <div className="flex items-center gap-2 min-w-0">
               <div
                 className={cn(
@@ -48,14 +54,27 @@ export function ToolCall({ call }: ToolCallProps) {
                 {call.toolName}
               </span>
             </div>
-            {call.isError && (
-              <span className="text-destructive text-sm shrink-0" data-testid="tool-call-error">
-                Error
-              </span>
-            )}
-          </div>
+            <div className="flex items-center gap-2">
+              {call.isError && (
+                <span className="text-destructive text-sm shrink-0" data-testid="tool-call-error">
+                  Error
+                </span>
+              )}
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-muted-foreground transition-transform duration-200',
+                  !isCollapsed && 'rotate-180'
+                )}
+              />
+            </div>
+          </button>
 
-          <div className="space-y-2">
+          <div
+            className={cn(
+              'space-y-2 overflow-hidden transition-all duration-200',
+              isCollapsed && 'hidden'
+            )}
+          >
             <div className="relative group/args">
               <div className="absolute -left-2 -right-2 top-0 bottom-0 bg-muted/30 opacity-0 group-hover/args:opacity-100 transition-opacity rounded-md" />
               <pre
