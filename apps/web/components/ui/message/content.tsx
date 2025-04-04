@@ -8,6 +8,10 @@ interface MessageContentProps {
 }
 
 export function MessageContent({ content }: MessageContentProps) {
+  if (typeof content !== 'string') {
+    console.warn('Message content is not a string:', content)
+    return null
+  }
   return (
     <div
       className="prose dark:prose-invert max-w-none prose-pre:my-0 prose-p:leading-relaxed prose-pre:bg-muted/50 overflow-hidden"
