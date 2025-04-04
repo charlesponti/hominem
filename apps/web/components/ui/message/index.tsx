@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import type { ChatMessage } from '@ponti/utils/schema'
 import { Card } from '../card'
 import { MessageContent } from './content'
@@ -22,10 +23,14 @@ export function Message({ message }: { message: ChatMessage }) {
 
   return (
     <Card
-      className={`group p-4 ${getBackgroundColor(role)} transition-colors duration-200`}
+      className={cn(
+        'group p-3 sm:p-4 min-w-0',
+        getBackgroundColor(role),
+        'transition-colors duration-200'
+      )}
       data-testid={`message-${role}`}
     >
-      <div className="space-y-2">
+      <div className="space-y-2 break-words">
         <MessageHeader role={role} />
         <MessageContent content={content} />
         <MessageDetails

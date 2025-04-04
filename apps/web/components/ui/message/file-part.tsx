@@ -19,17 +19,17 @@ export function FilePart({ part }: FilePartProps) {
       )}
     >
       <div className="p-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/5">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="p-1.5 rounded-lg bg-primary/5 shrink-0">
             {isImage ? (
               <ImageIcon size={16} className="text-primary" />
             ) : (
               <FileIcon size={16} className="text-primary" />
             )}
           </div>
-          <span className="text-sm font-medium text-primary truncate">{filename}</span>
+          <span className="text-sm font-medium text-primary truncate flex-1">{filename}</span>
           {!isImage && part.mimeType && (
-            <span className="text-xs text-muted-foreground">({part.mimeType})</span>
+            <span className="text-xs text-muted-foreground shrink-0">({part.mimeType})</span>
           )}
         </div>
 
@@ -47,7 +47,9 @@ export function FilePart({ part }: FilePartProps) {
         {!isImage && (
           <div className="relative rounded-md overflow-hidden" data-testid="file-preview">
             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative text-sm text-muted-foreground p-2 bg-muted/20">{filename}</div>
+            <div className="relative text-sm text-muted-foreground p-2 bg-muted/20 break-all">
+              {filename}
+            </div>
           </div>
         )}
       </div>

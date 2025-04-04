@@ -23,17 +23,17 @@ export function ToolCall({ call }: ToolCallProps) {
     <div className="group" data-testid="tool-call">
       <Card
         className={cn(
-          'border border-primary/10 transition-all duration-200',
+          'border border-primary/10 transition-all duration-200 overflow-hidden',
           'hover:border-primary/20 hover:shadow-md',
           call.isError && 'border-destructive/20 hover:border-destructive/30'
         )}
       >
         <div className="p-3 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <div
                 className={cn(
-                  'p-1.5 rounded-lg bg-primary/5 text-primary',
+                  'p-1.5 rounded-lg bg-primary/5 text-primary shrink-0',
                   call.isError && 'bg-destructive/5 text-destructive'
                 )}
               >
@@ -41,7 +41,7 @@ export function ToolCall({ call }: ToolCallProps) {
               </div>
               <span
                 className={cn(
-                  'text-sm font-medium text-primary',
+                  'text-sm font-medium text-primary truncate',
                   call.isError && 'text-destructive'
                 )}
               >
@@ -49,7 +49,7 @@ export function ToolCall({ call }: ToolCallProps) {
               </span>
             </div>
             {call.isError && (
-              <span className="text-destructive text-sm" data-testid="tool-call-error">
+              <span className="text-destructive text-sm shrink-0" data-testid="tool-call-error">
                 Error
               </span>
             )}
@@ -59,7 +59,7 @@ export function ToolCall({ call }: ToolCallProps) {
             <div className="relative group/args">
               <div className="absolute -left-2 -right-2 top-0 bottom-0 bg-muted/30 opacity-0 group-hover/args:opacity-100 transition-opacity rounded-md" />
               <pre
-                className="relative text-xs font-mono bg-muted/20 p-2 rounded-md overflow-x-auto"
+                className="relative text-xs font-mono bg-muted/20 p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
                 data-testid="tool-call-args"
               >
                 {formattedArgs}
@@ -75,7 +75,7 @@ export function ToolCall({ call }: ToolCallProps) {
                     <span>Result</span>
                   </div>
                   <pre
-                    className="text-xs font-mono bg-primary/5 p-2 rounded-md overflow-x-auto"
+                    className="text-xs font-mono bg-primary/5 p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
                     data-testid="tool-call-result"
                   >
                     {formattedResult}
