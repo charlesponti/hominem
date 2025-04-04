@@ -37,7 +37,7 @@ export class PromptService {
       const filePath = path.join(this.promptsDir, `${fileName}.md`)
       content = await fs.promises.readFile(filePath, 'utf-8')
 
-      // Store in cache
+      // Store in cache. Do not include context in cache as it is dynamic.
       this.cache.set(fileName, content)
 
       return `${content}${contextValues}`

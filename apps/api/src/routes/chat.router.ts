@@ -255,7 +255,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const result = await generateText({
         model,
         temperature: 0.2,
-        system: await promptService.getPrompt('assistant'),
+        system: await promptService.getPrompt('assistant', { userId }),
         messages: [...previousMessages, { role: 'user', content: message }],
         tools: {
           search: HominemVectorStore.searchDocumentsTool,
