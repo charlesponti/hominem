@@ -1,5 +1,5 @@
 import logger from '@/utils/logger'
-import { TypingMindExportSchema } from '@ponti/utils/services'
+import { TypingMindExportSchema, type nodeSchema } from '@ponti/utils/services'
 import { Command } from 'commander'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -26,7 +26,7 @@ export function convertTypingMindToOpenAI(typingMindData: z.infer<typeof TypingM
   return typingMindData.data.chats.map((chat) => {
     // Create root node
     const rootId = generateId('root-')
-    const mapping: Record<string, any> = {}
+    const mapping: Record<string, z.infer<typeof nodeSchema>> = {}
 
     // Add system message if it exists
     let lastNodeId = rootId
@@ -38,6 +38,7 @@ export function convertTypingMindToOpenAI(typingMindData: z.infer<typeof TypingM
       mapping[systemNodeId] = {
         id: systemNodeId,
         message: {
+          channel: null,
           id: systemNodeId,
           author: {
             role: 'system',
@@ -77,7 +78,7 @@ export function convertTypingMindToOpenAI(typingMindData: z.infer<typeof TypingM
         // Extract text content from array
         const textItems = message.content
           .filter((item) => item.type === 'text')
-          .map((item) => (item as any).text)
+          .map((item) => item.text)
         contentText = textItems.join('\n')
       }
 
@@ -92,6 +93,7 @@ export function convertTypingMindToOpenAI(typingMindData: z.infer<typeof TypingM
       mapping[nodeId] = {
         id: nodeId,
         message: {
+          channel: null,
           id: nodeId,
           author: {
             role,

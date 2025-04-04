@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // Author schema
 const authorSchema = z.object({
-  role: z.enum(['system', 'user', 'assistant']),
+  role: z.enum(['system', 'user', 'assistant', 'tool']),
   name: z.null(),
   metadata: z.record(z.any()).default({}),
 })
@@ -29,7 +29,7 @@ const messageSchema = z.object({
 })
 
 // Node schema
-const nodeSchema = z.object({
+export const nodeSchema = z.object({
   id: z.string(),
   message: messageSchema.nullable(),
   parent: z.string().nullable(),
