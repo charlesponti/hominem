@@ -2,12 +2,11 @@
 
 import { McpServer as Server } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import {
-  registerMentalWellnessTool,
-  registerNutritionTool,
-  registerSleepTool,
-  registerWorkoutTool,
-} from './tools/index.ts'
+import { registerFlightsTool } from './tools/flights.js'
+import { registerMentalWellnessTool } from './tools/mental-health.js'
+import { registerNutritionTool } from './tools/nutrition.js'
+import { registerSleepTool } from './tools/sleep.js'
+import { registerWorkoutTool } from './tools/workout.js'
 
 // Create an MCP server
 const server = new Server({
@@ -20,6 +19,7 @@ registerWorkoutTool(server)
 registerNutritionTool(server)
 registerSleepTool(server)
 registerMentalWellnessTool(server)
+registerFlightsTool(server)
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport()

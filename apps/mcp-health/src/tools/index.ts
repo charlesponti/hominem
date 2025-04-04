@@ -1,3 +1,4 @@
+export * from './flights.ts'
 export * from './mental-health.ts'
 export * from './nutrition.ts'
 export * from './sleep.ts'
