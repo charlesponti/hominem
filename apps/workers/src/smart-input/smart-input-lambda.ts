@@ -1,10 +1,16 @@
 import 'dotenv/config'
 
+import { openai } from '@ai-sdk/openai'
 import { logger } from '@ponti/utils/logger'
+import { generateObject } from 'ai'
 import { ZodError } from 'zod'
-import { processAttachments } from './services/attachment.service'
-import { parseEmail, processEmailBody, validateEmailBody } from './services/email.service'
-import type { Candidates, SubmissionAttachment } from './writer.schema'
+import {
+  CandidatesSchema,
+  type Candidates,
+  type SubmissionAttachment,
+} from '../../lib/writer.schema'
+import { parseEmail, validateEmailBody } from '../services/email.service'
+import { processAttachments } from './smart-input-lambda.utils'
 
 export interface LambdaEvent {
   Records: [
@@ -91,5 +97,31 @@ export const handler = async (event: LambdaEvent) => {
       statusCode: 500,
       body: JSON.stringify({ error: 'Internal server error' }),
     }
+  }
+}
+
+export async function processEmailBody(emailBody: string): Promise<Candidates> {
+  logger.info('Processing email body', {
+    bodyLength: emailBody.length,
+  })
+  try {
+    const response = await generateObject({
+      model: openai('gpt-4o', { structuredOutputs: true }),
+      messages: [
+        {
+          role: 'user',
+          content: `Analyze the following email and retrieve all the writers mentioned:\n\n${emailBody}`,
+        },
+      ],
+      schema: CandidatesSchema,
+    })
+
+    logger.info('Email body processed successfully', {
+      candidateCount: response.object.candidates?.length,
+    })
+    return response.object
+  } catch (error) {
+    logger.error('Email body processing error', { error })
+    throw error
   }
 }

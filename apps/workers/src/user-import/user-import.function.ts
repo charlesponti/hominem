@@ -1,6 +1,7 @@
 import { logger } from '@ponti/utils/logger'
 import { ZodError } from 'zod'
-import { getCSVFromS3, processCSVBuffer, writeResultsToS3 } from './services/csv.service'
+import { getObjectFromS3, writeJSONToS3 } from '../services/s3.service'
+import { processCSVBuffer } from './user-import.utils'
 
 interface S3Event {
   Records: {
@@ -28,9 +29,9 @@ export const handler = async (event: S3Event) => {
     const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, ' '))
     logger.info('Processing S3 object', { bucketName, key })
 
-    const buffer = await getCSVFromS3(bucketName, key)
+    const buffer = await getObjectFromS3(bucketName, key)
     const results = await processCSVBuffer(buffer)
-    const outputKey = await writeResultsToS3(bucketName, key, results)
+    const outputKey = await writeJSONToS3(bucketName, key, results)
 
     return {
       statusCode: 200,

@@ -1,9 +1,6 @@
-import { openai } from '@ai-sdk/openai'
 import { logger } from '@ponti/utils/logger'
-import { generateObject } from 'ai'
 import { simpleParser, type ParsedMail } from 'mailparser'
-import type { LambdaEvent } from '../prolog-email-lambda'
-import { CandidatesSchema, type Candidates } from '../writer.schema'
+import type { LambdaEvent } from '../smart-input/smart-input-lambda'
 
 export async function parseEmail(event: LambdaEvent): Promise<ParsedMail> {
   logger.info('Starting email parsing', {
@@ -35,30 +32,4 @@ export async function validateEmailBody(email: ParsedMail): Promise<string> {
   }
   logger.info('Email body validated successfully')
   return email.text
-}
-
-export async function processEmailBody(emailBody: string): Promise<Candidates> {
-  logger.info('Processing email body', {
-    bodyLength: emailBody.length,
-  })
-  try {
-    const response = await generateObject({
-      model: openai('gpt-4o', { structuredOutputs: true }),
-      messages: [
-        {
-          role: 'user',
-          content: `Analyze the following email and retrieve all the writers mentioned:\n\n${emailBody}`,
-        },
-      ],
-      schema: CandidatesSchema,
-    })
-
-    logger.info('Email body processed successfully', {
-      candidateCount: response.object.candidates?.length,
-    })
-    return response.object
-  } catch (error) {
-    logger.error('Email body processing error', { error })
-    throw error
-  }
 }

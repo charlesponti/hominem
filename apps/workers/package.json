@@ -13,7 +13,14 @@
     "build": "bun build src/import-transactions-worker.ts --target=bun --outdir=build --minify"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.782.0",
     "@ponti/utils": "*",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "mailparser": "^3.7.2",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.4.5",
+    "@types/pdf-parse": "^1.1.5"
   }
 }

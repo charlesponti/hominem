@@ -1,13 +1,13 @@
 import * as fs from 'node:fs'
 import path from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { handler, type LambdaEvent } from './prolog-email-lambda'
+import { handler, type LambdaEvent } from './smart-input-lambda'
 
 vi.mock('pdf-parse', () => ({
   default: vi.fn().mockResolvedValue({ text: 'test' }),
 }))
 
-vi.mock('aws-sdk', () => ({
+vi.mock('@aws-sdk/client-s3', () => ({
   S3: vi.fn().mockImplementation(() => ({
     putObject: vi.fn().mockReturnValue({
       promise: vi.fn().mockResolvedValue({}),
@@ -74,7 +74,7 @@ describe.skip('prolog-email-lambda', () => {
     const result = await handler(event)
 
     expect(result.statusCode).toBe(200)
-    const s3Instance = new (await import('aws-sdk')).S3()
+    const s3Instance = new (await import('@aws-sdk/client-s3')).S3()
     expect(s3Instance.putObject).toHaveBeenCalled()
     expect(s3Instance.putObject).toHaveBeenCalledWith(
       expect.objectContaining({

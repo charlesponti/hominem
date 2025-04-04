@@ -3,16 +3,20 @@ import 'dotenv/config'
 import { logger } from '@ponti/utils/logger'
 import * as fs from 'node:fs'
 import path from 'node:path'
-import { mergeWriterData, type LambdaEvent } from './prolog-email-lambda'
-import { processAttachments } from './services/attachment.service'
-import { parseEmail, processEmailBody, validateEmailBody } from './services/email.service'
+import { parseEmail, validateEmailBody } from './services/email.service'
+import {
+  mergeWriterData,
+  processEmailBody,
+  type LambdaEvent,
+} from './smart-input/smart-input-lambda'
+import { processAttachments } from './smart-input/smart-input-lambda.utils'
 
 async function main() {
   // Set required environment variables
   process.env.S3_BUCKET = 'test-bucket'
 
   // Read test email file
-  const ASSETS_DIR = path.join(__dirname, './test-assets')
+  const ASSETS_DIR = path.join(__dirname, '../test-assets')
   const emailContent = fs.readFileSync(path.join(ASSETS_DIR, 'housebroken.eml'), 'utf-8')
 
   // Create mock event
