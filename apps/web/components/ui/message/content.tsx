@@ -1,5 +1,4 @@
 import type { ChatMessage } from '@ponti/utils/schema'
-import type { Components } from 'react-markdown'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
@@ -45,9 +44,9 @@ export function MessageContent({ content }: MessageContentProps) {
             )
           },
           pre: ({ children, ...props }) => (
-            <div className="not-prose relative overflow-hidden rounded-md" {...props}>
+            <pre className="not-prose relative overflow-hidden rounded-md" {...props}>
               {children}
-            </div>
+            </pre>
           ),
           p: ({ children }) => <p className="whitespace-pre-wrap break-words">{children}</p>,
         }}
