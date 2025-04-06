@@ -22,7 +22,8 @@ command
       prompt: `Provide a concise answer to the following question:\n${options.question}`,
     })
 
-    logger.info(`Answer: ${response.text}`)
+    console.info(`Question:\n${options.question}`)
+    console.info(`Answer:\n${response.text}`)
   })
 
 command
