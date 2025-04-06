@@ -36,7 +36,16 @@
         "noUselessSwitchCase": "off"
       },
       "suspicious": {
-        "noConsoleLog": "warn"
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": [
+              "error",
+              "info",
+              "warn"
+            ]
+          }
+        }
       },
       "correctness": {
         "noUnusedImports": "error"
