@@ -36,7 +36,6 @@ command
       const pdfData = await pdfParse(pdfContent)
 
       const response = await generateObject({
-        // model: lmstudio('gemma-3-12b-it'),
         model: google('gemini-1.5-flash'),
         schema: z.object({
           answer: z.string(),
