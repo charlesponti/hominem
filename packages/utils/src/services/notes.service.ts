@@ -38,11 +38,9 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to create a note')
     }
 
-    const analysis = await this.nlpProcessor.analyzeText(input.content)
     const [note] = await db
       .insert(notes)
       .values({
-        analysis,
         content: input.content,
         title: input.title,
         tags: input.tags,
