@@ -1,4 +1,6 @@
 import { logger } from '@/logger'
+import { getMarkdownFile } from '@/utils'
+import { MarkdownProcessor } from '@ponti/utils/markdown'
 import { NLPProcessor } from '@ponti/utils/nlp'
 import { Command } from 'commander'
 import { createWriteStream } from 'node:fs'
@@ -8,7 +10,6 @@ import ora from 'ora'
 import { db } from '../../db'
 import { markdownEntries } from '../../db/schema'
 import { getPathFiles } from '../../utils/get-path-files'
-import { MarkdownProcessor } from './markdown/markdown-processor'
 
 interface ProcessMarkdownOptions {
   output: string
@@ -53,7 +54,8 @@ export default new Command('process-markdown')
         index++
         const fileCountText = `File: ${index} / ${files.length}`
         processorSpinner.text = `Processing ${fileCountText}`
-        const content = await processor.processFileWithAst(file)
+        const fileContent = await getMarkdownFile(file)
+        const content = await processor.processFileWithAst(fileContent, file)
 
         let entryIndex = 0
         for (const entry of content.entries) {

@@ -1,24 +1,24 @@
-import { logger } from '@/logger'
+import { getDatesFromText } from '@/time'
+import { LLMProvider, type LLMProviderConfig } from '@ponti/utils/llm'
 import type { TextAnalysis } from '@ponti/utils/schemas'
-import { getDatesFromText } from '@ponti/utils/time'
 import * as cheerio from 'cheerio'
 import {
   MarkdownTextSplitter,
   type RecursiveCharacterTextSplitterParams,
 } from 'langchain/text_splitter'
-import * as fs from 'node:fs/promises'
 import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
+import { extractMetadata, type Metadata } from './metadata.schema'
 import { detectTask, normalizeWhitespace, taskRegex } from './utils'
 
-interface GetProcessedEntryParams {
-  $: ReturnType<typeof cheerio.load>
-  elem: ReturnType<ReturnType<typeof cheerio.load>>[0]
-  entry: ProcessedMarkdownFileEntry
-  section: string | null
-  tag: string
+interface ProcessorConfig {
+  chunkSize?: number
+  llmConfig?: {
+    provider: LLMProviderConfig['provider']
+    model: string
+  }
 }
 
 export interface EntryContent {
@@ -31,71 +31,106 @@ export interface EntryContent {
   subentries?: EntryContent[]
 }
 
+interface GetProcessedEntryParams {
+  $: ReturnType<typeof import('cheerio').load>
+  elem: ReturnType<ReturnType<typeof import('cheerio').load>>[0]
+  entry: {
+    content: EntryContent[]
+    date?: string
+    filename: string
+    heading: string
+  }
+  section: string | null
+}
+
 export interface ProcessedMarkdownFileEntry {
   content: EntryContent[]
-  date: string | undefined
+  date?: string
   filename: string
   heading: string
+  metadata?: Metadata
   frontmatter?: Record<string, unknown>
 }
 
 export interface ProcessedMarkdownFile {
   entries: ProcessedMarkdownFileEntry[]
+  metadata?: Metadata
 }
 
 export class MarkdownProcessor {
-  async getChunks(filepath: string, options?: Partial<RecursiveCharacterTextSplitterParams>) {
-    const content = await fs.readFile(filepath, 'utf-8')
+  private llmProvider: LLMProvider
+  private config: ProcessorConfig
+
+  constructor(config: ProcessorConfig = {}) {
+    this.config = {
+      llmConfig: {
+        provider: 'lmstudio',
+        model: 'gpt-4o-mini',
+      },
+      ...config,
+    }
+
+    this.llmProvider = new LLMProvider(this.config.llmConfig)
+  }
+
+  async getChunks(content: string, options?: Partial<RecursiveCharacterTextSplitterParams>) {
     const splitter = MarkdownTextSplitter.fromLanguage('markdown', {
       separators: ['#', '##', '###', '####', '#####', '######'],
-      chunkSize: options?.chunkSize || 2000,
-      chunkOverlap: options?.chunkOverlap || 20,
+      chunkSize: this.config.chunkSize,
+      ...options,
     })
     const chunks = await splitter.splitText(content)
     return chunks
   }
 
-  async processFileWithAst(filepath: string): Promise<ProcessedMarkdownFile> {
-    // Check that the file exists
-    if (!(await fs.stat(filepath)).isFile()) {
-      throw new Error(`File not found: ${filepath}`)
-    }
+  async processFileWithAst(content: string, filename: string): Promise<ProcessedMarkdownFile> {
+    const { result } = await this.convertMarkdownToJSON(content, filename)
 
-    const content = await fs.readFile(filepath, 'utf-8')
-    const { result } = await this.convertMarkdownToJSON(content, filepath)
     return result
   }
 
-  processFrontmatter(content: string): { content: string; frontmatter?: Record<string, unknown> } {
+  processFrontmatter(content: string): {
+    content: string
+    metadata: Metadata
+    frontmatter?: Record<string, unknown>
+  } {
     // Find the frontmatter content at the start of the file
     const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
     let frontmatter: Record<string, unknown> | undefined
     let processableContent = content
+    let metadata: Metadata = {}
 
     if (frontmatterMatch) {
-      try {
-        // Parse the frontmatter content (assuming YAML format)
-        const frontmatterContent = frontmatterMatch[1]
-        // For now, we'll do a simple key-value extraction
-        frontmatter = Object.fromEntries(
-          frontmatterContent
-            .split('\n')
-            .filter((line) => line.includes(':'))
-            .map((line) => {
-              const [key, ...valueParts] = line.split(':')
-              const value = valueParts.join(':').trim()
-              // Remove quotes if present
-              return [key.trim(), value.replace(/^['"]|['"]$/g, '')]
-            })
-        )
-        // Remove the frontmatter from the content
-        processableContent = content.slice(frontmatterMatch[0].length)
-      } catch (error) {
-        logger.warn('Failed to parse frontmatter:', error)
+      // Parse the frontmatter content (assuming YAML format)
+      const frontmatterContent = frontmatterMatch[1]
+
+      if (!frontmatterContent) {
+        return { content, metadata, frontmatter: undefined }
       }
+
+      // Extract key-value pairs
+      frontmatter = Object.fromEntries(
+        frontmatterContent
+          .split('\n')
+          .filter((line) => line.includes(':'))
+          .map((line) => {
+            const [key, ...valueParts] = line.split(':')
+            const value = valueParts.join(':').trim()
+            if (!key) return [value]
+            return [key.trim(), value.replace(/^['"]|['"]$/g, '')]
+          })
+      )
+
+      // Validate and extract metadata
+      if (frontmatter) {
+        metadata = extractMetadata(frontmatter)
+      }
+
+      // Remove the frontmatter from the content
+      processableContent = content.slice(frontmatterMatch[0].length)
     }
 
-    return { content: processableContent, frontmatter }
+    return { content: processableContent, metadata, frontmatter }
   }
 
   async convertMarkdownToHTML(content: string) {
@@ -116,7 +151,7 @@ export class MarkdownProcessor {
   // Helper method to create or retrieve an entry
   private ensureEntry(
     filename: string,
-    heading: string | undefined,
+    heading?: string,
     frontmatter?: Record<string, unknown>,
     entries: ProcessedMarkdownFileEntry[] = []
   ): ProcessedMarkdownFileEntry {
@@ -133,22 +168,45 @@ export class MarkdownProcessor {
     return entry
   }
 
+  private async calculateReadingMetrics(
+    content: string
+  ): Promise<{ wordCount: number; readingTime: number }> {
+    const words = content.trim().split(/\s+/).length
+    // Average reading speed: 200-250 words per minute
+    const readingTime = Math.ceil(words / 200)
+
+    return { wordCount: words, readingTime }
+  }
+
   async convertMarkdownToJSON(
     markdownContent: string,
     filename: string
   ): Promise<{ result: ProcessedMarkdownFile; html: string }> {
-    const result: ProcessedMarkdownFile = { entries: [] }
+    // Process frontmatter and extract metadata
+    const {
+      content: processableContent,
+      metadata,
+      frontmatter,
+    } = this.processFrontmatter(markdownContent)
 
-    // Extract frontmatter if present
-    const { content: processableContent, frontmatter } = this.processFrontmatter(markdownContent)
+    // Calculate reading metrics
+    const { wordCount, readingTime } = await this.calculateReadingMetrics(processableContent)
+    metadata.wordCount = wordCount
+    metadata.readingTime = readingTime
 
-    // Convert markdown to HTML for fancy querying
+    // Convert markdown to HTML for processing
     const $ = await this.convertMarkdownToHTML(processableContent)
+
+    const result: ProcessedMarkdownFile = {
+      entries: [],
+      metadata,
+    }
 
     let currentHeading: string | undefined
     let currentEntry: ProcessedMarkdownFileEntry | null = null
 
     const elements = $('body').children().toArray()
+
     for (const elem of elements) {
       const tag = elem.tagName.toLowerCase()
       const text = $(elem).text().trim()
@@ -164,18 +222,22 @@ export class MarkdownProcessor {
           .trim()
 
       if (/^h[1-6]$/.test(tag)) {
-        // New entry on headings
         currentHeading = text
+        // New entry on headings
         currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
         const { dates, fullDate } = getDatesFromText(text)
-        currentEntry.date = dates.length > 0 ? dates[0].start.split('T')[0] : fullDate
+        if (dates.length > 0 && dates[0]) {
+          currentEntry.date = dates[0].start.split('T')[0]
+        } else if (fullDate) {
+          currentEntry.date = fullDate.split('T')[0]
+        }
       }
 
       if (tag === 'paragraph') {
         const previousContent = this.getPreviousEntry(currentEntry)
 
+        // If the previous entry was a paragraph, add to previous paragraph
         if (previousContent && previousContent.tag === 'paragraph') {
-          // Add to previous paragraph
           previousContent.text += `\n ${processedText}`
         }
 
@@ -186,30 +248,41 @@ export class MarkdownProcessor {
         currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
       }
 
-      if (tag === 'ul' || tag === 'ol') {
-        const listItems = $(elem).find('> li').toArray()
-        for (const li of listItems) {
-          await this.processListItem({
-            $,
-            elem: li,
-            entry: currentEntry,
-            section: currentHeading ? currentHeading.toLowerCase() : null,
-            tag,
-          })
-        }
-
-        continue
-      }
-
       const processedContent = await this.getProcessedEntry({
         $,
         elem,
         entry: currentEntry,
         section: currentHeading ? currentHeading.toLowerCase() : null,
-        tag,
       })
+
       if (processedContent) {
         currentEntry.content.push(processedContent)
+      }
+
+      if (tag === 'ul' || tag === 'ol') {
+        const listItems = $(elem).find('> li').toArray()
+
+        for (const li of listItems) {
+          const processedContent = await this.getProcessedEntry({
+            $,
+            elem: li,
+            entry: currentEntry,
+            section: currentHeading ? currentHeading.toLowerCase() : null,
+          })
+          if (!processedContent) {
+            console.error('No processed content found for list item', tag, processedText)
+            continue
+          }
+
+          currentEntry.content.push(processedContent)
+
+          processedContent.subentries = await this.processNestedLists(
+            $,
+            li,
+            currentEntry,
+            processedContent.tag
+          )
+        }
       }
     }
 
@@ -221,33 +294,19 @@ export class MarkdownProcessor {
   }
 
   async getProcessedEntry(params: GetProcessedEntryParams): Promise<EntryContent | undefined> {
-    const { $, elem, section, tag } = params
+    const { $, elem, section } = params
     const text = $(elem).contents().first().text().trim()
     if (!text) return
     const normalizedText = normalizeWhitespace(text)
     const { isTask, isComplete, taskText } = detectTask(normalizedText)
 
     return {
-      tag,
+      tag: elem.type,
       text: taskText || normalizedText,
       section,
       isTask,
       isComplete,
       subentries: [],
-    }
-  }
-
-  async processListItem(params: GetProcessedEntryParams) {
-    const { $, elem, entry } = params
-    const processedContent = await this.getProcessedEntry(params)
-    if (!processedContent) return
-
-    entry.content.push(processedContent)
-
-    // Refactored nested lists recursion
-    const subentries = await this.processNestedLists($, elem, entry, processedContent.tag)
-    if (subentries.length > 0) {
-      processedContent.subentries = subentries
     }
   }
 
@@ -271,7 +330,6 @@ export class MarkdownProcessor {
           elem: nestedListItem,
           entry,
           section: parentText,
-          tag,
         })
         if (nestedContent) {
           // Process deeper nested lists recursively

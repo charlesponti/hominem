@@ -1,8 +1,6 @@
-import * as fs from 'node:fs/promises'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MarkdownProcessor } from './markdown-processor'
 
-vi.mock('node:fs/promises')
 vi.mock('@ponti/utils/nlp')
 // vi.mock('@ponti/utils/time', () => ({
 //   getDatesFromText: vi.fn().mockReturnValue({ dates: [], fullDate: undefined }),
@@ -14,12 +12,6 @@ describe('MarkdownProcessor', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     processor = new MarkdownProcessor()
-
-    // Mock fs.stat to always return { isFile: () => true } for file existence checks
-    vi.mocked(fs.stat).mockResolvedValue({
-      isFile: () => true,
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    } as any)
   })
 
   describe('processFrontmatter', () => {
@@ -134,22 +126,11 @@ Meeting with John Smith in New York about #project planning.`
   describe('processFileWithAst', () => {
     it('should read file and process its content', async () => {
       const fileContent = '# Test Heading\n\nTest content'
-      vi.mocked(fs.readFile).mockResolvedValue(fileContent)
 
-      const result = await processor.processFileWithAst('test.md')
+      const result = await processor.processFileWithAst(fileContent, 'test.md')
 
-      expect(fs.readFile).toHaveBeenCalledWith('test.md', 'utf-8')
       expect(result.entries.length).toBe(1)
       expect(result.entries[0].heading).toBe('Test Heading')
-    })
-
-    it('should throw an error for non-existent files', async () => {
-      vi.mocked(fs.stat).mockResolvedValue({
-        isFile: () => false,
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      } as any)
-
-      await expect(processor.processFileWithAst('nonexistent.md')).rejects.toThrow('File not found')
     })
   })
 })

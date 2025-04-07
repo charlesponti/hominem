@@ -10,7 +10,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
           "isTask": false,
           "section": "personal",
           "subentries": [],
-          "tag": "h2",
+          "tag": "tag",
           "text": "personal",
         },
         {
@@ -18,7 +18,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
           "isTask": false,
           "section": "personal",
           "subentries": [],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Perfectionism",
         },
         {
@@ -31,7 +31,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
               "isTask": false,
               "section": "Overthinking, analysis paralysis, fear of failure",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "decrease my playfulness.",
             },
             {
@@ -39,7 +39,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
               "isTask": false,
               "section": "Overthinking, analysis paralysis, fear of failure",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "decreases poor decision-making",
             },
             {
@@ -47,7 +47,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
               "isTask": false,
               "section": "Overthinking, analysis paralysis, fear of failure",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "decreases action-taking",
             },
             {
@@ -55,11 +55,11 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
               "isTask": false,
               "section": "Overthinking, analysis paralysis, fear of failure",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "reinforces personal beliefs instead of increasing objective truth",
             },
           ],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Overthinking, analysis paralysis, fear of failure",
         },
         {
@@ -72,7 +72,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
               "isTask": false,
               "section": "Fear of judgement",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "desire to be seen as correct instead of desire to be effective",
             },
             {
@@ -80,11 +80,11 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
               "isTask": false,
               "section": "Fear of judgement",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "many judgments should be ignored because they lack sincerity",
             },
           ],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Fear of judgement",
         },
       ],
@@ -94,6 +94,10 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should correctly process hi
       "heading": "personal",
     },
   ],
+  "metadata": {
+    "readingTime": 1,
+    "wordCount": 58,
+  },
 }
 `;
 
@@ -107,7 +111,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should detect tasks and the
           "isTask": false,
           "section": "tasks",
           "subentries": [],
-          "tag": "h1",
+          "tag": "tag",
           "text": "Tasks",
         },
         {
@@ -115,7 +119,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should detect tasks and the
           "isTask": true,
           "section": "tasks",
           "subentries": [],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Incomplete task",
         },
         {
@@ -123,7 +127,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should detect tasks and the
           "isTask": true,
           "section": "tasks",
           "subentries": [],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Complete task",
         },
       ],
@@ -133,6 +137,10 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should detect tasks and the
       "heading": "Tasks",
     },
   ],
+  "metadata": {
+    "readingTime": 1,
+    "wordCount": 11,
+  },
 }
 `;
 
@@ -146,7 +154,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should extract metadata fro
           "isTask": false,
           "section": "meeting notes",
           "subentries": [],
-          "tag": "h1",
+          "tag": "tag",
           "text": "Meeting Notes",
         },
         {
@@ -154,7 +162,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should extract metadata fro
           "isTask": false,
           "section": "meeting notes",
           "subentries": [],
-          "tag": "p",
+          "tag": "tag",
           "text": "Meeting with John Smith in New York about #project planning.",
         },
       ],
@@ -164,6 +172,10 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should extract metadata fro
       "heading": "Meeting Notes",
     },
   ],
+  "metadata": {
+    "readingTime": 1,
+    "wordCount": 13,
+  },
 }
 `;
 
@@ -177,7 +189,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should handle nested lists 
           "isTask": false,
           "section": "nested list",
           "subentries": [],
-          "tag": "h1",
+          "tag": "tag",
           "text": "Nested List",
         },
         {
@@ -190,7 +202,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should handle nested lists 
               "isTask": false,
               "section": "Fruits:",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "Apples",
             },
             {
@@ -198,11 +210,11 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should handle nested lists 
               "isTask": false,
               "section": "Fruits:",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "Bananas",
             },
           ],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Fruits:",
         },
         {
@@ -215,7 +227,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should handle nested lists 
               "isTask": false,
               "section": "Vegetables:",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "Carrots",
             },
             {
@@ -223,11 +235,11 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should handle nested lists 
               "isTask": false,
               "section": "Vegetables:",
               "subentries": [],
-              "tag": "ul",
+              "tag": "tag",
               "text": "Broccoli",
             },
           ],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Vegetables:",
         },
       ],
@@ -237,6 +249,10 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should handle nested lists 
       "heading": "Nested List",
     },
   ],
+  "metadata": {
+    "readingTime": 1,
+    "wordCount": 15,
+  },
 }
 `;
 
@@ -250,7 +266,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process headings pro
           "isTask": false,
           "section": "heading 1",
           "subentries": [],
-          "tag": "h1",
+          "tag": "tag",
           "text": "Heading 1",
         },
         {
@@ -258,7 +274,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process headings pro
           "isTask": false,
           "section": "heading 1",
           "subentries": [],
-          "tag": "p",
+          "tag": "tag",
           "text": "Paragraph under heading 1",
         },
       ],
@@ -274,7 +290,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process headings pro
           "isTask": false,
           "section": "heading 2",
           "subentries": [],
-          "tag": "h2",
+          "tag": "tag",
           "text": "Heading 2",
         },
         {
@@ -282,7 +298,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process headings pro
           "isTask": false,
           "section": "heading 2",
           "subentries": [],
-          "tag": "p",
+          "tag": "tag",
           "text": "Paragraph under heading 2",
         },
       ],
@@ -292,6 +308,10 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process headings pro
       "heading": "Heading 2",
     },
   ],
+  "metadata": {
+    "readingTime": 1,
+    "wordCount": 14,
+  },
 }
 `;
 
@@ -305,7 +325,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process lists correc
           "isTask": false,
           "section": "shopping list",
           "subentries": [],
-          "tag": "h1",
+          "tag": "tag",
           "text": "Shopping List",
         },
         {
@@ -313,7 +333,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process lists correc
           "isTask": false,
           "section": "shopping list",
           "subentries": [],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Apples",
         },
         {
@@ -321,7 +341,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process lists correc
           "isTask": false,
           "section": "shopping list",
           "subentries": [],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Bananas",
         },
         {
@@ -329,7 +349,7 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process lists correc
           "isTask": false,
           "section": "shopping list",
           "subentries": [],
-          "tag": "ul",
+          "tag": "tag",
           "text": "Milk",
         },
       ],
@@ -339,5 +359,9 @@ exports[`MarkdownProcessor > convertMarkdownToJSON > should process lists correc
       "heading": "Shopping List",
     },
   ],
+  "metadata": {
+    "readingTime": 1,
+    "wordCount": 9,
+  },
 }
 `;

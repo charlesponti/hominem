@@ -19,12 +19,24 @@
     "baseUrl": ".",
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["src/*"],
-      "@/db": ["src/db"],
-      "@/logger": ["src/logger"],
-      "@/finance": ["src/finance"],
-      "@/schema": ["src/db/schema"],
-      "@ponti/utils/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "@/db": [
+        "src/db"
+      ],
+      "@/logger": [
+        "src/logger"
+      ],
+      "@/finance": [
+        "src/finance"
+      ],
+      "@/schema": [
+        "src/db/schema"
+      ],
+      "@ponti/utils/*": [
+        "src/*"
+      ]
     },
     "strictFunctionTypes": true,
     "noUncheckedIndexedAccess": true

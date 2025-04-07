@@ -19,7 +19,7 @@ export const TextAnalysisSchema = z.object({
   questions: z.array(z.string()).nullable(),
   locations: LocationsSchema.nullable(),
   emotions: z.array(TextAnalysisEmotionSchema).nullable(),
-  people: PeopleSchema,
+  people: PeopleSchema.nullable(),
   activities: EventsSchema.nullable(),
   decisions: DecisionsSchema.nullable(),
   topics: z.array(z.string()).describe('Topics mentioned in the text'),

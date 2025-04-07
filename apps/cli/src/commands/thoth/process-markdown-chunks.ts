@@ -1,5 +1,7 @@
 import { logger } from '@/logger'
+import { getMarkdownFile } from '@/utils'
 import { LLMProvider } from '@ponti/utils/llm'
+import { MarkdownProcessor } from '@ponti/utils/markdown'
 import { TextAnalysisSchema } from '@ponti/utils/schemas'
 import { generateObject } from 'ai'
 import { Command } from 'commander'
@@ -9,7 +11,6 @@ import path from 'node:path'
 import process from 'node:process'
 import ora from 'ora'
 import { getPathFiles } from '../../utils/get-path-files'
-import { MarkdownProcessor } from './markdown/markdown-processor'
 
 interface ProcessMarkdownChunksOptions {
   output: string
@@ -30,8 +31,6 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
       fs.mkdir(outputDir, { recursive: true })
     }
     const outputFilePath = path.join(outputDir, 'output_chunks.json')
-
-    // Create write stream for output file
     const outputStream = createWriteStream(outputFilePath)
     outputStream.write('[\n')
 
@@ -42,6 +41,7 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
       logger.info(`Processing ${files.length} files in ${shortPath} by chunks`)
 
       let index = 0
+      let totalCost = 0
       const processorSpinner = ora().start()
 
       for (const file of files) {
@@ -50,7 +50,8 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
         processorSpinner.text = `Processing ${fileCountText}`
 
         const processor = new MarkdownProcessor()
-        const chunks = await processor.getChunks(file)
+        const content = await getMarkdownFile(file)
+        const chunks = await processor.getChunks(content)
 
         const llmProvider = new LLMProvider({
           provider: options.provider,
@@ -69,16 +70,26 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
             prompt: `
               Analyze the following journal entry and extract the elements matching the provided JSON schema.
               "${chunk}"
-              `,
+
+              Context:
+              - Parent file: ${file}
+              - Parent file path: ${shortPath}
+            `,
             schema: TextAnalysisSchema,
           })
+
+          const cost = response.usage.totalTokens
+
+          // Increase the total cost of the current processing
+          totalCost += cost
 
           outputStream.write(
             `${JSON.stringify(
               {
                 filePath: file,
                 chunk: chunk,
-                ...response,
+                analysis: response.object,
+                tokenCost: cost,
               },
               null,
               2
@@ -86,22 +97,16 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
           )
         }
       }
-
-      // Close the JSON array
-      const finalOutputStream = createWriteStream(outputFilePath, { flags: 'a' })
-      finalOutputStream.write('\n]')
-      finalOutputStream.end()
-
       processorSpinner.succeed(`Processed ${files.length} files by chunks`)
-      logger.info(`Output streamed to ${outputFilePath}`)
+      logger.info(`Output streamed to ${outputFilePath}. Total cost: ${totalCost} tokens`)
     } catch (error) {
-      // Close the JSON array
-      const finalOutputStream = createWriteStream(outputFilePath, { flags: 'a' })
-      finalOutputStream.write('\n]')
-      finalOutputStream.end()
-      console.error(error)
       logger.error('Error processing markdown file by chunks:', error)
       process.exit(1)
+    } finally {
+      // Close the JSON array
+      outputStream.write('\n]')
+      outputStream.end()
+      process.exit(0)
     }
   })
 

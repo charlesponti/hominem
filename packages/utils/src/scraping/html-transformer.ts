@@ -14,15 +14,15 @@ export async function transformHTMLToSchema<T extends z.ZodObject<z.ZodRawShape,
   const startTime = Date.now()
   const response = await generateObject({
     model: {
-      openai: openai('gpt-4o', { structuredOutputs: true }),
-      google: googleAi('gemini-1.5-flash-8b-latest', { structuredOutputs: true }),
+      openai: openai('gpt-4o-mini', { structuredOutputs: true }),
+      google: googleAi('gemini-1.5-flash-latest', { structuredOutputs: true }),
     }[model],
     prompt: `
-        Transform the following input into structured data. Your responses should be concise, accurate, and match the provided schema.
+    Transform the following input into structured data. Your responses should be concise, accurate, and match the provided schema.
 
-        ## input
-        ${html}
-      `,
+    ## input
+    ${html}
+    `,
     schema,
     mode: 'json',
   })
