@@ -79,7 +79,7 @@ EXPOSE ${PORT}
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/health || exit 1
 
-RUN bun build apps/api/src/index.ts --outdir=apps/api/dist/index.js --target=node
+RUN bun build apps/api/src/index.ts --outfile=apps/api/dist/index.js --target=node
 
 # Start the application
 ENTRYPOINT ["node", "apps/api/dist/index.js"]
