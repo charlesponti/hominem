@@ -95,10 +95,10 @@ export default function TransactionsPage() {
 
           {/* Filters */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Filters</CardTitle>
+            <CardHeader className="py-2 px-4">
+              <CardTitle className="text-md text-muted-foreground">Filters</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="py-2 px-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label htmlFor="account" className="text-sm font-medium mb-1 block">
