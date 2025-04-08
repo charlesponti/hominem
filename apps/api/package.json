@@ -5,12 +5,13 @@
   "license": "MIT",
   "scripts": {
     "dev": "bun --watch src/index.ts | pino-pretty",
-    "lint": "bunx biome lint ./src",
-    "start": "bun run build/src/index | pino-pretty",
+    "lint": "npx biome lint ./src",
+    "start": "node build/index.js | pino-pretty",
     "test": "NODE_ENV=test vitest --run --coverage --passWithNoTests",
     "test:coverage": "NODE_ENV=test vitest --run --coverage",
     "test:watch": "NODE_ENV=test nx vitest",
-    "typecheck": "tsc --noEmit --incremental false"
+    "typecheck": "tsc --noEmit --incremental false",
+    "build": "bun build src/index.ts --outdir=build --target=node --minify"
   },
   "dependencies": {
     "@clerk/fastify": "^2.1.26",
