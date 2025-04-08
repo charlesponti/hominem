@@ -2,7 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { get_historical_flight_data } from '@ponti/ai'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { lmstudio } from '../utils/llm.js'
+import { lmstudio } from '../utils/llm.ts'
 
 export function registerFlightsTool(server: McpServer) {
   server.tool(

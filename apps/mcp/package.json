@@ -1,18 +1,18 @@
 {
-  "name": "@ponti-mcp/health",
+  "name": "@hominem/mcp",
   "version": "0.1.0",
-  "description": "A Model Context Protocol server",
+  "description": "the hominem model context protocol (mcp) client",
   "private": true,
   "type": "module",
   "bin": {
-    "ponti-mcp-health": "./build/index.js"
+    "hominem-mcp": "./build/index.js"
   },
   "files": [
     "build"
   ],
   "scripts": {
     "build": "bun build src/index.ts --outfile=build/index.js --target=node",
-    "dev": "bun build src/index.ts --outfile=build/index.js --target=node --watch",
+    "dev": "npx tsx --watch src/index.ts",
     "prepare": "npm run build",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },

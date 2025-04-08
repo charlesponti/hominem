@@ -2,11 +2,11 @@
 
 import { McpServer as Server } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { registerFlightsTool } from './tools/flights.js'
-import { registerMentalWellnessTool } from './tools/mental-health.js'
-import { registerNutritionTool } from './tools/nutrition.js'
-import { registerSleepTool } from './tools/sleep.js'
-import { registerWorkoutTool } from './tools/workout.js'
+import { registerFlightsTool } from './tools/flights.ts'
+import { registerMentalWellnessTool } from './tools/mental-health.ts'
+import { registerNutritionTool } from './tools/nutrition.ts'
+import { registerSleepTool } from './tools/sleep.ts'
+import { registerWorkoutTool } from './tools/workout.ts'
 
 // Create an MCP server
 const server = new Server({

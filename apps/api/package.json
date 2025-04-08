@@ -11,8 +11,7 @@
     "test": "NODE_ENV=test vitest --run --coverage --passWithNoTests",
     "test:coverage": "NODE_ENV=test vitest --run --coverage",
     "test:watch": "NODE_ENV=test nx vitest",
-    "typecheck": "tsc --noEmit --incremental false",
-    "build": "bun build src/index.ts --outdir=build --target=node --minify"
+    "typecheck": "tsc --noEmit --incremental false"
   },
   "dependencies": {
     "@clerk/fastify": "^2.1.26",
