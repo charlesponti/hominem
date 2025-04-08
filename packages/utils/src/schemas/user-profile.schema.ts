@@ -85,8 +85,8 @@ export const professionalProfileSchema = z.object({
       z.object({
         company: z.string(),
         position: z.string(),
-        startDate: z.date(),
-        endDate: z.date().optional(),
+        startDate: z.string().describe('YYYY-MM-DD'),
+        endDate: z.string().optional().describe('YYYY-MM-DD'),
         responsibilities: z.array(z.string()).optional(),
       })
     )
@@ -96,7 +96,7 @@ export const professionalProfileSchema = z.object({
       z.object({
         name: z.string(),
         issuingAuthority: z.string(),
-        dateAcquired: z.date(),
+        dateAcquired: z.string().describe('YYYY-MM-DD'),
       })
     )
     .optional(),

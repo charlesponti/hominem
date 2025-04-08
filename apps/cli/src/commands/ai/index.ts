@@ -1,9 +1,14 @@
 import { logger } from '@/logger'
 import { lmstudio } from '@/utils/lmstudio'
 import { google } from '@ai-sdk/google'
+import { educationalProfileSchema, professionalProfileSchema } from '@hominem/utils/schemas'
 import { generateObject, generateText } from 'ai'
 import { Command } from 'commander'
-import * as fs from 'node:fs'
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
+import ora from 'ora'
+import PDFParser from 'pdf2json'
 import { z } from 'zod'
 
 export const command = new Command()
@@ -25,31 +30,62 @@ command
   })
 
 command
-  .command('pdf-analyze')
+  .command('resume-to-json')
   .description('Analyze a PDF file')
   .requiredOption('--filepath <filepath>', 'Path to the PDF file')
+  .option('--outfile <outfile>', 'Output file name')
+  .option('--outdir <outdir>', 'Output file directory')
   .action(async (options) => {
-    try {
-      logger.info(`Reading PDF file: ${options.filepath}`)
-      const pdfContent = await fs.promises.readFile(options.filepath)
-      const pdfParse = (await import('pdf-parse')).default
-      const pdfData = await pdfParse(pdfContent)
+    if (!options.outdir && !options.outfile) {
+      console.error('Output file or directory not specified')
+      process.exit(1)
+    }
 
+    const outputFile =
+      options.outfile || (options.outdir && path.resolve(options.outdir, 'output/resume.json'))
+    const spinner = ora().start('Processing PDF file...')
+
+    if (!fs.existsSync(path.dirname(outputFile))) {
+      fs.mkdirSync(path.dirname(outputFile), { recursive: true })
+    }
+
+    try {
+      const pdfParser = new PDFParser(this, true)
+
+      const pdfText = await new Promise((resolve, reject) => {
+        pdfParser.loadPDF(options.filepath)
+
+        pdfParser.on('pdfParser_dataReady', () => {
+          const text = pdfParser.getRawTextContent()
+          resolve(text)
+        })
+
+        pdfParser.on('pdfParser_dataError', reject)
+      })
+
+      spinner.text = 'Generating JSON...'
       const response = await generateObject({
-        model: google('gemini-1.5-flash'),
+        model: google('gemini-2.0-flash-exp'),
         schema: z.object({
-          answer: z.string(),
+          description: z.string(),
+          education: educationalProfileSchema,
+          professional: professionalProfileSchema,
         }),
         messages: [
           {
             role: 'user',
-            content: `Analyze the attached PDF: ${pdfData.text}`,
+            content: `Analyze the attached PDF: ${pdfText}`,
           },
         ],
       })
 
-      logger.info(`FINAL PDF ANALYZE: ${JSON.stringify(response.object, null, 2)}`)
+      spinner.succeed('JSON generated successfully')
+      logger.info(`Writing JSON to file: ${outputFile}`)
+      fs.writeFileSync(outputFile, JSON.stringify(response.object, null, 2))
+      process.exit(0)
     } catch (error) {
       logger.error(`Error reading or processing PDF: ${error}`)
+      console.error(error)
+      process.exit(1)
     }
   })
