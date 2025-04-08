@@ -1,13 +1,13 @@
 {
-	"$schema": "https://railway.com/railway.schema.json",
-	"build": {
-		"builder": "NIXPACKS",
-		"buildCommand": "bun run build"
-	},
-	"deploy": {
-		"startCommand": "cd apps/web && bun run start",
-		"healthcheckPath": "/",
-		"healthcheckTimeout": 100,
-		"restartPolicyType": "NEVER"
-	}
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build"
+  },
+  "deploy": {
+    "startCommand": "cd apps/web && npm run start",
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "NEVER"
+  }
 }
