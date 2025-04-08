@@ -69,7 +69,7 @@ export default function TransactionsPage() {
   const totalBalance = getTotalBalance().toFixed(2)
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="px-4 py-6">
       <Tabs defaultValue="transactions" className="space-y-4">
         <TabsList>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
@@ -183,7 +183,7 @@ export default function TransactionsPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="cursor-pointer" onClick={() => handleSort('date')}>
-                          <div className="flex items-center">
+                          <div className="flex items-center min-w-20">
                             Date
                             {sortField === 'date' && (
                               <ArrowUpDown
@@ -236,7 +236,7 @@ export default function TransactionsPage() {
                     </TableHeader>
                     <TableBody>
                       {filteredTransactions.map((transaction) => (
-                        <TableRow key={transaction.id}>
+                        <TableRow key={transaction.id} className="text-xs">
                           <TableCell>{format(new Date(transaction.date), 'MMM d, yyyy')}</TableCell>
                           <TableCell className="font-medium">{transaction.description}</TableCell>
                           <TableCell
@@ -246,15 +246,22 @@ export default function TransactionsPage() {
                           </TableCell>
                           <TableCell>
                             {transaction.category ? (
-                              <Badge variant="outline">{transaction.category}</Badge>
+                              <Badge
+                                variant="outline"
+                                className="bg-primary text-primary-foreground line-clamp-1"
+                              >
+                                {transaction.category}
+                              </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-muted-foreground">
+                              <Badge variant="outline" className="text-muted-foreground min-w-full">
                                 Other
                               </Badge>
                             )}
                           </TableCell>
                           <TableCell>
-                            {accountsMap.get(transaction.accountId)?.name || 'Unknown'}
+                            <span className="line-clamp-1">
+                              {accountsMap.get(transaction.accountId)?.name || 'Unknown'}
+                            </span>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -263,8 +270,8 @@ export default function TransactionsPage() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-between py-4">
-              <div>
+            <CardFooter className="flex justify-between py-4 w-full">
+              <div className="flex justify-center text-sm text-muted-foreground w-full">
                 Showing {filteredTransactions.length} of {transactions.length} transactions
               </div>
             </CardFooter>

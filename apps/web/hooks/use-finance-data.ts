@@ -47,6 +47,8 @@ export function useFinanceData(): FinanceData {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined)
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined)
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [limit, setLimit] = useState<number>(10)
+  const [offset, setOffset] = useState<number>(0)
 
   // Sorting state
   const [sortField, setSortField] = useState<string>('date')
@@ -73,7 +75,9 @@ export function useFinanceData(): FinanceData {
     }
 
     // Add a limit to prevent loading too many transactions
-    params.append('limit', '500')
+    params.append('limit', limit.toString())
+    params.append('offset', offset.toString())
+    params.append('page', Math.floor(offset / limit).toString())
 
     const queryString = params.toString()
     return queryString ? `?${queryString}` : ''
