@@ -1,5 +1,5 @@
 import { S3 } from '@aws-sdk/client-s3'
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@hominem/utils/logger'
 
 const s3 = new S3()
 const S3_BUCKET = process.env.S3_BUCKET

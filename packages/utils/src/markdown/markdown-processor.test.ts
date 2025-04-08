@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MarkdownProcessor } from './markdown-processor'
 
-vi.mock('@ponti/utils/nlp')
-// vi.mock('@ponti/utils/time', () => ({
+vi.mock('../nlp')
+// vi.mock('@hominem/utils/time', () => ({
 //   getDatesFromText: vi.fn().mockReturnValue({ dates: [], fullDate: undefined }),
 // }))
 

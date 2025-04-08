@@ -1,5 +1,5 @@
-import { db } from '@ponti/utils/db'
-import { health } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { health } from '@hominem/utils/schema'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'

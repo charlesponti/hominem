@@ -1,5 +1,5 @@
-import { db } from '@ponti/utils/db'
-import { companies } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { companies } from '@hominem/utils/schema'
 import { ilike } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'

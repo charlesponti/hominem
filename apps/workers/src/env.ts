@@ -3,7 +3,8 @@ import { z } from 'zod'
 
 const envSchema = z.object({
   PORT: z.coerce.number(),
-  HOST: z.coerce.string().default('localhost'),
+  HOST: z.string().default('localhost'),
+  DATABASE_URL: z.string().url(),
 })
 
 const env = envSchema.parse(process.env)

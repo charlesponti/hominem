@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@ponti/utils/schema'
+import type { ChatMessage } from '@hominem/utils/schema'
 import { ChevronDown, CircleSlash, Cpu, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import { Card } from '../card'

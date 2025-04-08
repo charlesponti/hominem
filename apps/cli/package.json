@@ -1,18 +1,51 @@
 {
   "name": "@hominem/cli",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "description": "Command line tools for various tasks including API interactions, file processing, and development utilities",
+  "main": "build/index.js",
+  "type": "module",
   "bin": {
-    "hominem": "src/index.ts"
+    "hominem": "build/index.js"
+  },
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
-    "dev": "bun --watch src/commands/serve/index.ts",
-    "test": "NODE_ENV=test vitest --run --coverage"
+    "test": "NODE_ENV=test vitest --run --coverage",
+    "dev": "node esbuild.config.js",
+    "build": "node esbuild.config.js src/index.ts --bundle --platform=node --target=node20 --outfile=build/index.js --minify --external:duckdb --external:sqlite3 --external:playwright-core --external:chromium-bidi --external:electron --packages=external",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "cli",
+    "tools",
+    "development",
+    "utilities",
+    "api",
+    "automation"
+  ],
+  "author": {
+    "name": "Charles Ponti",
+    "email": "your.email@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/charlesponti/hominem.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/charlesponti/hominem/issues"
+  },
+  "homepage": "https://github.com/charlesponti/hominem#readme",
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai-compatible": "^0.1.17",
@@ -22,7 +55,7 @@
     "@hono/trpc-server": "^0.3.4",
     "@langchain/openai": "^0.4.3",
     "@libsql/client": "^0.14.0",
-    "@ponti/utils": "*",
+    "@hominem/utils": "*",
     "@tanstack/react-query": "^5.66.0",
     "ai": "^4.1.26",
     "chalk": "^5.4.1",
@@ -52,6 +85,7 @@
     "@ponti/tsconfigs": "*",
     "@types/bun": "^1.2.3",
     "@types/fs-extra": "^11.0.4",
-    "@types/pdf-parse": "^1.1.5"
+    "@types/pdf-parse": "^1.1.5",
+    "esbuild": "^0.20.1"
   }
 }

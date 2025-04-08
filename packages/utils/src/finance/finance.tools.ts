@@ -1,14 +1,14 @@
-import { db } from '@ponti/utils/db'
+import { tool } from 'ai'
+import { and, eq, like, sql } from 'drizzle-orm'
+import { z } from 'zod'
+import { db } from '../db/index'
 import {
   budgetCategories,
   financeAccounts,
   transactions,
   type FinanceAccountInsert,
   type TransactionInsert,
-} from '@ponti/utils/schema'
-import { tool } from 'ai'
-import { and, eq, like, sql } from 'drizzle-orm'
-import { z } from 'zod'
+} from '../db/schema/finance.schema'
 import { createNewTransaction, queryTransactions, type QueryOptions } from './finance.service'
 
 const budgetCalculatorSchema = z.object({

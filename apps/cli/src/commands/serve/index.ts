@@ -98,10 +98,3 @@ const command = new Command()
   })
 
 export default command
-
-if (require.main === module) {
-  startServer({
-    port: '4445',
-    host: 'localhost',
-  })
-}

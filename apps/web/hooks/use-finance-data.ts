@@ -1,7 +1,7 @@
 'use client'
 
 import { useApiClient } from '@/lib/hooks/use-api-client'
-import type { FinanceAccount, Transaction } from '@ponti/utils/schema'
+import type { FinanceAccount, Transaction } from '@hominem/utils/schema'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 

@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@hominem/utils/logger'
 import type { FastifyPluginAsync } from 'fastify'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import fs from 'node:fs'

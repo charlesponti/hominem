@@ -8,7 +8,7 @@ import type {
   ImportRequestParams,
   ImportRequestResponse,
   ImportTransactionsJob,
-} from '@ponti/utils/types'
+} from '@hominem/utils/types'
 import { useMutation } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 

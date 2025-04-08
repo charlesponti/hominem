@@ -1,4 +1,8 @@
-import { TransactionTypes, type TransactionInsert, type TransactionType } from '@ponti/utils/schema'
+import {
+  TransactionTypes,
+  type TransactionInsert,
+  type TransactionType,
+} from '../../db/schema/finance.schema'
 
 export interface CapitalOneTransaction {
   'Account Number': string
@@ -27,7 +31,8 @@ export function getCapitalOneTransactionType(type: string): TransactionType {
 
 export function convertCapitalOneTransaction(
   t: CapitalOneTransaction,
-  accountId: string
+  accountId: string,
+  userId: string
 ): TransactionInsert {
   return {
     id: crypto.randomUUID(),
@@ -42,5 +47,6 @@ export function convertCapitalOneTransaction(
     accountMask: t['Account Number'].slice(-4),
     createdAt: new Date(),
     updatedAt: new Date(),
+    userId,
   }
 }

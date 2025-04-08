@@ -1,4 +1,4 @@
-#! /usr/bin/env bun
+#! /usr/bin/env node
 
 import './env.ts'
 
@@ -12,6 +12,8 @@ import scrapeCommand from './commands/scraper/scrape.ts'
 import serveCommand from './commands/serve/index.ts'
 import thothCommand from './commands/thoth'
 import { initDb } from './db/index.ts'
+
+const foo = 'meow'
 
 async function init() {
   // Initialize the application
@@ -30,7 +32,7 @@ async function init() {
   program.addCommand(convertCommand)
   program.addCommand(serveCommand)
 
-  program.parse(Bun.argv)
+  program.parse(process.argv)
 }
 
 init().catch((error) => {

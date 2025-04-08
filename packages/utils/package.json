@@ -1,8 +1,9 @@
 {
-  "name": "@ponti/utils",
+  "name": "@hominem/utils",
   "version": "0.0.0",
   "description": "Random utilities",
   "main": "./src/index.ts",
+  "type": "module",
   "exports": {
     "./llm": "./src/ai/llm.provider.ts",
     "./ollama": "./src/ai/ollama.ts",
@@ -36,8 +37,8 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
-    "@ai-sdk/openai-compatible": "^0.1.14",
     "@ai-sdk/openai": "^1.1.9",
+    "@ai-sdk/openai-compatible": "^0.1.14",
     "@google-cloud/local-auth": "^3.0.1",
     "ai": "^4.1.54",
     "cheerio": "^1.0.0-rc.12",
@@ -75,6 +76,8 @@
     "@playwright/test": "^1.51.0",
     "@ponti/tsconfigs": "*",
     "@types/node": "^22.13.1",
-    "jsdom": "^26.0.0"
+    "jsdom": "^26.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
   }
 }

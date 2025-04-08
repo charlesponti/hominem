@@ -1,6 +1,6 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
 import { useAuth } from '@clerk/nextjs'
-import type { ChatMessage } from '@ponti/utils/schema'
+import type { ChatMessage } from '@hominem/utils/schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ToolContent, ToolSet } from 'ai'
 import { useCallback, useState } from 'react'

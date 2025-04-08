@@ -1,6 +1,4 @@
 import { getDatesFromText } from '@/time'
-import { LLMProvider, type LLMProviderConfig } from '@ponti/utils/llm'
-import type { TextAnalysis } from '@ponti/utils/schemas'
 import * as cheerio from 'cheerio'
 import {
   MarkdownTextSplitter,
@@ -10,6 +8,8 @@ import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
+import { LLMProvider, type LLMProviderConfig } from '../ai/llm.provider'
+import type { TextAnalysis } from '../schemas'
 import { extractMetadata, type Metadata } from './metadata.schema'
 import { detectTask, normalizeWhitespace, taskRegex } from './utils'
 

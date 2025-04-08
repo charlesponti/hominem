@@ -1,6 +1,6 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
 import { useDebounce } from '@/lib/hooks/useDebounce'
-import type { Company } from '@ponti/utils/schema'
+import type { Company } from '@hominem/utils/schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 

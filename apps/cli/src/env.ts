@@ -9,6 +9,7 @@ dotenv.config({ path: path.resolve(CONFIG_PATH, '.env') })
 const envSchema = z.object({
   CONFIG_PATH: z.string().default(CONFIG_PATH),
   DB_PATH: z.string().default(path.resolve(CONFIG_PATH, 'db.sqlite')),
+  OPENAI_API_KEY: z.string(),
 })
 
 export const env = envSchema.parse(process.env)

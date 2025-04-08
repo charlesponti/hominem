@@ -1,5 +1,5 @@
 import { JobApplicationStatus } from '@/lib/career'
-import type { JobApplication } from '@ponti/utils/schema'
+import type { JobApplication } from '@hominem/utils/schema'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '../ui/button'
 import {

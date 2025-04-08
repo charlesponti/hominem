@@ -1,11 +1,11 @@
 import { logger } from '@/logger'
-import { getBrowser, getContext } from '@ponti/utils/scraping'
+import { getBrowser, getContext } from '@hominem/utils/scraping'
 import * as fs from 'node:fs'
 import path from 'node:path'
 import ora from 'ora'
 
 async function scrapeUniqlo() {
-  const SCRATCHPAD_DIR = process.env.SCRATCHPAD_DIR
+  const SCRATCHPAD_DIR = path.resolve(__dirname)
 
   if (!SCRATCHPAD_DIR) {
     logger.error('SCRATCHPAD_DIR environment variable is required')
@@ -22,11 +22,16 @@ async function scrapeUniqlo() {
 
   spinner.start("Navigating to Uniqlo men's section")
   await page.goto('https://www.uniqlo.com/us/en/men')
-  await page.getByRole('tab', { name: 'men', exact: true }).click()
-  await page.goto('https://www.uniqlo.com/us/en/men')
   spinner.succeed()
 
   spinner.start('Navigating to T-Shirts section')
+  // const tab = await page.$('[role="tab"][id*=\'men\']')
+  const tab = await page.$('header')
+  if (!tab) {
+    logger.error('Tab not found')
+    process.exit(1)
+  }
+  await tab.hover()
   await page.getByRole('button', { name: 'T-Shirts, Sweats & Fleece T-' }).click()
   await page.getByRole('link', { name: 'All T-Shirts, Sweats & Fleece' }).click()
 

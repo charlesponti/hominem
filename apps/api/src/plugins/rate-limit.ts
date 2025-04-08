@@ -1,4 +1,4 @@
-import { redis } from '@ponti/utils/redis'
+import { redis } from '@hominem/utils/redis'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
 

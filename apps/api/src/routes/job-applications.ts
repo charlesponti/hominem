@@ -1,11 +1,11 @@
-import { ApplicationService, JobApplicationInsertSchema } from '@ponti/utils/career'
-import { db } from '@ponti/utils/db'
-import { companies, job_applications, type JobApplicationInsert } from '@ponti/utils/schema'
+import { ApplicationService, JobApplicationInsertSchema } from '@hominem/utils/career'
+import { db } from '@hominem/utils/db'
+import { companies, job_applications, type JobApplicationInsert } from '@hominem/utils/schema'
 import { desc, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { verifyAuth } from '../middleware/auth'
 import { ForbiddenError, NotFoundError, handleError } from '../lib/errors'
+import { verifyAuth } from '../middleware/auth'
 
 const updateSchema = z.object({
   data: JobApplicationInsertSchema.partial(),

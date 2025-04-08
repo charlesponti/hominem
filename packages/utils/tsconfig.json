@@ -34,7 +34,7 @@
       "@/schema": [
         "src/db/schema"
       ],
-      "@ponti/utils/*": [
+      "@hominem/utils/*": [
         "src/*"
       ]
     },

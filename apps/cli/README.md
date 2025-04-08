@@ -4,9 +4,29 @@ Command line tools for various tasks.
 
 ## Installation
 
+You can install the CLI globally using npm:
+
 ```bash
-bun install
+npm install -g @hominem/cli
 ```
+
+Or using yarn:
+
+```bash
+yarn global add @hominem/cli
+```
+
+For development:
+
+```bash
+git clone https://github.com/charlesponti/hominem.git
+cd hominem/apps/cli
+npm install
+```
+
+## Requirements
+
+- Node.js >= 20.0.0
 
 ## API Server
 

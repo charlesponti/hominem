@@ -6,8 +6,6 @@ import { Command } from 'commander'
 import * as fs from 'node:fs'
 import { z } from 'zod'
 
-const pdfParse = require('pdf-parse')
-
 export const command = new Command()
 
 command.name('ai')
@@ -34,6 +32,7 @@ command
     try {
       logger.info(`Reading PDF file: ${options.filepath}`)
       const pdfContent = await fs.promises.readFile(options.filepath)
+      const pdfParse = (await import('pdf-parse')).default
       const pdfData = await pdfParse(pdfContent)
 
       const response = await generateObject({

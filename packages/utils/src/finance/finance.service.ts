@@ -1,14 +1,14 @@
-import { db } from '@ponti/utils/db'
-import { logger } from '@ponti/utils/logger'
+import type { SQLWrapper } from 'drizzle-orm'
+import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
+import fs from 'fs-extra'
+import { db } from '../db'
 import {
   financeAccounts,
   transactions,
   type Transaction,
   type TransactionInsert,
-} from '@ponti/utils/schema'
-import type { SQLWrapper } from 'drizzle-orm'
-import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
-import fs from 'fs-extra'
+} from '../db/schema/finance.schema'
+import { logger } from '../logger'
 import { CopilotTransactionSchema } from './banks/copilot'
 import { parseAmount } from './finance.utils'
 import type { CategoryAggregate, DateRangeInput } from './types'

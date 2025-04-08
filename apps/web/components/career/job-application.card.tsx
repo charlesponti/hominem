@@ -1,5 +1,5 @@
 import { useUpdateApplication } from '@/lib/hooks/useApplications'
-import type { JobApplication } from '@ponti/utils/schema'
+import type { JobApplication } from '@hominem/utils/schema'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { StagesDialog } from './job-application-stages.dialog'

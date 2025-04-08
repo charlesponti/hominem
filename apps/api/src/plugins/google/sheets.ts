@@ -1,4 +1,4 @@
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@hominem/utils/logger'
 import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { verifyAuth } from '../../middleware/auth'

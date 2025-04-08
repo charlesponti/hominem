@@ -1,6 +1,6 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
 import { useAuth } from '@clerk/nextjs'
-import type { JobApplication, JobApplicationInsert } from '@ponti/utils/schema'
+import type { JobApplication, JobApplicationInsert } from '@hominem/utils/schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 

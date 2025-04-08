@@ -1,5 +1,5 @@
 import { logger } from '@/logger'
-import { BoltExportSchema, TypingMindExportSchema } from '@ponti/utils/services'
+import { BoltExportSchema, TypingMindExportSchema } from '@hominem/utils/services'
 import { Command } from 'commander'
 import fs from 'node:fs'
 import type { z } from 'zod'

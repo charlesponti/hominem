@@ -1,4 +1,4 @@
-import type { BoltExport } from '@ponti/utils/services'
+import type { BoltExport } from '@hominem/utils/services'
 import fs from 'node:fs'
 import { expect, vi } from 'vitest'
 

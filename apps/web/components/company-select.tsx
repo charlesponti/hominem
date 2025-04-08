@@ -13,7 +13,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useCompanySearch } from '@/lib/hooks/use-company-search'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
-import type { Company } from '@ponti/utils/schema'
+import type { Company } from '@hominem/utils/schema'
 import { CommandLoading } from 'cmdk'
 import * as React from 'react'
 
