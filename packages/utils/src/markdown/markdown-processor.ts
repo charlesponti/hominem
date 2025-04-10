@@ -8,18 +8,9 @@ import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
-import { LLMProvider, type LLMProviderConfig } from '../ai/llm.provider'
 import type { TextAnalysis } from '../schemas'
 import { extractMetadata, type Metadata } from './metadata.schema'
 import { detectTask, normalizeWhitespace, taskRegex } from './utils'
-
-interface ProcessorConfig {
-  chunkSize?: number
-  llmConfig?: {
-    provider: LLMProviderConfig['provider']
-    model: string
-  }
-}
 
 export interface EntryContent {
   tag: string
@@ -58,25 +49,9 @@ export interface ProcessedMarkdownFile {
 }
 
 export class MarkdownProcessor {
-  private llmProvider: LLMProvider
-  private config: ProcessorConfig
-
-  constructor(config: ProcessorConfig = {}) {
-    this.config = {
-      llmConfig: {
-        provider: 'lmstudio',
-        model: 'gpt-4o-mini',
-      },
-      ...config,
-    }
-
-    this.llmProvider = new LLMProvider(this.config.llmConfig)
-  }
-
   async getChunks(content: string, options?: Partial<RecursiveCharacterTextSplitterParams>) {
     const splitter = MarkdownTextSplitter.fromLanguage('markdown', {
       separators: ['#', '##', '###', '####', '#####', '######'],
-      chunkSize: this.config.chunkSize,
       ...options,
     })
     const chunks = await splitter.splitText(content)

@@ -68,7 +68,7 @@ program
     let markdown: Awaited<MarkdownFromURL>
     const scraperSpinner = ora('Scraping website').start()
     try {
-      markdown = await getMarkdownFromURL(url, query)
+      markdown = await getMarkdownFromURL(url)
       scraperSpinner.succeed('Scraping completed')
 
       if (options.images) {
