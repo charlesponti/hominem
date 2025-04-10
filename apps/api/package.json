@@ -5,6 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "build": "tsup src/index.ts -d build --format esm --tsconfig ./tsconfig.json --treeshake --splitting --inject-style",
     "dev": "bun --watch src/index.ts | pino-pretty",
     "lint": "npx biome lint ./src",
     "start": "node build/index.js | pino-pretty",

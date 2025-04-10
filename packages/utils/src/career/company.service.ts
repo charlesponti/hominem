@@ -1,5 +1,5 @@
 import { eq, type SQL } from 'drizzle-orm'
-import { db } from '../db'
+import { db } from '../db/index'
 import { companies, type Company, type NewCompany } from '../db/schema/company.schema'
 
 export class CompanyService {

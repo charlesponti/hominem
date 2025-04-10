@@ -1,16 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MarkdownProcessor } from './markdown-processor'
+import { MarkdownProcessor } from './markdown-processor.js'
 
-vi.mock('../nlp')
-// vi.mock('@hominem/utils/time', () => ({
-//   getDatesFromText: vi.fn().mockReturnValue({ dates: [], fullDate: undefined }),
-// }))
+// Mock the time module
+vi.mock('../time.js', () => {
+  return {
+    getDatesFromText: () => ({
+      dates: [],
+      fullDate: undefined,
+      year: undefined
+    })
+  }
+})
 
 describe('MarkdownProcessor', () => {
   let processor: MarkdownProcessor
 
   beforeEach(() => {
-    vi.resetAllMocks()
+    // Reset any mocks before each test
+    vi.clearAllMocks()
     processor = new MarkdownProcessor()
   })
 
@@ -130,7 +137,7 @@ Meeting with John Smith in New York about #project planning.`
       const result = await processor.processFileWithAst(fileContent, 'test.md')
 
       expect(result.entries.length).toBe(1)
-      expect(result.entries[0].heading).toBe('Test Heading')
+      expect(result.entries[0]?.heading).toBe('Test Heading')
     })
   })
 })

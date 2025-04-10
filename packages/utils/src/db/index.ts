@@ -1,7 +1,7 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import assert from 'node:assert'
 import postgres from 'postgres'
-import * as schema from './schema/index'
+import * as schema from './schema/index.js'
 
 const DATABASE_URL =
   process.env.NODE_ENV === 'test'

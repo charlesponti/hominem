@@ -1,6 +1,6 @@
 import { eq, type SQL } from 'drizzle-orm'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
-import { db } from '../db'
+import { db } from '../db/index'
 import {
   job_applications,
   type JobApplication,

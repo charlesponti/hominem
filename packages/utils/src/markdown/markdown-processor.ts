@@ -1,4 +1,3 @@
-import { getDatesFromText } from '@/time'
 import * as cheerio from 'cheerio'
 import {
   MarkdownTextSplitter,
@@ -8,9 +7,10 @@ import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
-import type { TextAnalysis } from '../schemas'
-import { extractMetadata, type Metadata } from './metadata.schema'
-import { detectTask, normalizeWhitespace, taskRegex } from './utils'
+import type { TextAnalysis } from '../schemas/text-analysis.schema.js'
+import { getDatesFromText } from '../time.js'
+import { extractMetadata, type Metadata } from './metadata.schema.js'
+import { detectTask, normalizeWhitespace, taskRegex } from './utils.js'
 
 export interface EntryContent {
   tag: string

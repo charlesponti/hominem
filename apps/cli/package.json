@@ -17,7 +17,7 @@
   },
   "scripts": {
     "test": "NODE_ENV=test vitest --run --coverage",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=build/index.js --minify --external:duckdb --external:sqlite3 --external:playwright-core --external:chromium-bidi --external:electron --packages=external",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=build/index.js --minify --external:duckdb --external:sqlite3 --external:playwright-core --external:chromium-bidi --external:electron",
     "prepack": "npm run build",
     "prepublishOnly": "npm run test"
   },
