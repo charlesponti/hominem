@@ -5,7 +5,6 @@
     "rootDir": "./src",
     "declaration": true,
     "sourceMap": true,
-    "removeComments": true,
     "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -13,29 +12,12 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "skipLibCheck": true,
     "paths": {
       "@/*": [
-        "src/*"
-      ],
-      "@/db": [
-        "src/db"
-      ],
-      "@/logger": [
-        "src/logger"
-      ],
-      "@/finance": [
-        "src/finance"
-      ],
-      "@/schema": [
-        "src/db/schema"
-      ],
-      "@hominem/utils/*": [
         "src/*"
       ]
     },
