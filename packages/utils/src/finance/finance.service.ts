@@ -1,6 +1,6 @@
 import type { SQLWrapper } from 'drizzle-orm'
 import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
-import fs from 'fs-extra'
+import fs from 'node:fs/promises'
 import { db } from '../db'
 import {
   financeAccounts,

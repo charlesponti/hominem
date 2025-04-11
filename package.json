@@ -59,12 +59,12 @@
     "react-dom": "^19.1.0"
   },
   "resolutions": {
-    "@langchain/core": "0.3.37",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "esbuild": "^0.21.3",
+    "@langchain/core": "0.3.37",
     "typescript": "5.7.3"
   }
 }
