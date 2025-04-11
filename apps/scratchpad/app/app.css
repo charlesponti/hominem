@@ -1,7 +1,7 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
 @custom-variant dark (&:is(.dark *));
-@plugin "daisyui";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,

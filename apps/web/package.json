@@ -92,7 +92,7 @@
     "@types/qrcode": "^1.5.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
-    "daisyui": "^4.12.23",
+    "daisyui": "^5.0.11",
     "eslint": "^9.23.0",
     "eslint-plugin-react": "^7.37.4",
     "eslint-config-next": "^15.1.6",
