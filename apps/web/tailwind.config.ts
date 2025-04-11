@@ -1,8 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 // We want each package to be responsible for its own content.
-const config: Omit<Config, 'content'> = {
-  darkMode: ['class'],
+const config: Config = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -97,9 +96,6 @@ const config: Omit<Config, 'content'> = {
     },
   },
   plugins: [require('daisyui'), require('tailwindcss-animate')],
-  daisyui: {
-    themes: [],
-  },
 }
 
 export default config
