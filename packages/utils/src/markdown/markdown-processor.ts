@@ -1,4 +1,4 @@
-import * as cheerio from 'cheerio'
+import { load as cheerio } from 'cheerio'
 import {
   MarkdownTextSplitter,
   type RecursiveCharacterTextSplitterParams,
@@ -115,7 +115,7 @@ export class MarkdownProcessor {
       .use(rehypeStringify)
       .process(content)
 
-    return cheerio.load(String(file))
+    return cheerio(String(file))
   }
 
   convertMarkdownToAST(content: string) {
@@ -286,8 +286,8 @@ export class MarkdownProcessor {
   }
 
   private async processNestedLists(
-    $: ReturnType<typeof cheerio.load>,
-    liElem: ReturnType<ReturnType<typeof cheerio.load>>[0],
+    $: ReturnType<typeof cheerio>,
+    liElem: ReturnType<ReturnType<typeof cheerio>>[0],
     entry: ProcessedMarkdownFileEntry,
     tag: string
   ): Promise<EntryContent[]> {
