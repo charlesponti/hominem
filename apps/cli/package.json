@@ -21,7 +21,7 @@
     "@hono/trpc-server": "^0.3.4",
     "@langchain/openai": "^0.4.3",
     "@libsql/client": "^0.14.0",
-    "@ponti/utils": "*",
+    "@hominem/utils": "*",
     "@tanstack/react-query": "^5.66.0",
     "ai": "^4.1.26",
     "chalk": "^5.4.1",
@@ -48,7 +48,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@ponti/tsconfigs": "*",
+    "@hominem/tsconfigs": "*",
     "@types/bun": "^1.2.3",
     "@types/fs-extra": "^11.0.4",
     "@types/pdf-parse": "^1.1.5"

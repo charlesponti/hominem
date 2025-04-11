@@ -1,5 +1,5 @@
 import { logger } from '@/logger'
-import { getBrowser, getContext } from '@ponti/utils/scraping'
+import { getBrowser, getContext } from '@hominem/utils/scraping'
 import * as fs from 'node:fs'
 import path from 'node:path'
 import ora from 'ora'

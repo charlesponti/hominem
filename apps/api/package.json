@@ -27,7 +27,7 @@
     "@langchain/core": "0.3.39",
     "@langchain/langgraph": "0.2.45",
     "@langchain/openai": "^0.4.3",
-    "@ponti/utils": "*",
+    "@hominem/utils": "*",
     "@segment/analytics-node": "^2.2.1",
     "@sendgrid/mail": "^8.1.4",
     "@sentry/node": "^8.54.0",

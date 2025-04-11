@@ -1,5 +1,5 @@
-import { logger } from '@ponti/utils/logger'
-import { redis } from '@ponti/utils/redis'
+import { logger } from '@hominem/utils/logger'
+import { redis } from '@hominem/utils/redis'
 import type { Credentials } from 'google-auth-library'
 
 interface GoogleToken {

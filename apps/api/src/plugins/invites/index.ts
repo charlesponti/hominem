@@ -1,5 +1,5 @@
-import { db } from '@ponti/utils/db'
-import { list, listInvite, users } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { list, listInvite, users } from '@hominem/utils/schema'
 import { and, asc, eq } from 'drizzle-orm'
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'

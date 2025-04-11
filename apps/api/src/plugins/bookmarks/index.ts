@@ -1,5 +1,5 @@
-import { db } from '@ponti/utils/db'
-import { bookmark } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { bookmark } from '@hominem/utils/schema'
 import { and, desc, eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { convertOGContentToBookmark, getOpenGraphData } from './utils'

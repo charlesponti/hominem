@@ -1,6 +1,6 @@
 import { createClerkClient, getAuth } from '@clerk/fastify'
-import { db } from '@ponti/utils/db'
-import { users } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { users } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { env } from 'src/lib/env'

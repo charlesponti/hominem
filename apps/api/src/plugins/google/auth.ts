@@ -1,5 +1,5 @@
 import type { User as ClerkUser, OauthAccessToken } from '@clerk/fastify'
-import { logger } from '@ponti/utils/logger'
+import { logger } from '@hominem/utils/logger'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { OAuth2Client } from 'google-auth-library'
 import { google } from 'googleapis'

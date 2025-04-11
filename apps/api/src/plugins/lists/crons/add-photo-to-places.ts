@@ -3,9 +3,9 @@
  * and updates the place with the photo URL.
  */
 
-import { db } from '@ponti/utils/db'
-import { logger } from '@ponti/utils/logger'
-import { place } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { logger } from '@hominem/utils/logger'
+import { place } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { getPlacePhotos, isValidImageUrl } from '../../google/places'

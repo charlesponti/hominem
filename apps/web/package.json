@@ -17,7 +17,7 @@
     "@langchain/core": "0.3.39",
     "@langchain/langgraph": "0.2.45",
     "@langchain/openai": "^0.4.3",
-    "@ponti/utils": "*",
+    "@hominem/utils": "*",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",
@@ -81,7 +81,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@ponti/tsconfigs": "*",
+    "@hominem/tsconfigs": "*",
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/postcss": "^4.1.3",
     "@testing-library/dom": "^9.3.4",

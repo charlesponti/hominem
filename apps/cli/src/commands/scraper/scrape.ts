@@ -7,7 +7,7 @@ import {
   transformHTMLToSchema,
   type AVAILABLE_SCHEMAS,
   type MarkdownFromURL,
-} from '@ponti/utils/scraping'
+} from '@hominem/utils/scraping'
 import { Command } from 'commander'
 import * as fs from 'node:fs'
 import ora from 'ora'

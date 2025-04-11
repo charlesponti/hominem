@@ -1,5 +1,5 @@
-import { db, takeUniqueOrThrow } from '@ponti/utils/db'
-import { list, listInvite, users } from '@ponti/utils/schema'
+import { db, takeUniqueOrThrow } from '@hominem/utils/db'
+import { list, listInvite, users } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 

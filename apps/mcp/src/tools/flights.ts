@@ -1,5 +1,5 @@
+import { get_historical_flight_data } from '@hominem/ai'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { get_historical_flight_data } from '@ponti/ai'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { lmstudio } from '../utils/llm.ts'

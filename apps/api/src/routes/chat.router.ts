@@ -1,6 +1,6 @@
 import { openai } from '@ai-sdk/openai'
-import { allTools, calculatorTool, searchTool } from '@ponti/ai'
-import { logger } from '@ponti/utils/logger'
+import { allTools, calculatorTool, searchTool } from '@hominem/ai'
+import { logger } from '@hominem/utils/logger'
 import { generateText, streamText } from 'ai'
 import type { FastifyInstance } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'

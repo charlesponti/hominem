@@ -1,5 +1,5 @@
-import { db } from '@ponti/utils/db'
-import { activity, flight, hotel, transport } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { activity, flight, hotel, transport } from '@hominem/utils/schema'
 import { tool } from 'ai'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'

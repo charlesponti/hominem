@@ -1,5 +1,5 @@
-import { db } from '@ponti/utils/db'
-import { token, users } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { token, users } from '@hominem/utils/schema'
 import { and, eq, gt } from 'drizzle-orm'
 import type { FastifyPluginAsync } from 'fastify'
 import { randomUUID } from 'node:crypto'

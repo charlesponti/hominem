@@ -1,5 +1,5 @@
-import { db } from '@ponti/utils/db'
-import { users } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { users } from '@hominem/utils/schema'
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyIsAdmin } from './auth/utils'
 

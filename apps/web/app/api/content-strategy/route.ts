@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google'
-import { contentTools } from '@ponti/ai'
+import { contentTools } from '@hominem/ai'
 import { generateText } from 'ai'
 import type { NextRequest } from 'next/server'
 

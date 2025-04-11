@@ -13,7 +13,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useLocationSearch } from '@/lib/hooks/use-location-search'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
-import type { GeocodeFeature } from '@ponti/utils/location'
+import type { GeocodeFeature } from '@hominem/utils/location'
 import { Building, MapIcon } from 'lucide-react'
 import * as React from 'react'
 

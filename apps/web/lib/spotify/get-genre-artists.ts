@@ -1,6 +1,6 @@
-import { db } from '@ponti/utils/db'
-import { redis, waitForRateLimit } from '@ponti/utils/redis'
-import { artists, type Artist } from '@ponti/utils/schema'
+import { db } from '@hominem/utils/db'
+import { redis, waitForRateLimit } from '@hominem/utils/redis'
+import { artists, type Artist } from '@hominem/utils/schema'
 import { sql } from 'drizzle-orm'
 import {
   getSpotifyArtistsByIds,

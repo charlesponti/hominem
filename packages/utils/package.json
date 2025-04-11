@@ -1,5 +1,5 @@
 {
-  "name": "@ponti/utils",
+  "name": "@hominem/utils",
   "version": "0.0.0",
   "type": "module",
   "description": "Random utilities",
@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.51.0",
-    "@ponti/tsconfigs": "*",
+    "@hominem/tsconfigs": "*",
     "@types/node": "^22.13.1",
     "jsdom": "^26.0.0"
   }

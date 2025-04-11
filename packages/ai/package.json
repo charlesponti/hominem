@@ -1,17 +1,17 @@
 {
-  "name": "@ponti/ai",
+  "name": "@hominem/ai",
   "version": "0.0.0",
   "exports": {
     ".": "./src/index.ts"
   },
   "devDependencies": {
-    "@ponti/tsconfigs": "*"
+    "@hominem/tsconfigs": "*"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.20",
     "@ai-sdk/openai": "^1.2.1",
     "@ai-sdk/openai-compatible": "^0.1.13",
-    "@ponti/utils": "*",
+    "@hominem/utils": "*",
     "ai": "^4.1.54",
     "ollama-ai-provider": "^1.2.0",
     "zod": "^3.24.2"

@@ -1,5 +1,5 @@
 {
-  "extends": "@ponti/tsconfigs/base.json",
+  "extends": "@hominem/tsconfigs/base.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "noEmit": true,
@@ -12,10 +12,10 @@
       "@/*": [
         "src/*"
       ],
-      "@ponti/utils/*": [
+      "@hominem/utils/*": [
         "../../packages/utils/src/*"
       ],
-      "@ponti/ai/*": [
+      "@hominem/ai/*": [
         "../../packages/ai/src/*"
       ],
       "@/db": [

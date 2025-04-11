@@ -31,7 +31,7 @@
 
 - Use TypeScript types consistently across all hooks
 - Define reusable utility types like `PartialWithId<T>` for common patterns
-- Import types from shared schema definitions (e.g., `@ponti/utils/schema`)
+- Import types from shared schema definitions (e.g., `@hominem/utils/schema`)
 
 ## Recommended Improvements
 

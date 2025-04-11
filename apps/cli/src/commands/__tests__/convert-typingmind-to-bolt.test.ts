@@ -1,4 +1,4 @@
-import { BoltExportSchema } from '@ponti/utils/services'
+import { BoltExportSchema } from '@hominem/utils/services'
 import { mkdirSync } from 'fs-extra'
 import fs from 'node:fs'
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'

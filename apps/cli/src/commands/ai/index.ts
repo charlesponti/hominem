@@ -1,7 +1,7 @@
 import { logger } from '@/logger'
 import { lmstudio } from '@/utils/lmstudio'
 import { google } from '@ai-sdk/google'
-import { educationalProfileSchema, professionalProfileSchema } from '@ponti/utils/schemas'
+import { educationalProfileSchema, professionalProfileSchema } from '@hominem/utils/schemas'
 import { generateObject, generateText } from 'ai'
 import { Command } from 'commander'
 import fs from 'node:fs'

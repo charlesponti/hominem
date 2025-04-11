@@ -14,10 +14,10 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@ponti/utils/*": [
+      "@hominem/utils/*": [
         "packages/utils/src/*"
       ],
-      "@ponti/ai/*": [
+      "@hominem/ai/*": [
         "packages/ai/src/*"
       ],
       "@cli/*": [

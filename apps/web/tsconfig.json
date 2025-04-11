@@ -1,5 +1,5 @@
 {
-  "extends": "@ponti/tsconfigs/nextjs.json",
+  "extends": "@hominem/tsconfigs/nextjs.json",
   "compilerOptions": {
     "paths": {
       "@/*": [

@@ -1,6 +1,6 @@
 import type { ToolCalls, ToolResults } from '@/lib/hooks/use-chat'
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@ponti/utils/schema'
+import type { ChatMessage } from '@hominem/utils/schema'
 import { Eraser, NotebookPen, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
