@@ -1,6 +1,6 @@
 import type { JobApplicationStage } from '@/lib/career'
 import { useUpdateApplication } from '@/lib/hooks/useApplications'
-import type { JobApplication } from '@hominem/utils/schema'
+import type { JobApplication } from '@ponti/utils/schema'
 import { Clock, Plus, Trash } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '../ui/button'

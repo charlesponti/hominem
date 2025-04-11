@@ -1,5 +1,5 @@
-import { db, takeUniqueOrThrow } from '@hominem/utils/db'
-import { listInvite, userLists, type users } from '@hominem/utils/schema'
+import { db, takeUniqueOrThrow } from '@ponti/utils/db'
+import { listInvite, userLists, type users } from '@ponti/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'

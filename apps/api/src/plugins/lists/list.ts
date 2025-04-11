@@ -1,5 +1,5 @@
-import { db, takeUniqueOrThrow } from '@hominem/utils/db'
-import { item, list, place } from '@hominem/utils/schema'
+import { db, takeUniqueOrThrow } from '@ponti/utils/db'
+import { item, list, place } from '@ponti/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 

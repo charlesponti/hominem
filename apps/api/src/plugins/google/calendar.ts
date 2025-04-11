@@ -1,4 +1,4 @@
-import { logger } from '@hominem/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import googleService from './auth'
 

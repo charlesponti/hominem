@@ -1,7 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import type { Habits } from '@hominem/utils/schemas'
+import type { Habits } from '@ponti/utils/schemas'
 import { Clock, Repeat } from 'lucide-react'
 import { AnalysisCard } from './analysis-card'
 import { getBadgeStyles } from './utils'

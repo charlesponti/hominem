@@ -14,7 +14,7 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@hominem/utils/*": [
+      "@ponti/utils/*": [
         "packages/utils/src/*"
       ],
       "@ponti/ai/*": [

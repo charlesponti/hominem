@@ -1,4 +1,4 @@
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@ponti/utils/redis'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 const RATE_LIMIT_PREFIX = 'ratelimit:import:'

@@ -1,6 +1,6 @@
 import 'dotenv/config'
 
-import { logger } from '@hominem/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import * as fs from 'node:fs'
 import path from 'node:path'
 import { parseEmail, validateEmailBody } from './services/email.service'

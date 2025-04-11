@@ -1,5 +1,5 @@
 import logger from '@/utils/logger'
-import { TypingMindExportSchema, type nodeSchema } from '@hominem/utils/services'
+import { TypingMindExportSchema, type nodeSchema } from '@ponti/utils/services'
 import { Command } from 'commander'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'

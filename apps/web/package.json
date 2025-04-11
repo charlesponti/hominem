@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 4444",
-    "build": "npx next build",
-    "start": "npx next start",
-    "lint": "npx biome lint app",
+    "build": "bunx next build",
+    "start": "bunx next start",
+    "lint": "bunx biome lint app",
     "test": "vitest --run --passWithNoTests"
   },
   "dependencies": {
@@ -17,7 +17,7 @@
     "@langchain/core": "0.3.39",
     "@langchain/langgraph": "0.2.45",
     "@langchain/openai": "^0.4.3",
-    "@hominem/utils": "*",
+    "@ponti/utils": "*",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",

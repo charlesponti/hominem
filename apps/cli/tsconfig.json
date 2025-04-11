@@ -12,7 +12,7 @@
       "@/*": [
         "src/*"
       ],
-      "@hominem/utils/*": [
+      "@ponti/utils/*": [
         "../../packages/utils/src/*"
       ],
       "@ponti/ai/*": [

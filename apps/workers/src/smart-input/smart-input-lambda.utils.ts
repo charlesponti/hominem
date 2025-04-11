@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai'
-import { logger } from '@hominem/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import { generateObject, generateText } from 'ai'
 import type { Attachment } from 'mailparser'
 import type { Result as PDFParseResult } from 'pdf-parse'

@@ -1,11 +1,11 @@
-import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/utils/redis'
+import { logger } from '@ponti/utils/logger'
+import { redis } from '@ponti/utils/redis'
 import type { FastifyInstance } from 'fastify'
 import { WebSocket, WebSocketServer } from 'ws'
 import { client, getHominemUser } from './middleware/auth'
 import { wsHandlers } from './websocket/handlers'
 
-// !TODO Move to @hominem/utils/consts
+// !TODO Move to @ponti/utils/consts
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
 export async function webSocketPlugin(fastify: FastifyInstance) {

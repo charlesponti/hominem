@@ -1,6 +1,6 @@
 'use client'
 
-import type { TextAnalysis } from '@hominem/utils/schemas'
+import type { TextAnalysis } from '@ponti/utils/schemas'
 import { ActivitiesAnalysis } from './activities-analysis'
 import { DecisionsAnalysis } from './decisions-analysis'
 import { EmotionsAnalysis } from './emotions-analysis'

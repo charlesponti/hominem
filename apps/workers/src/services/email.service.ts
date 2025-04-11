@@ -1,4 +1,4 @@
-import { logger } from '@hominem/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import { simpleParser, type ParsedMail } from 'mailparser'
 import type { LambdaEvent } from '../smart-input/smart-input-lambda'
 

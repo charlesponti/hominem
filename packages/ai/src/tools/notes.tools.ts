@@ -1,4 +1,4 @@
-import { NotesService } from '@hominem/utils/notes'
+import { NotesService } from '@ponti/utils/notes'
 import { tool } from 'ai'
 import { z } from 'zod'
 

@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { token, users } from '@hominem/utils/schema'
+import { db } from '@ponti/utils/db'
+import { token, users } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
 import { TOKEN_FAILURE_REASONS } from './index'
 

@@ -1,4 +1,4 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@ponti/utils/db'
 import { sql } from 'drizzle-orm'
 import { afterAll, beforeAll } from 'vitest'
 

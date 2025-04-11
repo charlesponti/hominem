@@ -1,4 +1,4 @@
-import { NotesService } from '@hominem/utils/notes'
+import { NotesService } from '@ponti/utils/notes'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'

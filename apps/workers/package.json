@@ -3,16 +3,18 @@
   "version": "0.1.0",
   "description": "collection of worker functions",
   "private": true,
+  "type": "module",
   "files": [
     "build"
   ],
   "scripts": {
-    "dev": "npx tsx --watch src/import-transactions-worker.ts",
-    "start": "npx tsx src/import-transactions-worker.ts"
+    "dev": "bun --watch src/import-transactions-worker.ts",
+    "start": "bun run src/import-transactions-worker.ts",
+    "build": "bun build src/import-transactions-worker.ts --target=bun --outdir=build --minify"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.782.0",
-    "@hominem/utils": "*",
+    "@ponti/utils": "*",
     "dotenv": "^16.4.7",
     "mailparser": "^3.7.2",
     "pdf-parse": "^1.1.1"

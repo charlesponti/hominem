@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { surveyOptions, surveyVotes, surveys } from '@hominem/utils/schema'
+import { db } from '@ponti/utils/db'
+import { surveyOptions, surveyVotes, surveys } from '@ponti/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'

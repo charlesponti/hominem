@@ -1,5 +1,5 @@
-import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/utils/redis'
+import { logger } from '@ponti/utils/logger'
+import { redis } from '@ponti/utils/redis'
 import type { FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
 import type Redis from 'ioredis'

@@ -1,6 +1,6 @@
 'use client'
 
-import type { Decisions } from '@hominem/utils/schemas'
+import type { Decisions } from '@ponti/utils/schemas'
 import { CheckCircle } from 'lucide-react'
 import { AnalysisCard } from './analysis-card'
 

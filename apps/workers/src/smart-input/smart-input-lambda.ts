@@ -1,7 +1,7 @@
 import 'dotenv/config'
 
 import { openai } from '@ai-sdk/openai'
-import { logger } from '@hominem/utils/logger'
+import { logger } from '@ponti/utils/logger'
 import { generateObject } from 'ai'
 import { ZodError } from 'zod'
 import {

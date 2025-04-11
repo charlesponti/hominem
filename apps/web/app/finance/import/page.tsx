@@ -8,7 +8,7 @@ import { useFileInput } from '@/hooks/use-file-input'
 import { useImportTransactions } from '@/hooks/use-import-transactions'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import type { FileStatus } from '@hominem/utils/types'
+import type { FileStatus } from '@ponti/utils/types'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 

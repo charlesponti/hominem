@@ -1,5 +1,5 @@
-import { logger } from '@hominem/utils/logger'
-import { downloadImage } from '@hominem/utils/scraping'
+import { logger } from '@ponti/utils/logger'
+import { downloadImage } from '@ponti/utils/scraping'
 import * as cheerio from 'cheerio'
 import * as fs from 'node:fs'
 import * as path from 'node:path'

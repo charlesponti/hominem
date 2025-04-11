@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import type { GeocodeFeature } from '@hominem/utils/location'
+import type { GeocodeFeature } from '@ponti/utils/location'
 
 interface UseLocationSearchOptions {
   initialValue?: string

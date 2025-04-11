@@ -1,4 +1,4 @@
-import type { place } from '@hominem/utils/schema'
+import type { place } from '@ponti/utils/schema'
 import type { places_v1 } from 'googleapis'
 import { writeFile } from 'node:fs'
 import * as path from 'node:path'

@@ -1,5 +1,5 @@
-import { getActiveJobs, getQueuedJobs } from '@hominem/utils/imports'
-import { logger } from '@hominem/utils/logger'
+import { getActiveJobs, getQueuedJobs } from '@ponti/utils/imports'
+import { logger } from '@ponti/utils/logger'
 import type { WebSocket } from 'ws'
 
 // Define message handler types

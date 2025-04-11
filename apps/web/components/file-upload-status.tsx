@@ -1,6 +1,6 @@
 import { ProgressBar } from '@/components/progress-bar'
 import { cn } from '@/lib/utils'
-import type { FileStatus } from '@hominem/utils/types'
+import type { FileStatus } from '@ponti/utils/types'
 import { motion } from 'framer-motion'
 import { XIcon } from 'lucide-react'
 

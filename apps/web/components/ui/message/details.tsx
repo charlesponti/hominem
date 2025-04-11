@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@hominem/utils/schema'
+import type { ChatMessage } from '@ponti/utils/schema'
 import { FilePart } from './file-part'
 import { Reasoning } from './reasoning'
 import { ToolCall } from './tool-call'

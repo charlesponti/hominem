@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { list, userLists, users } from '@hominem/utils/schema'
+import { db } from '@ponti/utils/db'
+import { list, userLists, users } from '@ponti/utils/schema'
 import { desc, eq } from 'drizzle-orm'
 
 export async function getUserLists(userId: string) {

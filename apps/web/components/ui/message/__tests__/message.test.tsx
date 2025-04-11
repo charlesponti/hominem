@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@hominem/utils/schema'
+import type { ChatMessage } from '@ponti/utils/schema'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { Message } from '..'

@@ -21,8 +21,10 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint --parallel",
     "migrate": "turbo run migrate",
-    "prepush": "npm run test",
-    "prerelease": "npm run test",
+    "prepush": "bun run test",
+    "prerelease": "bun run test",
+    "start:api": "cd apps/api && bun run start",
+    "start:web": "cd apps/web && bun run start",
     "test": "turbo run test",
     "test:ci": "turbo run test",
     "test:e2e:ci": "turbo run test:e2e:ci",
@@ -36,21 +38,21 @@
     "@types/react-dom": "^19.1.0",
     "@vitest/coverage-v8": "^3.0.5",
     "drizzle-kit": "^0.30.6",
-    "esbuild": "^0.25.2",
     "globals": "^15.15.0",
     "husky": "^7.0.0",
     "turbo": "^2.4.4",
     "typescript": "5.7.3",
-    "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.6"
+    "vitest": "^3.0.6",
+    "vite": "^5.4.11"
   },
   "keywords": [],
   "license": "ISC",
   "workspaces": [
-    "packages/*",
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
+  "packageManager": "bun@1.2.8",
   "dependencies": {
     "axios": "1.8.4",
     "react": "^19.1.0",
@@ -60,7 +62,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
-  },
-  "packageManager": "npm@10.9.2"
+    "react-dom": "^19.1.0",
+    "esbuild": "^0.21.3"
+  }
 }

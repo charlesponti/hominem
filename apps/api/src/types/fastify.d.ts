@@ -1,5 +1,5 @@
 import type { MultipartFile } from '@fastify/multipart'
-import type { User } from '@hominem/utils/schema'
+import type { User } from '@ponti/utils/schema'
 import type { MailService } from '@sendgrid/mail'
 import type { PerformanceService } from '../services/performance.service'
 

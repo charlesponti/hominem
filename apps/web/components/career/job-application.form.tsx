@@ -12,7 +12,7 @@ import {
 import { JobApplicationStage, JobApplicationStatus } from '@/lib/career'
 import { useCreateApplication, useDeleteApplication } from '@/lib/hooks/useApplications'
 import { useAuth } from '@clerk/nextjs'
-import type { JobApplication } from '@hominem/utils/career'
+import type { JobApplication } from '@ponti/utils/career'
 import { Plus, PlusCircle } from 'lucide-react'
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
 

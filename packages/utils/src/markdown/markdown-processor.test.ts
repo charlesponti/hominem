@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MarkdownProcessor } from './markdown-processor.js'
+import { MarkdownProcessor } from './markdown-processor'
 
 // Mock the time module
 vi.mock('../time.js', () => {
@@ -7,8 +7,8 @@ vi.mock('../time.js', () => {
     getDatesFromText: () => ({
       dates: [],
       fullDate: undefined,
-      year: undefined
-    })
+      year: undefined,
+    }),
   }
 })
 

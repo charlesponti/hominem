@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@hominem/utils/schema'
+import type { ChatMessage } from '@ponti/utils/schema'
 import { Card } from '../card'
 import { MessageContent } from './content'
 import { MessageDetails } from './details'

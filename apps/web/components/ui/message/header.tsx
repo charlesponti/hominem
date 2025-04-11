@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@hominem/utils/schema'
+import type { ChatMessage } from '@ponti/utils/schema'
 import { Bot, Settings, User, Wrench } from 'lucide-react'
 
 interface MessageHeaderProps {

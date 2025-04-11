@@ -1,5 +1,5 @@
 # Build stage
-FROM node:23-bookworm-slim AS base
+FROM node:20-bookworm-slim AS base
 WORKDIR /app
 
 # Define build arguments
@@ -17,9 +17,6 @@ ARG DATABASE_URL
 ARG SEGMENT_KEY
 ARG APP_USER_ID
 ARG ENABLE_REQUEST_LOGGING
-ARG REDIS_URL
-ARG OPENAI_API_KEY
-ARG CHROMA_URL
 
 # Set environment variables
 ENV NODE_ENV=${NODE_ENV}
@@ -36,33 +33,25 @@ ENV DATABASE_URL=${DATABASE_URL}
 ENV SEGMENT_KEY=${SEGMENT_KEY}
 ENV APP_USER_ID=${APP_USER_ID}
 ENV ENABLE_REQUEST_LOGGING=${ENABLE_REQUEST_LOGGING}
-ENV REDIS_URL=${REDIS_URL}
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-ENV CHROMA_URL=${CHROMA_URL}
 
-# Install wget and other dependencies
-RUN apt-get update && apt-get install -y wget
+# Install bun and wget
+RUN apt-get update && apt-get install -y curl unzip wget
+
+# Install bun in a location accessible to all users
+RUN curl -fsSL https://bun.sh/install | bash && \
+    mv /root/.bun/bin/bun /usr/local/bin/bun
+
+# Add bun to PATH
+ENV PATH="/usr/local/bin:${PATH}"
 
 FROM base AS install
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package.json package-lock.json turbo.json ./
-COPY apps/api/package.json ./apps/api/
-COPY packages/utils/package.json ./packages/utils/
-COPY packages/tsconfig/package.json ./packages/tsconfig/
-
 # Copy source code from parent directory
-COPY . .
+COPY .. .
 
 # Install dependencies
-RUN npm ci
-
-# Build the utils package first
-RUN npm run build --workspace=@hominem/utils
-
-# Build API
-RUN npm run build --workspace=@hominem/api
+RUN bun install
 
 # Production stage
 FROM base AS release
@@ -77,12 +66,8 @@ RUN addgroup --gid 1001 nodejs && \
 RUN mkdir -p /app/logs && \
   chown -R hominem:nodejs /app/logs
 
-# Copy only the necessary files from builder
-COPY --from=install --chown=hominem:nodejs /app/node_modules ./node_modules
-COPY --from=install --chown=hominem:nodejs /app/packages/utils/dist ./packages/utils/dist
-COPY --from=install --chown=hominem:nodejs /app/packages/utils/package.json ./packages/utils/
-COPY --from=install --chown=hominem:nodejs /app/apps/api/build ./apps/api/build
-COPY --from=install --chown=hominem:nodejs /app/apps/api/package.json ./apps/api/
+# Copy built files from builder
+COPY --from=install --chown=hominem:nodejs /app ./
 
 # Security: Run as non-root user
 USER hominem
@@ -95,5 +80,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/health || exit 1
 
 # Start the application
-ENTRYPOINT ["node", "apps/api/build/index.js"]
+ENTRYPOINT ["bun", "run", "apps/api/src/index"]
 CMD []

@@ -1,4 +1,4 @@
-import type { Transaction } from '@hominem/utils/schema'
+import type { Transaction } from '@ponti/utils/schema'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'

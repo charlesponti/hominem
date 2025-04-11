@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { ChatMessageFile } from '@hominem/utils/schema'
+import type { ChatMessageFile } from '@ponti/utils/schema'
 import { FileIcon, ImageIcon } from 'lucide-react'
 import { Card } from '../card'
 

@@ -1,4 +1,4 @@
-import { type QueryOptions, summarizeByMonth } from '@hominem/utils/finance'
+import { type QueryOptions, summarizeByMonth } from '@ponti/utils/finance'
 
 // Define interface for time series data points
 export interface TimeSeriesDataPoint {

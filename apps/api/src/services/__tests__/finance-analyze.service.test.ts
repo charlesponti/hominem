@@ -1,4 +1,4 @@
-import { summarizeByMonth } from '@hominem/utils/finance'
+import { summarizeByMonth } from '@ponti/utils/finance'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   calculateTimeSeriesStats,
@@ -7,7 +7,7 @@ import {
 } from '../finance-analyze.service'
 
 // Mock the finance service
-vi.mock('@hominem/utils/finance', () => ({
+vi.mock('@ponti/utils/finance', () => ({
   summarizeByMonth: vi.fn(),
 }))
 

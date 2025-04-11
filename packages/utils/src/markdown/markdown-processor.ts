@@ -7,10 +7,10 @@ import rehypeStringify from 'rehype-stringify'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
-import type { TextAnalysis } from '../schemas/text-analysis.schema.js'
-import { getDatesFromText } from '../time.js'
-import { extractMetadata, type Metadata } from './metadata.schema.js'
-import { detectTask, normalizeWhitespace, taskRegex } from './utils.js'
+import type { TextAnalysis } from '../schemas/text-analysis.schema'
+import { getDatesFromText } from '../time'
+import { extractMetadata, type Metadata } from './metadata.schema'
+import { detectTask, normalizeWhitespace, taskRegex } from './utils'
 
 export interface EntryContent {
   tag: string

@@ -1,5 +1,5 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
-import type { TextAnalysis } from '@hominem/utils/schemas'
+import type { TextAnalysis } from '@ponti/utils/schemas'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
