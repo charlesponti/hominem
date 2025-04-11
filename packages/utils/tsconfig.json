@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
+    "declarationMap": true,
     "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
