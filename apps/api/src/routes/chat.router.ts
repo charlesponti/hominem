@@ -1,6 +1,6 @@
 import { openai } from '@ai-sdk/openai'
-import { allTools, calculatorTool, searchTool } from '@hominem/ai'
 import { logger } from '@hominem/utils/logger'
+import { allTools } from '@hominem/utils/tools'
 import { generateText, streamText } from 'ai'
 import type { FastifyInstance } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'
@@ -23,8 +23,8 @@ const chatRequestSchema = z.object({
 
 // Define utility tools
 const utilityTools = {
-  calculatorTool,
-  searchTool,
+  calculatorTool: allTools.calculatorTool,
+  searchTool: allTools.searchTool,
 }
 
 export async function chatPlugin(fastify: FastifyInstance) {
