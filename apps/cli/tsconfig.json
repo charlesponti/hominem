@@ -12,24 +12,6 @@
       "@/*": [
         "src/*"
       ],
-      "@hominem/utils/*": [
-        "../../packages/utils/src/*"
-      ],
-      "@hominem/ai/*": [
-        "../../packages/ai/src/*"
-      ],
-      "@/db": [
-        "../../packages/utils/src/db"
-      ],
-      "@/logger": [
-        "../../packages/utils/src/logger"
-      ],
-      "@/finance": [
-        "../../packages/utils/src/finance"
-      ],
-      "@/schema": [
-        "../../packages/utils/src/db/schema"
-      ]
     }
   },
   "references": [

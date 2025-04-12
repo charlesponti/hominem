@@ -1,3 +1,18 @@
+import { openai } from '@ai-sdk/openai'
+import { generateObject, generateText } from 'ai'
+import { z } from 'zod'
+import * as bookmarkTools from './bookmarks.tools'
+import * as careerTools from './career.tools'
+import * as generalTools from './general'
+import * as healthTools from './health.tools'
+import * as listTools from './lists.tools'
+import * as locationTools from './location.tools'
+import * as notesTools from './notes.tools'
+import * as placeTools from './place.tools'
+import * as taskTools from './task.tools'
+import * as travelTools from './travel.tools'
+import * as userTools from './user.tools'
+
 // General tools
 export * from './general'
 
@@ -33,19 +48,6 @@ export * from './travel.tools'
 
 // Content generation tools
 export * as contentTools from './content.tools'
-
-// Tool collections for easier importing
-import * as bookmarkTools from './bookmarks.tools'
-import * as careerTools from './career.tools'
-import * as generalTools from './general'
-import * as healthTools from './health.tools'
-import * as listTools from './lists.tools'
-import * as locationTools from './location.tools'
-import * as notesTools from './notes.tools'
-import * as placeTools from './place.tools'
-import * as taskTools from './task.tools'
-import * as travelTools from './travel.tools'
-import * as userTools from './user.tools'
 
 // Grouped collections
 export const productivityTools = {
@@ -86,4 +88,34 @@ export const allTools = {
   ...placeTools,
   ...healthTools,
   ...travelPlanningTools,
+}
+
+export async function getAnswer({ prompt }: { prompt: string }) {
+  const response = await generateObject({
+    model: openai('gpt-4o-mini', { structuredOutputs: true }),
+    prompt,
+    schema: z.object({
+      answer: z.number(),
+    }),
+  })
+
+  return response
+}
+
+export const getCityInfo = async ({ city }: { city: string }) => {
+  const response = await generateText({
+    model: openai('gpt-4o-mini', { structuredOutputs: true }),
+    prompt: 'Get information about a city',
+    tools: {
+      get_location_info: locationTools.get_location_info,
+    },
+    messages: [
+      {
+        role: 'user',
+        content: `Get information: ${city}`,
+      },
+    ],
+  })
+
+  return response
 }

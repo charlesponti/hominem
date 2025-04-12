@@ -1,5 +1,8 @@
-import { logger } from '@/logger'
+import { db } from '@/db'
+import { markdownEntries } from '@/db/schema'
 import { getMarkdownFile } from '@/utils'
+import { getPathFiles } from '@/utils/get-path-files'
+import { logger } from '@/utils/logger'
 import { MarkdownProcessor } from '@hominem/utils/markdown'
 import { NLPProcessor } from '@hominem/utils/nlp'
 import { Command } from 'commander'
@@ -7,9 +10,6 @@ import { createWriteStream } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import ora from 'ora'
-import { db } from '../../db'
-import { markdownEntries } from '../../db/schema'
-import { getPathFiles } from '../../utils/get-path-files'
 
 interface ProcessMarkdownOptions {
   output: string

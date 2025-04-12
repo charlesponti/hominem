@@ -12,24 +12,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "composite": true,
-    "baseUrl": ".",
-    "paths": {
-      "@hominem/utils/*": [
-        "packages/utils/src/*"
-      ],
-      "@hominem/ai/*": [
-        "packages/ai/src/*"
-      ],
-      "@cli/*": [
-        "apps/cli/src/*"
-      ],
-      "@api/*": [
-        "apps/api/src/*"
-      ],
-      "@web/*": [
-        "apps/web/*"
-      ]
-    }
+    "baseUrl": "."
   },
   "include": [
     "apps/**/*.ts",

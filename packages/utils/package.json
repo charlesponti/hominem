@@ -5,8 +5,6 @@
   "description": "Random utilities",
   "main": "./src/index.ts",
   "exports": {
-    "./llm": "./src/ai/llm.provider.ts",
-    "./ollama": "./src/ai/ollama.ts",
     "./career": "./src/career/index.ts",
     "./db": "./src/db/index.ts",
     "./finance": "./src/finance/index.ts",
@@ -14,7 +12,7 @@
     "./imports": "./src/imports.helpers.ts",
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
-    "./nlp": "./src/nlp/index.ts",
+    "./markdown": "./src/markdown/index.ts",
     "./notes": "./src/services/notes.service.ts",
     "./redis": "./src/redis.ts",
     "./utils": "./src/utils/index.ts",
@@ -24,6 +22,7 @@
     "./services": "./src/services/index.ts",
     "./text": "./src/text.utils.ts",
     "./time": "./src/time.ts",
+    "./tools": "./src/tools/index.ts",
     "./types": "./src/types/index.ts",
     "./writer": "./src/writer/index.ts"
   },
@@ -38,6 +37,7 @@
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
     "@ai-sdk/openai-compatible": "^0.1.14",
+    "@hominem/ai": "*",
     "@google-cloud/local-auth": "^3.0.1",
     "ai": "^4.1.54",
     "cheerio": "^1.0.0",

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./build",
     "rootDir": "./src",
     "target": "ESNext",
     "module": "ES2022",
@@ -25,7 +25,7 @@
     },
   },
   "include": [
-    "src/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"

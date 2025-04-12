@@ -1,4 +1,4 @@
-import { get_historical_flight_data } from '@hominem/ai'
+import { travelPlanningTools } from '@hominem/utils/tools'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { generateObject } from 'ai'
 import { z } from 'zod'
@@ -51,7 +51,7 @@ export function registerFlightsTool(server: McpServer) {
         }
 
         // Get historical flight data
-        const flightData = await get_historical_flight_data.execute(
+        const flightData = await travelPlanningTools.get_historical_flight_data.execute(
           {
             origin: originCode,
             destination: destinationCode,

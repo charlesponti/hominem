@@ -3,6 +3,7 @@ import rehypeParse from 'rehype-parse'
 import rehypeRemark from 'rehype-remark'
 import remarkStringify from 'remark-stringify'
 import { unified } from 'unified'
+import type { VFile } from 'vfile'
 import { getBrowser } from './browser'
 
 async function removeHiddenElements(page: Page) {
@@ -69,9 +70,7 @@ export async function getSiteHTML(url: string, query?: string): Promise<string> 
   }
 }
 
-// !TODO: Add ability to pass `query` to get specific elements from the page
-export type MarkdownFromURL = ReturnType<typeof getMarkdownFromURL>
-export async function getMarkdownFromURL(url: string) {
+export async function getMarkdownFromURL(url: string): Promise<VFile> {
   const processor = unified().use(rehypeParse).use(rehypeRemark).use(remarkStringify)
 
   // Use Playwright to get the HTML of the website
@@ -80,3 +79,4 @@ export async function getMarkdownFromURL(url: string) {
   // Convert the HTML to markdown
   return processor.process(html)
 }
+export type MarkdownFromURL = ReturnType<typeof getMarkdownFromURL>

@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/utils/logger'
 import { BoltExportSchema, TypingMindExportSchema } from '@hominem/utils/services'
 import { Command } from 'commander'
 import fs from 'node:fs'

@@ -1,6 +1,7 @@
-import { logger } from '@/logger'
 import { getMarkdownFile } from '@/utils'
-import { LLMProvider } from '@hominem/utils/llm'
+import { getPathFiles } from '@/utils/get-path-files'
+import logger from '@/utils/logger'
+import { LLMProvider } from '@hominem/ai'
 import { MarkdownProcessor } from '@hominem/utils/markdown'
 import { TextAnalysisSchema } from '@hominem/utils/schemas'
 import { generateObject } from 'ai'
@@ -10,7 +11,6 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import ora from 'ora'
-import { getPathFiles } from '../../utils/get-path-files'
 
 interface ProcessMarkdownChunksOptions {
   output: string

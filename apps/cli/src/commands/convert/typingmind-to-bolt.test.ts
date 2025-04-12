@@ -1,8 +1,8 @@
 import { BoltExportSchema } from '@hominem/utils/services'
 import fs from 'node:fs'
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
-import { command } from '../convert/typingmind-to-bolt'
-import { typingMindBase, validTypingMindInput } from './typingmind.mock'
+import { typingMindBase, validTypingMindInput } from '../__tests__/typingmind.mock'
+import { command } from './typingmind-to-bolt'
 
 const PATH = '../convert/typingmind-to-bolt'
 
