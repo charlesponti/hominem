@@ -13,6 +13,7 @@
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
     "./markdown": "./src/markdown/index.ts",
+    "./nlp": "./src/nlp/index.ts",
     "./notes": "./src/services/notes.service.ts",
     "./redis": "./src/redis.ts",
     "./utils": "./src/utils/index.ts",
