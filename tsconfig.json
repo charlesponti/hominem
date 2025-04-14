@@ -1,27 +1,17 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./packages/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "build",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "target": "ES2020",
-    "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "composite": true,
     "baseUrl": "."
   },
-  "include": [
-    "apps/**/*.ts",
-    "apps/**/*.tsx",
-    "packages/**/*.ts",
-    "packages/**/*.tsx",
-    "packages/utils/vitest.config.mts"
-  ],
-  "exclude": [
-    "node_modules"
+  "files": [],
+  "references": [
+    { "path": "./apps/api" },
+    { "path": "./apps/cli" },
+    { "path": "./apps/mcp" },
+    { "path": "./apps/web" },
+    { "path": "./packages/ai" },
+    { "path": "./packages/utils" }
   ]
 }

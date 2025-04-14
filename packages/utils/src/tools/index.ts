@@ -71,7 +71,8 @@ export const lifestyleTools = {
   ...bookmarkTools,
 }
 
-export const travelPlanningTools = {
+type TravelPlanningTools = typeof travelTools & typeof locationTools
+export const travelPlanningTools: TravelPlanningTools = {
   ...travelTools,
   ...locationTools,
 }

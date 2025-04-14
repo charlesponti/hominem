@@ -2,7 +2,7 @@ import { travelPlanningTools } from '@hominem/utils/tools'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { lmstudio } from '../utils/llm.ts'
+import { lmstudio } from '../utils/llm.js'
 
 export function registerFlightsTool(server: McpServer) {
   server.tool(

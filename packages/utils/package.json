@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Random utilities",
-  "main": "./src/index.ts",
   "exports": {
     "./career": "./src/career/index.ts",
     "./db": "./src/db/index.ts",

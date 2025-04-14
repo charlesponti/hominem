@@ -1,11 +1,19 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Web",
   "extends": "@hominem/tsconfigs/nextjs.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "build",
+    "composite": true,
+    "declaration": true,
     "paths": {
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "noEmit": true
   },
   "include": [
     ".next/types/**/*.ts",
@@ -14,6 +22,18 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "build",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test.jsx",
+  ],
+  "references": [
+    {
+      "path": "../../packages/utils"
+    },
+    {
+      "path": "../../packages/ai"
+    }
   ]
 }

@@ -1,35 +1,26 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Default",
+  "display": "API",
+  "extends": "@hominem/tsconfigs/node.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "composite": false,
-    "declaration": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "forceConsistentCasingInFileNames": true,
-    "inlineSources": false,
-    "isolatedModules": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "outDir": "build",
-    "preserveWatchOutput": true,
     "rootDir": ".",
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "target": "ESNext"
+    "outDir": "build",
+    "composite": true,
+    "declaration": true,
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts",
     "test/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "build",
+    "**/*.test.ts",
   ]
 }
