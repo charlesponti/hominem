@@ -3,7 +3,7 @@ import { redis } from '@hominem/utils/redis'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import ora from 'ora'
-import { chromium, type Browser, type Page } from 'playwright'
+import { chromium, type Browser, type Page } from 'playwright-chromium'
 
 interface PlantInfo {
   name: string

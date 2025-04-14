@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/utils/logger'
 import { getBrowser, getContext } from '@hominem/utils/scraping'
 import * as fs from 'node:fs'
 import path from 'node:path'

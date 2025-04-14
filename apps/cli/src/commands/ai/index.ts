@@ -1,5 +1,5 @@
-import { logger } from '@/logger'
 import { lmstudio } from '@/utils/lmstudio'
+import { logger } from '@/utils/logger'
 import { google } from '@ai-sdk/google'
 import { educationalProfileSchema, professionalProfileSchema } from '@hominem/utils/schemas'
 import { generateObject, generateText } from 'ai'

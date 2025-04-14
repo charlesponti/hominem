@@ -1,17 +1,17 @@
-#! /usr/bin/env node
+#! /usr/bin/env bun
 
 import './env.ts'
 
 import { Command } from 'commander'
-import { command as aiCommand } from './commands/ai/index.ts'
+import { command as aiCommand } from './commands/ai'
 import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
-import { command as csvToJSONCommand } from './commands/csv-to-json.ts'
-import { command as initCommand } from './commands/init.ts'
-import scrapeCommand from './commands/scraper/scrape.ts'
-import serveCommand from './commands/serve/index.ts'
+import { command as csvToJSONCommand } from './commands/csv-to-json'
+import { command as initCommand } from './commands/init'
+import scrapeCommand from './commands/scraper/scrape'
+import serveCommand from './commands/serve/index'
 import thothCommand from './commands/thoth'
-import { initDb } from './db/index.ts'
+import { initDb } from './db/index'
 
 const foo = 'meow'
 

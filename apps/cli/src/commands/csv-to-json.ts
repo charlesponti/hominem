@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/utils/logger'
 import { Command } from 'commander'
 import csv from 'csv-parser'
 import * as fs from 'node:fs'

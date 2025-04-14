@@ -11,8 +11,9 @@
     "build"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --target=node --outdir build",
-    "dev": "bun build src/index.ts --target=node --outdir build --watch",
+    "build": "bun build src/index.ts --target=node --outdir build --external electron --external chromium-bidi",
+    "dev": "bun build src/index.ts --target=node --outdir build  --external electron --external chromium-bidi --watch",
+    "start": "bun run src/index.ts",
     "prepare": "npm run build",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
@@ -21,6 +22,8 @@
     "@hominem/utils": "*",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "ai": "^4.1.54",
+    "playwright": "^1.51.1",
+    "playwright-chromium": "^1.51.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {

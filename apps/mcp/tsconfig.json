@@ -1,15 +1,21 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "MCP",
-  "extends": "@hominem/tsconfigs/node.json",
+  "extends": "@hominem/tsconfigs/bun.json",
   "compilerOptions": {
+    "lib": [
+      "ESNext",
+      "dom"
+    ],
     "baseUrl": ".",
     "rootDir": ".",
     "outDir": "build",
     "composite": true,
-    "declaration": true, 
+    "declaration": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
   "include": [

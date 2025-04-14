@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/utils/logger'
 import { serve } from '@hono/node-server'
 import { Command } from 'commander'
 import { Hono } from 'hono'

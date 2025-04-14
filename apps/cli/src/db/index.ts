@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/utils/logger'
 import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql'
 import fs from 'node:fs'
 import path from 'node:path'

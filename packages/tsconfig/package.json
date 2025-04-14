@@ -8,6 +8,7 @@
   },
   "exports": {
     "./base.json": "./base.json",
+    "./bun.json": "./bun.json",
     "./library.json": "./library.json",
     "./nextjs.json": "./nextjs.json",
     "./node.json": "./node.json",

@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/utils/logger'
 import { Command } from 'commander'
 import fs from 'node:fs/promises'
 import os from 'node:os'

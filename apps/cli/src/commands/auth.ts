@@ -1,4 +1,4 @@
-import { logger } from '@/logger'
+import { logger } from '@/utils/logger'
 import axios from 'axios'
 import { Command } from 'commander'
 import fs from 'node:fs'
