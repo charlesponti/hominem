@@ -11,8 +11,8 @@
     "build"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --outDir build --format esm --target node20",
-    "dev": "tsup src/index.ts --outDir build --format esm --target node20 --watch",
+    "build": "bun build src/index.ts --target=node --outdir build",
+    "dev": "bun build src/index.ts --target=node --outdir build --watch",
     "prepare": "npm run build",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
