@@ -64,6 +64,8 @@ export default function CLIAuthPage() {
 
       return () => clearTimeout(timer)
     }
+
+    return () => {}
   }, [token])
 
   // Copy token to clipboard
