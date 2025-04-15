@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useUser } from '@clerk/nextjs'
 import {
   ArrowRight,
   BarChart3,
@@ -12,15 +13,25 @@ import {
   PlaneTakeoff,
   Star,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 export default function Page() {
   const [isVisible, setIsVisible] = useState(false)
+  const { user, isLoaded } = useUser()
+  const router = useRouter()
   const ctaRef = useRef<HTMLDivElement | null>(null)
   const heroRef = useRef<HTMLDivElement | null>(null)
   const featuresRef = useRef<HTMLDivElement | null>(null)
   const howItWorksRef = useRef<HTMLDivElement | null>(null)
   const testimonialRef = useRef<HTMLDivElement | null>(null)
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (isLoaded && user) {
+      router.push('/dashboard')
+    }
+  }, [isLoaded, user, router])
 
   useEffect(() => {
     setIsVisible(true)
@@ -47,6 +58,10 @@ export default function Page() {
       }
     }
   }, [])
+
+  if (!isLoaded || (isLoaded && user)) {
+    return null
+  }
 
   return (
     <div className="relative max-w-[100vw]">

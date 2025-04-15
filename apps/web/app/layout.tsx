@@ -1,8 +1,6 @@
 import Providers from '@/components/providers'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import { auth } from '@clerk/nextjs/server'
-import { Menu } from 'lucide-react'
-import { SiteNavigation } from '../components/app-navigation'
+import { MainNavigation } from '../components/main-navigation'
 import './animations.css'
 import './globals.css'
 
@@ -24,18 +22,11 @@ export default async function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <div className="bg-background text-foreground min-h-screen min-w-full flex max-h-screen overflow-x-hidden">
-            <SiteNavigation />
-            <div className="flex-1 flex flex-col">
-              {userId ? (
-                <SidebarTrigger className="md:hidden mt-2 ml-2">
-                  <div className="border border-gray-500 rounded-full p-1">
-                    <Menu size={20} />
-                  </div>
-                </SidebarTrigger>
-              ) : null}
-              <main className="h-full pb-safe-area-inset-bottom overflow-y-auto">{children}</main>
-            </div>
+          <div className="bg-background text-foreground min-h-screen min-w-full flex flex-col max-h-screen overflow-x-hidden">
+            <MainNavigation />
+            <main className="flex-1 overflow-y-auto pt-4 pb-safe-area-inset-bottom">
+              <div className="md:container md:mx-auto px-4 overflow-x-hidden">{children}</div>
+            </main>
           </div>
         </Providers>
       </body>
