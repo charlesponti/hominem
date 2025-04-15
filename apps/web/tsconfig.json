@@ -23,10 +23,7 @@
   ],
   "exclude": [
     "node_modules",
-    "build",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/*.test.jsx",
+    "build"
   ],
   "references": [
     {

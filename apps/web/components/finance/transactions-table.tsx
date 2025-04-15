@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { FinanceAccount, Transaction } from '@hominem/utils/schema'
+import type { FinanceAccount, Transaction } from '@hominem/utils/types'
 import { format } from 'date-fns'
 import { ArrowUpDown } from 'lucide-react'
 

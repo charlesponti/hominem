@@ -1,7 +1,9 @@
 import { db } from '@hominem/utils/db'
 import { redis, waitForRateLimit } from '@hominem/utils/redis'
-import { artists, type Artist } from '@hominem/utils/schema'
+import { artists } from '@hominem/utils/schema'
+import type { Artist } from '@hominem/utils/types'
 import { sql } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import {
   getSpotifyArtistsByIds,
   getSpotifyPlaylistItems,
@@ -50,8 +52,9 @@ export async function getGenreArtists(
   const cached = (await redis.get(cacheKey)) as string | null
 
   if (!force && cached) {
-    const cachedArtists = JSON.parse(cached)
-    return cachedArtists.map((artist: SpotifyArtist) => convertSpotifyArtistToArtist(artist))
+    const cachedArtists = JSON.parse(cached) as SpotifyArtist[]
+    // return cachedArtists.map((artist: SpotifyArtist) => convertSpotifyArtistToArtist(artist))
+    return cachedArtists
   }
 
   // Rate limit keys

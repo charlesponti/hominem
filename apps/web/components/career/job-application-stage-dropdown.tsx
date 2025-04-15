@@ -1,5 +1,5 @@
 import { JobApplicationStage } from '@/lib/career'
-import type { JobApplication } from '@hominem/utils/schema'
+import type { JobApplication } from '@hominem/utils/types'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '../ui/button'
 import {

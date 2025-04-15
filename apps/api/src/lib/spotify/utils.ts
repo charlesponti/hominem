@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getGenreArtists } from '../spotify/get-genre-artists'
+import { getGenreArtists } from './get-genre-artists'
 
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env
 const authToken = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')
@@ -217,8 +217,8 @@ export async function getSpotifyArtistsByIds(artistIds: string[], accessToken: s
     const response = await fetch(`https://api.spotify.com/v1/artists?ids=${chunk.join(',')}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-    const data = await response.json()
-    return data.artists as SpotifyArtist[]
+    const data = (await response.json()) as { artists: SpotifyArtist[] }
+    return data.artists
   })
 
   const artistChunks = await Promise.all(artistsPromises)
