@@ -1,3 +1,5 @@
+export type { Transaction, TransactionInsert } from '../db/schema/finance.schema'
+
 export interface DateRangeInput {
   from?: string
   to?: string

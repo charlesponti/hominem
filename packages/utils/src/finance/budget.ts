@@ -37,6 +37,6 @@ export const budget = {
  * @param {number} monthlyFixedCosts - The sum of all costs that are fixed
  * @return {number}
  */
-export function getFlexBudget(monthlyIncome: number, monthlyFixedCosts: number) {
+export function getFlexBudget(monthlyIncome: number, monthlyFixedCosts: number): number {
   return (monthlyIncome - monthlyFixedCosts) / 4.3
 }

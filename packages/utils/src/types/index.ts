@@ -1,3 +1,17 @@
+export type {
+  Activity,
+  Category,
+  Chat,
+  Company,
+  FinanceAccount,
+  Place,
+  Possession,
+  PossessionInsert,
+  Tag,
+  Transaction,
+  User,
+  UserInsert,
+} from '../db/schema'
 export type UploadStatus = 'queued' | 'uploading' | 'processing' | 'done' | 'error'
 
 export interface UploadStats {

@@ -1,5 +1,5 @@
-import type { TransactionInsert } from '@/db/schema/finance.schema'
 import { z } from 'zod'
+import type { TransactionInsert } from '../types'
 
 export const CopilotTransactionSchema = z.object({
   date: z.string(),

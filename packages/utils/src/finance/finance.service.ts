@@ -1,3 +1,4 @@
+import type { Possession } from '@/db/schema/possessions.schema'
 import type { SQLWrapper } from 'drizzle-orm'
 import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
 import fs from 'node:fs/promises'
@@ -10,8 +11,37 @@ import {
 } from '../db/schema/finance.schema'
 import { logger } from '../logger'
 import { CopilotTransactionSchema } from './banks/copilot'
-import { parseAmount } from './finance.utils'
 import type { CategoryAggregate, DateRangeInput } from './types'
+
+export interface ItemCategory {
+  id: number
+  name: string
+  userId: number
+  parentId: number | null
+}
+
+/**
+ * # Cost per Time
+ *
+ * ## Description
+ * Determine how much an item costs of a user's time in minutes, hours, days, and years.
+ *
+ * ## Steps
+ *  2. Get user's annual salary
+ *  4. Determine user's hourly rate
+ *  3. Get price of item
+ *  5. Determine how much of a user's time is required to purchase the item
+ */
+export function calculateCostPerTimeUnit(item: Possession): number {
+  return +(item.purchasePrice / 3 / 365).toPrecision(4)
+}
+
+/**
+ * Parses the amount to a number.
+ */
+export function parseAmount(amount: string | number): number {
+  return typeof amount === 'string' ? Number.parseFloat(amount) : amount
+}
 
 export interface QueryOptions {
   from?: string

@@ -1,5 +1,5 @@
 import moment from 'moment'
-import type { users } from '../db/schema/users.schema'
+import type { User } from '../types'
 
 interface Expense {
   cost: number
@@ -8,7 +8,7 @@ interface Expense {
 /**
  * percentage rate of return of US stock market per year
  */
-export function costOverTime(expense: Expense, user: typeof users.$inferSelect) {
+export function costOverTime(expense: Expense, user: User) {
   const expectedLifespan = 74
   const age = moment().diff(user.birthday, 'y')
   const yearsLeftToLive = expectedLifespan - age
