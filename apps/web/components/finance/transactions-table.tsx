@@ -11,15 +11,15 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { FinanceAccount, FinanceTransaction } from '@hominem/utils/finance'
+import type { FinanceAccount, Transaction } from '@hominem/utils/schema'
 import { format } from 'date-fns'
 import { ArrowUpDown } from 'lucide-react'
 
 type TransactionsTableProps = {
   loading: boolean
   error: string | null
-  transactions: FinanceTransaction[]
-  filteredTransactions: FinanceTransaction[]
+  transactions: Transaction[]
+  filteredTransactions: Transaction[]
   accountsMap: Map<string, FinanceAccount>
   sortField: string
   sortDirection: 'asc' | 'desc'
