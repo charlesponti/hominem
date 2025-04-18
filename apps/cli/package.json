@@ -7,7 +7,6 @@
     "hominem": "src/index.ts"
   },
   "scripts": {
-    "dev": "bun --watch src/commands/serve/index.ts",
     "test": "NODE_ENV=test vitest --run --coverage"
   },
   "keywords": [],
