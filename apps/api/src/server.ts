@@ -12,6 +12,7 @@ import googlePlugin from './plugins/google'
 import { invitesPlugin } from './plugins/invites'
 import listsPlugin from './plugins/lists'
 import placesPlugin from './plugins/places'
+import possessionsPlugin from './plugins/possessions'
 import rateLimitPlugin from './plugins/rate-limit'
 import shutdownPlugin from './plugins/shutdown'
 import { chatPlugin } from './routes/chat.router'
@@ -82,6 +83,7 @@ export async function createServer(
     await server.register(placesPlugin)
     await server.register(invitesPlugin)
     await server.register(bookmarksPlugin)
+    await server.register(possessionsPlugin, { prefix: '/api' })
     await server.register(googlePlugin, { prefix: '/api/google' })
     await server.register(healthRoutes, { prefix: '/api/health' })
     await server.register(companyRoutes, { prefix: '/api/companies' })

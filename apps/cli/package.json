@@ -17,26 +17,18 @@
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai-compatible": "^0.1.17",
-    "@duckdb/node-api": "^1.2.1-alpha.16",
     "@hominem/ai": "*",
     "@hominem/utils": "*",
-    "@hono/node-server": "^1.13.8",
-    "@hono/trpc-server": "^0.3.4",
-    "@libsql/client": "^0.14.0",
-    "@tanstack/react-query": "^5.66.0",
     "ai": "^4.1.54",
     "chalk": "^5.4.1",
     "cheerio": "^1.0.0",
     "cli-table3": "^0.6.5",
     "commander": "^13.1.0",
     "csv-parser": "^3.2.0",
-    "csv-writer": "^1.6.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.0",
-    "duckdb": "^1.2.0",
-    "hono": "^4.7.1",
     "ora": "^8.2.0",
-    "pdf-parse": "^1.1.1",
+    "pdf2json": "^3.1.5",
     "playwright-chromium": "^1.51.1",
     "rehype-parse": "^9.0.1",
     "rehype-remark": "^10.0.0",
@@ -50,7 +42,6 @@
   },
   "devDependencies": {
     "@hominem/tsconfigs": "*",
-    "@types/bun": "^1.2.3",
-    "@types/pdf-parse": "^1.1.5"
+    "@types/bun": "^1.2.3"
   }
 }

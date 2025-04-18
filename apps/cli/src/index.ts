@@ -8,8 +8,8 @@ import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
 import { command as csvToJSONCommand } from './commands/csv-to-json'
 import { command as initCommand } from './commands/init'
+import { command as notesCommand } from './commands/possessions.js'
 import scrapeCommand from './commands/scraper/scrape'
-import serveCommand from './commands/serve/index'
 import thothCommand from './commands/thoth'
 import { initDb } from './db/index'
 
@@ -27,10 +27,10 @@ async function init() {
   program.addCommand(initCommand)
   program.addCommand(scrapeCommand)
   program.addCommand(aiCommand)
+  program.addCommand(notesCommand)
   program.addCommand(thothCommand)
   program.addCommand(csvToJSONCommand)
   program.addCommand(convertCommand)
-  program.addCommand(serveCommand)
 
   program.parse(process.argv)
 }

@@ -18,7 +18,6 @@
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^0.1.13",
     "@hominem/utils": "*",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "ai": "^4.1.54",

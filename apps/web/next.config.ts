@@ -2,7 +2,7 @@ const { NEXT_PUBLIC_API_URL } = process.env
 
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['ui'],
+  transpilePackages: ['@hominem/utils', '@hominem/ai'],
   async rewrites() {
     return [
       {

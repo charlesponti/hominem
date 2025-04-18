@@ -23,7 +23,7 @@ async function dev() {
       target: 'node20',
       outfile: 'build/index.js',
       minify: true,
-      external: ['duckdb', 'sqlite3', 'playwright-core', 'chromium-bidi', 'electron', 'pdf-parse'],
+      external: ['duckdb', 'sqlite3', 'playwright-core', 'chromium-bidi', 'electron'],
       packages: 'external',
     })
     .catch(() => process.exit(1))

@@ -36,9 +36,7 @@
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
-    "@ai-sdk/openai-compatible": "^0.1.14",
     "@hominem/ai": "*",
-    "@google-cloud/local-auth": "^3.0.1",
     "ai": "^4.1.54",
     "cheerio": "^1.0.0",
     "chrono-node": "^2.7.8",
