@@ -5,12 +5,13 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "bun --watch src/index.ts | pino-pretty",
-    "lint": "bunx biome lint ./src",
-    "start": "bun run build/src/index | pino-pretty",
+    "dev": "pnpm exec tsx --watch src/index.ts | pino-pretty",
+    "lint": "pnpm exec biome lint ./src",
+    "build": "vite build",
+    "start": "pnpm exec node build/index.js | pino-pretty",
     "test": "NODE_ENV=test vitest --run --coverage --passWithNoTests",
     "test:coverage": "NODE_ENV=test vitest --run --coverage",
-    "test:watch": "NODE_ENV=test nx vitest",
+    "test:watch": "NODE_ENV=test vitest",
     "typecheck": "tsc --noEmit --incremental false"
   },
   "dependencies": {
@@ -25,8 +26,8 @@
     "@fastify/multipart": "^9.0.3",
     "@fastify/rate-limit": "^10.2.2",
     "@fastify/secure-session": "^8.1.1",
-    "@hominem/ai": "*",
-    "@hominem/utils": "*",
+    "@hominem/ai": "workspace:*",
+    "@hominem/utils": "workspace:*",
     "@langchain/community": "^0.3.29",
     "@langchain/core": "0.3.39",
     "@langchain/langgraph": "0.2.45",
@@ -61,8 +62,14 @@
     "zod-to-json-schema": "^3.24.1"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "*",
+    "@hominem/tsconfigs": "workspace:*",
     "@types/ws": "^8.18.1",
-    "tsup": "^8.4.0"
+    "@vitest/coverage-v8": "^3.1.1",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "vite": "^5.4.11",
+    "vite-node": "^3.1.1",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.1.1"
   }
 }

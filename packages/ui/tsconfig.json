@@ -1,0 +1,11 @@
+{
+  "extends": "@hominem/tsconfigs/react-library.json",
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "build",
+    "node_modules"
+  ],
+  "display": "@hominem/ui"
+}

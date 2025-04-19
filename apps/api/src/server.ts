@@ -1,6 +1,10 @@
 import { clerkPlugin } from '@clerk/fastify'
-import type { FastifyCookieOptions } from '@fastify/cookie'
+import fastifyCircuitBreaker from '@fastify/circuit-breaker'
 import fastifyCookie from '@fastify/cookie'
+import type { FastifyCookieOptions } from '@fastify/cookie'
+import fastifyCors from '@fastify/cors'
+import fastifyHelmet from '@fastify/helmet'
+import fastifyMultipart from '@fastify/multipart'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
 
@@ -46,7 +50,7 @@ export async function createServer(
   try {
     const server = fastify(opts)
 
-    await server.register(require('@fastify/cors'), {
+    await server.register(fastifyCors, {
       origin: [env.APP_URL?.split(',')],
       credentials: true,
     })
@@ -57,15 +61,20 @@ export async function createServer(
       parseOptions: {},
     } as FastifyCookieOptions)
 
-    await server.register(require('@fastify/circuit-breaker'))
-    await server.register(require('@fastify/multipart'))
-    await server.register(require('@fastify/helmet'))
+    await server.register(fastifyCircuitBreaker)
+    await server.register(fastifyMultipart)
+    await server.register(fastifyHelmet)
 
-    // Register Clerk plugin
-    await server.register(clerkPlugin, {
-      secretKey: env.CLERK_SECRET_KEY,
-      publishableKey: env.CLERK_PUBLISHABLE_KEY,
-    })
+    // Register Clerk plugin if keys are provided and not empty
+    if (env.CLERK_SECRET_KEY && env.CLERK_PUBLISHABLE_KEY && 
+        env.CLERK_SECRET_KEY !== '' && env.CLERK_PUBLISHABLE_KEY !== '') {
+      await server.register(clerkPlugin, {
+        secretKey: env.CLERK_SECRET_KEY,
+        publishableKey: env.CLERK_PUBLISHABLE_KEY,
+      })
+    } else {
+      server.log.warn('Clerk keys are not provided. Authentication is disabled.')
+    }
 
     // Register rate limit plugin with Redis client
     await server.register(rateLimitPlugin, {

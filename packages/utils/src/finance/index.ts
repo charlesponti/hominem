@@ -1,9 +1,9 @@
 export type {
   FinanceAccount,
   Transaction as FinanceTransaction,
-} from '../db/schema/finance.schema'
-export * from './finance.service'
-export { tools } from './finance.tools'
-export { default as FinancialAccountService } from './financial-account.service'
-export * from './transactions-processor'
-export * from './types'
+} from '../db/schema/finance.schema.js'
+export * from './finance.service.js'
+export { tools } from './finance.tools.js'
+export { default as FinancialAccountService } from './financial-account.service.js'
+export * from './transactions-processor.js'
+export * from './types.js'

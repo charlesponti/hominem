@@ -9,8 +9,6 @@
     "composite": true,
     "declaration": true,
     "downlevelIteration": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "lib": [
       "dom",
     ],

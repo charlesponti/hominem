@@ -8,7 +8,13 @@ export const metadata = {
   title: 'hominem',
   description: 'manage life easier.',
   keywords: 'nextjs, react, example, keywords',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default async function RootLayout({

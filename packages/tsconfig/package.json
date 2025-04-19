@@ -12,6 +12,7 @@
     "./library.json": "./library.json",
     "./nextjs.json": "./nextjs.json",
     "./node.json": "./node.json",
+    "./react.json": "./react.json",
     "./react-library.json": "./react-library.json"
   }
 }

@@ -1,0 +1,37 @@
+{
+  "name": "@hominem/components",
+  "version": "0.0.0",
+  "types": "./index.ts",
+  "exports": {
+    "./Button": "./components/Button/index.tsx",
+    "./Alert": "./components/Alert/index.tsx",
+    "./Input": "./components/Input/index.tsx",
+    "./Loading": "./components/Loading/index.tsx"
+  },
+  "license": "MIT",
+  "scripts": {
+    "lint": "biome lint ./*.ts*"
+  },
+  "dependencies": {
+    "@emotion/styled": "^11.8.1",
+    "@hominem/utils": "workspace:*",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "formik": "^2.2.9",
+    "lucide-react": "^0.363.0",
+    "prop-types": "^15.8.1",
+    "react": "19.1.0",
+    "react-stately": "^3.24.0",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss": "^3.4.3",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@hominem/tsconfigs": "workspace:*",
+    "@types/prop-types": "^15.7.5",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "5.4.3"
+  }
+}

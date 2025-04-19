@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "MCP",
-  "extends": "@hominem/tsconfigs/bun.json",
+  "extends": "@hominem/tsconfigs/node.json",
   "compilerOptions": {
     "lib": [
       "ESNext",

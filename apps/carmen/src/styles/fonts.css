@@ -1,0 +1,83 @@
+/* Font styles for Carmen App */
+
+/* Font Variables */
+:root {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'EB Garamond', ui-serif, Georgia, serif;
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Base Font Styles */
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Typographic Scale */
+.text-display-1 {
+  @apply font-display text-5xl font-bold;
+}
+
+.text-display-2 {
+  @apply font-display text-4xl font-bold;
+}
+
+.text-heading-1 {
+  @apply font-display text-3xl font-bold;
+}
+
+.text-heading-2 {
+  @apply font-display text-2xl font-bold;
+}
+
+.text-heading-3 {
+  @apply font-display text-xl font-semibold;
+}
+
+.text-body-large {
+  @apply font-sans text-lg;
+}
+
+.text-body {
+  @apply font-sans text-base;
+}
+
+.text-body-small {
+  @apply font-sans text-sm;
+}
+
+.text-quote {
+  @apply font-serif text-xl italic;
+}
+
+/* Combination Classes */
+.prose h1 {
+  @apply text-display-1;
+}
+
+.prose h2 {
+  @apply text-heading-1;
+}
+
+.prose h3 {
+  @apply text-heading-2;
+}
+
+.prose h4 {
+  @apply text-heading-3;
+}
+
+.prose p {
+  @apply text-body leading-relaxed;
+}
+
+.prose blockquote {
+  @apply text-quote text-gray-600 border-l-4 border-primary pl-4 py-2 my-4;
+}

@@ -13,8 +13,15 @@
       ]
     }
   },
+  "references": [
+    {
+      "path": "../ai"
+    },
+  ],
   "include": [
-    "./src/**/*"
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./src/**/*.json"
   ],
   "exclude": [
     "node_modules",

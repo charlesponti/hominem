@@ -11,21 +11,23 @@
     "build"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --target=node --outdir build --external electron --external chromium-bidi",
-    "dev": "bun build src/index.ts --target=node --outdir build  --external electron --external chromium-bidi --watch",
-    "start": "bun run src/index.ts",
-    "prepare": "npm run build",
+    "build": "tsup src/index.ts --target=node18 --outDir build --external electron --external chromium-bidi",
+    "dev": "tsup src/index.ts --target=node18 --outDir build  --external electron --external chromium-bidi --watch",
+    "start": "pnpm exec node src/index.ts",
+    "prepare": "pnpm run build",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
   "dependencies": {
-    "@hominem/utils": "*",
+    "@hominem/utils": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.7.0",
+    "@ai-sdk/openai-compatible": "^0.1.17",
     "ai": "^4.1.54",
     "playwright": "^1.51.1",
     "playwright-chromium": "^1.51.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@hominem/tsconfigs": "workspace:*",
     "tsup": "^8.4.0"
   }
 }

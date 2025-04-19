@@ -5,18 +5,19 @@
 // Load environment variables
 import './env.ts'
 
-import { parseTransactionString, processTransactionsFromCSV } from '@hominem/utils/finance'
+// Use local utility files to avoid ESM resolution issues
+import { parseTransactionString, processTransactionsFromCSV } from './finance-utils.ts'
 import {
   getActiveJobs,
   getImportFileContent,
   IMPORT_JOB_PREFIX,
   JOB_EXPIRATION_TIME,
   removeJobFromQueue,
-} from '@hominem/utils/imports'
-import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/utils/redis'
-import type { BaseJob, ImportTransactionsJob } from '@hominem/utils/types'
-import { retryWithBackoff } from '@hominem/utils/utils'
+} from './import-job-utils.ts'
+import { logger } from '../../../packages/utils/src/logger.ts'
+import { redis } from './redis-utils.ts'
+import { retryWithBackoff } from './utils.ts'
+import type { BaseJob, ImportTransactionsJob } from './utils.ts'
 
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
