@@ -16,8 +16,8 @@
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai-compatible": "^0.1.17",
-    "@hominem/ai": "*",
-    "@hominem/utils": "*",
+    "@hominem/ai": "workspace:*",
+    "@hominem/utils": "workspace:*",
     "ai": "^4.1.54",
     "chalk": "^5.4.1",
     "cheerio": "^1.0.0",
@@ -40,7 +40,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "*",
-    "@types/bun": "^1.2.3"
+    "@hominem/tsconfigs": "workspace:*"
   }
 }

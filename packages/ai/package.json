@@ -1,11 +1,23 @@
 {
   "name": "@hominem/ai",
   "version": "0.0.0",
+  "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "import": "./build/index.js",
+      "types": "./build/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./build/index.js",
+  "module": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format=esm --no-dts --outDir build && tsc -p tsconfig.build.json"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "*"
+    "@hominem/tsconfigs": "workspace:*",
+    "tsup": "^8.4.0"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.20",
@@ -13,5 +25,9 @@
     "@ai-sdk/openai-compatible": "^0.1.13",
     "ai": "^4.1.54",
     "ollama-ai-provider": "^1.2.0"
-  }
+  },
+  "files": [
+    "build",
+    "src"
+  ]
 }

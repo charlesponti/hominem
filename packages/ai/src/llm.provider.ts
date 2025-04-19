@@ -3,7 +3,7 @@ import { openai } from '@ai-sdk/openai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { LanguageModelV1 } from 'ai'
 
-export interface LLMProviderConfig {
+export type LLMProviderConfig = {
   provider: 'openai' | 'lmstudio' | 'google'
   model?: string
 }

@@ -457,6 +457,7 @@ export const delete_activity = tool({
 })
 
 export interface TripCost {
+  location: string
   type: 'transportation' | 'accommodation'
   cost: number
 }
@@ -541,7 +542,7 @@ export const calculate_transportation_costs = tool({
 
     return new Promise<TripCost>((resolve) => {
       setTimeout(() => {
-        resolve({ type: 'transportation', cost })
+        resolve({ location: destination, type: 'transportation', cost })
       }, 200)
     })
   },
@@ -555,7 +556,7 @@ export const calculate_accommodation_costs = tool({
   async execute({ location }) {
     return new Promise<TripCost>((resolve) => {
       setTimeout(() => {
-        resolve({ type: 'accommodation', cost: 500 })
+        resolve({ location, type: 'accommodation', cost: 500 })
       }, 1000)
     })
   },

@@ -1,6 +1,7 @@
 import { redis } from '@hominem/utils/redis'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
+import fastifyRateLimit from '@fastify/rate-limit'
 
 interface RateLimitOptions {
   getCustomError?: (request: FastifyRequest, key: string) => Error
@@ -75,7 +76,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, op
   }
 
   fastify.decorate('rateLimit', rateLimit)
-  fastify.register(require('@fastify/rate-limit'), opts)
+  fastify.register(fastifyRateLimit, opts)
 }
 
 export default fp(rateLimitPlugin, {

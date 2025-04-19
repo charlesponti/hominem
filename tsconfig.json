@@ -7,11 +7,24 @@
   },
   "files": [],
   "references": [
-    { "path": "./apps/api" },
-    { "path": "./apps/cli" },
-    { "path": "./apps/mcp" },
-    { "path": "./apps/web" },
-    { "path": "./packages/ai" },
-    { "path": "./packages/utils" }
-  ]
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/cli"
+    },
+    {
+      "path": "./apps/mcp"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./packages/ai"
+    },
+    {
+      "path": "./packages/utils"
+    }
+  ],
+  "display": "@hominem/root",
 }

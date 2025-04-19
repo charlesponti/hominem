@@ -2,7 +2,6 @@ autobuild
 autoincrement
 biomejs
 buildscript
-bunx
 chartjs
 checkpointer
 chromadb

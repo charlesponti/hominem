@@ -1,17 +1,17 @@
-import type { Possession } from '@/db/schema/possessions.schema'
+import type { Possession } from '../db/schema/possessions.schema.js'
 import type { SQLWrapper } from 'drizzle-orm'
 import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
 import fs from 'node:fs/promises'
-import { db } from '../db'
+import { db } from '../db/index.js'
 import {
   financeAccounts,
   transactions,
   type Transaction,
   type TransactionInsert,
-} from '../db/schema/finance.schema'
-import { logger } from '../logger'
-import { CopilotTransactionSchema } from './banks/copilot'
-import type { CategoryAggregate, DateRangeInput } from './types'
+} from '../db/schema/finance.schema.js'
+import { logger } from '../logger.js'
+import { CopilotTransactionSchema } from './banks/copilot.js'
+import type { CategoryAggregate, DateRangeInput } from './types.js'
 
 export interface ItemCategory {
   id: number

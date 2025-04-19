@@ -20,7 +20,7 @@ results.json
 *.pem
 *.sqlite
 *.sqlite3
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 results/
 output/
 

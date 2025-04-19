@@ -38,5 +38,6 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true
-  }
+  },
+  "display": "@hominem/scratchpad",
 }

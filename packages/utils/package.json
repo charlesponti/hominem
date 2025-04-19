@@ -4,6 +4,9 @@
   "type": "module",
   "description": "Random utilities",
   "exports": {
+    ".": {
+      "import": "./build/index.js"
+    },
     "./career": "./src/career/index.ts",
     "./db": "./src/db/index.ts",
     "./finance": "./src/finance/index.ts",
@@ -20,23 +23,24 @@
     "./schemas": "./src/schemas/index.ts",
     "./scraping": "./src/scraping/index.ts",
     "./services": "./src/services/index.ts",
-    "./text": "./src/text.utils.ts",
+    "./text": "./src/utils/text.utils.ts",
     "./time": "./src/time.ts",
     "./tools": "./src/tools/index.ts",
     "./types": "./src/types/index.ts",
     "./writer": "./src/writer/index.ts"
   },
   "scripts": {
-    "db:generate": "bunx drizzle-kit generate",
-    "migrate": "bunx drizzle-kit migrate",
-    "db:update": "bunx drizzle-kit generate && bunx drizzle-kit migrate",
+    "build": "tsup src/index.ts --format=esm --no-dts -d=build",
+    "db:generate": "pnpm drizzle-kit generate",
+    "migrate": "pnpm drizzle-kit migrate",
+    "db:update": "pnpm drizzle-kit generate && pnpm drizzle-kit migrate",
     "test": "vitest --run --passWithNoTests",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
-    "@hominem/ai": "*",
+    "@hominem/ai": "workspace:*",
     "ai": "^4.1.54",
     "cheerio": "^1.0.0",
     "chrono-node": "^2.7.8",
@@ -46,7 +50,7 @@
     "csvtojson": "^2.0.10",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.40.0",
+    "drizzle-orm": "^0.42.0",
     "drizzle-zod": "^0.7.0",
     "googleapis": "144.0.0",
     "ioredis": "^5.5.0",
@@ -67,11 +71,11 @@
     "unified": "^11.0.5",
     "vite": "^5.4.11",
     "winston": "^3.11.0",
-    "zod": "^3.24.1"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
+    "@hominem/tsconfigs": "workspace:*",
     "@playwright/test": "^1.51.0",
-    "@hominem/tsconfigs": "*",
     "@types/node": "^22.13.1",
     "jsdom": "^26.0.0",
     "tsup": "^8.4.0",

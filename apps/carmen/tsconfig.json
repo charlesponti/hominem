@@ -1,0 +1,32 @@
+{
+  "extends": "@hominem/tsconfigs/library.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.svelte",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules/*",
+    "build/*"
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "src/*": [
+        "src/*"
+      ]
+    },
+    "types": [
+      "svelte",
+      "vite/client"
+    ],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx"
+  }
+}

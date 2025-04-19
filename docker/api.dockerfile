@@ -1,52 +1,104 @@
-# Build stage
+# Base stage with common tools
 FROM node:23.11-bookworm-slim AS base
 WORKDIR /app
 
-# Install bun and wget
-RUN apt-get update && apt-get install -y curl unzip wget
+# Install necessary tools (only what's absolutely needed)
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends curl ca-certificates && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
-# Install bun in a location accessible to all users
-RUN curl -fsSL https://bun.sh/install | bash && \
-    mv /root/.bun/bin/bun /usr/local/bin/bun
-
-# Add bun to PATH
+# Set up Node.js environment
 ENV PATH="/usr/local/bin:${PATH}"
+ENV NODE_ENV=production
+ENV TURBO_TELEMETRY_DISABLED=1
 
-FROM base AS install
+# Pruner stage - use turbo to create a pruned workspace with only what's needed
+FROM base AS pruner
 WORKDIR /app
 
-# Copy source code from parent directory
-COPY .. .
+# Install turbo globally
+RUN npm install -g turbo
 
-# Install dependencies
-RUN bun install
+# Copy repo content needed for pruning
+COPY . .
+
+# Prune the workspace to only include the API app and its deps
+RUN turbo prune @hominem/api --docker
+
+# Builder stage - build from the pruned source
+FROM base AS builder
+WORKDIR /app
+
+# Install build tools
+RUN npm install -g pnpm turbo
+
+# Copy the pruned lockfile and package.json files
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=pruner /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+
+# Install all dependencies (including dev deps for building)
+RUN pnpm install --frozen-lockfile --prod=false
+
+# Copy the pruned source code
+COPY --from=pruner /app/out/full/ .
+
+# Copy turbo.json for the build
+COPY turbo.json .
+
+# Build the API and its dependencies
+RUN turbo run build --filter=@hominem/api...
 
 # Production stage
-FROM base AS release
+FROM node:23.11-bookworm-slim AS release
 WORKDIR /app
 ENV NODE_ENV=production
+ENV TURBO_TELEMETRY_DISABLED=1
+
+# Install only essential packages for production
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends ca-certificates && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN addgroup --gid 1001 nodejs && \
-    adduser --uid 1001 --gid 1001 hominem
+  adduser --uid 1001 --gid 1001 hominem
 
 # Create logs directory with correct permissions
 RUN mkdir -p /app/logs && \
   chown -R hominem:nodejs /app/logs
 
-# Copy built files from builder
-COPY --from=install --chown=hominem:nodejs /app ./
+# Copy pruned package files needed for production
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Install production dependencies only
+RUN npm install -g pnpm && \
+  pnpm install --frozen-lockfile --prod=true
+
+# Copy built artifacts
+COPY --from=builder /app/packages/ai/build ./packages/ai/build
+COPY --from=builder /app/packages/utils/build ./packages/utils/build
+COPY --from=builder /app/apps/api/build ./apps/api/build
+
+# Set proper permissions
+RUN chown -R hominem:nodejs /app
 
 # Security: Run as non-root user
 USER hominem
 
-# Expose port
-EXPOSE ${PORT}
+# Expose port (use default if not specified)
+EXPOSE ${PORT:-3000}
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/health || exit 1
+  CMD curl -f http://localhost:${PORT:-3000}/health || exit 1
+
+# Simple startup for the application
+USER hominem
 
 # Start the application
-ENTRYPOINT ["bun", "run", "apps/api/src/index"]
+ENTRYPOINT ["node", "apps/api/build/index.js"]
 CMD []

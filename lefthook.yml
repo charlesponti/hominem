@@ -1,0 +1,28 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://github.com/evilmartians/lefthook/blob/master/docs/configuration.md
+#
+# pre-push:
+#   commands:
+#     packages-audit:
+#       tags: frontend security
+#       run: npm run audit
+#     gems-audit:
+#       tags: backend security
+#       run: bundle audit
+#
+commit-msg:
+  commands:
+    lint:
+      glob: "*"
+      run: npx commitlint --config commitlint.config.js --edit $1
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      tags: lint
+      run: yarn lint
+    test:
+      tags: test
+      run: yarn test
