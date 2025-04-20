@@ -32,6 +32,7 @@ FROM base AS builder
 WORKDIR /app
 
 # Declare build arguments needed during the build
+ARG PORT
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
