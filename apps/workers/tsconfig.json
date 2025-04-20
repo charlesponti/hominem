@@ -1,22 +1,28 @@
 {
-  "display": "@hominem/workers",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "API",
   "extends": "@hominem/tsconfigs/node.json",
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "downlevelIteration": true,
     "baseUrl": ".",
-  },
-  "references": [
-    {
-      "path": "../../packages/utils",
+    "rootDir": ".",
+    "outDir": "build",
+    "composite": true,
+    "declaration": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
     }
-  ],
+  },
   "include": [
-    "**/*.ts"
+    "src/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "build",
+    "**/*.test.ts",
   ]
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "AI Package",
-  "extends": "../../packages/tsconfig/library.json",
+  "extends": "@hominem/tsconfigs/library.json",
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "./build",

@@ -95,7 +95,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "daisyui": "^5.0.11",
-    "eslint": "^9.23.0",
+    "eslint": "^9.0.0",
     "eslint-config-next": "^15.1.6",
     "eslint-plugin-react": "^7.37.4",
     "jsdom": "^26.0.0",

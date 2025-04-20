@@ -23,7 +23,8 @@ async function processCSVRow(row: Record<string, string>): Promise<z.infer<typeo
   })
 
   await new Promise((resolve) => setTimeout(resolve, 30000)) // Rate limiting
-  return response.object
+
+  return response.object as z.infer<typeof UserSchema>
 }
 
 export async function processCSVBuffer(buffer: Buffer): Promise<z.infer<typeof UserSchema>[]> {

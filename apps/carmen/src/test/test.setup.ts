@@ -1,12 +1,14 @@
+// filepath: /Users/charlesponti/Developer/hominem/apps/carmen/src/test/test.setup.ts
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/svelte'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { MOCK_PLACE, PLACE_HANDLERS } from './mocks/place'
 import './utils'
 
-import { API_URL } from '../lib/store'
-import { MOCK_PLACE, PLACE_HANDLERS } from './mocks/place'
+// Define API_URL here to avoid circular imports
+export const API_URL = 'http://localhost:3000'
 
 export const TEST_LIST_ID = 'list-id'
 
@@ -14,11 +16,11 @@ export const TEST_LIST_ID = 'list-id'
 vi.mock('svelte/store', async (importOriginal) => {
   const actual = await importOriginal()
   return {
-    ...(actual as Record<string, unknown>),
+    ...(actual as Record<string, unknown>)
   }
 })
 
-// The mock for svelte-navigator is in utils.tsx
+// The mock for svelte-navigator is in utils.ts
 
 // Mock auth stores
 vi.mock('../lib/clerk', async () => {
@@ -28,7 +30,7 @@ vi.mock('../lib/clerk', async () => {
     signIn: vi.fn(),
     signOut: vi.fn(),
     initializeClerk: vi.fn(),
-    isClerkLoaded: { subscribe: vi.fn(), set: vi.fn() },
+    isClerkLoaded: { subscribe: vi.fn(), set: vi.fn() }
   }
 })
 
@@ -38,10 +40,10 @@ const restHandlers = [
     return HttpResponse.json({
       id: TEST_LIST_ID,
       name: 'test list',
-      items: [MOCK_PLACE],
+      items: [MOCK_PLACE]
     })
   }),
-  ...PLACE_HANDLERS,
+  ...PLACE_HANDLERS
 ]
 
 export const testServer = setupServer(...restHandlers)
