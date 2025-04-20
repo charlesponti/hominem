@@ -31,6 +31,10 @@ RUN turbo prune @hominem/web --docker
 FROM base AS builder
 WORKDIR /app
 
+# Declare build arguments needed during the build
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
 # Install build tools
 RUN npm install -g pnpm turbo
 
@@ -49,7 +53,10 @@ COPY --from=pruner /app/out/full/ .
 COPY turbo.json .
 
 # Build the Next.js app and its dependencies
-RUN turbo run build --filter=@hominem/web...
+# Make build args available as env vars for the build command
+RUN NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} \
+  turbo run build --filter=@hominem/web...
 
 # Production stage - using Next.js standalone output
 FROM node:23.11-bookworm-slim AS release
