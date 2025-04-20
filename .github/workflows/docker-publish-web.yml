@@ -9,25 +9,25 @@ on:
       - "apps/web/**"
       - "packages/**"
       - "docker/**"
-      - ".github/workflows/docker-publish-web.yml" # Trigger on changes to this file itself
+      - ".github/workflows/docker-publish-web.yml"
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/centi
+  IMAGE_NAME: ${{ github.repository }}/enti
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Needed to push to GitHub Container Registry
+      packages: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Use latest version
+        uses: actions/checkout@v4
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3 # Use latest version
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -47,10 +47,13 @@ jobs:
             type=sha
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5 # Use latest version
+        uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/web/Dockerfile # Correct path to the web Dockerfile
+          file: ./apps/web/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NODE_ENV=production
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
