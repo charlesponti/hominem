@@ -32,7 +32,6 @@ FROM base AS builder
 WORKDIR /app
 
 # Declare build arguments needed during the build
-ARG PORT
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
@@ -65,9 +64,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install only essential packages for production
+# Install only essential packages for production, including curl for healthcheck
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends ca-certificates && \
+  apt-get install -y --no-install-recommends ca-certificates curl && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
@@ -90,12 +89,13 @@ RUN chown -R hominem:nodejs /app
 # Security: Run as non-root user
 USER hominem
 
-# Expose port (use default if not specified)
-EXPOSE ${PORT:-4444}
+# Expose the port Railway expects (based on logs). The actual port depends on the runtime $PORT env var.
+EXPOSE 8080
 
-# Health check
+# Health check using the runtime $PORT environment variable (defaults to 8080 if unset).
+# Uses shell form to evaluate $PORT at runtime.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:${PORT:-4444}/ || exit 1
+  CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
 
 # Start the Next.js application
-CMD ["node", "apps/web/server.js"]
+CMD ["node", "apps/web/server.js", "-H", "0.0.0.0", "-p", "${PORT:-8080}"]
