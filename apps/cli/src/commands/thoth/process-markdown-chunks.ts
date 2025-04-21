@@ -27,9 +27,10 @@ export const processMarkdownChunksCommand = new Command('process-markdown-chunks
   .action(async (processPath: string, options: ProcessMarkdownChunksOptions) => {
     // Prepare output file and stream
     const outputDir = path.resolve(process.cwd(), options.output)
-    if (!(await fs.exists(outputDir))) {
-      fs.mkdir(outputDir, { recursive: true })
-    }
+
+    // Check if the output directory exists, if not create it
+    await fs.mkdir(outputDir, { recursive: true })
+
     const outputFilePath = path.join(outputDir, 'output_chunks.json')
     const outputStream = createWriteStream(outputFilePath)
     outputStream.write('[\n')
