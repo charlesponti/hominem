@@ -1,27 +1,27 @@
-import type { NextPage } from "next";
-import { redirect } from "next/navigation";
+import type { NextPage } from 'next'
+import { redirect } from 'next/navigation'
 
-import { api } from "@/lib/trpc/server";
-import { getServerAuthSession } from "@/server/auth";
-import DashboardNav from "components/DashboardNav";
-import IdeaForm from "components/IdeaForm";
-import IdeaListItem from "components/IdeaListItem";
+import { api } from '@/lib/trpc/server'
+import { getServerAuthSession } from '@/server/auth'
+import DashboardNav from 'components/DashboardNav'
+import IdeaForm from 'components/IdeaForm'
+import IdeaListItem from 'components/IdeaListItem'
 
 const Dashboard: NextPage = async () => {
-  const session = await getServerAuthSession();
+  const session = await getServerAuthSession()
 
   if (session) {
-    redirect("/");
+    redirect('/')
   }
 
-  const data = await api.idea.getIdeas();
+  const data = await api.idea.getIdeas()
 
   return (
     <div className="flex flex-col">
       <DashboardNav />
       <IdeaForm />
       <div>
-        {data?.length === 0 && "your thoughts will appear here"}
+        {data?.length === 0 && 'your thoughts will appear here'}
         {data && data.length > 0 && (
           <ul className="space-y-2">
             {data.map((idea) => (
@@ -31,7 +31,7 @@ const Dashboard: NextPage = async () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard

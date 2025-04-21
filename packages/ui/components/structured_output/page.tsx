@@ -1,4 +1,4 @@
-import { Chat } from "@/components/chat";
+import { Chat } from '@/components/chat'
 
 /**
  * # LangChain.js Structured Output 🦜🔗
@@ -17,5 +17,5 @@ export default function StructuredOutputPage() {
       emoji="🧱"
       titleText="Structured Output"
     ></Chat>
-  );
+  )
 }

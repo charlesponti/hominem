@@ -1,15 +1,15 @@
-import Image from "next/image";
-import { redirect } from "next/navigation";
+import Image from 'next/image'
+import { redirect } from 'next/navigation'
 
-import { getServerAuthSession } from "@/server/auth";
-import AccountDelete from "../account-delete";
+import { getServerAuthSession } from '@/server/auth'
+import AccountDelete from '../account-delete'
 
 const Account = async () => {
-  const session = await getServerAuthSession();
-  const pictureUrl = session?.user?.image as string;
+  const session = await getServerAuthSession()
+  const pictureUrl = session?.user?.image as string
 
   if (!session) {
-    redirect("/");
+    redirect('/')
   }
 
   return (
@@ -21,7 +21,7 @@ const Account = async () => {
           <div className="card-body place-items-center">
             <Image
               alt="profile picture"
-              src={pictureUrl.replace("_normal", "")}
+              src={pictureUrl.replace('_normal', '')}
               width={100}
               height={100}
               className="avatar rounded-full border-2 border-base-content w-28 h-28"
@@ -37,7 +37,7 @@ const Account = async () => {
         <AccountDelete />
       </div>
     </>
-  );
-};
+  )
+}
 
-export default Account;
+export default Account

@@ -1,22 +1,22 @@
-"use client";
+'use client'
 
-import classNames from "classnames";
-import { SyntheticEvent, useCallback, useState } from "react";
+import classNames from 'classnames'
+import { SyntheticEvent, useCallback, useState } from 'react'
 
-import { api } from "@/lib/trpc/react";
-import AlertError from "components/AlertError";
+import { api } from '@/lib/trpc/react'
+import AlertError from 'components/AlertError'
 
 export default function IdeaForm() {
-  const [description, setDescription] = useState("");
-  const { isError, isPending, mutate } = api.idea.createIdea.useMutation();
+  const [description, setDescription] = useState('')
+  const { isError, isPending, mutate } = api.idea.createIdea.useMutation()
 
   const onFormSubmit = useCallback(
     (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      mutate({ description });
+      e.preventDefault()
+      mutate({ description })
     },
-    [mutate, description],
-  );
+    [mutate, description]
+  )
 
   return (
     <>
@@ -37,8 +37,8 @@ export default function IdeaForm() {
         {!!description.length && (
           <button
             className={classNames(
-              "btn btn-primary float-right min-w-full mb-4",
-              isPending && "loading",
+              'btn btn-primary float-right min-w-full mb-4',
+              isPending && 'loading'
             )}
           >
             Submit
@@ -46,5 +46,5 @@ export default function IdeaForm() {
         )}
       </form>
     </>
-  );
+  )
 }

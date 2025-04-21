@@ -10,7 +10,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "lint": "biome lint ./*.ts*"
+    "format": "biome format ./components --fix"
   },
   "dependencies": {
     "@emotion/styled": "^11.8.1",

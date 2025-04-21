@@ -1,10 +1,10 @@
-import Link from "next/link";
+import Link from 'next/link'
 
-import { getServerAuthSession } from "@/server/auth";
-import AuthNavMenu from "./AuthNavMenu";
+import { getServerAuthSession } from '@/server/auth'
+import AuthNavMenu from './AuthNavMenu'
 
 async function Header() {
-  const session = await getServerAuthSession();
+  const session = await getServerAuthSession()
 
   return (
     <nav className="navbar bg-base-100 sticky top-0 left-0 px-0 drop-shadow-sm border-b border-purple-200">
@@ -31,7 +31,7 @@ async function Header() {
         </div>
       </div>
     </nav>
-  );
+  )
 }
 
-export default Header;
+export default Header

@@ -1,10 +1,10 @@
-import Link from "next/link";
-import { ReactNode } from "react";
+import Link from 'next/link'
+import { ReactNode } from 'react'
 
 type LinkButtonProps = {
-  children: ReactNode;
-  href: string;
-};
+  children: ReactNode
+  href: string
+}
 export default function LinkButton({ children, href }: LinkButtonProps) {
   return (
     <Link href={href}>
@@ -12,5 +12,5 @@ export default function LinkButton({ children, href }: LinkButtonProps) {
         {children}
       </span>
     </Link>
-  );
+  )
 }

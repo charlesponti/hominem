@@ -1,27 +1,23 @@
-import classNames from "classnames";
-import AlertError from "components/AlertError";
-import { SyntheticEvent, useCallback } from "react";
-import useListInviteForm from "./useListInviteForm";
+import classNames from 'classnames'
+import AlertError from 'components/AlertError'
+import { SyntheticEvent, useCallback } from 'react'
+import useListInviteForm from './useListInviteForm'
 
 type ListInviteFormProps = {
-  listId: string;
-  onCreate: () => void;
-};
-export default function ListInviteForm({
-  listId,
-  onCreate,
-}: ListInviteFormProps) {
-  const { error, isLoading, email, createListInvite, onNameChange } =
-    useListInviteForm({
-      onCreate,
-    });
+  listId: string
+  onCreate: () => void
+}
+export default function ListInviteForm({ listId, onCreate }: ListInviteFormProps) {
+  const { error, isLoading, email, createListInvite, onNameChange } = useListInviteForm({
+    onCreate,
+  })
   const onFormSubmit = useCallback(
     (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      createListInvite({ listId });
+      e.preventDefault()
+      createListInvite({ listId })
     },
-    [createListInvite, listId],
-  );
+    [createListInvite, listId]
+  )
 
   return (
     <>
@@ -43,8 +39,8 @@ export default function ListInviteForm({
         {!!email.length && (
           <button
             className={classNames(
-              "btn btn-primary float-right min-w-full mb-4 rounded text-white",
-              isLoading && "loading",
+              'btn btn-primary float-right min-w-full mb-4 rounded text-white',
+              isLoading && 'loading'
             )}
           >
             Submit
@@ -52,5 +48,5 @@ export default function ListInviteForm({
         )}
       </form>
     </>
-  );
+  )
 }

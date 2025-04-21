@@ -15,7 +15,8 @@
     "dev": "tsup src/index.ts --target=node18 --outDir build  --external electron --external chromium-bidi --watch",
     "start": "pnpm exec node src/index.ts",
     "prepare": "pnpm run build",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "format": "biome format ./src --fix"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",

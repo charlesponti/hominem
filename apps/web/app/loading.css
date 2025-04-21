@@ -2,7 +2,12 @@
   position: relative;
   overflow: hidden;
   display: inline-block;
-  background: linear-gradient(90deg, rgba(150, 150, 150, 0.4), rgba(255, 255, 255, 0.9), rgba(150, 150, 150, 0.4));
+  background: linear-gradient(
+    90deg,
+    rgba(150, 150, 150, 0.4),
+    rgba(255, 255, 255, 0.9),
+    rgba(150, 150, 150, 0.4)
+  );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent; /* Ensure text is visible with the gradient */

@@ -1,28 +1,28 @@
-import { api } from "@/lib/trpc/server";
-import { getServerAuthSession } from "@/server/auth";
-import LinkButton from "components/LinkButton";
-import ListInviteForm from "components/ListInviteForm";
-import { notFound, redirect } from "next/navigation";
+import { api } from '@/lib/trpc/server'
+import { getServerAuthSession } from '@/server/auth'
+import LinkButton from 'components/LinkButton'
+import ListInviteForm from 'components/ListInviteForm'
+import { notFound, redirect } from 'next/navigation'
 
 export default async function invitesPage({
   params: { id: listId },
 }: {
-  params: { id: string };
+  params: { id: string }
 }) {
-  const session = await getServerAuthSession();
+  const session = await getServerAuthSession()
 
   if (!session) {
-    return redirect("/");
+    return redirect('/')
   }
 
-  const data = await api.lists.findById({ listId });
+  const data = await api.lists.findById({ listId })
 
   if (!data) {
-    return notFound();
+    return notFound()
   }
 
-  const { list } = data;
-  const invites = await api.lists.listInvites({ listId });
+  const { list } = data
+  const invites = await api.lists.listInvites({ listId })
 
   return (
     <>
@@ -60,5 +60,5 @@ export default async function invitesPage({
           </p>
         ))}
     </>
-  );
+  )
 }

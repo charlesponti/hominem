@@ -1,20 +1,20 @@
-"use client";
+'use client'
 
-import { api } from "@/lib/trpc/react";
-import classNames from "classnames";
-import AlertError from "components/AlertError";
-import { SyntheticEvent, useCallback, useState } from "react";
+import { api } from '@/lib/trpc/react'
+import classNames from 'classnames'
+import AlertError from 'components/AlertError'
+import { SyntheticEvent, useCallback, useState } from 'react'
 
 export default function ListForm() {
-  const [name, setName] = useState("");
-  const { mutate, isError, isPending } = api.lists.create.useMutation();
+  const [name, setName] = useState('')
+  const { mutate, isError, isPending } = api.lists.create.useMutation()
   const onFormSubmit = useCallback(
     (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      mutate({ name });
+      e.preventDefault()
+      mutate({ name })
     },
-    [mutate, name],
-  );
+    [mutate, name]
+  )
 
   return (
     <>
@@ -36,8 +36,8 @@ export default function ListForm() {
         {!!name.length && (
           <button
             className={classNames(
-              "btn btn-primary float-right min-w-full mb-4 rounded text-white",
-              isPending && "loading",
+              'btn btn-primary float-right min-w-full mb-4 rounded text-white',
+              isPending && 'loading'
             )}
           >
             Submit
@@ -45,5 +45,5 @@ export default function ListForm() {
         )}
       </form>
     </>
-  );
+  )
 }

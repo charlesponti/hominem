@@ -1,17 +1,17 @@
-import { api } from "@/lib/trpc/server";
-import { getServerAuthSession } from "@/server/auth";
-import DashboardNav from "components/DashboardNav";
-import LinkButton from "components/LinkButton";
-import { redirect } from "next/navigation";
+import { api } from '@/lib/trpc/server'
+import { getServerAuthSession } from '@/server/auth'
+import DashboardNav from 'components/DashboardNav'
+import LinkButton from 'components/LinkButton'
+import { redirect } from 'next/navigation'
 
 export default async function ListInvitesSentPage() {
-  const session = await getServerAuthSession();
+  const session = await getServerAuthSession()
 
   if (!session) {
-    return redirect("/login");
+    return redirect('/login')
   }
 
-  const data = await api.lists.sentInvites();
+  const data = await api.lists.sentInvites()
 
   return (
     <>
@@ -23,7 +23,7 @@ export default async function ListInvitesSentPage() {
       </div>
       <h1>Sent Invites</h1>
       <div>
-        {data?.length === 0 && "Your invites will appear here."}
+        {data?.length === 0 && 'Your invites will appear here.'}
         {data && data.length > 0 && (
           <ul className="space-y-2">
             {data.map((invite) => (
@@ -38,7 +38,7 @@ export default async function ListInvitesSentPage() {
                 </p>
                 <p>
                   <span className="font-semibold mr-2">Accepted:</span>
-                  {invite.accepted ? "Accepted ✅" : "Awaiting acceptance ⏳"}
+                  {invite.accepted ? 'Accepted ✅' : 'Awaiting acceptance ⏳'}
                 </p>
               </li>
             ))}
@@ -46,5 +46,5 @@ export default async function ListInvitesSentPage() {
         )}
       </div>
     </>
-  );
+  )
 }

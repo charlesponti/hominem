@@ -1,4 +1,4 @@
-import { Chat } from "@/components/chat";
+import { Chat } from '@/components/chat'
 
 export default function AgentsPage() {
   const InfoCard = (
@@ -8,11 +8,11 @@ export default function AgentsPage() {
         <li className="text-l">
           🤝
           <span className="ml-2">
-            This template showcases a{" "}
+            This template showcases a{' '}
             <a href="https://js.langchain.com/" target="_blank">
               LangChain.js
-            </a>{" "}
-            agent and the Vercel{" "}
+            </a>{' '}
+            agent and the Vercel{' '}
             <a href="https://sdk.vercel.ai/docs" target="_blank">
               AI SDK
             </a>
@@ -33,7 +33,7 @@ export default function AgentsPage() {
         </li>
       </ul>
     </div>
-  );
+  )
   return (
     <Chat
       endpoint="api/chat/agents"
@@ -42,5 +42,5 @@ export default function AgentsPage() {
       titleText="Polly the Agentic Parrot"
       emoji="🦜"
     ></Chat>
-  );
+  )
 }

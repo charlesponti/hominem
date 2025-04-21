@@ -1,27 +1,27 @@
-"use client";
+'use client'
 
-import { api } from "@/lib/trpc/react";
-import classNames from "classnames";
-import AlertError from "components/AlertError";
-import { SyntheticEvent, useCallback, useState } from "react";
+import { api } from '@/lib/trpc/react'
+import classNames from 'classnames'
+import AlertError from 'components/AlertError'
+import { SyntheticEvent, useCallback, useState } from 'react'
 
 type ListInviteFormProps = {
-  listId: string;
-};
+  listId: string
+}
 export default function ListInviteForm({ listId }: ListInviteFormProps) {
-  const { isError, mutateAsync, isPending } = api.lists.invite.useMutation();
-  const [email, setEmail] = useState("");
+  const { isError, mutateAsync, isPending } = api.lists.invite.useMutation()
+  const [email, setEmail] = useState('')
   const onEmailChange = useCallback((e: SyntheticEvent<HTMLInputElement>) => {
-    setEmail(e.currentTarget.value);
-  }, []);
+    setEmail(e.currentTarget.value)
+  }, [])
 
   const onFormSubmit = useCallback(
     async (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      await mutateAsync({ listId, email });
+      e.preventDefault()
+      await mutateAsync({ listId, email })
     },
-    [email, listId, mutateAsync],
-  );
+    [email, listId, mutateAsync]
+  )
 
   return (
     <div className="mb-8">
@@ -43,8 +43,8 @@ export default function ListInviteForm({ listId }: ListInviteFormProps) {
         {!!email.length && (
           <button
             className={classNames(
-              "btn btn-primary float-right min-w-full mb-4 rounded text-white",
-              isPending && "loading",
+              'btn btn-primary float-right min-w-full mb-4 rounded text-white',
+              isPending && 'loading'
             )}
           >
             Submit
@@ -52,5 +52,5 @@ export default function ListInviteForm({ listId }: ListInviteFormProps) {
         )}
       </form>
     </div>
-  );
+  )
 }

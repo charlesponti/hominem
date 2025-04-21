@@ -1,49 +1,42 @@
-import type React from "react";
-import { useState } from "react";
-
+import type React from 'react'
+import { useState } from 'react'
 
 export const ChatForm: React.FC = () => {
-  const [responseValue, setResponseValue] = useState("");
-  const [inputValue, setInputValue] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [responseValue, setResponseValue] = useState('')
+  const [inputValue, setInputValue] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     try {
       // Make a POST request to the API route
-      const response = await fetch("/api/openai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: inputValue,
         }),
-      });
-      const data = await response.json();
+      })
+      const data = await response.json()
 
       if (response.status !== 200) {
-        setError(data.message);
+        setError(data.message)
       } else {
-        setResponseValue(data.response);
+        setResponseValue(data.response)
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error(error);
-      setError("There was an error with your request. Please try again.");
+      console.error(error)
+      setError('There was an error with your request. Please try again.')
     }
-  };
+  }
 
   return (
     <>
       <h2 className="text-2xl font-bold mb-8 text-center">ChatGPT</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          {error && (
-            <div className="bg-red-500 text-white p-4 mb-4 rounded">
-              {error}
-            </div>
-          )}
-        </div>
+        <div>{error && <div className="bg-red-500 text-white p-4 mb-4 rounded">{error}</div>}</div>
         <div className="flex justify-between">
           <input
             type="text"
@@ -69,5 +62,5 @@ export const ChatForm: React.FC = () => {
         )}
       </div>
     </>
-  );
-};
+  )
+}

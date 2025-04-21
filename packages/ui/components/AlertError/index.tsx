@@ -1,6 +1,6 @@
 type AlertErrorProps = {
-  error?: string;
-};
+  error?: string
+}
 function AlertError({ error }: AlertErrorProps) {
   return (
     <div className="alert alert-error shadow-lg mb-8">
@@ -23,7 +23,7 @@ function AlertError({ error }: AlertErrorProps) {
         </span>
       </div>
     </div>
-  );
+  )
 }
 
-export default AlertError;
+export default AlertError

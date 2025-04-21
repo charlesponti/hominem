@@ -1,22 +1,22 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
-import { api } from "@/lib/trpc/server";
-import { getServerAuthSession } from "@/server/auth";
-import AlertError from "components/AlertError";
-import DashboardNav from "components/DashboardNav";
-import UserPlus from "components/Icons/UserPlus";
+import { api } from '@/lib/trpc/server'
+import { getServerAuthSession } from '@/server/auth'
+import AlertError from 'components/AlertError'
+import DashboardNav from 'components/DashboardNav'
+import UserPlus from 'components/Icons/UserPlus'
 
 export default async function List({
   params: { id: listId },
 }: {
-  params: { id: string };
+  params: { id: string }
 }) {
-  const session = await getServerAuthSession();
-  const data = await api.lists.findById({ listId });
+  const session = await getServerAuthSession()
+  const data = await api.lists.findById({ listId })
 
   if (!session) {
-    redirect("/");
+    redirect('/')
   }
 
   return (
@@ -39,5 +39,5 @@ export default async function List({
         </div>
       )}
     </>
-  );
+  )
 }

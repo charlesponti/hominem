@@ -1,4 +1,4 @@
-import { Chat } from "@/components/chat";
+import { Chat } from '@/components/chat'
 
 /**
  * LangChain.js Retrieval Chain 🦜🔗
@@ -24,5 +24,5 @@ export default function AgentsPage() {
       emoji="🐶"
       titleText="Dana the Document-Retrieving Dog"
     ></Chat>
-  );
+  )
 }

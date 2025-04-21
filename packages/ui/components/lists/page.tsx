@@ -1,19 +1,19 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
-import { api } from "@/lib/trpc/server";
-import { getServerAuthSession } from "@/server/auth";
-import DashboardNav from "components/DashboardNav";
-import ListForm from "components/ListForm";
+import { api } from '@/lib/trpc/server'
+import { getServerAuthSession } from '@/server/auth'
+import DashboardNav from 'components/DashboardNav'
+import ListForm from 'components/ListForm'
 
 export default async function ListsPage() {
-  const session = await getServerAuthSession();
+  const session = await getServerAuthSession()
 
   if (!session) {
-    return redirect("/");
+    return redirect('/')
   }
 
-  const data = await api.lists.get();
+  const data = await api.lists.get()
 
   return (
     <>
@@ -21,7 +21,7 @@ export default async function ListsPage() {
       <h1>Lists</h1>
       <ListForm />
       <div>
-        {data?.length === 0 && "Your lists will appear here."}
+        {data?.length === 0 && 'Your lists will appear here.'}
         {data && data.length > 0 && (
           <ul className="space-y-2">
             {data.map(({ user, ...list }) => (
@@ -39,5 +39,5 @@ export default async function ListsPage() {
         )}
       </div>
     </>
-  );
+  )
 }

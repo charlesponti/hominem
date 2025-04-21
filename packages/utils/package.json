@@ -35,7 +35,8 @@
     "migrate": "pnpm drizzle-kit migrate",
     "db:update": "pnpm drizzle-kit generate && pnpm drizzle-kit migrate",
     "test": "vitest --run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "format": "biome format ./src --fix"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",

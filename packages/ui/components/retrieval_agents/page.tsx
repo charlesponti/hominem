@@ -1,5 +1,5 @@
-import { Chat } from "@/components/chat";
-import { UploadDocumentsForm } from "@/components/UploadDocumentsForm";
+import { Chat } from '@/components/chat'
+import { UploadDocumentsForm } from '@/components/UploadDocumentsForm'
 
 /**
   # 🦜 Retrieval Agent
@@ -25,5 +25,5 @@ export default function AgentsPage() {
         titleText="Robbie the Retrieval Robot"
       ></Chat>
     </>
-  );
+  )
 }

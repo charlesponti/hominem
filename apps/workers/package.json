@@ -9,8 +9,9 @@
   ],
   "scripts": {
     "dev": "pnpm tsx --watch src/import-transactions-worker.ts",
-    "start": "pnpm exec node src/import-transactions-worker.ts",
-    "build": "tsup src/import-transactions-worker.ts --outDir=build --minify"
+    "start": "node src/import-transactions-worker.ts",
+    "build": "tsup src/import-transactions-worker.ts --outDir=build --minify",
+    "format": "biome format ./src --fix"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.782.0",

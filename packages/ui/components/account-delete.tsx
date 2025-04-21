@@ -1,16 +1,16 @@
-"use client";
-import { signOut } from "next-auth/react";
-import { useCallback } from "react";
+'use client'
+import { signOut } from 'next-auth/react'
+import { useCallback } from 'react'
 
-import { api } from "@/lib/trpc/react";
-import AlertError from "components/AlertError";
+import { api } from '@/lib/trpc/react'
+import AlertError from 'components/AlertError'
 
 export default function AccountDelete() {
-  const deleteUser = api.auth.deleteUser.useMutation();
+  const deleteUser = api.auth.deleteUser.useMutation()
   const onDelectAccount = useCallback(async () => {
-    await deleteUser.mutateAsync();
-    signOut();
-  }, [deleteUser]);
+    await deleteUser.mutateAsync()
+    signOut()
+  }, [deleteUser])
 
   return (
     <>
@@ -19,5 +19,5 @@ export default function AccountDelete() {
         Delete account
       </button>
     </>
-  );
+  )
 }

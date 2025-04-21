@@ -25,11 +25,8 @@
     "prepush": "pnpm run test",
     "prerelease": "pnpm run test",
     "start:api": "pnpm --filter @hominem/api run start",
-    "start:web": "pnpm --filter web run start",
-    "test": "turbo run test",
-    "test:ci": "turbo run test",
-    "test:e2e:ci": "turbo run test:e2e:ci",
-    "test:update": "turbo run test:update"
+    "start:web": "pnpm --filter @hominem/web run start",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

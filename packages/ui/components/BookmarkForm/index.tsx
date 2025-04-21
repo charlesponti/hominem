@@ -1,32 +1,30 @@
-"use client";
+'use client'
 
-import { api } from "@/lib/trpc/react";
-import classNames from "classnames";
-import AlertError from "components/AlertError";
-import { url } from "inspector";
-import { SyntheticEvent, useCallback } from "react";
+import { api } from '@/lib/trpc/react'
+import classNames from 'classnames'
+import AlertError from 'components/AlertError'
+import { url } from 'inspector'
+import { SyntheticEvent, useCallback } from 'react'
 
 type BookmarksFormProps = {
-  onCreate?: () => void;
-};
+  onCreate?: () => void
+}
 export default function BookmarksForm({ onCreate }: BookmarksFormProps) {
   const { isPending, isError, mutateAsync } = api.bookmarks.create.useMutation({
     onSuccess: onCreate,
-  });
+  })
 
   const onFormSubmit = useCallback(
     (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      mutateAsync({ url: e.currentTarget.url.value });
+      e.preventDefault()
+      mutateAsync({ url: e.currentTarget.url.value })
     },
-    [mutateAsync],
-  );
+    [mutateAsync]
+  )
 
   return (
     <>
-      {isError && (
-        <AlertError error="There was an issue creating this bookmark." />
-      )}
+      {isError && <AlertError error="There was an issue creating this bookmark." />}
 
       <form onSubmit={onFormSubmit}>
         <div className="form-control w-full mb-2">
@@ -42,8 +40,8 @@ export default function BookmarksForm({ onCreate }: BookmarksFormProps) {
         {!!url.length && (
           <button
             className={classNames(
-              "btn btn-primary float-right min-w-full mb-4 rounded text-white",
-              { loading: isPending },
+              'btn btn-primary float-right min-w-full mb-4 rounded text-white',
+              { loading: isPending }
             )}
           >
             Submit
@@ -51,5 +49,5 @@ export default function BookmarksForm({ onCreate }: BookmarksFormProps) {
         )}
       </form>
     </>
-  );
+  )
 }

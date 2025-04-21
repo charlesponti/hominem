@@ -1,14 +1,14 @@
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation'
 
 // import BookmarksForm from "@/components/BookmarkForm";
-import Bookmarks from "@/components/bookmarks";
-import { getServerAuthSession } from "@/server/auth";
+import Bookmarks from '@/components/bookmarks'
+import { getServerAuthSession } from '@/server/auth'
 
 export default async function BookmarksPage() {
-  const session = await getServerAuthSession();
+  const session = await getServerAuthSession()
 
   if (!session) {
-    return redirect("/");
+    return redirect('/')
   }
 
   return (
@@ -17,5 +17,5 @@ export default async function BookmarksPage() {
       {/* <BookmarksForm /> */}
       <Bookmarks />
     </div>
-  );
+  )
 }

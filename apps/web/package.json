@@ -6,7 +6,7 @@
     "dev": "next dev --port 4444",
     "build": "next build",
     "start": "next start",
-    "lint": "biome lint app",
+    "format": "biome format app --fix",
     "test": "vitest --run --passWithNoTests"
   },
   "dependencies": {
