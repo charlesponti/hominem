@@ -49,16 +49,17 @@ export async function chatPlugin(fastify: FastifyInstance) {
 
     try {
       const activeChatId = request.cookies.activeChat
-      const chat = await chatService.getOrCreateActiveChat(userId, activeChatId)
+      const chat = await chatService.getOrCreateActiveChat(userId, activeChatId, async (chatId) => {
+        // Remove chatId from cookies if it doesn't exist
+        reply.clearCookie('activeChat')
+      })
 
       if (!chat) {
         return reply.code(500).send({ error: 'Failed to get or create chat' })
       }
 
       // Set cookie for new chats
-      if (!activeChatId) {
-        reply.setCookie('activeChat', chat.id)
-      }
+      reply.setCookie('activeChat', chat.id)
 
       // Get last 20 messages with processed tool calls and results
       const history = await chatService.getConversationWithToolCalls(chat.id, {

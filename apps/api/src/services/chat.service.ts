@@ -54,7 +54,11 @@ export class ChatService {
   /**
    * Get or create an active chat for a user
    */
-  async getOrCreateActiveChat(userId: string, chatId?: string) {
+  async getOrCreateActiveChat(
+    userId: string,
+    chatId?: string,
+    onChatDoesNotExist?: (chatId: string) => Promise<void>
+  ) {
     try {
       if (chatId) {
         const existingChat = await db
@@ -64,6 +68,10 @@ export class ChatService {
           .limit(1)
           .then(takeUniqueOrThrow)
           .catch(() => null)
+
+        if (!existingChat) {
+          await onChatDoesNotExist?.(chatId)
+        }
 
         if (existingChat) {
           return existingChat
