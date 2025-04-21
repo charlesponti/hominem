@@ -8,10 +8,11 @@ const DATABASE_URL =
     ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
     : process.env.DATABASE_URL
 
+let client: ReturnType<typeof postgres> | null = null
 let db: PostgresJsDatabase<typeof schema>
 
 if (DATABASE_URL) {
-  const client = postgres(DATABASE_URL)
+  client = postgres(DATABASE_URL)
   db = drizzle(client, { schema })
 } else {
   logger.warn(
@@ -19,7 +20,7 @@ if (DATABASE_URL) {
   )
 }
 
-export { db }
+export { client, db }
 
 export const takeOne = <T>(values: T[]): T | undefined => {
   return values[0]
