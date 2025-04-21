@@ -43,6 +43,13 @@
       "when": 1741971386503,
       "tag": "0005_wealthy_mystique",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1745263873289,
+      "tag": "0006_worried_sumo",
+      "breakpoints": true
     }
   ]
 }
