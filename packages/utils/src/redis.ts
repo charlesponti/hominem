@@ -4,13 +4,6 @@ import delay from './utils/delay.utils'
 
 const { REDIS_URL } = process.env
 
-// Log warning if Redis is not available
-if (!REDIS_URL) {
-  throw new Error(
-    'REDIS_URL not provided. Using in-memory mock implementation. Some features may be limited.'
-  )
-}
-
 export const redis = new Redis(`${REDIS_URL}?family=0`)
 const MAX_REQUESTS = 50
 

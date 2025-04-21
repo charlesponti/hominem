@@ -1,13 +1,15 @@
 import { clerkPlugin } from '@clerk/fastify'
 import fastifyCircuitBreaker from '@fastify/circuit-breaker'
-import fastifyCookie from '@fastify/cookie'
 import type { FastifyCookieOptions } from '@fastify/cookie'
+import fastifyCookie from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyMultipart from '@fastify/multipart'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
 
+import { client } from '@hominem/utils/db' // Import the postgres client
+import { redis } from '@hominem/utils/redis' // Import the redis client
 import { env } from './lib/env'
 import adminPlugin from './plugins/admin'
 import bookmarksPlugin from './plugins/bookmarks'
@@ -66,8 +68,12 @@ export async function createServer(
     await server.register(fastifyHelmet)
 
     // Register Clerk plugin if keys are provided and not empty
-    if (env.CLERK_SECRET_KEY && env.CLERK_PUBLISHABLE_KEY && 
-        env.CLERK_SECRET_KEY !== '' && env.CLERK_PUBLISHABLE_KEY !== '') {
+    if (
+      env.CLERK_SECRET_KEY &&
+      env.CLERK_PUBLISHABLE_KEY &&
+      env.CLERK_SECRET_KEY !== '' &&
+      env.CLERK_PUBLISHABLE_KEY !== ''
+    ) {
       await server.register(clerkPlugin, {
         secretKey: env.CLERK_SECRET_KEY,
         publishableKey: env.CLERK_PUBLISHABLE_KEY,
@@ -105,6 +111,33 @@ export async function createServer(
     await server.register(financeRoutes, { prefix: '/api/finance' })
     await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })
     await server.register(webSocketPlugin)
+
+    // --- Add onClose hooks ---
+    server.addHook('onClose', async (instance) => {
+      instance.log.info('Closing connections...')
+      const promises = []
+      if (redis && typeof redis.quit === 'function') {
+        instance.log.info('Closing Redis connection...')
+        promises.push(
+          redis.quit().catch((err) => instance.log.error({ err }, 'Error closing Redis'))
+        )
+      } else {
+        instance.log.warn('Redis client not available or quit function missing.')
+      }
+      if (client && typeof client.end === 'function') {
+        instance.log.info('Closing database connection...')
+        promises.push(
+          client
+            .end({ timeout: 5 })
+            .catch((err: unknown) => instance.log.error({ err }, 'Error closing database'))
+        ) // 5 second timeout
+      } else {
+        instance.log.warn('Database client not available or end function missing.')
+      }
+      await Promise.all(promises)
+      instance.log.info('Connections closed.')
+    })
+    // --- End onClose hooks ---
 
     server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
       return (data) => schema.parse(data)
