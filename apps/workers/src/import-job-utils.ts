@@ -10,7 +10,6 @@ export const JOB_EXPIRATION_TIME = 60 * 60 * 24 // 24 hours
  */
 export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
   try {
-    logger.info('Getting active jobs from Redis...')
     const jobKeys = await redis.keys(`${IMPORT_JOB_PREFIX}*`)
     if (!jobKeys.length) {
       return []
