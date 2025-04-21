@@ -1,6 +1,7 @@
 import { openai } from '@ai-sdk/openai'
 import { generateObject, generateText } from 'ai'
 import { z } from 'zod'
+import { tools as financeTools } from '../finance/finance.tools'
 import * as bookmarkTools from './bookmarks.tools'
 import * as careerTools from './career.tools'
 import * as generalTools from './general'
@@ -84,6 +85,7 @@ export const allTools = {
   ...userTools,
   ...notesTools,
   ...careerTools,
+  ...financeTools,
   ...bookmarkTools,
   ...listTools,
   ...placeTools,
