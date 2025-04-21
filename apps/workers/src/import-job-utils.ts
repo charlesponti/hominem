@@ -1,6 +1,6 @@
-// Utility functions for import jobs
-import fs from 'node:fs/promises'
-import { logger } from '../../../packages/utils/src/logger.ts'
+import { logger } from '@hominem/utils/logger'
+import { redis } from '@hominem/utils/redis'
+import type { ImportTransactionsJob } from './utils.ts'
 
 export const IMPORT_JOB_PREFIX = 'import:job:'
 export const JOB_EXPIRATION_TIME = 60 * 60 * 24 // 24 hours
@@ -8,11 +8,27 @@ export const JOB_EXPIRATION_TIME = 60 * 60 * 24 // 24 hours
 /**
  * Get active import jobs from Redis
  */
-export async function getActiveJobs(): Promise<string[]> {
+export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
   try {
-    // Mocked implementation
-    logger.info('Getting active jobs')
-    return ['job1', 'job2'] 
+    logger.info('Getting active jobs from Redis...')
+    const jobKeys = await redis.keys(`${IMPORT_JOB_PREFIX}*`)
+    if (!jobKeys.length) {
+      return []
+    }
+    const jobsData = await redis.mget(jobKeys)
+    const jobs = jobsData
+      .map((jobStr) => {
+        try {
+          return jobStr ? (JSON.parse(jobStr) as ImportTransactionsJob) : null
+        } catch (e) {
+          logger.error('Failed to parse job data:', e, jobStr)
+          return null
+        }
+      })
+      .filter((job): job is ImportTransactionsJob => job !== null && job.status === 'queued') // Only return queued jobs
+
+    logger.info(`Found ${jobs.length} active jobs`)
+    return jobs
   } catch (error) {
     logger.error('Failed to get active jobs', error)
     return []
@@ -24,22 +40,32 @@ export async function getActiveJobs(): Promise<string[]> {
  */
 export async function removeJobFromQueue(jobId: string): Promise<void> {
   try {
-    logger.info(`Removing job ${jobId} from queue`)
-    // Implementation would remove from Redis
+    const jobKey = `${IMPORT_JOB_PREFIX}${jobId}`
+    logger.info(`Removing job ${jobId} (${jobKey}) from queue`)
+    await redis.del(jobKey)
   } catch (error) {
     logger.error(`Failed to remove job ${jobId}`, error)
   }
 }
 
 /**
- * Get the content of an import file
+ * Get the content of an import file (simulated)
+ * In a real scenario, this might fetch from storage like S3 or a local cache.
  */
-export async function getImportFileContent(filePath: string): Promise<string> {
+export async function getImportFileContent(jobId: string): Promise<string> {
   try {
-    logger.info(`Reading import file: ${filePath}`)
-    return 'mocked-file-content' // Replace with fs.readFile in actual implementation
+    // Simulate fetching content based on jobId - replace with actual logic
+    logger.info(`Simulating fetching import file content for job: ${jobId}`)
+    // Example: return await fs.readFile(`/path/to/imports/${jobId}.csv`, 'utf-8')
+    // For now, return mock CSV data
+    const mockCsv = `"Account","Date","Amount","Description","Category"
+"Checking","2025-04-20","-50.00","Coffee Shop","Food & Drink"
+"Savings","2025-04-19","1000.00","Paycheck","Income"
+`
+    // Return as base64 encoded string as expected by the worker
+    return Buffer.from(mockCsv).toString('base64')
   } catch (error) {
-    logger.error(`Failed to read import file ${filePath}`, error)
-    throw new Error(`Failed to read import file: ${error}`)
+    logger.error(`Failed to get import file content for job ${jobId}`, error)
+    throw new Error(`Failed to get import file content: ${error}`)
   }
 }

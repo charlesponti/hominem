@@ -285,7 +285,10 @@ export async function* processTransactionsFromCSV({
   maxRetries = DEFAULT_PROCESSING_CONFIG.maxRetries,
   retryDelay = DEFAULT_PROCESSING_CONFIG.retryDelay,
   userId,
-}: ProcessTransactionOptions & { userId: string }): AsyncGenerator<ProcessTransactionResult> {
+}: ProcessTransactionOptions & {
+  accountId?: string
+  userId: string
+}): AsyncGenerator<ProcessTransactionResult> {
   logger.info({
     msg: 'Starting transaction processing from string',
     fileName,

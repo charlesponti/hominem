@@ -8,7 +8,7 @@
     "build"
   ],
   "scripts": {
-    "dev": "pnpm exec node --watch src/import-transactions-worker.ts",
+    "dev": "pnpm tsx --watch src/import-transactions-worker.ts",
     "start": "pnpm exec node src/import-transactions-worker.ts",
     "build": "tsup src/import-transactions-worker.ts --outDir=build --minify"
   },

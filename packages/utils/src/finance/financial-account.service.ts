@@ -1,9 +1,9 @@
 import { db } from '../db/index'
-import { type FinanceAccountInsert, financeAccounts } from '../db/schema'
+import { type FinanceAccount, type FinanceAccountInsert, financeAccounts } from '../db/schema'
 import { logger } from '../logger'
 
 class FinancialAccountService {
-  public async getAccountsMap() {
+  public async getAccountsMap(): Promise<Map<string, FinanceAccount>> {
     try {
       const accounts = await db.select().from(financeAccounts)
       return new Map(accounts.map((acc) => [acc.name, acc]))

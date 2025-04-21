@@ -4,8 +4,9 @@
   "extends": "@hominem/tsconfigs/node.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": ".",
     "outDir": "build",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "composite": true,
     "declaration": true,
     "module": "ESNext",

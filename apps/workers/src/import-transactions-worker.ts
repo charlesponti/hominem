@@ -6,7 +6,9 @@
 import './env.ts'
 
 // Use local utility files to avoid ESM resolution issues
-import { parseTransactionString, processTransactionsFromCSV } from './finance-utils.ts'
+import { processTransactionsFromCSV } from '@hominem/utils/finance'
+import { logger } from '@hominem/utils/logger'
+import { redis } from '@hominem/utils/redis'
 import {
   getActiveJobs,
   getImportFileContent,
@@ -14,10 +16,7 @@ import {
   JOB_EXPIRATION_TIME,
   removeJobFromQueue,
 } from './import-job-utils.ts'
-import { logger } from '../../../packages/utils/src/logger.ts'
-import { redis } from './redis-utils.ts'
-import { retryWithBackoff } from './utils.ts'
-import type { BaseJob, ImportTransactionsJob } from './utils.ts'
+import type { BaseJob, ImportTransactionsJob, JobStats } from './utils.ts'
 
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
@@ -30,9 +29,9 @@ const CHUNK_SIZE = 1000 // Process 1000 transactions at a time
 /**
  * Update job status in Redis with retry logic
  */
-export async function updateJobStatus<T>(
+export async function updateJobStatus<T extends BaseJob>(
   jobId: string,
-  update: Partial<T extends BaseJob ? T : BaseJob>,
+  update: Partial<T>,
   retries = MAX_RETRIES
 ) {
   try {
@@ -40,14 +39,44 @@ export async function updateJobStatus<T>(
     const pipeline = redis.pipeline()
 
     // Get current state
-    const current = JSON.parse((await redis.get(jobKey)) || '{}') as T
+    const currentJobString = await redis.get(jobKey)
+    if (!currentJobString) {
+      logger.warn(`Job ${jobId} not found in Redis. Skipping update.`)
+      return undefined
+    }
+    const current = JSON.parse(currentJobString) as ImportTransactionsJob
+
+    // Merge update into current state
     const updated = { ...current, ...update }
+
+    // Special handling for stats: Only merge if both current and update are ImportTransactionsJob compatible
+    // And both have stats properties involved.
+    if (
+      updated.type === 'import-transactions' &&
+      'stats' in update &&
+      update.stats &&
+      'stats' in current &&
+      current.stats
+    ) {
+      // Use type assertion now that we've confirmed the type and presence of stats
+      const currentImportJob = current
+      const updateImportJob = update as Partial<ImportTransactionsJob>
+      const mergedStats = {
+        ...(currentImportJob.stats || {}),
+        ...(updateImportJob.stats || {}),
+      }
+      // Assign merged stats back to the updated object (which is known to be ImportTransactionsJob here)
+      ;(updated as ImportTransactionsJob).stats = mergedStats
+    }
 
     // Update job in Redis with TTL
     pipeline.set(jobKey, JSON.stringify(updated), 'EX', JOB_EXPIRATION_TIME)
 
-    // Publish progress update if provided
-    if (update.stats?.progress !== undefined) {
+    // Publish progress update if the job is ImportTransactionsJob and has progress
+    if (
+      updated.type === 'import-transactions' &&
+      (updated as ImportTransactionsJob).stats?.progress !== undefined
+    ) {
       pipeline.publish(IMPORT_PROGRESS_CHANNEL, JSON.stringify([updated]))
     }
 
@@ -57,7 +86,7 @@ export async function updateJobStatus<T>(
     if (retries > 0) {
       logger.warn(`Retrying update for job ${jobId}, attempts remaining: ${retries}`)
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY))
-      return updateJobStatus(jobId, update, retries - 1)
+      return updateJobStatus<T>(jobId, update, retries - 1)
     }
     logger.error(`Failed to update job status for ${jobId} after ${MAX_RETRIES} retries:`, error)
     throw error
@@ -68,7 +97,7 @@ export async function updateJobStatus<T>(
  * Process an import job in the background with retry logic
  */
 export async function processImportJob(job: ImportTransactionsJob) {
-  const { jobId, fileName, userId } = job
+  const { id: jobId, file: fileName, userId } = job
 
   // Check that userId exists
   if (!userId) {
@@ -78,8 +107,6 @@ export async function processImportJob(job: ImportTransactionsJob) {
       endTime: Date.now(),
       error: 'Missing userId in job',
       stats: {
-        progress: 0,
-        processingTime: 0,
         created: 0,
         updated: 0,
         skipped: 0,
@@ -87,6 +114,8 @@ export async function processImportJob(job: ImportTransactionsJob) {
         total: 0,
         invalid: 0,
         errors: ['Missing userId in job'],
+        progress: 0,
+        processingTime: 0,
       },
     })
     return
@@ -94,97 +123,112 @@ export async function processImportJob(job: ImportTransactionsJob) {
 
   logger.info(`Starting import job ${jobId} for file ${fileName} for user ${userId}`)
 
+  const stats: JobStats = {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    merged: 0,
+    total: 0,
+    invalid: 0,
+    errors: [],
+    progress: 0,
+    processingTime: 0,
+  }
+
+  const startTime = Date.now()
+
   try {
-    // Update job to prevent other workers from processing it
     await updateJobStatus<ImportTransactionsJob>(jobId, {
       status: 'processing',
+      startTime: startTime,
       stats: { progress: 0 },
-      startTime: Date.now(),
     })
 
-    // Get CSV content
-    const csvContent = await getImportFileContent(jobId)
-    if (!csvContent) {
+    const csvContentBase64 = await getImportFileContent(jobId)
+    if (!csvContentBase64) {
       throw new Error(`CSV content not found for job ${jobId}`)
     }
 
-    // Decode and parse CSV content with required userId
-    const decodedContent = Buffer.from(csvContent, 'base64').toString('utf-8')
-    const transactions = await retryWithBackoff(
-      () => parseTransactionString(decodedContent, userId),
-      {
-        retries: MAX_RETRIES,
-        delay: RETRY_DELAY,
-      }
-    )
-    const totalTransactions = transactions.length
-    logger.info(`Job ${jobId}: Parsed ${totalTransactions} transactions from CSV`)
+    const decodedContent = Buffer.from(csvContentBase64, 'base64').toString('utf-8')
+    logger.info(`Job ${jobId}: Decoded CSV content (length: ${decodedContent.length})`)
 
-    const startTime = Date.now()
-    const stats: Required<ImportTransactionsJob['stats']> = {
-      created: 0,
-      updated: 0,
-      skipped: 0,
-      merged: 0,
-      total: 0,
-      invalid: 0,
-      errors: [],
-      progress: 0,
-      processingTime: 0,
+    let processedCount = 0
+    const totalEstimate = decodedContent.split('\n').length - 1
+
+    const countableActionKeys: ReadonlyArray<
+      keyof Pick<JobStats, 'created' | 'updated' | 'skipped' | 'merged' | 'invalid'>
+    > = ['created', 'updated', 'skipped', 'merged', 'invalid']
+
+    // Type guard using the specific keys array type
+    const isCountableActionKey = (key: string): key is (typeof countableActionKeys)[number] => {
+      return countableActionKeys.includes(key as (typeof countableActionKeys)[number])
     }
 
-    // Process transactions in chunks
+    // Process transactions in batches
     for await (const result of processTransactionsFromCSV({
       fileName,
       csvContent: decodedContent,
-      deduplicateThreshold: job.options.deduplicateThreshold,
-      batchSize: job.options.batchSize || 20,
-      batchDelay: job.options.batchDelay || 200,
+      userId,
+      accountId: job.accountId,
+      deduplicateThreshold: job.options?.deduplicateThreshold,
+      batchSize: job.options?.batchSize,
+      batchDelay: job.options?.batchDelay,
       maxRetries: MAX_RETRIES,
       retryDelay: RETRY_DELAY,
-      userId,
     })) {
-      if (result.action) stats[result.action]++
+      processedCount++
       stats.total++
 
-      const progress = Math.min(100, Math.round((stats.total / totalTransactions) * 100))
-      stats.progress = progress
-      stats.processingTime = Date.now() - startTime
-
-      // Update status less frequently to reduce Redis load
-      if (stats.total % 100 === 0 || progress % 10 === 0) {
-        await updateJobStatus(jobId, { stats })
+      if (result.action) {
+        if (isCountableActionKey(result.action)) {
+          // Now the type of result.action is narrowed correctly
+          stats[result.action]++
+        } else {
+          logger.warn(
+            `Job ${jobId}: Received unexpected action key '${result.action}' from processor`
+          )
+          stats.invalid++
+        }
       }
 
-      // Free up memory periodically
-      if (stats.total % CHUNK_SIZE === 0) {
-        global.gc?.()
+      if (processedCount % 100 === 0 && totalEstimate > 0) {
+        stats.progress = Math.min(99, Math.round((processedCount / totalEstimate) * 100))
+        stats.processingTime = Date.now() - startTime
+        await updateJobStatus<ImportTransactionsJob>(jobId, {
+          stats: { progress: stats.progress, processingTime: stats.processingTime },
+        })
       }
     }
 
-    const endTime = Date.now()
-    const finalStats = {
-      ...stats,
-      progress: 100,
-      processingTime: endTime - startTime,
-    }
+    stats.progress = 100
+    stats.processingTime = Date.now() - startTime
 
     logger.info(
-      `Job ${jobId} completed: ${stats.total} transactions processed in ${finalStats.processingTime}ms`
+      `Job ${jobId} completed: ${stats.total} transactions processed in ${stats.processingTime}ms`,
+      {
+        created: stats.created,
+        updated: stats.updated,
+        skipped: stats.skipped,
+        merged: stats.merged,
+        invalid: stats.invalid,
+      }
     )
 
     await updateJobStatus<ImportTransactionsJob>(jobId, {
       status: 'done',
-      endTime,
-      stats: finalStats,
+      endTime: Date.now(),
+      stats: stats,
     })
 
-    // Remove import job from Redis (pass userId for efficiency)
-    await removeJobFromQueue(jobId, userId)
+    await removeJobFromQueue(jobId)
     logger.info(`Job ${jobId} removed from Redis`)
+
+    global.gc?.()
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error(`Job ${jobId} failed:`, error)
+    stats.errors.push(errorMessage)
+    stats.processingTime = Date.now() - startTime
 
     try {
       await updateJobStatus<ImportTransactionsJob>(jobId, {
@@ -192,15 +236,8 @@ export async function processImportJob(job: ImportTransactionsJob) {
         endTime: Date.now(),
         error: errorMessage,
         stats: {
-          progress: 0,
-          processingTime: 0,
-          created: 0,
-          updated: 0,
-          skipped: 0,
-          merged: 0,
-          total: 0,
-          invalid: 0,
-          errors: [errorMessage],
+          ...stats,
+          progress: stats.progress,
         },
       })
     } catch (updateError) {
@@ -209,7 +246,6 @@ export async function processImportJob(job: ImportTransactionsJob) {
   }
 }
 
-// Poll for active jobs
 let isProcessing = false
 setInterval(async () => {
   logger.debug('Polling for active jobs...')
@@ -220,41 +256,62 @@ setInterval(async () => {
 
   try {
     isProcessing = true
-    const activeJobs = await getActiveJobs<ImportTransactionsJob>()
+    const activeJobs = await getActiveJobs()
 
-    // Process each active job
     for (const job of activeJobs) {
-      if (!job.options) {
-        logger.warn(`Job ${job.jobId} has no options, removing from queue`)
-        await removeJobFromQueue(job.jobId, job.userId)
+      if (!job?.id || !job?.userId) {
+        // Use optional chaining
+        logger.error('Received invalid job data from getActiveJobs (should not happen): ', job)
+        if (job?.id) {
+          // Use optional chaining
+          await removeJobFromQueue(job.id)
+        }
         continue
       }
 
       try {
-        logger.info(`Processing job ${job.jobId} (${job.fileName})`)
+        logger.info(`Processing job ${job.id} (${job.file}) for user ${job.userId}`)
         await processImportJob(job)
-        logger.info(`Job ${job.jobId} processed successfully`)
+        logger.info(`Job ${job.id} processed successfully`)
       } catch (error) {
-        logger.error(`Failed to process job ${job.jobId}:`, error)
+        logger.error(`Unexpected error during processing call for job ${job.id}:`, error)
+        try {
+          await updateJobStatus<ImportTransactionsJob>(job.id, {
+            status: 'error',
+            error: `Worker failed unexpectedly: ${error instanceof Error ? error.message : String(error)}`,
+            endTime: Date.now(),
+          })
+        } catch (statusUpdateError) {
+          logger.error(
+            `Failed to update job ${job.id} status after unexpected error:`,
+            statusUpdateError
+          )
+        }
       }
     }
   } catch (error) {
-    logger.error('Error in job polling:', error)
+    logger.error('Error in job polling loop:', error)
   } finally {
     isProcessing = false
   }
 }, POLLING_INTERVAL)
 
-// Cleanup on process exit
 process.on('SIGTERM', async () => {
   logger.info('Received SIGTERM, cleaning up...')
   try {
-    const activeJobs = await getActiveJobs<ImportTransactionsJob>()
+    const activeJobs = await getActiveJobs()
     for (const job of activeJobs) {
-      await updateJobStatus<ImportTransactionsJob>(job.jobId, { status: 'queued' })
+      if (job?.id && job?.status === 'processing') {
+        // Use optional chaining
+        logger.info(`Resetting job ${job.id} status to 'queued' due to SIGTERM`)
+        await updateJobStatus<ImportTransactionsJob>(job.id, {
+          status: 'queued',
+          startTime: undefined,
+        })
+      }
     }
   } catch (error) {
-    logger.error('Error during cleanup:', error)
+    logger.error('Error during SIGTERM cleanup:', error)
   }
   process.exit(0)
 })

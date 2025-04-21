@@ -1,6 +1,6 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
-import { logger } from '../logger'
 import postgres from 'postgres'
+import { logger } from '../logger'
 import * as schema from './schema'
 
 const DATABASE_URL =
@@ -8,56 +8,15 @@ const DATABASE_URL =
     ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
     : process.env.DATABASE_URL
 
-// Create a mock DB client if DATABASE_URL is not provided
-class MockDB {
-  async select() { 
-    return this 
-  }
-  async from() { 
-    return this 
-  }
-  async where() { 
-    return [] 
-  }
-  async orderBy() { 
-    return []
-  }
-  async limit() {
-    return []
-  }
-  async insert() { 
-    return { 
-      values: () => ({
-        returning: () => [{ id: 'mock-id' }]
-      })
-    }
-  }
-  async update() {
-    return {
-      set: () => ({
-        where: () => ({
-          returning: () => []
-        })
-      })
-    }
-  }
-  async delete() {
-    return {
-      where: () => ({ count: 0 })
-    }
-  }
-}
+let db: PostgresJsDatabase<typeof schema>
 
-let client: any
-let db: any
-
-// Only create a real DB connection if DATABASE_URL is available
 if (DATABASE_URL) {
-  client = postgres(DATABASE_URL)
+  const client = postgres(DATABASE_URL)
   db = drizzle(client, { schema })
 } else {
-  logger.warn('DATABASE_URL not provided. Using in-memory mock implementation. Some features may be limited.')
-  db = new MockDB()
+  logger.warn(
+    'DATABASE_URL not provided. Using in-memory mock implementation. Some features may be limited.'
+  )
 }
 
 export { db }
