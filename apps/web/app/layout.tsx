@@ -31,7 +31,9 @@ export default async function RootLayout({
           <div className="bg-background text-foreground min-h-screen min-w-full flex flex-col max-h-screen overflow-x-hidden">
             <MainNavigation />
             <main className="flex-1 overflow-y-auto pt-4 pb-safe-area-inset-bottom">
-              <div className="md:container md:mx-auto px-4 overflow-x-hidden">{children}</div>
+              <div className="md:container md:mx-auto md:h-[calc(100dvh-85px)] px-4 overflow-x-hidden">
+                {children}
+              </div>
             </main>
           </div>
         </Providers>
