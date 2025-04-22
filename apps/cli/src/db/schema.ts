@@ -13,9 +13,6 @@ export type Venue = typeof venues.$inferSelect
 export const markdownEntries = sqliteTable('markdown_entries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   filePath: text('file_path').notNull(),
-  processingDate: integer('processing_date', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
   text: text('text').notNull(),
   section: text('section').notNull(),
   isTask: integer('is_task', { mode: 'boolean' }),

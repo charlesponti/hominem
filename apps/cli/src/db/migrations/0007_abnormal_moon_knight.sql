@@ -1,0 +1,1 @@
+ALTER TABLE `markdown_entries` DROP COLUMN `processing_date`;

@@ -45,7 +45,6 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
             textAnalysis: null,
             createdAt: new Date(),
             updatedAt: new Date(),
-            processingDate: new Date(),
           })
           paragraphBuffer = []
         }
@@ -62,7 +61,6 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
             const { isTask, isComplete } = detectTask(trimmed)
             await db.insert(markdownEntries).values({
               filePath,
-              processingDate: new Date(),
               text: trimmed,
               section: currentHeading || baseName,
               isTask,
