@@ -1,6 +1,4 @@
-import type { SQLWrapper } from 'drizzle-orm'
 import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
-import fs from 'node:fs/promises'
 import { db } from '../db/index'
 import {
   financeAccounts,
@@ -10,8 +8,7 @@ import {
 } from '../db/schema/finance.schema'
 import type { Possession } from '../db/schema/possessions.schema'
 import { logger } from '../logger'
-import { CopilotTransactionSchema } from './banks/copilot'
-import type { CategoryAggregate, DateRangeInput } from './types'
+import type { CategoryAggregate } from './types'
 
 export interface ItemCategory {
   id: number
@@ -87,8 +84,6 @@ export function buildWhereConditions(options: QueryOptions) {
 }
 
 export async function queryTransactions(options: QueryOptions) {
-  logger.info(JSON.stringify({ ms: 'Querying transactions', options }, null, 2))
-
   const whereConditions = buildWhereConditions(options)
   const limit = options.limit || 100
 
@@ -117,8 +112,6 @@ export async function queryTransactions(options: QueryOptions) {
 }
 
 export async function summarizeByCategory(options: QueryOptions) {
-  logger.info(JSON.stringify({ ms: 'Summarizing by category', options }, null, 2))
-
   const whereConditions = buildWhereConditions(options)
   const limit = options.limit || 10
 
@@ -150,17 +143,6 @@ export async function summarizeByCategory(options: QueryOptions) {
 }
 
 export async function summarizeByMonth(options: QueryOptions) {
-  logger.info(
-    JSON.stringify(
-      {
-        msg: 'Summarizing by month',
-        options,
-      },
-      null,
-      2
-    )
-  )
-
   const whereConditions = buildWhereConditions(options)
 
   const result = await db
@@ -191,17 +173,6 @@ export async function summarizeByMonth(options: QueryOptions) {
 }
 
 export async function findTopMerchants(options: QueryOptions) {
-  logger.info(
-    JSON.stringify(
-      {
-        msg: 'Finding top merchants',
-        options,
-      },
-      null,
-      2
-    )
-  )
-
   const whereConditions = buildWhereConditions(options)
   const limit = options.limit || 10
 
@@ -227,17 +198,6 @@ export async function findTopMerchants(options: QueryOptions) {
     firstTransaction: row.firstTransaction,
     lastTransaction: row.lastTransaction,
   }))
-}
-
-export function getDateRangeConditions(dateRange?: DateRangeInput): SQLWrapper[] {
-  const conditions: SQLWrapper[] = []
-  if (dateRange?.from) {
-    conditions.push(gte(transactions.date, new Date(dateRange.from)))
-  }
-  if (dateRange?.to) {
-    conditions.push(lte(transactions.date, new Date(dateRange.to)))
-  }
-  return conditions
 }
 
 export function aggregateByCategory(transactions: Transaction[]): CategoryAggregate[] {
@@ -276,50 +236,6 @@ export function aggregateByMonth(transactions: Transaction[]) {
     totalAmount,
     count,
   }))
-}
-
-export type ProcessingStats = { processed: number; skipped: number; merged: number }
-
-export function isSimilarTransaction(tx1: TransactionInsert, tx2: TransactionInsert): boolean {
-  const tx1Description = tx1.description || ''
-  const tx2Description = tx2.description || ''
-
-  // Check if date, amount, and type match
-  if (tx1.date !== tx2.date || tx1.amount !== tx2.amount || tx1.type !== tx2.type) {
-    return false
-  }
-
-  // Check for name similarity - exact match or substring
-  if (tx1Description === tx2Description) {
-    return true
-  }
-
-  // Check if one name contains the other (for shortened/extended names)
-  if (tx1Description.includes(tx2Description) || tx2Description.includes(tx1Description)) {
-    return true
-  }
-
-  // Check if names are similar using basic string similarity
-  const name1 = tx1Description.toLowerCase().replace(/[^a-z0-9]/g, '')
-  const name2 = tx2Description.toLowerCase().replace(/[^a-z0-9]/g, '')
-
-  // If one name is contained within the other after normalization
-  if (name1.includes(name2) || name2.includes(name1)) {
-    return true
-  }
-
-  return false
-}
-
-export async function findTransactionFiles(directory: string): Promise<string[]> {
-  logger.info(`Scanning directory: ${directory}`)
-  const files = await fs.readdir(directory)
-  const csvContents = files
-    .filter((file) => file.endsWith('.csv') && file.startsWith('transactions-'))
-    .sort() // Process files in chronological order
-
-  logger.info(`Found ${csvContents.length} CSV files to process`)
-  return csvContents
 }
 
 export async function findExistingTransaction(tx: {
@@ -409,52 +325,4 @@ export async function updateTransactionIfNeeded(
   }
 
   return false
-}
-
-export async function* validateTransactions(
-  transactions: Record<string, string | null | Date | unknown>[],
-  fileName: string
-): AsyncGenerator<{
-  valid: boolean
-  transaction: Record<string, string | null | Date | unknown>
-  issue?: string
-}> {
-  logger.info(`Validating ${transactions.length} transactions from ${fileName}`)
-
-  for (const tx of transactions) {
-    try {
-      const validatedTx = CopilotTransactionSchema.safeParse(tx)
-      if (!validatedTx.success) {
-        yield { valid: false, transaction: tx, issue: validatedTx.error.errors.join(', ') }
-        continue
-      }
-
-      // Check for existing transaction without saving
-      const existingTransaction = await findExistingTransaction({
-        date: new Date(validatedTx.data.date),
-        amount: validatedTx.data.amount,
-        type: validatedTx.data.type,
-        accountMask: validatedTx.data.account_mask,
-      })
-      if (existingTransaction) {
-        yield {
-          valid: true,
-          transaction: tx,
-          issue: `Duplicate of transaction from ${existingTransaction.date}`,
-        }
-        continue
-      }
-
-      yield { valid: true, transaction: tx }
-    } catch (error) {
-      logger.warn(`Validation error for transaction: ${tx.description}`, error)
-      yield {
-        valid: false,
-        transaction: tx,
-        issue: error instanceof Error ? error.message : String(error),
-      }
-    }
-  }
-
-  logger.info(`Validation completed for ${fileName}`)
 }
