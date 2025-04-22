@@ -1,10 +1,10 @@
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { Message } from '..'
+import { ChatMessage } from '..'
 
 describe('Message Component', () => {
-  const mockMessage: ChatMessage = {
+  const mockMessage: ChatMessageSelect = {
     id: '1',
     role: 'assistant',
     content: 'Hello world',
@@ -38,7 +38,7 @@ describe('Message Component', () => {
   }
 
   it('renders all message components correctly', () => {
-    render(<Message message={mockMessage} />)
+    render(<ChatMessage message={mockMessage} />)
 
     expect(screen.getByTestId('message-assistant')).toBeInTheDocument()
     expect(screen.getByTestId('message-header')).toHaveTextContent('Assistant')
@@ -47,7 +47,7 @@ describe('Message Component', () => {
   })
 
   it('renders tool calls correctly', () => {
-    render(<Message message={mockMessage} />)
+    render(<ChatMessage message={mockMessage} />)
 
     const toolCall = screen.getByTestId('tool-call')
     expect(toolCall).toBeInTheDocument()
@@ -56,14 +56,14 @@ describe('Message Component', () => {
   })
 
   it('renders reasoning when present', () => {
-    render(<Message message={mockMessage} />)
+    render(<ChatMessage message={mockMessage} />)
 
     expect(screen.getByTestId('message-reasoning')).toBeInTheDocument()
     expect(screen.getByTestId('reasoning-content')).toHaveTextContent('Test reasoning')
   })
 
   it('renders file previews correctly', () => {
-    render(<Message message={mockMessage} />)
+    render(<ChatMessage message={mockMessage} />)
 
     expect(screen.getByTestId('file-image')).toBeInTheDocument()
     expect(screen.getByTestId('file-preview')).toBeInTheDocument()
@@ -75,7 +75,7 @@ describe('Message Component', () => {
       content: 'Hello &amp; World',
     }
 
-    render(<Message message={messageWithFormattedContent} />)
+    render(<ChatMessage message={messageWithFormattedContent} />)
     expect(screen.getByTestId('message-content')).toHaveTextContent('Hello & World')
   })
 
@@ -92,7 +92,7 @@ describe('Message Component', () => {
         : null,
     }
 
-    render(<Message message={messageWithToolError} />)
+    render(<ChatMessage message={messageWithToolError} />)
     expect(screen.getByTestId('tool-call-error')).toBeInTheDocument()
   })
 })

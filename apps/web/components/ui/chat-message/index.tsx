@@ -1,31 +1,24 @@
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { Card } from '../card'
 import { MessageContent } from './content'
 import { MessageDetails } from './details'
 import { MessageHeader } from './header'
 
-export function Message({ message }: { message: ChatMessage }) {
+export function ChatMessage({ message }: { message: ChatMessageSelect }) {
   const { content, role } = message
-  const getBackgroundColor = (role: ChatMessage['role']) => {
-    switch (role) {
-      case 'user':
-        return 'bg-secondary/50 hover:bg-secondary/70'
-      case 'assistant':
-        return 'bg-primary/5 hover:bg-primary/10'
-      case 'tool':
-        return 'bg-accent/30 hover:bg-accent/40'
-      case 'system':
-      default:
-        return 'bg-muted/50 hover:bg-muted/70'
-    }
-  }
 
+  const isUndefinedRole = !['user', 'assistant', 'tool', 'system'].includes(role)
   return (
     <Card
       className={cn(
         'group p-3 sm:p-4 min-w-0',
-        getBackgroundColor(role),
+        {
+          'bg-[#fbfbfb]/50 hover:bg-[#fbfbfb]/70': role === 'user',
+          'bg-[#fffbf7]/50 hover:bg-[#fffbf7]/70': role === 'assistant',
+          'bg-accent/30 hover:bg-accent/40': role === 'tool',
+          'bg-muted/50 hover:bg-muted/70': role === 'system' || isUndefinedRole,
+        },
         'transition-colors duration-200'
       )}
       data-testid={`message-${role}`}

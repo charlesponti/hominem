@@ -4,9 +4,6 @@
   "type": "module",
   "description": "Random utilities",
   "exports": {
-    ".": {
-      "import": "./build/index.js"
-    },
     "./career": "./src/career/index.ts",
     "./db": "./src/db/index.ts",
     "./finance": "./src/finance/index.ts",

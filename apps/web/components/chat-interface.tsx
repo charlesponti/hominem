@@ -1,14 +1,14 @@
 import type { ToolCalls, ToolResults } from '@/lib/hooks/use-chat'
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { Eraser, NotebookPen, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
-import { Message } from './ui/message'
+import { ChatMessage } from './ui/chat-message'
 
 type ChatInterfaceProps = {
-  messages: ChatMessage[]
+  messages: ChatMessageSelect[]
   onSendMessage: (message: string) => void
   isLoading: boolean
   error: boolean
@@ -131,7 +131,7 @@ export function ChatInterface({
         <div className="flex flex-col space-y-4 sm:space-y-6 px-2 sm:px-4 pb-[160px] w-full">
           <div className="w-full max-w-[850px] mx-auto space-y-6">
             {messages.map((message) => (
-              <Message key={message.id} message={message} />
+              <ChatMessage key={message.id} message={message} />
             ))}
 
             {showDebugInfo && toolCalls.length > 0 && (

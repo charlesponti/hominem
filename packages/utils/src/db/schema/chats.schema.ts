@@ -78,7 +78,7 @@ export const chatMessage = pgTable(
       .onDelete('cascade'),
   ]
 )
-export type ChatMessage = typeof chatMessage.$inferSelect
+export type ChatMessageSelect = typeof chatMessage.$inferSelect
 
 export const chatRelations = relations(chat, ({ one, many }) => ({
   user: one(users, {
