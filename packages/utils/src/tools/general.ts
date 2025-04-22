@@ -46,12 +46,3 @@ export const calculatorTool = tool({
     }
   },
 })
-
-export const searchTool = tool({
-  description: 'Search the web for information',
-  parameters: z.object({ query: z.string() }),
-  execute: async ({ query }: { query: string }): Promise<string> => {
-    // This is a placeholder. In a real app, you'd implement a proper search API call
-    return `Search results for: ${query}. (This is a placeholder for SERP API results)`
-  },
-})

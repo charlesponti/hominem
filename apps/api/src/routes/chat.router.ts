@@ -24,7 +24,6 @@ const chatRequestSchema = z.object({
 // Define utility tools
 const utilityTools = {
   calculatorTool: allTools.calculatorTool,
-  searchTool: allTools.searchTool,
 }
 
 export async function chatPlugin(fastify: FastifyInstance) {
