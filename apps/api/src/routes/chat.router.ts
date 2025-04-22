@@ -21,6 +21,12 @@ const chatRequestSchema = z.object({
   showDebugInfo: z.boolean().optional(),
 })
 
+// Schema for generate requests
+const generateRequestSchema = z.object({
+  message: z.string().min(1, 'Message cannot be empty'),
+  showDebugInfo: z.boolean().optional(),
+})
+
 // Define utility tools
 const utilityTools = {
   calculatorTool: allTools.calculatorTool,
@@ -285,6 +291,68 @@ export async function chatPlugin(fastify: FastifyInstance) {
       logger.error(error)
       return handleError(
         error instanceof Error ? error : new ApiError(500, 'Error processing chat request'),
+        reply
+      )
+    }
+  })
+
+  // Generate endpoint - handles single-turn generation with tools
+  fastify.post('/generate', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Unauthorized' })
+    }
+
+    try {
+      // Parse request body based on schema
+      const { success, data, error } = generateRequestSchema.safeParse(request.body)
+      if (!success) {
+        return reply.code(400).send({ errors: error.errors.map((e) => e.path).join(', ') })
+      }
+
+      const { message, showDebugInfo } = data
+
+      // Create performance timer
+      const timer = performanceService.startTimer(`generate-${userId}-${Date.now()}`)
+      timer.mark('generate-start')
+
+      // Handle agent-based response type
+      const result = await generateText({
+        model,
+        temperature: 0.2,
+        system: `
+          UserID: ${userId}
+
+          Use the tools provided to answer the question.
+          If tool is applicable, return a very succinct response.
+          Ensure the response is clear and concise.
+          Use the least amount of words possible.
+        `,
+        messages: [{ role: 'user', content: message }],
+        tools: {
+          search: HominemVectorStore.searchDocumentsTool,
+          ...allTools,
+          ...utilityTools,
+        },
+        maxSteps: 5,
+      })
+      timer.mark('generate-complete')
+      timer.stop()
+
+      // Format response
+      return reply.send({
+        messages: result.response.messages,
+        ...(showDebugInfo
+          ? {
+              steps: result.toolCalls,
+              results: result.toolResults,
+            }
+          : {}),
+      })
+    } catch (error) {
+      logger.error(error)
+      return handleError(
+        error instanceof Error ? error : new ApiError(500, 'Error processing generate request'),
         reply
       )
     }
