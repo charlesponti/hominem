@@ -1,3 +1,3 @@
-export * from './markdown-processor.js'
-export * from './metadata.schema.js'
-export * from './utils.js'
+export * from './markdown-processor'
+export * from './metadata.schema'
+export * from './utils'

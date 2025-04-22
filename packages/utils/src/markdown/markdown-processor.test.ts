@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MarkdownProcessor } from './markdown-processor'
 
 // Mock the time module
-vi.mock('../time.js', () => {
+vi.mock('../time', () => {
   return {
     getDatesFromText: () => ({
       dates: [],
@@ -106,8 +106,8 @@ Some content here.`
       const content =
         '# Meeting Notes\n      \nMeeting with John Smith in New York about #project planning.'
       const { result } = await processor.convertMarkdownToJSON(content, 'test.md')
-      expect(typeof result.metadata.wordCount).toBe('number')
-      expect(typeof result.metadata.readingTime).toBe('number')
+      expect(typeof result.metadata?.wordCount).toBe('number')
+      expect(typeof result.metadata?.readingTime).toBe('number')
       expect(result.entries[0].heading).toBe('Meeting Notes')
     })
   })

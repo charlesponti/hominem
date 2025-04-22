@@ -59,17 +59,23 @@ export const create_finance_account = tool({
 export const get_finance_accounts = tool({
   description: 'Get all finance accounts',
   parameters: z.object({
+    userId: z.string().describe('User ID to filter accounts by'),
     type: z
       .enum(['checking', 'savings', 'investment', 'credit', 'loan', 'retirement'])
       .optional()
       .describe('Filter by account type'),
   }),
   async execute(args) {
-    const query = db.select().from(financeAccounts)
-    if (args.type) {
-      query.where(eq(financeAccounts.type, args.type))
-    }
-    const accounts = await query
+    const accounts = await db
+      .select()
+      .from(financeAccounts)
+      .where(
+        and(
+          eq(financeAccounts.userId, args.userId),
+          args.type ? eq(financeAccounts.type, args.type) : undefined
+        )
+      )
+
     return {
       accounts,
       message: `Retrieved finance accounts${args.type ? ` of type: ${args.type}` : ''}`,
@@ -85,6 +91,7 @@ export const update_finance_account = tool({
     balance: z.number().optional().describe('New balance'),
     interestRate: z.number().optional().describe('New interest rate'),
     minimumPayment: z.number().optional().describe('New minimum payment'),
+    userId: z.string().describe('User ID who owns this account'),
   }),
   async execute(args) {
     const updates: Partial<FinanceAccountInsert> = {}
@@ -96,7 +103,7 @@ export const update_finance_account = tool({
     const result = await db
       .update(financeAccounts)
       .set(updates)
-      .where(eq(financeAccounts.id, args.accountId))
+      .where(and(eq(financeAccounts.id, args.accountId), eq(financeAccounts.userId, args.userId)))
       .returning()
 
     return {
@@ -110,9 +117,12 @@ export const delete_finance_account = tool({
   description: 'Delete a finance account',
   parameters: z.object({
     accountId: z.string().describe('ID of the account to delete'),
+    userId: z.string().describe('User ID who owns this account'),
   }),
   async execute(args) {
-    await db.delete(financeAccounts).where(eq(financeAccounts.id, args.accountId))
+    await db
+      .delete(financeAccounts)
+      .where(and(eq(financeAccounts.id, args.accountId), eq(financeAccounts.userId, args.userId)))
     return {
       message: `Deleted finance account ${args.accountId}`,
     }
@@ -208,6 +218,7 @@ export const update_transaction = tool({
     category: z.string().optional().describe('New category'),
     parentCategory: z.string().optional().describe('New parent category'),
     notes: z.string().optional().describe('New notes'),
+    userId: z.string().describe('User ID who owns this transaction'),
   }),
   async execute(args) {
     const updates: Partial<TransactionInsert> = {}
@@ -221,7 +232,7 @@ export const update_transaction = tool({
     const result = await db
       .update(transactions)
       .set(updates)
-      .where(eq(transactions.id, args.transactionId))
+      .where(and(eq(transactions.id, args.transactionId), eq(transactions.userId, args.userId)))
       .returning()
 
     return {
@@ -235,9 +246,12 @@ export const delete_transaction = tool({
   description: 'Delete a financial transaction',
   parameters: z.object({
     transactionId: z.string().describe('ID of the transaction to delete'),
+    userId: z.string().describe('User ID who owns this transaction'),
   }),
   async execute(args) {
-    await db.delete(transactions).where(eq(transactions.id, args.transactionId))
+    await db
+      .delete(transactions)
+      .where(and(eq(transactions.id, args.transactionId), eq(transactions.userId, args.userId)))
     return {
       message: `Deleted transaction ${args.transactionId}`,
     }
@@ -306,6 +320,7 @@ export const get_budget_category_suggestions = tool({
   parameters: z.object({
     description: z.string().describe('Transaction description to get category suggestions for'),
     limit: z.number().optional().default(5).describe('Maximum number of suggestions to return'),
+    userId: z.string().describe('User ID who owns the transactions'),
   }),
   async execute(args) {
     // Query similar transactions to get category suggestions
@@ -316,7 +331,12 @@ export const get_budget_category_suggestions = tool({
         count: sql<number>`COUNT(*)`,
       })
       .from(transactions)
-      .where(like(transactions.description, `%${args.description}%`))
+      .where(
+        and(
+          like(transactions.description, `%${args.description}%`),
+          eq(transactions.userId, args.userId)
+        )
+      )
       .groupBy(transactions.category, transactions.parentCategory)
       .orderBy(sql`count DESC`)
       .limit(args.limit)
@@ -336,6 +356,7 @@ export const get_budget_categories = tool({
   description: 'A tool to get budget categories by id, name, or type.',
   parameters: z.object({
     query: z.object({
+      userId: z.string().describe('User ID who owns the categories'),
       categoryName: z.string().optional(),
       categoryId: z.string().optional(),
       categoryType: z.string().optional(),
@@ -347,6 +368,7 @@ export const get_budget_categories = tool({
       .from(budgetCategories)
       .where(
         and(
+          eq(budgetCategories.userId, query.userId),
           query.categoryId ? eq(budgetCategories.id, query.categoryId) : undefined,
           query.categoryName ? like(budgetCategories.name, `%${query.categoryName}%`) : undefined,
           query.categoryType ? eq(budgetCategories.type, query.categoryType) : undefined
