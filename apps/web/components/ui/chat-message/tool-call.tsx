@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { ChevronDown, CircleSlash, Cpu, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import { Card } from '../card'
 
 interface ToolCallProps {
-  call: NonNullable<ChatMessage['toolCalls']>[number]
+  call: NonNullable<ChatMessageSelect['toolCalls']>[number]
 }
 
 function formatValue(value: unknown): string {

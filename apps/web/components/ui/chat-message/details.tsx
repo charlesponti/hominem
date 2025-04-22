@@ -1,12 +1,12 @@
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { FilePart } from './file-part'
 import { Reasoning } from './reasoning'
 import { ToolCall } from './tool-call'
 
 interface MessageDetailsProps {
-  toolCalls?: ChatMessage['toolCalls']
-  reasoning?: ChatMessage['reasoning']
-  files?: ChatMessage['files']
+  toolCalls?: ChatMessageSelect['toolCalls']
+  reasoning?: ChatMessageSelect['reasoning']
+  files?: ChatMessageSelect['files']
 }
 
 export function MessageDetails({ toolCalls, reasoning, files }: MessageDetailsProps) {

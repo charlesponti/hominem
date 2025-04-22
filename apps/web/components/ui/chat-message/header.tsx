@@ -1,12 +1,12 @@
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { Bot, Settings, User, Wrench } from 'lucide-react'
 
 interface MessageHeaderProps {
-  role: ChatMessage['role']
+  role: ChatMessageSelect['role']
 }
 
 const roleConfig: Record<
-  ChatMessage['role'],
+  ChatMessageSelect['role'],
   {
     label: string
     icon: React.ComponentType<{ className?: string }>

@@ -1,10 +1,10 @@
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 interface MessageContentProps {
-  content: ChatMessage['content']
+  content: ChatMessageSelect['content']
 }
 
 export function MessageContent({ content }: MessageContentProps) {

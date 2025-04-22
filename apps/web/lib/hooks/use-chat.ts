@@ -1,6 +1,6 @@
 import { useApiClient } from '@/lib/hooks/use-api-client'
 import { useAuth } from '@clerk/nextjs'
-import type { ChatMessage } from '@hominem/utils/types'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ToolContent, ToolSet } from 'ai'
 import { useCallback, useState } from 'react'
@@ -17,7 +17,7 @@ export enum CHAT_ENDPOINTS {
 }
 
 interface ChatResponse {
-  messages: ChatMessage[]
+  messages: ChatMessageSelect[]
 }
 
 interface SendMessageRequest {
@@ -27,7 +27,7 @@ interface SendMessageRequest {
 
 type UseChatOptions = {
   endpoint: CHAT_ENDPOINTS
-  initialMessages?: ChatMessage[]
+  initialMessages?: ChatMessageSelect[]
   showDebugInfo?: boolean
   stream?: boolean
 }
@@ -65,7 +65,7 @@ export function useChat({
 
   // Helper to update message cache
   const updateMessages = useCallback(
-    (newMessages: ChatMessage[]) => {
+    (newMessages: ChatMessageSelect[]) => {
       queryClient.setQueryData(['chat', endpoint], newMessages)
     },
     [queryClient, endpoint]
@@ -73,14 +73,14 @@ export function useChat({
 
   // Helper to add a single message
   const addMessage = useCallback(
-    (message: ChatMessage) => {
+    (message: ChatMessageSelect) => {
       const newMessage = {
         ...message,
         id: message.id || crypto.randomUUID(),
         messageIndex: message.messageIndex || String(Date.now()),
         createdAt: message.createdAt || new Date().toISOString(),
       }
-      queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) => [
+      queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) => [
         ...oldMessages,
         newMessage,
       ])
@@ -124,7 +124,7 @@ export function useChat({
 
         // Create initial streaming message
         const streamId = 'stream-response'
-        const streamMessage: ChatMessage = {
+        const streamMessage: ChatMessageSelect = {
           role: 'assistant',
           content: '',
           id: streamId,
@@ -148,13 +148,13 @@ export function useChat({
           responseText += decoder.decode(value, { stream: true })
 
           // Update the streaming message in the cache
-          queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) =>
+          queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) =>
             oldMessages.map((m) => (m.id === streamId ? { ...m, content: responseText } : m))
           )
         }
 
         // Finalize the message with a permanent ID
-        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) =>
+        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) =>
           oldMessages.map((m) => (m.id === streamId ? { ...m, id: crypto.randomUUID() } : m))
         )
 
@@ -176,7 +176,7 @@ export function useChat({
       }
 
       if (data.messages) {
-        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessage[] = []) => [
+        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) => [
           ...oldMessages,
           ...data.messages.map((message) => ({
             ...message,
