@@ -1,141 +1,91 @@
-import { db } from '@/db'
+import { db } from '@/db/index'
 import { markdownEntries } from '@/db/schema'
-import { getMarkdownFile } from '@/utils'
-import { getPathFiles } from '@/utils/get-path-files'
-import { logger } from '@/utils/logger'
-import { MarkdownProcessor } from '@hominem/utils/markdown'
-import { NLPProcessor } from '@hominem/utils/nlp'
+import logger from '@/utils/logger'
+import { detectTask } from '@hominem/utils/markdown'
 import { Command } from 'commander'
-import { createWriteStream } from 'node:fs'
-import * as fs from 'node:fs/promises'
-import * as path from 'node:path'
-import ora from 'ora'
+import { createReadStream } from 'node:fs'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import process from 'node:process'
+import readline from 'node:readline'
 
-interface ProcessMarkdownOptions {
-  output: string
-  enhanced: boolean
-  model: string
-  provider: string
-  store: boolean // New option to store in database
-}
-
-export default new Command('process-markdown')
-  .command('process-markdown')
-  .description('Process markdown files and create JSON files for bullet points')
-  .argument('<path>', 'Path to process markdown files')
-  .option('-o, --output <dir>', 'Output directory', './output')
-  .option('-e, --enhanced', 'Should the output be enhanced')
-  .option('-m, --model <model>', 'Model to use for enhancement')
-  .option('-p, --provider <provider>', 'NLP provider to use', 'lmstudio')
-  .option('-s, --store', 'Store processed entries in database', false) // Add store option
-  .action(async (processPath: string, options: ProcessMarkdownOptions) => {
+export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-heading')
+  .description('Group markdown content by heading across files and save to separate files')
+  .argument('<dir>', 'Directory containing markdown files')
+  .option('-o, --output <dir>', 'Output directory', './headings')
+  .action(async (dir: string, options: { output: string }) => {
     try {
-      const processor = new MarkdownProcessor()
-      const files = await getPathFiles(processPath, { extension: '.md' })
-      const shortPath = path.dirname(processPath).split('/').slice(-1).join('/')
+      const inputDir = path.resolve(process.cwd(), dir)
+      const outputDir = path.resolve(process.cwd(), options.output)
+      await fs.mkdir(outputDir, { recursive: true })
 
-      logger.info(`Processing ${files.length} files in ${shortPath}`)
+      const files = await fs.readdir(inputDir)
 
-      // Prepare output file and stream
-      let outputDir = path.resolve(options.output)
-      if (!(await fs.exists(outputDir))) {
-        outputDir = path.dirname(processPath)
-      }
-      const outputFilePath = path.join(outputDir, 'output.json')
+      for (const fileName of files) {
+        if (!fileName.endsWith('.md')) continue
+        const filePath = path.join(inputDir, fileName)
+        const baseName = path.basename(fileName, '.md')
 
-      // Initialize the JSON structure
-      const outputStream = createWriteStream(outputFilePath)
-      outputStream.write('[\n')
+        const rl = readline.createInterface({
+          input: createReadStream(filePath),
+          crlfDelay: Number.POSITIVE_INFINITY,
+        })
+        let currentHeading = ''
+        let paragraphBuffer: string[] = []
 
-      const results = []
-      let index = 0
-      const processorSpinner = ora().start()
-      for (const file of files) {
-        index++
-        const fileCountText = `File: ${index} / ${files.length}`
-        processorSpinner.text = `Processing ${fileCountText}`
-        const fileContent = await getMarkdownFile(file)
-        const content = await processor.processFileWithAst(fileContent, file)
+        async function flushParagraphBuffer() {
+          if (!paragraphBuffer.length) return
+          const paragraph = paragraphBuffer.join(' ')
+          await db.insert(markdownEntries).values({
+            section: currentHeading || baseName,
+            text: paragraph,
+            filePath,
+            isTask: false,
+            isComplete: false,
+            textAnalysis: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            processingDate: new Date(),
+          })
+          paragraphBuffer = []
+        }
 
-        let entryIndex = 0
-        for (const entry of content.entries) {
-          entryIndex++
-          const entryTextCountText = `Entry: ${entryIndex} / ${content.entries.length}`
-          processorSpinner.text = `Processing ${fileCountText} | ${entryTextCountText}`
-
-          if (options.enhanced) {
-            const nlpProcessor = new NLPProcessor({
-              // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-              provider: options.provider as any,
-              model: options.model,
+        for await (const line of rl) {
+          const trimmed = line.trim()
+          const headingMatch = /^#{1,6}\s+(.*)/.exec(trimmed)
+          if (headingMatch) {
+            await flushParagraphBuffer()
+            currentHeading = headingMatch[1].trim()
+          } else if (/^[-*]\s+/.test(trimmed)) {
+            await flushParagraphBuffer()
+            // insert bullet point as its own row
+            const { isTask, isComplete } = detectTask(trimmed)
+            await db.insert(markdownEntries).values({
+              filePath,
+              processingDate: new Date(),
+              text: trimmed,
+              section: currentHeading || baseName,
+              isTask,
+              isComplete,
+              textAnalysis: null,
+              createdAt: new Date(),
+              updatedAt: new Date(),
             })
-            let contentIndex = 0
-            for (const entryContent of entry.content) {
-              contentIndex++
-              processorSpinner.text = `Processing ${fileCountText} | ${entryTextCountText} | ${entry.heading}: ${contentIndex} / ${entry.content.length}`
-              const analysis = await nlpProcessor.analyzeText(entryContent.text)
-              entryContent.textAnalysis = analysis
-
-              results.push({
-                filePath: file,
-                ...entryContent,
-              })
-
-              // write to output file
-              const isLast = index === files.length && entryIndex === content.entries.length
-              outputStream.write(
-                `${JSON.stringify(
-                  {
-                    filePath: file,
-                    ...entryContent,
-                  },
-                  null,
-                  2
-                )}${isLast ? '' : ',\n'}`
-              )
-              // If store option is enabled, save to database
-              if (options.store) {
-                try {
-                  processorSpinner.text = `Storing entry "${entry.heading}" in database...`
-
-                  // Store the markdown entry in database
-                  await db
-                    .insert(markdownEntries)
-                    .values({
-                      filePath: file,
-                      processingDate: new Date(),
-                      text: entryContent.text,
-                      section: entry.heading,
-                      isTask: entryContent.isTask,
-                      isComplete: entryContent.isComplete,
-                      textAnalysis: JSON.stringify(entryContent.textAnalysis),
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    })
-                    .returning()
-
-                  processorSpinner.text = `Entry "${entry.heading}" stored in database`
-                } catch (dbError) {
-                  logger.error(`Failed to store entry in database: ${dbError}`)
-                }
-              }
-            }
+          } else if (trimmed) {
+            paragraphBuffer.push(trimmed)
+          } else {
+            await flushParagraphBuffer()
           }
         }
+        await flushParagraphBuffer()
+        rl.close()
       }
-
-      // Close the JSON array
-      const finalOutputStream = createWriteStream(outputFilePath, { flags: 'a' })
-      finalOutputStream.write('\n]')
-      finalOutputStream.end()
-
-      processorSpinner.succeed(
-        `Processed ${files.length} files${options.store ? ' and stored in database' : ''}`
-      )
-      logger.info(`Output streamed to ${outputFilePath}`)
-    } catch (error) {
-      console.error(error)
-      logger.error('Error processing markdown file:', error)
+    } catch (err) {
+      console.error(err)
+      logger.error('Error grouping markdown by heading:', err)
       process.exit(1)
     }
+    process.exit(0)
   })
+
+export default groupMarkdownByHeadingCommand

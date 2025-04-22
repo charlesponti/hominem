@@ -13,8 +13,6 @@ import scrapeCommand from './commands/scraper/scrape'
 import thothCommand from './commands/thoth'
 import { initDb } from './db/index'
 
-const foo = 'meow'
-
 async function init() {
   // Initialize the application
   // This is where you can add any global setup code

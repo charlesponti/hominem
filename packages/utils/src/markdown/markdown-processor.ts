@@ -10,7 +10,7 @@ import { unified } from 'unified'
 import type { TextAnalysis } from '../schemas/text-analysis.schema'
 import { getDatesFromText } from '../time'
 import { extractMetadata, type Metadata } from './metadata.schema'
-import { detectTask, normalizeWhitespace, taskRegex } from './utils'
+import { detectTask, normalizeWhitespace } from './utils'
 
 export interface EntryContent {
   tag: string
@@ -157,115 +157,55 @@ export class MarkdownProcessor {
     markdownContent: string,
     filename: string
   ): Promise<{ result: ProcessedMarkdownFile; html: string }> {
-    // Process frontmatter and extract metadata
-    const {
-      content: processableContent,
-      metadata,
-      frontmatter,
-    } = this.processFrontmatter(markdownContent)
-
-    // Calculate reading metrics
-    const { wordCount, readingTime } = await this.calculateReadingMetrics(processableContent)
+    const { content: body, metadata, frontmatter } = this.processFrontmatter(markdownContent)
+    const { wordCount, readingTime } = await this.calculateReadingMetrics(body)
     metadata.wordCount = wordCount
     metadata.readingTime = readingTime
 
-    // Convert markdown to HTML for processing
-    const $ = await this.convertMarkdownToHTML(processableContent)
+    const baseName = filename.split('/').pop()?.replace(/\.md$/, '') || filename
+    const headingRegex = /^#{1,6}\s+(.*)/
+    const lines = body.split('\n')
+    const entries: ProcessedMarkdownFileEntry[] = []
+    let currentHeading = ''
+    let buffer: string[] = []
 
-    const result: ProcessedMarkdownFile = {
-      entries: [],
-      metadata,
+    const flushBuffer = () => {
+      const texts = buffer.map((l) => l.trim()).filter((l) => l)
+      if (!texts.length) return
+      const heading = currentHeading || baseName
+      const { dates, fullDate } = getDatesFromText(heading)
+      const entry: ProcessedMarkdownFileEntry = { filename, heading, content: [], frontmatter }
+      if (dates?.[0]) entry.date = dates[0].start.split('T')[0]
+      else if (fullDate) entry.date = fullDate.split('T')[0]
+      for (const text of texts) {
+        const normalized = normalizeWhitespace(text)
+        const { isTask, isComplete } = detectTask(normalized)
+        entry.content.push({
+          tag: 'text',
+          text,
+          section: currentHeading || null,
+          isTask,
+          isComplete,
+          subentries: [],
+        })
+      }
+      entries.push(entry)
     }
 
-    let currentHeading: string | undefined
-    let currentEntry: ProcessedMarkdownFileEntry | null = null
-
-    const elements = $('body').children().toArray()
-
-    for (const elem of elements) {
-      const tag = elem.tagName.toLowerCase()
-      const text = $(elem).text().trim()
-      if (!text) continue
-
-      const { taskText } = detectTask(text)
-
-      const processedText =
-        taskText ||
-        text
-          .replace(/^(-|\*)\s+/, '')
-          .replace(taskRegex, '')
-          .trim()
-
-      if (/^h[1-6]$/.test(tag)) {
-        currentHeading = text
-        // New entry on headings
-        currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
-        const { dates, fullDate } = getDatesFromText(text)
-        if (dates.length > 0 && dates[0]) {
-          currentEntry.date = dates[0].start.split('T')[0]
-        } else if (fullDate) {
-          currentEntry.date = fullDate.split('T')[0]
-        }
-      }
-
-      if (tag === 'paragraph') {
-        const previousContent = this.getPreviousEntry(currentEntry)
-
-        // If the previous entry was a paragraph, add to previous paragraph
-        if (previousContent && previousContent.tag === 'paragraph') {
-          previousContent.text += `\n ${processedText}`
-        }
-
-        continue
-      }
-
-      if (!currentEntry) {
-        currentEntry = this.ensureEntry(filename, currentHeading, frontmatter, result.entries)
-      }
-
-      const processedContent = await this.getProcessedEntry({
-        $,
-        elem,
-        entry: currentEntry,
-        section: currentHeading ? currentHeading.toLowerCase() : null,
-      })
-
-      if (processedContent) {
-        currentEntry.content.push(processedContent)
-      }
-
-      if (tag === 'ul' || tag === 'ol') {
-        const listItems = $(elem).find('> li').toArray()
-
-        for (const li of listItems) {
-          const processedContent = await this.getProcessedEntry({
-            $,
-            elem: li,
-            entry: currentEntry,
-            section: currentHeading ? currentHeading.toLowerCase() : null,
-          })
-          if (!processedContent) {
-            console.error('No processed content found for list item', tag, processedText)
-            continue
-          }
-
-          currentEntry.content.push(processedContent)
-
-          processedContent.subentries = await this.processNestedLists(
-            $,
-            li,
-            currentEntry,
-            processedContent.tag
-          )
-        }
+    for (const line of lines) {
+      const match = headingRegex.exec(line)
+      if (match) {
+        flushBuffer()
+        currentHeading = match[1]?.trim() || ''
+        buffer = []
+      } else {
+        buffer.push(line)
       }
     }
+    flushBuffer()
 
-    if (result.entries.length === 0 && frontmatter) {
-      this.ensureEntry(filename, undefined, frontmatter, result.entries)
-    }
-
-    return { result, html: $.html() }
+    const result: ProcessedMarkdownFile = { entries, metadata }
+    return { result, html: body }
   }
 
   async getProcessedEntry(params: GetProcessedEntryParams): Promise<EntryContent | undefined> {

@@ -19,6 +19,7 @@
     "@ai-sdk/openai-compatible": "^0.1.17",
     "@hominem/ai": "workspace:*",
     "@hominem/utils": "workspace:*",
+    "@libsql/client": "^0.15.4",
     "ai": "^4.1.54",
     "chalk": "^5.4.1",
     "cheerio": "^1.0.0",

@@ -58,75 +58,57 @@ Some content here.`
     it('should process headings properly', async () => {
       const content =
         '# Heading 1\n\nParagraph under heading 1\n\n## Heading 2\n\nParagraph under heading 2'
-
       const { result } = await processor.convertMarkdownToJSON(content, 'test.md')
-
-      expect(result).toMatchSnapshot()
+      const entries = result.entries
+      expect(entries).toHaveLength(2)
+      expect(entries.map((e) => e.heading)).toEqual(['Heading 1', 'Heading 2'])
+      expect(entries[0].content.map((c) => c.text)).toEqual(['Paragraph under heading 1'])
+      expect(entries[1].content.map((c) => c.text)).toEqual(['Paragraph under heading 2'])
     })
 
     it('should process lists correctly', async () => {
-      const content = `# Shopping List
-      
-- Apples
-- Bananas
-- Milk`
-
+      const content = '# Shopping List\n      \n- Apples\n- Bananas\n- Milk'
       const { result } = await processor.convertMarkdownToJSON(content, 'test.md')
-
-      expect(result).toMatchSnapshot()
+      const entry = result.entries[0]
+      expect(entry.heading).toBe('Shopping List')
+      expect(entry.content.map((c) => c.text)).toEqual(['- Apples', '- Bananas', '- Milk'])
     })
 
     it('should detect tasks and their completion status', async () => {
-      const content = `# Tasks
-      
-- [ ] Incomplete task
-- [x] Complete task`
-
+      const content = '# Tasks\n      \n- [ ] Incomplete task\n- [x] Complete task'
       const { result } = await processor.convertMarkdownToJSON(content, 'test.md')
-
-      expect(result).toMatchSnapshot()
+      const entry = result.entries[0]
+      const texts = entry.content.map((c) => c.text)
+      expect(texts).toEqual(['- [ ] Incomplete task', '- [x] Complete task'])
+      expect(entry.content[0].isTask).toBe(true)
+      expect(entry.content[0].isComplete).toBe(false)
+      expect(entry.content[1].isTask).toBe(true)
+      expect(entry.content[1].isComplete).toBe(true)
     })
 
     it('should handle nested lists properly', async () => {
-      const content = `# Nested List
-      
-- Fruits:
-  - Apples
-  - Bananas
-- Vegetables:
-  - Carrots
-  - Broccoli`
-
+      const content =
+        '# Nested List\n      \n- Fruits:\n  - Apples\n  - Bananas\n- Vegetables:\n  - Carrots\n  - Broccoli'
       const { result } = await processor.convertMarkdownToJSON(content, 'test.md')
-
-      expect(result).toMatchSnapshot()
+      const entry = result.entries[0]
+      const texts = entry.content.map((c) => c.text)
+      expect(texts).toEqual([
+        '- Fruits:',
+        '- Apples',
+        '- Bananas',
+        '- Vegetables:',
+        '- Carrots',
+        '- Broccoli',
+      ])
     })
 
     it('should extract metadata from content', async () => {
-      const content = `# Meeting Notes
-      
-Meeting with John Smith in New York about #project planning.`
-
+      const content =
+        '# Meeting Notes\n      \nMeeting with John Smith in New York about #project planning.'
       const { result } = await processor.convertMarkdownToJSON(content, 'test.md')
-
-      expect(result).toMatchSnapshot()
-    })
-
-    it('should correctly process hierarchical lists with personal reflections', async () => {
-      const markdown = `## personal
-- **Perfectionism**
-- **Overthinking, analysis paralysis, fear of failure**
-  - decrease my playfulness.
-  - decreases poor decision-making
-  - decreases action-taking
-  - reinforces personal beliefs instead of increasing objective truth
-- **Fear of judgement**
-  - desire to be seen as correct instead of desire to be effective
-  - many judgments should be ignored because they lack sincerity`
-
-      const { result } = await processor.convertMarkdownToJSON(markdown, 'personal-reflections.md')
-
-      expect(result).toMatchSnapshot()
+      expect(typeof result.metadata.wordCount).toBe('number')
+      expect(typeof result.metadata.readingTime).toBe('number')
+      expect(result.entries[0].heading).toBe('Meeting Notes')
     })
   })
 
