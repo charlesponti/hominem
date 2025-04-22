@@ -1,3 +1,4 @@
+import { and, eq } from 'drizzle-orm'
 import { db } from '../db/index'
 import { type FinanceAccount, type FinanceAccountInsert, financeAccounts } from '../db/schema'
 import { logger } from '../logger'
@@ -30,6 +31,62 @@ class FinancialAccountService {
       return createdAccount
     } catch (error) {
       logger.error(`Error creating account ${account.name}:`, error)
+      throw error
+    }
+  }
+
+  public async listAccounts(userId: string): Promise<FinanceAccount[]> {
+    try {
+      return await db.query.financeAccounts.findMany({
+        where: eq(financeAccounts.userId, userId),
+        orderBy: (accounts) => accounts.name,
+      })
+    } catch (error) {
+      logger.error(`Error listing accounts for user ${userId}:`, error)
+      throw error
+    }
+  }
+
+  public async getAccountById(id: string, userId: string): Promise<FinanceAccount | null> {
+    try {
+      const account = await db.query.financeAccounts.findFirst({
+        where: and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)),
+      })
+      return account ?? null
+    } catch (error) {
+      logger.error(`Error fetching account ${id}:`, error)
+      throw error
+    }
+  }
+
+  public async updateAccount(
+    id: string,
+    userId: string,
+    updates: Partial<Omit<FinanceAccountInsert, 'id'>>
+  ): Promise<FinanceAccount> {
+    try {
+      const [updated] = await db
+        .update(financeAccounts)
+        .set(updates)
+        .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)))
+        .returning()
+      if (!updated) {
+        throw new Error(`Account not found or not updated: ${id}`)
+      }
+      return updated
+    } catch (error) {
+      logger.error(`Error updating account ${id}:`, error)
+      throw error
+    }
+  }
+
+  public async deleteAccount(id: string, userId: string): Promise<void> {
+    try {
+      await db
+        .delete(financeAccounts)
+        .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)))
+    } catch (error) {
+      logger.error(`Error deleting account ${id}:`, error)
       throw error
     }
   }

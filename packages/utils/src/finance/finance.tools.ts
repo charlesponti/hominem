@@ -4,12 +4,18 @@ import { z } from 'zod'
 import { db } from '../db/index'
 import {
   budgetCategories,
-  financeAccounts,
   transactions,
   type FinanceAccountInsert,
   type TransactionInsert,
 } from '../db/schema/finance.schema'
-import { createNewTransaction, queryTransactions, type QueryOptions } from './finance.service'
+import {
+  createNewTransaction,
+  deleteTransaction,
+  queryTransactions,
+  updateTransaction,
+  type QueryOptions,
+} from './finance.service'
+import FinancialAccountService from './financial-account.service'
 
 const budgetCalculatorSchema = z.object({
   monthlyIncome: z.number().positive().describe('Monthly income amount'),
@@ -43,16 +49,15 @@ export const create_finance_account = tool({
     userId: z.string().describe('User ID who owns this account'),
   }),
   async execute(args) {
-    const account: FinanceAccountInsert = {
-      id: crypto.randomUUID(),
+    const created = await FinancialAccountService.createAccount({
       name: args.name,
       type: args.type,
       balance: args.balance,
-      interestRate: args.interestRate ? args.interestRate : null,
-      minimumPayment: args.minimumPayment ? args.minimumPayment : null,
+      interestRate: args.interestRate || null,
+      minimumPayment: args.minimumPayment || null,
       userId: args.userId,
-    }
-    return db.insert(financeAccounts).values(account).returning()
+    })
+    return { message: `Created account ${created.id}`, account: created }
   },
 })
 
@@ -66,16 +71,10 @@ export const get_finance_accounts = tool({
       .describe('Filter by account type'),
   }),
   async execute(args) {
-    const accounts = await db
-      .select()
-      .from(financeAccounts)
-      .where(
-        and(
-          eq(financeAccounts.userId, args.userId),
-          args.type ? eq(financeAccounts.type, args.type) : undefined
-        )
-      )
-
+    let accounts = await FinancialAccountService.listAccounts(args.userId)
+    if (args.type) {
+      accounts = accounts.filter((acc) => acc.type === args.type)
+    }
     return {
       accounts,
       message: `Retrieved finance accounts${args.type ? ` of type: ${args.type}` : ''}`,
@@ -100,16 +99,12 @@ export const update_finance_account = tool({
     if (args.interestRate) updates.interestRate = args.interestRate.toString()
     if (args.minimumPayment) updates.minimumPayment = args.minimumPayment.toString()
 
-    const result = await db
-      .update(financeAccounts)
-      .set(updates)
-      .where(and(eq(financeAccounts.id, args.accountId), eq(financeAccounts.userId, args.userId)))
-      .returning()
-
-    return {
-      message: `Updated finance account ${args.accountId}`,
-      account: result[0],
-    }
+    const updated = await FinancialAccountService.updateAccount(
+      args.accountId,
+      args.userId,
+      updates
+    )
+    return { message: `Updated finance account ${updated.id}`, account: updated }
   },
 })
 
@@ -120,12 +115,8 @@ export const delete_finance_account = tool({
     userId: z.string().describe('User ID who owns this account'),
   }),
   async execute(args) {
-    await db
-      .delete(financeAccounts)
-      .where(and(eq(financeAccounts.id, args.accountId), eq(financeAccounts.userId, args.userId)))
-    return {
-      message: `Deleted finance account ${args.accountId}`,
-    }
+    await FinancialAccountService.deleteAccount(args.accountId, args.userId)
+    return { message: `Deleted finance account ${args.accountId}` }
   },
 })
 
@@ -229,15 +220,10 @@ export const update_transaction = tool({
     if (args.parentCategory) updates.parentCategory = args.parentCategory
     if (args.notes) updates.note = args.notes
 
-    const result = await db
-      .update(transactions)
-      .set(updates)
-      .where(and(eq(transactions.id, args.transactionId), eq(transactions.userId, args.userId)))
-      .returning()
-
+    const updated = await updateTransaction(args.transactionId, args.userId, updates)
     return {
-      message: `Updated transaction ${args.transactionId}`,
-      transaction: result[0],
+      message: `Updated transaction ${updated.id}`,
+      transaction: updated,
     }
   },
 })
@@ -249,9 +235,7 @@ export const delete_transaction = tool({
     userId: z.string().describe('User ID who owns this transaction'),
   }),
   async execute(args) {
-    await db
-      .delete(transactions)
-      .where(and(eq(transactions.id, args.transactionId), eq(transactions.userId, args.userId)))
+    await deleteTransaction(args.transactionId, args.userId)
     return {
       message: `Deleted transaction ${args.transactionId}`,
     }
@@ -380,17 +364,23 @@ export const get_budget_categories = tool({
 })
 
 export const tools = {
+  // Accounts
   create_finance_account,
   get_finance_accounts,
   update_finance_account,
   delete_finance_account,
+
+  // Transactions
   create_transaction,
   get_transactions,
   update_transaction,
   delete_transaction,
+
+  // Budgeting
+  get_budget_category_suggestions,
+  get_budget_categories,
+
   budgetCalculatorTool,
   savingsGoalCalculatorTool,
   loanCalculatorTool,
-  get_budget_category_suggestions,
-  get_budget_categories,
 }

@@ -326,3 +326,37 @@ export async function updateTransactionIfNeeded(
 
   return false
 }
+
+export async function updateTransaction(
+  transactionId: string,
+  userId: string,
+  updates: Partial<TransactionInsert>
+): Promise<Transaction> {
+  try {
+    const [updated] = await db
+      .update(transactions)
+      .set(updates)
+      .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
+      .returning()
+
+    if (!updated) {
+      throw new Error(`Transaction not found or not updated: ${transactionId}`)
+    }
+
+    return updated
+  } catch (error) {
+    logger.error(`Error updating transaction ${transactionId}:`, error)
+    throw error
+  }
+}
+
+export async function deleteTransaction(transactionId: string, userId: string): Promise<void> {
+  try {
+    await db
+      .delete(transactions)
+      .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
+  } catch (error) {
+    logger.error(`Error deleting transaction ${transactionId}:`, error)
+    throw error
+  }
+}
