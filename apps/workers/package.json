@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "pnpm tsx --watch src/import-transactions-worker.ts",
-    "start": "node src/import-transactions-worker.ts",
+    "start": "pnpm tsx src/import-transactions-worker.ts",
     "build": "tsup src/import-transactions-worker.ts --outDir=build --minify",
     "format": "biome format ./src --fix"
   },
