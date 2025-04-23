@@ -13,18 +13,18 @@ export const create_tasks = tool({
   },
 })
 
-export const edit_tasks = tool({
-  description: 'Edit an existing task',
-  parameters: z.object({
-    taskId: z.string().describe('ID of the task to edit'),
-    updates: z.record(z.any()).describe('Updates to apply to the task'),
-  }),
-  async execute(args: { taskId: string; updates: object }) {
-    return {
-      message: `Edited task ${args.taskId} with updates: ${JSON.stringify(args.updates)}`,
-    }
-  },
-})
+// export const edit_tasks = tool({
+//   description: 'Edit an existing task',
+//   parameters: z.object({
+//     taskId: z.string().describe('ID of the task to edit'),
+//     updates: z.record(z.any()).describe('Updates to apply to the task'),
+//   }),
+//   async execute(args: { taskId: string; updates: object }) {
+//     return {
+//       message: `Edited task ${args.taskId} with updates: ${JSON.stringify(args.updates)}`,
+//     }
+//   },
+// })
 
 export const search_tasks = tool({
   description: 'Search for tasks',

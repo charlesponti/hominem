@@ -4,7 +4,7 @@ import { z } from 'zod'
 export const create_bookmark = tool({
   description: 'Create a new bookmark',
   parameters: z.object({
-    url: z.string().url().describe('URL to bookmark'),
+    url: z.string().describe('URL to bookmark'),
     title: z.string().describe('Title of the bookmark'),
     description: z.string().optional().describe('Description of the bookmark'),
     siteName: z.string().describe('Name of the website'),

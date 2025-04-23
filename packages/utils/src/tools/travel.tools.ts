@@ -15,8 +15,8 @@ export const create_flight = tool({
     airline: z.string().describe('Name of the airline'),
     reservationNumber: z.string().describe('Reservation confirmation number'),
     url: z.string().optional().describe('URL for the booking'),
-    userId: z.string().uuid().describe('User ID'),
-    listId: z.string().uuid().optional().describe('Optional list ID to associate with the flight'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to associate with the flight'),
   }),
   execute: async (params) => {
     try {
@@ -40,8 +40,8 @@ export const create_flight = tool({
 export const get_flights = tool({
   description: 'Get flights for a user',
   parameters: z.object({
-    userId: z.string().uuid().describe('User ID'),
-    listId: z.string().uuid().optional().describe('Optional list ID to filter flights'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to filter flights'),
   }),
   execute: async ({ userId, listId }) => {
     try {
@@ -61,7 +61,7 @@ export const get_flights = tool({
 export const update_flight = tool({
   description: 'Update a flight record',
   parameters: z.object({
-    id: z.string().uuid().describe('Flight ID'),
+    id: z.string().describe('Flight ID'),
     flightNumber: z.string().optional().describe('Flight number'),
     departureAirport: z.string().optional().describe('Departure airport code'),
     departureDate: z.string().optional().describe('Departure date and time'),
@@ -70,7 +70,7 @@ export const update_flight = tool({
     airline: z.string().optional().describe('Name of the airline'),
     reservationNumber: z.string().optional().describe('Reservation confirmation number'),
     url: z.string().optional().describe('URL for the booking'),
-    listId: z.string().uuid().optional().describe('Optional list ID'),
+    listId: z.string().optional().describe('Optional list ID'),
   }),
   execute: async ({ id, ...params }) => {
     try {
@@ -97,7 +97,7 @@ export const update_flight = tool({
 export const delete_flight = tool({
   description: 'Delete a flight record',
   parameters: z.object({
-    id: z.string().uuid().describe('Flight ID to delete'),
+    id: z.string().describe('Flight ID to delete'),
   }),
   execute: async ({ id }) => {
     try {
@@ -128,12 +128,8 @@ export const create_hotel = tool({
     phoneNumber: z.string().optional().describe('Hotel phone number'),
     price: z.string().optional().describe('Price of the stay'),
     notes: z.string().optional().describe('Additional notes'),
-    userId: z.string().uuid().describe('User ID'),
-    listId: z
-      .string()
-      .uuid()
-      .optional()
-      .describe('Optional list ID to associate with the hotel booking'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to associate with the hotel booking'),
   }),
   execute: async (params) => {
     try {
@@ -157,8 +153,8 @@ export const create_hotel = tool({
 export const get_hotels = tool({
   description: 'Get hotel bookings for a user',
   parameters: z.object({
-    userId: z.string().uuid().describe('User ID'),
-    listId: z.string().uuid().optional().describe('Optional list ID to filter hotels'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to filter hotels'),
   }),
   execute: async ({ userId, listId }) => {
     try {
@@ -178,7 +174,7 @@ export const get_hotels = tool({
 export const update_hotel = tool({
   description: 'Update a hotel booking record',
   parameters: z.object({
-    id: z.string().uuid().describe('Hotel booking ID'),
+    id: z.string().describe('Hotel booking ID'),
     name: z.string().optional().describe('Hotel name'),
     address: z.string().optional().describe('Hotel address'),
     checkInDate: z.string().optional().describe('Check-in date and time'),
@@ -190,7 +186,7 @@ export const update_hotel = tool({
     phoneNumber: z.string().optional().describe('Hotel phone number'),
     price: z.string().optional().describe('Price of the stay'),
     notes: z.string().optional().describe('Additional notes'),
-    listId: z.string().uuid().optional().describe('Optional list ID'),
+    listId: z.string().optional().describe('Optional list ID'),
   }),
   execute: async ({ id, ...params }) => {
     try {
@@ -217,7 +213,7 @@ export const update_hotel = tool({
 export const delete_hotel = tool({
   description: 'Delete a hotel booking record',
   parameters: z.object({
-    id: z.string().uuid().describe('Hotel booking ID to delete'),
+    id: z.string().describe('Hotel booking ID to delete'),
   }),
   execute: async ({ id }) => {
     try {
@@ -246,8 +242,8 @@ export const create_transport = tool({
     price: z.string().optional().describe('Price of transport'),
     url: z.string().optional().describe('URL for booking details'),
     notes: z.string().optional().describe('Additional notes'),
-    userId: z.string().uuid().describe('User ID'),
-    listId: z.string().uuid().optional().describe('Optional list ID to associate with transport'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to associate with transport'),
   }),
   execute: async (params) => {
     try {
@@ -271,8 +267,8 @@ export const create_transport = tool({
 export const get_transports = tool({
   description: 'Get transport records for a user',
   parameters: z.object({
-    userId: z.string().uuid().describe('User ID'),
-    listId: z.string().uuid().optional().describe('Optional list ID to filter transport'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to filter transport'),
   }),
   execute: async ({ userId, listId }) => {
     try {
@@ -292,7 +288,7 @@ export const get_transports = tool({
 export const update_transport = tool({
   description: 'Update a transport record',
   parameters: z.object({
-    id: z.string().uuid().describe('Transport ID'),
+    id: z.string().describe('Transport ID'),
     type: z.string().optional().describe('Type of transport (taxi, train, bus, etc.)'),
     departureLocation: z.string().optional().describe('Departure location'),
     arrivalLocation: z.string().optional().describe('Arrival location'),
@@ -302,7 +298,7 @@ export const update_transport = tool({
     price: z.string().optional().describe('Price of transport'),
     url: z.string().optional().describe('URL for booking details'),
     notes: z.string().optional().describe('Additional notes'),
-    listId: z.string().uuid().optional().describe('Optional list ID'),
+    listId: z.string().optional().describe('Optional list ID'),
   }),
   execute: async ({ id, ...params }) => {
     try {
@@ -329,7 +325,7 @@ export const update_transport = tool({
 export const delete_transport = tool({
   description: 'Delete a transport record',
   parameters: z.object({
-    id: z.string().uuid().describe('Transport ID to delete'),
+    id: z.string().describe('Transport ID to delete'),
   }),
   execute: async ({ id }) => {
     try {
@@ -357,8 +353,8 @@ export const create_activity = tool({
     price: z.string().optional().describe('Price of activity'),
     url: z.string().optional().describe('URL for booking details'),
     notes: z.string().optional().describe('Additional notes'),
-    userId: z.string().uuid().describe('User ID'),
-    listId: z.string().uuid().optional().describe('Optional list ID to associate with activity'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to associate with activity'),
   }),
   execute: async (params) => {
     try {
@@ -382,8 +378,8 @@ export const create_activity = tool({
 export const get_activities = tool({
   description: 'Get activity records for a user',
   parameters: z.object({
-    userId: z.string().uuid().describe('User ID'),
-    listId: z.string().uuid().optional().describe('Optional list ID to filter activities'),
+    userId: z.string().describe('User ID'),
+    listId: z.string().optional().describe('Optional list ID to filter activities'),
   }),
   execute: async ({ userId, listId }) => {
     try {
@@ -403,7 +399,7 @@ export const get_activities = tool({
 export const update_activity = tool({
   description: 'Update an activity record',
   parameters: z.object({
-    id: z.string().uuid().describe('Activity ID'),
+    id: z.string().describe('Activity ID'),
     name: z.string().optional().describe('Name of the activity'),
     location: z.string().optional().describe('Location of the activity'),
     startTime: z.string().optional().describe('Start date and time'),
@@ -412,7 +408,7 @@ export const update_activity = tool({
     price: z.string().optional().describe('Price of activity'),
     url: z.string().optional().describe('URL for booking details'),
     notes: z.string().optional().describe('Additional notes'),
-    listId: z.string().uuid().optional().describe('Optional list ID'),
+    listId: z.string().optional().describe('Optional list ID'),
   }),
   execute: async ({ id, ...params }) => {
     try {
@@ -439,7 +435,7 @@ export const update_activity = tool({
 export const delete_activity = tool({
   description: 'Delete an activity record',
   parameters: z.object({
-    id: z.string().uuid().describe('Activity ID to delete'),
+    id: z.string().describe('Activity ID to delete'),
   }),
   execute: async ({ id }) => {
     try {

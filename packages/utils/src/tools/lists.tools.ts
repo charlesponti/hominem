@@ -54,7 +54,7 @@ export const invite_to_list = tool({
   description: 'Invite a user to a list',
   parameters: z.object({
     listId: z.string().describe('ID of the list'),
-    email: z.string().email().describe('Email of the user to invite'),
+    email: z.string().describe('Email of the user to invite'),
   }),
   async execute(args) {
     return {
@@ -67,7 +67,7 @@ export const accept_list_invite = tool({
   description: 'Accept an invitation to a list',
   parameters: z.object({
     listId: z.string().describe('ID of the list'),
-    invitedUserEmail: z.string().email().describe('Email of the invited user'),
+    invitedUserEmail: z.string().describe('Email of the invited user'),
   }),
   async execute(args) {
     return {

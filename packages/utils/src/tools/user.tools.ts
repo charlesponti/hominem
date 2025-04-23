@@ -17,8 +17,8 @@ export const update_user_profile = tool({
   description: 'Update user profile information',
   parameters: z.object({
     name: z.string().optional().describe('User name'),
-    email: z.string().email().optional().describe('User email'),
-    photo_url: z.string().url().optional().describe('Profile photo URL'),
+    email: z.string().optional().describe('User email'),
+    photo_url: z.string().optional().describe('Profile photo URL'),
     birthday: z.string().optional().describe('User birthday'),
   }),
   async execute(args) {

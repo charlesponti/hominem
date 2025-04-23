@@ -1,4 +1,4 @@
-import { foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { boolean, foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm/relations'
 import type { z } from 'zod'
 import type { TextAnalysisSchema } from '../../schemas'
@@ -12,6 +12,8 @@ export const notes = pgTable(
     title: text('title'),
     tags: json('tags').$type<Record<string, string>[]>().default([]),
     analysis: json('analysis').$type<z.infer<typeof TextAnalysisSchema>>(),
+    isTask: boolean('is_task').default(false),
+    isComplete: boolean('is_complete').default(false),
     userId: uuid('userId').notNull(),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
