@@ -1,4 +1,5 @@
 import { and, eq } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { db } from '../db/index'
 import { type FinanceAccount, type FinanceAccountInsert, financeAccounts } from '../db/schema'
 import { logger } from '../logger'

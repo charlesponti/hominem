@@ -170,6 +170,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
         `Job ${jobId}: Successfully decoded CSV content (length: ${decodedContent.length})`
       )
     } catch (decodeError) {
+      await removeJobFromQueue(jobId)
       throw new Error(
         `Failed to decode CSV content: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`
       )
