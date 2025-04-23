@@ -2,6 +2,7 @@ import { db } from '@hominem/utils/db'
 import { activity, flight, hotel, transport } from '@hominem/utils/schema'
 import { tool } from 'ai'
 import { and, eq } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { z } from 'zod'
 
 export const create_flight = tool({

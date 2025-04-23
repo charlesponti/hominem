@@ -1,5 +1,6 @@
 import { tool } from 'ai'
 import { and, eq, like, sql } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { z } from 'zod'
 import { db } from '../db/index'
 import {

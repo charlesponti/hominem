@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { logger } from './logger'
 import { redis } from './redis'
 import type { BaseJob, ImportTransactionsJob, ProcessTransactionOptions } from './types'

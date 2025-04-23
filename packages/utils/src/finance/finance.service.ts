@@ -1,4 +1,5 @@
 import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { db } from '../db/index'
 import {
   financeAccounts,
