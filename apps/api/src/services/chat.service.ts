@@ -3,7 +3,7 @@ import { db, takeUniqueOrThrow } from '@hominem/utils/db'
 import { logger } from '@hominem/utils/logger'
 import { chat, chatMessage } from '@hominem/utils/schema'
 import type { ChatMessageSelect } from '@hominem/utils/types'
-import { generateText, type GenerateTextResult, type StepResult, type ToolCallUnion, type ToolResultUnion, type ToolSet } from 'ai'
+import { generateText, type GenerateTextResult, type ToolSet } from 'ai'
 import { desc, eq } from 'drizzle-orm'
 
 type GenerateTextResponse = Awaited<ReturnType<typeof generateText>>['response']
@@ -18,7 +18,7 @@ export class ChatService {
   /**
    * Process and merge tool calls with their results from the response steps
    */
-  mergeToolCallsAndResults<T extends ToolSet>(response: GenerateTextResult<T, any>) {
+  mergeToolCallsAndResults<T extends ToolSet>(response: GenerateTextResult<T, unknown>) {
     // Define type for the merged tool call records
     type MergedToolCall = {
       type: 'tool-call' | 'tool-result'
@@ -31,7 +31,7 @@ export class ChatService {
 
     // Extract all toolCalls and toolResults from the response steps
     const toolCallsMap = new Map<string, MergedToolCall>()
-    
+
     // Process each step in the response to gather all tool calls and results
     for (const step of response.steps || []) {
       // Add tool calls from this step
@@ -43,11 +43,11 @@ export class ChatService {
           args: call.args || {},
         })
       }
-      
+
       // Add tool results from this step
       for (const result of step.toolResults) {
         const existingCall = toolCallsMap.get(result.toolCallId)
-        
+
         if (existingCall) {
           // Merge result with existing call
           existingCall.result = result.result
@@ -60,12 +60,12 @@ export class ChatService {
             toolCallId: result.toolCallId,
             toolName: result.toolName,
             result: result.result,
-            isError: 'isError' in result ? Boolean(result.isError) : false
+            isError: 'isError' in result ? Boolean(result.isError) : false,
           })
         }
       }
     }
-    
+
     // Convert Map to array
     return Array.from(toolCallsMap.values())
   }
@@ -94,38 +94,45 @@ export class ChatService {
    * Transform a generateText response into a single ChatMessageSelect with merged tool calls
    */
   generateChatMessagesFromResponse<T extends ToolSet>(
-    response: GenerateTextResult<T, any>,
+    response: GenerateTextResult<T, unknown>,
     userId: string,
-    chatId: string = ''
+    chatId = ''
   ): ChatMessageSelect[] {
     const timestamp = new Date().toISOString()
-    
+
     // Get the final assistant message content
     const assistantContent = this.getLastAssistantMessage(response.response.messages)
-    
+
     const toolCalls = []
-      for (const step of response.steps) {
-        if (step.toolCalls) toolCalls.push(...step.toolCalls)
-        if (step.toolResults) toolCalls.push(...step.toolResults)
-      }
-    // // Get merged tool calls using the improved method
-    // const mergedToolCalls = this.mergeToolCallsAndResults(response)
-    
+    for (const step of response.steps) {
+      if (step.toolCalls) toolCalls.push(...step.toolCalls)
+      if (step.toolResults) toolCalls.push(...step.toolResults)
+    }
+
+    // Get merged tool calls using the improved method
+    const mergedToolCalls = this.mergeToolCallsAndResults(response)
+    console.log('Merged tool calls:', mergedToolCalls)
+
     // Create a single ChatMessageSelect with the final assistant content and merged tool calls
-    return [{
-      id: crypto.randomUUID(),
-      chatId,
-      userId,
-      role: 'assistant',
-      content: typeof assistantContent === 'string' ? assistantContent : JSON.stringify(assistantContent),
-      toolCalls,
-      reasoning: response.reasoning || null,
-      files: [],
-      parentMessageId: null,
-      messageIndex: '0',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    }]
+    return [
+      {
+        id: crypto.randomUUID(),
+        chatId,
+        userId,
+        role: 'assistant',
+        content:
+          typeof assistantContent === 'string'
+            ? assistantContent
+            : JSON.stringify(assistantContent),
+        toolCalls,
+        reasoning: response.reasoning || null,
+        files: [],
+        parentMessageId: null,
+        messageIndex: '0',
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+    ]
   }
 
   async getChatById(chatId: string) {
