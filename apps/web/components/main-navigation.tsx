@@ -9,7 +9,6 @@ import {
   Menu,
   MessageCircle,
   PaintbrushIcon,
-  UploadCloudIcon,
   User,
 } from 'lucide-react'
 import Image from 'next/image'
@@ -41,13 +40,6 @@ const navItems = [
     title: 'Finance',
     icon: CircleDollarSign,
     url: '/finance',
-    items: [
-      {
-        title: 'Import',
-        icon: UploadCloudIcon,
-        url: '/finance/import',
-      },
-    ],
   },
   {
     title: 'Chats',

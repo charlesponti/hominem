@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useFinanceData } from '@/hooks/use-finance-data'
-import { Download, RefreshCcw, Search } from 'lucide-react'
+import { Download, RefreshCcw, Search, UploadCloudIcon } from 'lucide-react'
+import Link from 'next/link'
 
 export default function TransactionsPage() {
   const {
@@ -76,10 +77,16 @@ export default function TransactionsPage() {
               <RefreshCcw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button variant="outline" onClick={exportTransactions}>
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
+            {transactions.length ? (
+              <Button variant="outline" onClick={exportTransactions}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            ) : null}
+            <Link href="/finance/import" className="btn bg-white">
+              <UploadCloudIcon className="h-4 w-4 mr-2" />
+              Import
+            </Link>
           </div>
         </div>
 
