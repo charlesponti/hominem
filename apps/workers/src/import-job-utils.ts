@@ -15,19 +15,33 @@ export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
       return []
     }
     const jobsData = await redis.mget(jobKeys)
-    const jobs = jobsData
-      .map((jobStr) => {
+    const jobs = await Promise.all(
+      jobsData.map(async (jobStr, index) => {
         try {
           return jobStr ? (JSON.parse(jobStr) as ImportTransactionsJob) : null
         } catch (e) {
-          logger.error('Failed to parse job data:', e, jobStr)
+          // Delete corrupted job data from Redis
+          const jobKey = jobKeys[index]
+          logger.error(`Failed to parse job data for ${jobKey}:`, e)
+
+          try {
+            await redis.del(jobKey)
+            logger.info(`Deleted corrupted job data: ${jobKey}`)
+          } catch (delError) {
+            logger.error(`Failed to delete corrupted job ${jobKey}:`, delError)
+          }
+
           return null
         }
       })
-      .filter((job): job is ImportTransactionsJob => job !== null && job.status === 'queued') // Only return queued jobs
+    )
 
-    logger.info(`Found ${jobs.length} active jobs`)
-    return jobs
+    const activeJobs = jobs.filter(
+      (job): job is ImportTransactionsJob => job !== null && job.status === 'queued'
+    ) // Only return queued jobs
+
+    logger.info(`Found ${activeJobs.length} active jobs`)
+    return activeJobs
   } catch (error) {
     logger.error('Failed to get active jobs', error)
     return []
