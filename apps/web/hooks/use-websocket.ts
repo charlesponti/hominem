@@ -18,7 +18,6 @@ export function useWebsocket<T>() {
   useEffect(() => {
     const connectWebSocket = async () => {
       if (connection) {
-        console.log('reusing existing websocket')
         return
       }
 
@@ -29,7 +28,7 @@ export function useWebsocket<T>() {
       const ws = new WebSocket(wsUrlWithAuth)
 
       ws.onopen = () => {
-        console.log(`WebSocket connected ${wsUrl}`)
+        console.info(`WebSocket connected ${wsUrl}`)
         setIsConnected(true)
       }
 
@@ -37,14 +36,14 @@ export function useWebsocket<T>() {
         try {
           const message = JSON.parse(event.data) as WebSocketMessage<T>
           // Handle messages here based on type
-          console.log('WebSocket message:', message)
+          console.info('WebSocket message:', message)
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error)
         }
       }
 
       ws.onclose = (event) => {
-        console.log(`WebSocket closed: ${event.code} ${event.reason}`)
+        console.error(`WebSocket closed: ${event.code} ${event.reason}`)
         setIsConnected(false)
         connection = null // Clear the WebSocket instance
 
