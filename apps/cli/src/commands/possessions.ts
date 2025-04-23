@@ -27,10 +27,13 @@ command
       // Include auth token in headers if available
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-      const response = await axios.get(`http://${options.host}:${options.port}/api/possessions`, {
-        headers,
-      })
-      spinner.succeed('Possessions fetched successfully')
+      const response = await axios.get(
+        `http://${options.host}:${options.port}/api/finance/accounts`,
+        {
+          headers,
+        }
+      )
+      spinner.succeed('Possessions fetched successfully\n')
       logger.info(JSON.stringify(response.data, null, 2))
     } catch (error) {
       logger.error('Error fetching possessions:', error)
