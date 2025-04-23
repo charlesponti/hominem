@@ -1,7 +1,6 @@
-import { openai } from '@ai-sdk/openai'
+import { google } from '@ai-sdk/google'
 import { logger } from '@hominem/utils/logger'
 import { allTools } from '@hominem/utils/tools'
-import type { ChatMessageSelect } from '@hominem/utils/types'
 import { generateText, streamText } from 'ai'
 import type { FastifyInstance } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'
@@ -13,7 +12,7 @@ import z from 'zod'
 import { ApiError, handleError } from '../lib/errors'
 import { redisCache } from '../plugins/redis'
 
-const model = openai('gpt-4o-mini')
+const model = google('gemini-2.0-flash-exp')
 
 // Schema for chat requests
 const chatRequestSchema = z.object({
@@ -24,7 +23,7 @@ const chatRequestSchema = z.object({
 
 // Schema for generate requests
 const generateRequestSchema = z.object({
-  message: z.string().min(1, 'Message cannot be empty')
+  message: z.string().min(1, 'Message cannot be empty'),
 })
 
 // Define utility tools
@@ -342,9 +341,10 @@ export async function chatPlugin(fastify: FastifyInstance) {
       // Generate ChatMessageSelect array using service helper
       const chatMessages = chatService.generateChatMessagesFromResponse(result, userId)
       return reply.send({
-        messages: chatMessages
+        messages: chatMessages,
       })
     } catch (error) {
+      console.error('Error in generate endpoint:', error)
       logger.error(error)
       return handleError(
         error instanceof Error ? error : new ApiError(500, 'Error processing generate request'),
