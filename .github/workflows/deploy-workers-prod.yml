@@ -1,6 +1,7 @@
 name: deploy-workers-prod
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -8,49 +9,15 @@ on:
       - 'packages/utils/**'
       - '.github/workflows/deploy-workers-prod.yml'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        
-      - name: Build worker
-        run: pnpm turbo run build --filter=@hominem/workers --force
-        
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: workers-build
-          path: apps/workers/build/
-          
+jobs:     
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     container: ghcr.io/railwayapp/cli:latest
     env:
       SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_IMPORT_TRANSACTIONS }}
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
     steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v4
-      
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: workers-build
-          path: apps/workers/build/
-          
       - name: Deploy to Railway
         run: railway up --service ${{ env.SERVICE_ID }} --detach
