@@ -12,6 +12,8 @@
     "outDir": "build",
     "composite": true,
     "declaration": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": [
         "src/*"
