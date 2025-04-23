@@ -1,4 +1,5 @@
 import { logger } from '@hominem/utils/logger'
+import type { BaseJob } from '@hominem/utils/types'
 
 /**
  * Implements a retry mechanism with exponential backoff
@@ -37,20 +38,12 @@ export interface JobStats {
   processingTime: number // Milliseconds
 }
 
-export interface BaseJob {
-  id: string
-  userId: string
-  createdAt: number
-  status: 'queued' | 'processing' | 'done' | 'error'
-  startTime?: number
-  endTime?: number
-  error?: string
-}
-
 export interface ImportTransactionsJob extends BaseJob {
   type: 'import-transactions'
   file: string
   accountId?: string
+  error?: string
+  startTime: number
   options?: {
     // Add options if they are expected
     deduplicateThreshold?: number

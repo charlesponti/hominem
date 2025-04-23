@@ -1,5 +1,6 @@
 import { queryTransactions } from '@hominem/utils/finance'
-import { getActiveJobs, getJobStatus, queueImportJob } from '@hominem/utils/imports'
+import { getActiveJobs, getJobStatus, getUserJobs, queueImportJob } from '@hominem/utils/imports'
+import type { ImportTransactionsJob } from '@hominem/utils/types'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
@@ -60,6 +61,26 @@ export async function financeRoutes(fastify: FastifyInstance) {
           }
         }
 
+        // Check if a job with the same filename already exists for this user
+        const userJobs = await getUserJobs<ImportTransactionsJob>(userId, 1, 100)
+        const existingJob = userJobs.jobs.find(
+          (job) =>
+            job.fileName === validated.data.fileName &&
+            (job.status === 'queued' || job.status === 'uploading' || job.status === 'processing')
+        )
+
+        if (existingJob) {
+          fastify.log.info(`Found existing job ${existingJob.jobId} for ${validated.data.fileName}`)
+
+          return {
+            success: true,
+            jobId: existingJob.jobId,
+            fileName: existingJob.fileName,
+            status: existingJob.status,
+            message: 'File is already being processed',
+          }
+        }
+
         // Queue job in Redis-based worker system
         const job = await queueImportJob({
           ...validated.data,
@@ -79,14 +100,13 @@ export async function financeRoutes(fastify: FastifyInstance) {
       } catch (error) {
         if (error instanceof Error) {
           fastify.log.error(`Import error: ${error.message}`)
-          reply.code(500).send({
+          return reply.code(500).send({
             success: false,
             error: 'Failed to process import',
             details: error.message,
           })
-        } else {
-          handleError(error as Error, reply)
         }
+        return handleError(error as Error, reply)
       }
     }
   )

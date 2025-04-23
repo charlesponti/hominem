@@ -10,10 +10,20 @@ export const JOB_EXPIRATION_TIME = 60 * 60 * 24 // 24 hours
  */
 export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
   try {
-    const jobKeys = await redis.keys(`${IMPORT_JOB_PREFIX}*`)
-    if (!jobKeys.length) {
+    // Get all keys that match the job prefix
+    const allKeys = await redis.keys(`${IMPORT_JOB_PREFIX}*`)
+    if (!allKeys.length) {
       return []
     }
+
+    // Filter out CSV content keys to avoid parsing them as JSON
+    const jobKeys = allKeys.filter((key) => !key.endsWith(':csv'))
+
+    if (!jobKeys.length) {
+      logger.info('No job objects found in Redis')
+      return []
+    }
+
     const jobsData = await redis.mget(jobKeys)
     const jobs = await Promise.all(
       jobsData.map(async (jobStr, index) => {
@@ -54,31 +64,47 @@ export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
 export async function removeJobFromQueue(jobId: string): Promise<void> {
   try {
     const jobKey = `${IMPORT_JOB_PREFIX}${jobId}`
-    logger.info(`Removing job ${jobId} (${jobKey}) from queue`)
-    await redis.del(jobKey)
+    const csvKey = `${jobKey}:csv`
+
+    logger.info(`Removing job ${jobId} and its associated data from Redis`)
+
+    // Use pipeline to perform both deletions in a single Redis call
+    const pipeline = redis.pipeline()
+    pipeline.del(jobKey)
+    pipeline.del(csvKey)
+
+    await pipeline.exec()
+    logger.info(`Successfully removed job ${jobId} and its CSV content`)
   } catch (error) {
     logger.error(`Failed to remove job ${jobId}`, error)
   }
 }
 
 /**
- * Get the content of an import file (simulated)
- * In a real scenario, this might fetch from storage like S3 or a local cache.
+ * Get the content of an import file from Redis
+ * Returns the base64-encoded CSV content that was saved from the API
  */
 export async function getImportFileContent(jobId: string): Promise<string> {
   try {
-    // Simulate fetching content based on jobId - replace with actual logic
-    logger.info(`Simulating fetching import file content for job: ${jobId}`)
-    // Example: return await fs.readFile(`/path/to/imports/${jobId}.csv`, 'utf-8')
-    // For now, return mock CSV data
-    const mockCsv = `"Account","Date","Amount","Description","Category"
-"Checking","2025-04-20","-50.00","Coffee Shop","Food & Drink"
-"Savings","2025-04-19","1000.00","Paycheck","Income"
-`
-    // Return as base64 encoded string as expected by the worker
-    return Buffer.from(mockCsv).toString('base64')
+    const csvKey = `${IMPORT_JOB_PREFIX}${jobId}:csv`
+    logger.info(`Fetching import file content for job: ${jobId} from key: ${csvKey}`)
+
+    const content = await redis.get(csvKey)
+    if (!content) {
+      throw new Error(`CSV content not found for job ${jobId}`)
+    }
+
+    // Validate that the content looks like base64 (simple regex check)
+    const base64Regex = /^[A-Za-z0-9+/=]+$/
+    if (!base64Regex.test(content.trim())) {
+      logger.warn(`Content for job ${jobId} doesn't appear to be valid base64`)
+    }
+
+    return content
   } catch (error) {
+    await removeJobFromQueue(jobId) // Clean up the job if there's an error
+    const message = error instanceof Error ? error.message : String(error)
     logger.error(`Failed to get import file content for job ${jobId}`, error)
-    throw new Error(`Failed to get import file content: ${error}`)
+    throw new Error(`Failed to get import file content: ${message}`)
   }
 }

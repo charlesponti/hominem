@@ -139,7 +139,9 @@ export function useImportTransactions() {
 
   useEffect(() => {
     if (ws && isConnected) {
-      ws.send(JSON.stringify({ type: IMPORT_PROGRESS_CHANNEL_TYPE }))
+      setTimeout(() => {
+        ws.send(JSON.stringify({ type: IMPORT_PROGRESS_CHANNEL_TYPE }))
+      }, 1000)
     }
   }, [ws, isConnected])
 

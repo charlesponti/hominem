@@ -9,6 +9,7 @@ import './env.ts'
 import { processTransactionsFromCSV } from '@hominem/utils/finance'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
+import type { BaseJob } from '@hominem/utils/types'
 import {
   getActiveJobs,
   getImportFileContent,
@@ -16,7 +17,7 @@ import {
   JOB_EXPIRATION_TIME,
   removeJobFromQueue,
 } from './import-job-utils.ts'
-import type { BaseJob, ImportTransactionsJob, JobStats } from './utils.ts'
+import type { ImportTransactionsJob, JobStats } from './utils.ts'
 
 const IMPORT_PROGRESS_CHANNEL = 'import:progress'
 
@@ -97,7 +98,7 @@ export async function updateJobStatus<T extends BaseJob>(
  * Process an import job in the background with retry logic
  */
 export async function processImportJob(job: ImportTransactionsJob) {
-  const { id: jobId, file: fileName, userId } = job
+  const { jobId, file: fileName, userId } = job
 
   // Check that userId exists
   if (!userId) {
@@ -121,7 +122,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
     return
   }
 
-  logger.info(`Starting import job ${jobId} for file ${fileName} for user ${userId}`)
+  logger.info(`Starting import job ${jobId} for file ${fileName || 'unnamed'} for user ${userId}`)
 
   const stats: JobStats = {
     created: 0,
@@ -140,17 +141,39 @@ export async function processImportJob(job: ImportTransactionsJob) {
   try {
     await updateJobStatus<ImportTransactionsJob>(jobId, {
       status: 'processing',
-      startTime: startTime,
+      startTime,
       stats: { progress: 0 },
     })
 
+    // Get base64 encoded CSV content from Redis
     const csvContentBase64 = await getImportFileContent(jobId)
     if (!csvContentBase64) {
       throw new Error(`CSV content not found for job ${jobId}`)
     }
 
-    const decodedContent = Buffer.from(csvContentBase64, 'base64').toString('utf-8')
-    logger.info(`Job ${jobId}: Decoded CSV content (length: ${decodedContent.length})`)
+    let decodedContent: string
+    try {
+      // Safely decode the base64 content to UTF-8
+      decodedContent = Buffer.from(csvContentBase64, 'base64').toString('utf-8')
+
+      // Basic validation of CSV content
+      if (!decodedContent || decodedContent.trim().length === 0) {
+        throw new Error('Decoded CSV content is empty')
+      }
+
+      // Check if content looks like a CSV (contains commas and at least one newline)
+      if (!decodedContent.includes(',') || !decodedContent.includes('\n')) {
+        logger.warn(`Job ${jobId}: Decoded content doesn't appear to be a valid CSV format`)
+      }
+
+      logger.info(
+        `Job ${jobId}: Successfully decoded CSV content (length: ${decodedContent.length})`
+      )
+    } catch (decodeError) {
+      throw new Error(
+        `Failed to decode CSV content: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`
+      )
+    }
 
     let processedCount = 0
     const totalEstimate = decodedContent.split('\n').length - 1
@@ -258,31 +281,31 @@ setInterval(async () => {
     const activeJobs = await getActiveJobs()
 
     for (const job of activeJobs) {
-      if (!job?.id || !job?.userId) {
+      if (!job?.jobId || !job?.userId) {
         // Use optional chaining
         logger.error('Received invalid job data from getActiveJobs (should not happen): ', job)
-        if (job?.id) {
+        if (job?.jobId) {
           // Use optional chaining
-          await removeJobFromQueue(job.id)
+          await removeJobFromQueue(job.jobId)
         }
         continue
       }
 
       try {
-        logger.info(`Processing job ${job.id} (${job.file}) for user ${job.userId}`)
+        logger.info(`Processing job ${job.jobId} (${job.file}) for user ${job.userId}`)
         await processImportJob(job)
-        logger.info(`Job ${job.id} processed successfully`)
+        logger.info(`Job ${job.jobId} processed successfully`)
       } catch (error) {
-        logger.error(`Unexpected error during processing call for job ${job.id}:`, error)
+        logger.error(`Unexpected error during processing call for job ${job.jobId}:`, error)
         try {
-          await updateJobStatus<ImportTransactionsJob>(job.id, {
+          await updateJobStatus<ImportTransactionsJob>(job.jobId, {
             status: 'error',
             error: `Worker failed unexpectedly: ${error instanceof Error ? error.message : String(error)}`,
             endTime: Date.now(),
           })
         } catch (statusUpdateError) {
           logger.error(
-            `Failed to update job ${job.id} status after unexpected error:`,
+            `Failed to update job ${job.jobId} status after unexpected error:`,
             statusUpdateError
           )
         }
@@ -300,10 +323,10 @@ process.on('SIGTERM', async () => {
   try {
     const activeJobs = await getActiveJobs()
     for (const job of activeJobs) {
-      if (job?.id && job?.status === 'processing') {
+      if (job?.jobId && job?.status === 'processing') {
         // Use optional chaining
-        logger.info(`Resetting job ${job.id} status to 'queued' due to SIGTERM`)
-        await updateJobStatus<ImportTransactionsJob>(job.id, {
+        logger.info(`Resetting job ${job.jobId} status to 'queued' due to SIGTERM`)
+        await updateJobStatus<ImportTransactionsJob>(job.jobId, {
           status: 'queued',
           startTime: undefined,
         })
