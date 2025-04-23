@@ -61,12 +61,10 @@ export function useImportTransactions() {
               throw new Error('Server error')
             }
 
-            // Update status to processing after successful upload
+            // Update status after successful upload
             setStatuses((prev) =>
               prev.map((status) =>
-                status.file.name === file.name
-                  ? { ...status, status: 'processing' as const }
-                  : status
+                status.file.name === file.name ? { ...status, status: response.status } : status
               )
             )
 
