@@ -1,6 +1,7 @@
 import { openai } from '@ai-sdk/openai'
 import { logger } from '@hominem/utils/logger'
 import { allTools } from '@hominem/utils/tools'
+import type { ChatMessageSelect } from '@hominem/utils/types'
 import { generateText, streamText } from 'ai'
 import type { FastifyInstance } from 'fastify'
 import { verifyAuth } from 'src/middleware/auth'
@@ -23,8 +24,7 @@ const chatRequestSchema = z.object({
 
 // Schema for generate requests
 const generateRequestSchema = z.object({
-  message: z.string().min(1, 'Message cannot be empty'),
-  showDebugInfo: z.boolean().optional(),
+  message: z.string().min(1, 'Message cannot be empty')
 })
 
 // Define utility tools
@@ -310,7 +310,7 @@ export async function chatPlugin(fastify: FastifyInstance) {
         return reply.code(400).send({ errors: error.errors.map((e) => e.path).join(', ') })
       }
 
-      const { message, showDebugInfo } = data
+      const { message } = data
 
       // Create performance timer
       const timer = performanceService.startTimer(`generate-${userId}-${Date.now()}`)
@@ -339,15 +339,10 @@ export async function chatPlugin(fastify: FastifyInstance) {
       timer.mark('generate-complete')
       timer.stop()
 
-      // Format response
+      // Generate ChatMessageSelect array using service helper
+      const chatMessages = chatService.generateChatMessagesFromResponse(result, userId)
       return reply.send({
-        messages: result.response.messages,
-        ...(showDebugInfo
-          ? {
-              steps: result.toolCalls,
-              results: result.toolResults,
-            }
-          : {}),
+        messages: chatMessages
       })
     } catch (error) {
       logger.error(error)
