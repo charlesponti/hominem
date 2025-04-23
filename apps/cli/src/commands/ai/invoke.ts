@@ -4,6 +4,7 @@ import type { ChatMessageSelect } from '@hominem/utils/types'
 import axios from 'axios'
 import chalk from 'chalk'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import { writeFileSync } from 'node:fs'
 import util from 'node:util'
 import ora from 'ora'
@@ -34,86 +35,88 @@ export const invokeCommand = new Command()
         messages: ChatMessageSelect[]
       }>(url, payload, { headers })
       spinner.succeed(chalk.green('Response generated successfully'))
-      
+
       const { messages } = response.data
 
-      writeFileSync('messages.json', JSON.stringify(messages, null, 2))
-      
       // Get the assistant message (should be only one with our updated service)
-      const assistantMsg = messages.find(msg => msg.role === 'assistant')
-      
+      const assistantMsg = messages.find((msg) => msg.role === 'assistant')
+
       if (!assistantMsg) {
-        console.log(chalk.red('No assistant message found in response'))
+        consola.log(chalk.red('No assistant message found in response'))
         process.exit(1)
       }
-      
+
       const toolCalls = assistantMsg.toolCalls ?? []
 
       // Display the message content
-      console.log(chalk.blue.bold('assistant:'))
-      console.log(assistantMsg.content)
-      console.log('\n')
+      consola.log(chalk.blue.bold('assistant:'))
+      consola.log(assistantMsg.content)
+      consola.log('\n')
 
       // Summarize any tool calls succinctly
       if (toolCalls.length > 0) {
-        console.log(chalk.yellow.bold('tool calls:'))
-        
+        consola.log(chalk.yellow.bold('tool calls:'))
+
         // Group tool calls by toolName for a more structured output
         const callsByToolName = new Map()
-        
+
         for (const call of toolCalls) {
           if (call.type !== 'tool-call') continue
-          
+
           // Group by tool name for better organization
           if (!callsByToolName.has(call.toolName)) {
             callsByToolName.set(call.toolName, [])
           }
           callsByToolName.get(call.toolName).push(call)
         }
-        
+
         // Display each tool by name with their calls
         for (const [toolName, calls] of callsByToolName.entries()) {
-          console.log(chalk.cyan.bold(`  ${toolName}:`))
-          
+          consola.log(chalk.cyan.bold(`  ${toolName}:`))
+
           for (const call of calls) {
             // Find the matching result if any
             const result = toolCalls.find(
-              tc => tc.type === 'tool-result' && tc.toolCallId === call.toolCallId
+              (tc) => tc.type === 'tool-result' && tc.toolCallId === call.toolCallId
             )
-            
+
             // Format args
             const argsObj = call.args ?? {}
-            console.log(chalk.cyan('    args:'))
+            consola.log(chalk.cyan('    args:'))
             for (const [key, value] of Object.entries(argsObj)) {
-              console.log(chalk.cyan(`      ${key}: ${util.inspect(value, { colors: true, depth: 1 })}`))
+              consola.log(
+                chalk.cyan(`      ${key}: ${util.inspect(value, { colors: true, depth: 1 })}`)
+              )
             }
-            
+
             // Format result
-            if (result && result.result) {
+            if (result?.result) {
               const status = result.isError ? chalk.red('✗') : chalk.green('✓')
-              console.log(chalk.cyan(`    result: ${status}`))
-              
+              consola.log(chalk.cyan(`    result: ${status}`))
+
               // Use util.inspect to format the result object nicely
-              const formattedResult = util.inspect(result.result, { 
-                colors: true, 
-                depth: 2,
-                compact: false
-              }).split('\n').map(line => '      ' + line).join('\n')
-              
-              console.log(formattedResult)
+              const formattedResult = util
+                .inspect(result.result, {
+                  colors: true,
+                  depth: 2,
+                  compact: false,
+                })
+                .split('\n')
+                .map((line) => `      ${line}`)
+                .join('\n')
+
+              consola.log(formattedResult)
             } else {
-              console.log(chalk.cyan('    result: ') + chalk.yellow('(no result)'))
+              consola.log(chalk.cyan('    result: ') + chalk.yellow('(no result)'))
             }
-            console.log() // Empty line between calls
+            consola.log('\n') // Empty line between calls
           }
         }
       }
 
       // Detailed debug info when requested
       if (options.debug) {
-        console.log(chalk.yellow.bold('Debug information:'))
-        console.log(chalk.cyan('Raw tool calls:'))
-        console.log(util.inspect(toolCalls, { colors: true, depth: null }))
+        writeFileSync('debug.json', JSON.stringify(response.data, null, 2))
       }
     } catch (err) {
       logger.error('Error generating response:', err)
