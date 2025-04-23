@@ -12,7 +12,7 @@ import z from 'zod'
 import { ApiError, handleError } from '../lib/errors'
 import { redisCache } from '../plugins/redis'
 
-const model = google('gemini-2.0-flash-exp')
+const model = google('gemini-1.5-pro')
 
 // Schema for chat requests
 const chatRequestSchema = z.object({
