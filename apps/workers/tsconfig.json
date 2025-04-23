@@ -17,6 +17,14 @@
       ]
     }
   },
+  "references": [
+    {
+      "path": "../../packages/utils"
+    },
+    {
+      "path": "../../packages/ai"
+    }
+  ],
   "include": [
     "src/**/*.ts",
     "test/**/*.ts"
