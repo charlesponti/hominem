@@ -1,5 +1,5 @@
 import { tool } from 'ai'
-import { and, eq, like, sql } from 'drizzle-orm'
+import { and, eq, gte, ilike, like, lte, or, sql, type SQL } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
 import { db } from '../db/index'
@@ -364,6 +364,97 @@ export const get_budget_categories = tool({
   },
 })
 
+export const calculate_transactions = tool({
+  description:
+    'Calculate aggregate values (sum, average, count) for transactions based on filters. Useful for questions like "How much did I spend on coffee last month?" or "What was my total income this year?".',
+  parameters: z.object({
+    calculationType: z
+      .enum(['sum', 'average', 'count'])
+      .describe('Type of calculation to perform (sum, average, count)'),
+    userId: z.string().describe('User ID for filtering transactions'),
+    startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
+    endDate: z.string().optional().describe('End date (YYYY-MM-DD)'),
+    type: z
+      .enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment'])
+      .optional()
+      .describe('Filter by transaction type'),
+    category: z.string().optional().describe('Filter by category'),
+    accountId: z.string().optional().describe('Filter by account ID'),
+    descriptionLike: z
+      .string()
+      .optional()
+      .describe('Filter transactions where description contains this text'),
+  }),
+  async execute(args) {
+    const {
+      calculationType,
+      userId,
+      startDate,
+      endDate,
+      type,
+      category,
+      accountId,
+      descriptionLike,
+    } = args
+
+    const conditions: (SQL<unknown> | undefined)[] = [eq(transactions.userId, userId)]
+    if (startDate) conditions.push(gte(transactions.date, new Date(startDate)))
+    if (endDate) conditions.push(lte(transactions.date, new Date(endDate)))
+    if (type) conditions.push(eq(transactions.type, type))
+    if (category)
+      conditions.push(
+        or(
+          ilike(transactions.category, `%${category}%`),
+          ilike(transactions.parentCategory, `%${category}%`)
+        )
+      )
+    if (accountId) conditions.push(eq(transactions.accountId, accountId))
+    if (descriptionLike) conditions.push(like(transactions.description, `%${descriptionLike}%`))
+
+    let aggregateSelection
+    switch (calculationType) {
+      case 'sum':
+        // Assuming 'amount' is stored as text but represents a number
+        aggregateSelection = {
+          value: sql<number>`SUM(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
+        }
+        break
+      case 'average':
+        aggregateSelection = {
+          value: sql<number>`AVG(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
+        }
+        break
+      case 'count':
+        aggregateSelection = { value: sql<number>`COUNT(*)`.mapWith(Number) }
+        break
+      default:
+        throw new Error(`Unsupported calculation type: ${calculationType}`)
+    }
+
+    const result = await db
+      .select(aggregateSelection)
+      .from(transactions)
+      .where(and(...conditions))
+
+    const value = result[0]?.value ?? 0 // Default to 0 if no transactions match or calculation results in null
+
+    // Construct a descriptive message
+    let message = `Calculated ${calculationType}: ${value}`
+    const filtersApplied = Object.entries(args)
+      .filter(([key, val]) => key !== 'userId' && key !== 'calculationType' && val !== undefined)
+      .map(([key, val]) => `${key}=${val}`)
+      .join(', ')
+    if (filtersApplied) {
+      message += ` for filters: ${filtersApplied}`
+    }
+
+    return {
+      calculationResult: value,
+      message,
+    }
+  },
+})
+
 export const tools = {
   // Accounts
   create_finance_account,
@@ -376,6 +467,7 @@ export const tools = {
   get_transactions,
   update_transaction,
   delete_transaction,
+  calculate_transactions, // Added new tool
 
   // Budgeting
   get_budget_category_suggestions,
