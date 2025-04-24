@@ -38,21 +38,31 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to create a note')
     }
 
-    const [note] = await db
-      .insert(notes)
-      .values({
+    try {
+      // Explicitly format the data to match the expected database structure
+      const noteData = {
         content: input.content,
-        title: input.title,
-        tags: input.tags,
+        title: input.title || null,
+        tags: input.tags || [],
         userId: input.userId,
-      })
-      .returning()
+      }
 
-    if (!note) {
-      throw new Error('Failed to create note')
+      console.log('Creating note with data:', JSON.stringify(noteData, null, 2))
+
+      const [note] = await db.insert(notes).values(noteData).returning()
+
+      if (!note) {
+        throw new Error('Failed to create note: No note returned from database')
+      }
+
+      return note
+    } catch (error) {
+      console.error('Error creating note:', error)
+      if (error instanceof Error) {
+        throw new Error(`Failed to create note: ${error.message}`)
+      }
+      throw new Error('Failed to create note: Unknown error')
     }
-
-    return note
   }
 
   async list(userId: string, query?: string, tags?: string[]) {

@@ -28,17 +28,6 @@ export async function financeRoutes(fastify: FastifyInstance) {
     batchDelay: z.number().min(100).max(1000).optional().default(200),
   })
 
-  const queryOptionsSchema = z.object({
-    from: z.string().optional(),
-    to: z.string().optional(),
-    category: z.string().optional(),
-    min: z.string().optional(),
-    max: z.string().optional(),
-    account: z.string().optional(),
-    limit: z.coerce.number().optional(),
-    description: z.string().optional(),
-  })
-
   fastify.post(
     '/import',
     {
@@ -166,10 +155,25 @@ export async function financeRoutes(fastify: FastifyInstance) {
     }
   })
 
+  const queryOptionsSchema = z.object({
+    from: z.string().optional().describe('Start date in YYYY-MM-DD format'),
+    to: z.string().optional().describe('End date in YYYY-MM-DD format'),
+    category: z.string().optional().describe('Transaction category'),
+    min: z.string().optional().describe('Minimum transaction amount'),
+    max: z.string().optional().describe('Maximum transaction amount'),
+    account: z.string().optional().describe('Account filter'),
+    limit: z.coerce.number().optional().describe('Maximum results to return'),
+    description: z.string().optional().describe('Description search term'),
+  })
+
   fastify.get('/transactions', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Not authorized' })
+    }
     try {
       const queryOptions = queryOptionsSchema.parse(request.query)
-      const result = await queryTransactions(queryOptions)
+      const result = await queryTransactions({ ...queryOptions, userId })
       return result
     } catch (error) {
       fastify.log.error(`Error fetching transactions: ${error}`)

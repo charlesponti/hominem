@@ -17,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useFinanceData } from '@/lib/hooks/use-finance-data'
 import { Download, RefreshCcw, Search, UploadCloudIcon } from 'lucide-react'
-import Link from 'next/link'
+import { RouteLink } from '../../components/route-link'
 
 export default function TransactionsPage() {
   const {
@@ -83,10 +83,10 @@ export default function TransactionsPage() {
                 Export
               </Button>
             ) : null}
-            <Link href="/finance/import" className="btn bg-white">
+            <RouteLink href="/finance/import" className="btn bg-white">
               <UploadCloudIcon className="h-4 w-4 mr-2" />
               Import
-            </Link>
+            </RouteLink>
           </div>
         </div>
 

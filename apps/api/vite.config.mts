@@ -13,20 +13,9 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        /node_modules/,
-        'node:fs',
-        'node:path',
-        'node:os',
-        'node:crypto',
-        'node:https',
-        'node:http',
-        'node:url',
-        'node:zlib',
-        'node:stream',
-        'node:buffer',
-        'node:util',
-        'node:process',
-        'node:events'
+        /^node:.*/,
+        /^@hominem\/(?!.*\.(ts|tsx)$).*$/,
+        /node_modules/
       ],
       output: {
         entryFileNames: '[name].js',
@@ -35,4 +24,12 @@ export default defineConfig({
     sourcemap: true,
     emptyOutDir: true,
   },
+  optimizeDeps: {
+    include: ['@hominem/ai', '@hominem/utils'],
+    exclude: ['fsevents']
+  },
+  resolve: {
+    conditions: ['import', 'default', 'node'],
+    mainFields: ['module', 'main']
+  }
 })

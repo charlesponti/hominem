@@ -3,18 +3,19 @@
 import { cn } from '@/lib/utils'
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
 import {
-  CircleDollarSign,
-  FilePen,
-  LogOut,
+  CircleDollarSignIcon,
+  Home,
   Menu,
   MessageCircle,
-  PaintbrushIcon,
+  PenTool,
+  Timer,
   User,
+  X,
 } from 'lucide-react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { RouteLink } from './route-link'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -22,40 +23,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
-import { Sheet, SheetClose, SheetContent, SheetTrigger } from './ui/sheet'
 
 const navItems = [
   {
-    title: 'Career',
-    icon: FilePen,
-    items: [
-      {
-        title: 'Applications',
-        icon: User,
-        url: '/career/job-applications',
-      },
-    ],
+    title: 'Home',
+    icon: Home,
+    url: '/',
   },
   {
     title: 'Finance',
-    icon: CircleDollarSign,
+    icon: CircleDollarSignIcon,
     url: '/finance',
   },
   {
-    title: 'Chats',
-    icon: MessageCircle,
-    url: '/chat',
+    title: 'Tasks',
+    icon: Timer,
+    url: '/tasks',
   },
   {
-    title: 'Creative',
-    icon: PaintbrushIcon,
-    items: [
-      {
-        title: 'Content Strategy',
-        icon: PaintbrushIcon,
-        url: '/creative/content-strategy',
-      },
-    ],
+    title: 'Notes',
+    icon: PenTool,
+    url: '/notes',
+  },
+  {
+    title: 'Chat',
+    icon: MessageCircle,
+    url: '/chat',
   },
 ]
 
@@ -63,107 +56,134 @@ export function MainNavigation() {
   const pathname = usePathname()
   const { user, isLoaded } = useUser()
   const isLoggedIn = isLoaded && user
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [animateExit, setAnimateExit] = useState(false)
 
-  // Close mobile menu when navigating
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [pathname])
+    // Check if we're on the client side
+    if (typeof window !== 'undefined') {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth < 768)
+      }
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="md:container md:mx-auto px-4 flex h-16 items-center">
-        {/* Logo */}
-        <div className="mr-4 flex items-center">
-          <Link href="/" className="flex items-center space-x-2">
+      // Initial check
+      checkMobile()
+
+      // Add event listener for window resize
+      window.addEventListener('resize', checkMobile)
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('resize', checkMobile)
+      }
+    }
+
+    return () => {}
+  }, [])
+
+  // Control body scroll when menu is open
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (menuOpen) {
+        document.body.style.overflow = 'hidden'
+      } else {
+        document.body.style.overflow = ''
+      }
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        document.body.style.overflow = ''
+      }
+    }
+  }, [menuOpen])
+
+  const closeMenu = useCallback(() => {
+    if (menuOpen) {
+      setAnimateExit(true)
+      setTimeout(() => {
+        setMenuOpen(false)
+        setAnimateExit(false)
+      }, 400) // Match this with the animation duration
+    }
+  }, [menuOpen])
+
+  // Close the menu when navigating to a new page
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Close menu on route change
+  useEffect(() => {
+    closeMenu()
+  }, [pathname, closeMenu])
+
+  const toggleMenu = () => {
+    if (menuOpen) {
+      closeMenu()
+    } else {
+      setMenuOpen(true)
+    }
+  }
+
+  // Desktop sidebar
+  if (!isMobile) {
+    return (
+      <header className="fixed left-0 top-0 h-screen flex flex-col w-14 md:w-16 border-r bg-background z-40">
+        <div className="flex flex-col items-center py-6">
+          <RouteLink href="/" className="mb-8">
             <Image
               src="/logo-hominem-transparent.png"
               alt="Hominem Logo"
-              width={30}
-              height={30}
-              className="rounded-md"
+              width={24}
+              height={24}
+              className="transition-opacity hover:opacity-80"
             />
-          </Link>
-        </div>
+          </RouteLink>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex md:flex-1 md:items-center md:justify-between">
-          <ul className="flex items-center gap-6">
+          <nav className="flex flex-col items-center gap-8 mb-auto">
             {navItems.map((item) => (
-              <li key={item.title} className="relative group">
-                {item.url ? (
-                  <Link
-                    href={item.url}
-                    className={cn(
-                      'flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary',
-                      pathname.startsWith(item.url) && 'text-primary'
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm font-medium cursor-default">
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </div>
+              <RouteLink
+                key={item.title}
+                href={item.url}
+                className={cn(
+                  'flex items-center justify-center h-10 w-10 rounded-none transition-colors relative',
+                  pathname === item.url
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
-
-                {/* Dropdown for submenus */}
-                {item.items && item.items.length > 0 && (
-                  <div className="absolute left-0 top-full z-10 mt-2 w-48 rounded-md border bg-background p-2 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                    <ul className="space-y-1">
-                      {item.items.map((subItem) => (
-                        <li key={subItem.title}>
-                          <Link
-                            href={subItem.url}
-                            className={cn(
-                              'flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted',
-                              pathname.startsWith(subItem.url) && 'bg-muted'
-                            )}
-                          >
-                            <subItem.icon className="h-4 w-4" />
-                            <span>{subItem.title}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+              >
+                <item.icon className="h-[18px] w-[18px]" />
+                {pathname === item.url && (
+                  <span className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-[2px] h-5 bg-primary" />
                 )}
-              </li>
+              </RouteLink>
             ))}
-          </ul>
+          </nav>
 
-          {/* User/Auth Section */}
-          <div className="flex items-center gap-2">
+          <div className="mt-auto pt-6">
             {!isLoaded ? (
-              <div className="h-9 w-9 rounded-full animate-pulse bg-muted" />
+              <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
             ) : isLoggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-2 rounded-full"
+                    size="icon"
+                    className="h-10 w-10 rounded-none text-muted-foreground hover:text-foreground"
                     aria-label="User menu"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="rounded-full p-1 bg-gray-100">
-                        <User size={18} />
-                      </div>
-                      <span className="hidden sm:inline-block">{user.fullName}</span>
-                    </div>
+                    <User className="h-[18px] w-[18px]" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent side="right" align="end" className="w-56 mb-2">
+                  <DropdownMenuItem className="py-2">
+                    <span className="font-serif">{user.fullName}</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <SignOutButton>
                       <Button
                         variant="ghost"
                         className="w-full flex items-center justify-start gap-2 p-0"
                       >
-                        <LogOut size={16} />
-                        Sign Out
+                        Sign out
                       </Button>
                     </SignOutButton>
                   </DropdownMenuItem>
@@ -171,106 +191,57 @@ export function MainNavigation() {
               </DropdownMenu>
             ) : (
               <SignInButton>
-                <Button>Sign in</Button>
+                <Button variant="ghost" size="icon" className="rounded-none">
+                  <User className="h-[18px] w-[18px]" />
+                </Button>
               </SignInButton>
             )}
           </div>
-        </nav>
+        </div>
+      </header>
+    )
+  }
 
-        {/* Mobile Menu Button */}
-        <div className="flex flex-1 items-center justify-end md:hidden">
-          {isLoggedIn && (
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="mr-2" aria-label="Toggle menu">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh] rounded-t-xl">
-                <div className="px-4 py-6">
-                  <div className="mb-8 flex items-center">
-                    <Image
-                      src="/logo-hominem-transparent.png"
-                      alt="Hominem Logo"
-                      width={30}
-                      height={30}
-                      className="rounded-md"
-                    />
-                    <span className="ml-2 text-xl font-bold">hominem</span>
-                  </div>
+  // Mobile top bar with full screen menu
+  return (
+    <>
+      <header className="fixed top-0 left-0 right-0 h-14 bg-background border-b flex items-center justify-between px-4 z-40">
+        <RouteLink href="/" className="flex items-center">
+          <Image
+            src="/logo-hominem-transparent.png"
+            alt="Hominem Logo"
+            width={24}
+            height={24}
+            className="transition-opacity hover:opacity-80"
+          />
+        </RouteLink>
 
-                  <nav className="flex flex-col space-y-6">
-                    {navItems.map((item) => (
-                      <div key={item.title} className="space-y-2">
-                        {item.url ? (
-                          <SheetClose asChild>
-                            <Link
-                              href={item.url}
-                              className={cn(
-                                'flex items-center gap-2 text-sm font-medium',
-                                pathname.startsWith(item.url) && 'text-primary'
-                              )}
-                            >
-                              <item.icon className="h-5 w-5" />
-                              <span>{item.title}</span>
-                            </Link>
-                          </SheetClose>
-                        ) : (
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                            <item.icon className="h-5 w-5" />
-                            <span>{item.title}</span>
-                          </div>
-                        )}
-
-                        {item.items && item.items.length > 0 && (
-                          <ul className="ml-6 space-y-2 border-l pl-4">
-                            {item.items.map((subItem) => (
-                              <li key={subItem.title}>
-                                <SheetClose asChild>
-                                  <Link
-                                    href={subItem.url}
-                                    className={cn(
-                                      'flex items-center gap-2 text-sm',
-                                      pathname.startsWith(subItem.url) && 'text-primary'
-                                    )}
-                                  >
-                                    <subItem.icon className="h-4 w-4" />
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                </SheetClose>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
-                  </nav>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
-
-          {/* Mobile User Menu */}
+        <div className="flex items-center gap-2">
           {!isLoaded ? (
-            <div className="h-9 w-9 rounded-full animate-pulse bg-muted" />
+            <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
           ) : isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
-                  <div className="rounded-full p-1 bg-gray-100">
-                    <User size={18} />
-                  </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full"
+                  aria-label="User menu"
+                >
+                  <User className="h-[18px] w-[18px]" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="py-2">
+                  <span className="font-serif">{user.fullName}</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <SignOutButton>
                     <Button
                       variant="ghost"
                       className="w-full flex items-center justify-start gap-2 p-0"
                     >
-                      <LogOut size={16} />
-                      Sign Out
+                      Sign out
                     </Button>
                   </SignOutButton>
                 </DropdownMenuItem>
@@ -278,11 +249,75 @@ export function MainNavigation() {
             </DropdownMenu>
           ) : (
             <SignInButton>
-              <Button>Sign in</Button>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <User className="h-[18px] w-[18px]" />
+              </Button>
             </SignInButton>
           )}
+
+          <Button variant="ghost" size="icon" className="ml-1" onClick={toggleMenu}>
+            {menuOpen ? (
+              <X className="h-5 w-5 transition-all duration-300 ease-out" />
+            ) : (
+              <Menu className="h-5 w-5 transition-all duration-300 ease-out" />
+            )}
+          </Button>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Full-screen Mobile Menu */}
+      {menuOpen && (
+        <div
+          className={cn(
+            'fixed inset-0 z-50 bg-background flex flex-col pt-14',
+            animateExit ? 'menu-container-exit' : 'menu-container-enter'
+          )}
+        >
+          <div className="relative w-full h-full overflow-auto p-6 flex flex-col">
+            <h2 className="font-serif text-xl mb-8 opacity-0 animate-[menuSlideUp_0.4s_cubic-bezier(0.22,1,0.36,1)_0.1s_forwards]">
+              Navigation
+            </h2>
+
+            <nav className="flex flex-col space-y-4 mb-8">
+              {navItems.map((item, index) => (
+                <RouteLink
+                  key={item.title}
+                  href={item.url}
+                  onClick={closeMenu}
+                  className={cn(
+                    'flex items-center py-3 border-b border-muted transition-colors',
+                    pathname === item.url
+                      ? 'text-primary border-primary'
+                      : 'text-foreground border-muted hover:text-primary'
+                  )}
+                  style={{
+                    opacity: 0,
+                    animation: `menuSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${0.1 + index * 0.05}s forwards`,
+                  }}
+                >
+                  <div className="w-10 flex items-center justify-center">
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <span className="ml-4 text-lg font-light">{item.title}</span>
+                </RouteLink>
+              ))}
+            </nav>
+
+            <div
+              className="mt-auto opacity-0"
+              style={{
+                animation: 'menuSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards',
+              }}
+            >
+              <div className="border-t border-muted pt-4">
+                <p className="text-sm text-muted-foreground">
+                  © {new Date().getFullYear()} Hominem. All rights reserved.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

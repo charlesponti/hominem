@@ -201,11 +201,5 @@ export function useImportTransactionsStore() {
     isImporting: importMutation.isLoading,
     isError: importMutation.isError || !!error,
     error,
-    reset: () => {
-      setStatuses([])
-      setActiveJobIds([])
-      setError(null)
-      importMutation.reset()
-    },
   }
 }

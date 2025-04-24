@@ -1,4 +1,4 @@
-import { NotesService } from '@hominem/utils/notes'
+import { ForbiddenError, NotesService } from '@hominem/utils/notes'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
@@ -32,12 +32,74 @@ export async function notesRoutes(fastify: FastifyInstance) {
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const userId = request.userId
-      if (!userId) throw new Error('User ID is required')
+      if (!userId) {
+        fastify.log.error('Create note failed: Missing user ID')
+        reply.code(401)
+        return { error: 'User ID is required' }
+      }
 
-      const validated = createNoteSchema.parse(request.body)
+      fastify.log.info(`Creating note for user ${userId}`)
+
+      // Validate request body and log any parsing errors
+      const validationResult = createNoteSchema.safeParse(request.body)
+      if (!validationResult.success) {
+        const validationErrors = validationResult.error.format()
+        fastify.log.error({
+          msg: 'Create note validation failed',
+          userId,
+          errors: validationErrors,
+        })
+        reply.code(400)
+        return {
+          error: 'Invalid note data',
+          details: validationErrors,
+        }
+      }
+
+      const validated = validationResult.data
+
+      // Log the note creation attempt with sanitized content length
+      fastify.log.info({
+        msg: 'Attempting to create note',
+        userId,
+        contentLength: validated.content.length,
+        hasTitle: !!validated.title,
+        tagsCount: validated.tags?.length || 0,
+      })
+
       const result = await notesService.create({ ...validated, userId })
+
+      fastify.log.info({
+        msg: 'Note created successfully',
+        userId,
+        noteId: result.id,
+      })
+
       return result
     } catch (error) {
+      // Log detailed error information
+      fastify.log.error({
+        msg: 'Create note error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        userId: request.userId,
+      })
+
+      // Handle specific error types with appropriate status codes
+      if (error instanceof ForbiddenError) {
+        reply.code(403)
+        return { error: error.message }
+      }
+
+      if (error instanceof z.ZodError) {
+        reply.code(400)
+        return {
+          error: 'Validation failed',
+          details: error.format(),
+        }
+      }
+
       handleError(error as Error, reply)
     }
   })

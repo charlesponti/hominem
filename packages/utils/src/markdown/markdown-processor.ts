@@ -123,26 +123,6 @@ export class MarkdownProcessor {
     return processor.parse(content)
   }
 
-  // Helper method to create or retrieve an entry
-  private ensureEntry(
-    filename: string,
-    heading?: string,
-    frontmatter?: Record<string, unknown>,
-    entries: ProcessedMarkdownFileEntry[] = []
-  ): ProcessedMarkdownFileEntry {
-    // If no entry exists or we're at a new heading, create a new entry
-    const entry: ProcessedMarkdownFileEntry = {
-      date: undefined,
-      filename,
-      heading: heading || filename.split('/').pop() || '',
-      content: [],
-      frontmatter,
-    }
-
-    entries.push(entry)
-    return entry
-  }
-
   private async calculateReadingMetrics(
     content: string
   ): Promise<{ wordCount: number; readingTime: number }> {
@@ -223,37 +203,6 @@ export class MarkdownProcessor {
       isComplete,
       subentries: [],
     }
-  }
-
-  private async processNestedLists(
-    $: ReturnType<typeof cheerio>,
-    liElem: ReturnType<ReturnType<typeof cheerio>>[0],
-    entry: ProcessedMarkdownFileEntry,
-    tag: string
-  ): Promise<EntryContent[]> {
-    const subentries: EntryContent[] = []
-
-    // Process immediate nested lists (ul or ol) inside the current li element
-    const nestedLists = $(liElem).find('> ul, > ol').toArray()
-    for (const nestedList of nestedLists) {
-      // Use the text of the current li as section
-      const parentText = $(liElem).contents().first().text().trim()
-      const nestedListItems = $(nestedList).find('> li').toArray()
-      for (const nestedListItem of nestedListItems) {
-        const nestedContent = await this.getProcessedEntry({
-          $,
-          elem: nestedListItem,
-          entry,
-          section: parentText,
-        })
-        if (nestedContent) {
-          // Process deeper nested lists recursively
-          nestedContent.subentries = await this.processNestedLists($, nestedListItem, entry, tag)
-          subentries.push(nestedContent)
-        }
-      }
-    }
-    return subentries
   }
 
   getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {

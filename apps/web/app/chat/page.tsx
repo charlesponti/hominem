@@ -25,16 +25,18 @@ export default function ChatPage() {
   })
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="py-3 pr-2 flex sm:flex-row justify-end items-center gap-2 bg-none">
+    <div className="h-full flex flex-col ml-14 md:ml-16">
+      <div className="pt-6 pb-4 px-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-800">
+        <h1 className="font-serif text-base">For you</h1>
         <div className="flex items-center space-x-2">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">Debug</span>
           <Switch
             id="show-debug"
             checked={showDebugInfo}
             onCheckedChange={setShowDebugInfo}
             className="data-[state=checked]:bg-primary"
           />
-          <BugIcon size={16} className="text-primary" />
+          <BugIcon size={14} className="text-muted-foreground" />
         </div>
       </div>
 

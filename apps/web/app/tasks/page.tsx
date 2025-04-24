@@ -8,7 +8,7 @@ import { TaskSchema } from '@/lib/tasks/types'
 import { ListChecks, StopCircle, Timer } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
-const TaskTimerApp = () => {
+export default function TasksPage() {
   const [currentTask, setCurrentTask] = useState('')
   const [error, setError] = useState<string | null>(null)
   const { tasks, createTask, startTask, stopTask } = useTasks()
@@ -48,11 +48,16 @@ const TaskTimerApp = () => {
   )
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
+    <div className="container mx-auto p-4 max-w-2xl py-6">
+      <div className="flex items-center mb-8">
+        <Timer className="h-6 w-6 mr-2 text-indigo-500" />
+        <h1 className="text-2xl font-bold">Task Tracker</h1>
+      </div>
+      
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Timer /> Task Timer Tracker
+          <CardTitle className="flex items-center gap-2 text-gray-800">
+            <Timer className="h-5 w-5 text-indigo-500" /> Time Tracking
           </CardTitle>
           {error && <div className="text-red-500 text-sm">{error}</div>}
         </CardHeader>
@@ -69,12 +74,12 @@ const TaskTimerApp = () => {
           </div>
 
           <div className="space-y-4">
-            <h2 className="flex items-center gap-2 text-lg">
-              <ListChecks /> Task History
+            <h2 className="flex items-center gap-2 text-lg font-medium text-gray-800">
+              <ListChecks className="h-5 w-5 text-indigo-500" /> Task History
             </h2>
             <div className="space-y-2">
               {tasks.map((task) => (
-                <div key={task.id} className="flex justify-between items-center border p-2 rounded">
+                <div key={task.id} className="flex justify-between items-center border p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                   <div className="grow">
                     <div className="font-medium">{task.title}</div>
                     <div className="text-sm text-gray-500">
@@ -83,7 +88,7 @@ const TaskTimerApp = () => {
                   </div>
                   {task.isActive ? (
                     <div className="flex items-center space-x-2">
-                      <div className="font-light text-sm">
+                      <div className="font-medium text-sm bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
                         <TaskElapseTimer startTime={task.startTime} />
                       </div>
 
@@ -93,7 +98,7 @@ const TaskTimerApp = () => {
                         className="flex items-center gap-2"
                         onClick={() => onStopTask(task.id)}
                       >
-                        <StopCircle /> Stop
+                        <StopCircle className="h-4 w-4" /> Stop
                       </Button>
                     </div>
                   ) : (
@@ -103,11 +108,17 @@ const TaskTimerApp = () => {
                       className="flex items-center gap-2"
                       onClick={() => startTask({ taskId: task.id })}
                     >
-                      <Timer /> Start
+                      <Timer className="h-4 w-4" /> Start
                     </Button>
                   )}
                 </div>
               ))}
+
+              {tasks.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No tasks yet. Create your first task above.
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -115,8 +126,6 @@ const TaskTimerApp = () => {
     </div>
   )
 }
-
-export default TaskTimerApp
 
 const getElapsedTime = (startTime: Date, unit: 'seconds' | 'minutes') => {
   let value = 0
@@ -145,5 +154,5 @@ function TaskElapseTimer({ startTime }: { startTime: Date }) {
     return () => clearInterval(interval)
   }, [startTime])
 
-  return <div>{elapsedTime} seconds</div>
+  return <div>{elapsedTime} minutes</div>
 }

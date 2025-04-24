@@ -4,13 +4,17 @@ import type { z } from 'zod'
 import type { TextAnalysisSchema } from '../../schemas'
 import { users } from './users.schema'
 
+// Define the tag type to match our API expectations
+export type NoteTag = { value: string }
+
 export const notes = pgTable(
   'notes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     content: text('content').notNull(),
     title: text('title'),
-    tags: json('tags').$type<Record<string, string>[]>().default([]),
+    // Update the type to match what we're using in the API
+    tags: json('tags').$type<NoteTag[]>().default([]),
     analysis: json('analysis').$type<z.infer<typeof TextAnalysisSchema>>(),
     isTask: boolean('is_task').default(false),
     isComplete: boolean('is_complete').default(false),

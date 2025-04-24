@@ -28,26 +28,41 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "^build"
+        "^typecheck"
       ],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-        "build/**"
+        "build/**",
+        "dist/**"
       ]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "format": {},
-    "lint": {},
-    "migrate": {},
-    "start": {
-      "dependsOn": [
-        "^build"
+    "test": {
+      "dependsOn": [],
+      "outputs": [
+        "coverage/**"
       ]
     },
-    "test": {}
+    "format": {
+      "outputs": []
+    },
+    "migrate": {
+      "cache": false
+    },
+    "start": {
+      "dependsOn": [
+        "build"
+      ]
+    }
   }
 }

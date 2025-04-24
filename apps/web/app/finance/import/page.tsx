@@ -49,7 +49,6 @@ export default function TransactionImportPage() {
     isImporting: isImportInProgress,
     isError,
     error,
-    reset: resetImport,
   } = useImportTransactionsStore()
   const { toast } = useToast()
   const [dragActive, setDragActive] = useState(false)
@@ -116,12 +115,6 @@ export default function TransactionImportPage() {
         variant: 'destructive',
       })
     }
-  }
-
-  // Reset all import state
-  const handleReset = () => {
-    resetFiles()
-    resetImport()
   }
 
   return (
@@ -201,21 +194,6 @@ export default function TransactionImportPage() {
 
         {/* Import progress indicators */}
         <div className="space-y-3">
-          {activeJobIds.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-            >
-              <div className="block w-full text-sm font-medium bg-blue-50 text-blue-700 p-3 rounded-md">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-                  Processing {activeJobIds.length} active import{activeJobIds.length > 1 ? 's' : ''}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
           {queuedFiles.length > 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -260,18 +238,6 @@ export default function TransactionImportPage() {
               ) : (
                 <span>Start Import</span>
               )}
-            </Button>
-          )}
-
-          {(statuses.length > 0 || files.length > 0) && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleReset}
-              className="h-12 text-base font-medium"
-              disabled={isImportInProgress}
-            >
-              Reset
             </Button>
           )}
         </motion.div>
