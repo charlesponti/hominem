@@ -64,7 +64,7 @@ export default function Page() {
   }
 
   return (
-    <div className="relative max-w-[100vw]">
+    <div className="relative max-w-[100vw] space-y-8">
       {/* Hero section */}
       <section className="relative py-20 md:py-32">
         <div
@@ -146,7 +146,7 @@ export default function Page() {
 
       {/* Features */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900/50">
-        <div ref={featuresRef} className="container mx-auto px-4 opacity-0">
+        <div ref={featuresRef} className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Organize Every Aspect of Your Life
@@ -207,64 +207,9 @@ export default function Page() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-20">
-        <div ref={howItWorksRef} className="container mx-auto px-4 opacity-0">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Getting started is simple and takes less than 5 minutes.
-            </p>
-          </div>
-
-          <div className="max-w-4xl mx-auto">
-            {[
-              {
-                number: '01',
-                title: 'Create your account',
-                description: 'Sign up in seconds with your email or social accounts.',
-              },
-              {
-                number: '02',
-                title: 'Customize your dashboard',
-                description: 'Add the tools and widgets that matter most to you.',
-              },
-              {
-                number: '03',
-                title: 'Import your data',
-                description: 'Easily import calendar events, contacts, and more.',
-              },
-              {
-                number: '04',
-                title: 'Enjoy a more organized life',
-                description: 'Start tracking, planning, and achieving your goals.',
-              },
-            ].map((step, i) => (
-              <div
-                key={crypto.getRandomValues(new Uint32Array(1))[0]}
-                className="flex mb-12 last:mb-0"
-              >
-                <div className="mr-8">
-                  <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl font-bold">
-                    {step.number}
-                  </div>
-                  {i < 3 && (
-                    <div className="w-0.5 h-12 bg-blue-100 dark:bg-blue-900/30 mx-auto my-2" />
-                  )}
-                </div>
-                <div className="flex-1 pt-3">
-                  <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-300">{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials */}
       <section className="py-20 bg-gray-50 dark:bg-gray-900/50">
-        <div ref={testimonialRef} className="container mx-auto px-4 opacity-0">
+        <div ref={testimonialRef} className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Users Say</h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -326,7 +271,7 @@ export default function Page() {
 
       {/* CTA */}
       <section className="py-20">
-        <div ref={ctaRef} className="container mx-auto px-4 opacity-0">
+        <div ref={ctaRef} className="container mx-auto px-4">
           <div className="bg-gradient-to-r from-purple-600 to-blue-500 rounded-3xl p-10 md:p-16 text-white text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to transform your life?</h2>
             <p className="text-lg text-white/80 max-w-2xl mx-auto mb-8">
