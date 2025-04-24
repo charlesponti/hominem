@@ -188,6 +188,7 @@ export async function queueImportJob(
       userId,
       fileName,
       status: 'queued',
+      type: 'import-transactions',
       startTime: Date.now(),
       options: otherOptions,
       stats: {

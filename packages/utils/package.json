@@ -11,6 +11,7 @@
     "./imports": "./src/imports.helpers.ts",
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
+    "./jobs": "./src/jobs/index.ts",
     "./markdown": "./src/markdown/index.ts",
     "./nlp": "./src/nlp/index.ts",
     "./notes": "./src/services/notes.service.ts",

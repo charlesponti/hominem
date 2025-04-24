@@ -34,7 +34,8 @@
     "rules": {
       "recommended": true,
       "complexity": {
-        "noUselessSwitchCase": "off"
+        "noUselessSwitchCase": "off",
+        "noStaticOnlyClass": "off"
       },
       "suspicious": {
         "noConsole": {

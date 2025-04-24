@@ -1,5 +1,5 @@
+import type { BaseJob, JobStats } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
-import type { BaseJob } from '@hominem/utils/types'
 
 /**
  * Implements a retry mechanism with exponential backoff
@@ -23,19 +23,6 @@ export async function retryWithBackoff<T>(
     await new Promise((resolve) => setTimeout(resolve, delay))
     return retryWithBackoff(fn, retries - 1, baseDelay, factor)
   }
-}
-
-// Define the structure for job statistics
-export interface JobStats {
-  created: number
-  updated: number
-  skipped: number
-  merged: number
-  total: number
-  invalid: number
-  errors: string[]
-  progress: number // Percentage 0-100
-  processingTime: number // Milliseconds
 }
 
 export interface ImportTransactionsJob extends BaseJob {

@@ -9,7 +9,7 @@ import {
 } from '../db/schema/finance.schema'
 import type { Possession } from '../db/schema/possessions.schema'
 import { logger } from '../logger'
-import type { CategoryAggregate } from './types'
+import type { CategoryAggregate, QueryOptions } from './types'
 
 export interface ItemCategory {
   id: number
@@ -39,17 +39,6 @@ export function calculateCostPerTimeUnit(item: Possession): number {
  */
 export function parseAmount(amount: string | number): number {
   return typeof amount === 'string' ? Number.parseFloat(amount) : amount
-}
-
-export interface QueryOptions {
-  from?: string
-  to?: string
-  category?: string
-  min?: string
-  max?: string
-  account?: string
-  limit?: number
-  description?: string
 }
 
 export function buildWhereConditions(options: QueryOptions) {

@@ -14,9 +14,11 @@ import {
   deleteTransaction,
   queryTransactions,
   updateTransaction,
-  type QueryOptions,
 } from './finance.service'
 import FinancialAccountService from './financial-account.service'
+import type { QueryOptions } from './types'
+
+// Using the centralized QueryOptions type from finance/types
 
 const budgetCalculatorSchema = z.object({
   monthlyIncome: z.number().positive().describe('Monthly income amount'),
@@ -167,6 +169,7 @@ export const create_transaction = tool({
 export const get_transactions = tool({
   description: 'Get financial transactions',
   parameters: z.object({
+    userId: z.string().describe('User ID to filter transactions by'),
     startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
     endDate: z.string().optional().describe('End date (YYYY-MM-DD)'),
     type: z
@@ -186,6 +189,7 @@ export const get_transactions = tool({
       min: args.minAmount?.toString(),
       max: args.maxAmount?.toString(),
       account: args.accountId,
+      userId: args.userId,
     }
 
     const transactions = await queryTransactions(options)

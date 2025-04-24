@@ -1,7 +1,5 @@
 import { logger } from '@hominem/utils/logger'
 
-export { processTransactionsFromCSV } from '@hominem/utils/finance'
-
 /**
  * Parse a transaction from a string. (Keep if needed elsewhere, otherwise remove if unused)
  */
