@@ -13,8 +13,7 @@
     "lint": "biome lint ./src --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch",
-    "prepare": "pnpm run build"
+    "dev": "tsc -p tsconfig.json --watch"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
