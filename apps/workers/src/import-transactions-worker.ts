@@ -107,6 +107,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
       status: 'error',
       endTime: Date.now(),
       error: 'Missing userId in job',
+      type: 'import-transactions',
       stats: {
         created: 0,
         updated: 0,
@@ -142,6 +143,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
     await updateJobStatus<ImportTransactionsJob>(jobId, {
       status: 'processing',
       startTime,
+      type: 'import-transactions',
       stats: { progress: 0 },
     })
 
@@ -220,6 +222,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
         stats.processingTime = Date.now() - startTime
         await updateJobStatus<ImportTransactionsJob>(jobId, {
           stats: { progress: stats.progress, processingTime: stats.processingTime },
+          type: 'import-transactions',
         })
       }
     }
@@ -242,6 +245,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
       status: 'done',
       endTime: Date.now(),
       stats: stats,
+      type: 'import-transactions',
     })
 
     await removeJobFromQueue(jobId)
@@ -259,6 +263,7 @@ export async function processImportJob(job: ImportTransactionsJob) {
         status: 'error',
         endTime: Date.now(),
         error: errorMessage,
+        type: 'import-transactions',
         stats: {
           ...stats,
           progress: stats.progress,
@@ -303,6 +308,7 @@ setInterval(async () => {
             status: 'error',
             error: `Worker failed unexpectedly: ${error instanceof Error ? error.message : String(error)}`,
             endTime: Date.now(),
+            type: 'import-transactions',
           })
         } catch (statusUpdateError) {
           logger.error(
@@ -324,12 +330,13 @@ process.on('SIGTERM', async () => {
   try {
     const activeJobs = await getActiveJobs()
     for (const job of activeJobs) {
-      if (job?.jobId && job?.status === 'processing') {
+      if (job.jobId && job.status === 'processing') {
         // Use optional chaining
         logger.info(`Resetting job ${job.jobId} status to 'queued' due to SIGTERM`)
         await updateJobStatus<ImportTransactionsJob>(job.jobId, {
           status: 'queued',
           startTime: undefined,
+          type: 'import-transactions',
         })
       }
     }

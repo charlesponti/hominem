@@ -6,7 +6,7 @@ import { FileUploadStatusBadge } from '@/components/file-upload-status-badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useFileInput } from '@/hooks/use-file-input'
-import { useImportTransactions } from '@/hooks/use-import-transactions'
+import { useImportTransactionsStore } from '@/hooks/use-import-transactions-store'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import type { FileStatus } from '@hominem/utils/types'
@@ -50,7 +50,7 @@ export default function TransactionImportPage() {
     isError,
     error,
     reset: resetImport,
-  } = useImportTransactions()
+  } = useImportTransactionsStore()
   const { toast } = useToast()
   const [dragActive, setDragActive] = useState(false)
 

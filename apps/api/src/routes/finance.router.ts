@@ -90,7 +90,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
           retryDelay: 1000,
         })
 
-        fastify.log.info(`Queued import job ${job.jobId} for ${validated.data.fileName}`)
+        fastify.log.info(`Queued import job ${job.jobId}`)
 
         return {
           success: true,

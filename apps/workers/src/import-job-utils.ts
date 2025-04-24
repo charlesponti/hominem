@@ -46,9 +46,11 @@ export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
       })
     )
 
+    // Return both queued and processing jobs to properly handle SIGTERM graceful shutdown
     const activeJobs = jobs.filter(
-      (job): job is ImportTransactionsJob => job !== null && job.status === 'queued'
-    ) // Only return queued jobs
+      (job): job is ImportTransactionsJob =>
+        job !== null && (job.status === 'queued' || job.status === 'processing')
+    )
 
     logger.info(`Found ${activeJobs.length} active jobs`)
     return activeJobs

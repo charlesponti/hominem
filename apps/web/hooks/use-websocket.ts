@@ -34,6 +34,7 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
   const listenersRef = useRef<Map<string, Set<WebSocketListener<unknown>>>>(new Map())
   const messageQueueRef = useRef<WebSocketMessage<T>[]>([])
   const wsUrlRef = useRef('')
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null) // Ref for the timer ID
 
   const mergedOptions = useMemo(
     () => ({
@@ -53,28 +54,40 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
   }, [mergedOptions])
 
   const connect = useCallback(async () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN || isConnecting) return
+    if (wsRef.current?.readyState === WebSocket.OPEN || isConnecting) {
+      console.log(
+        '[WS Hook] Connect called but already open or connecting. State:',
+        wsRef.current?.readyState,
+        'isConnecting:',
+        isConnecting
+      )
+      return
+    }
+    console.log('[WS Hook] Attempting to connect...')
     setIsConnecting(true)
     try {
       const token = await getToken()
+      console.log('[WS Hook] Token fetched.')
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const apiUrlDomain = process.env.NEXT_PUBLIC_API_URL?.split('/')[2] ?? ''
       if (!apiUrlDomain) {
-        console.error('NEXT_PUBLIC_API_URL is not configured correctly.')
+        console.error('[WS Hook] NEXT_PUBLIC_API_URL is not configured correctly.')
         setIsConnecting(false)
         return
       }
       const wsBaseUrl = `${protocol}//${apiUrlDomain}`
       const wsUrl = token ? `${wsBaseUrl}?token=${token}` : wsBaseUrl
       wsUrlRef.current = wsUrl
+      console.log(`[WS Hook] Connecting to: ${wsUrl}`)
 
       const ws = new WebSocket(wsUrl)
 
       ws.onopen = () => {
-        console.info(`WebSocket connected to ${wsBaseUrl}`)
+        console.info(`[WS Hook] WebSocket connected successfully to ${wsBaseUrl}`)
         setIsConnected(true)
         setIsConnecting(false)
-        reconnectAttemptsRef.current = 0
+        reconnectAttemptsRef.current = 0 // Reset attempts on successful connection
+        console.log('[WS Hook] Reset reconnect attempts to 0')
 
         if (messageQueueRef.current.length > 0) {
           for (const msg of messageQueueRef.current) {
@@ -93,7 +106,7 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
             parsedData === null ||
             typeof parsedData.type !== 'string'
           ) {
-            console.error('Received invalid WebSocket message structure:', parsedData)
+            console.error('[WS Hook] Received invalid WebSocket message structure:', parsedData)
             return
           }
 
@@ -118,77 +131,107 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
               listener(message)
             }
           }
+
+          console.log('[WS Hook] Message received:', message.type)
         } catch (error) {
           if (error instanceof Error) {
-            console.error('Failed to parse WebSocket message:', error.message)
+            console.error('[WS Hook] Failed to parse WebSocket message:', error.message)
           } else {
-            console.error('Failed to parse WebSocket message with unknown error:', error)
+            console.error('[WS Hook] Failed to parse WebSocket message with unknown error:', error)
           }
         }
       }
 
       ws.onclose = (event) => {
-        console.warn(`WebSocket closed: ${event.code} ${event.reason}`)
+        console.warn(
+          `[WS Hook] WebSocket closed. Code: ${event.code}, Reason: ${event.reason}, Clean: ${event.wasClean}`
+        )
         setIsConnected(false)
         setIsConnecting(false)
         wsRef.current = null
 
+        // Clear any existing reconnect timer before scheduling a new one
+        if (reconnectTimerRef.current) {
+          clearTimeout(reconnectTimerRef.current)
+          reconnectTimerRef.current = null
+          console.log('[WS Hook] Cleared existing reconnect timer before scheduling new one.')
+        }
+
         if (event.code !== 1000 && mergedOptions.autoReconnect) {
           const { reconnectAttempts } = mergedOptions
+          console.log(
+            `[WS Hook] Reconnect check. Attempts made: ${reconnectAttemptsRef.current}, Max attempts: ${reconnectAttempts}`
+          )
 
           if (reconnectAttempts != null && reconnectAttemptsRef.current >= reconnectAttempts) {
             console.error(
-              `WebSocket reconnection failed after ${reconnectAttemptsRef.current} attempts`
+              `[WS Hook] WebSocket reconnection failed after ${reconnectAttemptsRef.current} attempts. Stopping.`
             )
             return
           }
 
           const backoffTime = getBackoffTime()
           console.info(
-            `Attempting to reconnect in ${backoffTime}ms (attempt ${reconnectAttemptsRef.current + 1})`
+            `[WS Hook] Attempting to reconnect in ${backoffTime}ms (attempt ${reconnectAttemptsRef.current + 1})`
           )
 
-          setTimeout(() => {
+          // Store the timer ID in the ref
+          reconnectTimerRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++
-            connect()
+            console.log(
+              `[WS Hook] Incremented reconnect attempts to: ${reconnectAttemptsRef.current}`
+            )
+            reconnectTimerRef.current = null // Clear ref after timer runs
+            connectRef.current()
           }, backoffTime)
+        } else {
+          console.log('[WS Hook] No reconnect needed (closed normally or autoReconnect disabled).')
         }
       }
 
       ws.onerror = (errorEvent) => {
-        console.error('WebSocket error:', errorEvent)
+        console.error('[WS Hook] WebSocket error occurred:', errorEvent)
         setIsConnecting(false)
       }
 
       wsRef.current = ws
+      console.log('[WS Hook] WebSocket instance created.')
     } catch (err) {
+      console.error('[WS Hook] Error during connect setup:', err)
       setIsConnecting(false)
-      if (err instanceof Error) {
-        console.error('Failed to establish WebSocket connection:', err.message)
-      } else {
-        console.error('Failed to establish WebSocket connection with unknown error:', err)
-      }
     }
   }, [getToken, mergedOptions, getBackoffTime, isConnecting])
+
+  const connectRef = useRef(connect)
+  useEffect(() => {
+    connectRef.current = connect
+  }, [connect])
 
   const sendMessage = useCallback(
     (message: WebSocketMessage<T>) => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
+        console.log('[WS Hook] Sending message:', message.type)
         wsRef.current.send(JSON.stringify(message))
         return true
       }
 
+      console.log('[WS Hook] Queuing message, WS not open. State:', wsRef.current?.readyState)
       messageQueueRef.current.push(message)
 
       if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
-        if (reconnectAttemptsRef.current === 0 && !isConnecting) {
-          connect()
+        if (
+          !isConnecting &&
+          reconnectAttemptsRef.current <
+            (mergedOptions.reconnectAttempts ?? DEFAULT_OPTIONS.reconnectAttempts ?? 10)
+        ) {
+          console.log('[WS Hook] sendMessage triggered connect attempt.')
+          connectRef.current()
         }
       }
 
       return false
     },
-    [connect, isConnecting]
+    [isConnecting, mergedOptions.reconnectAttempts]
   )
 
   const subscribe = useCallback(<R = unknown>(type: string, listener: WebSocketListener<R>) => {
@@ -224,16 +267,39 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
   }, [])
 
   useEffect(() => {
+    console.log(
+      `[WS Hook] Mount/Connection Effect. isConnected: ${isConnected}, isConnecting: ${isConnecting}`
+    )
     if (!isConnected && !isConnecting) {
-      connect()
+      if (
+        reconnectAttemptsRef.current <
+        (mergedOptions.reconnectAttempts ?? DEFAULT_OPTIONS.reconnectAttempts ?? 10)
+      ) {
+        console.log('[WS Hook] Initial connect triggered by useEffect.')
+        connectRef.current()
+      } else {
+        console.log('[WS Hook] Initial connect skipped, max reconnect attempts reached.')
+      }
     }
 
+    // Cleanup function
     return () => {
+      console.log(`[WS Hook] Cleanup Effect. autoReconnect: ${mergedOptions.autoReconnect}`)
+
+      // Clear any pending reconnect timer on unmount/cleanup
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current)
+        reconnectTimerRef.current = null
+        console.log('[WS Hook] Cleared pending reconnect timer on cleanup.')
+      }
+
+      // Close connection only if autoReconnect is off
       if (!mergedOptions.autoReconnect && wsRef.current) {
+        console.log('[WS Hook] Closing WebSocket connection on unmount (autoReconnect is off).')
         wsRef.current.close(1000, 'Component unmounted')
       }
     }
-  }, [connect, mergedOptions.autoReconnect, isConnected, isConnecting])
+  }, [mergedOptions.autoReconnect, isConnected, isConnecting, mergedOptions.reconnectAttempts])
 
   return {
     isConnected,

@@ -1,8 +1,9 @@
 'use client'
 
-import { useWebsocket } from '@/hooks/use-websocket'
 import { fileToBase64 } from '@/lib/files.utils'
 import { useApiClient } from '@/lib/hooks/use-api-client'
+import { useWebSocketStore } from '@/store/websocket/websocket-store'
+import { useAuth } from '@clerk/nextjs'
 import type {
   FileStatus,
   ImportRequestParams,
@@ -26,15 +27,21 @@ const convertJobToFileStatus = (jobs: ImportTransactionsJob[]): FileStatus[] =>
     error: job.error,
   }))
 
-export function useImportTransactions() {
+export function useImportTransactionsStore() {
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
+  const { getToken } = useAuth()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
   const [error, setError] = useState<Error | null>(null)
 
-  // Use the improved WebSocket hook with subscriptions
-  const { isConnected, sendMessage, subscribe } = useWebsocket()
+  // Get WebSocket store functions
+  const { isConnected, connect, sendMessage, subscribe } = useWebSocketStore()
+
+  // Connect on initialization, providing token function
+  useEffect(() => {
+    connect(getToken)
+  }, [connect, getToken])
 
   // Process real-time job updates from WebSocket
   const updateImportProgress = useCallback((jobData: ImportTransactionsJob[]) => {
@@ -69,7 +76,7 @@ export function useImportTransactions() {
       // If no existing statuses match, convert all jobs to file statuses
       return convertJobToFileStatus(jobData)
     })
-  }, []) // <-- ensure stable reference
+  }, [])
 
   // Mutation for importing files
   const importMutation = useMutation({
@@ -153,41 +160,36 @@ export function useImportTransactions() {
 
   // Subscribe to WebSocket messages when connected
   useEffect(() => {
-    let unsubProgress = () => {}
-    let unsubSubscribed = () => {}
+    if (!isConnected) return
 
-    if (isConnected) {
-      console.log('[Import Hook] WebSocket connected, subscribing to import updates...')
+    // Send subscription message
+    sendMessage({
+      type: IMPORT_PROGRESS_CHANNEL_TYPE,
+    })
 
-      sendMessage({
-        type: IMPORT_PROGRESS_CHANNEL_TYPE,
-      })
-
-      unsubProgress = subscribe<ImportTransactionsJob[]>(IMPORT_PROGRESS_CHANNEL, (message) => {
-        console.log('[Import Hook] Received import:progress message')
+    // Subscribe to both channels (progress updates and confirmation of subscription)
+    const unsubscribeProgress = subscribe<ImportTransactionsJob[]>(
+      IMPORT_PROGRESS_CHANNEL,
+      (message) => {
         if (message.data) {
           updateImportProgress(message.data)
         }
-      })
+      }
+    )
 
-      unsubSubscribed = subscribe<ImportTransactionsJob[]>(
-        IMPORT_PROGRESS_CHANNEL_SUBSCRIBED,
-        (message) => {
-          console.log('[Import Hook] Received import:subscribed message')
-          if (message.data) {
-            updateImportProgress(message.data)
-          }
+    const unsubscribeSubscribed = subscribe<ImportTransactionsJob[]>(
+      IMPORT_PROGRESS_CHANNEL_SUBSCRIBED,
+      (message) => {
+        if (message.data) {
+          updateImportProgress(message.data)
         }
-      )
-    } else {
-      console.log('[Import Hook] WebSocket disconnected or connecting...')
-    }
+      }
+    )
 
-    // Cleanup subscriptions on unmount or when connection changes
+    // Cleanup subscriptions
     return () => {
-      console.log('[Import Hook] Running cleanup for import subscriptions...')
-      unsubProgress()
-      unsubSubscribed()
+      unsubscribeProgress()
+      unsubscribeSubscribed()
     }
   }, [isConnected, sendMessage, subscribe, updateImportProgress])
 
