@@ -41,19 +41,38 @@ export function convertCopilotTransaction(
   data: CopilotTransaction,
   userId: string
 ): Omit<TransactionInsert, 'accountId'> {
-  // Clean the amount field - remove quotes and other non-numeric chars except decimal point
-  const cleanAmount = data.amount.toString().replace(/[^0-9.-]/g, '')
+  // Clean the amount field
+  const cleanAmountString = data.amount.toString().replace(/[^0-9.-]/g, '')
   const type = translateTransactionType(data.type)
 
   // Validate that amount is a valid number
-  if (Number.isNaN(cleanAmount)) {
+  const parsedAmount = Number.parseFloat(cleanAmountString)
+  if (Number.isNaN(parsedAmount)) {
     throw Error('Invalid amount')
+  }
+
+  let finalAmount = parsedAmount
+
+  // Copilot: income is negative, expenses/transfers are positive
+  // Our app: income is positive, expenses/transfers are negative
+
+  if (type === 'income') {
+    // If Copilot income is negative (as expected), make it positive
+    if (finalAmount < 0) {
+      finalAmount *= -1
+    }
+  } else {
+    // 'expense' or 'transfer'
+    // If Copilot expense/transfer is positive (as expected), make it negative
+    if (finalAmount > 0) {
+      finalAmount *= -1
+    }
   }
 
   return {
     id: crypto.randomUUID(),
     type,
-    amount: data.amount,
+    amount: finalAmount.toFixed(2), // Convert back to string
     date: new Date(data.date),
     description: data.name,
     category: data.category,
@@ -63,7 +82,7 @@ export function convertCopilotTransaction(
     status: data.status,
     accountMask: data['account mask'] || data.account_mask || '',
     note: data.note,
-    recurring: !!data.recurring,
+    recurring: data.recurring === 'false' ? false : !!data.recurring,
     userId,
     createdAt: new Date(),
     updatedAt: new Date(),
