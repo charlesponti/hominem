@@ -1,11 +1,23 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
-import { Note, useCreateNote, useDeleteNote, useNotes, useUpdateNote } from '@/lib/hooks/use-notes'
+import {
+  type Note,
+  useCreateNote,
+  useDeleteNote,
+  useNotes,
+  useUpdateNote,
+} from '@/lib/hooks/use-notes'
 import {
   ArrowLeft,
   Check,
@@ -21,12 +33,6 @@ import {
   X,
 } from 'lucide-react'
 import { type KeyboardEvent, useState } from 'react'
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 
 // Types for our note form
 interface NoteForm {
@@ -306,7 +312,7 @@ export default function NotesPage() {
   // Luxury branded icon
   const LuxuryIcon = () => (
     <div className="h-7 w-7 relative flex items-center justify-center">
-      <div className="absolute inset-0 border border-[#FF6600] rotate-45"></div>
+      <div className="absolute inset-0 border border-[#FF6600] rotate-45" />
       <div className="h-5 w-5 text-[#FF6600]">
         <Pen className="h-4 w-4" strokeWidth={2.5} />
       </div>
@@ -325,8 +331,9 @@ export default function NotesPage() {
                 Luxe<span className="font-semibold tracking-tight">Notes</span>
               </h1>
             </div>
-            
+
             <button
+              type="button"
               onClick={handleCreateNew}
               className="bg-[#FF6600] text-white rounded-full h-10 w-10 md:w-auto md:px-4 flex items-center justify-center shadow-sm hover:bg-[#E05A00] transition-colors"
             >
@@ -378,8 +385,11 @@ export default function NotesPage() {
               // Loading skeletons
               Array(4)
                 .fill(0)
-                .map((_, i) => (
-                  <div key={i} className="space-y-2 bg-white p-4 border border-[#E8E1D9] rounded-lg animate-pulse">
+                .map((_) => (
+                  <div
+                    key={_}
+                    className="space-y-2 bg-white p-4 border border-[#E8E1D9] rounded-lg animate-pulse"
+                  >
                     <Skeleton className="h-5 w-2/3 bg-[#E8E1D9]" />
                     <Skeleton className="h-3.5 w-full bg-[#E8E1D9]" />
                     <Skeleton className="h-3.5 w-5/6 bg-[#E8E1D9]" />
@@ -413,6 +423,7 @@ export default function NotesPage() {
                   className="group border border-[#E8E1D9] hover:border-[#FF6600]/30 bg-white rounded-lg overflow-hidden transition-all duration-300"
                 >
                   <button
+                    type="button"
                     onClick={() => handleEditNote(note.id)}
                     className="w-full text-left block p-4"
                   >
@@ -423,6 +434,7 @@ export default function NotesPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
+                            type="button"
                             className="h-6 w-6 rounded-full text-[#8A7265] opacity-0 group-hover:opacity-100 hover:bg-[#F5F5F5] flex items-center justify-center transition-all"
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -430,7 +442,7 @@ export default function NotesPage() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="text-[#FF0000] cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation()
@@ -453,7 +465,7 @@ export default function NotesPage() {
                     <div className="flex gap-1.5 overflow-hidden">
                       {note.tags?.slice(0, 2).map((tag, i) => (
                         <span
-                          key={i}
+                          key={tag.value}
                           className="bg-white text-[#8A7265] px-2 py-0.5 rounded-full text-[10px] border border-[#E8E1D9] truncate max-w-16"
                         >
                           {tag.value}
@@ -480,6 +492,7 @@ export default function NotesPage() {
         <div className="max-w-screen-md mx-auto h-screen flex flex-col bg-white">
           <div className="border-b border-[#E8E1D9] py-3 px-4 flex items-center sticky top-0 z-10 bg-white">
             <button
+              type="button"
               onClick={handleBackToList}
               className="mr-4 h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#F5F5F5] transition-colors"
               aria-label="Back to notes list"
@@ -490,7 +503,7 @@ export default function NotesPage() {
             <h2 className="text-[#1A1A1A] font-medium text-lg">
               {isCreatingNew ? 'New Note' : 'Edit Note'}
             </h2>
-            
+
             <div className="ml-auto">
               <Button
                 onClick={handleSaveNote}
@@ -512,7 +525,7 @@ export default function NotesPage() {
                 value={noteForm.title || ''}
                 onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })}
               />
-              
+
               {/* Content area */}
               <Textarea
                 id="note-content"
@@ -521,14 +534,14 @@ export default function NotesPage() {
                 value={noteForm.content}
                 onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
               />
-              
+
               {/* Tags section */}
               <div className="pt-4 border-t border-[#E8E1D9] mt-4">
                 <h3 className="text-sm font-medium text-[#1A1A1A] mb-3">Tags</h3>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {noteForm.tags.map((tag, index) => (
                     <span
-                      key={index}
+                      key={tag.value}
                       className="bg-[#FFF0E6] text-[#FF6600] text-xs px-2.5 py-1.5 rounded-full flex items-center group"
                     >
                       {tag.value}
