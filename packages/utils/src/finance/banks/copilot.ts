@@ -21,8 +21,8 @@ export const CopilotTransactionSchema = z.object({
 })
 export type CopilotTransaction = z.infer<typeof CopilotTransactionSchema>
 
-export function translateTransactionType(type: string, amount: number): TransactionInsert['type'] {
-  if (type === 'regular' && amount > 0) {
+export function translateTransactionType(type: string): TransactionInsert['type'] {
+  if (type === 'income') {
     return 'income'
   }
 
@@ -30,7 +30,7 @@ export function translateTransactionType(type: string, amount: number): Transact
     return 'transfer'
   }
 
-  if (type === 'regular' && amount < 0) {
+  if (type === 'regular') {
     return 'expense'
   }
 
@@ -43,7 +43,7 @@ export function convertCopilotTransaction(
 ): Omit<TransactionInsert, 'accountId'> {
   // Clean the amount field - remove quotes and other non-numeric chars except decimal point
   const cleanAmount = data.amount.toString().replace(/[^0-9.-]/g, '')
-  const type = translateTransactionType(data.type, Number.parseFloat(cleanAmount))
+  const type = translateTransactionType(data.type)
 
   // Validate that amount is a valid number
   if (Number.isNaN(cleanAmount)) {
