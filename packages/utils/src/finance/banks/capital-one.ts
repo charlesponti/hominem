@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import {
   TransactionTypes,
-  type TransactionInsert,
+  type FinanceTransactionInsert,
   type TransactionType,
 } from '../../db/schema/finance.schema'
 
@@ -34,7 +34,7 @@ export function convertCapitalOneTransaction(
   t: CapitalOneTransaction,
   accountId: string,
   userId: string
-): TransactionInsert {
+): FinanceTransactionInsert {
   return {
     id: crypto.randomUUID(),
     type: getCapitalOneTransactionType(t['Transaction Type']),

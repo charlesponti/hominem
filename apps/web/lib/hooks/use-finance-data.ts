@@ -1,12 +1,12 @@
 'use client'
 
 import { useApiClient } from '@/lib/hooks/use-api-client'
-import type { FinanceAccount, Transaction } from '@hominem/utils/types'
+import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 export interface FinanceData {
-  transactions: Transaction[]
+  transactions: FinanceTransaction[]
   accounts: FinanceAccount[]
   accountsMap: Map<string, FinanceAccount>
   loading: boolean
@@ -29,11 +29,11 @@ export interface FinanceData {
   setSortDirection: (direction: 'asc' | 'desc') => void
 
   // Filtered and sorted transactions
-  filteredTransactions: Transaction[]
+  filteredTransactions: FinanceTransaction[]
 
   // Helpers
   getTotalBalance: () => number
-  getRecentTransactions: (accountName: string, limit?: number) => Transaction[]
+  getRecentTransactions: (accountName: string, limit?: number) => FinanceTransaction[]
   getFilterQueryString: () => string
   exportTransactions: () => void
   refreshData: () => Promise<void>
@@ -97,7 +97,7 @@ export function useFinanceData(): FinanceData {
     queryKey: ['finance', 'transactions', { selectedAccount, dateFrom, dateTo, searchQuery }],
     queryFn: async () => {
       const queryString = getFilterQueryString()
-      return await api.get<unknown, Transaction[]>(`/api/finance/transactions${queryString}`)
+      return await api.get<unknown, FinanceTransaction[]>(`/api/finance/transactions${queryString}`)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   })

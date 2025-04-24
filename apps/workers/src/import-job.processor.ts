@@ -1,6 +1,7 @@
 import { processTransactionsFromCSV } from '@hominem/utils/finance'
 import type { ImportTransactionsJob, JobStats } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
+import type { Job } from 'bullmq'
 import { JOB_PROCESSING } from './config'
 import { getImportFileContent, removeJobFromQueue } from './import-job-utils'
 import { JobStatusService } from './job-status.service'
@@ -10,9 +11,108 @@ import { JobStatusService } from './job-status.service'
  */
 export class ImportJobProcessor {
   /**
+   * Process a BullMQ job
+   */
+  static async processBullMQJob(bullJob: Job<ImportTransactionsJob>): Promise<any> {
+    try {
+      logger.info(`Processing BullMQ job ${bullJob.id}`)
+
+      // Update progress
+      await bullJob.updateProgress(0)
+
+      const jobData = bullJob.data
+
+      // BullMQ jobs have the CSV content directly in the job data
+      if (!jobData.csvContent) {
+        throw new Error(`CSV content not found in job ${bullJob.id}`)
+      }
+
+      // Initialize stats with explicit typing and default values
+      const stats: JobStats = {
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        merged: 0,
+        total: 0,
+        invalid: 0,
+        errors: [],
+        progress: 0,
+        processingTime: 0,
+      }
+
+      const startTime = Date.now()
+
+      try {
+        await JobStatusService.markJobProcessing(bullJob.id)
+
+        // Process the CSV content directly from job data
+        const decodedContent = await ImportJobProcessor.decodeAndValidateContent(
+          bullJob.id,
+          jobData.csvContent
+        )
+
+        // Create a custom version of the JobStatusService.updateJobProgress method
+        // that updates BullMQ progress directly
+        const updateBullJobProgress = async (progress: number) => {
+          await bullJob.updateProgress(progress)
+          logger.debug(`Updated BullMQ job ${bullJob.id} progress to ${progress}%`)
+        }
+        
+        // Process the content
+        await ImportJobProcessor.processCSVContent(
+          {
+            ...jobData,
+            jobId: bullJob.id, // Ensure jobId is set to the BullMQ job id
+            // Add a custom progress updater
+            progressUpdater: updateBullJobProgress
+          },
+          decodedContent,
+          stats,
+          startTime
+        )
+
+        // Mark job as complete
+        stats.progress = 100
+        stats.processingTime = Date.now() - startTime
+
+        // Update BullMQ progress
+        await bullJob.updateProgress(100)
+
+        // Log success
+        logger.info(`BullMQ job ${bullJob.id} completed successfully`, {
+          stats,
+          processingTime: stats.processingTime,
+        })
+
+        return {
+          success: true,
+          stats,
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        logger.error(`BullMQ job ${bullJob.id} processing failed:`, error)
+
+        if (stats.errors) {
+          stats.errors.push(errorMessage)
+        } else {
+          stats.errors = [errorMessage]
+        }
+
+        stats.processingTime = Date.now() - startTime
+        await JobStatusService.markJobError(bullJob.id, errorMessage, stats)
+
+        throw error
+      }
+    } catch (error) {
+      logger.error(`Error processing BullMQ job ${bullJob.id}:`, error)
+      throw error
+    }
+  }
+
+  /**
    * Process a single import job
    */
-  static async processJob(job: ImportTransactionsJob): Promise<void> {
+  static async processJob(job: ImportTransactionsJob): Promise<any> {
     const { jobId, fileName, userId } = job
 
     // Check that userId exists
@@ -201,11 +301,18 @@ export class ImportJobProcessor {
       if (processedCount % 100 === 0 && totalEstimate > 0) {
         stats.progress = Math.min(99, Math.round((processedCount / totalEstimate) * 100))
         stats.processingTime = Date.now() - startTime
-        await JobStatusService.updateJobProgress(
-          jobId,
-          stats.progress || 0,
-          stats.processingTime || 0
-        )
+        
+        // Use BullMQ progress updater if available (added from processBullMQJob)
+        if ('progressUpdater' in job && typeof job.progressUpdater === 'function') {
+          await job.progressUpdater(stats.progress)
+        } else if (job.jobId) {
+          // This is the legacy Redis approach
+          await JobStatusService.updateJobProgress(
+            jobId,
+            stats.progress || 0,
+            stats.processingTime || 0
+          )
+        }
       }
     }
   }

@@ -422,10 +422,10 @@ export default function NotesPage() {
                   key={note.id}
                   className="group border border-[#E8E1D9] hover:border-[#FF6600]/30 bg-white rounded-lg overflow-hidden transition-all duration-300"
                 >
-                  <button
-                    type="button"
+                  <div
+                    onKeyDown={(e) => handleKeyDown(e, () => handleEditNote(note.id))}
                     onClick={() => handleEditNote(note.id)}
-                    className="w-full text-left block p-4"
+                    className="w-full text-left block p-4 cursor-pointer"
                   >
                     <div className="flex justify-between mb-1.5">
                       <h3 className="font-medium text-[#1A1A1A] text-sm">
@@ -459,8 +459,7 @@ export default function NotesPage() {
                     <p className="text-[#4A4A4A] text-xs line-clamp-2 leading-relaxed">
                       {note.content}
                     </p>
-                  </button>
-
+                  </div>
                   <div className="flex justify-between items-center px-4 py-2 bg-[#FFF8F0] border-t border-[#E8E1D9] text-xs">
                     <div className="flex gap-1.5 overflow-hidden">
                       {note.tags?.slice(0, 2).map((tag, i) => (

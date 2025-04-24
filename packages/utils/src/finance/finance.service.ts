@@ -4,8 +4,8 @@ import { db } from '../db/index'
 import {
   financeAccounts,
   transactions,
-  type Transaction,
-  type TransactionInsert,
+  type FinanceTransaction,
+  type FinanceTransactionInsert,
 } from '../db/schema/finance.schema'
 import type { Possession } from '../db/schema/possessions.schema'
 import { logger } from '../logger'
@@ -195,7 +195,7 @@ export async function findTopMerchants(options: QueryOptions) {
   }))
 }
 
-export function aggregateByCategory(transactions: Transaction[]): CategoryAggregate[] {
+export function aggregateByCategory(transactions: FinanceTransaction[]): CategoryAggregate[] {
   return Object.entries(
     transactions.reduce<Record<string, { totalAmount: number; count: number }>>((acc, tx) => {
       const category = tx.category || 'Other'
@@ -214,7 +214,7 @@ export function aggregateByCategory(transactions: Transaction[]): CategoryAggreg
   }))
 }
 
-export function aggregateByMonth(transactions: Transaction[]) {
+export function aggregateByMonth(transactions: FinanceTransaction[]) {
   return Object.entries(
     transactions.reduce<Record<string, { totalAmount: number; count: number }>>((acc, tx) => {
       const month = tx.date.toISOString().substring(0, 7)
@@ -243,13 +243,13 @@ export async function findExistingTransaction(tx: {
     where: and(
       eq(transactions.date, tx.date),
       eq(transactions.amount, tx.amount),
-      eq(transactions.type, tx.type as TransactionInsert['type']),
+      eq(transactions.type, tx.type as FinanceTransactionInsert['type']),
       tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined
     ),
   })
 }
 
-export async function createNewTransaction(tx: TransactionInsert): Promise<Transaction> {
+export async function createNewTransaction(tx: FinanceTransactionInsert): Promise<FinanceTransaction> {
   try {
     const result = await db
       .insert(transactions)
@@ -286,10 +286,10 @@ export async function createNewTransaction(tx: TransactionInsert): Promise<Trans
 }
 
 export async function updateTransactionIfNeeded(
-  tx: TransactionInsert,
-  existingTx: Transaction
+  tx: FinanceTransactionInsert,
+  existingTx: FinanceTransaction
 ): Promise<boolean> {
-  const updates: Partial<TransactionInsert> = {}
+  const updates: Partial<FinanceTransactionInsert> = {}
 
   // Only update empty or null fields if the new transaction has data
   if ((!existingTx.category || existingTx.category === '') && tx.category) {
@@ -325,8 +325,8 @@ export async function updateTransactionIfNeeded(
 export async function updateTransaction(
   transactionId: string,
   userId: string,
-  updates: Partial<TransactionInsert>
-): Promise<Transaction> {
+  updates: Partial<FinanceTransactionInsert>
+): Promise<FinanceTransaction> {
   try {
     const [updated] = await db
       .update(transactions)

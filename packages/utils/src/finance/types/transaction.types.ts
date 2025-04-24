@@ -2,12 +2,15 @@
  * Transaction types used across the monorepo
  */
 import type {
-  Transaction,
-  TransactionInsert,
+  FinanceTransaction,
+  FinanceTransactionInsert,
   TransactionType,
 } from '../../db/schema/finance.schema'
 
-export type { Transaction, TransactionInsert, TransactionType }
+export type { FinanceTransaction as Transaction, FinanceTransactionInsert as TransactionInsert, TransactionType }
+
+// Also export the new names directly for new code
+export type { FinanceTransaction, FinanceTransactionInsert }
 
 /**
  * Bank-specific transaction formats
@@ -68,7 +71,7 @@ export interface MonthAggregate {
  */
 export interface TransactionResult {
   action?: 'created' | 'updated' | 'skipped' | 'merged' | 'invalid'
-  transaction?: Transaction
+  transaction?: FinanceTransaction
   message?: string
   error?: Error
 }

@@ -1,5 +1,5 @@
 import { queryTransactions } from '@hominem/utils/finance'
-import { getActiveJobs, getJobStatus, getUserJobs, queueImportJob } from '@hominem/utils/imports'
+import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
 import type { ImportTransactionsJob } from '@hominem/utils/types'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
@@ -71,21 +71,34 @@ export async function financeRoutes(fastify: FastifyInstance) {
           }
         }
 
-        // Queue job in Redis-based worker system
-        const job = await queueImportJob({
-          ...validated.data,
-          userId,
-          maxRetries: 3,
-          retryDelay: 1000,
-        })
+        // Use BullMQ instead of Redis directly
+        const job = await fastify.queues.importTransactions.add(
+          'import-transaction',
+          {
+            ...validated.data,
+            userId,
+            // BullMQ provides the job ID, so we don't need to create one
+            fileName: validated.data.fileName,
+            status: 'queued',
+            createdAt: Date.now(),
+            type: 'import-transactions',
+          },
+          {
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 1000,
+            },
+          }
+        )
 
-        fastify.log.info(`Queued import job ${job.jobId}`)
+        fastify.log.info(`Queued import job ${job.id}`)
 
         return {
           success: true,
-          jobId: job.jobId,
-          fileName: job.fileName,
-          status: job.status,
+          jobId: job.id,
+          fileName: validated.data.fileName,
+          status: 'queued',
         }
       } catch (error) {
         if (error instanceof Error) {
@@ -121,12 +134,28 @@ export async function financeRoutes(fastify: FastifyInstance) {
       const { jobId } = parsed.data
 
       try {
-        const job = await getJobStatus(jobId)
+        // With BullMQ, we can get the job status directly
+        const job = await fastify.queues.importTransactions.getJob(jobId)
+        
         if (!job) {
-          reply.code(404)
-          return { error: 'Import job not found' }
+          // Try the legacy job status method as a fallback
+          const legacyJob = await getJobStatus(jobId)
+          if (!legacyJob) {
+            reply.code(404)
+            return { error: 'Import job not found' }
+          }
+          return legacyJob
         }
-        return job
+
+        // Map BullMQ job to our expected format
+        return {
+          jobId: job.id,
+          status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
+          fileName: job.data.fileName,
+          progress: job.progress,
+          error: job.failedReason,
+          stats: job.returnvalue?.stats || {},
+        }
       } catch (error) {
         fastify.log.error(`Error fetching job status: ${error}`)
         return reply.code(500).send({
@@ -144,8 +173,21 @@ export async function financeRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      const activeJobs = await getActiveJobs()
-      return activeJobs
+      // With BullMQ, we can get active jobs directly
+      const activeJobs = await fastify.queues.importTransactions.getJobs(['active', 'waiting', 'delayed'])
+      
+      // Filter to only get this user's jobs and map to our expected format
+      const userJobs = activeJobs
+        .filter(job => job.data.userId === userId)
+        .map(job => ({
+          jobId: job.id,
+          userId: job.data.userId,
+          fileName: job.data.fileName,
+          status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
+          progress: job.progress,
+        }))
+      
+      return { jobs: userJobs }
     } catch (error) {
       fastify.log.error(`Error fetching active jobs: ${error}`)
       return reply.code(500).send({

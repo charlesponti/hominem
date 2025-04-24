@@ -76,7 +76,6 @@ Ready-to-use authentication components:
 
 - `<AuthPage />`: Combined login and signup interface
 - `<LoginForm />`: Email/password login with social login options
-- `<SignupForm />`: Registration form
 - `<Profile />`: Display user profile information
 
 ## Architecture

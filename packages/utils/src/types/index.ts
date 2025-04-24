@@ -14,7 +14,7 @@ export type {
   Possession,
   PossessionInsert,
   Tag,
-  Transaction,
+  FinanceTransaction as Transaction,
   User,
   UserInsert,
 } from '../db/schema'

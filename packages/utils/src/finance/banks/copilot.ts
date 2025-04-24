@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { z } from 'zod'
-import type { TransactionInsert } from '../types'
+import type { FinanceTransactionInsert } from '../types'
 
 export const CopilotTransactionSchema = z.object({
   date: z.string(),
@@ -21,7 +21,7 @@ export const CopilotTransactionSchema = z.object({
 })
 export type CopilotTransaction = z.infer<typeof CopilotTransactionSchema>
 
-export function translateTransactionType(type: string): TransactionInsert['type'] {
+export function translateTransactionType(type: string): FinanceTransactionInsert['type'] {
   if (type === 'income') {
     return 'income'
   }
@@ -40,7 +40,7 @@ export function translateTransactionType(type: string): TransactionInsert['type'
 export function convertCopilotTransaction(
   data: CopilotTransaction,
   userId: string
-): Omit<TransactionInsert, 'accountId'> {
+): Omit<FinanceTransactionInsert, 'accountId'> {
   // Clean the amount field
   const cleanAmountString = data.amount.toString().replace(/[^0-9.-]/g, '')
   const type = translateTransactionType(data.type)

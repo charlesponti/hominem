@@ -1,0 +1,24 @@
+name: deploy-plaid-sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/workers/src/plaid-sync.processor.ts'
+      - 'apps/workers/src/plaid-worker.ts'
+      - 'packages/utils/src/db/schema/finance.schema.ts'
+      - '.github/workflows/deploy-plaid-sync.yml'
+
+jobs:     
+  deploy:
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_WORKERS }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v4
+      - name: Deploy to Railway
+        run: railway up --service ${{ env.SERVICE_ID }} --detach

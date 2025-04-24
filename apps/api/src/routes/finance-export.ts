@@ -1,4 +1,4 @@
-import type { Transaction } from '@hominem/utils/schema'
+import type { FinanceTransaction } from '@hominem/utils/schema'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
@@ -39,7 +39,7 @@ export async function financeExportRoutes(fastify: FastifyInstance) {
       }
 
       //!TODO Add transaction objects
-      const exportData: Transaction[] = []
+      const exportData: FinanceTransaction[] = []
       reply.header('Content-Type', 'application/json')
       reply.header('Content-Disposition', 'attachment; filename=transactions.json')
       return exportData

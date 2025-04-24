@@ -7,6 +7,7 @@ import fastifyHelmet from '@fastify/helmet'
 import fastifyMultipart from '@fastify/multipart'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
+import { Queue } from 'bullmq'
 
 import { env } from './lib/env'
 import adminPlugin from './plugins/admin'
@@ -27,17 +28,42 @@ import { healthRoutes } from './routes/health'
 import { jobApplicationRoutes } from './routes/job-applications'
 import { notesRoutes } from './routes/notes'
 import { personalFinanceRoutes } from './routes/personal-finance'
+import { plaidRoutes } from './routes/plaid.router'
 import statusPlugin from './routes/status'
 import { surveyRoutes } from './routes/surveys'
 import usersPlugin from './routes/user.router'
 import { vectorRoutes } from './routes/vector.router'
 import { webSocketPlugin } from './websocket'
 
+// Use the existing Redis connection from @hominem/utils
+import { redis } from '@hominem/utils/redis'
+
+// Define queue interface on FastifyInstance
+declare module 'fastify' {
+  interface FastifyInstance {
+    queues: {
+      plaidSync: Queue
+      importTransactions: Queue
+    }
+  }
+}
+
 export async function createServer(
   opts: FastifyServerOptions = {}
 ): Promise<FastifyInstance | null> {
   try {
     const server = fastify(opts)
+
+    // Set up BullMQ queues
+    const plaidSyncQueue = new Queue('plaid-sync', { connection: redis })
+    // Name must match the job name used in the worker (import-transaction - singular)
+    const importTransactionsQueue = new Queue('import-transaction', { connection: redis })
+    
+    // Add queues to fastify instance
+    server.decorate('queues', {
+      plaidSync: plaidSyncQueue,
+      importTransactions: importTransactionsQueue,
+    })
 
     await server.register(fastifyCors, {
       origin: [env.APP_URL?.split(',')],
@@ -97,10 +123,14 @@ export async function createServer(
     await server.register(emailMaskRoutes, { prefix: '/api/email-mask' })
     await server.register(financeRoutes, { prefix: '/api/finance' })
     await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })
+    await server.register(plaidRoutes, { prefix: '/api/plaid' })
     await server.register(webSocketPlugin)
 
     // --- Add onClose hooks ---
-
+    server.addHook('onClose', async (instance) => {
+      await instance.queues.plaidSync.close()
+      await instance.queues.importTransactions.close()
+    })
     // --- End onClose hooks ---
 
     server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {

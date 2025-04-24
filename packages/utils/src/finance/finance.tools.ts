@@ -7,7 +7,7 @@ import {
   budgetCategories,
   transactions,
   type FinanceAccountInsert,
-  type TransactionInsert,
+  type FinanceTransactionInsert,
 } from '../db/schema/finance.schema'
 import {
   createNewTransaction,
@@ -142,7 +142,7 @@ export const create_transaction = tool({
     userId: z.string().describe('User ID who owns this transaction'),
   }),
   async execute(args) {
-    const transaction: TransactionInsert = {
+    const transaction: FinanceTransactionInsert = {
       id: crypto.randomUUID(),
       type: args.type,
       amount: args.amount.toString(),
@@ -217,7 +217,7 @@ export const update_transaction = tool({
     userId: z.string().describe('User ID who owns this transaction'),
   }),
   async execute(args) {
-    const updates: Partial<TransactionInsert> = {}
+    const updates: Partial<FinanceTransactionInsert> = {}
     if (args.amount) updates.amount = args.amount.toString()
     if (args.date) updates.date = new Date(args.date)
     if (args.description) updates.description = args.description

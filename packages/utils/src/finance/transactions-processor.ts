@@ -1,6 +1,6 @@
 import { parse } from 'csv-parse'
 import { EventEmitter } from 'node:events'
-import type { FinanceAccount, TransactionInsert } from '../db/schema'
+import type { FinanceAccount, FinanceTransactionInsert } from '../db/schema'
 import { logger } from '../logger'
 import type { ProcessTransactionOptions } from '../types'
 import { withRetry } from '../utils/retry.utils'
@@ -91,10 +91,10 @@ async function processTransactionRow({
 
 type ProcessedTransaction = {
   action: 'created' | 'skipped' | 'merged' | 'updated'
-  transaction: TransactionInsert
+  transaction: FinanceTransactionInsert
 }
 export async function processTransaction(
-  tx: TransactionInsert,
+  tx: FinanceTransactionInsert,
   config: Pick<ProcessingConfig, 'maxRetries' | 'retryDelay'> = DEFAULT_PROCESSING_CONFIG
 ): Promise<ProcessedTransaction> {
   const context = {
@@ -142,7 +142,7 @@ export async function processTransaction(
 }
 
 async function* processTransactions(
-  transactions: TransactionInsert[],
+  transactions: FinanceTransactionInsert[],
   fileName: string,
   config: Partial<ProcessingConfig> = {}
 ): AsyncGenerator<ProcessedTransaction> {
@@ -235,7 +235,7 @@ async function* processTransactions(
   })
 }
 
-type ParsedTransactions = [string, Omit<TransactionInsert, 'accountId'>][]
+type ParsedTransactions = [string, Omit<FinanceTransactionInsert, 'accountId'>][]
 export async function parseTransactionString(
   csvString: string,
   userId: string
@@ -268,7 +268,7 @@ export async function parseTransactionString(
 
 export type ProcessTransactionResult = {
   action: 'created' | 'skipped' | 'merged' | 'updated'
-  transaction: TransactionInsert
+  transaction: FinanceTransactionInsert
   file: string
 }
 
@@ -298,7 +298,7 @@ export async function* processTransactionsFromCSV({
   })
 
   try {
-    const transactions: TransactionInsert[] = []
+    const transactions: FinanceTransactionInsert[] = []
 
     // Parse CSV string into [account, transaction] pairs.
     const parsed = await parseTransactionString(csvContent, userId)
