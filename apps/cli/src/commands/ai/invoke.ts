@@ -14,6 +14,7 @@ export const invokeCommand = new Command()
   .description('Interact with the AI assistant and invoke tools')
   .argument('<message>', 'Message to send')
   .option('-d, --debug', 'Show debug info')
+  .option('--showToolResults', 'Show tool results', false)
   .option('-h, --host <host>', 'API host', 'localhost')
   .option('-p, --port <port>', 'API port', '4040')
   .action(async (message, options) => {
@@ -90,7 +91,7 @@ export const invokeCommand = new Command()
             }
 
             // Format result
-            if (result?.result) {
+            if (result?.result && options.showToolResults) {
               const status = result.isError ? chalk.red('✗') : chalk.green('✓')
               consola.log(chalk.cyan(`    result: ${status}`))
 
