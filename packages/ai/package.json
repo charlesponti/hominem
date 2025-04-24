@@ -7,10 +7,13 @@
     ".": "./src/index.ts"
   },
   "main": "./src/index.ts",
+  "types": "./build/index.d.ts",
   "scripts": {
     "format": "biome format ./src --fix",
     "lint": "biome lint ./src --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:types": "tsc --emitDeclarationOnly",
+    "prepare": "tsc --emitDeclarationOnly"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
