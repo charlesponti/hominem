@@ -36,6 +36,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     max: z.string().optional(),
     account: z.string().optional(),
     limit: z.coerce.number().optional(),
+    description: z.string().optional(),
   })
 
   fastify.post(
@@ -114,21 +115,24 @@ export async function financeRoutes(fastify: FastifyInstance) {
   // Check import status endpoint
   fastify.get<{ Params: { jobId: string } }>(
     '/import/:jobId',
-    {
-      preHandler: verifyAuth,
-      schema: {
-        params: {
-          type: 'object',
-          required: ['jobId'],
-          properties: {
-            jobId: { type: 'string' },
-          },
-        },
-      },
-    },
+    { preHandler: verifyAuth },
     async (request, reply) => {
+      const paramsSchema = z.object({
+        jobId: z.string().min(1, 'jobId is required'),
+      })
+      const parsed = paramsSchema.safeParse(request.params)
+      if (!parsed.success) {
+        reply.code(400)
+        return {
+          error: 'Validation failed',
+          details: parsed.error.issues,
+        }
+      }
+
+      const { jobId } = parsed.data
+
       try {
-        const job = await getJobStatus(request.params.jobId)
+        const job = await getJobStatus(jobId)
         if (!job) {
           reply.code(404)
           return { error: 'Import job not found' }
@@ -136,7 +140,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
         return job
       } catch (error) {
         fastify.log.error(`Error fetching job status: ${error}`)
-        reply.code(500).send({
+        return reply.code(500).send({
           error: 'Failed to retrieve job status',
           details: error instanceof Error ? error.message : String(error),
         })
@@ -144,7 +148,6 @@ export async function financeRoutes(fastify: FastifyInstance) {
     }
   )
 
-  // List active imports endpoint
   fastify.get('/imports/active', { preHandler: verifyAuth }, async (request, reply) => {
     const { userId } = request
     if (!userId) {
@@ -156,14 +159,13 @@ export async function financeRoutes(fastify: FastifyInstance) {
       return activeJobs
     } catch (error) {
       fastify.log.error(`Error fetching active jobs: ${error}`)
-      reply.code(500).send({
+      return reply.code(500).send({
         error: 'Failed to retrieve active import jobs',
         details: error instanceof Error ? error.message : String(error),
       })
     }
   })
 
-  // Get transactions endpoint
   fastify.get('/transactions', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const queryOptions = queryOptionsSchema.parse(request.query)
@@ -171,7 +173,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
       return result
     } catch (error) {
       fastify.log.error(`Error fetching transactions: ${error}`)
-      reply.code(500).send({
+      return reply.code(500).send({
         error: 'Failed to retrieve transactions',
         details: error instanceof Error ? error.message : String(error),
       })

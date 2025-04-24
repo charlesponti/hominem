@@ -49,6 +49,7 @@ export interface QueryOptions {
   max?: string
   account?: string
   limit?: number
+  description?: string
 }
 
 export function buildWhereConditions(options: QueryOptions) {
@@ -79,6 +80,10 @@ export function buildWhereConditions(options: QueryOptions) {
   // !FIX This breaks because a `leftJoin` is required
   if (options.account) {
     conditions.push(like(financeAccounts.name, `%${options.account}%`))
+  }
+
+  if (options.description) {
+    conditions.push(like(transactions.description, `%${options.description}%`))
   }
 
   return conditions.length > 0 ? and(...conditions) : undefined
