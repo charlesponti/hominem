@@ -11,9 +11,9 @@
   "scripts": {
     "format": "biome format ./src --fix",
     "lint": "biome lint ./src --fix",
-    "typecheck": "npx tsc -p tsconfig.json --noEmit",
-    "build": "npx tsc -p tsconfig.json",
-    "dev": "npx tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
     "prepare": "pnpm run build"
   },
   "devDependencies": {
