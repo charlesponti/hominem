@@ -13,7 +13,7 @@
     "url": "git+https://github.com/charlesponti/hominem.git"
   },
   "private": true,
-  "packageManager": "pnpm@10.8.1",
+  "packageManager": "pnpm@10.9.0",
   "bugs": {
     "url": "https://github.com/charlesponti/hominem/issues"
   },
@@ -39,9 +39,9 @@
     "husky": "^9.1.7",
     "turbo": "^2.4.4",
     "typescript": "5.7.3",
+    "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.6",
-    "vite": "^5.4.11"
+    "vitest": "^3.0.6"
   },
   "keywords": [],
   "license": "ISC",
