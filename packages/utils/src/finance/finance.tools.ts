@@ -411,7 +411,7 @@ export const calculate_transactions = tool({
     if (accountId) conditions.push(eq(transactions.accountId, accountId))
     if (descriptionLike) conditions.push(like(transactions.description, `%${descriptionLike}%`))
 
-    let aggregateSelection
+    let aggregateSelection: Record<string, SQL<unknown>>
     switch (calculationType) {
       case 'sum':
         // Assuming 'amount' is stored as text but represents a number
