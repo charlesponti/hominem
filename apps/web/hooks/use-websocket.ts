@@ -27,6 +27,7 @@ const DEFAULT_OPTIONS: WebSocketOptions = {
 export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
   const { getToken } = useAuth()
   const [isConnected, setIsConnected] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage<T> | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectAttemptsRef = useRef(0)
@@ -52,14 +53,15 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
   }, [mergedOptions])
 
   const connect = useCallback(async () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return
-
+    if (wsRef.current?.readyState === WebSocket.OPEN || isConnecting) return
+    setIsConnecting(true)
     try {
       const token = await getToken()
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const apiUrlDomain = process.env.NEXT_PUBLIC_API_URL?.split('/')[2] ?? ''
       if (!apiUrlDomain) {
         console.error('NEXT_PUBLIC_API_URL is not configured correctly.')
+        setIsConnecting(false)
         return
       }
       const wsBaseUrl = `${protocol}//${apiUrlDomain}`
@@ -71,6 +73,7 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
       ws.onopen = () => {
         console.info(`WebSocket connected to ${wsBaseUrl}`)
         setIsConnected(true)
+        setIsConnecting(false)
         reconnectAttemptsRef.current = 0
 
         if (messageQueueRef.current.length > 0) {
@@ -127,6 +130,7 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
       ws.onclose = (event) => {
         console.warn(`WebSocket closed: ${event.code} ${event.reason}`)
         setIsConnected(false)
+        setIsConnecting(false)
         wsRef.current = null
 
         if (event.code !== 1000 && mergedOptions.autoReconnect) {
@@ -153,17 +157,19 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
 
       ws.onerror = (errorEvent) => {
         console.error('WebSocket error:', errorEvent)
+        setIsConnecting(false)
       }
 
       wsRef.current = ws
     } catch (err) {
+      setIsConnecting(false)
       if (err instanceof Error) {
         console.error('Failed to establish WebSocket connection:', err.message)
       } else {
         console.error('Failed to establish WebSocket connection with unknown error:', err)
       }
     }
-  }, [getToken, mergedOptions, getBackoffTime])
+  }, [getToken, mergedOptions, getBackoffTime, isConnecting])
 
   const sendMessage = useCallback(
     (message: WebSocketMessage<T>) => {
@@ -175,14 +181,14 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
       messageQueueRef.current.push(message)
 
       if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
-        if (reconnectAttemptsRef.current === 0) {
+        if (reconnectAttemptsRef.current === 0 && !isConnecting) {
           connect()
         }
       }
 
       return false
     },
-    [connect]
+    [connect, isConnecting]
   )
 
   const subscribe = useCallback(<R = unknown>(type: string, listener: WebSocketListener<R>) => {
@@ -218,17 +224,20 @@ export function useWebsocket<T = unknown>(options: WebSocketOptions = {}) {
   }, [])
 
   useEffect(() => {
-    connect()
+    if (!isConnected && !isConnecting) {
+      connect()
+    }
 
     return () => {
       if (!mergedOptions.autoReconnect && wsRef.current) {
         wsRef.current.close(1000, 'Component unmounted')
       }
     }
-  }, [connect, mergedOptions.autoReconnect])
+  }, [connect, mergedOptions.autoReconnect, isConnected, isConnecting])
 
   return {
     isConnected,
+    isConnecting,
     lastMessage,
     sendMessage,
     subscribe,
