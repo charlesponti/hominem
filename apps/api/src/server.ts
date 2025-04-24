@@ -8,8 +8,6 @@ import fastifyMultipart from '@fastify/multipart'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
 
-import { client } from '@hominem/utils/db' // Import the postgres client
-import { redis } from '@hominem/utils/redis' // Import the redis client
 import { env } from './lib/env'
 import adminPlugin from './plugins/admin'
 import bookmarksPlugin from './plugins/bookmarks'
@@ -34,17 +32,6 @@ import { surveyRoutes } from './routes/surveys'
 import usersPlugin from './routes/user.router'
 import { vectorRoutes } from './routes/vector.router'
 import { webSocketPlugin } from './websocket'
-
-// Add cache declaration to extend Fastify types
-declare module 'fastify' {
-  interface FastifyInstance {
-    cache?: {
-      get: (key: string) => Promise<string | null>
-      set: (key: string, value: string, ttl?: number) => Promise<void>
-      del: (key: string) => Promise<void>
-    }
-  }
-}
 
 export async function createServer(
   opts: FastifyServerOptions = {}
@@ -113,30 +100,7 @@ export async function createServer(
     await server.register(webSocketPlugin)
 
     // --- Add onClose hooks ---
-    server.addHook('onClose', async (instance) => {
-      instance.log.info('Closing connections...')
-      const promises = []
-      if (redis && typeof redis.quit === 'function') {
-        instance.log.info('Closing Redis connection...')
-        promises.push(
-          redis.quit().catch((err) => instance.log.error({ err }, 'Error closing Redis'))
-        )
-      } else {
-        instance.log.warn('Redis client not available or quit function missing.')
-      }
-      if (client && typeof client.end === 'function') {
-        instance.log.info('Closing database connection...')
-        promises.push(
-          client
-            .end({ timeout: 5 })
-            .catch((err: unknown) => instance.log.error({ err }, 'Error closing database'))
-        ) // 5 second timeout
-      } else {
-        instance.log.warn('Database client not available or end function missing.')
-      }
-      await Promise.all(promises)
-      instance.log.info('Connections closed.')
-    })
+
     // --- End onClose hooks ---
 
     server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {

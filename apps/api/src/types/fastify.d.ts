@@ -28,6 +28,11 @@ declare module 'fastify' {
       sign: (payload: SessionToken) => Promise<Token>
       verify: (token: string) => Promise<SessionToken>
     }
+    cache?: {
+      get: (key: string) => Promise<string | null>
+      set: (key: string, value: string, ttl?: number) => Promise<void>
+      del: (key: string) => Promise<void>
+    }
   }
 
   interface FastifyRequest {
