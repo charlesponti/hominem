@@ -84,7 +84,6 @@ export function MainNavigation() {
               height={30}
               className="rounded-md"
             />
-            <span className="text-xl font-bold">hominem</span>
           </Link>
         </div>
 
