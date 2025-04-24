@@ -1,4 +1,4 @@
-import type { FinanceData } from '@/hooks/use-finance-data'
+import type { FinanceData } from '@/lib/hooks/use-finance-data'
 import { AccountCard } from './account-card'
 
 interface AccountsListProps {

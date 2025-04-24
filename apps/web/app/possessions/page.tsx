@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { usePossessions } from '@/hooks/use-possessions'
+import { usePossessions } from '@/lib/hooks/use-possessions'
 import { useAuth } from '@clerk/nextjs'
 import type { Possession, PossessionInsert } from '@hominem/utils/types'
 import { PlusCircle, RefreshCcw, Search } from 'lucide-react'

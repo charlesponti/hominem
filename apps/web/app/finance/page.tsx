@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useFinanceData } from '@/hooks/use-finance-data'
+import { useFinanceData } from '@/lib/hooks/use-finance-data'
 import { Download, RefreshCcw, Search, UploadCloudIcon } from 'lucide-react'
 import Link from 'next/link'
 

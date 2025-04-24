@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import type { FinanceData } from '@/hooks/use-finance-data'
+import type { FinanceData } from '@/lib/hooks/use-finance-data'
 
 interface AccountCardProps {
   account: FinanceData['accounts'][number]
