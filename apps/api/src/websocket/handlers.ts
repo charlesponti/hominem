@@ -117,34 +117,3 @@ wsHandlers.use(async (_ws, message, next) => {
   }
   await next()
 })
-
-// async function handleImportsSubscribe(ws: WebSocket) {
-//   const [activeJobs, queuedJobs] = await Promise.all([getActiveJobs(), getQueuedJobs()])
-//   ws.send(
-//     JSON.stringify({
-//       type: 'import:subscribed',
-//       channel: IMPORT_PROGRESS_CHANNEL,
-//       data: [...activeJobs, ...queuedJobs],
-//     })
-//   )
-// }
-
-// async function handleChatMessage(ws: WebSocket, message: string) {
-//   // Handle chat messages here
-//   ws.send(
-//     JSON.stringify({
-//       type: 'chat',
-//       message: `Received: ${message}`,
-//     })
-//   )
-// }
-
-// async function handleConnection(ws: WebSocket) {
-//   ws.send(
-//     JSON.stringify({
-//       type: 'info',
-//       message: 'Connected to server',
-//       serverTime: new Date().toISOString(),
-//     })
-//   )
-// }
