@@ -11,10 +11,10 @@
   "scripts": {
     "format": "biome format ./src --fix",
     "lint": "biome lint ./src --fix",
-    "typecheck": "npx tsc --noEmit",
-    "build:types": "npx tsc --emitDeclarationOnly",
-    "dev": "npx tsc --emitDeclarationOnly --watch",
-    "prepare": "npx tsc --emitDeclarationOnly"
+    "typecheck": "npx tsc -p tsconfig.json --noEmit",
+    "build:types": "npx tsc -p tsconfig.json",
+    "dev": "npx tsc -p tsconfig.json --watch",
+    "prepare": "pnpm run build"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
