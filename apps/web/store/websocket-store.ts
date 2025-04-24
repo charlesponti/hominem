@@ -41,9 +41,7 @@ const DEFAULT_OPTIONS: WebSocketOptions = {
   maxReconnectInterval: 30000,
 }
 
-// Create the store with private implementation details
 const useWebSocketStore = create<WebSocketStore>((set, get) => {
-  // Private variables that don't need to be in the state
   let socket: WebSocket | null = null
   let reconnectAttempts = 0
   let reconnectTimer: NodeJS.Timeout | null = null

@@ -2,7 +2,7 @@
 
 import { fileToBase64 } from '@/lib/files.utils'
 import { useApiClient } from '@/lib/hooks/use-api-client'
-import { useWebSocketStore } from '@/store/websocket/websocket-store'
+import { useWebSocketStore, type WebSocketMessage } from '@/store/websocket-store'
 import { useAuth } from '@clerk/nextjs'
 import type {
   FileStatus,
@@ -170,7 +170,7 @@ export function useImportTransactionsStore() {
     // Subscribe to both channels (progress updates and confirmation of subscription)
     const unsubscribeProgress = subscribe<ImportTransactionsJob[]>(
       IMPORT_PROGRESS_CHANNEL,
-      (message) => {
+      (message: WebSocketMessage<ImportTransactionsJob[]>) => {
         if (message.data) {
           updateImportProgress(message.data)
         }
@@ -179,7 +179,7 @@ export function useImportTransactionsStore() {
 
     const unsubscribeSubscribed = subscribe<ImportTransactionsJob[]>(
       IMPORT_PROGRESS_CHANNEL_SUBSCRIBED,
-      (message) => {
+      (message: WebSocketMessage<ImportTransactionsJob[]>) => {
         if (message.data) {
           updateImportProgress(message.data)
         }
