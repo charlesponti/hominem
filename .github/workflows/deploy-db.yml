@@ -10,28 +10,39 @@ on:
     branches: [main]
     paths:
       - 'packages/utils/db/**'
+      - '.github/workflows/deploy-db.yml' # Trigger on changes to the workflow itself
 
 jobs:
-  deploy-migrations:
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.workflow_id != github.workflow }}
+  run-migrations: # More descriptive job name
+    name: Run Database Migrations
+    # Run on push to relevant paths OR successful completion of code-quality workflow
+    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-migrations
+      cancel-in-progress: true
     steps:
-      - uses: styfle/cancel-workflow-action@0.9.1
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.12.1
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4 # Use latest version
         with:
-          version: 8
-      - uses: actions/setup-node@v3
+          version: 8 # Or your desired pnpm version
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4 # Use latest version
         with:
-          node-version: 18
+          node-version: 18 # Or your desired Node version
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile # Use frozen lockfile for consistency
 
-      - name: Deploy
+      - name: Run Migrations
         run: pnpm run migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

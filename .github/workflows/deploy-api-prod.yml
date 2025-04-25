@@ -8,15 +8,12 @@ on:
       - completed
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    container: ghcr.io/railwayapp/cli:latest
-    env:
-      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_API }}
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  call-reusable-deploy:
+    name: Deploy API to Railway
+    # Only run if the triggering workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - uses: styfle/cancel-workflow-action@0.9.1
-      - uses: actions/checkout@v4
-      - name: Deploy
-        run: railway up --service ${{ env.SERVICE_ID }} --detach
+    uses: ./.github/workflows/reusable-deploy-railway.yml
+    with:
+      service-id: ${{ secrets.RAILWAY_SERVICE_API }}
+    secrets:
+      railway-token: ${{ secrets.RAILWAY_TOKEN }}
