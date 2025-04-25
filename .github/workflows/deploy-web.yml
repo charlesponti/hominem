@@ -9,9 +9,8 @@ on:
       - completed
 
 jobs:
-  call-reusable-deploy:
+  deploy:
     name: Deploy Web to Railway
-    # Run on manual trigger or successful code-quality workflow
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/reusable-deploy-railway.yml
     with:

@@ -13,8 +13,8 @@ on:
       - '.github/workflows/deploy-db.yml' # Trigger on changes to the workflow itself
 
 jobs:
-  run-migrations: # More descriptive job name
-    name: Run Database Migrations
+  run-migrations:
+    name: Database Migrations
     # Run on push to relevant paths OR successful completion of code-quality workflow
     if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
@@ -28,19 +28,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4 # Use latest version
+      - name: Setup CI Environment
+        uses: ./.github/actions/setup-ci
         with:
-          version: 8 # Or your desired pnpm version
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4 # Use latest version
-        with:
-          node-version: 18 # Or your desired Node version
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile # Use frozen lockfile for consistency
+          node-version: '18'
+          pnpm-version: '10.9.0'
+          install-dependencies: 'true'
 
       - name: Run Migrations
         run: pnpm run migrate

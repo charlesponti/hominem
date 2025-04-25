@@ -8,9 +8,8 @@ on:
       - completed
 
 jobs:
-  call-reusable-deploy:
+  deploy:
     name: Deploy API to Railway
-    # Only run if the triggering workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/reusable-deploy-railway.yml
     with:

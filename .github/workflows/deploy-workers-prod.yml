@@ -1,7 +1,7 @@
 name: deploy-workers-prod
 
 on:
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -10,7 +10,7 @@ on:
       - '.github/workflows/deploy-workers-prod.yml'
 
 jobs:
-  call-reusable-deploy:
+  deploy:
     name: Deploy Workers to Railway
     uses: ./.github/workflows/reusable-deploy-railway.yml
     with:
