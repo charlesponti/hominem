@@ -54,18 +54,21 @@ jobs:
         ports:
           - 6379:6379
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup CI Environment
-        uses: ./.github/actions/setup-ci
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v4
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
         with:
-          node-version: '18'
-          pnpm-version: '10.9.0'
-          install-dependencies: 'true'
+          version: 10.9.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: 📦 Install dependencies
+        run: pnpm install
 
       - name: 🏗️ Build
         run: pnpm turbo run build
