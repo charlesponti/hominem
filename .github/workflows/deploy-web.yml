@@ -9,10 +9,21 @@ on:
       - completed
 
 jobs:
-  call-reusable-deploy:
+  deploy:
     name: Deploy Web to Railway
-    # Run on manual trigger or successful code-quality workflow
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    uses: ./.github/workflows/reusable-deploy-railway.yml
-    with:
-      service-id: ${{ secrets.RAILWAY_SERVICE_WEB }}
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_WEB }}
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.12.1 # Use a more recent version
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Railway
+        run: railway up --service ${{ env.SERVICE_ID }} --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

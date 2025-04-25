@@ -12,8 +12,18 @@ on:
 jobs:
   deploy:
     name: Deploy Workers to Railway
-    uses: ./.github/workflows/reusable-deploy-railway.yml
-    with:
-      service-id: ${{ secrets.RAILWAY_SERVICE_IMPORT_TRANSACTIONS }}
-    secrets:
-      railway-token: ${{ secrets.RAILWAY_TOKEN }}
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_IMPORT_TRANSACTIONS }}
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.12.1 # Use a more recent version
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Railway
+        run: railway up --service ${{ env.SERVICE_ID }} --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
