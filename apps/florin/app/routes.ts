@@ -14,7 +14,6 @@ export default [
       ]),
     ]),
     layout('routes/notes/layout.tsx', [route('notes', 'routes/notes/page.tsx')]),
-    route('/health', 'routes/health.tsx'),
     route('/auth/cli', 'routes/auth/cli.tsx'),
   ]),
 ] as RouteConfig
