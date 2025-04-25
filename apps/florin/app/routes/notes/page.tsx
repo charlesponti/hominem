@@ -53,7 +53,7 @@ const colors = {
   lightGrey: '#F5F5F5',
 }
 
-export function Component() {
+export default function NotesPage() {
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [tagInput, setTagInput] = useState('')
@@ -323,12 +323,7 @@ export function Component() {
         <div className="max-w-screen-md mx-auto pt-3 pb-20 px-3 md:px-6">
           {/* Header with branding */}
           <div className="flex justify-between items-center py-4 mb-3">
-            <div className="flex items-center">
-              <LuxuryIcon />
-              <h1 className="text-[#1A1A1A] text-xl md:text-2xl font-light ml-3">
-                Luxe<span className="font-semibold tracking-tight">Notes</span>
-              </h1>
-            </div>
+            <div className="flex items-center" />
 
             <button
               type="button"
@@ -382,10 +377,10 @@ export function Component() {
             {isLoadingNotes ? (
               // Loading skeletons
               Array(4)
-                .fill(0)
-                .map((_) => (
+                .fill(crypto.randomUUID())
+                .map((id) => (
                   <div
-                    key={_}
+                    key={id + Math.random()}
                     className="space-y-2 bg-white p-4 border border-[#E8E1D9] rounded-lg animate-pulse"
                   >
                     <Skeleton className="h-5 w-2/3 bg-[#E8E1D9]" />

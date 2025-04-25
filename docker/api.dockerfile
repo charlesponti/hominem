@@ -81,7 +81,6 @@ RUN npm install -g pnpm && \
 # Copy built artifacts
 COPY --from=builder /app/packages/ai/build ./packages/ai/build
 COPY --from=builder /app/packages/utils/build ./packages/utils/build
-COPY --from=builder /app/apps/api/build ./apps/api/build
 
 # Set proper permissions
 RUN chown -R hominem:nodejs /app

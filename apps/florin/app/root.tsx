@@ -9,7 +9,6 @@ import './globals.css'
 // Import routes
 import type { Route } from './+types/root'
 import './app.css'
-import { SidebarProvider } from './components/ui/sidebar'
 import { UserProvider } from './context/user-context'
 import { getQueryClient } from './lib/get-query-client'
 
@@ -53,7 +52,12 @@ export default function App({ loaderData }: { loaderData: Route.ComponentProps }
   const queryClient = getQueryClient()
 
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} loaderData={loaderData}>
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      loaderData={loaderData}
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
+    >
       <QueryClientProvider client={queryClient}>
         <UserProvider>
           <Outlet />

@@ -51,15 +51,12 @@ export function useCreateNote() {
         ...(Array.isArray(data.tags) && data.tags.length > 0 ? { tags: data.tags } : {}),
       }
 
-      console.log('Creating note with payload:', notePayload)
-
       return apiClient.post<CreateNoteInput, Note>('/api/notes', notePayload)
     },
     onError: (error) => {
       console.error('Error creating note:', error)
     },
     onSuccess: (newNote) => {
-      console.log('Note created successfully:', newNote)
       queryClient.invalidateQueries({ queryKey: [NOTES_KEY] })
     },
   })
@@ -97,15 +94,12 @@ export function useUpdateNote() {
         ...(input.tags !== undefined ? { tags: input.tags } : {}),
       }
 
-      console.log(`Updating note ${input.noteId} with payload:`, notePayload)
-
       return apiClient.put<typeof notePayload, Note>(`/api/notes/${input.noteId}`, notePayload)
     },
     onError: (error) => {
       console.error('Error updating note:', error)
     },
     onSuccess: () => {
-      console.log('Note updated successfully')
       queryClient.invalidateQueries({ queryKey: [NOTES_KEY] })
     },
   })
