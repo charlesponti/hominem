@@ -1,6 +1,7 @@
 /**
  * Transaction import worker using BullMQ
  */
+import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts'
 import type { ImportTransactionsJob } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
@@ -23,8 +24,7 @@ export class TransactionImportWorker {
    */
   constructor() {
     // Create worker to process import jobs
-    // Note: API adds jobs with name 'import-transaction' (singular)
-    this.worker = new Worker('import-transaction', this.processJob, {
+    this.worker = new Worker(QUEUE_NAMES.IMPORT_TRANSACTIONS, this.processJob, {
       connection: redis,
       concurrency: CONCURRENCY,
     })
@@ -32,7 +32,7 @@ export class TransactionImportWorker {
     this.setupEventHandlers()
     this.setupSignalHandlers()
 
-    logger.info('Transaction Importer initialized with queue name: import-transaction')
+    logger.info('Transaction Importer: Initialized')
   }
 
   /**
@@ -59,7 +59,7 @@ export class TransactionImportWorker {
       // Publish completion to Redis for WebSocket updates
       redis
         .publish(
-          'import:progress',
+          REDIS_CHANNELS.IMPORT_PROGRESS,
           JSON.stringify([
             {
               jobId: job.id,
@@ -86,7 +86,7 @@ export class TransactionImportWorker {
         // Publish failure to Redis for WebSocket updates
         redis
           .publish(
-            'import:progress',
+            REDIS_CHANNELS.IMPORT_PROGRESS,
             JSON.stringify([
               {
                 jobId: job.id,
@@ -113,7 +113,7 @@ export class TransactionImportWorker {
       // Publish progress to Redis for WebSocket updates
       redis
         .publish(
-          'import:progress',
+          REDIS_CHANNELS.IMPORT_PROGRESS,
           JSON.stringify([
             {
               jobId: job.id,

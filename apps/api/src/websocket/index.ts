@@ -1,3 +1,4 @@
+import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import type { FastifyInstance } from 'fastify'
@@ -5,8 +6,7 @@ import { WebSocket, WebSocketServer } from 'ws'
 import { client, getHominemUser } from '../middleware/auth'
 import { wsHandlers } from './handlers'
 
-// !TODO Move to @hominem/utils/consts
-const IMPORT_PROGRESS_CHANNEL = 'import:progress'
+const IMPORT_PROGRESS_CHANNEL = REDIS_CHANNELS.IMPORT_PROGRESS
 
 export async function webSocketPlugin(fastify: FastifyInstance) {
   // WebSocket server. Do not need a server since this is handled by Fastify.

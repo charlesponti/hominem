@@ -4,10 +4,7 @@
  */
 
 export const REDIS = {
-  IMPORT_JOB_PREFIX: 'import:job:',
   JOB_EXPIRATION_TIME: 60 * 60 * 24, // 24 hours
-  IMPORT_PROGRESS_CHANNEL: 'import:progress',
-  IMPORT_JOBS_LIST_KEY: 'import:active-jobs',
 }
 
 export const JOB_PROCESSING = {

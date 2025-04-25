@@ -1,3 +1,4 @@
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/utils/db'
 import { financialInstitutions, plaidItems } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
@@ -146,7 +147,7 @@ export async function plaidRoutes(fastify: FastifyInstance) {
 
         // Queue sync job
         await fastify.queues.plaidSync.add(
-          'plaid-sync',
+          QUEUE_NAMES.PLAID_SYNC,
           {
             userId,
             accessToken,
@@ -206,7 +207,7 @@ export async function plaidRoutes(fastify: FastifyInstance) {
 
         // Queue sync job
         await fastify.queues.plaidSync.add(
-          'plaid-sync',
+          QUEUE_NAMES.PLAID_SYNC,
           {
             userId,
             accessToken: plaidItem.accessToken,

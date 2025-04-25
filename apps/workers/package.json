@@ -20,6 +20,7 @@
     "csv-parse": "^5.6.0",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.42.0",
     "mailparser": "^3.7.2",
     "pdf-parse": "^1.1.1",
     "plaid": "^18.2.0",

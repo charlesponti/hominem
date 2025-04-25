@@ -6,6 +6,7 @@
   "description": "Random utilities",
   "exports": {
     "./career": "./src/career/index.ts",
+    "./consts": "./src/consts.ts",
     "./db": "./src/db/index.ts",
     "./finance": "./src/finance/index.ts",
     "./google-maps": "./src/google/maps.ts",

@@ -1,8 +1,7 @@
+import { IMPORT_JOB_PREFIX } from '@hominem/utils/imports'
 import type { ImportTransactionsJob } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
-
-import { REDIS } from './config'
 
 /**
  * Get active import jobs from Redis
@@ -10,7 +9,7 @@ import { REDIS } from './config'
 export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
   try {
     // Get all keys that match the job prefix
-    const allKeys = await redis.keys(`${REDIS.IMPORT_JOB_PREFIX}*`)
+    const allKeys = await redis.keys(`${IMPORT_JOB_PREFIX}*`)
     if (!allKeys.length) {
       return []
     }
@@ -64,7 +63,7 @@ export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
  */
 export async function removeJobFromQueue(jobId: string): Promise<void> {
   try {
-    const jobKey = `${REDIS.IMPORT_JOB_PREFIX}${jobId}`
+    const jobKey = `${IMPORT_JOB_PREFIX}${jobId}`
     const csvKey = `${jobKey}:csv`
 
     logger.info(`Removing job ${jobId} and its associated data from Redis`)
@@ -87,7 +86,7 @@ export async function removeJobFromQueue(jobId: string): Promise<void> {
  */
 export async function getImportFileContent(jobId: string): Promise<string> {
   try {
-    const csvKey = `${REDIS.IMPORT_JOB_PREFIX}${jobId}:csv`
+    const csvKey = `${IMPORT_JOB_PREFIX}${jobId}:csv`
     logger.info(`Fetching import file content for job: ${jobId} from key: ${csvKey}`)
 
     const content = await redis.get(csvKey)

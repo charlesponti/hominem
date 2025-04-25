@@ -4,6 +4,7 @@ import { fileToBase64 } from '@/lib/files.utils'
 import { useApiClient } from '@/lib/hooks/use-api-client'
 import { useWebSocketStore, type WebSocketMessage } from '@/store/websocket-store'
 import { useAuth } from '@clerk/nextjs'
+import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type {
   FileStatus,
   ImportRequestParams,
@@ -14,9 +15,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 
 // Define constants for channel names and message types
-const IMPORT_PROGRESS_CHANNEL = 'import:progress'
-const IMPORT_PROGRESS_CHANNEL_TYPE = 'imports:subscribe'
-const IMPORT_PROGRESS_CHANNEL_SUBSCRIBED = 'import:subscribed'
+const IMPORT_PROGRESS_CHANNEL = REDIS_CHANNELS.IMPORT_PROGRESS
+const IMPORT_PROGRESS_CHANNEL_SUBSCRIBED = REDIS_CHANNELS.SUBSCRIBED
+const IMPORT_PROGRESS_CHANNEL_TYPE = REDIS_CHANNELS.SUBSCRIBE
 const IMPORT_TRANSACTIONS_KEY = [['finance', 'import-transactions']] as const
 
 const convertJobToFileStatus = (jobs: ImportTransactionsJob[]): FileStatus[] =>

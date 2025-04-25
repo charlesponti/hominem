@@ -1,3 +1,5 @@
+import { REDIS_CHANNELS } from '@hominem/utils/consts'
+import { IMPORT_JOB_PREFIX } from '@hominem/utils/imports'
 import type { ImportTransactionsJob } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
@@ -20,7 +22,7 @@ export class JobStatusService {
     retries = JOB_PROCESSING.MAX_RETRIES
   ): Promise<T | undefined> {
     try {
-      const jobKey = `${REDIS.IMPORT_JOB_PREFIX}${jobId}`
+      const jobKey = `${IMPORT_JOB_PREFIX}${jobId}`
       const pipeline = redis.pipeline()
 
       // Get current state
@@ -59,7 +61,7 @@ export class JobStatusService {
 
       // Publish progress update if the job is ImportTransactionsJob and has progress
       if (updated.type === 'import-transactions' && updated.stats?.progress !== undefined) {
-        pipeline.publish(REDIS.IMPORT_PROGRESS_CHANNEL, JSON.stringify([updated]))
+        pipeline.publish(REDIS_CHANNELS.IMPORT_PROGRESS, JSON.stringify([updated]))
       }
 
       await pipeline.exec()

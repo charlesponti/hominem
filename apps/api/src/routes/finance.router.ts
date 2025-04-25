@@ -1,3 +1,4 @@
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { queryTransactions } from '@hominem/utils/finance'
 import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
 import type { ImportTransactionsJob } from '@hominem/utils/types'
@@ -73,7 +74,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
         // Use BullMQ instead of Redis directly
         const job = await fastify.queues.importTransactions.add(
-          'import-transaction',
+          QUEUE_NAMES.IMPORT_TRANSACTIONS,
           {
             ...validated.data,
             userId,
@@ -136,7 +137,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
       try {
         // With BullMQ, we can get the job status directly
         const job = await fastify.queues.importTransactions.getJob(jobId)
-        
+
         if (!job) {
           // Try the legacy job status method as a fallback
           const legacyJob = await getJobStatus(jobId)
@@ -174,19 +175,23 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
     try {
       // With BullMQ, we can get active jobs directly
-      const activeJobs = await fastify.queues.importTransactions.getJobs(['active', 'waiting', 'delayed'])
-      
+      const activeJobs = await fastify.queues.importTransactions.getJobs([
+        'active',
+        'waiting',
+        'delayed',
+      ])
+
       // Filter to only get this user's jobs and map to our expected format
       const userJobs = activeJobs
-        .filter(job => job.data.userId === userId)
-        .map(job => ({
+        .filter((job) => job.data.userId === userId)
+        .map((job) => ({
           jobId: job.id,
           userId: job.data.userId,
           fileName: job.data.fileName,
           status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
           progress: job.progress,
         }))
-      
+
       return { jobs: userJobs }
     } catch (error) {
       fastify.log.error(`Error fetching active jobs: ${error}`)

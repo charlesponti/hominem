@@ -7,6 +7,7 @@ import fastifyHelmet from '@fastify/helmet'
 import fastifyMultipart from '@fastify/multipart'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { Queue } from 'bullmq'
 
 import { env } from './lib/env'
@@ -54,10 +55,9 @@ export async function createServer(
   try {
     const server = fastify(opts)
 
-    // Set up BullMQ queues
-    const plaidSyncQueue = new Queue('plaid-sync', { connection: redis })
-    // Name must match the job name used in the worker (import-transaction - singular)
-    const importTransactionsQueue = new Queue('import-transaction', { connection: redis })
+    // Set up BullMQ queues using consistent queue names from utils/consts
+    const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
+    const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, { connection: redis })
     
     // Add queues to fastify instance
     server.decorate('queues', {

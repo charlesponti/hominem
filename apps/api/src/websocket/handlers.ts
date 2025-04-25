@@ -1,3 +1,4 @@
+import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import { getActiveJobs, getQueuedJobs } from '@hominem/utils/imports'
 import { logger } from '@hominem/utils/logger'
 import type { WebSocket } from 'ws'
@@ -80,12 +81,12 @@ wsHandlers.register('ping', async (ws) => {
   ws.send(JSON.stringify({ type: 'pong' }))
 })
 
-wsHandlers.register('imports:subscribe', async (ws) => {
+wsHandlers.register(REDIS_CHANNELS.SUBSCRIBE, async (ws) => {
   const [activeJobs, queuedJobs] = await Promise.all([getActiveJobs(), getQueuedJobs()])
   ws.send(
     JSON.stringify({
-      type: 'import:subscribed',
-      channel: 'import:progress',
+      type: REDIS_CHANNELS.SUBSCRIBED,
+      channel: REDIS_CHANNELS.IMPORT_PROGRESS,
       data: [...activeJobs, ...queuedJobs],
     })
   )

@@ -1,142 +1,92 @@
 /**
- * Plaid sync worker
+ * Plaid sync worker using BullMQ
  */
 import './env.ts'
 
-import { db } from '@hominem/utils/db'
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
-import { plaidItems } from '@hominem/utils/schema'
-import { and, eq } from 'drizzle-orm'
+import { redis } from '@hominem/utils/redis'
+import { type Job, Worker } from 'bullmq'
 import { processSyncJob } from './plaid-sync.processor'
 
 // Configuration
-const POLLING_INTERVAL = 5 * 60 * 1000 // 5 minutes
-const CONCURRENCY_LIMIT = 3
+const CONCURRENCY = 3
 
 /**
  * Worker class for processing Plaid sync jobs
  */
 export class PlaidSyncWorker {
-  private isProcessing = false
-  private pollingInterval: NodeJS.Timeout | null = null
+  private worker: Worker
+  private isShuttingDown = false
 
   /**
    * Initialize the worker
    */
   constructor() {
-    this.setupSignalHandlers()
-  }
-
-  /**
-   * Start the worker
-   */
-  public start(): void {
-    if (this.pollingInterval) {
-      logger.info('Plaid sync worker already started')
-      return
-    }
-
-    logger.info(`Starting Plaid sync polling with interval of ${POLLING_INTERVAL}ms`)
-    this.pollingInterval = setInterval(() => this.processPlaidSyncs(), POLLING_INTERVAL)
-
-    // Process syncs immediately on startup
-    this.processPlaidSyncs().catch((err) => {
-      logger.error('Error processing Plaid syncs on startup:', err)
+    // Create worker to process Plaid sync jobs
+    // Use queue name from constants to ensure consistency
+    this.worker = new Worker(QUEUE_NAMES.PLAID_SYNC, this.processJob, {
+      connection: redis,
+      concurrency: CONCURRENCY,
     })
+
+    this.setupEventHandlers()
+    this.setupSignalHandlers()
+
+    logger.info(`Plaid Sync Worker initialized with queue name: ${QUEUE_NAMES.PLAID_SYNC}`)
   }
 
   /**
-   * Stop the worker
+   * Process a Plaid sync job
    */
-  public stop(): void {
-    if (!this.pollingInterval) {
-      logger.info('Plaid sync worker already stopped')
-      return
-    }
-
-    clearInterval(this.pollingInterval)
-    this.pollingInterval = null
-    logger.info('Plaid sync worker stopped')
-  }
-
-  /**
-   * Process Plaid items that need syncing
-   */
-  private async processPlaidSyncs(): Promise<void> {
-    if (this.isProcessing) {
-      logger.debug('Still processing previous syncs, skipping poll')
-      return
-    }
+  private processJob = async (job: Job): Promise<any> => {
+    logger.info(`Processing Plaid sync job ${job.id} for user ${job.data.userId}`)
 
     try {
-      this.isProcessing = true
-
-      // Find Plaid items that need syncing (last sync > 24 hours ago or null)
-      const oneDayAgo = new Date()
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1)
-
-      const itemsToSync = await db.query.plaidItems.findMany({
-        where: and(
-          eq(plaidItems.status, 'active')
-          // Last synced more than 24 hours ago or never synced
-          // OR sync error occurred more than 1 hour ago
-        ),
-        limit: CONCURRENCY_LIMIT,
-      })
-
-      logger.info(`Found ${itemsToSync.length} Plaid items to sync`)
-
-      // Process each item
-      for (const item of itemsToSync) {
-        try {
-          logger.info(`Processing Plaid sync for item ${item.itemId} (user ${item.userId})`)
-
-          // Process the sync job
-          await processSyncJob({
-            id: `plaid-sync-${item.id}-${Date.now()}`,
-            data: {
-              userId: item.userId,
-              accessToken: item.accessToken,
-              itemId: item.itemId,
-              initialSync: false,
-            },
-            name: 'plaid-sync',
-            timestamp: Date.now(),
-            opts: {},
-            // Implement updateProgress as no-op
-            updateProgress: async () => {},
-          })
-
-          logger.info(`Plaid sync for item ${item.itemId} completed successfully`)
-        } catch (error) {
-          logger.error(`Unexpected error processing Plaid sync for item ${item.itemId}:`, error)
-
-          // Update item status to error
-          await db
-            .update(plaidItems)
-            .set({
-              status: 'error',
-              error: error instanceof Error ? error.message : String(error),
-              updatedAt: new Date(),
-            })
-            .where(eq(plaidItems.id, item.id))
-        }
-      }
+      return await processSyncJob(job)
     } catch (error) {
-      logger.error('Error in Plaid sync polling loop:', error)
-    } finally {
-      this.isProcessing = false
+      logger.error(`Error processing Plaid sync job ${job.id}:`, error)
+      throw error
     }
+  }
+
+  /**
+   * Set up event handlers for the worker
+   */
+  private setupEventHandlers() {
+    this.worker.on('completed', (job) => {
+      logger.info(`Plaid sync job ${job.id} completed successfully`)
+    })
+
+    this.worker.on('failed', (job, error) => {
+      logger.error(`Plaid sync job ${job?.id} failed:`, error)
+    })
+
+    this.worker.on('error', (error) => {
+      logger.error('Plaid sync worker error:', error)
+    })
+    
+    this.worker.on('progress', (job, progress) => {
+      logger.debug(`Plaid sync job ${job.id} progress: ${progress}%`)
+    })
   }
 
   /**
    * Handle graceful shutdown
    */
   private async handleGracefulShutdown(): Promise<void> {
-    logger.info('Starting graceful shutdown...')
-    this.stop()
-    this.isProcessing = true
-    logger.info('Plaid sync worker shutdown completed')
+    if (this.isShuttingDown) return
+    
+    this.isShuttingDown = true
+    logger.info('Starting graceful shutdown of Plaid sync worker...')
+
+    try {
+      // Close the worker
+      await this.worker.close()
+      logger.info('Plaid sync worker closed successfully')
+    } catch (error) {
+      logger.error('Error during Plaid sync worker shutdown:', error)
+    }
   }
 
   /**
@@ -144,29 +94,25 @@ export class PlaidSyncWorker {
    */
   private setupSignalHandlers(): void {
     process.on('SIGTERM', async () => {
-      logger.info('Received SIGTERM, cleaning up...')
+      logger.info('Plaid sync worker received SIGTERM, cleaning up...')
       await this.handleGracefulShutdown()
-      process.exit(0)
     })
 
     process.on('SIGINT', async () => {
-      logger.info('Received SIGINT, cleaning up...')
+      logger.info('Plaid sync worker received SIGINT, cleaning up...')
       await this.handleGracefulShutdown()
-      process.exit(0)
     })
 
     // Handle uncaught exceptions
     process.on('uncaughtException', async (error) => {
-      logger.error('Uncaught exception:', error)
+      logger.error('Plaid sync worker uncaught exception:', error)
       await this.handleGracefulShutdown()
-      process.exit(1)
     })
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', async (reason) => {
-      logger.error('Unhandled promise rejection:', reason)
+      logger.error('Plaid sync worker unhandled promise rejection:', reason)
       await this.handleGracefulShutdown()
-      process.exit(1)
     })
   }
 }
@@ -174,4 +120,14 @@ export class PlaidSyncWorker {
 // Bootstrap the worker
 logger.info('Starting Plaid sync worker...')
 const worker = new PlaidSyncWorker()
-worker.start()
+
+// Add a health check timer to periodically check job status
+setInterval(async () => {
+  try {
+    // Check if Redis connection is alive
+    await redis.ping()
+    logger.info('Plaid sync worker: Active')
+  } catch (error) {
+    logger.error('Plaid sync worker: Health check failed', error)
+  }
+}, 30000) // Check every 30 seconds
