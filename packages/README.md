@@ -43,7 +43,6 @@ Each package provides these scripts:
 
 - `lint`: Lint the package code
 - `format`: Format the package code
-- `typecheck`: Type check without emitting files
 - `test`: Run tests (if applicable)
 
 ### Build Process

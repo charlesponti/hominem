@@ -36,7 +36,6 @@
     "lint": "biome lint ./src --fix",
     "test": "vitest --run --passWithNoTests",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
     "format": "biome format ./src --fix"
   },
   "dependencies": {

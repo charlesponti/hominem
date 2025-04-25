@@ -11,7 +11,6 @@
   "scripts": {
     "format": "biome format ./src --fix",
     "lint": "biome lint ./src --fix",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch"
   },
