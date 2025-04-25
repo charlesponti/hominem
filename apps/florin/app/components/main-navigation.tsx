@@ -94,7 +94,25 @@ export function MainNavigation() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     closeMenu()
-  }, [pathname, closeMenu])
+  }, [pathname])
+
+  // Close the menu when the Escape key is pressed
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeMenu()
+      }
+    }
+
+    if (menuOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    // Cleanup function to remove the event listener
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [menuOpen, closeMenu]) // Re-run effect if menuOpen or closeMenu changes
 
   const toggleMenu = () => {
     if (menuOpen) {
