@@ -9,11 +9,10 @@ on:
       - completed
 
 jobs:
-  deploy:
+  call-reusable-deploy:
     name: Deploy Web to Railway
+    # Run on manual trigger or successful code-quality workflow
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/reusable-deploy-railway.yml
     with:
       service-id: ${{ secrets.RAILWAY_SERVICE_WEB }}
-    secrets:
-      railway-token: ${{ secrets.RAILWAY_TOKEN }}

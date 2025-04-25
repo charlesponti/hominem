@@ -7,10 +7,6 @@ on:
         description: 'The Railway service ID to deploy to'
         required: true
         type: string
-    secrets:
-      railway-token:
-        description: 'Railway token for authentication'
-        required: true
 
 jobs:
   deploy:
