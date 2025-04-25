@@ -26,7 +26,8 @@
     "prerelease": "pnpm run test",
     "start:api": "pnpm --filter @hominem/api run start",
     "start:web": "pnpm --filter @hominem/web run start",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -f tsconfig.tsbuildinfo"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

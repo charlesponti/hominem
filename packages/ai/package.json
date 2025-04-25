@@ -11,8 +11,9 @@
   "scripts": {
     "format": "biome format ./src --fix",
     "lint": "biome lint ./src --fix",
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch"
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "clean": "rm -rf build tsconfig.tsbuildinfo"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",

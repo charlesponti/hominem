@@ -31,7 +31,11 @@
         ".next/**",
         "!.next/cache/**",
         "build/**",
-        "dist/**"
+        "dist/**",
+        "*.tsbuildinfo"
+      ],
+      "dependsOn": [
+        "^build"
       ]
     },
     "lint": {
@@ -57,6 +61,9 @@
       "dependsOn": [
         "build"
       ]
+    },
+    "clean": {
+      "cache": false
     }
   }
 }

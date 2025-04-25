@@ -35,8 +35,10 @@
     "db:update": "pnpm drizzle-kit generate && pnpm drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
     "test": "vitest --run --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json",
     "test:watch": "vitest",
-    "format": "biome format ./src --fix"
+    "format": "biome format ./src --fix",
+    "clean": "rm -rf build tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
