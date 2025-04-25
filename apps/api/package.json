@@ -8,8 +8,7 @@
     "dev": "tsx --watch src/index.ts",
     "lint": "biome lint ./src --fix",
     "format": "biome format ./src --fix",
-    "build": "vite build",
-    "start": "node build/index.js | pino-pretty",
+    "start": "node --import tsx src/index.ts | pino-pretty",
     "test": "NODE_ENV=test vitest --run --coverage --passWithNoTests",
     "test:coverage": "NODE_ENV=test vitest --run --coverage",
     "test:watch": "NODE_ENV=test vitest"

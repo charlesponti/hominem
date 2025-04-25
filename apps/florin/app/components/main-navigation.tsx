@@ -1,16 +1,7 @@
 'use client'
 
 import { SignInButton, SignOutButton, useUser } from '@clerk/react-router'
-import {
-  CircleDollarSignIcon,
-  Home,
-  Menu,
-  MessageCircle,
-  PenTool,
-  Timer,
-  User,
-  X,
-} from 'lucide-react'
+import { CircleDollarSignIcon, Home, Menu, PenTool, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
 import { cn } from '~/lib/utils'
@@ -35,19 +26,9 @@ const navItems = [
     url: '/finance',
   },
   {
-    title: 'Tasks',
-    icon: Timer,
-    url: '/tasks',
-  },
-  {
     title: 'Notes',
     icon: PenTool,
     url: '/notes',
-  },
-  {
-    title: 'Chat',
-    icon: MessageCircle,
-    url: '/chat',
   },
 ]
 

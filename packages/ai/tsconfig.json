@@ -5,7 +5,6 @@
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": "./src",
-    "module": "ES2022",
     "incremental": true,
     "emitDeclarationOnly": true,
     "outDir": "./build",
