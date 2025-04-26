@@ -5,10 +5,10 @@ import fastifyCookie from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyMultipart from '@fastify/multipart'
-import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
-import type { ZodSchema } from 'zod'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { Queue } from 'bullmq'
+import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
+import type { ZodSchema } from 'zod'
 
 import { env } from './lib/env'
 import adminPlugin from './plugins/admin'
@@ -57,8 +57,10 @@ export async function createServer(
 
     // Set up BullMQ queues using consistent queue names from utils/consts
     const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
-    const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, { connection: redis })
-    
+    const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
+      connection: redis,
+    })
+
     // Add queues to fastify instance
     server.decorate('queues', {
       plaidSync: plaidSyncQueue,
@@ -111,6 +113,7 @@ export async function createServer(
     await server.register(placesPlugin)
     await server.register(invitesPlugin)
     await server.register(bookmarksPlugin)
+    await server.register(plaidRoutes, { prefix: '/plaid' })
     await server.register(possessionsPlugin, { prefix: '/api' })
     await server.register(googlePlugin, { prefix: '/api/google' })
     await server.register(healthRoutes, { prefix: '/api/health' })

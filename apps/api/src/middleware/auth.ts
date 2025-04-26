@@ -3,7 +3,7 @@ import { db } from '@hominem/utils/db'
 import { users } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { env } from 'src/lib/env'
+import { env } from '../lib/env'
 
 export const client = createClerkClient({
   publishableKey: env.CLERK_PUBLISHABLE_KEY,

@@ -5,8 +5,8 @@ import { ChromaClient, IncludeEnum, OpenAIEmbeddingFunction } from 'chromadb'
 import csv from 'csv-parser'
 import crypto, { createHash } from 'node:crypto'
 import fs from 'node:fs'
-import { env } from 'src/lib/env'
 import z from 'zod'
+import { env } from '../lib/env'
 
 const embeddingFunction = new OpenAIEmbeddingFunction({
   openai_api_key: env.OPENAI_API_KEY,

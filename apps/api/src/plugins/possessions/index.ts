@@ -3,9 +3,9 @@ import { possessions } from '@hominem/utils/schema'
 import { desc, eq } from 'drizzle-orm'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import crypto from 'node:crypto'
-import { ForbiddenError } from 'src/lib/errors.js'
-import { verifyAuth } from 'src/middleware/auth'
 import { z } from 'zod'
+import { ForbiddenError } from '../../lib/errors.js'
+import { verifyAuth } from '../../middleware/auth'
 
 const createPossessionSchema = {
   body: z.object({

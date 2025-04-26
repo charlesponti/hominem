@@ -2,7 +2,7 @@ import { db, takeUniqueOrThrow } from '@hominem/utils/db'
 import { listInvite, userLists, type users } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { verifyAuth } from 'src/middleware/auth'
+import { verifyAuth } from '../../../middleware/auth'
 
 const acceptListInviteRoute = async (server: FastifyInstance) => {
   server.post(

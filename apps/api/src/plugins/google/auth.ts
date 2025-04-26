@@ -4,7 +4,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { OAuth2Client } from 'google-auth-library'
 import { google } from 'googleapis'
 import assert from 'node:assert'
-import { client } from 'src/middleware/auth'
+import { client } from '../../middleware/auth'
 import { tokenManager } from './token-manager'
 
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI } = process.env
