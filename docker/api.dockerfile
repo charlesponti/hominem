@@ -98,5 +98,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 USER hominem
 
 # Start the application
-ENTRYPOINT ["node", "--import", "tsx", "src/index.ts"]
+ENTRYPOINT ["node", "--import", "tsx", "apps/api/src/index.ts"]
 CMD []
