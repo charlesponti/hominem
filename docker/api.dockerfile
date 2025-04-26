@@ -79,8 +79,7 @@ RUN npm install -g pnpm && \
   pnpm install --frozen-lockfile --prod=true
 
 # Copy built artifacts
-COPY --from=builder /app/packages/ai/build ./packages/ai/build
-COPY --from=builder /app/packages/utils/build ./packages/utils/build
+COPY --from=builder /app/ .
 
 # Set proper permissions
 RUN chown -R hominem:nodejs /app
