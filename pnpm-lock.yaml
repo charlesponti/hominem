@@ -199,8 +199,8 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0
       plaid:
-        specifier: ^18.2.0
-        version: 18.3.0
+        specifier: ^16.0.0
+        version: 16.0.0
       playwright-chromium:
         specifier: ^1.51.1
         version: 1.52.0
@@ -545,6 +545,9 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.1.2)(react@19.1.0)
+      react-plaid-link:
+        specifier: ^3.6.1
+        version: 3.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-router:
         specifier: ^7.5.2
         version: 7.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -7000,6 +7003,7 @@ packages:
 
   libsql@0.5.8:
     resolution: {integrity: sha512-+OopMI1wM/NvAJTHf3O3+beHd1YfKLnSVsOGBl3/7UBDZ4ydVadkbBk5Hjjs9d3ALC5rBaftMY59AvwyC8MzPw==}
+    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   light-my-request@6.6.0:
@@ -8032,6 +8036,10 @@ packages:
     resolution: {integrity: sha512-ueGLflrrnvwB3xuo/uGob5pd5FN7l0MsLf0Z87o/UQmRtwjvfylfc9MurIxRAWywCYTgrvpXBcqjV4OfCYGCIQ==}
     engines: {node: '>=16.20.0'}
 
+  plaid@16.0.0:
+    resolution: {integrity: sha512-WtVquGIF1AlAImYEaoIB/axkbk+yD+4i/FnYkEudZgTUjEYyaZKqPAenFmMYeP+/yha+YjsX1YyR8E6754iPag==}
+    engines: {node: '>=10.0.0'}
+
   plaid@18.3.0:
     resolution: {integrity: sha512-uk9xHS/Gs/wNRmcAM+La1QHqUCIYU/CdPQZ6Cbm+DQ05cIiJmk+ttjKCfKRLHFazUPuPd8Yszf5lFy17MnXGgA==}
     engines: {node: '>=10.0.0'}
@@ -8325,6 +8333,12 @@ packages:
       '@types/react': ^19.1.0
       react: ^19.1.0
 
+  react-plaid-link@3.6.1:
+    resolution: {integrity: sha512-nKxFPm9z8NiFCqOczNhhIp5R/xZY5BQ0lcQjkflIzpQ3Bx9Dsq2F1kORse0EU1aYkuGfVCfnySLwXhsu7rJSjQ==}
+    peerDependencies:
+      react: ^19.1.0
+      react-dom: ^19.1.0
+
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
     engines: {node: '>=0.10.0'}
@@ -8370,6 +8384,12 @@ packages:
     peerDependenciesMeta:
       react-dom:
         optional: true
+
+  react-script-hook@1.7.2:
+    resolution: {integrity: sha512-fhyCEfXb94fag34UPRF0zry1XGwmVY+79iibWwTqAoOiCzYJQOYTiWJ7CnqglA9tMSV8g45cQpHCMcBwr7dwhA==}
+    peerDependencies:
+      react: ^19.1.0
+      react-dom: ^19.1.0
 
   react-smooth@4.0.4:
     resolution: {integrity: sha512-gnGKTpYwqL0Iii09gHobNolvX4Kiq4PKx6eWBCYYix+8cdw+cGo3do906l1NBPKkSWx1DghC1dlWG9L2uGd61Q==}
@@ -16367,7 +16387,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.8.4(debug@4.4.0))
+      retry-axios: 2.6.0(axios@1.8.4)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -18187,6 +18207,12 @@ snapshots:
 
   pkce-challenge@5.0.0: {}
 
+  plaid@16.0.0:
+    dependencies:
+      axios: 1.8.4(debug@4.4.0)
+    transitivePeerDependencies:
+      - debug
+
   plaid@18.3.0:
     dependencies:
       axios: 1.8.4(debug@4.4.0)
@@ -18542,6 +18568,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  react-plaid-link@3.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      prop-types: 15.8.1
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-script-hook: 1.7.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+
   react-refresh@0.14.2: {}
 
   react-refresh@0.17.0: {}
@@ -18638,6 +18671,11 @@ snapshots:
       set-cookie-parser: 2.7.1
       turbo-stream: 2.4.0
     optionalDependencies:
+      react-dom: 19.1.0(react@19.1.0)
+
+  react-script-hook@1.7.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
   react-smooth@4.0.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
@@ -18887,7 +18925,7 @@ snapshots:
 
   ret@0.5.0: {}
 
-  retry-axios@2.6.0(axios@1.8.4(debug@4.4.0)):
+  retry-axios@2.6.0(axios@1.8.4):
     dependencies:
       axios: 1.8.4(debug@4.4.0)
 
