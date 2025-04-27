@@ -1,5 +1,6 @@
 import { BoltExportSchema } from '@hominem/utils/services'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { z } from 'zod'
 import { readFileSyncMock, writeFileSyncMock } from '../../../vitest.setup.js'
 import { typingMindBase, validTypingMindInput } from '../__tests__/typingmind.mock.js'
 import { command } from './typingmind-to-bolt.js'
@@ -19,7 +20,7 @@ describe('convert-typingmind-to-bolt command', () => {
     const writeCalls = writeFileSyncMock.mock.calls
     expect(writeCalls.length).toBeGreaterThan(0)
 
-    const writtenData = JSON.parse(writeCalls[0][1])
+    const writtenData = JSON.parse(writeCalls[0][1]) as z.infer<typeof BoltExportSchema>
 
     expect(() => BoltExportSchema.parse(writtenData)).not.toThrow()
     expect(writtenData.chats).toHaveLength(1)
@@ -52,7 +53,9 @@ describe('convert-typingmind-to-bolt command', () => {
     readFileSyncMock.mockReturnValue(JSON.stringify(input))
     await command.parseAsync(['node', 'test', 'input.json'])
 
-    const writtenData = JSON.parse(writeFileSyncMock.mock.calls[0][1])
+    const writtenData = JSON.parse(writeFileSyncMock.mock.calls[0][1]) as z.infer<
+      typeof BoltExportSchema
+    >
     expect(writtenData.chats[0].messages[0].content).toBe('Part 1\nPart 2')
   })
 
@@ -77,7 +80,9 @@ describe('convert-typingmind-to-bolt command', () => {
     readFileSyncMock.mockReturnValue(JSON.stringify(input))
     await command.parseAsync(['node', 'test', 'input.json'])
 
-    const writtenData = JSON.parse(writeFileSyncMock.mock.calls[0][1])
+    const writtenData = JSON.parse(writeFileSyncMock.mock.calls[0][1]) as z.infer<
+      typeof BoltExportSchema
+    >
     expect(writtenData.chats[0].messages[0].createdAt).toBeDefined()
   })
 
