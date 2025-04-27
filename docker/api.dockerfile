@@ -31,7 +31,7 @@ FROM base AS builder
 WORKDIR /app
 
 # Install build tools
-RUN npm install -g pnpm turbo
+RUN npm install -g pnpm turbo esbuild
 
 # Copy the pruned lockfile and package.json files
 COPY --from=pruner /app/out/json/ .
@@ -47,8 +47,10 @@ COPY --from=pruner /app/out/full/ .
 # Copy turbo.json for the build
 COPY turbo.json .
 
-# Build the API and its dependencies
-RUN turbo run build --filter=@hominem/api...
+# Build the API using esbuild
+WORKDIR /app/apps/api
+RUN node build.js
+WORKDIR /app
 
 # Production stage
 FROM node:23.11-bookworm-slim AS release
@@ -79,7 +81,7 @@ RUN npm install -g pnpm && \
   pnpm install --frozen-lockfile --prod=true
 
 # Copy built artifacts
-COPY --from=builder /app/ .
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
 # Set proper permissions
 RUN chown -R hominem:nodejs /app
@@ -98,5 +100,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 USER hominem
 
 # Start the application
-ENTRYPOINT ["node", "--import", "tsx", "apps/api/src/index.ts"]
+ENTRYPOINT ["node", "apps/api/dist/index.js"]
 CMD []

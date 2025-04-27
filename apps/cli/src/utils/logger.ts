@@ -1,40 +1,33 @@
-import winston from 'winston'
+import { createWriteStream, existsSync, mkdirSync } from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
+import pino from 'pino'
 
-// Define custom log format
-const logFormat = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.colorize(),
-  winston.format.printf(({ level, message, timestamp }) => {
-    return `${timestamp} ${level}: ${message}`
-  })
+const LOG_DIR = path.resolve(process.cwd(), 'logs')
+if (!existsSync(LOG_DIR)) {
+  mkdirSync(LOG_DIR, { recursive: true })
+}
+
+const streams = [
+  { stream: process.stdout },
+  { stream: createWriteStream(path.join(LOG_DIR, 'error.log'), { flags: 'a' }), level: 'error' },
+  { stream: createWriteStream(path.join(LOG_DIR, 'combined.log'), { flags: 'a' }) },
+]
+
+export const logger = pino(
+  {
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    formatters: {
+      level(label) {
+        return { level: label }
+      },
+    },
+  }
+  // pino.multistream(streams)
 )
 
-// Create the logger instance
-export const logger = winston.createLogger({
-  format: logFormat,
-  transports: [
-    // Console transport for development
-    new winston.transports.Console({
-      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-    }),
-    // File transport for errors
-    new winston.transports.File({
-      filename: 'error.log',
-      level: 'error',
-      dirname: 'logs',
-    }),
-    // File transport for all logs
-    new winston.transports.File({
-      filename: 'combined.log',
-      dirname: 'logs',
-    }),
-  ],
-})
-
-// Export the logger instance
 export default logger
 
-// Export common logging methods
 export const debug = logger.debug.bind(logger)
 export const info = logger.info.bind(logger)
 export const warn = logger.warn.bind(logger)

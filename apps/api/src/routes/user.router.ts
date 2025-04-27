@@ -3,7 +3,7 @@ import { users } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
-import { verifyAuth } from '../middleware/auth'
+import { verifyAuth } from '../middleware/auth.js'
 
 const usersPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
   server.get('/me', { preHandler: verifyAuth }, async (request, reply) => {

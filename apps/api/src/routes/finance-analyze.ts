@@ -3,9 +3,9 @@ import { transactions } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../lib/errors'
-import { verifyAuth } from '../middleware/auth'
-import { generateTimeSeriesData } from '../services/finance-analyze.service'
+import { handleError } from '../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
+import { generateTimeSeriesData } from '../services/finance-analyze.service.js'
 
 export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
   // Schema definitions

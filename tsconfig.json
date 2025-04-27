@@ -3,7 +3,20 @@
   "extends": "./packages/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "outDir": "dist",
+    "paths": {
+      "@utils/*": [
+        "packages/utils/src/*"
+      ]
+    },
+    "allowImportingTsExtensions": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
   "files": [],
   "references": [
@@ -27,4 +40,8 @@
     }
   ],
   "display": "@hominem/root",
+  "include": [
+    "apps",
+    "packages"
+  ]
 }

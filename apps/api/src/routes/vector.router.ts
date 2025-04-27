@@ -3,8 +3,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import fs from 'node:fs'
 import z from 'zod'
-import { handleFileUpload } from '../middleware/file-upload'
-import { HominemVectorStore } from '../services/vector.service'
+import { handleFileUpload } from '../middleware/file-upload.js'
+import { HominemVectorStore } from '../services/vector.service.js'
 
 export const vectorRoutes: FastifyPluginAsync = async (fastify) => {
   const UploadSchema = {

@@ -13,19 +13,3 @@ export function getWrittenBoltData(): BoltExport {
   expect(writeCalls.length).toBeGreaterThan(0)
   return JSON.parse(writeCalls[0][1] as string)
 }
-
-export function setupFsMock() {
-  return vi.mock('node:fs', () => {
-    const actual = vi.importActual('node:fs') as object
-    return {
-      ...actual,
-      readFileSync: vi.fn(),
-      writeFileSync: vi.fn(),
-      default: {
-        ...actual,
-        readFileSync: vi.fn(),
-        writeFileSync: vi.fn(),
-      },
-    }
-  })
-}

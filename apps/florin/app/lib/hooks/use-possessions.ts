@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/nextjs'
+import { useAuth } from '@clerk/react-router'
 import type { Category, Possession, PossessionInsert } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'

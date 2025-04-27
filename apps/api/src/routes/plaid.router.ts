@@ -5,16 +5,16 @@ import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
-import { env } from '../lib/env'
-import { handleError } from '../lib/errors'
+import { env } from '../lib/env.js'
+import { handleError } from '../lib/errors.js'
 import {
   PLAID_COUNTRY_CODES,
   PLAID_PRODUCTS,
   plaidClient,
   verifyPlaidWebhookSignature,
-} from '../lib/plaid'
-import { verifyAuth } from '../middleware/auth'
-import { rateLimit } from '../middleware/rate-limit'
+} from '../lib/plaid.js'
+import { verifyAuth } from '../middleware/auth.js'
+import { rateLimit } from '../middleware/rate-limit.js'
 
 // Plaid API router for handling Plaid API integration
 export async function plaidRoutes(fastify: FastifyInstance) {

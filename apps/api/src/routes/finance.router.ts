@@ -4,12 +4,12 @@ import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
 import type { ImportTransactionsJob } from '@hominem/utils/types'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../lib/errors'
-import { verifyAuth } from '../middleware/auth'
-import { rateLimitImport } from '../middleware/rate-limit'
-import { financeAccountsRoutes } from './finance-accounts'
-import { financeAnalyzeRoutes } from './finance-analyze'
-import { financeExportRoutes } from './finance-export'
+import { handleError } from '../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
+import { rateLimitImport } from '../middleware/rate-limit.js'
+import { financeAccountsRoutes } from './finance-accounts.js'
+import { financeAnalyzeRoutes } from './finance-analyze.js'
+import { financeExportRoutes } from './finance-export.js'
 
 export async function financeRoutes(fastify: FastifyInstance) {
   // Register sub-routes

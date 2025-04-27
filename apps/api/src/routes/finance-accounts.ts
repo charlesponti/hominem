@@ -4,8 +4,8 @@ import { financeAccounts } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../lib/errors'
-import { verifyAuth } from '../middleware/auth'
+import { handleError } from '../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
 
 export async function financeAccountsRoutes(fastify: FastifyInstance) {
   // Schema definitions

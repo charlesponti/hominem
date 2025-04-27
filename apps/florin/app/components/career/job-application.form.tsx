@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/nextjs'
+import { useAuth } from '@clerk/react-router'
 import type { JobApplication } from '@hominem/utils/career'
 import { Plus, PlusCircle } from 'lucide-react'
 import { useCallback, useMemo, useState, type FormEvent } from 'react'

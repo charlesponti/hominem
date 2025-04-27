@@ -5,29 +5,98 @@
   "sideEffects": false,
   "description": "Random utilities",
   "exports": {
-    "./career": "./src/career/index.ts",
-    "./consts": "./src/consts.ts",
-    "./db": "./src/db/index.ts",
-    "./finance": "./src/finance/index.ts",
-    "./google-maps": "./src/google/maps.ts",
-    "./imports": "./src/imports.helpers.ts",
-    "./location": "./src/location/index.ts",
-    "./logger": "./src/logger.ts",
-    "./jobs": "./src/jobs/index.ts",
-    "./markdown": "./src/markdown/index.ts",
-    "./nlp": "./src/nlp/index.ts",
-    "./notes": "./src/services/notes.service.ts",
-    "./redis": "./src/redis.ts",
-    "./utils": "./src/utils/index.ts",
-    "./schema": "./src/db/schema/index.ts",
-    "./schemas": "./src/schemas/index.ts",
-    "./scraping": "./src/scraping/index.ts",
-    "./services": "./src/services/index.ts",
-    "./text": "./src/utils/text.utils.ts",
-    "./time": "./src/time.ts",
-    "./tools": "./src/tools/index.ts",
-    "./types": "./src/types/index.ts",
-    "./writer": "./src/writer/index.ts"
+    "./career": {
+      "import": "./src/career/index.ts",
+      "require": "./dist/career/index.cjs"
+    },
+    "./consts": {
+      "import": "./src/consts.ts",
+      "require": "./dist/consts.cjs"
+    },
+    "./db": {
+      "import": "./src/db/index.ts",
+      "require": "./dist/db/index.cjs"
+    },
+    "./finance": {
+      "import": "./src/finance/index.ts",
+      "require": "./dist/finance/index.cjs"
+    },
+    "./google-maps": {
+      "import": "./src/google/maps.ts",
+      "require": "./dist/google/maps.cjs"
+    },
+    "./imports": {
+      "import": "./src/imports.helpers.ts",
+      "require": "./dist/imports.helpers.cjs"
+    },
+    "./location": {
+      "import": "./src/location/index.ts",
+      "require": "./dist/location/index.cjs"
+    },
+    "./logger": {
+      "import": "./src/logger.ts",
+      "require": "./dist/logger.cjs"
+    },
+    "./jobs": {
+      "import": "./src/jobs/index.ts",
+      "require": "./dist/jobs/index.cjs"
+    },
+    "./markdown": {
+      "import": "./src/markdown/index.ts",
+      "require": "./dist/markdown/index.cjs"
+    },
+    "./nlp": {
+      "import": "./src/nlp/index.ts",
+      "require": "./dist/nlp/index.cjs"
+    },
+    "./notes": {
+      "import": "./src/services/notes.service.ts",
+      "require": "./dist/services/notes.service.cjs"
+    },
+    "./redis": {
+      "import": "./src/redis.ts",
+      "require": "./dist/redis.cjs"
+    },
+    "./utils": {
+      "import": "./src/utils/index.ts",
+      "require": "./dist/utils/index.cjs"
+    },
+    "./schema": {
+      "import": "./src/db/schema/index.ts",
+      "require": "./dist/db/schema/index.cjs"
+    },
+    "./schemas": {
+      "import": "./src/schemas/index.ts",
+      "require": "./dist/schemas/index.cjs"
+    },
+    "./scraping": {
+      "import": "./src/scraping/index.ts",
+      "require": "./dist/scraping/index.cjs"
+    },
+    "./services": {
+      "import": "./src/services/index.ts",
+      "require": "./dist/services/index.cjs"
+    },
+    "./text": {
+      "import": "./src/utils/text.utils.ts",
+      "require": "./dist/utils/text.utils.cjs"
+    },
+    "./time": {
+      "import": "./src/time.ts",
+      "require": "./dist/time.cjs"
+    },
+    "./tools": {
+      "import": "./src/tools/index.ts",
+      "require": "./dist/tools/index.cjs"
+    },
+    "./types": {
+      "import": "./src/types/index.ts",
+      "require": "./dist/types/index.cjs"
+    },
+    "./writer": {
+      "import": "./src/writer/index.ts",
+      "require": "./dist/writer/index.cjs"
+    }
   },
   "scripts": {
     "db:generate": "pnpm drizzle-kit generate",
@@ -35,7 +104,7 @@
     "db:update": "pnpm drizzle-kit generate && pnpm drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
     "test": "vitest --run --passWithNoTests",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node build.js",
     "test:watch": "vitest",
     "format": "biome format ./src --fix",
     "clean": "rm -rf build tsconfig.tsbuildinfo"
@@ -55,6 +124,7 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.42.0",
     "drizzle-zod": "^0.7.0",
+    "esbuild": "^0.21.5",
     "googleapis": "144.0.0",
     "ioredis": "^5.5.0",
     "langchain": "^0.3.15",
@@ -62,6 +132,7 @@
     "mongodb": "^6.13.0",
     "ollama-ai-provider": "^1.2.0",
     "openai": "4.83.0",
+    "pino": "^9.6.0",
     "playwright": "^1.51.0",
     "postgres": "^3.4.5",
     "react-syntax-highlighter": "^15.6.1",
@@ -72,13 +143,13 @@
     "remark-rehype": "^11.1.2",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
-    "winston": "^3.11.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "@playwright/test": "^1.51.0",
-    "@types/node": "^22.13.1",
+    "esbuild-node-externals": "^1.18.0",
+    "esbuild-plugin-copy": "^2.1.1",
     "jsdom": "^26.0.0",
     "typescript": "5.7.3",
     "vfile": "^6.0.3",

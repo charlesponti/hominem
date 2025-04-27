@@ -3,8 +3,8 @@ import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import type { FastifyInstance } from 'fastify'
 import { WebSocket, WebSocketServer } from 'ws'
-import { client, getHominemUser } from '../middleware/auth'
-import { wsHandlers } from './handlers'
+import { client, getHominemUser } from '../middleware/auth.js'
+import { wsHandlers } from './handlers.js'
 
 const IMPORT_PROGRESS_CHANNEL = REDIS_CHANNELS.IMPORT_PROGRESS
 

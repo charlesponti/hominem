@@ -1,7 +1,16 @@
-import { FastifyInstance } from 'fastify'
+import { db } from '@hominem/utils/db'
+import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/utils/schema'
+import { eq } from 'drizzle-orm'
+import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
-import { plaidClient, PLAID_COUNTRY_CODES, PLAID_PRODUCTS, PLAID_REDIRECT_URI, PLAID_WEBHOOK_URL } from '../../services/plaid'
+import {
+  PLAID_COUNTRY_CODES,
+  PLAID_PRODUCTS,
+  PLAID_REDIRECT_URI,
+  PLAID_WEBHOOK_URL,
+  plaidClient,
+} from '../../services/plaid.js'
 
 // Schema for validating the exchange public token request
 const exchangeTokenSchema = z.object({
@@ -27,22 +36,21 @@ export default async function plaidTokenRoutes(fastify: FastifyInstance) {
     },
     handler: async (request, reply) => {
       try {
-        // Get the user from the session
-        const { user } = request.session
+        const { userId } = request
 
-        if (!user) {
+        if (!userId) {
           return reply.status(401).send({ error: 'User not authenticated' })
         }
 
         // Create the link token
         const tokenResponse = await plaidClient.linkTokenCreate({
-          user: { client_user_id: user.id },
+          user: { client_user_id: userId },
           client_name: 'Hominem Finance',
           products: PLAID_PRODUCTS,
           country_codes: PLAID_COUNTRY_CODES,
           language: 'en',
           webhook: PLAID_WEBHOOK_URL,
-          redirect_uri: PLAID_REDIRECT_URI,
+          redirect_uri: PLAID_REDIRECT_URI || undefined,
         })
 
         return tokenResponse.data
@@ -68,10 +76,10 @@ export default async function plaidTokenRoutes(fastify: FastifyInstance) {
     },
     handler: async (request, reply) => {
       try {
-        const { user } = request.session
+        const { userId } = request
         const { publicToken } = request.body as z.infer<typeof exchangeTokenSchema>
 
-        if (!user) {
+        if (!userId) {
           return reply.status(401).send({ error: 'User not authenticated' })
         }
 
@@ -82,21 +90,23 @@ export default async function plaidTokenRoutes(fastify: FastifyInstance) {
 
         const { access_token, item_id } = exchangeResponse.data
 
-        // Store the access token and item ID in your database
-        await fastify.db.plaidConnections.create({
-          data: {
-            userId: user.id,
+        // Store the access token and item ID using our schema
+        const newPlaidItem = await db
+          .insert(plaidItems)
+          .values({
             itemId: item_id,
             accessToken: access_token,
             status: 'active',
-          },
-        })
+            userId,
+            institutionId: 'unknown', // Will be updated in updateInstitutionInfo
+          })
+          .returning({ id: plaidItems.id })
 
         // Get institution information
         await updateInstitutionInfo(item_id, access_token)
-        
+
         // Fetch and store account information
-        await fetchAndStoreAccounts(access_token, item_id, user.id)
+        await fetchAndStoreAccounts(access_token, item_id, newPlaidItem[0].id, userId)
 
         return { status: 'success', itemId: item_id }
       } catch (error) {
@@ -115,47 +125,45 @@ export default async function plaidTokenRoutes(fastify: FastifyInstance) {
       const itemResponse = await plaidClient.itemGet({
         access_token: accessToken,
       })
-      
+
       const institutionId = itemResponse.data.item.institution_id
-      
+
       if (!institutionId) {
         return
       }
-      
+
       // Get institution details
       const institutionResponse = await plaidClient.institutionsGetById({
         institution_id: institutionId,
         country_codes: PLAID_COUNTRY_CODES,
       })
-      
+
       const institution = institutionResponse.data.institution
-      
-      // Store institution information
-      await fastify.db.plaidInstitutions.upsert({
-        where: { institutionId },
-        create: {
-          institutionId,
-          name: institution.name,
-          logo: institution.logo,
-          primaryColor: institution.primary_color,
-          url: institution.url,
-        },
-        update: {
-          name: institution.name,
-          logo: institution.logo,
-          primaryColor: institution.primary_color,
-          url: institution.url,
-        },
+
+      // Check if institution already exists
+      const existingInstitution = await db.query.financialInstitutions.findFirst({
+        where: (institutions, { eq }) => eq(institutions.id, institutionId),
       })
-      
-      // Update plaidConnection with institution information
-      await fastify.db.plaidConnections.update({
-        where: { itemId },
-        data: {
+
+      if (!existingInstitution) {
+        // Create new institution record
+        await db.insert(financialInstitutions).values({
+          id: institutionId,
+          name: institution.name,
+          logo: institution.logo || null,
+          primaryColor: institution.primary_color || null,
+          url: institution.url || null,
+          country: PLAID_COUNTRY_CODES[0],
+        })
+      }
+
+      // Update plaidItem with institution information
+      await db
+        .update(plaidItems)
+        .set({
           institutionId,
-          institutionName: institution.name,
-        },
-      })
+        })
+        .where(eq(plaidItems.itemId, itemId))
     } catch (error) {
       fastify.log.error(`Error updating institution info: ${error}`)
     }
@@ -164,35 +172,55 @@ export default async function plaidTokenRoutes(fastify: FastifyInstance) {
   /**
    * Fetch and store account information
    */
-  async function fetchAndStoreAccounts(accessToken: string, itemId: string, userId: string) {
+  async function fetchAndStoreAccounts(
+    accessToken: string,
+    itemId: string,
+    plaidItemUuid: string,
+    userId: string
+  ) {
     try {
       const accountsResponse = await plaidClient.accountsGet({
         access_token: accessToken,
       })
-      
+
       const accounts = accountsResponse.data.accounts
-      
+
       // Store each account
       for (const account of accounts) {
-        await fastify.db.plaidAccounts.create({
-          data: {
-            accountId: account.account_id,
-            itemId,
-            userId,
-            name: account.name,
-            officialName: account.official_name,
-            type: account.type,
-            subtype: account.subtype,
-            mask: account.mask,
-            balanceAvailable: account.balances.available,
-            balanceCurrent: account.balances.current,
-            balanceLimit: account.balances.limit,
-            isoCurrencyCode: account.balances.iso_currency_code,
-          },
+        // Create new account using our finance schema
+        await db.insert(financeAccounts).values({
+          // userId,
+          // name: account.name,
+          // officialName: account.official_name || null,
+          type: mapAccountType(account.type),
+          subtype: account.subtype || null,
+          balance: (account.balances.current || 0).toFixed(2),
+          interestRate: null,
+          minimumPayment: null,
+          plaidAccountId: account.account_id,
+          plaidItemId: plaidItemUuid,
+          mask: account.mask || null,
+          isoCurrencyCode: account.balances.iso_currency_code || 'USD',
+          limit: account.balances.limit || null,
         })
       }
     } catch (error) {
       fastify.log.error(`Error fetching and storing accounts: ${error}`)
     }
+  }
+
+  /**
+   * Map Plaid account type to our schema's account type
+   */
+  function mapAccountType(plaidType: string): string {
+    const typeMap: Record<string, string> = {
+      depository: 'depository',
+      credit: 'credit',
+      loan: 'loan',
+      investment: 'investment',
+      other: 'other',
+    }
+
+    return typeMap[plaidType] || 'other'
   }
 }

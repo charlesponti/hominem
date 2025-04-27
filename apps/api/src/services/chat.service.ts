@@ -1,8 +1,7 @@
 import { openai } from '@ai-sdk/openai'
 import { db, takeUniqueOrThrow } from '@hominem/utils/db'
 import { logger } from '@hominem/utils/logger'
-import { chat, chatMessage } from '@hominem/utils/schema'
-import type { ChatMessageSelect } from '@hominem/utils/types'
+import { chat, chatMessage, type ChatMessageSelect } from '@hominem/utils/schema'
 import { generateText, type GenerateTextResult, type ToolSet } from 'ai'
 import { desc, eq } from 'drizzle-orm'
 
@@ -110,8 +109,7 @@ export class ChatService {
     }
 
     // Get merged tool calls using the improved method
-    const mergedToolCalls = this.mergeToolCallsAndResults(response)
-    console.log('Merged tool calls:', mergedToolCalls)
+    // const mergedToolCalls = this.mergeToolCallsAndResults(response)
 
     // Create a single ChatMessageSelect with the final assistant content and merged tool calls
     return [
@@ -282,7 +280,7 @@ export class ChatService {
   /**
    * Update chat title based on conversation
    */
-  async updateChatTitle(chatId: string, messages: (typeof chatMessage.$inferSelect)[]) {
+  async updateChatTitle(chatId: string, messages: ChatMessageSelect[]) {
     // Only update if there are a few messages and the title is still default
     const currentChat = await db
       .select()
@@ -358,7 +356,7 @@ export class ChatService {
   /**
    * Convert database message array to AI SDK message format
    */
-  formatMessagesForAI(messages: (typeof chatMessage.$inferSelect)[]) {
+  formatMessagesForAI(messages: ChatMessageSelect[]) {
     return messages.map((msg) => ({
       role: msg.role as 'user' | 'assistant' | 'system',
       content: msg.content,

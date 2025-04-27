@@ -1,64 +1,29 @@
 import { BoltExportSchema } from '@hominem/utils/services'
-import fs from 'node:fs'
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
-import { typingMindBase, validTypingMindInput } from '../__tests__/typingmind.mock'
-import { command } from './typingmind-to-bolt'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSyncMock, writeFileSyncMock } from '../../../vitest.setup.js'
+import { typingMindBase, validTypingMindInput } from '../__tests__/typingmind.mock.js'
+import { command } from './typingmind-to-bolt.js'
 
 const PATH = '../convert/typingmind-to-bolt'
-
-// Update fs mock to handle both named and default exports
-vi.mock('node:fs', () => {
-  const actual = vi.importActual('node:fs') as object
-  const existsSync = vi.fn(() => true)
-  const writeFileSync = vi.fn()
-  const readFileSync = vi.fn(() => JSON.stringify(validTypingMindInput))
-  return {
-    ...actual,
-    readFileSync,
-    writeFileSync,
-    existsSync,
-    default: {
-      ...actual,
-      readFileSync,
-      writeFileSync,
-      existsSync,
-      mkdirSync: vi.fn(),
-    },
-  }
-})
 
 describe('convert-typingmind-to-bolt command', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-
-    // Mock readFileSync to return valid data
-    const mockData = JSON.stringify(validTypingMindInput)
-    ;(fs.readFileSync as Mock).mockReturnValue(mockData)
-    vi.mocked(fs.readFileSync).mockReturnValue(mockData)
-
-    // Mock writeFileSync
-    ;(fs.readFileSync as Mock).mockImplementation(() => undefined)
-    vi.mocked(fs.writeFileSync).mockImplementation(() => undefined)
   })
 
   it('should convert valid TypingMind export to Bolt format', async () => {
-    const input = validTypingMindInput
-    vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(input))
+    readFileSyncMock.mockReturnValue(JSON.stringify(validTypingMindInput))
     await command.parseAsync(['node', 'test', 'input.json'])
 
-    // Get the spy and check its calls
-    expect(fs.writeFileSync).toHaveBeenCalled()
-    const writeCalls = vi.mocked(fs.writeFileSync).mock.calls
+    expect(writeFileSyncMock).toHaveBeenCalled()
+    const writeCalls = writeFileSyncMock.mock.calls
     expect(writeCalls.length).toBeGreaterThan(0)
 
-    const writtenData = JSON.parse(writeCalls[0][1] as string)
+    const writtenData = JSON.parse(writeCalls[0][1])
 
-    // Validate against Bolt schema
     expect(() => BoltExportSchema.parse(writtenData)).not.toThrow()
-
-    // Check specific conversion results
     expect(writtenData.chats).toHaveLength(1)
-    expect(writtenData.chats[0].messages).toHaveLength(2) // System message filtered out
+    expect(writtenData.chats[0].messages).toHaveLength(2)
     expect(writtenData.version).toBe(3)
   })
 
@@ -84,12 +49,10 @@ describe('convert-typingmind-to-bolt command', () => {
       },
     }
 
-    vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(input))
-    const writeSpy = vi.spyOn(fs, 'writeFileSync')
-
+    readFileSyncMock.mockReturnValue(JSON.stringify(input))
     await command.parseAsync(['node', 'test', 'input.json'])
 
-    const writtenData = JSON.parse(writeSpy.mock.calls[0][1] as string)
+    const writtenData = JSON.parse(writeFileSyncMock.mock.calls[0][1])
     expect(writtenData.chats[0].messages[0].content).toBe('Part 1\nPart 2')
   })
 
@@ -111,31 +74,24 @@ describe('convert-typingmind-to-bolt command', () => {
       },
     }
 
-    vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(input))
-    const writeSpy = vi.spyOn(fs, 'writeFileSync')
-
+    readFileSyncMock.mockReturnValue(JSON.stringify(input))
     await command.parseAsync(['node', 'test', 'input.json'])
 
-    const writtenData = JSON.parse(writeSpy.mock.calls[0][1] as string)
+    const writtenData = JSON.parse(writeFileSyncMock.mock.calls[0][1])
     expect(writtenData.chats[0].messages[0].createdAt).toBeDefined()
   })
 
   it('should use output path from options when provided', async () => {
-    const writeSpy = vi.spyOn(fs, 'writeFileSync')
-    vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(validTypingMindInput))
-
+    readFileSyncMock.mockReturnValue(JSON.stringify(validTypingMindInput))
     await command.parseAsync(['node', 'test', 'input.json', '-o', 'custom-output.json'])
 
-    expect(writeSpy).toHaveBeenCalledWith('custom-output.json', expect.any(String))
+    expect(writeFileSyncMock).toHaveBeenCalledWith('custom-output.json', expect.any(String))
   })
 
   it('should handle invalid input JSON', async () => {
-    vi.mocked(fs.readFileSync).mockReturnValue('invalid json')
-
+    readFileSyncMock.mockReturnValue('invalid json')
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
-
     await command.parseAsync(['node', 'test', 'input.json'])
-
     expect(exitSpy).toHaveBeenCalledWith(1)
   })
 })

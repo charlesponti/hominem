@@ -1,8 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import type { LeveledLogMethod, Logger as WinstonLogger } from 'winston'
-import winston from 'winston'
+import pino from 'pino'
 
 const LOG_FILE = path.resolve(process.cwd(), './logs/error.log')
 if (!fs.existsSync(LOG_FILE)) {
@@ -10,75 +9,31 @@ if (!fs.existsSync(LOG_FILE)) {
   fs.writeFileSync(LOG_FILE, '')
 }
 
-const redactFields = ['email', 'password', 'token'] as const
+const redactFields = ['email', 'password', 'token']
 
-function redactSensitiveInfo(obj: Record<string, unknown>): Record<string, unknown> {
-  return JSON.parse(
-    JSON.stringify(obj, (key, value) => {
-      if (redactFields.includes(key as (typeof redactFields)[number])) {
-        return '[REDACTED]'
-      }
-      return value
-    })
-  )
-}
+const streams = [
+  { stream: process.stdout },
+  { stream: fs.createWriteStream(LOG_FILE, { flags: 'a' }), level: 'error' },
+]
 
-const baselogger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'debug',
-  defaultMeta: { service: 'api' },
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      level: 'debug',
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple(),
-        winston.format.printf(({ level, message, timestamp, service, ...metadata }) => {
-          let msg = `${timestamp} ${level}: ${service} - ${typeof message === 'string' ? message : JSON.stringify(message)}`
-          if (Object.keys(metadata).length > 0) {
-            msg += ` ${JSON.stringify(metadata)}`
-          }
-          return msg
-        })
-      ),
-    }),
-    new winston.transports.File({
-      dirname: path.dirname(LOG_FILE),
-      filename: LOG_FILE,
-      level: 'error',
-      format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-    }),
-  ],
-})
+export const logger = pino(
+  {
+    level: process.env.LOG_LEVEL || 'debug',
+    redact: {
+      paths: redactFields.map((field) => `*.${field}`),
+      censor: '[REDACTED]',
+    },
+    formatters: {
+      level(label) {
+        return { level: label }
+      },
+    },
+  },
+  pino.multistream(streams)
+)
 
-type LoggerWithRedaction = Omit<WinstonLogger, 'log' | 'error' | 'warn' | 'info' | 'debug'> & {
-  [K in 'log' | 'error' | 'warn' | 'info' | 'debug']: LeveledLogMethod
-}
-
-export const logger = baselogger as LoggerWithRedaction
-
-const methods = ['error', 'warn', 'info', 'debug', 'log'] as const
-for (const method of methods) {
-  const original = logger[method].bind(baselogger)
-  logger[method] = ((info: string | object, ...args: unknown[]) => {
-    try {
-      let processedInfo: string
-      if (typeof info === 'object' && info !== null) {
-        processedInfo = JSON.stringify(redactSensitiveInfo(info as Record<string, unknown>))
-      } else {
-        processedInfo = String(info)
-      }
-
-      return original(processedInfo, ...args)
-    } catch (error) {
-      return logger.error('Error processing log message', {
-        originalMessage: typeof info === 'string' ? info : '[Object]',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
-    }
-  }) as LeveledLogMethod
-}
+export const log = logger.info.bind(logger)
+export const info = logger.info.bind(logger)
+export const warn = logger.warn.bind(logger)
+export const error = logger.error.bind(logger)
+export const debug = logger.debug.bind(logger)

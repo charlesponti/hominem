@@ -1,9 +1,11 @@
 import { db } from '@hominem/utils/db'
+import { redis } from '@hominem/utils/redis'
 import { health } from '@hominem/utils/schema'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../lib/errors'
+import { env } from '../lib/env.js'
+import { handleError } from '../lib/errors.js'
 
 const healthQuerySchema = z.object({
   userId: z.string().optional(),

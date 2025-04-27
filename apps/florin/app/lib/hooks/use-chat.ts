@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/nextjs'
+import { useAuth } from '@clerk/react-router'
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ToolContent, ToolSet } from 'ai'

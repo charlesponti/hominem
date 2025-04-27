@@ -5,13 +5,17 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "tsx --watch src/index.ts",
-    "lint": "biome lint ./src --fix",
-    "format": "biome format ./src --fix",
-    "start": "node --import tsx src/index.ts | pino-pretty",
-    "test": "NODE_ENV=test vitest --run --coverage --passWithNoTests",
-    "test:coverage": "NODE_ENV=test vitest --run --coverage",
-    "test:watch": "NODE_ENV=test vitest"
+    "dev": "pnpm tsx --watch src/index.ts",
+    "lint": "pnpm biome lint ./src --fix",
+    "format": "pnpm biome format ./src --fix",
+    "start": "pnpm node --import tsx src/index.ts | pnpm pino-pretty",
+    "build": "pnpm exec node build.js",
+    "start:prod": "pnpm node dist/index.js",
+    "test": "NODE_ENV=test pnpm vitest --run --coverage --passWithNoTests",
+    "test:coverage": "NODE_ENV=test pnpm vitest --run --coverage",
+    "test:watch": "NODE_ENV=test pnpm vitest",
+    "clean": "rm -rf dist",
+    "prebuild": "pnpm clean"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",
@@ -68,6 +72,9 @@
     "@hominem/tsconfigs": "workspace:*",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^3.1.1",
+    "esbuild": "^0.21.5",
+    "esbuild-node-externals": "^1.18.0",
+    "esbuild-plugin-copy": "^2.1.1",
     "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.1.1"

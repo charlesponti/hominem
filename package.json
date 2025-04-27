@@ -25,12 +25,14 @@
     "prepush": "pnpm run test",
     "prerelease": "pnpm run test",
     "test": "turbo run test",
-    "clean": "turbo run clean && rm -f tsconfig.tsbuildinfo"
+    "clean": "turbo run clean && rm -f tsconfig.tsbuildinfo",
+    "start:dev": "tsx apps/api/src/index.ts",
+    "start:prod": "node apps/api/dist/index.js"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@turbo/gen": "^1.9.7",
-    "@types/node": "^20.11.24",
+    "@types/node": "^22.15.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitest/coverage-v8": "^3.0.5",

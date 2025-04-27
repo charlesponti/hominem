@@ -4,8 +4,8 @@ import { companies, job_applications, type JobApplicationInsert } from '@hominem
 import { desc, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { ForbiddenError, NotFoundError, handleError } from '../lib/errors'
-import { verifyAuth } from '../middleware/auth'
+import { ForbiddenError, NotFoundError, handleError } from '../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
 
 const updateSchema = z.object({
   data: JobApplicationInsertSchema.partial(),

@@ -181,7 +181,7 @@ export default function FinanceFeedPage() {
               </Button>
             ) : null}
             <RouteLink
-              href="/finance/import"
+              to="/finance/import"
               className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-[#FF6600] text-white hover:bg-[#FF6600]/90 h-10 px-4 py-2"
             >
               <UploadCloudIcon className="h-4 w-4 mr-2" />

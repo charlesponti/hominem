@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/nextjs'
+import { useAuth } from '@clerk/react-router'
 import type { Category, Possession, PossessionInsert } from '@hominem/utils/types'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'

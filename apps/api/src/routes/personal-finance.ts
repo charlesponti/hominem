@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../lib/errors'
-import { verifyAuth } from '../middleware/auth'
+import { handleError } from '../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
 
 // Mock cost of living indices for demo
 // In production, this would use real cost of living data APIs

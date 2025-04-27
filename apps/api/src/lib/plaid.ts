@@ -1,6 +1,6 @@
-import * as crypto from 'node:crypto'
+import crypto from 'node:crypto'
 import { Configuration, CountryCode, PlaidApi, PlaidEnvironments, Products } from 'plaid'
-import { env } from './env'
+import { env } from './env.js'
 
 // Initialize Plaid client
 const configuration = new Configuration({
