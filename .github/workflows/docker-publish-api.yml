@@ -14,28 +14,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  APP_URL: ${{ secrets.APP_URL }}
-  CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-  COOKIE_DOMAIN: ${{ secrets.COOKIE_DOMAIN }}
-  COOKIE_NAME: ${{ secrets.COOKIE_NAME }}
-  COOKIE_SALT: ${{ secrets.COOKIE_SALT }}
-  COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
-  DATABASE_URL: ${{ secrets.DATABASE_URL }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-  GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-  JWT_SECRET: ${{ secrets.JWT_SECRET }}
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-  NODE_ENV: production
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-  REDIS_URL: ${{ secrets.REDIS_URL }}
-  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-  SENDGRID_SENDER_EMAIL: ${{ secrets.SENDGRID_SENDER_EMAIL }}
-  SENDGRID_SENDER_NAME: ${{ secrets.SENDGRID_SENDER_NAME }}
-  SEGMENT_KEY: ${{ secrets.SEGMENT_KEY }}
-  APP_USER_ID: ${{ secrets.APP_USER_ID }}
-  ENABLE_REQUEST_LOGGING: true
 
 jobs:
   build-and-push:
@@ -72,21 +50,3 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            APP_URL: ${{ env.APP_URL }}
-            CLERK_SECRET_KEY: ${{ env.CLERK_SECRET_KEY }}
-            COOKIE_DOMAIN: ${{ env.COOKIE_DOMAIN }}
-            COOKIE_NAME: ${{ env.COOKIE_NAME }}
-            COOKIE_SALT: ${{ env.COOKIE_SALT }}
-            COOKIE_SECRET: ${{ env.COOKIE_SECRET }}
-            DATABASE_URL: ${{ env.DATABASE_URL }}
-            GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
-            GOOGLE_CLIENT_ID: ${{ env.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET: ${{ env.GOOGLE_CLIENT_SECRET }}
-            GOOGLE_REDIRECT_URI: ${{ env.GOOGLE_REDIRECT_URI }}
-            JWT_SECRET: ${{ env.JWT_SECRET }}
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-            NODE_ENV: production
-            OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
-            REDIS_URL: ${{ env.REDIS_URL }}
-            SENDGRID_API_KEY: ${{ env.SENDGRID_API_KEY }}
