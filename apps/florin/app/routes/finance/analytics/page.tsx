@@ -29,7 +29,9 @@ import {
 import { Switch } from '~/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { useFinanceCategories } from '~/lib/hooks/use-finance-categories'
+import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
 import { useFinanceData } from '~/lib/hooks/use-finance-data'
+import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
 // Create a client
@@ -69,6 +71,29 @@ function AnalyticsContent() {
     includeStats,
     compareToPrevious,
     groupBy,
+  })
+
+  // Top merchants and categories analytics
+  const {
+    data: topMerchants,
+    isLoading: isLoadingMerchants,
+    error: errorMerchants,
+  } = useFinanceTopMerchants({
+    from: dateFrom?.toISOString().split('T')[0],
+    to: dateTo?.toISOString().split('T')[0],
+    account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    category: selectedCategory || undefined,
+    limit: 5,
+  })
+  const {
+    data: categoryBreakdown,
+    isLoading: isLoadingCategories,
+    error: errorCategories,
+  } = useFinanceCategoryBreakdown({
+    from: dateFrom?.toISOString().split('T')[0],
+    to: dateTo?.toISOString().split('T')[0],
+    account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    limit: 5,
   })
 
   return (
@@ -390,6 +415,143 @@ function AnalyticsContent() {
               </CardContent>
             </Card>
           )}
+
+          {/* --- New Analytics Cards --- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            {/* Top Categories */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Top Categories</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingCategories ? (
+                  <div>Loading...</div>
+                ) : errorCategories ? (
+                  <div className="text-red-500">
+                    Your categories are not available. Please try again later.
+                  </div>
+                ) : categoryBreakdown && categoryBreakdown.length > 0 ? (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr>
+                        <th className="text-left">Category</th>
+                        <th className="text-right">Total</th>
+                        <th className="text-right">Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categoryBreakdown.map((cat) => (
+                        <tr key={cat.category}>
+                          <td>{cat.category}</td>
+                          <td className="text-right font-mono">{formatCurrency(cat.total)}</td>
+                          <td className="text-right">{cat.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div>No data</div>
+                )}
+              </CardContent>
+            </Card>
+            {/* Top Merchants */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Top Merchants</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingMerchants ? (
+                  <div>Loading...</div>
+                ) : errorMerchants ? (
+                  <div className="text-red-500">
+                    Your merchants are not available. Please try again later.
+                  </div>
+                ) : topMerchants && topMerchants.length > 0 ? (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr>
+                        <th className="text-left">Merchant</th>
+                        <th className="text-right">Total</th>
+                        <th className="text-right">Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topMerchants.map((m) => (
+                        <tr key={m.merchant}>
+                          <td>{m.merchant}</td>
+                          <td className="text-right font-mono">{formatCurrency(m.totalSpent)}</td>
+                          <td className="text-right">{m.frequency}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div>No data</div>
+                )}
+              </CardContent>
+            </Card>
+            {/* Income vs. Expenses */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Income vs. Expenses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Placeholder: Replace with real data if available */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between">
+                    <span>Income</span>
+                    <span className="font-bold text-green-600">$0.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Expenses</span>
+                    <span className="font-bold text-red-600">
+                      {timeSeriesData?.stats?.formattedTotal || '$0.00'}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            {/* Trends & Anomalies */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Trends & Anomalies</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Find largest month-over-month change */}
+                {timeSeriesData?.data && timeSeriesData.data.length > 1 ? (
+                  (() => {
+                    let maxChange = 0
+                    let maxIdx = 1
+                    for (let i = 1; i < timeSeriesData.data.length; i++) {
+                      const prev = timeSeriesData.data[i - 1]
+                      const curr = timeSeriesData.data[i]
+                      const change = Math.abs(curr.amount - prev.amount)
+                      if (change > maxChange) {
+                        maxChange = change
+                        maxIdx = i
+                      }
+                    }
+                    const prev = timeSeriesData.data[maxIdx - 1]
+                    const curr = timeSeriesData.data[maxIdx]
+                    return (
+                      <div>
+                        <div>
+                          <span className="font-medium">Largest change:</span>{' '}
+                          {formatDateLabel(prev.date)} → {formatDateLabel(curr.date)}
+                        </div>
+                        <div>
+                          <span className="font-medium">Change:</span>{' '}
+                          {formatCurrency(curr.amount - prev.amount)}
+                        </div>
+                      </div>
+                    )
+                  })()
+                ) : (
+                  <div>No significant changes</div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

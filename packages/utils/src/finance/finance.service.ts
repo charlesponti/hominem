@@ -9,7 +9,7 @@ import {
 } from '../db/schema/finance.schema'
 import type { Possession } from '../db/schema/possessions.schema'
 import { logger } from '../logger'
-import type { CategoryAggregate, QueryOptions } from './types'
+import type { CategoryAggregate, CategorySummary, QueryOptions, TopMerchant } from './types'
 
 export interface ItemCategory {
   id: number
@@ -44,6 +44,12 @@ export function parseAmount(amount: string | number): number {
 export function buildWhereConditions(options: QueryOptions) {
   const conditions = []
 
+  if (!options.userId) return undefined
+  conditions.push(eq(transactions.userId, options.userId))
+  conditions.push(eq(transactions.type, 'expense'))
+  conditions.push(eq(transactions.excluded, false))
+  conditions.push(eq(transactions.pending, false))
+
   if (options.from) {
     conditions.push(gte(transactions.date, new Date(options.from)))
   }
@@ -66,7 +72,6 @@ export function buildWhereConditions(options: QueryOptions) {
     conditions.push(lte(transactions.amount, options.max))
   }
 
-  // !FIX This breaks because a `leftJoin` is required
   if (options.account) {
     conditions.push(like(financeAccounts.name, `%${options.account}%`))
   }
@@ -106,7 +111,7 @@ export async function queryTransactions(options: QueryOptions) {
   return result
 }
 
-export async function summarizeByCategory(options: QueryOptions) {
+export async function summarizeByCategory(options: QueryOptions): Promise<CategorySummary[]> {
   const whereConditions = buildWhereConditions(options)
   const limit = options.limit || 10
 
@@ -120,13 +125,12 @@ export async function summarizeByCategory(options: QueryOptions) {
       maximum: sql<number>`MAX(${transactions.amount})`,
     })
     .from(transactions)
-    // .leftJoin(financeAccounts, eq(transactions.fromAccountId, financeAccounts.id))
     .where(whereConditions)
     .groupBy(sql`COALESCE(${transactions.category}, 'Uncategorized')`)
-    .orderBy(sql`total DESC`)
+    .having(sql`SUM(${transactions.amount}) < 0`)
+    .orderBy(sql`SUM(${transactions.amount}) ASC`)
     .limit(limit)
 
-  // Format the numeric values
   return result.map((row) => ({
     category: row.category,
     count: row.count,
@@ -167,13 +171,17 @@ export async function summarizeByMonth(options: QueryOptions) {
     })
 }
 
-export async function findTopMerchants(options: QueryOptions) {
-  const whereConditions = buildWhereConditions(options)
+export async function findTopMerchants(options: QueryOptions): Promise<TopMerchant[]> {
+  const whereConditions = buildWhereConditions({ ...options, limit: undefined, type: 'expense' })
   const limit = options.limit || 10
+
+  // Prefer merchantName, fallback to description, filter out empty/null
+  // const merchantField = sql<string>`COALESCE(NULLIF(TRIM(${transactions.merchantName}), ''), NULLIF(TRIM(${transactions.description}), ''))`
+  const descriptionField = sql<string>`TRIM(${transactions.description})`
 
   const result = await db
     .select({
-      merchant: transactions.description,
+      merchant: descriptionField,
       frequency: sql<number>`COUNT(*)`,
       totalSpent: sql<number>`SUM(${transactions.amount})`,
       firstTransaction: sql<string>`MIN(${transactions.date}::text)`,
@@ -181,18 +189,22 @@ export async function findTopMerchants(options: QueryOptions) {
     })
     .from(transactions)
     .where(whereConditions)
-    .groupBy(transactions.description)
-    .orderBy(sql`totalSpent DESC`)
+    .groupBy(descriptionField)
+    .having(sql`SUM(${transactions.amount}) < 0`)
+    .orderBy(sql`SUM(${transactions.amount}) ASC`)
     .limit(limit)
 
-  // Format the numeric values
-  return result.map((row) => ({
-    merchant: row.merchant,
-    frequency: row.frequency,
-    totalSpent: Number.parseFloat(row.totalSpent.toString()).toFixed(2),
-    firstTransaction: row.firstTransaction,
-    lastTransaction: row.lastTransaction,
-  }))
+  return (
+    result
+      // .filter((row) => row.merchant)
+      .map((row) => ({
+        merchant: row.merchant,
+        frequency: row.frequency,
+        totalSpent: Number.parseFloat(row.totalSpent.toString()).toFixed(2),
+        firstTransaction: row.firstTransaction,
+        lastTransaction: row.lastTransaction,
+      }))
+  )
 }
 
 export function aggregateByCategory(transactions: FinanceTransaction[]): CategoryAggregate[] {
@@ -249,7 +261,9 @@ export async function findExistingTransaction(tx: {
   })
 }
 
-export async function createNewTransaction(tx: FinanceTransactionInsert): Promise<FinanceTransaction> {
+export async function createNewTransaction(
+  tx: FinanceTransactionInsert
+): Promise<FinanceTransaction> {
   try {
     const result = await db
       .insert(transactions)

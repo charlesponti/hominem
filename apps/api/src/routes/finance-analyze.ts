@@ -1,4 +1,5 @@
 import { db } from '@hominem/utils/db'
+import { findTopMerchants, summarizeByCategory } from '@hominem/utils/finance'
 import { transactions } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
@@ -137,8 +138,56 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
         groupBy: query.groupBy,
         includeStats: query.includeStats,
         compareToPrevious: query.compareToPrevious,
+        userId,
       })
 
+      return result
+    } catch (error) {
+      handleError(error as Error, reply)
+    }
+  })
+
+  // Top merchants endpoint
+  fastify.get('/top-merchants', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const { userId } = request
+      if (!userId) {
+        reply.code(401)
+        return { error: 'Not authorized' }
+      }
+      const query = request.query as Record<string, string>
+      const options = {
+        userId,
+        from: query.from,
+        to: query.to,
+        account: query.account,
+        category: query.category,
+        limit: query.limit ? Number.parseInt(query.limit) : 5,
+      }
+      const result = await findTopMerchants(options)
+      return result
+    } catch (error) {
+      return handleError(error as Error, reply)
+    }
+  })
+
+  // Category breakdown endpoint
+  fastify.get('/category-breakdown', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const { userId } = request
+      if (!userId) {
+        reply.code(401)
+        return { error: 'Not authorized' }
+      }
+      const query = request.query as Record<string, string>
+      const options = {
+        userId,
+        from: query.from,
+        to: query.to,
+        account: query.account,
+        limit: query.limit ? Number.parseInt(query.limit) : 5,
+      }
+      const result = await summarizeByCategory(options)
       return result
     } catch (error) {
       handleError(error as Error, reply)

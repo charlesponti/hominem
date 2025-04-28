@@ -6,6 +6,7 @@ import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyMultipart from '@fastify/multipart'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
+import { redis } from '@hominem/utils/redis'
 import { Queue } from 'bullmq'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
@@ -35,9 +36,6 @@ import { surveyRoutes } from './routes/surveys.js'
 import usersPlugin from './routes/user.router.js'
 import { vectorRoutes } from './routes/vector.router.js'
 import { webSocketPlugin } from './websocket/index.js'
-
-// Use the existing Redis connection from @hominem/utils
-import { redis } from '@hominem/utils/redis'
 
 // Define queue interface on FastifyInstance
 declare module 'fastify' {

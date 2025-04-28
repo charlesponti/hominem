@@ -128,11 +128,12 @@ export function useTimeSeriesData({
   }))
 
   // Format currency
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | string) => {
+    const formattedValue = typeof value === 'string' ? Number.parseFloat(value) : value
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(value)
+    }).format(formattedValue)
   }
 
   return {
