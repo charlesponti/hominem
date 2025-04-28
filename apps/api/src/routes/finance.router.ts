@@ -1,7 +1,16 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
+import { db } from '@hominem/utils/db'
 import { queryTransactions } from '@hominem/utils/finance'
 import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
+import {
+  budgetCategories,
+  budgetGoals,
+  financeAccounts,
+  plaidItems,
+  transactions,
+} from '@hominem/utils/schema'
 import type { ImportTransactionsJob } from '@hominem/utils/types'
+import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors.js'
@@ -227,6 +236,28 @@ export async function financeRoutes(fastify: FastifyInstance) {
       return reply.code(500).send({
         error: 'Failed to retrieve transactions',
         details: error instanceof Error ? error.message : String(error),
+      })
+    }
+  })
+
+  // Delete all finance data for the authenticated user
+  fastify.delete('/', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Not authorized' })
+    }
+    try {
+      await db.delete(transactions).where(eq(transactions.userId, userId))
+      await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId))
+      await db.delete(budgetGoals).where(eq(budgetGoals.userId, userId))
+      await db.delete(budgetCategories).where(eq(budgetCategories.userId, userId))
+      await db.delete(plaidItems).where(eq(plaidItems.userId, userId))
+      return { success: true, message: 'All finance data deleted' }
+    } catch (err) {
+      fastify.log.error(`Error deleting finance data: ${err}`)
+      return reply.code(500).send({
+        error: 'Failed to delete finance data',
+        details: err instanceof Error ? err.message : String(err),
       })
     }
   })

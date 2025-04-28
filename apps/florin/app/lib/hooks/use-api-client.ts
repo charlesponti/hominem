@@ -102,7 +102,8 @@ export function useApiClient() {
       fetchApi<T, S>(endpoint, { ...options, method: 'PUT', body: data }),
 
     delete: <T, S>(endpoint: string, options?: Omit<FetchOptions<T>, 'method'>) =>
-      fetchApi<T, S>(endpoint, { ...options, method: 'DELETE' }),
+      // We add body because `fetchApi` use `application/json` as default content type
+      fetchApi<T, S>(endpoint, { ...options, method: 'DELETE', body: {} as T }),
   }
 
   return {

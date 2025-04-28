@@ -1,6 +1,7 @@
 'use client'
 
-import { Download, RefreshCcw, Search, UploadCloudIcon } from 'lucide-react'
+import { AlertTriangle, Download, RefreshCcw, Search, UploadCloudIcon } from 'lucide-react'
+import { useState } from 'react'
 import { AccountsList } from '~/components/finance/accounts-list'
 import { TotalBalance } from '~/components/finance/total-balance'
 import { TransactionsTable } from '~/components/finance/transactions-table'
@@ -43,7 +44,9 @@ export default function TransactionsPage() {
     getRecentTransactions,
     exportTransactions,
     refreshData,
+    deleteAllFinanceData,
   } = useFinanceData()
+  const [showConfirm, setShowConfirm] = useState(false)
 
   // Handle sorting
   const handleSort = (field: string) => {
@@ -87,8 +90,58 @@ export default function TransactionsPage() {
               <UploadCloudIcon className="h-4 w-4 mr-2" />
               Import
             </RouteLink>
+            <Button
+              variant="destructive"
+              onClick={() => setShowConfirm(true)}
+              disabled={deleteAllFinanceData.isLoading}
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Delete All Data
+            </Button>
           </div>
         </div>
+
+        {/* Confirm Delete Dialog */}
+        {showConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full flex flex-col items-center">
+              <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+              <h2 className="text-lg font-bold mb-2 text-center">Delete all finance data?</h2>
+              <p className="text-sm text-center mb-4 text-muted-foreground">
+                This will permanently delete all your accounts, transactions, and budgets. This
+                action cannot be undone.
+              </p>
+              {deleteAllFinanceData.isError && (
+                <div className="text-red-600 text-sm mb-2">
+                  {deleteAllFinanceData.error instanceof Error
+                    ? deleteAllFinanceData.error.message
+                    : 'Failed to delete data'}
+                </div>
+              )}
+              <div className="flex gap-2 w-full">
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={() => {
+                    deleteAllFinanceData.mutate()
+                    setShowConfirm(false)
+                  }}
+                  disabled={deleteAllFinanceData.isLoading}
+                >
+                  {deleteAllFinanceData.isLoading ? 'Deleting...' : 'Delete All'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowConfirm(false)}
+                  disabled={deleteAllFinanceData.isLoading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <Card>

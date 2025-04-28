@@ -70,6 +70,7 @@ export async function createServer(
     await server.register(fastifyCors, {
       origin: [env.APP_URL?.split(',')],
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
     })
 
     await server.register(fastifyCookie, {

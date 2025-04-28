@@ -1,7 +1,7 @@
 'use client'
 
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useApiClient } from '~/lib/hooks/use-api-client'
 
@@ -37,10 +37,19 @@ export interface FinanceData {
   getFilterQueryString: () => string
   exportTransactions: () => void
   refreshData: () => Promise<void>
+
+  // Delete all finance data
+  deleteAllFinanceData: {
+    mutate: () => void
+    isLoading: boolean
+    isError: boolean
+    error: unknown
+  }
 }
 
 export function useFinanceData(): FinanceData {
   const api = useApiClient()
+  const queryClient = useQueryClient()
 
   // Filtering state
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
@@ -236,6 +245,17 @@ export function useFinanceData(): FinanceData {
     await Promise.all([accountsQuery.refetch(), transactionsQuery.refetch()])
   }
 
+  // Delete all finance data mutation
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete('/api/finance')
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['finance'] })
+      await refreshData()
+    },
+  })
+
   return {
     transactions,
     accounts,
@@ -260,5 +280,11 @@ export function useFinanceData(): FinanceData {
     getFilterQueryString,
     exportTransactions,
     refreshData,
+    deleteAllFinanceData: {
+      mutate: deleteAllMutation.mutate,
+      isLoading: deleteAllMutation.isLoading,
+      isError: deleteAllMutation.isError,
+      error: deleteAllMutation.error,
+    },
   }
 }
