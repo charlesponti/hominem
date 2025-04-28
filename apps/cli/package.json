@@ -17,7 +17,7 @@
   "description": "",
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
-    "@ai-sdk/openai-compatible": "^0.1.17",
+    "@ai-sdk/openai-compatible": "^0.2.13",
     "@hominem/ai": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@libsql/client": "^0.15.4",

@@ -1,4 +1,4 @@
-import { createWriteStream, existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import pino from 'pino'
@@ -8,11 +8,11 @@ if (!existsSync(LOG_DIR)) {
   mkdirSync(LOG_DIR, { recursive: true })
 }
 
-const streams = [
-  { stream: process.stdout },
-  { stream: createWriteStream(path.join(LOG_DIR, 'error.log'), { flags: 'a' }), level: 'error' },
-  { stream: createWriteStream(path.join(LOG_DIR, 'combined.log'), { flags: 'a' }) },
-]
+// const streams = [
+//   { stream: process.stdout },
+//   { stream: createWriteStream(path.join(LOG_DIR, 'error.log'), { flags: 'a' }), level: 'error' },
+//   { stream: createWriteStream(path.join(LOG_DIR, 'combined.log'), { flags: 'a' }) },
+// ]
 
 export const logger = pino(
   {

@@ -1,53 +1,49 @@
 import { useUser } from '@clerk/react-router'
+import { getAuth } from '@clerk/react-router/ssr.server'
 import { Check, Copy, Terminal } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import type { Route } from './+types/cli'
 
-export default function AuthCli() {
+export async function loader(args: Route.LoaderArgs) {
+  // Get the Clerk auth state from the request
+  const auth = await getAuth(args)
+  const { userId, getToken } = auth
+
+  // If no user is logged in, return null token
+  if (!userId) {
+    return { token: null, error: null }
+  }
+
+  try {
+    // Generate a JWT token for the Clerk user that can be used with the CLI
+    const token = await getToken({
+      template: 'hominem-cli',
+    })
+
+    // Return the token
+    return { token, error: null }
+  } catch (error) {
+    console.error('Token generation error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate token'
+    return { token: null, error: errorMessage }
+  }
+}
+
+export default function AuthCli({ loaderData }: Route.ComponentProps) {
   const { user, isLoaded } = useUser()
   const [searchParams] = useSearchParams()
-  const token = searchParams.get('token')
+  const urlToken = searchParams.get('token')
   const [copied, setCopied] = useState(false)
-  const [authToken, setAuthToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Reset copy state when token changes
-    setCopied(false)
+  // Get data from the loader
+  const { token: loaderToken, error: loaderError } = loaderData
 
-    if (token) {
-      // If token is provided in URL, use it
-      setAuthToken(token)
-    } else if (user) {
-      // Otherwise, fetch a new token
-      fetchAuthToken()
-    }
-  }, [token, user])
-
-  const fetchAuthToken = async () => {
-    if (!user) return
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/auth/cli')
-      if (!response.ok) {
-        throw new Error(`Failed to fetch token: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      setAuthToken(data.token)
-    } catch (err) {
-      console.error('Error fetching CLI auth token:', err)
-      setError(err instanceof Error ? err.message : 'Failed to generate CLI token')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // Use URL token if available, otherwise use loader token
+  const authToken = urlToken || loaderToken
+  const error = loaderError
 
   const handleCopyToken = () => {
     if (!authToken) return
@@ -65,6 +61,8 @@ export default function AuthCli() {
 
   // Protected route that requires authentication
   if (isLoaded && !user) {
+    // This will likely be handled by a route protection mechanism,
+    // but keeping it for compatibility
     return <Navigate to="/sign-in" replace />
   }
 
@@ -89,21 +87,17 @@ export default function AuthCli() {
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-medium mb-2">Your CLI Token</h3>
-              <div className="relative">
-                <div className="bg-muted p-3 rounded-md font-mono text-sm overflow-x-auto whitespace-pre">
-                  {isLoading ? (
-                    <div className="animate-pulse h-6 bg-muted-foreground/20 rounded" />
-                  ) : authToken ? (
-                    authToken
-                  ) : (
-                    'No token generated yet'
-                  )}
+              <div className="flex relative items-center">
+                <div className="bg-muted flex items-center pl-2 h-[3.125rem] rounded-l-md font-mono text-sm overflow-x-auto whitespace-pre">
+                  <span className="overflow-hidden text-ellipsis">
+                    {authToken || 'No token available'}
+                  </span>
                 </div>
                 {authToken && (
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="absolute right-2 top-2 h-8 w-8 p-0"
+                    className="p-4 h-[3.125rem] rounded-l-none rounded-r-md bg-gray-600 text-white"
                     onClick={handleCopyToken}
                   >
                     {copied ? (
@@ -118,8 +112,8 @@ export default function AuthCli() {
             </div>
 
             <div className="pt-2">
-              <Button onClick={fetchAuthToken} disabled={isLoading} className="w-full">
-                {isLoading ? 'Generating...' : 'Generate New Token'}
+              <Button onClick={() => window.location.reload()} className="w-full">
+                Generate New Token
               </Button>
             </div>
 
