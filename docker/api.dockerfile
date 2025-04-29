@@ -47,9 +47,9 @@ COPY --from=pruner /app/out/full/ .
 # Copy turbo.json for the build
 COPY turbo.json .
 
-# Build the API using esbuild
+# Build
 WORKDIR /app/apps/api
-RUN node build.js
+RUN node esbuild.config.js
 WORKDIR /app
 
 # Production stage
