@@ -7,7 +7,7 @@ await build({
   outdir: 'build',
   bundle: true,
   platform: 'node',
-  format: 'esm',
+  format: 'cjs',
   target: ['node20'],
   external: ['@colors/colors', 'logform', 'utils', '@modelcontextprotocol/sdk', 'node:*'],
   plugins: [

@@ -1,5 +1,7 @@
+export * from './finance.js'
 export * from './flights.js'
 export * from './mental-health.js'
 export * from './nutrition.js'
 export * from './sleep.js'
+export * from './taxes.js'
 export * from './workout.js'

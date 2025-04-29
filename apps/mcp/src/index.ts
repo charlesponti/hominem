@@ -2,6 +2,7 @@
 
 import { McpServer as Server } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { registerFinanceTools } from './tools/finance' // Import the new finance tools registration function
 import { registerFlightsTool } from './tools/flights'
 import { registerMentalWellnessTool } from './tools/mental-health'
 import { registerNutritionTool } from './tools/nutrition'
@@ -22,6 +23,7 @@ registerSleepTool(server)
 registerMentalWellnessTool(server)
 registerFlightsTool(server)
 registerTaxTool(server)
+registerFinanceTools(server) // Call the registration function
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport()
