@@ -44,17 +44,17 @@ export function AnalyticsMonthlyBreakdown({
                 <tr
                   key={item.date}
                   className="border-b hover:bg-muted/50 cursor-pointer"
-                  onClick={() => navigate(`/finance/analytics/${item.date}`)}
+                  onClick={() => navigate(`/finance/analytics/monthly/${item.date}`)}
                   tabIndex={0}
                   onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Enter' || e.key === ' ') {
-                      navigate(`/finance/analytics/${item.date}`)
+                      navigate(`/finance/analytics/monthly/${item.date}`)
                     }
                   }}
                 >
                   <td className="py-2">
                     <Link
-                      to={`/finance/analytics/${item.date}`}
+                      to={`/finance/analytics/monthly/${item.date}`}
                       className="hover:underline"
                       onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     >

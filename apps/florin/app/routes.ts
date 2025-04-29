@@ -11,6 +11,10 @@ export default [
       route('finance/location-comparison', 'routes/finance/location-comparison/page.tsx'),
       route('finance/analytics', 'routes/finance/analytics/page.tsx'),
       route('finance/feed', 'routes/finance/feed/page.tsx'),
+      route(
+        'finance/analytics/monthly/:month',
+        'routes/finance/analytics/monthly/[month]/page.tsx'
+      ),
     ]),
     layout('routes/notes/layout.tsx', [
       route('notes', 'routes/notes/page.tsx'),
