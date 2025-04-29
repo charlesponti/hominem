@@ -3,10 +3,6 @@
   "display": "MCP",
   "extends": "@hominem/tsconfigs/node.json",
   "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "dom"
-    ],
     "baseUrl": ".",
     "rootDir": ".",
     "outDir": "build",
@@ -27,13 +23,5 @@
     "node_modules",
     "build",
     "**/*.spec.ts"
-  ],
-  "references": [
-    {
-      "path": "../../packages/utils"
-    },
-    {
-      "path": "../../packages/ai"
-    }
   ]
 }

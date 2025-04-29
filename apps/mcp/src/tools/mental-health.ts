@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { lmstudio } from '../utils/llm.ts'
-import { loadPrompt } from '../utils/prompts.ts'
+import { lmstudio } from '../utils/llm'
+import { loadPrompt } from '../utils/prompts'
 
 // Mental wellness assessment schema
 export const MentalWellnessSchema = z.object({
