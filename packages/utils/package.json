@@ -104,7 +104,7 @@
     "db:update": "pnpm drizzle-kit generate && pnpm drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
     "test": "vitest --run --passWithNoTests",
-    "build": "node build.js",
+    "build": "pnpm exec node esbuild.config.js",
     "test:watch": "vitest",
     "format": "biome format ./src --fix",
     "clean": "rm -rf build tsconfig.tsbuildinfo"

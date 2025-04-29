@@ -9,7 +9,7 @@
     "lint": "pnpm biome lint ./src --fix",
     "format": "pnpm biome format ./src --fix",
     "start": "pnpm node --import tsx src/index.ts | pnpm pino-pretty",
-    "build": "pnpm exec node build.js",
+    "build": "pnpm exec node esbuild.config.js",
     "start:prod": "pnpm node dist/index.js",
     "test": "NODE_ENV=test pnpm vitest --run --coverage --passWithNoTests",
     "test:coverage": "NODE_ENV=test pnpm vitest --run --coverage",
