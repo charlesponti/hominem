@@ -5,6 +5,22 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+}
+
+html,
+body {
+  @apply bg-white dark:bg-gray-950;
+  
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
+
+
+@theme {
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-serif: "EB Garamound", ui-serif, serif;
+  --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);

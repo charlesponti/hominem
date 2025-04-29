@@ -8,7 +8,6 @@ import './globals.css'
 
 // Import routes
 import type { Route } from './+types/root'
-import './app.css'
 import { UserProvider } from './context/user-context'
 import { getQueryClient } from './lib/get-query-client'
 
@@ -25,7 +24,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    href: 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Geist+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
   },
 ]
 

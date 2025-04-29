@@ -1,5 +1,6 @@
 'use client'
 
+import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { format } from 'date-fns'
 import {
   ArrowDownRight,
@@ -24,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import { useFinanceData } from '~/lib/hooks/use-finance-data'
+// Import both hooks from the correct file
+import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
 
 const HermesLogo = () => (
@@ -35,12 +37,15 @@ const HermesLogo = () => (
 )
 
 export default function FinanceFeedPage() {
+  // Get accounts data separately
+  const { accounts, accountsMap, isLoading: accountsLoading } = useFinanceAccounts()
+
+  // Get transactions data and filters/sorting/pagination state
   const {
-    accounts,
-    accountsMap,
-    transactions,
-    loading,
+    transactions, // Use this instead of filteredTransactions
+    isLoading: transactionsLoading, // Rename to avoid conflict
     error,
+    refetch, // Use this instead of refreshData
     selectedAccount,
     setSelectedAccount,
     dateFrom,
@@ -49,19 +54,25 @@ export default function FinanceFeedPage() {
     setDateTo,
     searchQuery,
     setSearchQuery,
-    sortField,
+    sortField, // Keep sort state if needed for UI, though sorting happens in hook
     setSortField,
     sortDirection,
     setSortDirection,
-    filteredTransactions,
-    getTotalBalance,
-    getRecentTransactions,
-    exportTransactions,
-    refreshData,
-  } = useFinanceData()
+    // Pagination state if needed for UI controls (not currently used)
+    // limit, setLimit, offset, setOffset, page, setPage
+  } = useFinanceTransactions()
 
-  // Format total balance
-  const totalBalance = getTotalBalance().toFixed(2)
+  // Combine loading states
+  const loading = accountsLoading || transactionsLoading
+
+  // TODO: Implement total balance calculation if needed
+  // const totalBalance = calculateTotalBalance(accounts); // Example
+  const totalBalance = '0.00' // Placeholder
+
+  // TODO: Implement export functionality if needed
+  const exportTransactions = () => {
+    console.warn('Export functionality not implemented yet.')
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -99,7 +110,8 @@ export default function FinanceFeedPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All accounts</SelectItem>
-                  {accounts.map((account) => (
+                  {/* Type is already applied */}
+                  {accounts.map((account: FinanceAccount) => (
                     <SelectItem key={account.id} value={account.name}>
                       {account.name}
                     </SelectItem>
@@ -165,7 +177,7 @@ export default function FinanceFeedPage() {
             <Button
               variant="outline"
               className="border-[#E8E1D9] text-[#917C6F] hover:text-[#333333]"
-              onClick={refreshData}
+              onClick={() => refetch()} // Use refetch
             >
               <RefreshCcw className="h-4 w-4 mr-2" />
               Refresh
@@ -199,12 +211,16 @@ export default function FinanceFeedPage() {
             </div>
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-500">{error}</div>
-        ) : filteredTransactions.length === 0 ? (
+          // Handle error rendering safely
+          <div className="p-8 text-center text-red-500">
+            {error instanceof Error ? error.message : 'An unknown error occurred'}
+          </div>
+        ) : transactions.length === 0 ? ( // Use transactions
           <div className="p-8 text-center text-[#917C6F]">No transactions found.</div>
         ) : (
           <div className="space-y-4">
-            {filteredTransactions.map((transaction) => {
+            {/* Use transactions, type is already applied */}
+            {transactions.map((transaction: FinanceTransaction) => {
               const account = accountsMap.get(transaction.accountId)
               const isNegative = Number.parseFloat(transaction.amount) < 0
               const formattedDate = format(new Date(transaction.date), 'MMM d, yyyy')
@@ -282,12 +298,12 @@ export default function FinanceFeedPage() {
         )}
 
         <div className="flex justify-between items-center pt-2 text-sm text-[#917C6F] font-light">
-          <span>
-            Showing {filteredTransactions.length} of {transactions.length} transactions
-          </span>
-          {filteredTransactions.length > 0 && (
+          {/* TODO: Update count display if pagination/total count is available */}
+          <span>Showing {transactions.length} transactions</span>
+          {transactions.length > 0 && (
             <Button variant="link" className="text-[#FF6600] font-normal p-0">
-              View all transactions
+              {/* TODO: Implement "View all" or pagination controls */}
+              {/* View all transactions */}
             </Button>
           )}
         </div>

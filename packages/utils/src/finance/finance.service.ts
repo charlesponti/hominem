@@ -166,7 +166,6 @@ export async function summarizeByMonth(options: QueryOptions) {
       count: sql<number>`COUNT(*)`,
       income: sql<number>`SUM(CASE WHEN ${transactions.type} = 'income' THEN ${transactions.amount}::numeric ELSE 0 END)`,
       expenses: sql<number>`SUM(CASE WHEN ${transactions.type} = 'expense' THEN ${transactions.amount}::numeric ELSE 0 END)`,
-      total: sql<number>`SUM(${transactions.amount}::numeric)`,
       average: sql<number>`AVG(${transactions.amount}::numeric)`,
     })
     .from(transactions)
@@ -181,7 +180,6 @@ export async function summarizeByMonth(options: QueryOptions) {
       count: row.count,
       income: Number.parseFloat(row.income?.toString() || '0').toFixed(2),
       expenses: Number.parseFloat(row.expenses?.toString() || '0').toFixed(2),
-      total: Number.parseFloat(row.total?.toString() || '0').toFixed(2),
       average: Number.parseFloat(row.average?.toString() || '0').toFixed(2),
     }))
     .sort((a, b) => {

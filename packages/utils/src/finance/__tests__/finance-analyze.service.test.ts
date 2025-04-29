@@ -138,7 +138,7 @@ describe('Finance Analyze Service', () => {
           total: '500.00',
           average: '50.00',
           income: '800.00',
-          expenses: '300.00',
+          expenses: '-300.00',
         },
         {
           month: '2023-02',
@@ -146,7 +146,7 @@ describe('Finance Analyze Service', () => {
           total: '300.00',
           average: '50.00',
           income: '600.00',
-          expenses: '300.00',
+          expenses: '-300.00',
         },
         {
           month: '2023-01',
@@ -154,7 +154,7 @@ describe('Finance Analyze Service', () => {
           total: '200.00',
           average: '50.00',
           income: '500.00',
-          expenses: '300.00',
+          expenses: '-300.00',
         },
       ]
 
@@ -176,11 +176,11 @@ describe('Finance Analyze Service', () => {
       expect(result.data[0].date).toBe('2023-03')
       expect(result.data[0].amount).toBe(500)
       expect(result.data[0].income).toBe(800)
-      expect(result.data[0].expenses).toBe(300)
+      expect(result.data[0].expenses).toBe(-300)
       expect(result.stats).not.toBeNull()
       expect(result.stats?.total).toBe(1000)
       expect(result.stats?.totalIncome).toBe(1900)
-      expect(result.stats?.totalExpenses).toBe(900)
+      expect(result.stats?.totalExpenses).toBe(-900)
       expect(result.query).toEqual({
         from: '2023-01-01',
         to: '2023-03-31',
@@ -200,7 +200,7 @@ describe('Finance Analyze Service', () => {
           total: '500.00',
           average: '50.00',
           income: '800.00',
-          expenses: '300.00',
+          expenses: '-300.00',
         },
         {
           month: '2023-02',
@@ -208,7 +208,7 @@ describe('Finance Analyze Service', () => {
           total: '300.00',
           average: '50.00',
           income: '600.00',
-          expenses: '300.00',
+          expenses: '-300.00',
         },
         {
           month: '2023-01',
@@ -216,7 +216,7 @@ describe('Finance Analyze Service', () => {
           total: '200.00',
           average: '50.00',
           income: '500.00',
-          expenses: '300.00',
+          expenses: '-300.00',
         },
       ]
 
@@ -246,7 +246,7 @@ describe('Finance Analyze Service', () => {
           total: '500.00',
           average: '50.00',
           income: '800.00',
-          expenses: '300.00',
+          expenses: '-300.00',
         },
       ]
 

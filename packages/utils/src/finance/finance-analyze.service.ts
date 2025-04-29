@@ -94,24 +94,36 @@ export async function generateTimeSeriesData(
 
   // Transform into enhanced time series format
   const timeSeries = monthlySummaries.map((summary, index, array) => {
+    const income = Number.parseFloat(summary.income)
+    const expenses = Number.parseFloat(summary.expenses || '0')
+
     const current: TimeSeriesDataPoint = {
       date: summary.month,
-      amount: Number.parseFloat(summary.total),
+      amount: income + expenses, // Calculate net income (expenses are negative)
       count: summary.count,
-      income: Number.parseFloat(summary.income),
-      expenses: Number.parseFloat(summary.expenses || '0'),
+      income: income,
+      expenses: expenses,
       average: Number.parseFloat(summary.average),
-      formattedAmount: formatCurrency(Number.parseFloat(summary.total)),
-      formattedIncome: formatCurrency(Number.parseFloat(summary.income)),
-      formattedExpenses: formatCurrency(Number.parseFloat(summary.expenses || '0')),
+      formattedAmount: formatCurrency(income + expenses), // Format net income
+      formattedIncome: formatCurrency(income),
+      formattedExpenses: formatCurrency(expenses),
     }
 
     // Add trend indicators if we have previous data
     if (options.compareToPrevious && index < array.length - 1) {
-      const previous = array[index + 1]
-      const previousAmount = Number.parseFloat(previous ? previous.total : '0')
-      const currentAmount = Number.parseFloat(summary.total)
-      const percentChange = ((currentAmount - previousAmount) / Math.abs(previousAmount)) * 100
+      const previousSummary = array[index + 1]
+      const previousIncome = Number.parseFloat(previousSummary ? previousSummary.income : '0')
+      const previousExpenses = Number.parseFloat(
+        previousSummary ? previousSummary.expenses || '0' : '0'
+      )
+      const previousAmount = previousIncome + previousExpenses // Previous net income (expenses are negative)
+      const currentAmount = current.amount // Current net income
+      const percentChange =
+        previousAmount === 0
+          ? currentAmount === 0
+            ? 0
+            : Number.POSITIVE_INFINITY
+          : ((currentAmount - previousAmount) / Math.abs(previousAmount)) * 100
 
       current.trend = {
         direction: currentAmount > previousAmount ? 'up' : 'down',
