@@ -6,6 +6,7 @@
 export * from './types'
 
 // Export services and utilities
+export { generateTimeSeriesData } from './finance-analyze.service'
 export * from './finance.service'
 export { tools } from './finance.tools'
 export { default as FinancialAccountService } from './financial-account.service'

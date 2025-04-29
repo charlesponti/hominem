@@ -1,6 +1,7 @@
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { FinanceAccount } from '@hominem/utils/types' // Added type import
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { subMonths } from 'date-fns'
 import { useState } from 'react'
 import {
@@ -28,9 +29,10 @@ import {
 } from '~/components/ui/select'
 import { Switch } from '~/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
+import { useApiClient } from '~/lib/hooks/use-api-client' // Added useApiClient import
 import { useFinanceCategories } from '~/lib/hooks/use-finance-categories'
 import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
-import { useFinanceData } from '~/lib/hooks/use-finance-data'
+// Removed useFinanceData import
 import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
@@ -47,9 +49,14 @@ function AnalyticsContent() {
   const [compareToPrevious, setCompareToPrevious] = useState<boolean>(true)
   const [groupBy, setGroupBy] = useState<'month' | 'week' | 'day'>('month')
   const [chartType, setChartType] = useState<'area' | 'bar'>('area')
+  const apiClient = useApiClient() // Added apiClient instance
 
-  // Get finance data (accounts)
-  const { accounts } = useFinanceData()
+  // Fetch accounts directly
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery<FinanceAccount[], Error>({
+    queryKey: ['finance', 'accounts'],
+    queryFn: () => apiClient.get<never, FinanceAccount[]>('/api/finance/accounts'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
 
   // Use our custom hook for categories
   const { categories, isLoading: categoriesLoading } = useFinanceCategories()
@@ -62,7 +69,6 @@ function AnalyticsContent() {
     error,
     formatDateLabel,
     formatCurrency,
-    refetch,
   } = useTimeSeriesData({
     dateFrom,
     dateTo,
@@ -127,11 +133,17 @@ function AnalyticsContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All accounts</SelectItem>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.name}>
-                      {account.name}
+                  {accountsLoading ? (
+                    <SelectItem value="disabled" disabled>
+                      Loading accounts...
                     </SelectItem>
-                  ))}
+                  ) : (
+                    accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.name}>
+                        {account.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -196,12 +208,7 @@ function AnalyticsContent() {
               </div>
             </div>
           </div>
-
-          <div className="mt-4 flex justify-end">
-            <Button onClick={() => refetch()} disabled={isLoading}>
-              {isLoading ? 'Loading...' : 'Update Chart'}
-            </Button>
-          </div>
+          {/* Removed Update Chart button as React Query handles refetching */}
         </CardContent>
       </Card>
 
@@ -339,7 +346,7 @@ function AnalyticsContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
                       <div>
                         <div className="text-sm text-muted-foreground">Minimum</div>
                         <div className="text-lg font-medium">
@@ -417,7 +424,7 @@ function AnalyticsContent() {
           )}
 
           {/* --- New Analytics Cards --- */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             {/* Top Categories */}
             <Card>
               <CardHeader className="pb-2">
@@ -500,12 +507,14 @@ function AnalyticsContent() {
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between">
                     <span>Income</span>
-                    <span className="font-bold text-green-600">$0.00</span>
+                    <span className="font-bold text-green-600 font-mono">
+                      {formatCurrency(timeSeriesData?.stats?.totalIncome || '0.00')}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Expenses</span>
-                    <span className="font-bold text-red-600">
-                      {timeSeriesData?.stats?.formattedTotal || '$0.00'}
+                    <span className="font-bold text-red-600 font-mono">
+                      {formatCurrency(timeSeriesData?.stats?.totalExpenses || '0.00')}
                     </span>
                   </div>
                 </div>

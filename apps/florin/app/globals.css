@@ -58,6 +58,10 @@
   min-height: 100dvh;
 }
 
+@utility min-h-screen-dynamic {
+  min-height: 100dvh;
+}
+
 @utility h-screen {
   height: 100vh; /* fallback */
   height: 100dvh;
@@ -220,10 +224,6 @@
 
   .h-screen-dynamic {
     height: 100dvh;
-  }
-
-  .min-h-screen-dynamic {
-    min-height: 100dvh;
   }
 
   .max-h-screen-dynamic {

@@ -19,7 +19,12 @@ export type {
   UserInsert,
 } from '../db/schema'
 
-export type { CategorySummary, TopMerchant } from '../finance/types'
+export type {
+  CategorySummary,
+  TimeSeriesDataPoint,
+  TimeSeriesStats,
+  TopMerchant,
+} from '../finance/types'
 
 // Re-export job-related types
 export type {

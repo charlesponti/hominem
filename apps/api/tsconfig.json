@@ -18,7 +18,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    "../../packages/utils/src/finance/finance-analyze.service.ts"
   ],
   "exclude": [
     "node_modules",

@@ -46,7 +46,12 @@ export function buildWhereConditions(options: QueryOptions) {
 
   if (!options.userId) return undefined
   conditions.push(eq(transactions.userId, options.userId))
-  conditions.push(eq(transactions.type, 'expense'))
+
+  // Only filter by transaction type if specified in options
+  if (options.type && typeof options.type === 'string') {
+    conditions.push(eq(transactions.type, options.type))
+  }
+
   conditions.push(eq(transactions.excluded, false))
   conditions.push(eq(transactions.pending, false))
 
@@ -142,32 +147,48 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
 }
 
 export async function summarizeByMonth(options: QueryOptions) {
-  const whereConditions = buildWhereConditions(options)
+  // Build minimal WHERE conditions directly to avoid default filters
+  const conditions = []
+  if (options.userId) {
+    conditions.push(eq(transactions.userId, options.userId))
+  }
+  if (options.from) {
+    conditions.push(gte(transactions.date, new Date(options.from)))
+  }
+  if (options.to) {
+    conditions.push(lte(transactions.date, new Date(options.to)))
+  }
+  const whereConditions = conditions.length > 0 ? and(...conditions) : undefined
 
   const result = await db
     .select({
       month: sql<string>`SUBSTR(${transactions.date}::text, 1, 7)`,
       count: sql<number>`COUNT(*)`,
-      total: sql<number>`SUM(${transactions.amount})`,
-      average: sql<number>`AVG(${transactions.amount})`,
+      income: sql<number>`SUM(CASE WHEN ${transactions.type} = 'income' THEN ${transactions.amount}::numeric ELSE 0 END)`,
+      expenses: sql<number>`SUM(CASE WHEN ${transactions.type} = 'expense' THEN ${transactions.amount}::numeric ELSE 0 END)`,
+      total: sql<number>`SUM(${transactions.amount}::numeric)`,
+      average: sql<number>`AVG(${transactions.amount}::numeric)`,
     })
     .from(transactions)
     .where(whereConditions)
     .groupBy(sql`SUBSTR(${transactions.date}::text, 1, 7)`)
+    .orderBy(sql`SUBSTR(${transactions.date}::text, 1, 7) DESC`)
 
   // Format the numeric values
   return result
     .map((row) => ({
       month: row.month,
       count: row.count,
-      total: Number.parseFloat(row.total.toString()).toFixed(2),
-      average: Number.parseFloat(row.average.toString()).toFixed(2),
+      income: Number.parseFloat(row.income?.toString() || '0').toFixed(2),
+      expenses: Number.parseFloat(row.expenses?.toString() || '0').toFixed(2),
+      total: Number.parseFloat(row.total?.toString() || '0').toFixed(2),
+      average: Number.parseFloat(row.average?.toString() || '0').toFixed(2),
     }))
     .sort((a, b) => {
       const dateA = new Date(a.month)
       const dateB = new Date(b.month)
 
-      return dateA.getTime() - dateB.getTime()
+      return dateB.getTime() - dateA.getTime() // Descending order
     })
 }
 

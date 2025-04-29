@@ -3,7 +3,7 @@ export * from './transaction.types'
 export * from './account.types'
 
 export type { FinanceTransaction, FinanceTransactionInsert } from '../../db/schema/finance.schema'
-
+export type { TimeSeriesDataPoint, TimeSeriesStats } from '../finance-analyze.service'
 export interface CategoryAggregate {
   category: string
   totalAmount: number

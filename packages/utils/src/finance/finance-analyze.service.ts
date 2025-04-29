@@ -1,4 +1,5 @@
-import { type QueryOptions, summarizeByMonth } from '@hominem/utils/finance'
+import { summarizeByMonth } from './finance.service'
+import type { QueryOptions } from './types/transaction.types'
 
 // Define interface for time series data points
 export interface TimeSeriesDataPoint {
@@ -7,6 +8,10 @@ export interface TimeSeriesDataPoint {
   count: number
   average: number
   formattedAmount: string
+  income: number
+  expenses: number
+  formattedIncome: string
+  formattedExpenses: string
   trend?: {
     direction: 'up' | 'down'
     percentChange: string
@@ -25,6 +30,18 @@ export interface TimeSeriesStats {
   max: number
   count: number
   formattedTotal: string
+  totalIncome: number
+  averageIncome: number
+  medianIncome: number
+  minIncome: number
+  maxIncome: number
+  formattedTotalIncome: string
+  totalExpenses: number
+  averageExpenses: number
+  medianExpenses: number
+  minExpenses: number
+  maxExpenses: number
+  formattedTotalExpenses: string
   periodCovered: string
 }
 
@@ -34,6 +51,32 @@ export interface TimeSeriesResponse {
   stats: TimeSeriesStats | null
   query: Record<string, unknown>
   timestamp: string
+}
+
+/**
+ * Helper function to format currency values consistently
+ */
+const formatCurrency = (value: number): string =>
+  `$${value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+
+/**
+ * Helper function to calculate median of a number array
+ */
+const calculateMedian = (values: number[]): number => {
+  if (values.length === 0) return 0
+  if (values.length === 1 && values[0] !== undefined) return values[0]
+
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = sorted[Math.floor(sorted.length / 2)]
+  const beforeMiddle = sorted[Math.floor(sorted.length / 2) - 1]
+  if (!middle || !beforeMiddle) {
+    return 0
+  }
+
+  return sorted.length % 2 === 0 ? (beforeMiddle + middle) / 2 : middle
 }
 
 /**
@@ -55,17 +98,18 @@ export async function generateTimeSeriesData(
       date: summary.month,
       amount: Number.parseFloat(summary.total),
       count: summary.count,
+      income: Number.parseFloat(summary.income),
+      expenses: Number.parseFloat(summary.expenses || '0'),
       average: Number.parseFloat(summary.average),
-      formattedAmount: `$${Number.parseFloat(summary.total).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
+      formattedAmount: formatCurrency(Number.parseFloat(summary.total)),
+      formattedIncome: formatCurrency(Number.parseFloat(summary.income)),
+      formattedExpenses: formatCurrency(Number.parseFloat(summary.expenses || '0')),
     }
 
     // Add trend indicators if we have previous data
     if (options.compareToPrevious && index < array.length - 1) {
       const previous = array[index + 1]
-      const previousAmount = Number.parseFloat(previous.total)
+      const previousAmount = Number.parseFloat(previous ? previous.total : '0')
       const currentAmount = Number.parseFloat(summary.total)
       const percentChange = ((currentAmount - previousAmount) / Math.abs(previousAmount)) * 100
 
@@ -74,10 +118,7 @@ export async function generateTimeSeriesData(
         percentChange: Math.abs(percentChange).toFixed(1),
         raw: percentChange.toFixed(1),
         previousAmount: previousAmount,
-        formattedPreviousAmount: `$${previousAmount.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        formattedPreviousAmount: formatCurrency(previousAmount),
       }
     }
 
@@ -110,13 +151,20 @@ export async function generateTimeSeriesData(
  */
 export function calculateTimeSeriesStats(timeSeriesData: TimeSeriesDataPoint[]): TimeSeriesStats {
   const amounts = timeSeriesData.map((item) => item.amount)
+  const incomes = timeSeriesData.map((item) => item.income)
+  const expenses = timeSeriesData.map((item) => item.expenses)
+
   const total = amounts.reduce((sum, amount) => sum + amount, 0)
+  const totalIncome = incomes.reduce((sum, income) => sum + income, 0)
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense, 0)
+
   const average = total / amounts.length
-  const sorted = [...amounts].sort((a, b) => a - b)
-  const median =
-    sorted.length % 2 === 0
-      ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
-      : sorted[Math.floor(sorted.length / 2)]
+  const averageIncome = totalIncome / incomes.length
+  const averageExpenses = totalExpenses / expenses.length
+
+  const median = calculateMedian(amounts)
+  const medianIncome = calculateMedian(incomes)
+  const medianExpenses = calculateMedian(expenses)
 
   return {
     total,
@@ -125,10 +173,19 @@ export function calculateTimeSeriesStats(timeSeriesData: TimeSeriesDataPoint[]):
     min: Math.min(...amounts),
     max: Math.max(...amounts),
     count: timeSeriesData.length,
-    formattedTotal: `$${total.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`,
+    formattedTotal: formatCurrency(total),
+    totalIncome,
+    averageIncome,
+    medianIncome,
+    minIncome: Math.min(...incomes),
+    maxIncome: Math.max(...incomes),
+    formattedTotalIncome: formatCurrency(totalIncome),
+    totalExpenses,
+    averageExpenses,
+    medianExpenses,
+    minExpenses: Math.min(...expenses),
+    maxExpenses: Math.max(...expenses),
+    formattedTotalExpenses: formatCurrency(totalExpenses),
     periodCovered: `${timeSeriesData[timeSeriesData.length - 1]?.date} to ${timeSeriesData[0]?.date}`,
   }
 }

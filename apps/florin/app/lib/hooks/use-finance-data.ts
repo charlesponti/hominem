@@ -1,267 +1,136 @@
 'use client'
 
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react' // Added useMemo
 import { useApiClient } from '~/lib/hooks/use-api-client'
 
-export interface FinanceData {
-  transactions: FinanceTransaction[]
-  accounts: FinanceAccount[]
-  accountsMap: Map<string, FinanceAccount>
-  loading: boolean
-  error: string | null
+// --- Hook for fetching Finance Accounts ---
+export function useFinanceAccounts() {
+  const api = useApiClient()
 
-  // Filter options
-  selectedAccount: string
-  setSelectedAccount: (account: string) => void
-  dateFrom: Date | undefined
-  setDateFrom: (date: Date | undefined) => void
-  dateTo: Date | undefined
-  setDateTo: (date: Date | undefined) => void
-  searchQuery: string
-  setSearchQuery: (query: string) => void
+  const accountsQuery = useQuery<FinanceAccount[], Error>({
+    queryKey: ['finance', 'accounts'],
+    queryFn: async () => {
+      return await api.get<never, FinanceAccount[]>('/api/finance/accounts')
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
 
-  // Sorting
-  sortField: string
-  setSortField: (field: string) => void
-  sortDirection: 'asc' | 'desc'
-  setSortDirection: (direction: 'asc' | 'desc') => void
+  const accountsMap = useMemo(() => {
+    return new Map((accountsQuery.data || []).map((account) => [account.id, account]))
+  }, [accountsQuery.data])
 
-  // Filtered and sorted transactions
-  filteredTransactions: FinanceTransaction[]
-
-  // Helpers
-  getTotalBalance: () => number
-  getRecentTransactions: (accountName: string, limit?: number) => FinanceTransaction[]
-  getFilterQueryString: () => string
-  exportTransactions: () => void
-  refreshData: () => Promise<void>
-
-  // Delete all finance data
-  deleteAllFinanceData: {
-    mutate: () => void
-    isLoading: boolean
-    isError: boolean
-    error: unknown
+  return {
+    accounts: accountsQuery.data || [],
+    accountsMap,
+    isLoading: accountsQuery.isLoading,
+    error: accountsQuery.error,
+    refetch: accountsQuery.refetch,
   }
 }
 
-export function useFinanceData(): FinanceData {
+// --- Hook for fetching and managing Finance Transactions ---
+export interface UseFinanceTransactionsOptions {
+  initialLimit?: number
+  initialOffset?: number
+  initialSortField?: string
+  initialSortDirection?: 'asc' | 'desc'
+}
+
+export function useFinanceTransactions({
+  initialLimit = 25,
+  initialOffset = 0,
+  initialSortField = 'date',
+  initialSortDirection = 'desc',
+}: UseFinanceTransactionsOptions = {}) {
   const api = useApiClient()
-  const queryClient = useQueryClient()
+  const { accountsMap } = useFinanceAccounts() // Get accountsMap for client-side filtering/sorting if needed
 
   // Filtering state
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined)
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined)
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [limit, setLimit] = useState<number>(10)
-  const [offset, setOffset] = useState<number>(0)
+  const [limit, setLimit] = useState<number>(initialLimit)
+  const [offset, setOffset] = useState<number>(initialOffset)
 
   // Sorting state
-  const [sortField, setSortField] = useState<string>('date')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [sortField, setSortField] = useState<string>(initialSortField)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(initialSortDirection)
 
   // Generate query string from filters
-  const getFilterQueryString = () => {
+  const queryString = useMemo(() => {
     const params = new URLSearchParams()
-
-    if (selectedAccount !== 'all') {
-      params.append('account', selectedAccount)
-    }
-
-    if (dateFrom) {
-      params.append('from', dateFrom.toISOString().split('T')[0])
-    }
-
-    if (dateTo) {
-      params.append('to', dateTo.toISOString().split('T')[0])
-    }
-
-    if (searchQuery) {
-      params.append('search', searchQuery)
-    }
-
-    // Add a limit to prevent loading too many transactions
+    if (selectedAccount !== 'all') params.append('account', selectedAccount)
+    if (dateFrom) params.append('from', dateFrom.toISOString().split('T')[0])
+    if (dateTo) params.append('to', dateTo.toISOString().split('T')[0])
+    if (searchQuery) params.append('search', searchQuery)
     params.append('limit', limit.toString())
     params.append('offset', offset.toString())
-    params.append('page', Math.floor(offset / limit).toString())
-
-    const queryString = params.toString()
-    return queryString ? `?${queryString}` : ''
-  }
-
-  // Query for accounts
-  const accountsQuery = useQuery({
-    queryKey: ['finance', 'accounts'],
-    queryFn: async () => {
-      return await api.get<unknown, FinanceAccount[]>('/api/finance/accounts')
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+    // Consider adding sort params if backend supports it
+    // params.append('sort', sortField);
+    // params.append('direction', sortDirection);
+    return params.toString()
+  }, [selectedAccount, dateFrom, dateTo, searchQuery, limit, offset /*, sortField, sortDirection*/])
 
   // Query for transactions with dependencies on filters
-  const transactionsQuery = useQuery({
-    queryKey: ['finance', 'transactions', { selectedAccount, dateFrom, dateTo, searchQuery }],
+  const transactionsQuery = useQuery<FinanceTransaction[], Error>({
+    // Include all state dependencies in the query key
+    queryKey: [
+      'finance',
+      'transactions',
+      { selectedAccount, dateFrom, dateTo, searchQuery, limit, offset, sortField, sortDirection },
+    ],
     queryFn: async () => {
-      const queryString = getFilterQueryString()
-      return await api.get<unknown, FinanceTransaction[]>(`/api/finance/transactions${queryString}`)
+      return await api.get<never, FinanceTransaction[]>(`/api/finance/transactions?${queryString}`)
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 1 * 60 * 1000, // 1 minute, transactions might change more often
+    keepPreviousData: true, // Useful for pagination to avoid flickering
   })
 
-  // Combine loading and error states
-  const loading = accountsQuery.isLoading || transactionsQuery.isLoading
-  const error =
-    (accountsQuery.error && accountsQuery.error instanceof Error
-      ? accountsQuery.error.message
-      : null) ||
-    (transactionsQuery.error && transactionsQuery.error instanceof Error
-      ? transactionsQuery.error.message
-      : null) ||
-    null
+  // Perform client-side sorting (if backend doesn't support it)
+  // Note: Client-side filtering is removed as it duplicates backend logic
+  const sortedTransactions = useMemo(() => {
+    const dataToSort = transactionsQuery.data || []
+    // If backend handles sorting, return data directly: return dataToSort;
 
-  // Extract data with fallbacks
-  const accounts = accountsQuery.data || []
-  const transactions = transactionsQuery.data || []
-  const accountsMap = new Map(accounts.map((account) => [account.id, account]))
-  // Calculate filtered and sorted transactions
-  const filteredTransactions = transactions
-    .filter((transaction) => {
-      // Client-side additional filtering
-      if (
-        selectedAccount !== 'all' &&
-        accountsMap.get(transaction.accountId)?.type !== selectedAccount
-      ) {
-        return false
-      }
-
-      // Filter by date range
-      if (dateFrom && new Date(transaction.date) < dateFrom) {
-        return false
-      }
-      if (dateTo) {
-        const endDate = new Date(dateTo)
-        endDate.setHours(23, 59, 59)
-        if (new Date(transaction.date) > endDate) {
-          return false
-        }
-      }
-
-      // Filter by search term
-      if (
-        searchQuery &&
-        ![transaction.description, transaction.note]
-          .join(' ')
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())
-      ) {
-        return false
-      }
-
-      return true
-    })
-    .sort((a, b) => {
-      // Sort by the selected field
+    return [...dataToSort].sort((a, b) => {
       let comparison = 0
-      switch (sortField) {
-        case 'date':
-          comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
-          break
-        case 'description':
-          comparison = (b.description && a.description?.localeCompare(b.description)) || 0
-          break
-        case 'amount':
-          comparison = Number.parseFloat(a.amount) - Number.parseFloat(b.amount)
-          break
-        case 'category':
-          comparison = (a.category || '').localeCompare(b.category || '')
-          break
-        default:
-          comparison = 0
-      }
+      const valA = a[sortField as keyof FinanceTransaction]
+      const valB = b[sortField as keyof FinanceTransaction]
 
-      // Apply sort direction
+      if (sortField === 'date') {
+        comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
+      } else if (sortField === 'amount') {
+        comparison = Number.parseFloat(a.amount) - Number.parseFloat(b.amount)
+      } else if (typeof valA === 'string' && typeof valB === 'string') {
+        comparison = valA.localeCompare(valB)
+      } else if (typeof valA === 'number' && typeof valB === 'number') {
+        comparison = valA - valB
+      }
+      // Add more type checks if needed
+
       return sortDirection === 'asc' ? comparison : -comparison
     })
+  }, [transactionsQuery.data, sortField, sortDirection])
 
-  // Helper functions
-  const getTotalBalance = () => {
-    return accounts.reduce((sum, account) => sum + Number.parseFloat(account.balance || '0'), 0)
+  // Pagination helpers
+  const page = Math.floor(offset / limit)
+  const setPage = (newPage: number) => {
+    setOffset(newPage * limit)
   }
-
-  const getRecentTransactions = (accountName: string, limit = 3) => {
-    return transactions
-      .filter((tx) => {
-        const account = accountsMap.get(tx.accountId)
-        return account?.name === accountName
-      })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, limit)
-  }
-
-  // Export transactions as CSV
-  const exportTransactions = () => {
-    // Create CSV content
-    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account']
-
-    const csvRows = [
-      headers.join(','),
-      ...filteredTransactions.map((tx) => {
-        const account = accountsMap.get(tx.accountId)
-        if (!account) {
-          return ''
-        }
-
-        return [
-          tx.date,
-          `"${tx.description?.replace(/"/g, '""')}"`, // Handle quotes in description
-          tx.amount,
-          tx.category || 'Other',
-          tx.type,
-          account.name || 'Unknown',
-        ].join(',')
-      }),
-    ]
-
-    const csvContent = csvRows.join('\n')
-
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    const date = new Date().toISOString().split('T')[0]
-    a.href = url
-    a.download = `transactions-${date}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
-  // Public refresh method using React Query's refetch
-  const refreshData = async () => {
-    await Promise.all([accountsQuery.refetch(), transactionsQuery.refetch()])
-  }
-
-  // Delete all finance data mutation
-  const deleteAllMutation = useMutation({
-    mutationFn: async () => {
-      await api.delete('/api/finance')
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['finance'] })
-      await refreshData()
-    },
-  })
 
   return {
-    transactions,
-    accounts,
-    accountsMap,
-    loading,
-    error,
+    // Data
+    transactions: sortedTransactions, // Use sorted (and potentially filtered) data
+    rawTransactions: transactionsQuery.data, // Raw data from query if needed
+    isLoading: transactionsQuery.isLoading,
+    isFetching: transactionsQuery.isFetching, // More granular loading state
+    error: transactionsQuery.error,
+    refetch: transactionsQuery.refetch,
+
+    // Filter state and setters
     selectedAccount,
     setSelectedAccount,
     dateFrom,
@@ -270,21 +139,41 @@ export function useFinanceData(): FinanceData {
     setDateTo,
     searchQuery,
     setSearchQuery,
+
+    // Sorting state and setters
     sortField,
     setSortField,
     sortDirection,
     setSortDirection,
-    filteredTransactions,
-    getTotalBalance,
-    getRecentTransactions,
-    getFilterQueryString,
-    exportTransactions,
-    refreshData,
-    deleteAllFinanceData: {
-      mutate: deleteAllMutation.mutate,
-      isLoading: deleteAllMutation.isLoading,
-      isError: deleteAllMutation.isError,
-      error: deleteAllMutation.error,
-    },
+
+    // Pagination state and setters
+    limit,
+    setLimit,
+    offset,
+    setOffset,
+    page,
+    setPage,
+    // Consider adding total count from backend if available for better pagination UI
   }
 }
+
+// --- Other Helper Functions (can be moved or kept separate) ---
+
+// Example: Delete All Data Mutation (can be in its own hook like `useFinanceSettings`)
+// import { useMutation, useQueryClient } from '@tanstack/react-query';
+// export function useDeleteAllFinanceData() {
+//   const api = useApiClient();
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: async () => api.delete('/api/finance'),
+//     onSuccess: () => {
+//       // Invalidate all finance queries
+//       queryClient.invalidateQueries({ queryKey: ['finance'] });
+//     },
+//   });
+// }
+
+// Example: Export Function (can be a standalone utility)
+// export function exportTransactionsCSV(transactions: FinanceTransaction[], accountsMap: Map<string, FinanceAccount>) {
+//    // ... (CSV generation logic from original hook) ...
+// }

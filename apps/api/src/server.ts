@@ -12,6 +12,7 @@ import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastif
 import type { ZodSchema } from 'zod'
 
 import { env } from './lib/env.js'
+import { handleError } from './lib/errors.js'
 import adminPlugin from './plugins/admin.js'
 import bookmarksPlugin from './plugins/bookmarks/index.js'
 import emailPlugin from './plugins/email.js'
@@ -63,6 +64,11 @@ export async function createServer(
     server.decorate('queues', {
       plaidSync: plaidSyncQueue,
       importTransactions: importTransactionsQueue,
+    })
+
+    // Set up global error handler
+    server.setErrorHandler((error, _request, reply) => {
+      return handleError(error, reply)
     })
 
     await server.register(fastifyCors, {

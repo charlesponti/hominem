@@ -1,7 +1,11 @@
 'use client'
 
+import type { FinanceAccount } from '@hominem/utils/types' // Add back FinanceAccount import
+// Removed unused FinanceTransaction import
+import { useMutation, useQueryClient } from '@tanstack/react-query' // Added for mutation
 import { AlertTriangle, Download, RefreshCcw, Search, UploadCloudIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router' // Removed href import
 import { AccountsList } from '~/components/finance/accounts-list'
 import { TotalBalance } from '~/components/finance/total-balance'
 import { TransactionsTable } from '~/components/finance/transactions-table'
@@ -17,16 +21,29 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { useFinanceData } from '~/lib/hooks/use-finance-data'
+import { useApiClient } from '~/lib/hooks/use-api-client' // Added for mutation
+import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data' // Updated import
 import { RouteLink } from '../../components/route-link'
 
 export default function TransactionsPage() {
+  const navigate = useNavigate()
+  const api = useApiClient() // Added for mutation
+  const queryClient = useQueryClient() // Added for mutation
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  // Use the new hooks
   const {
     accounts,
     accountsMap,
-    transactions,
-    loading,
-    error,
+    isLoading: accountsLoading,
+    error: accountsError,
+    refetch: refetchAccounts,
+  } = useFinanceAccounts()
+
+  const {
+    transactions, // This is now the sorted list
+    isLoading: transactionsLoading,
+    error: transactionsError,
     selectedAccount,
     setSelectedAccount,
     dateFrom,
@@ -39,35 +56,109 @@ export default function TransactionsPage() {
     setSortField,
     sortDirection,
     setSortDirection,
-    filteredTransactions,
-    getTotalBalance,
-    getRecentTransactions,
-    exportTransactions,
-    refreshData,
-    deleteAllFinanceData,
-  } = useFinanceData()
-  const [showConfirm, setShowConfirm] = useState(false)
+    refetch: refetchTransactions,
+    // Note: Client-side filtering logic is removed from the hook, assuming backend handles it.
+    // We'll use the 'transactions' (sorted) array directly.
+  } = useFinanceTransactions()
 
-  // Handle sorting
+  // Combine loading and error states
+  const loading = accountsLoading || transactionsLoading
+  const error = accountsError || transactionsError
+
+  // --- Re-implement helper functions and mutation ---
+
+  // Handle sorting (now directly uses setters from useFinanceTransactions)
+  // Removed duplicated handleSort function
   const handleSort = (field: string) => {
     if (sortField === field) {
-      // Toggle direction if clicking the same field
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
-      // Set new field and default to descending
       setSortField(field)
-      setSortDirection('desc')
+      setSortDirection('desc') // Default to descending for new field
     }
   }
 
-  // Format total balance
-  const totalBalance = getTotalBalance().toFixed(2)
+  // Calculate total balance
+  const totalBalance = accounts
+    .reduce((sum, account) => sum + Number.parseFloat(account.balance || '0'), 0)
+    .toFixed(2)
+
+  // Get recent transactions
+  const getRecentTransactions = (accountName: string, limit = 3) => {
+    // Use the 'transactions' array from the hook (already sorted by date desc by default)
+    return transactions
+      .filter((tx) => {
+        const account = accountsMap.get(tx.accountId)
+        return account?.name === accountName
+      })
+      .slice(0, limit)
+  }
+
+  // Export transactions as CSV
+  const exportTransactions = () => {
+    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account']
+    const csvRows = [
+      headers.join(','),
+      // Use the 'transactions' array (which is sorted)
+      ...transactions.map((tx) => {
+        const account = accountsMap.get(tx.accountId)
+        return [
+          tx.date,
+          `"${tx.description?.replace(/"/g, '""') || ''}"`,
+          tx.amount,
+          tx.category || 'Other',
+          tx.type,
+          account?.name || 'Unknown',
+        ].join(',')
+      }),
+    ]
+    const csvContent = csvRows.join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const date = new Date().toISOString().split('T')[0]
+    a.href = url
+    a.download = `transactions-${date}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Refresh data
+  const refreshData = async () => {
+    // Refetch both accounts and transactions
+    await Promise.all([refetchAccounts(), refetchTransactions()])
+  }
+
+  // Delete all finance data mutation (re-implemented here)
+  const deleteAllFinanceData = useMutation({
+    mutationFn: async () => {
+      await api.delete('/api/finance')
+    },
+    onSuccess: async () => {
+      // Invalidate all finance queries to force refetch
+      await queryClient.invalidateQueries({ queryKey: ['finance'] })
+      // Optionally trigger manual refetch if needed, though invalidation often suffices
+      // await refreshData();
+    },
+    onError: (err) => {
+      console.error('Error deleting finance data:', err)
+      // Add user feedback (e.g., toast notification)
+    },
+  })
+  // --- End of re-implemented helpers ---
 
   return (
     <Tabs defaultValue="transactions" className="space-y-4">
       <TabsList>
         <TabsTrigger value="transactions">Transactions</TabsTrigger>
         <TabsTrigger value="accounts">Accounts</TabsTrigger>
+        <TabsTrigger value="accounts" onClick={() => navigate('/finance/analytics')}>
+          {' '}
+          {/* Removed href */}
+          Analytics
+        </TabsTrigger>
       </TabsList>
 
       {/* Transactions Tab */}
@@ -80,7 +171,7 @@ export default function TransactionsPage() {
               <RefreshCcw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            {transactions.length ? (
+            {transactions && transactions.length > 0 ? ( // Check if transactions exist
               <Button variant="outline" onClick={exportTransactions}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
@@ -160,11 +251,21 @@ export default function TransactionsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All accounts</SelectItem>
-                    {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.name}>
-                        {account.name}
+                    {accountsLoading ? (
+                      <SelectItem value="loading" disabled>
+                        Loading accounts...
                       </SelectItem>
-                    ))}
+                    ) : (
+                      accounts.map(
+                        (
+                          account: FinanceAccount // Added type annotation
+                        ) => (
+                          <SelectItem key={account.id} value={account.name}>
+                            {account.name}
+                          </SelectItem>
+                        )
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -215,11 +316,12 @@ export default function TransactionsPage() {
         </Card>
 
         {/* Transactions Table */}
+        {/* Pass loading/error specific to transactions if needed, or combined */}
         <TransactionsTable
-          loading={loading}
-          error={error}
-          transactions={transactions}
-          filteredTransactions={filteredTransactions}
+          loading={transactionsLoading}
+          error={transactionsError instanceof Error ? transactionsError.message : null} // Pass error message
+          transactions={transactions} // Pass the sorted transactions
+          filteredTransactions={transactions} // Pass transactions also as filteredTransactions
           accountsMap={accountsMap}
           sortField={sortField}
           sortDirection={sortDirection}
@@ -234,11 +336,12 @@ export default function TransactionsPage() {
           <TotalBalance balance={totalBalance} />
         </div>
 
+        {/* Pass loading/error specific to accounts */}
         <AccountsList
           accounts={accounts}
-          loading={loading}
-          error={error}
-          getRecentTransactions={getRecentTransactions}
+          loading={accountsLoading}
+          error={accountsError instanceof Error ? accountsError.message : null} // Pass error message
+          getRecentTransactions={getRecentTransactions} // Pass the re-implemented helper
         />
       </TabsContent>
     </Tabs>

@@ -1,33 +1,7 @@
+import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useApiClient } from '~/lib/hooks/use-api-client'
-
-// Define TS interfaces
-export interface TimeSeriesDataPoint {
-  date: string
-  amount: number
-  count: number
-  average: number
-  formattedAmount: string
-  trend?: {
-    direction: 'up' | 'down'
-    percentChange: string
-    raw: string
-    previousAmount: number
-    formattedPreviousAmount: string
-  }
-}
-
-export interface TimeSeriesStats {
-  total: number
-  average: number
-  median: number
-  min: number
-  max: number
-  count: number
-  formattedTotal: string
-  periodCovered: string
-}
 
 export interface TimeSeriesResponse {
   data: TimeSeriesDataPoint[]

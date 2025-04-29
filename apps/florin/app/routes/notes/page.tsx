@@ -153,7 +153,7 @@ export default function NotesPage() {
   )
 
   return (
-    <div className="flex flex-col h-screen-dynamic min-h-screen-dynamic bg-background luxury-text-shadow">
+    <div className="flex flex-col h-screen-dynamic bg-background luxury-text-shadow">
       <div className="flex justify-between items-center py-4 px-3 md:px-6 mb-3">
         <div className="flex items-center" />
         <button
