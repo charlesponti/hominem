@@ -2,14 +2,19 @@ import { lmstudio } from '@/utils/lmstudio'
 import { generateText } from 'ai'
 import chalk from 'chalk'
 import { Command } from 'commander'
+import { consola } from 'consola'
+import ora from 'ora'
 
 export const askCommand = new Command()
   .command('ask')
   .description('get answer to a question')
   .argument('<question>', 'The question the LLM should answer.')
-  .action(async (question) => {
+  .option('-t, --show-thinking', 'Show the LLM thinking process')
+  .action(async (question, options) => {
+    const spinner = ora(`Asking: ${chalk.blue(question)}`).start()
+
     const response = await generateText({
-      model: lmstudio('gemma-3-12b-it'),
+      model: lmstudio('qwen3-14b'),
       prompt: `
         You are a multi-disciplinary expert with a deep understanding of various fields.
         You are capable of providing concise and accurate answers to a wide range of questions.
@@ -20,8 +25,17 @@ export const askCommand = new Command()
       `,
     })
 
-    console.info(chalk.bold.blue('Question:'))
-    console.info(chalk.cyan(question))
-    console.info(chalk.bold.green('Answer:'))
-    console.info(chalk.white(response.text))
+    spinner.succeed(chalk.green('Answer received successfully'))
+    const [thinking, answer] = response.text.split('</think>')
+    consola.log(`${chalk.bold.blue('Question:')} ${chalk.cyan(question)}`)
+
+    let responseText = '\n'
+
+    if (options.showThinking) {
+      responseText += `${chalk.bold.green('thinking:')} ${chalk.white(thinking.replace(/<think>/g, '').trim())}\n\n`
+    }
+
+    responseText += `${chalk.bold.blue('Answer:')} ${chalk.white(answer.trim())}`
+
+    consola.log(responseText)
   })

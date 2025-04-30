@@ -10,12 +10,7 @@ import { askCommand } from './ask'
 import { command as generateCommand } from './generate'
 import { invokeCommand } from './invoke'
 
-export const command = new Command('ai')
-  .description('Interact with AI models')
-  .addCommand(askCommand)
-  .addCommand(invokeCommand)
-  .addCommand(generateCommand)
-  .command('list-models')
+const listModelsCommand = new Command('list-models')
   .description('List available AI models')
   .option('-h, --host <host>', 'API host', 'localhost')
   .option('-p, --port <port>', 'API port', '4040')
@@ -37,5 +32,13 @@ export const command = new Command('ai')
       process.exit(1)
     }
   })
+
+export const command = new Command('ai')
+  .name('ai')
+  .description('Interact with AI models')
+  .addCommand(askCommand)
+  .addCommand(invokeCommand)
+  .addCommand(generateCommand)
+  .addCommand(listModelsCommand)
 
 export default command
