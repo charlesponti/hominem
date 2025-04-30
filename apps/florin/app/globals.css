@@ -1,11 +1,8 @@
 @import 'tailwindcss';
 
-@plugin "daisyui";
+/* @plugin "daisyui"; */
 
 @custom-variant dark (&:is(.dark *));
-
-@theme {
-}
 
 html,
 body {
@@ -21,9 +18,6 @@ body {
   --font-mono: "Geist Mono", ui-monospace, monospace;
   --font-serif: "EB Garamound", ui-serif, serif;
   --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -155,7 +149,6 @@ body {
     --chart-3: 200 60% 45%;
     --chart-4: 170 50% 40%;
     --chart-5: 340 50% 40%;
-    --radius: 0px;
     --sidebar-background: 220 14% 8%;
     --sidebar-foreground: 210 20% 98%;
     --sidebar-primary: 210 20% 98%;
@@ -218,6 +211,9 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  button {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {
@@ -234,10 +230,6 @@ body {
     );
   }
 
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out;
-  }
-
   .h-screen-dynamic {
     height: 100dvh;
   }
@@ -248,18 +240,6 @@ body {
 
   .spacing-safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .rounded-lg {
-    border-radius: var(--radius);
-  }
-
-  .rounded-md {
-    border-radius: calc(var(--radius) - 2px);
-  }
-
-  .rounded-sm {
-    border-radius: calc(var(--radius) - 4px);
   }
 
   .bg-background {
@@ -388,21 +368,6 @@ body {
 
   .ring-sidebar {
     box-shadow: 0 0 0 3px hsl(var(--sidebar-ring));
-  }
-
-  .animate-fadeIn {
-    animation: fadeIn 1.2s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 
   .luxury-text-shadow {
