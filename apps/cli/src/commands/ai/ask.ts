@@ -7,7 +7,7 @@ export const askCommand = new Command()
   .command('ask')
   .description('get answer to a question')
   .argument('<question>', 'The question the LLM should answer.')
-  .action(async (question, options) => {
+  .action(async (question) => {
     const response = await generateText({
       model: lmstudio('gemma-3-12b-it'),
       prompt: `
