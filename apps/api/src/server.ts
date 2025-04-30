@@ -31,7 +31,7 @@ import { healthRoutes } from './routes/health.js'
 import { jobApplicationRoutes } from './routes/job-applications.js'
 import { notesRoutes } from './routes/notes.js'
 import { personalFinanceRoutes } from './routes/personal-finance.js'
-import { plaidRoutes } from './routes/plaid.router.js'
+import { plaidRoutes } from './routes/plaid/plaid.router.js' // Corrected import path
 import statusPlugin from './routes/status.js'
 import { surveyRoutes } from './routes/surveys.js'
 import usersPlugin from './routes/user.router.js'
@@ -118,7 +118,6 @@ export async function createServer(
     await server.register(placesPlugin)
     await server.register(invitesPlugin)
     await server.register(bookmarksPlugin)
-    await server.register(plaidRoutes, { prefix: '/plaid' })
     await server.register(possessionsPlugin, { prefix: '/api' })
     await server.register(googlePlugin, { prefix: '/api/google' })
     await server.register(healthRoutes, { prefix: '/api/health' })
