@@ -13,9 +13,5 @@ export default function NotesLayout() {
     return <RedirectToSignIn />
   }
 
-  return (
-    <div className="w-full">
-      <Outlet />
-    </div>
-  )
+  return <Outlet />
 }
