@@ -1,37 +1,43 @@
-import { FilePlus, MoreHorizontal, Pen, PenLine, Plus, Search, Trash } from 'lucide-react'
-import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { ChevronRight, FilePlus, PenLine, Plus, Search } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Button } from '~/components/ui/button'
+import { Card, CardContent, CardFooter } from '~/components/ui/card'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '~/components/ui/command'
 import { Input } from '~/components/ui/input'
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '~/components/ui/sheet'
 import { Skeleton } from '~/components/ui/skeleton'
 import { useToast } from '~/components/ui/use-toast'
 import { type Note, useCreateNote, useDeleteNote, useNotes } from '~/lib/hooks/use-notes'
+import { cn } from '~/lib/utils'
 
-// Hermes-inspired luxury color palette
-const colors = {
-  primary: '#FF6600',
-  primaryLight: '#FFF0E6',
-  secondary: '#8A7265',
-  secondaryLight: '#E8E1D9',
-  gold: '#D4AF37',
-  cream: '#FDF5E6',
-  dark: '#1A1A1A',
-  darkGrey: '#4A4A4A',
-  lightGrey: '#F5F5F5',
-}
+const emptyArray = Array.from({ length: 3 }, (_, i) => i + 1)
 
 export default function NotesPage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [commandOpen, setCommandOpen] = useState(false)
   const [noteForm, setNoteForm] = useState({
     content: '',
   })
+
+  // Reference to search input for focus management
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
 
   // Get toast for notifications
   const { toast } = useToast()
@@ -42,6 +48,30 @@ export default function NotesPage() {
   // Use hooks for creating and deleting notes
   const { createNote, isLoading: isCreatingNote } = useCreateNote()
   const { deleteNote } = useDeleteNote()
+
+  // Handle keyboard shortcuts for search dialog
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Command+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setCommandOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Focus search input when command dialog opens
+  useEffect(() => {
+    if (commandOpen && searchInputRef.current) {
+      // Small timeout to ensure DOM is ready
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 50)
+    }
+  }, [commandOpen])
 
   // Handle quick note creation
   const handleQuickNote = async () => {
@@ -99,29 +129,6 @@ export default function NotesPage() {
     return getAutoTitle(note.content)
   }
 
-  // Handle deleting a note
-  const handleDeleteNote = async (noteId: string) => {
-    try {
-      await deleteNote.mutateAsync(noteId)
-
-      toast({
-        title: 'Note deleted',
-        description: 'Your note has been deleted successfully.',
-      })
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'There was a problem deleting your note.',
-        variant: 'destructive',
-      })
-    }
-  }
-
-  // Extract the preview content (first 100 characters)
-  const getPreviewContent = (content: string) => {
-    return content.length > 100 ? `${content.substring(0, 100)}...` : content
-  }
-
   // Filter notes based on search query
   const filteredNotes = notes?.filter((note) => {
     if (!searchQuery) return true
@@ -142,159 +149,243 @@ export default function NotesPage() {
     }).format(date)
   }
 
-  // Luxury branded icon
-  const LuxuryIcon = () => (
-    <div className="h-7 w-7 relative flex items-center justify-center">
-      <div className="absolute inset-0 border border-[#FF6600] rotate-45" />
-      <div className="h-5 w-5 text-[#FF6600]">
-        <Pen className="h-4 w-4" strokeWidth={2.5} />
-      </div>
-    </div>
-  )
-
   return (
-    <div className="flex flex-col h-screen-dynamic bg-background luxury-text-shadow">
-      <div className="flex justify-between items-center py-4 px-3 md:px-6 mb-3">
-        <div className="flex items-center" />
-        <button
-          type="button"
-          onClick={() => navigate('/notes/new')}
-          className="bg-[#FF6600] text-white rounded-full h-10 w-10 md:w-auto md:px-4 flex items-center justify-center shadow-sm hover:bg-[#E05A00] transition-colors"
-        >
-          <Plus className="h-5 w-5 md:mr-2" />
-          <span className="hidden md:inline text-sm font-medium">New Note</span>
-        </button>
-      </div>
+    <div className="flex flex-col bg-background pb-safe">
+      <div className="sticky top-0 z-10 border-b border-border/40 pb-3 backdrop-blur-md bg-background/90">
+        <div className="flex justify-between items-center py-4">
+          <div className="flex w-full items-center justify-between px-4 md:px-0">
+            <h1 className="text-xl font-semibold text-foreground">Notes</h1>
 
-      <div className="relative px-3 md:px-6 mb-2">
-        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-[#8A7265]/60" />
-        </div>
-        <Input
-          placeholder="Search notes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 border-[#E8E1D9] focus-visible:ring-[#FF6600]/20 focus-visible:border-[#FF6600]/40 rounded-full h-9 text-sm"
-        />
-      </div>
-
-      {/* Twitter-feed style notes list */}
-      <ul className="flex-1 min-h-0 overflow-y-auto px-0 md:px-0 py-2">
-        {isLoadingNotes ? (
-          <li className="px-4 md:px-6">
-            <div className="space-y-2">
-              {Array(4)
-                .fill(crypto.randomUUID())
-                .map((id) => (
-                  <div
-                    key={id + Math.random()}
-                    className="py-5 border-b border-border animate-pulse"
-                  >
-                    <Skeleton className="h-4 w-1/2 bg-[#E8E1D9] mb-2" />
-                    <Skeleton className="h-3 w-2/3 bg-[#E8E1D9]" />
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  size="sm"
+                  className="md:hidden bg-primary text-primary-foreground rounded-full h-9 w-9 p-0"
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-xl px-0">
+                <SheetHeader className="px-4 sm:px-6 text-left">
+                  <SheetTitle>New Note</SheetTitle>
+                </SheetHeader>
+                <form
+                  className="flex flex-col h-full"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleQuickNote()
+                  }}
+                >
+                  <div className="flex-1 px-4 sm:px-6 py-4">
+                    <textarea
+                      className="w-full h-full resize-none p-4 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      placeholder="Write your note here..."
+                      value={noteForm.content}
+                      onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
+                      required
+                    />
                   </div>
-                ))}
+                  <SheetFooter className="px-4 sm:px-6">
+                    <Button
+                      type="submit"
+                      className="w-full bg-primary text-primary-foreground"
+                      disabled={isCreatingNote || !noteForm.content.trim()}
+                    >
+                      {isCreatingNote ? 'Creating...' : 'Create Note'}
+                    </Button>
+                  </SheetFooter>
+                </form>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden md:flex gap-2 text-muted-foreground"
+              onClick={() => setCommandOpen(true)}
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">Search notes...</span>
+              <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground ml-2">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile search bar */}
+        <div className="relative px-3 md:hidden">
+          <button
+            type="button"
+            onClick={() => setCommandOpen(true)}
+            className="w-full flex items-center text-sm rounded-lg border border-input bg-background px-3 py-2 text-muted-foreground shadow-sm hover:border-primary/30 transition-all"
+          >
+            <Search className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span className="truncate">Search notes...</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Command menu for searching (keyboard accessible) */}
+      <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
+        <div className="w-full">
+          <CommandInput
+            ref={searchInputRef}
+            placeholder="Search all notes..."
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+            className="border-none focus-visible:ring-0 focus:outline-none"
+          />
+        </div>
+        <CommandList className="max-h-[400px] overflow-auto">
+          <CommandEmpty>No notes found.</CommandEmpty>
+          <CommandGroup heading="Notes">
+            {filteredNotes?.map((note) => (
+              <CommandItem
+                key={note.id}
+                onSelect={() => {
+                  navigate(`/notes/${note.id}`)
+                  setCommandOpen(false)
+                }}
+                className="flex items-center justify-between"
+              >
+                <span className="truncate">{getDisplayTitle(note)}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
+
+      <div className="flex-1 px-0 md:px-0">
+        {isLoadingNotes ? (
+          <div className="px-4 md:px-6 py-4">
+            <div className="space-y-4">
+              {emptyArray.map((id) => (
+                <div key={id} className="border border-border rounded-lg overflow-hidden">
+                  <div className="p-4 animate-pulse space-y-3">
+                    <Skeleton className="h-5 w-3/4 bg-muted" />
+                    <Skeleton className="h-4 w-full bg-muted" />
+                    <Skeleton className="h-4 w-2/3 bg-muted" />
+                  </div>
+                </div>
+              ))}
             </div>
-          </li>
+          </div>
         ) : !filteredNotes?.length ? (
-          <li className="px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="bg-[#FFF0E6] p-4 rounded-lg mb-4">
-                <PenLine className="h-6 w-6 text-[#FF6600]" />
-              </div>
-              <p className="text-[#1A1A1A] font-medium mb-1">No notes found</p>
-              <p className="text-[#8A7265] text-sm mb-4">Create your first note</p>
+          <div className="h-full flex flex-col items-center justify-center py-12 px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-primary/5 p-4 rounded-full mb-4"
+            >
+              <PenLine className="h-6 w-6 text-primary" />
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-lg font-medium text-foreground mb-1"
+            >
+              No notes found
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-muted-foreground mb-6"
+            >
+              {searchQuery
+                ? 'Try a different search term'
+                : 'Create your first note to get started'}
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
               <Button
                 onClick={() => navigate('/notes/new')}
-                className="bg-[#FF6600] hover:bg-[#E05A00] text-white rounded-full text-sm font-medium"
+                className="bg-primary text-white rounded-full shadow-sm hover:bg-primary/90 transition-colors"
               >
                 <FilePlus className="h-4 w-4 mr-2" />
                 Create Note
               </Button>
-            </div>
-          </li>
+            </motion.div>
+          </div>
         ) : (
-          filteredNotes.map((note) => (
-            <li
-              key={note.id}
-              className="group px-4 md:px-6 py-5 border-b border-border flex items-start gap-2"
-            >
-              <button
-                type="button"
-                className="flex-1 text-left bg-transparent border-0 p-0 m-0 appearance-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md transition-colors hover:bg-muted/60 cursor-pointer outline-none"
-                onClick={() => navigate(`/notes/${note.id}`)}
-                aria-label={`View note: ${getDisplayTitle(note)}`}
+          <div className="grid gap-4 p-4 md:p-6">
+            {filteredNotes.map((note) => (
+              <motion.div
+                key={note.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                layout
               >
-                <div className="flex justify-between items-center mb-1.5">
-                  <h3 className="font-medium text-[#1A1A1A] text-base truncate">
-                    {getDisplayTitle(note)}
-                  </h3>
-                </div>
-                <p className="text-[#4A4A4A] text-sm leading-relaxed break-words mb-2">
-                  {note.content}
-                </p>
-                <div className="flex justify-between items-center text-xs text-muted-foreground">
-                  <div className="flex gap-1.5 overflow-hidden">
-                    {note.tags?.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag.value}
-                        className="bg-muted text-[#8A7265] px-2 py-0.5 rounded-full text-[11px] border border-border truncate max-w-16"
-                      >
-                        {tag.value}
-                      </span>
-                    ))}
-                    {note.tags && note.tags.length > 2 && (
-                      <span className="text-[#8A7265] text-[11px] flex items-center">
-                        +{note.tags.length - 2}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[11px]">
-                    {note.updatedAt && formatDate(note.updatedAt)}
-                  </span>
-                </div>
-              </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <Card className="overflow-hidden h-full transition-all hover:shadow-md group">
                   <button
                     type="button"
-                    className="h-6 w-6 rounded-full text-[#8A7265] opacity-0 group-hover:opacity-100 hover:bg-[#F5F5F5] flex items-center justify-center transition-all mt-1"
-                    onClick={(e) => e.stopPropagation()}
-                    aria-label="Open note menu"
+                    className="text-left w-full appearance-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none rounded-md"
+                    onClick={() => navigate(`/notes/${note.id}`)}
+                    aria-label={`View note: ${getDisplayTitle(note)}`}
                   >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
+                    <CardContent className="p-4 sm:p-5">
+                      {note.title ? (
+                        <div className="flex justify-between items-start gap-3">
+                          <h3 className="font-medium text-foreground text-base sm:text-lg line-clamp-1">
+                            {note.title}
+                          </h3>
+                        </div>
+                      ) : null}
+                      <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
+                        {note.content}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="px-4 sm:px-5 py-3 border-t border-border flex justify-between items-center bg-muted/30">
+                      <div className="flex gap-1.5 overflow-hidden">
+                        {note.tags?.slice(0, 2).map((tag) => (
+                          <span
+                            key={tag.value}
+                            className="bg-primary/5 text-primary-foreground/80 px-2 py-0.5 rounded-full text-[11px] inline-flex items-center"
+                          >
+                            {tag.value}
+                          </span>
+                        ))}
+                        {note.tags && note.tags.length > 2 && (
+                          <span className="text-muted-foreground text-[11px] flex items-center">
+                            +{note.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">
+                        {note.updatedAt && formatDate(note.updatedAt)}
+                      </span>
+                    </CardFooter>
                   </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem
-                    className="text-[#FF0000] cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteNote(note.id)
-                    }}
-                  >
-                    <Trash className="h-3.5 w-3.5 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-          ))
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         )}
-      </ul>
+      </div>
 
+      {/* Quick note input */}
       <form
-        className="sticky bottom-0 left-0 w-full bg-background border-t border-border px-4 py-3 flex gap-2 spacing-safe-area-bottom z-10"
+        className="sticky bottom-0 left-0 w-full md:max-w-[75svw] mx-auto bg-background/80 backdrop-blur-lg border-t border-border px-4 py-3 flex gap-2 z-10"
         onSubmit={(e) => {
           e.preventDefault()
           if (!noteForm.content.trim()) return
           handleQuickNote()
         }}
-        aria-label="Send a new note"
+        aria-label="Quick note input"
         autoComplete="off"
       >
         <Input
-          className="flex-1 bg-input rounded-md px-3 py-2 text-foreground outline-none"
+          className="flex-1 bg-background rounded-md px-3 py-2 text-foreground focus-visible:ring-2 focus-visible:ring-primary/30"
           type="text"
           placeholder="Type your note..."
           aria-label="Note input"
@@ -305,7 +396,10 @@ export default function NotesPage() {
         />
         <Button
           type="submit"
-          className="bg-primary text-primary-foreground rounded-md px-4 py-2 font-medium shadow hover:bg-primary/90 transition"
+          className={cn(
+            'bg-primary text-primary-foreground rounded-md transition',
+            !noteForm.content.trim() && 'opacity-70'
+          )}
           disabled={isCreatingNote || !noteForm.content.trim()}
         >
           {isCreatingNote ? 'Sending...' : 'Send'}

@@ -29,6 +29,7 @@ export interface UpdateNoteInput {
 
 // React Query keys
 const NOTES_KEY = 'notes'
+const NOTES_SEARCH_KEY = 'notesSearch'
 
 export function useCreateNote() {
   const queryClient = useQueryClient()
@@ -172,5 +173,36 @@ export function useNotes(options = {}) {
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
+  }
+}
+
+export function useSearchNotes(query?: string, tags?: string[], options = {}) {
+  const apiClient = useApiClient()
+
+  // Construct query parameters, only including defined values
+  const params = new URLSearchParams()
+  if (query) {
+    params.set('query', query)
+  }
+  if (tags && tags.length > 0) {
+    params.set('tags', tags.join(','))
+  }
+
+  const searchQuery = useQuery<Note[]>({
+    // Dynamic query key based on search parameters
+    queryKey: [NOTES_SEARCH_KEY, query, tags],
+    queryFn: () => apiClient.get<null, Note[]>(`/api/notes?${params.toString()}`),
+    // Only run the query if there's a query string or tags provided
+    enabled: !!(query || (tags && tags.length > 0)),
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    ...options,
+  })
+
+  return {
+    notes: searchQuery.data || [],
+    isLoading: searchQuery.isLoading,
+    isError: searchQuery.isError,
+    error: searchQuery.error,
+    refetch: searchQuery.refetch,
   }
 }

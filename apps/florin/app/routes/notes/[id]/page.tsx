@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Button } from '~/components/ui/button'
@@ -63,7 +64,7 @@ function NoteDetailPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background luxury-text-shadow">
+    <div className="min-h-svh flex flex-col bg-background">
       <header className="sticky top-0 z-20 bg-background/95 border-b border-border backdrop-blur flex items-center px-2 sm:px-4 py-2 sm:py-3 gap-2">
         <button
           type="button"
@@ -72,26 +73,16 @@ function NoteDetailPage() {
           aria-label="Back to notes list"
         >
           <span className="sr-only">Back</span>
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <title>Back</title>
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft className="h-4 w-4 text-muted-foreground" />
         </button>
         <h1 className="flex-1 text-base sm:text-lg font-semibold text-foreground truncate luxury-text-shadow">
           Edit Note
         </h1>
       </header>
-      <form className="flex flex-col flex-1 w-full max-w-2xl mx-auto px-2 sm:px-4 pt-4 pb-24">
+      <form className="flex flex-col flex-1 w-full max-w-2xl mx-auto px-2 sm:px-4 pt-4 pb-8">
         <Input
           placeholder="Title (optional)"
-          className="text-base sm:text-lg font-medium border-none px-0 focus-visible:ring-2 focus-visible:ring-primary/30 placeholder:text-muted-foreground/70 mb-2 text-foreground bg-background"
+          className="text-base rounded-lg sm:text-lg font-medium focus-visible:ring-2 focus-visible:ring-primary/30 placeholder:text-muted-foreground/70 mb-2 text-foreground"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={100}
@@ -101,7 +92,7 @@ function NoteDetailPage() {
         <div className="flex-1 min-h-0 flex flex-col">
           <Textarea
             placeholder="Write your note here…"
-            className="flex-1 min-h-0 max-h-full resize-none border border-border rounded-md focus-visible:ring-2 focus-visible:ring-primary/30 p-3 sm:p-4 text-foreground placeholder:text-muted-foreground/70 text-sm sm:text-base leading-relaxed bg-background transition-shadow shadow-sm focus:shadow-lg overflow-y-auto"
+            className="flex-1 min-h-0 max-h-full resize-none rounded-2xl focus-visible:ring-2 focus-visible:ring-primary/30 p-3 sm:p-4 text-foreground placeholder:text-muted-foreground/70 text-sm sm:text-base leading-relaxed bg-background transition-shadow shadow-sm focus:shadow-lg overflow-y-auto"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             aria-label="Note content"
@@ -112,17 +103,17 @@ function NoteDetailPage() {
         {/* Spacer for fixed buttons */}
         <div className="h-2 sm:h-4" />
       </form>
-      <div className="fixed bottom-0 left-0 w-full bg-background/95 border-t border-border px-2 sm:px-4 py-3 flex gap-2 z-20 max-w-2xl mx-auto">
+      <div className="sticky bottom-0 left-0 w-full bg-background/95 px-2 sm:px-4 py-3 flex gap-2 z-20 max-w-2xl mx-auto">
         <Button
           onClick={handleSave}
-          className="bg-primary text-primary-foreground rounded-md text-xs sm:text-sm font-medium h-10 px-4 shadow-sm transition-colors hover:bg-primary/90 flex-1"
+          className="bg-black text-white rounded-md text-xs sm:text-sm font-medium h-10 px-4 shadow-sm transition-colors hover:bg-primary/90 flex-1"
           disabled={isUpdatingNote || !content.trim()}
         >
           {isUpdatingNote ? 'Saving…' : 'Save'}
         </Button>
         <Button
           onClick={handleDelete}
-          className="bg-destructive text-destructive-foreground rounded-md text-xs sm:text-sm font-medium h-10 px-4 shadow-sm transition-colors hover:bg-destructive/90 flex-1"
+          className="text-destructive hover:text-white rounded-md text-xs sm:text-sm font-medium h-10 px-4 shadow-sm transition-colors hover:bg-destructive/90 flex-1"
           disabled={isDeletingNote}
           variant="outline"
         >
