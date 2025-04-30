@@ -1,10 +1,9 @@
 import { Command } from 'commander'
-import processMarkdownCommand from './process-markdown'
 
-const program = new Command()
+import { command as queryCommand } from './query'
 
-program.name('thoth').description('Writing tools')
+export const command = new Command('thoth')
+  .description('Interact with the Thoth knowledge engine')
+  .addCommand(queryCommand)
 
-program.addCommand(processMarkdownCommand)
-
-export default program
+export default command

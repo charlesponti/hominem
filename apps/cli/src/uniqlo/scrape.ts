@@ -1,5 +1,5 @@
-import { logger } from '@/utils/logger'
 import { getBrowser, getContext } from '@hominem/utils/scraping'
+import { consola } from 'consola'
 import * as fs from 'node:fs'
 import path from 'node:path'
 import ora from 'ora'
@@ -8,11 +8,11 @@ async function scrapeUniqlo() {
   const SCRATCHPAD_DIR = path.resolve(__dirname)
 
   if (!SCRATCHPAD_DIR) {
-    logger.error('SCRATCHPAD_DIR environment variable is required')
+    consola.error('SCRATCHPAD_DIR environment variable is required')
     process.exit(1)
   }
 
-  logger.info('🚀 Starting Uniqlo scraper...')
+  consola.info('🚀 Starting Uniqlo scraper...')
 
   const spinner = ora('Launching browser').start()
   const browser = await getBrowser()
@@ -28,7 +28,7 @@ async function scrapeUniqlo() {
   // const tab = await page.$('[role="tab"][id*=\'men\']')
   const tab = await page.$('header')
   if (!tab) {
-    logger.error('Tab not found')
+    consola.error('Tab not found')
     process.exit(1)
   }
   await tab.hover()
@@ -79,18 +79,18 @@ async function scrapeUniqlo() {
   fs.writeFileSync(path.resolve(SCRATCHPAD_DIR, './results.json'), JSON.stringify(results, null, 2))
   spinner.succeed('Results saved to results.json')
 
-  logger.info('✨ Scraping completed successfully!')
+  consola.info('✨ Scraping completed successfully!')
 
   return results
 }
 ;(async () => {
   try {
     const results = await scrapeUniqlo()
-    logger.info('Scraping results:', results)
+    consola.info('Scraping results:', results)
   } catch (error) {
-    logger.error('❌ Error during scraping:', error)
+    consola.error('❌ Error during scraping:', error)
     process.exit(1)
   } finally {
-    logger.info('🛑 Scraping process has ended.')
+    consola.info('🛑 Scraping process has ended.')
   }
 })()

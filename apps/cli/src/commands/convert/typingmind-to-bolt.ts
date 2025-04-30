@@ -1,6 +1,6 @@
-import { logger } from '@/utils/logger'
 import { BoltExportSchema, TypingMindExportSchema } from '@hominem/utils/services'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import { readFileSync, writeFileSync } from 'node:fs'
 import type { z } from 'zod'
 
@@ -10,7 +10,7 @@ export const command = new Command('convert-typingmind-to-bolt')
   .option('-o, --output <output>', 'Output file path')
   .action(async (input, options) => {
     try {
-      logger.info(`Reading file: ${input}`)
+      consola.info(`Reading file: ${input}`)
       const inputData = JSON.parse(readFileSync(input, 'utf-8'))
 
       // Validate input against TypingMind schema
@@ -158,11 +158,11 @@ export const command = new Command('convert-typingmind-to-bolt')
       // Write output
       const outputPath = options.output || input.replace(/\.json$/, '-bolt.json')
       writeFileSync(outputPath, JSON.stringify(boltExport, null, 2))
-      logger.info(`Successfully converted to Bolt format: ${outputPath}`)
+      consola.success(`Successfully converted to Bolt format: ${outputPath}`)
     } catch (error) {
-      console.error('Error during conversion:', error)
+      consola.error('Error during conversion:', error)
       if (error instanceof Error) {
-        logger.error(error.message)
+        consola.error(error.message)
       }
       process.exit(1)
     }

@@ -1,6 +1,7 @@
-import { logger } from '@/utils/logger'
 import axios from 'axios'
+import chalk from 'chalk'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -34,8 +35,8 @@ const command = new Command()
         }
 
         fs.writeFileSync(configFile, JSON.stringify(config, null, 2))
-        spinner.succeed('Authentication token saved successfully')
-        logger.info(`Token saved to ${configFile}`)
+        spinner.succeed(chalk.green('Authentication token saved successfully'))
+        consola.info(`Token saved to ${chalk.blue(configFile)}`)
 
         // Try to fetch Google tokens from the web API using the token
         spinner.start('Checking for Google account integration')
@@ -51,31 +52,32 @@ const command = new Command()
             // Save Google tokens to a separate file
             const googleTokensPath = path.join(configDir, 'google-token.json')
             fs.writeFileSync(googleTokensPath, JSON.stringify(response.data.googleTokens, null, 2))
-            spinner.succeed('Google authentication tokens saved successfully')
-            logger.info(`Google tokens saved to ${googleTokensPath}`)
-            logger.info('You can now use Google commands in the CLI!')
+            spinner.succeed(chalk.green('Google authentication tokens saved successfully'))
+            consola.info(`Google tokens saved to ${chalk.blue(googleTokensPath)}`)
+            consola.info(chalk.green('You can now use Google commands in the CLI!'))
           } else {
-            spinner.info('No Google account connected. Google commands may not work.')
-            logger.info('Connect your Google account in the web app to use Google commands.')
+            spinner.info(chalk.yellow('No Google account connected. Google commands may not work.'))
+            consola.info('Connect your Google account in the web app to use Google commands.')
           }
         } catch (err) {
-          spinner.warn('Could not retrieve Google tokens')
-          logger.info('To use Google commands, connect your Google account in the web app.')
+          spinner.warn(chalk.yellow('Could not retrieve Google tokens'))
+          consola.info('To use Google commands, connect your Google account in the web app.')
         }
 
         process.exit(0)
       } catch (error) {
-        logger.error('Error saving token', error)
-        spinner.fail('Failed to save token')
+        consola.error(chalk.red('Error saving token'), error)
+        spinner.fail(chalk.red('Failed to save token'))
         process.exit(1)
       }
     }
 
     // Otherwise, open the web authentication flow
     const authUrl = `${options.webUrl}/auth/cli?from=cli`
-    logger.info(`\nPlease authenticate in your browser at: ${authUrl}`)
-    logger.info(
-      'After authentication, copy the token and run this command again with --token option'
+    consola.info(`
+Please authenticate in your browser at: ${chalk.blue.underline(authUrl)}`)
+    consola.info(
+      `After authentication, copy the token and run this command again with ${chalk.bold('--token')} option`
     )
 
     if (options.open) {

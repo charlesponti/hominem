@@ -1,10 +1,9 @@
 import { Command } from 'commander'
-import { command as convertTypingMindToBolt } from './typingmind-to-bolt'
-import { command as typingMindToOpenAICommand } from './typingmind-to-openai'
 
-const convertCommand = new Command('convert')
-  .description('Convert between different formats')
-  .addCommand(typingMindToOpenAICommand)
-  .addCommand(convertTypingMindToBolt)
+import { command as csvToJsonCommand } from '../csv-to-json'
 
-export default convertCommand
+export const command = new Command('convert')
+  .description('Convert between different file formats')
+  .addCommand(csvToJsonCommand)
+
+export default command

@@ -1,5 +1,6 @@
-import { logger } from '@/utils/logger'
+import chalk from 'chalk'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import csv from 'csv-parser'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -62,11 +63,14 @@ command
       const jsonData = await convertCsv(inputFile)
       if (jsonData) {
         fs.writeFileSync(outputFile, JSON.stringify(jsonData, null, 2))
-        logger.info(`Successfully converted ${inputFile} to ${outputFile}`)
+        consola.success(chalk.green(`Successfully converted ${inputFile} to ${outputFile}`))
       } else {
-        logger.warn(`No data converted from ${inputFile}.`)
+        consola.warn(chalk.yellow(`No data converted from ${inputFile}.`))
       }
     } catch (error) {
-      logger.error('Failed to convert CSV to JSON:', error)
+      consola.error(chalk.red('Failed to convert CSV to JSON:'), error)
+      process.exit(1)
     }
   })
+
+export default command

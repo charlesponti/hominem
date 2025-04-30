@@ -1,7 +1,8 @@
 import { getAuthToken } from '@/utils/auth.utils'
-import { logger } from '@/utils/logger'
 import axios from 'axios'
+import chalk from 'chalk'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import ora from 'ora'
 
 export const command = new Command()
@@ -23,8 +24,9 @@ export const command = new Command()
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
       const response = await axios.get(`http://${options.host}:${options.port}/status`, { headers })
 
-      spinner.succeed('API is healthy')
-      logger.info(JSON.stringify(response.data, null, 2))
+      spinner.succeed(chalk.green('API is healthy'))
+      consola.info(JSON.stringify(response.data, null, 2))
+      consola.success(chalk.green('Health data fetched and saved successfully.'))
 
       // If we have a token, verify it
       if (token) {
@@ -35,17 +37,20 @@ export const command = new Command()
               headers: { Authorization: `Bearer ${token}` },
             }
           )
-          logger.info('\nAuthentication status:')
-          logger.info(JSON.stringify(authResponse.data, null, 2))
+          consola.info('\nAuthentication status:')
+          consola.info(JSON.stringify(authResponse.data, null, 2))
         } catch (err) {
-          logger.info('\nAuthentication failed. Please re-authenticate with `hominem api auth`')
+          consola.info('\nAuthentication failed. Please re-authenticate with `hominem api auth`')
         }
       } else {
-        logger.info('\nTip: Authenticate with `hominem api auth` to access more features')
+        consola.info('\nTip: Authenticate with `hominem api auth` to access more features')
       }
     } catch (error) {
-      logger.error('Error checking API health:', error)
-      spinner.fail('Failed to connect to API')
+      consola.error(chalk.red('Error checking API health:'), error)
+      spinner.fail(chalk.red('Failed to connect to API'))
+      consola.error(chalk.red('Error fetching or saving health data:'), error)
       process.exit(1)
     }
   })
+
+export default command

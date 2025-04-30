@@ -1,9 +1,16 @@
-import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
+import { Command } from 'commander'
+import { consola } from 'consola'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import ora from 'ora'
 import { chromium, type Browser, type Page } from 'playwright-chromium'
+
+export const command = new Command('smgrowers').description(
+  'Commands for interacting with SM Growers website'
+)
+
+export default command
 
 interface PlantInfo {
   name: string
@@ -41,7 +48,7 @@ async function main() {
   try {
     // Go to the plant index page
     await page.goto('https://www.smgrowers.com/plantindx.asp', { waitUntil: 'domcontentloaded' })
-    console.log('Loaded plant index page')
+    consola.info('Loaded plant index page') // Replaced console.log
 
     // Get all plant links
     const plantLinks = await page.evaluate<PlantLink[]>(() => {
@@ -52,7 +59,7 @@ async function main() {
         const href = link.getAttribute('href')
         if (href?.includes('plantdisplay.asp')) {
           if (!link.textContent) {
-            console.warn('Found a plant link with no text:', link)
+            console.warn('Found a plant link with no text:', link) // Keep console.warn inside evaluate
             continue
           }
           plants.push({
@@ -65,7 +72,7 @@ async function main() {
       return plants
     })
 
-    console.log(`Found ${plantLinks.length} plant links`)
+    consola.info(`Found ${plantLinks.length} plant links`) // Replaced console.log
 
     // Add plant links to Redis queue
     for (const plantLink of plantLinks) {
@@ -114,13 +121,13 @@ async function main() {
         await new Promise((resolve) => setTimeout(resolve, 10000))
       } catch (error) {
         spinner.warn(`Failed to scrape ${plant.name}. Adding back to queue.`)
-        logger.error(`Scrape error for ${plant.name}: ${error}`)
+        consola.error(`Scrape error for ${plant.name}: ${error}`)
 
         await redis.lpush(plantQueueKey, JSON.stringify(plant))
       }
     }
   } catch (error) {
-    console.error('An error occurred:', error)
+    consola.error('An error occurred:', error) // Replaced console.error
   } finally {
     await browser.close()
   }

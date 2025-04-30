@@ -1,8 +1,8 @@
-import { logger } from '@/utils/logger'
 import { google } from '@ai-sdk/google'
 import { educationalProfileSchema, professionalProfileSchema } from '@hominem/utils/schemas'
 import { generateObject } from 'ai'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
@@ -18,7 +18,7 @@ export default new Command()
   .option('--outdir <outdir>', 'Output file directory')
   .action(async (options) => {
     if (!options.outdir && !options.outfile) {
-      console.error('Output file or directory not specified')
+      consola.error('Output file or directory not specified')
       process.exit(1)
     }
 
@@ -61,11 +61,11 @@ export default new Command()
       })
 
       spinner.succeed('JSON generated successfully')
-      logger.info(`Writing JSON to file: ${outputFile}`)
+      consola.success(`Resume converted successfully. Output saved to: ${outputFile}`)
       fs.writeFileSync(outputFile, JSON.stringify(response.object, null, 2))
       process.exit(0)
     } catch (error) {
-      logger.error(`Error reading or processing PDF: ${error}`)
+      consola.error('Error reading or processing PDF:', error)
       console.error(error)
       process.exit(1)
     }

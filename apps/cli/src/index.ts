@@ -6,11 +6,11 @@ import { Command } from 'commander'
 import { command as aiCommand } from './commands/ai'
 import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
-import { command as csvToJSONCommand } from './commands/csv-to-json'
 import { command as initCommand } from './commands/init'
 import { command as notesCommand } from './commands/possessions.js'
 import scrapeCommand from './commands/scraper/scrape'
 import thothCommand from './commands/thoth'
+import { command as toolsCommand } from './commands/tools'
 import { initDb } from './db/index'
 
 async function init() {
@@ -27,7 +27,7 @@ async function init() {
   program.addCommand(aiCommand)
   program.addCommand(notesCommand)
   program.addCommand(thothCommand)
-  program.addCommand(csvToJSONCommand)
+  program.addCommand(toolsCommand)
   program.addCommand(convertCommand)
 
   program.parse(process.argv)

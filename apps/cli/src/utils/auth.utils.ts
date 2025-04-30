@@ -1,5 +1,5 @@
-import { logger } from '@/utils/logger'
 import axios from 'axios'
+import { consola } from 'consola'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -8,16 +8,21 @@ export function getAuthToken() {
   const configFile = path.join(os.homedir(), '.hominem', 'config.json')
 
   if (!fs.existsSync(configFile)) {
-    console.error('Not authenticated. Please run `hominem api auth` first')
-    process.exit(1)
+    consola.warn('Authentication token not found or config file is invalid.')
+    throw new Error(
+      'Authentication required. Please run `hominem auth` or provide a token via --token option.'
+    )
   }
 
   try {
     const config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
+    consola.info('Using token from config file')
     return config.token
   } catch (error) {
-    logger.error('Error reading auth token', error)
-    process.exit(1)
+    consola.warn('Authentication token not found or config file is invalid.')
+    throw new Error(
+      'Authentication required. Please run `hominem auth` or provide a token via --token option.'
+    )
   }
 }
 

@@ -1,5 +1,4 @@
 import { getAuthToken } from '@/utils/auth.utils'
-import { logger } from '@/utils/logger'
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import axios from 'axios'
 import chalk from 'chalk'
@@ -32,10 +31,13 @@ export const invokeCommand = new Command()
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
       const payload = { message }
       const url = `http://${options.host}:${options.port}/api/chat/generate`
+      consola.info('Invoking AI model with payload:', payload)
       const response = await axios.post<{
         messages: ChatMessageSelect[]
       }>(url, payload, { headers })
       spinner.succeed(chalk.green('Response generated successfully'))
+      consola.success('AI model invoked successfully')
+      consola.info('Response:', response.data)
 
       const { messages } = response.data
 
@@ -120,8 +122,10 @@ export const invokeCommand = new Command()
         writeFileSync('debug.json', JSON.stringify(response.data, null, 2))
       }
     } catch (err) {
-      logger.error('Error generating response:', err)
+      consola.error('Error invoking AI model:', err)
       spinner.fail('Failed to generate response')
       process.exit(1)
     }
   })
+
+export default invokeCommand

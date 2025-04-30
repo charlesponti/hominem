@@ -1,8 +1,8 @@
 import { db } from '@/db/index'
 import { markdownEntries } from '@/db/schema'
-import logger from '@/utils/logger'
 import { detectTask } from '@hominem/utils/markdown'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import { createReadStream } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -79,8 +79,7 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
         rl.close()
       }
     } catch (err) {
-      console.error(err)
-      logger.error('Error grouping markdown by heading:', err)
+      consola.error('Error grouping markdown by heading:', err)
       process.exit(1)
     }
     process.exit(0)

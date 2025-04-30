@@ -1,6 +1,6 @@
-import logger from '@/utils/logger'
 import { TypingMindExportSchema, type nodeSchema } from '@hominem/utils/services'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { z } from 'zod'
@@ -168,23 +168,23 @@ export const command = new Command('typingmind-to-openai')
   .option('-o, --output <path>', 'Path to save the OpenAI format JSON file', './openai-export.json')
   .action(async (options) => {
     try {
-      logger.info(`Reading file: ${options.input}`)
+      consola.info(`Reading file: ${options.input}`)
       const data = JSON.parse(readFileSync(options.input, 'utf8'))
 
       // Validate input data
       const typingMindData = TypingMindExportSchema.parse(data)
-      logger.info(
+      consola.info(
         `Successfully parsed Typing Mind data with ${typingMindData.data.chats.length} conversations`
       )
 
       // Convert data
       const openAIData = convertTypingMindToOpenAI(typingMindData)
-      logger.info(`Converted ${openAIData.length} conversations to OpenAI format`)
+      consola.info(`Converted ${openAIData.length} conversations to OpenAI format`)
 
       // Save output
       const outputPath = path.resolve(options.output)
       writeFileSync(outputPath, JSON.stringify(openAIData, null, 2))
-      logger.info(`Saved OpenAI export to ${outputPath}`)
+      consola.info(`Saved OpenAI export to ${outputPath}`)
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error('Validation error in Typing Mind data:')

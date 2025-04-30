@@ -1,6 +1,6 @@
-import { logger } from '@hominem/utils/logger'
 import { downloadImage } from '@hominem/utils/scraping'
 import * as cheerio from 'cheerio'
+import { consola } from 'consola'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as process from 'node:process'
@@ -12,7 +12,7 @@ const plantFiles = fs.readdirSync(path.join(__dirname, 'output'))
 const imagesDir = path.join(process.cwd(), 'parsed_images')
 if (!fs.existsSync(imagesDir)) {
   fs.mkdirSync(imagesDir, { recursive: true })
-  logger.info(`Created image directory: ${imagesDir}`)
+  consola.info(`Created image directory: ${imagesDir}`)
 }
 
 // Create a write stream to write the JSON to
@@ -122,6 +122,9 @@ for (const file of plantFiles) {
     } else {
       // Fallback: Get all text and clean it
       description = cleanText(descriptionTable.text())
+      if (!description) {
+        consola.warn('Could not find description for plant')
+      }
     }
 
     plantData.description = description
@@ -148,10 +151,12 @@ for (const file of plantFiles) {
     } else {
       writeStream.write('\n')
     }
+
+    consola.info('Parsed plant info:', plantData)
   } catch (error) {
     spinner.fail(`Error parsing file ${file}: ${error}`)
     // Continue with next file instead of failing completely
-    logger.error(`Error parsing file ${file}: ${error}`)
+    consola.error(`Error parsing file ${file}: ${error}`)
     // if (index < totalFiles) {
     //   writeStream.write(JSON.stringify({ error: `Failed to parse ${file}` }) + ',\n')
     // }

@@ -1,7 +1,8 @@
 import { getAuthToken } from '@/utils/auth.utils'
-import { logger } from '@/utils/logger'
 import axios from 'axios'
+import chalk from 'chalk'
 import { Command } from 'commander'
+import { consola } from 'consola'
 import ora from 'ora'
 
 export const command = new Command()
@@ -34,10 +35,14 @@ command
         }
       )
       spinner.succeed('Possessions fetched successfully\n')
-      logger.info(JSON.stringify(response.data, null, 2))
+      consola.info(JSON.stringify(response.data, null, 2))
+      consola.success(chalk.green('Possessions data fetched and saved successfully.'))
     } catch (error) {
-      logger.error('Error fetching possessions:', error)
+      consola.error('Error fetching possessions:', error)
       spinner.fail('Failed to fetch possessions')
+      consola.error(chalk.red('Error fetching or saving possessions data:'), error)
       process.exit(1)
     }
   })
+
+export default command

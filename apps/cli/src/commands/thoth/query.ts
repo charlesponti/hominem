@@ -6,34 +6,33 @@ import { getAuthToken } from '@/utils/auth.utils'
 import axios from 'axios'
 import ora from 'ora'
 
-export const command = new Command('scrape')
-  .description('Scrape a website')
-  .requiredOption('-u, --url <url>', 'URL to scrape')
+export const command = new Command('query')
+  .description('Query the Thoth knowledge engine')
+  .requiredOption('-q, --query <query>', 'Query string')
   .option('-h, --host <host>', 'API host', 'localhost')
   .option('-p, --port <port>', 'API port', '4040')
   .action(async (options) => {
-    const spinner = ora(`Scraping ${chalk.blue(options.url)}`).start()
+    const spinner = ora(`Querying Thoth with: ${chalk.blue(options.query)}`).start()
     try {
       const token = getAuthToken()
       const headers = { Authorization: `Bearer ${token}` }
 
       const response = await axios.post(
-        `http://${options.host}:${options.port}/api/scrape`,
+        `http://${options.host}:${options.port}/api/thoth/query`,
         {
-          url: options.url,
+          query: options.query,
         },
         {
           headers,
         }
       )
 
-      spinner.succeed(chalk.green('Website scraped successfully'))
-      consola.info(chalk.cyan('Scraped Content:'))
-      // Potentially large output, consider summarizing or saving to file
+      spinner.succeed(chalk.green('Thoth query successful'))
+      consola.info(chalk.cyan('Query Result:'))
       consola.info(JSON.stringify(response.data, null, 2))
     } catch (error) {
-      spinner.fail(chalk.red('Failed to scrape website'))
-      consola.error(chalk.red('Error scraping website:'), error)
+      spinner.fail(chalk.red('Failed to query Thoth'))
+      consola.error(chalk.red('Error querying Thoth:'), error)
       process.exit(1)
     }
   })
