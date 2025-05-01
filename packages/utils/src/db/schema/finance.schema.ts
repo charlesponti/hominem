@@ -9,6 +9,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core'
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import { events } from './calendar.schema'
 import { users } from './users.schema'
 
@@ -144,6 +145,8 @@ export const transactions = pgTable('transactions', {
 })
 export type FinanceTransaction = typeof transactions.$inferSelect
 export type FinanceTransactionInsert = typeof transactions.$inferInsert
+export const insertTransactionSchema = createInsertSchema(transactions)
+export const updateTransactionSchema = createSelectSchema(transactions)
 
 export const budgetCategories = pgTable('budget_categories', {
   id: uuid('id').primaryKey(),
