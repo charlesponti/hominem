@@ -46,3 +46,18 @@ export function getAuthenticatedClient(host = 'localhost', port = '4040') {
 
   return client
 }
+
+export function handleApiError(
+  error: unknown,
+  toolName: string
+): { isError: true; content: { type: 'text'; text: string }[] } {
+  return {
+    isError: true,
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify({ error }, null, 2),
+      },
+    ],
+  }
+}

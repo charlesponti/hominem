@@ -4,30 +4,8 @@ import {
   runwayCalculationSchema,
 } from '@hominem/utils/finance'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import axios from 'axios'
 import { z } from 'zod'
-import { getAuthenticatedClient } from '../utils/auth.utils.js'
-
-// Helper to handle API errors
-function handleApiError(
-  error: unknown,
-  toolName: string
-): { content: { type: 'text'; text: string }[] } {
-  console.error(`[MCP Finance Error - ${toolName} API]`, error)
-  const errorMessage = axios.isAxiosError(error)
-    ? error.response?.data?.error || error.message
-    : error instanceof Error
-      ? error.message
-      : String(error)
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify({ error: errorMessage }, null, 2),
-      },
-    ],
-  }
-}
+import { getAuthenticatedClient, handleApiError } from '../utils/auth.utils.js'
 
 export function registerFinanceTools(server: McpServer) {
   const apiClient = getAuthenticatedClient()
@@ -274,8 +252,6 @@ export function registerFinanceTools(server: McpServer) {
       }
     }
   )
-
-  // --- Tools without direct API endpoints (Using direct calls - Keep as is for now) ---
 
   server.tool(
     'calculate_savings_goal_timeline',
