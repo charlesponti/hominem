@@ -1,7 +1,8 @@
-import { and, eq, gte, like, lte, sql } from 'drizzle-orm'
+import { and, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { db } from '../db/index'
 import {
+  budgetCategories,
   financeAccounts,
   transactions,
   type FinanceTransaction,
@@ -387,4 +388,128 @@ export async function deleteTransaction(transactionId: string, userId: string): 
     logger.error(`Error deleting transaction ${transactionId}:`, error)
     throw error
   }
+}
+
+export async function calculateTransactions(
+  options: QueryOptions & {
+    calculationType?: 'sum' | 'average' | 'count' | 'stats'
+    descriptionLike?: string
+  }
+) {
+  let whereConditions = buildWhereConditions(options)
+
+  // Add description filter if provided
+  if (options.descriptionLike) {
+    const conditions = whereConditions
+      ? [whereConditions, like(transactions.description, `%${options.descriptionLike}%`)]
+      : [like(transactions.description, `%${options.descriptionLike}%`)]
+    whereConditions = and(...conditions)
+  }
+
+  // If calculationType is specified, return just that metric
+  if (options.calculationType && options.calculationType !== 'stats') {
+    let aggregateSelection: Record<string, SQL<unknown>>
+
+    switch (options.calculationType) {
+      case 'sum':
+        aggregateSelection = {
+          value: sql<number>`SUM(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
+        }
+        break
+      case 'average':
+        aggregateSelection = {
+          value: sql<number>`AVG(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
+        }
+        break
+      case 'count':
+        aggregateSelection = { value: sql<number>`COUNT(*)`.mapWith(Number) }
+        break
+      default:
+        throw new Error(`Unsupported calculation type: ${options.calculationType}`)
+    }
+
+    const result = await db.select(aggregateSelection).from(transactions).where(whereConditions)
+
+    return {
+      value: result[0]?.value ?? 0,
+      calculationType: options.calculationType,
+    } as {
+      value: number
+      calculationType: 'sum' | 'average' | 'count'
+    }
+  }
+
+  // Otherwise return all stats (default behavior)
+  const result = await db
+    .select({
+      count: sql<number>`COUNT(*)`,
+      total: sql<number>`SUM(${transactions.amount})`,
+      average: sql<number>`AVG(${transactions.amount})`,
+      minimum: sql<number>`MIN(${transactions.amount})`,
+      maximum: sql<number>`MAX(${transactions.amount})`,
+    })
+    .from(transactions)
+    .where(whereConditions)
+
+  const stats = result[0] || { count: 0, total: 0, average: 0, minimum: 0, maximum: 0 }
+
+  return {
+    count: stats.count,
+    total: Number.parseFloat(stats.total?.toString() || '0').toFixed(2),
+    average: Number.parseFloat(stats.average?.toString() || '0').toFixed(2),
+    minimum: Number.parseFloat(stats.minimum?.toString() || '0').toFixed(2),
+    maximum: Number.parseFloat(stats.maximum?.toString() || '0').toFixed(2),
+  }
+}
+
+export async function getBudgetCategories(options: { userId: string }) {
+  if (!options.userId) {
+    throw new Error('User ID is required to fetch budget categories.')
+  }
+
+  const categories = await db
+    .select()
+    .from(budgetCategories)
+    .where(eq(budgetCategories.userId, options.userId))
+    .orderBy(budgetCategories.name)
+
+  return categories
+}
+
+export async function getBudgetCategorySuggestions(options: {
+  userId: string
+  description: string
+  amount?: number
+}) {
+  if (!options.userId) {
+    throw new Error('User ID is required to get budget category suggestions.')
+  }
+
+  // Basic suggestion logic: Find categories from past transactions with similar descriptions
+  const similarTransactions = await db
+    .selectDistinct({ category: transactions.category })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.userId, options.userId),
+        like(transactions.description, `%${options.description}%`),
+        transactions.category // Ensure category is not null or empty
+      )
+    )
+    .limit(5)
+
+  const suggestions = similarTransactions.map((tx) => tx.category).filter(Boolean) as string[]
+
+  // Fallback or additional suggestions (could be expanded)
+  if (suggestions.length === 0) {
+    if (options.amount && options.amount > 0) {
+      suggestions.push('Income') // Suggest 'Income' for positive amounts
+    } else {
+      suggestions.push('Miscellaneous') // Default suggestion
+    }
+  }
+
+  // You could add more sophisticated logic here, e.g., using ML or keyword mapping
+
+  return { suggestions: [...new Set(suggestions)] } // Return unique suggestions
 }

@@ -1,21 +1,27 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/utils/db'
-import { queryTransactions } from '@hominem/utils/finance'
+import {
+  FinancialAccountService,
+  getBudgetCategories,
+  queryTransactions,
+} from '@hominem/utils/finance'
 import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
 import {
   budgetCategories,
   budgetGoals,
   financeAccounts,
+  insertTransactionSchema,
   plaidItems,
   transactions,
+  updateTransactionSchema,
 } from '@hominem/utils/schema'
 import type { ImportTransactionsJob } from '@hominem/utils/types'
-import { and, count, desc, eq, gte, lt, or, sql } from 'drizzle-orm' // Removed unused gt, sum
+import { and, count, desc, eq, gte, lt, or, sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../lib/errors.js'
-import { verifyAuth } from '../middleware/auth.js'
-import { rateLimitImport } from '../middleware/rate-limit.js'
+import { handleError } from '../../lib/errors.js'
+import { verifyAuth } from '../../middleware/auth.js'
+import { rateLimitImport } from '../../middleware/rate-limit.js'
 import { financeAccountsRoutes } from './finance-accounts.js'
 import { financeAnalyzeRoutes } from './finance-analyze.js'
 import { financeExportRoutes } from './finance-export.js'
@@ -240,6 +246,106 @@ export async function financeRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // Add Transaction
+  fastify.post('/transactions', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Not authorized' })
+    }
+
+    try {
+      const validatedData = insertTransactionSchema.omit({ userId: true }).parse(request.body)
+
+      // Optional: Validate accountId exists for the user
+      if (validatedData.accountId) {
+        const account = await FinancialAccountService.getAccountById(
+          validatedData.accountId,
+          userId
+        )
+        if (!account) {
+          return reply.code(404).send({ error: 'Account not found' })
+        }
+      }
+
+      const [newTransaction] = await db
+        .insert(transactions)
+        .values({ ...validatedData, userId })
+        .returning()
+
+      return reply.code(201).send(newTransaction)
+    } catch (error) {
+      handleError(error as Error, reply)
+    }
+  })
+
+  // Update Transaction
+  fastify.put('/transactions/:id', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Not authorized' })
+    }
+
+    const { id } = request.params as { id: string }
+
+    try {
+      const validatedData = updateTransactionSchema.partial().parse(request.body) // Allow partial updates
+
+      // Verify transaction exists and belongs to the user
+      const existingTransaction = await db.query.transactions.findFirst({
+        where: and(eq(transactions.id, id), eq(transactions.userId, userId)),
+      })
+
+      if (!existingTransaction) {
+        return reply.code(404).send({ error: 'Transaction not found' })
+      }
+
+      // Optional: Validate accountId if provided
+      if (validatedData.accountId) {
+        const account = await FinancialAccountService.getAccountById(
+          validatedData.accountId,
+          userId
+        )
+        if (!account) {
+          return reply.code(404).send({ error: 'Account not found' })
+        }
+      }
+
+      const [updatedTransaction] = await db
+        .update(transactions)
+        .set({ ...validatedData, updatedAt: new Date() })
+        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+        .returning()
+
+      return updatedTransaction
+    } catch (error) {
+      handleError(error as Error, reply)
+    }
+  })
+
+  // Delete Transaction
+  fastify.delete('/transactions/:id', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Not authorized' })
+    }
+
+    const { id } = request.params as { id: string }
+
+    try {
+      const result = await db
+        .delete(transactions)
+        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+
+      if (result.count === 0) {
+        return reply.code(404).send({ error: 'Transaction not found' })
+      }
+
+      return { success: true, message: 'Transaction deleted successfully' }
+    } catch (error) {
+      handleError(error as Error, reply)
+    }
+  })
+
   const monthlyStatsParamsSchema = z.object({
     month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
   })
@@ -355,6 +461,49 @@ export async function financeRoutes(fastify: FastifyInstance) {
         error: 'Failed to delete finance data',
         details: err instanceof Error ? err.message : String(err),
       })
+    }
+  })
+
+  // Get spending categories
+  fastify.get('/categories', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const { userId } = request
+      if (!userId) {
+        reply.code(401)
+        return { error: 'Not authorized' }
+      }
+
+      // Logic to get spending categories
+      const categories = await db
+        .select({
+          category: transactions.category,
+        })
+        .from(transactions)
+        .where(and(eq(transactions.userId, userId), eq(transactions.type, 'expense')))
+        .groupBy(transactions.category)
+        .orderBy(transactions.category)
+
+      // !TODO: Implement logic to analyze spending categories
+      return categories
+    } catch (error) {
+      handleError(error as Error, reply)
+    }
+  })
+
+  // Get Budget Categories
+  fastify.get('/budget-categories', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const { userId } = request
+      if (!userId) {
+        reply.code(401)
+        return { error: 'Not authorized' }
+      }
+
+      const result = await getBudgetCategories({ userId })
+
+      return result
+    } catch (error) {
+      handleError(error as Error, reply)
     }
   })
 }

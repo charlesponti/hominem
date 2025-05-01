@@ -1,3 +1,4 @@
+import { runwayCalculationSchema } from '@hominem/utils/finance'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors.js'
@@ -40,22 +41,6 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
         amount: z.number().positive(),
       })
     ),
-  })
-
-  const runwayCalculationSchema = z.object({
-    balance: z.number().positive(),
-    monthlyExpenses: z.number().positive(),
-    plannedPurchases: z
-      .array(
-        z.object({
-          description: z.string(),
-          amount: z.number().positive(),
-          date: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-            message: 'Invalid date format',
-          }),
-        })
-      )
-      .optional(),
   })
 
   const musicStreamingCalculationSchema = z.object({

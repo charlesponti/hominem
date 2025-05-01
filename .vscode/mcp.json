@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "hominem": {
+      "command": "node",
+      "args": [
+        "/Users/charlesponti/Developer/hominem/apps/mcp/build/index.js"
+      ],
+      "type": "stdio",
+      "env": {
+        "DATABASE_URL": "postgresql://postgres:postgres@postgres:4432/hominem"
+      }
+    }
+  }
+}

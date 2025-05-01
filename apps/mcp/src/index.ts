@@ -2,7 +2,7 @@
 
 import { McpServer as Server } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { registerFinanceTools } from './tools/finance' // Import the new finance tools registration function
+import { registerFinanceTools } from './tools/finance'
 import { registerFlightsTool } from './tools/flights'
 import { registerMentalWellnessTool } from './tools/mental-health'
 import { registerNutritionTool } from './tools/nutrition'
@@ -12,7 +12,7 @@ import { registerWorkoutTool } from './tools/workout'
 
 // Create an MCP server
 const server = new Server({
-  name: 'health-and-fitness-server',
+  name: 'hominem-mcp-server',
   version: '0.1.0',
 })
 
@@ -23,7 +23,7 @@ registerSleepTool(server)
 registerMentalWellnessTool(server)
 registerFlightsTool(server)
 registerTaxTool(server)
-registerFinanceTools(server) // Call the registration function
+registerFinanceTools(server)
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport()

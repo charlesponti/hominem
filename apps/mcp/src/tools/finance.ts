@@ -1,359 +1,294 @@
-import { tools as financeTools } from '@hominem/utils/finance'
+import {
+  categoryBreakdownSchema,
+  tools as financeTools,
+  runwayCalculationSchema,
+} from '@hominem/utils/finance'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import axios from 'axios'
+import { z } from 'zod'
+import { getAuthenticatedClient } from '../utils/auth.utils.js'
+
+// Helper to handle API errors
+function handleApiError(
+  error: unknown,
+  toolName: string
+): { content: { type: 'text'; text: string }[] } {
+  console.error(`[MCP Finance Error - ${toolName} API]`, error)
+  const errorMessage = axios.isAxiosError(error)
+    ? error.response?.data?.error || error.message
+    : error instanceof Error
+      ? error.message
+      : String(error)
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify({ error: errorMessage }, null, 2),
+      },
+    ],
+  }
+}
 
 export function registerFinanceTools(server: McpServer) {
+  const apiClient = getAuthenticatedClient()
+
   server.tool(
     'create_finance_account',
-    financeTools.create_finance_account.parameters.shape,
-    async (args, _extra) => {
-      // Callback receives args and extra
+    financeTools.create_finance_account.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.create_finance_account.execute(args, {
-          messages: [],
-          toolCallId: 'create_finance_account',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+        const response = await apiClient.post('/api/finance/accounts', args)
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - create_finance_account]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
+        return handleApiError(error, 'create_finance_account')
       }
     }
   )
 
   server.tool(
     'get_finance_accounts',
-    financeTools.get_finance_accounts.parameters.shape,
-    async (args, _extra) => {
+    financeTools.get_finance_accounts.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.get_finance_accounts.execute(args, {
-          messages: [],
-          toolCallId: 'get_finance_accounts',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+        const response = await apiClient.get('/api/finance/accounts', { params: args })
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - get_finance_accounts]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
+        return handleApiError(error, 'get_finance_accounts')
       }
     }
   )
 
   server.tool(
     'update_finance_account',
-    financeTools.update_finance_account.parameters.shape,
-    async (args, _extra) => {
+    financeTools.update_finance_account.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.update_finance_account.execute(args, {
-          messages: [],
-          toolCallId: 'update_finance_account',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
-      } catch (error) {
-        console.error('[MCP Finance Error - update_finance_account]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
+        const { accountId, ...updateData } = args
+        if (!accountId) {
+          throw new Error('Account ID is required for update.')
         }
+        const response = await apiClient.put(`/api/finance/accounts/${accountId}`, updateData)
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'update_finance_account')
       }
     }
   )
 
   server.tool(
     'delete_finance_account',
-    financeTools.delete_finance_account.parameters.shape,
-    async (args, _extra) => {
+    financeTools.delete_finance_account.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.delete_finance_account.execute(args, {
-          messages: [],
-          toolCallId: 'delete_finance_account',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
-      } catch (error) {
-        console.error('[MCP Finance Error - delete_finance_account]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
+        const { accountId } = args
+        if (!accountId) {
+          throw new Error('Account ID is required for deletion.')
         }
+        const response = await apiClient.delete(`/api/finance/accounts/${accountId}`)
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'delete_finance_account')
       }
     }
   )
 
+  // --- Transaction Management --- (Refactored)
   server.tool(
     'create_transaction',
-    financeTools.create_transaction.parameters.shape,
-    async (args, _extra) => {
+    financeTools.create_transaction.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.create_transaction.execute(args, {
-          messages: [],
-          toolCallId: 'create_transaction',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+        const response = await apiClient.post('/api/finance/transactions', args)
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - create_transaction]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
+        return handleApiError(error, 'create_transaction')
       }
     }
   )
 
   server.tool(
     'get_transactions',
-    financeTools.get_transactions.parameters.shape,
-    async (args, _extra) => {
+    financeTools.get_transactions.parameters.omit({ userId: true }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.get_transactions.execute(args, {
-          messages: [],
-          toolCallId: 'get_transactions',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+        const response = await apiClient.get('/api/finance/transactions', { params: args })
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - get_transactions]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
+        return handleApiError(error, 'get_transactions')
       }
     }
   )
 
   server.tool(
     'update_transaction',
-    financeTools.update_transaction.parameters.shape,
-    async (args, _extra) => {
+    financeTools.update_transaction.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.update_transaction.execute(args, {
-          messages: [],
-          toolCallId: 'update_transaction',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
-      } catch (error) {
-        console.error('[MCP Finance Error - update_transaction]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
+        const { transactionId, ...updateData } = args
+        if (!transactionId) {
+          throw new Error('Transaction ID is required for update.')
         }
+        const response = await apiClient.put(
+          `/api/finance/transactions/${transactionId}`,
+          updateData
+        )
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'update_transaction')
       }
     }
   )
 
   server.tool(
     'delete_transaction',
-    financeTools.delete_transaction.parameters.shape,
-    async (args, _extra) => {
+    financeTools.delete_transaction.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.delete_transaction.execute(args, {
-          messages: [],
-          toolCallId: 'delete_transaction',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
-      } catch (error) {
-        console.error('[MCP Finance Error - delete_transaction]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
+        const { transactionId } = args
+        if (!transactionId) {
+          throw new Error('Transaction ID is required for deletion.')
         }
+        const response = await apiClient.delete(`/api/finance/transactions/${transactionId}`)
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'delete_transaction')
       }
     }
   )
 
+  server.tool('get_spending_categories', async (args) => {
+    try {
+      const response = await apiClient.get('/api/finance/categories', { params: args })
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+    } catch (error) {
+      return handleApiError(error, 'get_spending_categories')
+    }
+  })
+
+  server.tool(
+    'get_spending_time_series',
+    z.object({
+      from: z.string().optional(),
+      to: z.string().optional(),
+      account: z.string().optional(),
+      category: z.string().optional(),
+      limit: z.string().transform(Number).optional(),
+      groupBy: z.enum(['month', 'week', 'day']).optional().default('month'),
+      includeStats: z.coerce.boolean().optional().default(false),
+      compareToPrevious: z.coerce.boolean().optional().default(false),
+    }).shape,
+    async (args) => {
+      try {
+        const response = await apiClient.get('/api/finance/analyze/spending-time-series', {
+          params: args,
+        })
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'get_spending_time_series')
+      }
+    }
+  )
+
+  server.tool('get_top_merchants', async () => {
+    try {
+      const response = await apiClient.get('/api/finance/analyze/top-merchants')
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+    } catch (error) {
+      return handleApiError(error, 'get_top_merchants')
+    }
+  })
+
+  server.tool('get_category_breakdown', categoryBreakdownSchema.shape, async (args) => {
+    try {
+      const response = await apiClient.get('/api/finance/analyze/category-breakdown', {
+        params: args,
+      })
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+    } catch (error) {
+      return handleApiError(error, 'get_category_breakdown')
+    }
+  })
+
+  server.tool(
+    'calculate_budget_breakdown',
+    financeTools.budgetCalculatorTool.parameters.shape,
+    async (args) => {
+      try {
+        const response = await apiClient.post('/api/personal-finance/budget', args)
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'calculate_budget_breakdown')
+      }
+    }
+  )
+
+  server.tool('calculate_runway', runwayCalculationSchema.shape, async (args) => {
+    try {
+      const response = await apiClient.post('/api/personal-finance/runway', args)
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+    } catch (error) {
+      return handleApiError(error, 'calculate_runway')
+    }
+  })
+
   server.tool(
     'calculate_transactions',
-    financeTools.calculate_transactions.parameters.shape,
-    async (args, _extra) => {
+    financeTools.calculate_transactions.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.calculate_transactions.execute(args, {
-          messages: [],
-          toolCallId: 'calculate_transactions',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+        const response = await apiClient.post('/api/finance/analyze/calculate', args)
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - calculate_transactions]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
+        return handleApiError(error, 'calculate_transactions')
       }
     }
   )
 
   server.tool(
     'get_budget_category_suggestions',
-    financeTools.get_budget_category_suggestions.parameters.shape,
-    async (args, _extra) => {
+    financeTools.get_budget_category_suggestions.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.get_budget_category_suggestions.execute(args, {
-          messages: [],
-          toolCallId: 'get_budget_category_suggestions',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+        const response = await apiClient.post(
+          '/api/finance/analyze/budget-category-suggestions',
+          args
+        )
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - get_budget_category_suggestions]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
+        return handleApiError(error, 'get_budget_category_suggestions')
       }
     }
   )
 
   server.tool(
     'get_budget_categories',
-    financeTools.get_budget_categories.parameters.shape,
-    async (args, _extra) => {
+    financeTools.get_budget_categories.parameters.omit({ userId: undefined }).shape,
+    async (args) => {
       try {
-        const result = await financeTools.get_budget_categories.execute(
-          { query: args.query },
-          {
-            messages: [],
-            toolCallId: 'get_budget_categories',
-          }
-        )
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+        const response = await apiClient.get('/api/finance/analyze/budget-categories', {
+          params: args,
+        })
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - get_budget_categories]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
+        return handleApiError(error, 'get_budget_categories')
       }
     }
   )
 
-  server.tool(
-    'calculate_budget_breakdown',
-    financeTools.budgetCalculatorTool.parameters.shape,
-    async (args, _extra) => {
-      try {
-        const result = await financeTools.budgetCalculatorTool.execute(args, {
-          messages: [],
-          toolCallId: 'calculate_budget_breakdown',
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
-      } catch (error) {
-        console.error('[MCP Finance Error - budgetCalculatorTool]', error)
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                { error: error instanceof Error ? error.message : String(error) },
-                null,
-                2
-              ),
-            },
-          ],
-        }
-      }
-    }
-  )
+  // --- Tools without direct API endpoints (Using direct calls - Keep as is for now) ---
 
   server.tool(
     'calculate_savings_goal_timeline',
     financeTools.savingsGoalCalculatorTool.parameters.shape,
-    async (args, _extra) => {
+    async (args) => {
       try {
         const result = await financeTools.savingsGoalCalculatorTool.execute(args, {
           messages: [],
-          toolCallId: 'calculate_savings_goal_timeline',
+          toolCallId: '',
         })
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - savingsGoalCalculatorTool]', error)
+        console.error('[MCP Finance Error - savingsGoalCalculatorTool Direct]', error)
         return {
           content: [
             {
@@ -373,15 +308,15 @@ export function registerFinanceTools(server: McpServer) {
   server.tool(
     'calculate_loan_details',
     financeTools.loanCalculatorTool.parameters.shape,
-    async (args, _extra) => {
+    async (args) => {
       try {
         const result = await financeTools.loanCalculatorTool.execute(args, {
           messages: [],
-          toolCallId: 'calculate_loan_details',
+          toolCallId: '',
         })
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
       } catch (error) {
-        console.error('[MCP Finance Error - loanCalculatorTool]', error)
+        console.error('[MCP Finance Error - loanCalculatorTool Direct]', error)
         return {
           content: [
             {

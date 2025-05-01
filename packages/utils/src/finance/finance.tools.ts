@@ -1,5 +1,5 @@
 import { tool } from 'ai'
-import { and, eq, gte, ilike, like, lte, or, sql, type SQL } from 'drizzle-orm'
+import { and, eq, like, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
 import { db } from '../db/index'
@@ -10,6 +10,7 @@ import {
   type FinanceTransactionInsert,
 } from '../db/schema/finance.schema'
 import {
+  calculateTransactions,
   createNewTransaction,
   deleteTransaction,
   queryTransactions,
@@ -18,39 +19,140 @@ import {
 import FinancialAccountService from './financial-account.service'
 import type { QueryOptions } from './types'
 
-// Using the centralized QueryOptions type from finance/types
-
-const budgetCalculatorSchema = z.object({
+export const budgetCalculatorSchema = z.object({
   monthlyIncome: z.number().positive().describe('Monthly income amount'),
   savingsPercentage: z.number().min(0).max(100).describe('Percentage of income to save'),
   fixedExpenses: z.number().nonnegative().describe('Total fixed monthly expenses'),
 })
 
-const savingsGoalCalculatorSchema = z.object({
+export const savingsGoalCalculatorSchema = z.object({
   targetAmount: z.number().positive().describe('Target savings amount'),
   currentSavings: z.number().nonnegative().describe('Current savings amount'),
   monthlyContribution: z.number().positive().describe('Monthly contribution amount'),
   interestRate: z.number().min(0).max(100).optional().describe('Annual interest rate (%)'),
 })
 
-const loanCalculatorSchema = z.object({
+export const loanCalculatorSchema = z.object({
   loanAmount: z.number().positive().describe('Total loan amount'),
   interestRate: z.number().positive().describe('Annual interest rate (%)'),
   loanTermYears: z.number().positive().describe('Loan term in years'),
 })
 
+export const financeAccountSchema = z.object({
+  name: z.string().describe('Name of the account'),
+  type: z
+    .enum(['checking', 'savings', 'investment', 'credit', 'loan', 'retirement'])
+    .describe('Type of account'),
+  balance: z.string().describe('Initial balance'),
+  interestRate: z.string().optional().describe('Interest rate (if applicable)'),
+  minimumPayment: z.string().optional().describe('Minimum payment (if applicable)'),
+  userId: z.string().describe('User ID who owns this account'),
+})
+
+export const getFinanceAccountsSchema = z.object({
+  userId: z.string().describe('User ID to filter accounts by'),
+  type: z
+    .enum(['checking', 'savings', 'investment', 'credit', 'loan', 'retirement'])
+    .optional()
+    .describe('Filter by account type'),
+})
+
+export const updateFinanceAccountSchema = z.object({
+  accountId: z.string().describe('ID of the account to update'),
+  name: z.string().optional().describe('New name for the account'),
+  balance: z.number().optional().describe('New balance'),
+  interestRate: z.number().optional().describe('New interest rate'),
+  minimumPayment: z.number().optional().describe('New minimum payment'),
+  userId: z.string().describe('User ID who owns this account'),
+})
+
+export const deleteFinanceAccountSchema = z.object({
+  accountId: z.string().describe('ID of the account to delete'),
+  userId: z.string().describe('User ID who owns this account'),
+})
+
+export const createTransactionSchema = z.object({
+  type: z
+    .enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment'])
+    .describe('Type of transaction'),
+  amount: z.number().describe('Transaction amount'),
+  date: z.string().describe('Transaction date (YYYY-MM-DD)'),
+  description: z.string().optional().describe('Transaction description'),
+  accountId: z.string().describe('Account ID this transaction belongs to'),
+  fromAccountId: z.string().optional().describe('Source account ID (for transfers)'),
+  toAccountId: z.string().optional().describe('Destination account ID (for transfers)'),
+  category: z.string().optional().describe('Transaction category'),
+  parentCategory: z.string().optional().describe('Parent category'),
+  notes: z.string().optional().describe('Additional notes'),
+  recurring: z.boolean().optional().describe('Whether this is a recurring transaction'),
+  userId: z.string().describe('User ID who owns this transaction'),
+})
+
+export const getTransactionsSchema = z.object({
+  userId: z.string().describe('User ID to filter transactions by'),
+  startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
+  endDate: z.string().optional().describe('End date (YYYY-MM-DD)'),
+  type: z
+    .enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment'])
+    .optional()
+    .describe('Filter by transaction type'),
+  category: z.string().optional().describe('Filter by category'),
+  accountId: z.string().optional().describe('Filter by account ID'),
+  minAmount: z.number().optional().describe('Minimum transaction amount'),
+  maxAmount: z.number().optional().describe('Maximum transaction amount'),
+})
+
+export const updateTransactionSchema = z.object({
+  transactionId: z.string().describe('ID of the transaction to update'),
+  amount: z.number().optional().describe('New transaction amount'),
+  date: z.string().optional().describe('New transaction date'),
+  description: z.string().optional().describe('New description'),
+  category: z.string().optional().describe('New category'),
+  parentCategory: z.string().optional().describe('New parent category'),
+  notes: z.string().optional().describe('New notes'),
+  userId: z.string().describe('User ID who owns this transaction'),
+})
+
+export const deleteTransactionSchema = z.object({
+  transactionId: z.string().describe('ID of the transaction to delete'),
+  userId: z.string().describe('User ID who owns this transaction'),
+})
+
+export const getBudgetCategorySuggestionsSchema = z.object({
+  description: z.string().describe('Transaction description to get category suggestions for'),
+  limit: z.number().optional().default(5).describe('Maximum number of suggestions to return'),
+  userId: z.string().describe('User ID who owns the transactions'),
+})
+
+export const getBudgetCategoriesSchema = z.object({
+  userId: z.string().describe('User ID who owns the categories'),
+  categoryName: z.string().optional(),
+  categoryId: z.string().optional(),
+  categoryType: z.string().optional(),
+})
+
+export const calculateTransactionsSchema = z.object({
+  calculationType: z
+    .enum(['sum', 'average', 'count'])
+    .describe('Type of calculation to perform (sum, average, count)'),
+  userId: z.string().describe('User ID for filtering transactions'),
+  startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
+  endDate: z.string().optional().describe('End date (YYYY-MM-DD)'),
+  type: z
+    .enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment'])
+    .optional()
+    .describe('Filter by transaction type'),
+  category: z.string().optional().describe('Filter by category'),
+  accountId: z.string().optional().describe('Filter by account ID'),
+  descriptionLike: z
+    .string()
+    .optional()
+    .describe('Filter transactions where description contains this text'),
+})
+
 export const create_finance_account = tool({
   description: 'Create a new finance account',
-  parameters: z.object({
-    name: z.string().describe('Name of the account'),
-    type: z
-      .enum(['checking', 'savings', 'investment', 'credit', 'loan', 'retirement'])
-      .describe('Type of account'),
-    balance: z.string().describe('Initial balance'),
-    interestRate: z.string().optional().describe('Interest rate (if applicable)'),
-    minimumPayment: z.string().optional().describe('Minimum payment (if applicable)'),
-    userId: z.string().describe('User ID who owns this account'),
-  }),
+  parameters: financeAccountSchema,
   async execute(args) {
     const created = await FinancialAccountService.createAccount({
       name: args.name,
@@ -66,13 +168,7 @@ export const create_finance_account = tool({
 
 export const get_finance_accounts = tool({
   description: 'Get all finance accounts',
-  parameters: z.object({
-    userId: z.string().describe('User ID to filter accounts by'),
-    type: z
-      .enum(['checking', 'savings', 'investment', 'credit', 'loan', 'retirement'])
-      .optional()
-      .describe('Filter by account type'),
-  }),
+  parameters: getFinanceAccountsSchema,
   async execute(args) {
     let accounts = await FinancialAccountService.listAccounts(args.userId)
     if (args.type) {
@@ -87,14 +183,7 @@ export const get_finance_accounts = tool({
 
 export const update_finance_account = tool({
   description: 'Update a finance account',
-  parameters: z.object({
-    accountId: z.string().describe('ID of the account to update'),
-    name: z.string().optional().describe('New name for the account'),
-    balance: z.number().optional().describe('New balance'),
-    interestRate: z.number().optional().describe('New interest rate'),
-    minimumPayment: z.number().optional().describe('New minimum payment'),
-    userId: z.string().describe('User ID who owns this account'),
-  }),
+  parameters: updateFinanceAccountSchema,
   async execute(args) {
     const updates: Partial<FinanceAccountInsert> = {}
     if (args.name) updates.name = args.name
@@ -113,10 +202,7 @@ export const update_finance_account = tool({
 
 export const delete_finance_account = tool({
   description: 'Delete a finance account',
-  parameters: z.object({
-    accountId: z.string().describe('ID of the account to delete'),
-    userId: z.string().describe('User ID who owns this account'),
-  }),
+  parameters: deleteFinanceAccountSchema,
   async execute(args) {
     await FinancialAccountService.deleteAccount(args.accountId, args.userId)
     return { message: `Deleted finance account ${args.accountId}` }
@@ -125,22 +211,7 @@ export const delete_finance_account = tool({
 
 export const create_transaction = tool({
   description: 'Create a new financial transaction',
-  parameters: z.object({
-    type: z
-      .enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment'])
-      .describe('Type of transaction'),
-    amount: z.number().describe('Transaction amount'),
-    date: z.string().describe('Transaction date (YYYY-MM-DD)'),
-    description: z.string().optional().describe('Transaction description'),
-    accountId: z.string().describe('Account ID this transaction belongs to'),
-    fromAccountId: z.string().optional().describe('Source account ID (for transfers)'),
-    toAccountId: z.string().optional().describe('Destination account ID (for transfers)'),
-    category: z.string().optional().describe('Transaction category'),
-    parentCategory: z.string().optional().describe('Parent category'),
-    notes: z.string().optional().describe('Additional notes'),
-    recurring: z.boolean().optional().describe('Whether this is a recurring transaction'),
-    userId: z.string().describe('User ID who owns this transaction'),
-  }),
+  parameters: createTransactionSchema,
   async execute(args) {
     const transaction: FinanceTransactionInsert = {
       id: crypto.randomUUID(),
@@ -168,19 +239,7 @@ export const create_transaction = tool({
 
 export const get_transactions = tool({
   description: 'Get financial transactions',
-  parameters: z.object({
-    userId: z.string().describe('User ID to filter transactions by'),
-    startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
-    endDate: z.string().optional().describe('End date (YYYY-MM-DD)'),
-    type: z
-      .enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment'])
-      .optional()
-      .describe('Filter by transaction type'),
-    category: z.string().optional().describe('Filter by category'),
-    accountId: z.string().optional().describe('Filter by account ID'),
-    minAmount: z.number().optional().describe('Minimum transaction amount'),
-    maxAmount: z.number().optional().describe('Maximum transaction amount'),
-  }),
+  parameters: getTransactionsSchema,
   async execute(args) {
     const options: QueryOptions = {
       from: args.startDate,
@@ -206,16 +265,7 @@ export const get_transactions = tool({
 
 export const update_transaction = tool({
   description: 'Update a financial transaction',
-  parameters: z.object({
-    transactionId: z.string().describe('ID of the transaction to update'),
-    amount: z.number().optional().describe('New transaction amount'),
-    date: z.string().optional().describe('New transaction date'),
-    description: z.string().optional().describe('New description'),
-    category: z.string().optional().describe('New category'),
-    parentCategory: z.string().optional().describe('New parent category'),
-    notes: z.string().optional().describe('New notes'),
-    userId: z.string().describe('User ID who owns this transaction'),
-  }),
+  parameters: updateTransactionSchema,
   async execute(args) {
     const updates: Partial<FinanceTransactionInsert> = {}
     if (args.amount) updates.amount = args.amount.toString()
@@ -235,10 +285,7 @@ export const update_transaction = tool({
 
 export const delete_transaction = tool({
   description: 'Delete a financial transaction',
-  parameters: z.object({
-    transactionId: z.string().describe('ID of the transaction to delete'),
-    userId: z.string().describe('User ID who owns this transaction'),
-  }),
+  parameters: deleteTransactionSchema,
   async execute(args) {
     await deleteTransaction(args.transactionId, args.userId)
     return {
@@ -306,11 +353,7 @@ export const loanCalculatorTool = tool({
 
 export const get_budget_category_suggestions = tool({
   description: 'Get suggested budget categories based on transaction description',
-  parameters: z.object({
-    description: z.string().describe('Transaction description to get category suggestions for'),
-    limit: z.number().optional().default(5).describe('Maximum number of suggestions to return'),
-    userId: z.string().describe('User ID who owns the transactions'),
-  }),
+  parameters: getBudgetCategorySuggestionsSchema,
   async execute(args) {
     // Query similar transactions to get category suggestions
     const similarTransactions = await db
@@ -343,15 +386,8 @@ export const get_budget_category_suggestions = tool({
 
 export const get_budget_categories = tool({
   description: 'A tool to get budget categories by id, name, or type.',
-  parameters: z.object({
-    query: z.object({
-      userId: z.string().describe('User ID who owns the categories'),
-      categoryName: z.string().optional(),
-      categoryId: z.string().optional(),
-      categoryType: z.string().optional(),
-    }),
-  }),
-  execute: async ({ query }) => {
+  parameters: getBudgetCategoriesSchema,
+  execute: async (query) => {
     const dbQuery = db
       .select()
       .from(budgetCategories)
@@ -371,24 +407,7 @@ export const get_budget_categories = tool({
 export const calculate_transactions = tool({
   description:
     'Calculate aggregate values (sum, average, count) for transactions based on filters. Useful for questions like "How much did I spend on coffee last month?" or "What was my total income this year?".',
-  parameters: z.object({
-    calculationType: z
-      .enum(['sum', 'average', 'count'])
-      .describe('Type of calculation to perform (sum, average, count)'),
-    userId: z.string().describe('User ID for filtering transactions'),
-    startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
-    endDate: z.string().optional().describe('End date (YYYY-MM-DD)'),
-    type: z
-      .enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment'])
-      .optional()
-      .describe('Filter by transaction type'),
-    category: z.string().optional().describe('Filter by category'),
-    accountId: z.string().optional().describe('Filter by account ID'),
-    descriptionLike: z
-      .string()
-      .optional()
-      .describe('Filter transactions where description contains this text'),
-  }),
+  parameters: calculateTransactionsSchema,
   async execute(args) {
     const {
       calculationType,
@@ -401,46 +420,51 @@ export const calculate_transactions = tool({
       descriptionLike,
     } = args
 
-    const conditions: (SQL<unknown> | undefined)[] = [eq(transactions.userId, userId)]
-    if (startDate) conditions.push(gte(transactions.date, new Date(startDate)))
-    if (endDate) conditions.push(lte(transactions.date, new Date(endDate)))
-    if (type) conditions.push(eq(transactions.type, type))
-    if (category)
-      conditions.push(
-        or(
-          ilike(transactions.category, `%${category}%`),
-          ilike(transactions.parentCategory, `%${category}%`)
-        )
-      )
-    if (accountId) conditions.push(eq(transactions.accountId, accountId))
-    if (descriptionLike) conditions.push(like(transactions.description, `%${descriptionLike}%`))
-
-    let aggregateSelection: Record<string, SQL<unknown>>
-    switch (calculationType) {
-      case 'sum':
-        // Assuming 'amount' is stored as text but represents a number
-        aggregateSelection = {
-          value: sql<number>`SUM(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
-        }
-        break
-      case 'average':
-        aggregateSelection = {
-          value: sql<number>`AVG(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
-        }
-        break
-      case 'count':
-        aggregateSelection = { value: sql<number>`COUNT(*)`.mapWith(Number) }
-        break
-      default:
-        throw new Error(`Unsupported calculation type: ${calculationType}`)
+    // Convert tool parameters to service function parameters
+    const options = {
+      userId,
+      from: startDate,
+      to: endDate,
+      type,
+      category,
+      account: accountId,
+      calculationType,
+      descriptionLike,
     }
 
-    const result = await db
-      .select(aggregateSelection)
-      .from(transactions)
-      .where(and(...conditions))
+    const result = await calculateTransactions(options)
 
-    const value = result[0]?.value ?? 0 // Default to 0 if no transactions match or calculation results in null
+    // Format the result for the tool response
+    let value = 0
+    if ('value' in result) {
+      value = result.value
+    } else {
+      // If we got full stats, use the appropriate value based on calculationType
+      switch (calculationType) {
+        case 'sum':
+          value = Number.parseFloat(result.total)
+          break
+        case 'average':
+          value = Number.parseFloat(result.average)
+          break
+        case 'count':
+          value = result.count
+          break
+        default:
+          // Return full stats object for 'stats' type
+          return {
+            calculationResult: result,
+            message: `Calculated statistics for filters: ${
+              Object.entries(args)
+                .filter(
+                  ([key, val]) => key !== 'userId' && key !== 'calculationType' && val !== undefined
+                )
+                .map(([key, val]) => `${key}=${val}`)
+                .join(', ') || 'none'
+            }`,
+          }
+      }
+    }
 
     // Construct a descriptive message
     let message = `Calculated ${calculationType}: ${value}`
@@ -448,6 +472,7 @@ export const calculate_transactions = tool({
       .filter(([key, val]) => key !== 'userId' && key !== 'calculationType' && val !== undefined)
       .map(([key, val]) => `${key}=${val}`)
       .join(', ')
+
     if (filtersApplied) {
       message += ` for filters: ${filtersApplied}`
     }

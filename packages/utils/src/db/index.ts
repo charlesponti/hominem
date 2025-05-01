@@ -15,9 +15,7 @@ if (DATABASE_URL) {
   client = postgres(DATABASE_URL)
   db = drizzle(client, { schema })
 } else {
-  logger.warn(
-    'DATABASE_URL not provided. Using in-memory mock implementation. Some features may be limited.'
-  )
+  logger.warn('DATABASE_URL not provided.')
 }
 
 export { client, db }

@@ -1,8 +1,8 @@
 import type { FinanceTransaction } from '@hominem/utils/schema'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { handleError } from '../lib/errors.js'
-import { verifyAuth } from '../middleware/auth.js'
+import { handleError } from '../../lib/errors.js'
+import { verifyAuth } from '../../middleware/auth.js'
 
 export async function financeExportRoutes(fastify: FastifyInstance) {
   // Schema definitions
