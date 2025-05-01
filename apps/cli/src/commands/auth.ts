@@ -74,10 +74,9 @@ const command = new Command()
 
     // Otherwise, open the web authentication flow
     const authUrl = `${options.webUrl}/auth/cli?from=cli`
-    consola.info(`
-Please authenticate in your browser at: ${chalk.blue.underline(authUrl)}`)
+    consola.info(`Please authenticate in your browser at: ${chalk.blue.underline(authUrl)}`)
     consola.info(
-      `After authentication, copy the token and run this command again with ${chalk.bold('--token')} option`
+      `After authentication, copy the token and run: '${chalk.bold('hominem auth --token <token>')}.`
     )
 
     if (options.open) {
