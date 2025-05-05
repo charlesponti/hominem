@@ -35,7 +35,7 @@ const deleteListSchema = {
 }
 
 const listsPlugin: FastifyPluginAsync = async (server) => {
-  server.get('/lists', {}, async (request: FastifyRequest) => {
+  server.get('/lists', { preHandler: verifyAuth }, async (request: FastifyRequest) => {
     const { userId } = request
 
     if (!userId) {
