@@ -12,7 +12,6 @@ import getListInvitesRoute from './invites'
 import { deleteListItemRoute, getListRoute } from './list'
 import { getUserLists } from './lists.service'
 
-// Define Zod schemas
 const createListSchema = {
   body: z.object({
     name: z.string().min(3).max(50),

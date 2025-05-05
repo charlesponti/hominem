@@ -8,11 +8,11 @@ const envSchema = z.object({
   API_URL: z.string().url().default('http://localhost:3000'),
   COOKIE_SECRET: z.string().default('supersecret'),
   CHROMA_URL: z.string().optional(),
-  // Provide empty default values instead of optional to prevent errors
-  CLERK_SECRET_KEY: z.string().default(''),
-  CLERK_PUBLISHABLE_KEY: z.string().default(''),
-  OPENAI_API_KEY: z.string().optional(),
-  // Plaid API keys
+
+  CLERK_SECRET_KEY: z.string(),
+  CLERK_PUBLISHABLE_KEY: z.string(),
+  OPENAI_API_KEY: z.string(),
+
   PLAID_CLIENT_ID: z.string().default(''),
   PLAID_SECRET: z.string().default(''),
   PLAID_ENV: z.enum(['sandbox', 'development', 'production']).default('sandbox'),
