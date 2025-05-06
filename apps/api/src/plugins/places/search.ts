@@ -1,7 +1,7 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { searchPlaces } from '../../google/places'
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
+import { searchPlaces } from '../google/places'
 
-export async function placesSearch(server: FastifyInstance) {
+export const placesSearch: FastifyPluginAsync = async (server) => {
   server.route({
     method: 'GET',
     url: '/places/search',
@@ -48,6 +48,7 @@ export async function placesSearch(server: FastifyInstance) {
 
         return reply.code(200).send(formattedPlaces)
       } catch (err) {
+        console.error('Error fetching places:', err)
         request.log.error('Could not fetch places', err)
         return reply.code(500).send()
       }
