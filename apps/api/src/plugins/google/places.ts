@@ -1,5 +1,7 @@
+import { env } from '@/lib/env'
 import type { place } from '@hominem/utils/schema'
-import type { places_v1 } from 'googleapis'
+import { OAuth2Client } from 'google-auth-library'
+import { google, type places_v1 } from 'googleapis'
 import { writeFile } from 'node:fs'
 import * as path from 'node:path'
 import googleService from './auth'
@@ -181,7 +183,11 @@ export const searchPlaces = async ({
   center: { latitude: number; longitude: number }
   radius: number
 }) => {
-  const response = await places.searchText({
+  const client = google.places({
+    version: 'v1',
+    auth: new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.GOOGLE_REDIRECT_URI),
+  })
+  const response = await client.places.searchText({
     requestBody: {
       textQuery: query,
       locationBias: {

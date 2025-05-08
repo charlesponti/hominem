@@ -3,12 +3,11 @@ import { rootAuthLoader } from '@clerk/react-router/ssr.server'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-import './animations.css'
-import './globals.css'
 
 // Import routes
 import type { Route } from './+types/root'
 import { UserProvider } from './context/user-context'
+import './globals.css'
 import { getQueryClient } from './lib/get-query-client'
 
 export async function loader(args: Route.LoaderArgs) {

@@ -184,11 +184,17 @@ logger.info('Starting transaction import worker...')
 const worker = new TransactionImportWorker()
 
 // Add a health check timer to periodically check job status
+let hasLogged = false
 setInterval(async () => {
   try {
     // Check if Redis connection is alive
     await redis.ping()
-    logger.info('Transaction import worker: Active')
+
+    // Log when the worker becomes active
+    if (!hasLogged) {
+      logger.info('Transaction import worker: Active')
+      hasLogged = true
+    }
   } catch (error) {
     logger.error('Transaction import worker: Health check failed', error)
   }

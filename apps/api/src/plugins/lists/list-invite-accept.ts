@@ -2,45 +2,35 @@ import { db, takeUniqueOrThrow } from '@hominem/utils/db'
 import { listInvite, userLists, type users } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { verifyAuth } from '../../../middleware/auth'
+import { z } from 'zod'
+import { verifyAuth } from '../../middleware/auth.js'
 
 const acceptListInviteRoute = async (server: FastifyInstance) => {
   server.post(
     '/invites/:listId/accept',
-    {
-      preHandler: verifyAuth,
-      schema: {
-        params: {
-          type: 'object',
-          properties: {
-            listId: { type: 'string' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              list: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  createdAt: { type: 'string' },
-                  updatedAt: { type: 'string' },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    { preHandler: verifyAuth },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request
       if (!userId) {
         return reply.status(401).send({ error: 'Unauthorized' })
       }
 
-      const { listId } = request.params as { listId: string }
+      // Validate params using Zod
+      const result = z
+        .object({
+          listId: z.string().uuid(),
+        })
+        .safeParse(request.params)
+
+      if (!result.success) {
+        reply.status(400).send({
+          error: 'Invalid parameters',
+          details: result.error.format(),
+        })
+        return
+      }
+
+      const { listId } = result.data
       const { email } = request.user as typeof users.$inferSelect
 
       const invite = await db

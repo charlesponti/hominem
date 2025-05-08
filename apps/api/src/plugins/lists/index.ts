@@ -1,79 +1,102 @@
 import { db, takeUniqueOrThrow } from '@hominem/utils/db'
-import { list, users } from '@hominem/utils/schema'
-import { desc, eq } from 'drizzle-orm'
-import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
-import fastifyPlugin from 'fastify-plugin'
+import { item, list, listInvite } from '@hominem/utils/schema'
+import { and, eq } from 'drizzle-orm'
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { EVENTS, track } from '../../analytics'
 import { ForbiddenError } from '../../lib/errors'
 import { verifyAuth } from '../../middleware/auth'
-import acceptListInviteRoute from './accept-invite/route'
-import getListInvitesRoute from './invites'
-import { deleteListItemRoute, getListRoute } from './list'
-import { getUserLists } from './lists.service'
+import {
+  formatList,
+  getListPlacesMap,
+  getOwnedLists,
+  getUserLists,
+} from '../../services/lists.service'
+import acceptListInviteRoute from './list-invite-accept'
+import sendListInviteRoute from './list-invite-send'
 
-const createListSchema = {
-  body: z.object({
-    name: z.string().min(3).max(50),
-  }),
-}
+const ListNameSchema = z.string().min(3).max(50)
 
-const updateListSchema = {
-  params: z.object({
-    id: z.string().uuid(),
-  }),
-  body: z.object({
-    name: z.string().min(3).max(50),
-  }),
-}
+const createListSchema = z.object({
+  name: ListNameSchema,
+})
 
-const deleteListSchema = {
-  params: z.object({
-    id: z.string().uuid(),
-  }),
-}
+const updateListSchema = z.object({
+  id: z.string().uuid(),
+  name: ListNameSchema,
+})
+
+const deleteListSchema = z.object({
+  id: z.string().uuid(),
+})
 
 const listsPlugin: FastifyPluginAsync = async (server) => {
-  server.get('/lists', { preHandler: verifyAuth }, async (request: FastifyRequest) => {
-    const { userId } = request
+  server.get(
+    '/lists',
+    { preHandler: verifyAuth },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { userId } = request
 
-    if (!userId) {
-      throw ForbiddenError('Unauthorized')
+      if (!userId) {
+        throw ForbiddenError('Unauthorized')
+      }
+
+      // Fetch owned and shared lists in parallel
+      const [ownedLists, sharedUserLists] = await Promise.all([
+        getOwnedLists(userId),
+        getUserLists(userId),
+      ])
+
+      // Extract list IDs for fetching places
+      const listIds = [
+        ...ownedLists.map(({ list }) => list.id),
+        ...sharedUserLists.filter(({ list }) => !!list).map(({ list }) => list.id),
+      ]
+
+      // Build a map of list places
+      const listPlacesMap = await getListPlacesMap(listIds)
+
+      // Format owned lists
+      const formattedOwnedLists = ownedLists.map((listData) =>
+        formatList(listData, listPlacesMap.get(listData.list.id) || [], true)
+      )
+
+      // Format shared lists
+      const formattedSharedLists = sharedUserLists
+        .filter(({ list }) => !!list)
+        .map((sharedListData) => {
+          // Need to adapt the shape to match ListWithUser
+          const listWithUser = {
+            list: sharedListData.list!,
+            user: sharedListData.users,
+          }
+          return formatList(listWithUser, listPlacesMap.get(sharedListData.list!.id) || [], false)
+        })
+
+      return [...formattedOwnedLists, ...formattedSharedLists]
     }
-
-    const lists = await db
-      .select()
-      .from(list)
-      .where(eq(list.userId, userId))
-      .leftJoin(users, eq(list.userId, list.id))
-      .orderBy(desc(list.createdAt))
-    const userLists = await getUserLists(userId)
-
-    return [
-      ...lists,
-      ...userLists.map(({ list, users }) => ({
-        ...list,
-        createdBy: {
-          email: users?.email,
-        },
-      })),
-    ]
-  })
+  )
 
   server.post(
     '/lists',
     { preHandler: verifyAuth },
-    async (request: FastifyRequest): Promise<{ list: typeof list.$inferInsert }> => {
+    async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request
       if (!userId) {
         throw ForbiddenError('Unauthorized')
       }
 
-      const parsedName = createListSchema.body.safeParse(request.body)
-      if (!parsedName.success) {
-        throw new Error(parsedName.error.message)
+      // Validate request body using Zod
+      const result = createListSchema.safeParse(request.body)
+      if (!result.success) {
+        reply.status(400).send({
+          error: 'Invalid request body',
+          details: result.error.format(),
+        })
+        return
       }
-      const { name } = parsedName.data
+
+      const { name } = result.data
 
       const found = await db
         .insert(list)
@@ -91,45 +114,154 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
     }
   )
 
-  server.put('/lists/:id', { preHandler: verifyAuth }, async (request) => {
-    const paramsResult = updateListSchema.params.safeParse(request.params)
-    if (!paramsResult.success) {
-      throw new Error(paramsResult.error.message)
+  server.put(
+    '/lists/:id',
+    { preHandler: verifyAuth },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { userId } = request
+      if (!userId) {
+        throw ForbiddenError('Unauthorized')
+      }
+
+      // Validate params and body using Zod
+      const paramsResult = z.object({ id: z.string().uuid() }).safeParse(request.params)
+      if (!paramsResult.success) {
+        reply.status(400).send({
+          error: 'Invalid parameters',
+          details: paramsResult.error.format(),
+        })
+        return
+      }
+
+      const { id } = paramsResult.data
+
+      const bodyResult = updateListSchema.safeParse(request.body)
+      if (!bodyResult.success) {
+        reply.status(400).send({
+          error: 'Invalid request body',
+          details: bodyResult.error.format(),
+        })
+        return
+      }
+
+      const { name } = bodyResult.data
+
+      const found = await db
+        .update(list)
+        .set({
+          name,
+        })
+        .where(eq(list.id, id))
+        .returning()
+
+      return { list: found }
     }
-    const { id } = paramsResult.data
+  )
 
-    const bodyResult = updateListSchema.body.safeParse(request.body)
-    if (!bodyResult.success) {
-      throw new Error(bodyResult.error.message)
+  server.delete(
+    '/lists/:id',
+    { preHandler: verifyAuth },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { userId } = request
+      if (!userId) {
+        throw ForbiddenError('Unauthorized')
+      }
+
+      // Validate params using Zod
+      const result = deleteListSchema.safeParse(request.params)
+      if (!result.success) {
+        reply.status(400).send({
+          error: 'Invalid parameters',
+          details: result.error.format(),
+        })
+        return
+      }
+
+      const { id } = result.data
+
+      await db.delete(list).where(eq(list.id, id))
+
+      return reply.status(204).send()
     }
-    const { name } = bodyResult.data
+  )
 
-    const found = await db
-      .update(list)
-      .set({
-        name,
-      })
-      .where(eq(list.id, id))
-      .returning()
-    return { list: found }
-  })
-
-  server.delete('/lists/:id', { preHandler: verifyAuth }, async (request, reply) => {
-    const result = deleteListSchema.params.safeParse(request.params)
+  server.get('/lists/:id', async (request: FastifyRequest, reply: FastifyReply) => {
+    // Validate params using Zod
+    const result = z.object({ id: z.string().uuid() }).safeParse(request.params)
     if (!result.success) {
-      throw new Error(result.error.message)
+      reply.status(400).send({
+        error: 'Invalid parameters',
+        details: result.error.format(),
+      })
+      return
     }
+
     const { id } = result.data
 
-    await db.delete(list).where(eq(list.id, id))
+    const found = await db.select().from(list).where(eq(list.id, id)).then(takeUniqueOrThrow)
 
-    return reply.status(204).send()
+    if (!found) {
+      return reply.status(404).send({ message: 'List not found' })
+    }
+
+    // Import getListPlaces from service
+    const { getListPlaces } = await import('../../services/lists.service')
+    const listItems = await getListPlaces(id)
+
+    return { ...found, items: listItems, userId: found.userId }
   })
 
+  server.delete(
+    '/lists/:listId/items/:itemId',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      // Validate params using Zod
+      const result = z
+        .object({
+          listId: z.string().uuid(),
+          itemId: z.string().uuid(),
+        })
+        .safeParse(request.params)
+
+      if (!result.success) {
+        reply.status(400).send({
+          error: 'Invalid parameters',
+          details: result.error.format(),
+        })
+        return
+      }
+
+      const { listId, itemId } = result.data
+
+      await db.delete(item).where(and(eq(item.listId, listId), eq(item.itemId, itemId)))
+
+      return reply.status(204).send()
+    }
+  )
+
+  server.get('/lists/:id/invites', async (request: FastifyRequest, reply: FastifyReply) => {
+    // Validate params using Zod
+    const result = z
+      .object({
+        id: z.string().uuid(),
+      })
+      .safeParse(request.params)
+
+    if (!result.success) {
+      reply.status(400).send({
+        error: 'Invalid parameters',
+        details: result.error.format(),
+      })
+      return
+    }
+
+    const { id } = result.data
+    const invites = await db.select().from(listInvite).where(eq(listInvite.listId, id))
+
+    return reply.status(200).send(invites)
+  })
+
+  sendListInviteRoute(server)
   acceptListInviteRoute(server)
-  deleteListItemRoute(server)
-  getListRoute(server)
-  getListInvitesRoute(server)
 
   // Cron jobs
   // if (process.env.NODE_ENV !== "test") {
@@ -142,4 +274,4 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
   // }
 }
 
-export default fastifyPlugin(listsPlugin)
+export default listsPlugin
