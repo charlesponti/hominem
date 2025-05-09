@@ -39,7 +39,7 @@ export class PlaidSyncWorker {
   /**
    * Process a Plaid sync job
    */
-  private processJob = async (job: Job): Promise<any> => {
+  private processJob = async (job: Job): Promise<ReturnType<typeof processSyncJob>> => {
     logger.info(`Processing Plaid sync job ${job.id} for user ${job.data.userId}`)
 
     try {
@@ -65,7 +65,7 @@ export class PlaidSyncWorker {
     this.worker.on('error', (error) => {
       logger.error('Plaid sync worker error:', error)
     })
-    
+
     this.worker.on('progress', (job, progress) => {
       logger.debug(`Plaid sync job ${job.id} progress: ${progress}%`)
     })
@@ -76,7 +76,7 @@ export class PlaidSyncWorker {
    */
   private async handleGracefulShutdown(): Promise<void> {
     if (this.isShuttingDown) return
-    
+
     this.isShuttingDown = true
     logger.info('Starting graceful shutdown of Plaid sync worker...')
 
@@ -121,12 +121,16 @@ export class PlaidSyncWorker {
 logger.info('Starting Plaid sync worker...')
 const worker = new PlaidSyncWorker()
 
+let hasLogged = false
 // Add a health check timer to periodically check job status
 setInterval(async () => {
   try {
     // Check if Redis connection is alive
     await redis.ping()
-    logger.info('Plaid sync worker: Active')
+    if (!hasLogged) {
+      logger.info('Plaid sync worker: Active')
+      hasLogged = true
+    }
   } catch (error) {
     logger.error('Plaid sync worker: Health check failed', error)
   }
