@@ -127,6 +127,13 @@
       "when": 1745528886673,
       "tag": "0017_panoramic_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1746743577875,
+      "tag": "0018_fearless_warpath",
+      "breakpoints": true
     }
   ]
 }

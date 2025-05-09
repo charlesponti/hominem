@@ -1,16 +1,19 @@
-import { db, takeUniqueOrThrow } from '@hominem/utils/db'
-import { item, list, listInvite } from '@hominem/utils/schema'
-import { and, eq } from 'drizzle-orm'
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { EVENTS, track } from '../../analytics'
 import { ForbiddenError } from '../../lib/errors'
 import { verifyAuth } from '../../middleware/auth'
 import {
+  createList,
+  deleteList,
+  deleteListItem,
   formatList,
+  getListById,
+  getListInvites,
   getListPlacesMap,
   getOwnedLists,
   getUserLists,
+  updateList,
 } from '../../services/lists.service'
 import acceptListInviteRoute from './list-invite-accept'
 import sendListInviteRoute from './list-invite-send'
@@ -22,7 +25,6 @@ const createListSchema = z.object({
 })
 
 const updateListSchema = z.object({
-  id: z.string().uuid(),
   name: ListNameSchema,
 })
 
@@ -41,39 +43,27 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         throw ForbiddenError('Unauthorized')
       }
 
-      // Fetch owned and shared lists in parallel
       const [ownedLists, sharedUserLists] = await Promise.all([
         getOwnedLists(userId),
         getUserLists(userId),
       ])
 
-      // Extract list IDs for fetching places
       const listIds = [
-        ...ownedLists.map(({ list }) => list.id),
-        ...sharedUserLists.filter(({ list }) => !!list).map(({ list }) => list.id),
+        ...ownedLists.map((list) => list.id),
+        ...sharedUserLists.map((list) => list.id),
       ]
 
-      // Build a map of list places
       const listPlacesMap = await getListPlacesMap(listIds)
 
-      // Format owned lists
       const formattedOwnedLists = ownedLists.map((listData) =>
-        formatList(listData, listPlacesMap.get(listData.list.id) || [], true)
+        formatList(listData, listPlacesMap.get(listData.id) || [], true)
       )
 
-      // Format shared lists
-      const formattedSharedLists = sharedUserLists
-        .filter(({ list }) => !!list)
-        .map((sharedListData) => {
-          // Need to adapt the shape to match ListWithUser
-          const listWithUser = {
-            list: sharedListData.list!,
-            user: sharedListData.users,
-          }
-          return formatList(listWithUser, listPlacesMap.get(sharedListData.list!.id) || [], false)
-        })
+      const formattedSharedLists = sharedUserLists.map((listData) =>
+        formatList(listData, listPlacesMap.get(listData.id) || [], false)
+      )
 
-      return [...formattedOwnedLists, ...formattedSharedLists]
+      return { lists: [...formattedOwnedLists, ...formattedSharedLists] }
     }
   )
 
@@ -86,7 +76,6 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         throw ForbiddenError('Unauthorized')
       }
 
-      // Validate request body using Zod
       const result = createListSchema.safeParse(request.body)
       if (!result.success) {
         reply.status(400).send({
@@ -95,22 +84,17 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         })
         return
       }
-
       const { name } = result.data
 
-      const found = await db
-        .insert(list)
-        .values({
-          id: crypto.randomUUID(),
-          name,
-          userId,
-        })
-        .returning()
-        .then(takeUniqueOrThrow)
+      const newList = await createList(name, userId)
 
-      track(userId, EVENTS.LIST_CREATED, { name })
+      if (!newList) {
+        reply.status(500).send({ error: 'Failed to create list' })
+        return
+      }
 
-      return { list: found }
+      track(userId, EVENTS.LIST_CREATED, { listId: newList.id, name: newList.name })
+      return reply.status(201).send({ list: newList })
     }
   )
 
@@ -123,7 +107,6 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         throw ForbiddenError('Unauthorized')
       }
 
-      // Validate params and body using Zod
       const paramsResult = z.object({ id: z.string().uuid() }).safeParse(request.params)
       if (!paramsResult.success) {
         reply.status(400).send({
@@ -132,7 +115,6 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         })
         return
       }
-
       const { id } = paramsResult.data
 
       const bodyResult = updateListSchema.safeParse(request.body)
@@ -143,18 +125,16 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         })
         return
       }
-
       const { name } = bodyResult.data
 
-      const found = await db
-        .update(list)
-        .set({
-          name,
-        })
-        .where(eq(list.id, id))
-        .returning()
+      const updatedList = await updateList(id, name, userId)
 
-      return { list: found }
+      if (!updatedList) {
+        reply.status(404).send({ error: 'Failed to update list or list not found' })
+        return
+      }
+
+      return { list: updatedList }
     }
   )
 
@@ -167,7 +147,6 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         throw ForbiddenError('Unauthorized')
       }
 
-      // Validate params using Zod
       const result = deleteListSchema.safeParse(request.params)
       if (!result.success) {
         reply.status(400).send({
@@ -176,45 +155,42 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         })
         return
       }
-
       const { id } = result.data
 
-      await db.delete(list).where(eq(list.id, id))
+      const success = await deleteList(id, userId)
+
+      if (!success) {
+        reply.status(404).send({ error: 'Failed to delete list or list not found' })
+        return
+      }
 
       return reply.status(204).send()
     }
   )
 
   server.get('/lists/:id', async (request: FastifyRequest, reply: FastifyReply) => {
-    // Validate params using Zod
     const result = z.object({ id: z.string().uuid() }).safeParse(request.params)
     if (!result.success) {
-      reply.status(400).send({
+      return reply.status(400).send({
         error: 'Invalid parameters',
         details: result.error.format(),
       })
-      return
     }
-
     const { id } = result.data
+    const { userId } = request
 
-    const found = await db.select().from(list).where(eq(list.id, id)).then(takeUniqueOrThrow)
+    const listData = await getListById(id, userId)
 
-    if (!found) {
+    if (!listData) {
       return reply.status(404).send({ message: 'List not found' })
     }
 
-    // Import getListPlaces from service
-    const { getListPlaces } = await import('../../services/lists.service')
-    const listItems = await getListPlaces(id)
-
-    return { ...found, items: listItems, userId: found.userId }
+    return { list: listData }
   })
 
   server.delete(
     '/lists/:listId/items/:itemId',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      // Validate params using Zod
       const result = z
         .object({
           listId: z.string().uuid(),
@@ -229,17 +205,20 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
         })
         return
       }
-
       const { listId, itemId } = result.data
 
-      await db.delete(item).where(and(eq(item.listId, listId), eq(item.itemId, itemId)))
+      const success = await deleteListItem(listId, itemId)
+
+      if (!success) {
+        reply.status(404).send({ error: 'Failed to delete list item or item not found' })
+        return
+      }
 
       return reply.status(204).send()
     }
   )
 
   server.get('/lists/:id/invites', async (request: FastifyRequest, reply: FastifyReply) => {
-    // Validate params using Zod
     const result = z
       .object({
         id: z.string().uuid(),
@@ -255,23 +234,13 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
     }
 
     const { id } = result.data
-    const invites = await db.select().from(listInvite).where(eq(listInvite.listId, id))
+    const invites = await getListInvites(id)
 
     return reply.status(200).send(invites)
   })
 
   sendListInviteRoute(server)
   acceptListInviteRoute(server)
-
-  // Cron jobs
-  // if (process.env.NODE_ENV !== "test") {
-  // addPhotoToPlaces(server).catch((err) => {
-  //   console.error("Error adding photo to place", err);
-  // });
-  // migrateLatLngFloat(server).catch((err) => {
-  //   console.error("Error migrating lat and lng", err);
-  // });
-  // }
 }
 
 export default listsPlugin

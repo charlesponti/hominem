@@ -19,6 +19,7 @@ export const list = pgTable(
     name: text('name').notNull(),
     description: text('description'),
     userId: uuid('userId').notNull(),
+    isPublic: boolean('isPublic').notNull().default(false),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
@@ -32,6 +33,8 @@ export const list = pgTable(
       .onDelete('cascade'),
   ]
 )
+export type ListSelect = typeof list.$inferSelect
+export type ListInsert = typeof list.$inferInsert
 
 export const userLists = pgTable(
   'user_lists',
@@ -69,7 +72,9 @@ export const listInvite = pgTable(
     accepted: boolean('accepted').default(false).notNull(),
     listId: uuid('listId').notNull(),
     invitedUserEmail: text('invitedUserEmail').notNull(),
+    // Invites can be sent to users that are not registered, so the id can be null.
     invitedUserId: uuid('invitedUserId'),
+    // The user who sent the invite.
     userId: uuid('userId').notNull(),
   },
   (table) => [

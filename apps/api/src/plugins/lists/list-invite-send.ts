@@ -1,6 +1,7 @@
+import { env } from '@/lib/env'
 import { db, takeUniqueOrThrow } from '@hominem/utils/db'
 import { list, listInvite, users } from '@hominem/utils/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
@@ -43,62 +44,98 @@ export default function sendListInvite(server: FastifyInstance) {
     const { id } = paramsResult.data
     const { email } = bodyResult.data
 
-    const found = await db.select().from(list).where(eq(list.id, id)).then(takeUniqueOrThrow)
+    const listRecord = await db.select().from(list).where(eq(list.id, id)).then(takeUniqueOrThrow)
 
-    if (!found) {
+    if (!listRecord) {
       return reply.status(404).send({
         message: 'List not found',
       })
     }
 
-    let invite = null
-    try {
-      invite = await db.insert(listInvite).values({
-        listId: id,
-        invitedUserEmail: email,
-        invitedUserId: null,
-        accepted: false,
-        userId,
-      })
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    } catch (error: any) {
-      switch (error.code) {
-        case 'P2002':
-          return reply.status(409).send({
-            message: 'Invite already exists',
-          })
-        default:
-          break
-      }
-
-      return reply.status(500).send({
-        message: 'Something went wrong',
+    // Check if user being invited is the list owner
+    if (listRecord.userId === request.userId && email === request.user?.email) {
+      return reply.status(400).send({
+        message: 'You cannot invite yourself to your own list.',
       })
     }
 
-    const userEmail = await db
-      .select({
-        email: users.email,
-      })
-      .from(users)
-      .where(eq(users.id, userId))
-      .then(takeUniqueOrThrow)
+    // Check if an invite already exists for this email on this list
+    const existingInvite = await db.query.listInvite.findFirst({
+      where: and(eq(listInvite.listId, id), eq(listInvite.invitedUserEmail, email)),
+    })
 
-    // Send email to the invited user using sendgrid
+    if (existingInvite) {
+      // If invite exists and is not accepted, resend? Or return conflict?
+      // If accepted, perhaps indicate they are already a member or invite is completed.
+      // For now, treating as a conflict if any invite exists.
+      return reply.status(409).send({
+        message: 'An invite for this email address to this list already exists.',
+      })
+    }
+
+    // Attempt to find the user by email to link invitedUserId
+    const invitedUserRecord = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    })
+
+    let createdInvite: typeof listInvite.$inferSelect
+    try {
+      createdInvite = await db
+        .insert(listInvite)
+        .values({
+          listId: id,
+          invitedUserEmail: email,
+          invitedUserId: invitedUserRecord?.id || null, // Link if user exists
+          accepted: false,
+          userId, // ID of the user sending the invite
+        })
+        .returning()
+        .then(takeUniqueOrThrow)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        // Catch unique constraint violation (e.g., if somehow existingInvite check missed due to race condition or other constraints)
+        if (error.message.includes('duplicate key value violates unique constraint')) {
+          return reply.status(409).send({
+            message: 'Invite already exists or conflicts with an existing record.',
+          })
+        }
+      }
+
+      server.log.error(
+        `Error creating list invite: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+
+      return reply.status(500).send({
+        message: 'Something went wrong while creating the invite.',
+      })
+    }
+
+    // Send email to the invited user
     await server.sendEmail(
       email,
-      'You have been invited to a list',
-      'You have been invited to a list',
+      "You've been invited to a list!",
+      "You've been invited to a list!",
       `
-					<div class="email" style="font-family: sans-serif;">
-						<h1>You have been invited to a list</h1>
-						<p class="font-size: 16px">You have been invited to the ${found.name} list</p>
-						<p class="font-size: 14px; color: grey">This list is by ${userEmail?.email}</p>
-						<p>Click <a href="${process.env.APP_URL}/invites/incoming">here</a> to accept the invite</p>
-					</div>
-				`
+        <div class="email" style="font-family: sans-serif;">
+          <h1 style="color: #333;">You've been invited to a list!</h1>
+          <p style="color: #555;">
+            You've been invited to join the list "${listRecord.name}".
+          </p>
+          <p style="color: #555;">
+            Click <a href="${env.APP_URL}/invites/incoming" style="color: #007BFF;">here</a> to accept the invite.
+          </p>
+        </div>
+      `
     )
 
-    return reply.status(200).send(invite)
+    if (!createdInvite) {
+      // This case should ideally not be reached if insert + returning + takeUniqueOrThrow is used
+      server.log.error('List invite creation failed to return a record.')
+      return reply.status(500).send({
+        message: 'Failed to create invite record.',
+      })
+    }
+
+    return reply.status(201).send({ invite: createdInvite })
   })
 }
