@@ -1,4 +1,4 @@
-name: deploy-workers-prod
+name: deploy-worker-transactions-import
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     paths:
       - 'apps/workers/**'
       - 'packages/utils/**'
-      - '.github/workflows/deploy-workers-prod.yml'
+      - '.github/workflows/deploy-worker-transactions-import.yml'
 
 jobs:
   deploy:
