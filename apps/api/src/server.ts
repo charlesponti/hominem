@@ -29,9 +29,9 @@ import { emailMaskRoutes } from './routes/email-mask.js'
 import { financeRoutes } from './routes/finance/finance.router.js'
 import { healthRoutes } from './routes/health.js'
 import { jobApplicationRoutes } from './routes/job-applications.js'
-import { notesRoutes } from './routes/notes.js'
+import { contentRoutes } from './routes/notes.js'
 import { personalFinanceRoutes } from './routes/personal-finance.js'
-import { plaidRoutes } from './routes/plaid/plaid.router.js' // Corrected import path
+import { plaidRoutes } from './routes/plaid/plaid.router.js'
 import statusPlugin from './routes/status.js'
 import { surveyRoutes } from './routes/surveys.js'
 import usersPlugin from './routes/user.router.js'
@@ -125,7 +125,7 @@ export async function createServer(
     await server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })
     await server.register(chatPlugin, { prefix: '/api/chat' })
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
-    await server.register(notesRoutes, { prefix: '/api/notes' })
+    await server.register(contentRoutes, { prefix: '/api/content' })
     await server.register(vectorRoutes, { prefix: '/api/vectors' })
     await server.register(emailMaskRoutes, { prefix: '/api/email-mask' })
     await server.register(financeRoutes, { prefix: '/api/finance' })

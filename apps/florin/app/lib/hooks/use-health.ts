@@ -1,20 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useToast } from '~/components/ui/use-toast'
 import { useApiClient } from '~/lib/hooks/use-api-client'
-import { useIndexedDBCollection } from '~/lib/hooks/use-indexdb-collection'
-import { useSyncData } from '~/lib/hooks/use-sync-data'
+import type { SyncableEntity } from '~/lib/hooks/use-local-data'
+import { useLocalData } from '~/lib/hooks/use-local-data'
 
-export interface HealthData {
-  id: string
-  userId?: string
+export interface HealthData extends SyncableEntity {
   date: string
   activityType: string
   duration: number
   caloriesBurned: number
   notes: string
-  createdAt: string
-  updatedAt: string
-  synced?: boolean
 }
 
 export interface HealthDataFilter {
@@ -49,34 +44,30 @@ export function useHealth(options: {
     notes: '',
   })
 
-  // IndexedDB collection for health data
+  // Using new useLocalData hook for health data
   const {
     items: healthData,
     isLoading,
     create: createEntry,
     update: updateEntry,
     delete: deleteEntry,
-  } = useIndexedDBCollection<HealthData>({
-    collectionKey: 'health_activities',
+    sync: syncDataWithServer,
+    isSyncing,
+    error,
+  } = useLocalData<HealthData>({
+    queryKey: ['health_activities'],
+    endpoint: '/api/health',
+    storeName: 'health_activities',
     dbName: 'hominem',
     version: 1,
   })
 
-  // Sync functionality
-  const { syncData: syncDataWithServer, isSyncing } = useSyncData({
-    isLoggedIn,
-    userId,
-    items: healthData,
-    updateItem: updateEntry,
-    endpoint: '/api/health',
-  })
-
   // Effect to sync data with server when user logs in
   useEffect(() => {
-    if (isLoggedIn && !isSyncing) {
+    if (isLoggedIn && !isSyncing && userId) {
       syncDataWithServer()
     }
-  }, [isLoggedIn, isSyncing, syncDataWithServer])
+  }, [isLoggedIn, isSyncing, syncDataWithServer, userId])
 
   // Filter data based on criteria
   const filteredData = useMemo(() => {
@@ -100,55 +91,35 @@ export function useHealth(options: {
     })
   }, [filteredData])
 
-  const handleSubmit = async (formData: HealthDataInput) => {
+  const handleSubmit = async () => {
     try {
-      const now = new Date().toISOString()
-
       if (editingId) {
         // Update existing entry
         const existingEntry = healthData.find((entry) => entry.id === editingId)
         if (!existingEntry) return
 
         updateEntry({
-          ...existingEntry,
+          id: editingId,
           ...formData,
           date: formData.date.toISOString().split('T')[0],
-          updatedAt: now,
-          synced: false,
         })
-
-        // Sync with server if logged in
-        if (isLoggedIn) {
-          await apiClient.put(`/api/health/${editingId}`, {
-            ...formData,
-            date: formData.date.toISOString().split('T')[0],
-            userId,
-          })
-        }
       } else {
         // Create new entry
-        const newEntry: Omit<HealthData, 'id'> = {
+        const newEntry = {
           date: formData.date.toISOString().split('T')[0],
           activityType: formData.activityType,
           duration: formData.duration,
           caloriesBurned: formData.caloriesBurned,
           notes: formData.notes,
-          createdAt: now,
-          updatedAt: now,
-          synced: false,
-          ...(isLoggedIn && { userId }),
         }
 
         // Save locally
         createEntry(newEntry)
+      }
 
-        // Sync with server if logged in
-        if (isLoggedIn) {
-          await apiClient.post('/api/health', {
-            ...newEntry,
-            userId,
-          })
-        }
+      // If user is logged in, sync with server
+      if (isLoggedIn && userId) {
+        syncDataWithServer()
       }
 
       // Reset form state
@@ -176,9 +147,9 @@ export function useHealth(options: {
       // Delete locally
       deleteEntry(id)
 
-      // Delete from server if logged in
-      if (isLoggedIn) {
-        await apiClient.delete(`/api/health/${id}`)
+      // If user is logged in, sync deletion with server
+      if (isLoggedIn && userId) {
+        syncDataWithServer()
       }
 
       toast({
@@ -207,5 +178,6 @@ export function useHealth(options: {
     setEditingId,
     handleSubmit,
     handleDelete,
+    error,
   }
 }

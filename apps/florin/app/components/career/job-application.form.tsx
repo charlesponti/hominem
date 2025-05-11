@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { JobApplicationStage, JobApplicationStatus } from '~/lib/career'
-import { useCreateApplication, useDeleteApplication } from '~/lib/hooks/useApplications'
+import { useCreateApplication, useDeleteApplication } from '~/lib/hooks/use-job-applications'
 
 export function EditApplicationDialog({
   application,

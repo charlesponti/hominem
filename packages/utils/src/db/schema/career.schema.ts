@@ -1,7 +1,6 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
 import { companies } from './company.schema'
-import { notes } from './notes.schema'
 import { users } from './users.schema'
 
 const JobApplicationStageSchema = z.object({
@@ -72,7 +71,4 @@ export const application_notes = pgTable('application_notes', {
   applicationId: uuid('application_id')
     .notNull()
     .references(() => job_applications.id),
-  noteId: uuid('note_id')
-    .notNull()
-    .references(() => notes.id),
 })

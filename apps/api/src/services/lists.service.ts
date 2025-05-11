@@ -6,6 +6,7 @@ import {
   place,
   userLists,
   users,
+  type ListInviteSelect,
   type ListSelect,
 } from '@hominem/utils/schema'
 import { and, desc, eq } from 'drizzle-orm'
@@ -383,13 +384,134 @@ export async function deleteListItem(listId: string, itemId: string): Promise<bo
  * @param listId - The ID of the list
  * @returns Array of list invites
  */
-export async function getListInvites(
-  listId: string
-): Promise<Array<typeof listInvite.$inferSelect>> {
+export async function getListInvites(listId: string): Promise<Array<ListInviteSelect>> {
   try {
     return await db.select().from(listInvite).where(eq(listInvite.listId, listId))
   } catch (error) {
     console.error(`Error fetching invites for list ${listId}:`, error)
     return []
+  }
+}
+
+/**
+ * Creates a new list invite.
+ * @param listId - The ID of the list to invite to.
+ * @param invitedUserEmail - The email of the user to invite.
+ * @param invitingUserId - The ID of the user sending the invite.
+ * @returns The created invite object or an error string.
+ */
+export async function sendListInvite(
+  listId: string,
+  invitedUserEmail: string,
+  invitingUserId: string
+): Promise<ListInviteSelect | { error: string; status: number }> {
+  try {
+    const listRecord = await db.query.list.findFirst({
+      where: eq(list.id, listId),
+    })
+
+    if (!listRecord) {
+      return { error: 'List not found', status: 404 }
+    }
+
+    const existingInvite = await db.query.listInvite.findFirst({
+      where: and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, invitedUserEmail)),
+    })
+
+    if (existingInvite) {
+      return { error: 'An invite for this email address to this list already exists.', status: 409 }
+    }
+
+    const invitedUserRecord = await db.query.users.findFirst({
+      where: eq(users.email, invitedUserEmail),
+    })
+
+    const createdInvite = await db
+      .insert(listInvite)
+      .values({
+        listId: listId,
+        invitedUserEmail: invitedUserEmail,
+        invitedUserId: invitedUserRecord?.id || null,
+        accepted: false,
+        userId: invitingUserId,
+      })
+      .returning()
+      .then(takeUniqueOrThrow)
+    return createdInvite
+  } catch (error) {
+    console.error(`Error creating list invite for list ${listId} by user ${invitingUserId}:`, error)
+    if (
+      error instanceof Error &&
+      error.message.includes('duplicate key value violates unique constraint')
+    ) {
+      return { error: 'Invite already exists or conflicts with an existing record.', status: 409 }
+    }
+    return { error: 'Failed to create invite.', status: 500 }
+  }
+}
+
+/**
+ * Accepts a list invite.
+ * @param listId - The ID of the list from the invite.
+ * @param acceptingUserId - The ID of the user accepting the invite.
+ * @param acceptingUserEmail - The email of the user accepting the invite.
+ * @returns The list object if successful, or an error string.
+ */
+export async function acceptListInvite(
+  listId: string,
+  acceptingUserId: string,
+  acceptingUserEmail: string
+): Promise<ListSelect | { error: string; status: number }> {
+  try {
+    const invite = await db.query.listInvite.findFirst({
+      where: and(
+        eq(listInvite.listId, listId),
+        eq(listInvite.invitedUserEmail, acceptingUserEmail)
+      ),
+    })
+
+    if (!invite) {
+      return { error: 'Invite not found.', status: 404 }
+    }
+
+    if (invite.accepted) {
+      return { error: 'Invite already accepted.', status: 400 }
+    }
+
+    if (invite.invitedUserEmail !== acceptingUserEmail) {
+      return { error: 'Forbidden.', status: 403 }
+    }
+
+    const acceptedList = await db.transaction(async (tx) => {
+      await tx
+        .update(listInvite)
+        .set({ accepted: true, acceptedAt: new Date().toISOString() })
+        .where(and(
+          eq(listInvite.listId, invite.listId),
+          eq(listInvite.invitedUserEmail, invite.invitedUserEmail)
+        ))
+
+      await tx
+        .insert(userLists)
+        .values({
+          userId: acceptingUserId,
+          listId: invite.listId,
+        })
+        .onConflictDoNothing()
+
+      const l = await tx.query.list.findFirst({
+        where: eq(list.id, invite.listId),
+      })
+      if (!l) throw new Error('List not found after accepting invite.')
+      return l
+    })
+
+    return acceptedList
+  } catch (error) {
+    console.error(
+      `Error accepting list invite for list ${listId} by user ${acceptingUserId}:`,
+      error
+    )
+    return { error: 'Failed to accept invite.', status: 500 }
   }
 }

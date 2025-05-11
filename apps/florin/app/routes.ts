@@ -16,10 +16,8 @@ export default [
         'routes/finance/analytics/monthly/[month]/page.tsx'
       ),
     ]),
-    layout('routes/notes/layout.tsx', [
-      route('notes', 'routes/notes/page.tsx'),
-      route('notes/:id', 'routes/notes/[id]/page.tsx'),
-    ]),
+    layout('routes/notes/layout.tsx', [route('notes', 'routes/notes/page.tsx')]),
+
     route('/auth/cli', 'routes/auth/cli.tsx'),
   ]),
 ] as RouteConfig

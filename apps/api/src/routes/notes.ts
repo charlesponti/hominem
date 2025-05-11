@@ -1,163 +1,233 @@
-import { ForbiddenError, NotesService } from '@hominem/utils/notes'
+import { ContentService, ForbiddenError, type ContentInput } from '@hominem/utils/services'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
 import { verifyAuth } from '../middleware/auth'
 
-const createNoteSchema = z.object({
+// Validation schemas for Content
+const contentTagSchema = z.object({
+  value: z.string(),
+})
+
+// More specific ContentType enum for validation if needed, or use string and validate in service
+const ContentTypeEnum = z.enum(['note', 'task', 'timer', 'journal', 'document']) // Example
+
+const createContentSchema = z.object({
+  type: ContentTypeEnum.default('note'), // Use the enum here
   content: z.string(),
   title: z.string().optional(),
-  tags: z.array(z.object({ value: z.string() })).optional(),
+  tags: z.array(contentTagSchema).optional().default([]),
+  taskMetadata: z.record(z.unknown()).optional(), // Keep as flexible for now
+  timeTracking: z.record(z.unknown()).optional(), // Keep as flexible
+  analysis: z.record(z.unknown()).optional(),
+  // Add any other fields that are part of the generic Content but not in specific metadata
+  // e.g., parentId, customData, etc.
 })
 
-const updateNoteSchema = z.object({
+const updateContentSchema = z.object({
+  type: ContentTypeEnum.optional(),
   content: z.string().optional(),
   title: z.string().optional(),
-  tags: z.array(z.object({ value: z.string() })).optional(),
+  tags: z.array(contentTagSchema).optional(),
+  taskMetadata: z.record(z.unknown()).optional(),
+  timeTracking: z.record(z.unknown()).optional(),
+  analysis: z.record(z.unknown()).optional(),
+  // Add other updatable fields
 })
 
-const noteIdSchema = z.object({
+const contentIdSchema = z.object({
   id: z.string(),
 })
 
-const querySchema = z.object({
-  query: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-})
+export async function contentRoutes(fastify: FastifyInstance) {
+  const contentService = new ContentService() // This service should now use the unified 'content' table
 
-export async function notesRoutes(fastify: FastifyInstance) {
-  const notesService = new NotesService()
-
-  // Create a new note
+  // Create new content
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const userId = request.userId
       if (!userId) {
-        fastify.log.error('Create note failed: Missing user ID')
-        reply.code(401)
-        return { error: 'User ID is required' }
+        fastify.log.error('Create content failed: Missing user ID')
+        return reply.status(401).send({ error: 'User ID is required' })
       }
 
-      fastify.log.info(`Creating note for user ${userId}`)
+      fastify.log.info(`Creating content for user ${userId}`)
 
-      // Validate request body and log any parsing errors
-      const validationResult = createNoteSchema.safeParse(request.body)
+      const validationResult = createContentSchema.safeParse(request.body)
       if (!validationResult.success) {
         const validationErrors = validationResult.error.format()
         fastify.log.error({
-          msg: 'Create note validation failed',
+          msg: 'Create content validation failed',
           userId,
           errors: validationErrors,
         })
-        reply.code(400)
-        return {
-          error: 'Invalid note data',
+        return reply.status(400).send({
+          error: 'Invalid content data',
           details: validationErrors,
-        }
+        })
       }
 
-      const validated = validationResult.data
+      const validatedData = validationResult.data
 
-      // Log the note creation attempt with sanitized content length
       fastify.log.info({
-        msg: 'Attempting to create note',
+        msg: 'Attempting to create content',
         userId,
-        contentLength: validated.content.length,
-        hasTitle: !!validated.title,
-        tagsCount: validated.tags?.length || 0,
+        contentType: validatedData.type,
+        contentLength: validatedData.content.length,
+        hasTitle: !!validatedData.title,
+        tagsCount: validatedData.tags?.length || 0,
       })
 
-      const result = await notesService.create({ ...validated, userId })
+      // Ensure ContentInput matches what ContentService.create expects
+      const result = await contentService.create({ ...validatedData, userId } as ContentInput & {
+        userId: string
+      })
 
       fastify.log.info({
-        msg: 'Note created successfully',
+        msg: 'Content created successfully',
         userId,
-        noteId: result.id,
+        contentId: result.id,
+        contentType: result.type,
       })
 
       return result
     } catch (error) {
-      // Log detailed error information
       fastify.log.error({
-        msg: 'Create note error',
+        msg: 'Create content error',
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
         errorName: error instanceof Error ? error.name : 'Unknown',
         userId: request.userId,
       })
 
-      // Handle specific error types with appropriate status codes
       if (error instanceof ForbiddenError) {
-        reply.code(403)
-        return { error: error.message }
+        // Keep if ForbiddenError is still relevant
+        return reply.status(403).send({ error: error.message })
       }
-
       if (error instanceof z.ZodError) {
-        reply.code(400)
-        return {
+        return reply.status(400).send({
           error: 'Validation failed',
           details: error.format(),
-        }
+        })
       }
-
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
-  // List all notes for authenticated user
+  const listContentQuerySchema = z.object({
+    types: z.array(ContentTypeEnum).optional(),
+    query: z.string().optional(),
+    tags: z
+      .string()
+      .transform((val) => (val ? val.split(',') : undefined))
+      .optional(),
+  })
+
+  // List content with optional filters
   fastify.get('/', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const userId = request.userId
-      if (!userId) throw new Error('User ID is required')
+      if (!userId) {
+        return reply.status(401).send({ error: 'User ID is required' })
+      }
 
-      const { query, tags } = querySchema.parse(request.query)
-      const result = await notesService.list(userId, query, tags)
+      const { types, query, tags } = listContentQuerySchema.parse(request.query)
+      // Call contentService.list with currently supported filters
+      const result = await contentService.list(userId, { types, query, tags })
       return result
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
-  // Update a note
+  // Get content by ID
+  fastify.get('/:id', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const userId = request.userId
+      if (!userId) {
+        return reply.status(401).send({ error: 'User ID is required' })
+      }
+      const { id } = contentIdSchema.parse(request.params)
+      const result = await contentService.getById(id, userId)
+      return result
+    } catch (error) {
+      return handleError(error as Error, reply)
+    }
+  })
+
+  // Update content
   fastify.put('/:id', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const userId = request.userId
-      if (!userId) throw new Error('User ID is required')
-
-      const { id } = noteIdSchema.parse(request.params)
-      const validated = updateNoteSchema.parse(request.body)
-      const result = await notesService.update({ ...validated, noteId: id, userId })
+      if (!userId) {
+        return reply.status(401).send({ error: 'User ID is required' })
+      }
+      const { id } = contentIdSchema.parse(request.params)
+      const validatedData = updateContentSchema.parse(request.body)
+      // Ensure ContentInput matches what ContentService.update expects
+      const result = await contentService.update({
+        ...validatedData,
+        id,
+        userId,
+      } as ContentInput & { id: string; userId: string })
       return result
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
-  // Delete a note
+  // Delete content
   fastify.delete('/:id', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const userId = request.userId
-      if (!userId) throw new Error('User ID is required')
-
-      const { id } = noteIdSchema.parse(request.params)
-      const result = await notesService.delete(id, userId)
+      if (!userId) {
+        return reply.status(401).send({ error: 'User ID is required' })
+      }
+      const { id } = contentIdSchema.parse(request.params)
+      const result = await contentService.delete(id, userId)
       return result
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
-  // Analyze a note
-  fastify.post('/:id/analyze', { preHandler: verifyAuth }, async (request, reply) => {
+  // Sync multiple content items
+  // The body should be an array of Content objects (or a subset for creation/update)
+  const syncContentItemSchema = createContentSchema.extend({ id: z.string().optional() }) // For existing items, ID is present
+  const syncContentRequestSchema = z.array(syncContentItemSchema)
+
+  fastify.post('/sync', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const userId = request.userId
-      if (!userId) throw new Error('User ID is required')
+      if (!userId) {
+        return reply.status(401).send({ error: 'User ID is required' })
+      }
 
-      const { id } = noteIdSchema.parse(request.params)
-      const result = await notesService.analyze(id, userId)
+      const validationResult = syncContentRequestSchema.safeParse(request.body)
+      if (!validationResult.success) {
+        return reply
+          .status(400)
+          .send({ error: 'Invalid sync data', details: validationResult.error.format() })
+      }
+
+      const itemsToSync = validationResult.data as Array<
+        ContentInput & { id?: string; userId: string }
+      >
+      // Add userId to each item and ensure properties match SyncClientItem expectations
+      const itemsWithUserId = itemsToSync.map((item) => ({
+        ...item,
+        userId,
+        title: !item.title ? null : item.title,
+        tags: item.tags || [],
+        taskMetadata: !item.taskMetadata ? null : item.taskMetadata,
+        timeTracking: !item.timeTracking ? null : item.timeTracking,
+        analysis: !item.analysis ? null : item.analysis,
+      }))
+
+      const result = await contentService.sync(itemsWithUserId, userId)
       return result
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 }

@@ -1,41 +1,92 @@
-import { boolean, foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { boolean, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm/relations'
-import type { z } from 'zod'
-import type { TextAnalysisSchema } from '../../schemas'
+import { z } from 'zod'
 import { users } from './users.schema'
 
-// Define the tag type to match our API expectations
-export type NoteTag = { value: string }
+/**
+ * This schema stores all types of content (notes, tasks, timers, etc.)
+ */
+export const content = pgTable('notes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: text('type').notNull().$type<ContentType>().default('note'),
+  title: text('title'),
+  content: text('content').notNull(),
+  tags: json('tags').$type<Array<ContentTag>>().default([]),
+  analysis: json('analysis'),
+  taskMetadata: json('task_metadata').$type<TaskMetadata>(),
+  timeTracking: json('time_tracking').$type<TimeTracking>(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => users.id),
+  synced: boolean('synced').default(false),
+  createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+})
 
-export const notes = pgTable(
-  'notes',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    content: text('content').notNull(),
-    title: text('title'),
-    // Update the type to match what we're using in the API
-    tags: json('tags').$type<NoteTag[]>().default([]),
-    analysis: json('analysis').$type<z.infer<typeof TextAnalysisSchema>>(),
-    isTask: boolean('is_task').default(false),
-    isComplete: boolean('is_complete').default(false),
-    userId: uuid('userId').notNull(),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.userId],
-      foreignColumns: [users.id],
-      name: 'idea_userId_user_id_fk',
-    })
-      .onUpdate('cascade')
-      .onDelete('cascade'),
-  ]
-)
-
-export const notesRelations = relations(notes, ({ one }) => ({
+export const contentRelations = relations(content, ({ one }) => ({
   user: one(users, {
-    fields: [notes.userId],
+    fields: [content.userId],
     references: [users.id],
   }),
 }))
+
+/**
+ * Define the tag type that's used across the application
+ */
+export const ContentTagSchema = z.object({
+  value: z.string(),
+})
+
+export type ContentTag = z.infer<typeof ContentTagSchema>
+
+/**
+ * ContentType defines the type of content for specialized behavior
+ * This allows us to extend with new content types without creating new data silos
+ */
+export const ContentTypeSchema = z.enum([
+  'note', // Standard note
+  'task', // Task with status tracking
+  'timer', // Time-trackable task
+  'journal', // Journal entry
+  'document', // Longer form document
+])
+
+export type ContentType = z.infer<typeof ContentTypeSchema>
+
+/**
+ * Task status schema for task-type content
+ */
+export const TaskStatusSchema = z.enum(['todo', 'in-progress', 'done', 'archived'])
+export type TaskStatus = z.infer<typeof TaskStatusSchema>
+
+/**
+ * Priority levels for tasks
+ */
+export const PrioritySchema = z.enum(['low', 'medium', 'high', 'urgent'])
+export type Priority = z.infer<typeof PrioritySchema>
+
+/**
+ * Time tracking metadata for timer-type content
+ */
+export const TimeTrackingSchema = z.object({
+  startTime: z.string().optional(), // ISO string of when timer was last started
+  endTime: z.string().optional(), // ISO string of when timer was last stopped
+  isActive: z.boolean().default(false),
+})
+
+export type TimeTracking = z.infer<typeof TimeTrackingSchema>
+
+/**
+ * Task metadata for task-type content
+ */
+export const TaskMetadataSchema = z.object({
+  status: TaskStatusSchema.default('todo'),
+  priority: PrioritySchema.default('medium'),
+  dueDate: z.string().nullable(),
+  completed: z.boolean().default(false),
+})
+
+export type TaskMetadata = z.infer<typeof TaskMetadataSchema>
+
+export type Content = typeof content.$inferSelect
+export type ContentInsert = typeof content.$inferInsert

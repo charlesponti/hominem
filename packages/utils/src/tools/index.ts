@@ -8,7 +8,6 @@ import * as generalTools from './general'
 import * as healthTools from './health.tools'
 import * as listTools from './lists.tools'
 import * as locationTools from './location.tools'
-import * as notesTools from './notes.tools'
 import * as placeTools from './place.tools'
 import * as taskTools from './task.tools'
 import * as travelTools from './travel.tools'
@@ -25,9 +24,6 @@ export * from './task.tools'
 
 // User management tools
 export * from './user.tools'
-
-// Notes management tools
-export * from './notes.tools'
 
 // Job application tools
 export * from './career.tools'
@@ -53,7 +49,6 @@ export * as contentTools from './content.tools'
 // Grouped collections
 export const productivityTools = {
   ...taskTools,
-  ...notesTools,
   ...listTools,
 }
 
@@ -83,7 +78,6 @@ export const allTools = {
   ...generalTools,
   ...taskTools,
   ...userTools,
-  ...notesTools,
   ...careerTools,
   ...financeTools,
   ...bookmarkTools,

@@ -20,6 +20,15 @@ export type {
 } from '../db/schema'
 
 export type {
+  Content,
+  ContentTag,
+  ContentType,
+  TaskMetadata,
+  TaskStatus,
+  TimeTracking,
+} from '../db/schema/notes.schema'
+
+export type {
   CategorySummary,
   TimeSeriesDataPoint,
   TimeSeriesStats,

@@ -1,5 +1,5 @@
 import type { JobApplication } from '@hominem/utils/types'
-import { useUpdateApplication } from '~/lib/hooks/useApplications'
+import { useUpdateApplication } from '~/lib/hooks/use-job-applications'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { StagesDialog } from './job-application-stages.dialog'

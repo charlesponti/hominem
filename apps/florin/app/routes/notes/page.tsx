@@ -1,410 +1,519 @@
-import { motion } from 'framer-motion'
-import { ChevronRight, FilePlus, PenLine, Plus, Search } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardFooter } from '~/components/ui/card'
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '~/components/ui/command'
-import { Input } from '~/components/ui/input'
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '~/components/ui/sheet'
-import { Skeleton } from '~/components/ui/skeleton'
-import { useToast } from '~/components/ui/use-toast'
-import { type Note, useCreateNote, useDeleteNote, useNotes } from '~/lib/hooks/use-notes'
-import { cn } from '~/lib/utils'
+'use client'
 
-const emptyArray = Array.from({ length: 3 }, (_, i) => i + 1)
+import type { Content, TaskMetadata, TaskStatus } from '@hominem/utils/types'
+import {
+  CheckCircle2,
+  Edit,
+  FileText,
+  ListChecks,
+  // PlusCircle, // Removed unused import
+  Save,
+  Send,
+  Tag,
+  Trash2,
+  X,
+} from 'lucide-react' // Added FileText, ListChecks, Send
+import { useEffect, useMemo, useRef, useState } from 'react' // Added useEffect, useRef
+import { Badge } from '~/components/ui/badge'
+import { Button } from '~/components/ui/button'
+import { Card, CardContent } from '~/components/ui/card' // Removed CardHeader, CardTitle
+import { Input } from '~/components/ui/input'
+import { Textarea } from '~/components/ui/textarea'
+import { useContentEngine } from '~/lib/content/use-content-engine'
+import { cn } from '~/lib/utils' // For conditional class names
+
+interface FeedNote extends Content {
+  type: 'note'
+  feedType: 'note'
+  date: string
+}
+
+interface FeedTask extends Content {
+  type: 'task'
+  taskMetadata: TaskMetadata
+  feedType: 'task'
+  date: string
+}
+
+type FeedItem = FeedNote | FeedTask
+type InputMode = 'note' | 'task'
 
 export default function NotesPage() {
-  const navigate = useNavigate()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [commandOpen, setCommandOpen] = useState(false)
-  const [noteForm, setNoteForm] = useState({
-    content: '',
-  })
+  const {
+    items: allContentItems = [],
+    createItem,
+    updateItem,
+    deleteItem,
+    isLoading, // Added isLoading
+  } = useContentEngine({ type: ['note', 'task'] })
 
-  // Reference to search input for focus management
-  const searchInputRef = useRef<HTMLInputElement | null>(null)
+  const [filter, setFilter] = useState<'all' | 'note' | 'task'>('all')
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editNoteData, setEditNoteData] = useState({ title: '', content: '' })
+  const [newTag, setNewTag] = useState('')
 
-  // Get toast for notifications
-  const { toast } = useToast()
+  // State for the new floating input
+  const [inputValue, setInputValue] = useState('')
+  const [inputTitle, setInputTitle] = useState('')
+  const [inputMode, setInputMode] = useState<InputMode>('note') // Default to creating a note
+  const feedContainerRef = useRef<HTMLDivElement>(null)
 
-  // Fetch all notes
-  const { notes, isLoading: isLoadingNotes } = useNotes()
+  const feed = useMemo<FeedItem[]>(() => {
+    const mappedItems = allContentItems
+      .map((item): FeedItem | null => {
+        if (item.type === 'note') {
+          return {
+            ...(item as Content & { type: 'note' }),
+            feedType: 'note' as const,
+            date: item.updatedAt || item.createdAt || '',
+          }
+        }
+        if (item.type === 'task') {
+          const taskMetadata = item.taskMetadata || {
+            status: 'todo',
+            priority: 'medium',
+            completed: false,
+            dueDate: null,
+          }
+          return {
+            ...(item as Content & { type: 'task' }),
+            taskMetadata,
+            feedType: 'task' as const,
+            date: item.updatedAt || item.createdAt || '',
+          }
+        }
+        return null
+      })
+      .filter(Boolean) as FeedItem[]
 
-  // Use hooks for creating and deleting notes
-  const { createNote, isLoading: isCreatingNote } = useCreateNote()
-  const { deleteNote } = useDeleteNote()
+    let filteredItems = mappedItems
+    if (filter === 'note') filteredItems = mappedItems.filter((i) => i.feedType === 'note')
+    if (filter === 'task') filteredItems = mappedItems.filter((i) => i.feedType === 'task')
 
-  // Handle keyboard shortcuts for search dialog
+    return filteredItems.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  }, [allContentItems, filter])
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Check for Command+K (Mac) or Ctrl+K (Windows/Linux)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setCommandOpen(true)
-      }
+    // Scroll to bottom of feed when new items are added or on initial load
+    if (feedContainerRef.current) {
+      feedContainerRef.current.scrollTop = feedContainerRef.current.scrollHeight
     }
+  }, []) // Empty dependency array to run only on mount
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  function startEditingNote(note: FeedNote) {
+    setEditingNoteId(note.id)
+    setEditNoteData({ title: note.title || '', content: note.content })
+    // Optionally, could populate the main input for editing, but that might be complex.
+    // For now, editing remains in-card.
+  }
 
-  // Focus search input when command dialog opens
-  useEffect(() => {
-    if (commandOpen && searchInputRef.current) {
-      // Small timeout to ensure DOM is ready
-      setTimeout(() => {
-        searchInputRef.current?.focus()
-      }, 50)
+  function saveEditNote(id: string) {
+    updateItem({ id, title: editNoteData.title, content: editNoteData.content })
+    setEditingNoteId(null)
+  }
+
+  function addTagToNote(noteId: string, tagValue: string) {
+    const item = allContentItems.find((n) => n.id === noteId)
+    if (!item) return
+    const currentTags = item.tags || []
+    if (currentTags.some((tag) => tag.value === tagValue)) return
+    const newTags = [...currentTags, { value: tagValue }]
+    updateItem({ id: noteId, tags: newTags })
+  }
+
+  function removeTagFromNote(noteId: string, tagValue: string) {
+    const item = allContentItems.find((n) => n.id === noteId)
+    if (!item) return
+    const newTags = (item.tags || []).filter((tag) => tag.value !== tagValue)
+    updateItem({ id: noteId, tags: newTags })
+  }
+
+  function addTag(noteId: string) {
+    if (newTag.trim()) {
+      addTagToNote(noteId, newTag.trim())
+      setNewTag('')
     }
-  }, [commandOpen])
+  }
+  function handleDeleteItem(id: string) {
+    // Renamed for clarity
+    deleteItem(id)
+  }
 
-  // Handle quick note creation
-  const handleQuickNote = async () => {
-    // Create a new note with just content
-    if (!noteForm.content.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please enter some content for your note.',
-        variant: 'destructive',
+  function handleCreateItem() {
+    const contentToSave = inputValue.trim()
+    const titleToSave = inputTitle.trim()
+
+    if (!contentToSave && !titleToSave) return // Require at least title or content for tasks, content for notes
+
+    if (inputMode === 'note') {
+      if (!contentToSave) return // Notes require content
+      createItem({
+        type: 'note',
+        title: titleToSave,
+        content: contentToSave,
+        tags: [],
       })
-      return
+    } else {
+      // inputMode === 'task'
+      if (!titleToSave && !contentToSave) return // Tasks should have a title or content (description)
+      createItem({
+        type: 'task',
+        title: titleToSave, // Title is primary for tasks
+        content: contentToSave, // Content acts as description
+        tags: [],
+        taskMetadata: {
+          status: 'todo',
+          priority: 'medium',
+          dueDate: null,
+          completed: false,
+        },
+      })
     }
+    setInputValue('')
+    setInputTitle('')
+    // setInputMode('note'); // Optionally reset mode or keep user's last choice
+  }
 
-    try {
-      await createNote.mutateAsync({
-        content: noteForm.content,
-      })
+  function updateTaskStatus({ taskId, status }: { taskId: string; status: TaskStatus }) {
+    const task = allContentItems.find((i) => i.id === taskId && i.type === 'task') as
+      | FeedTask
+      | undefined
+    if (task?.taskMetadata) {
+      updateItem({ id: taskId, taskMetadata: { ...task.taskMetadata, status } })
+    }
+  }
 
-      toast({
-        title: 'Note created',
-        description: 'Your note has been created successfully.',
-      })
-
-      setNoteForm({
-        content: '',
-      })
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'There was a problem saving your note.',
-        variant: 'destructive',
+  function toggleTaskCompletion(taskId: string) {
+    const task = allContentItems.find((i) => i.id === taskId && i.type === 'task') as
+      | FeedTask
+      | undefined
+    if (task?.taskMetadata) {
+      updateItem({
+        id: taskId,
+        taskMetadata: { ...task.taskMetadata, completed: !task.taskMetadata.completed },
       })
     }
   }
 
-  // Extract the first line or first few words for auto-generated title preview
-  const getAutoTitle = (content: string): string => {
-    if (!content) return ''
-
-    // Try to get the first line (up to 60 chars)
-    const firstLine = content.split('\n')[0].trim()
-    if (firstLine && firstLine.length <= 60) {
-      return firstLine
-    }
-
-    // Otherwise get first few words (up to 60 chars)
-    return content.slice(0, 60).trim() + (content.length > 60 ? '...' : '')
-  }
-
-  // Format display title (use auto-generated title if none exists)
-  const getDisplayTitle = (note: Note): string => {
-    if (note.title?.trim()) {
-      return note.title
-    }
-    return getAutoTitle(note.content)
-  }
-
-  // Filter notes based on search query
-  const filteredNotes = notes?.filter((note) => {
-    if (!searchQuery) return true
-    return (
-      note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.tags?.some((tag) => tag.value.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-  })
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(date)
-  }
-
+  // Main page layout
   return (
-    <div className="flex flex-col bg-background pb-safe">
-      <div className="sticky top-0 z-10 border-b border-border/40 pb-3 backdrop-blur-md bg-background/90">
-        <div className="flex justify-between items-center py-4">
-          <div className="flex w-full items-center justify-between px-4 md:px-0">
-            <h1 className="text-xl font-semibold text-foreground">Notes</h1>
-
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  size="sm"
-                  className="md:hidden bg-primary text-primary-foreground rounded-full h-9 w-9 p-0"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-xl px-0">
-                <SheetHeader className="px-4 sm:px-6 text-left">
-                  <SheetTitle>New Note</SheetTitle>
-                </SheetHeader>
-                <form
-                  className="flex flex-col h-full"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleQuickNote()
-                  }}
-                >
-                  <div className="flex-1 px-4 sm:px-6 py-4">
-                    <textarea
-                      className="w-full h-full resize-none p-4 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      placeholder="Write your note here..."
-                      value={noteForm.content}
-                      onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <SheetFooter className="px-4 sm:px-6">
-                    <Button
-                      type="submit"
-                      className="w-full bg-primary text-primary-foreground"
-                      disabled={isCreatingNote || !noteForm.content.trim()}
-                    >
-                      {isCreatingNote ? 'Creating...' : 'Create Note'}
-                    </Button>
-                  </SheetFooter>
-                </form>
-              </SheetContent>
-            </Sheet>
-          </div>
-
+    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-900">
+      {/* Header section */}
+      <header className="p-4 border-b dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Knowledge Feed</h1>
           <div className="flex gap-2">
             <Button
-              variant="outline"
-              size="sm"
-              className="hidden md:flex gap-2 text-muted-foreground"
-              onClick={() => setCommandOpen(true)}
+              variant={filter === 'all' ? 'default' : 'outline'}
+              onClick={() => setFilter('all')}
             >
-              <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">Search notes...</span>
-              <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground ml-2">
-                <span className="text-xs">⌘</span>K
-              </kbd>
+              All
+            </Button>
+            <Button
+              variant={filter === 'note' ? 'default' : 'outline'}
+              onClick={() => setFilter('note')}
+            >
+              Notes
+            </Button>
+            <Button
+              variant={filter === 'task' ? 'default' : 'outline'}
+              onClick={() => setFilter('task')}
+            >
+              Tasks
             </Button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile search bar */}
-        <div className="relative px-3 md:hidden">
-          <button
-            type="button"
-            onClick={() => setCommandOpen(true)}
-            className="w-full flex items-center text-sm rounded-lg border border-input bg-background px-3 py-2 text-muted-foreground shadow-sm hover:border-primary/30 transition-all"
-          >
-            <Search className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span className="truncate">Search notes...</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Command menu for searching (keyboard accessible) */}
-      <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
-        <div className="w-full">
-          <CommandInput
-            ref={searchInputRef}
-            placeholder="Search all notes..."
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            className="border-none focus-visible:ring-0 focus:outline-none"
-          />
-        </div>
-        <CommandList className="max-h-[400px] overflow-auto">
-          <CommandEmpty>No notes found.</CommandEmpty>
-          <CommandGroup heading="Notes">
-            {filteredNotes?.map((note) => (
-              <CommandItem
-                key={note.id}
-                onSelect={() => {
-                  navigate(`/notes/${note.id}`)
-                  setCommandOpen(false)
-                }}
-                className="flex items-center justify-between"
-              >
-                <span className="truncate">{getDisplayTitle(note)}</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
-
-      <div className="flex-1 px-0 md:px-0">
-        {isLoadingNotes ? (
-          <div className="px-4 md:px-6 py-4">
-            <div className="space-y-4">
-              {emptyArray.map((id) => (
-                <div key={id} className="border border-border rounded-lg overflow-hidden">
-                  <div className="p-4 animate-pulse space-y-3">
-                    <Skeleton className="h-5 w-3/4 bg-muted" />
-                    <Skeleton className="h-4 w-full bg-muted" />
-                    <Skeleton className="h-4 w-2/3 bg-muted" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : !filteredNotes?.length ? (
-          <div className="h-full flex flex-col items-center justify-center py-12 px-4 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-primary/5 p-4 rounded-full mb-4"
-            >
-              <PenLine className="h-6 w-6 text-primary" />
-            </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-lg font-medium text-foreground mb-1"
-            >
-              No notes found
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-muted-foreground mb-6"
-            >
-              {searchQuery
-                ? 'Try a different search term'
-                : 'Create your first note to get started'}
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Button
-                onClick={() => navigate('/notes/new')}
-                className="bg-primary text-white rounded-full shadow-sm hover:bg-primary/90 transition-colors"
-              >
-                <FilePlus className="h-4 w-4 mr-2" />
-                Create Note
-              </Button>
-            </motion.div>
-          </div>
-        ) : (
-          <div className="grid gap-4 p-4 md:p-6">
-            {filteredNotes.map((note) => (
-              <motion.div
-                key={note.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                layout
-              >
-                <Card className="overflow-hidden h-full transition-all hover:shadow-md group">
-                  <button
-                    type="button"
-                    className="text-left w-full appearance-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none rounded-md"
-                    onClick={() => navigate(`/notes/${note.id}`)}
-                    aria-label={`View note: ${getDisplayTitle(note)}`}
-                  >
-                    <CardContent className="p-4 sm:p-5">
-                      {note.title ? (
-                        <div className="flex justify-between items-start gap-3">
-                          <h3 className="font-medium text-foreground text-base sm:text-lg line-clamp-1">
-                            {note.title}
-                          </h3>
-                        </div>
-                      ) : null}
-                      <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
-                        {note.content}
-                      </p>
-                    </CardContent>
-                    <CardFooter className="px-4 sm:px-5 py-3 border-t border-border flex justify-between items-center bg-muted/30">
-                      <div className="flex gap-1.5 overflow-hidden">
-                        {note.tags?.slice(0, 2).map((tag) => (
-                          <span
-                            key={tag.value}
-                            className="bg-primary/5 text-primary-foreground/80 px-2 py-0.5 rounded-full text-[11px] inline-flex items-center"
-                          >
-                            {tag.value}
-                          </span>
-                        ))}
-                        {note.tags && note.tags.length > 2 && (
-                          <span className="text-muted-foreground text-[11px] flex items-center">
-                            +{note.tags.length - 2}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[11px] text-muted-foreground">
-                        {note.updatedAt && formatDate(note.updatedAt)}
-                      </span>
-                    </CardFooter>
-                  </button>
-                </Card>
-              </motion.div>
-            ))}
+      {/* Scrollable Feed Area */}
+      <main
+        ref={feedContainerRef}
+        className="flex-grow overflow-y-auto p-4 space-y-4 container mx-auto"
+      >
+        {isLoading && <div className="text-center py-12 text-gray-500">Loading feed...</div>}
+        {!isLoading && feed.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            No content yet. Add something below!
           </div>
         )}
-      </div>
+        {feed.map((item: FeedItem) =>
+          item.feedType === 'note' ? (
+            <Card
+              key={`note-${item.id}`}
+              className="bg-white dark:bg-slate-800 shadow-lg rounded-xl"
+            >
+              <CardContent className="pt-6">
+                {editingNoteId === item.id ? (
+                  <div className="space-y-3">
+                    <Input
+                      value={editNoteData.title}
+                      onChange={(e) => setEditNoteData({ ...editNoteData, title: e.target.value })}
+                      placeholder="Title (optional)"
+                      className="dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600"
+                    />
+                    <Textarea
+                      value={editNoteData.content}
+                      onChange={(e) =>
+                        setEditNoteData({ ...editNoteData, content: e.target.value })
+                      }
+                      rows={4}
+                      className="dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setEditingNoteId(null)}>
+                        <X className="h-4 w-4 mr-1" /> Cancel
+                      </Button>
+                      <Button size="sm" onClick={() => saveEditNote(item.id)}>
+                        <Save className="h-4 w-4 mr-1" /> Save
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {item.title && (
+                      <h3 className="font-semibold text-lg mb-2 text-slate-800 dark:text-slate-100">
+                        {item.title}
+                      </h3>
+                    )}
+                    <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap mb-4">
+                      {item.content}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {(item.tags || []).map((tag: { value: string }) => (
+                        <Badge
+                          key={tag.value}
+                          variant="secondary"
+                          className="flex items-center gap-1 bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100"
+                        >
+                          {tag.value}
+                          <button
+                            type="button"
+                            onClick={() => removeTagFromNote(item.id, tag.value)}
+                            className="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-100"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Input
+                        placeholder="Add tag"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        className="h-8 text-sm dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600"
+                        onKeyPress={(e) => e.key === 'Enter' && addTag(item.id)}
+                      />
+                      <Button variant="secondary" size="sm" onClick={() => addTag(item.id)}>
+                        <Tag className="h-3 w-3 mr-1" /> Add
+                      </Button>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => startEditingNote(item)}>
+                        <Edit className="h-4 w-4 mr-1" /> Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <TaskCard
+              key={`task-${item.id}`}
+              task={item as FeedTask}
+              onStatusChange={updateTaskStatus}
+              onToggleComplete={toggleTaskCompletion}
+              onDelete={handleDeleteItem}
+            />
+          )
+        )}
+      </main>
 
-      {/* Quick note input */}
-      <form
-        className="sticky bottom-0 left-0 w-full md:max-w-[75svw] mx-auto bg-background/80 backdrop-blur-lg border-t border-border px-4 py-3 flex gap-2 z-10"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (!noteForm.content.trim()) return
-          handleQuickNote()
-        }}
-        aria-label="Quick note input"
-        autoComplete="off"
-      >
-        <Input
-          className="flex-1 bg-background rounded-md px-3 py-2 text-foreground focus-visible:ring-2 focus-visible:ring-primary/30"
-          type="text"
-          placeholder="Type your note..."
-          aria-label="Note input"
-          value={noteForm.content}
-          onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
-          required
-          disabled={isCreatingNote}
-        />
-        <Button
-          type="submit"
-          className={cn(
-            'bg-primary text-primary-foreground rounded-md transition',
-            !noteForm.content.trim() && 'opacity-70'
-          )}
-          disabled={isCreatingNote || !noteForm.content.trim()}
-        >
-          {isCreatingNote ? 'Sending...' : 'Send'}
-        </Button>
-      </form>
+      {/* Floating Glassmorphism Input Area */}
+      <footer className="sticky bottom-0 z-10 p-4">
+        <div className="container mx-auto">
+          <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg shadow-xl rounded-xl p-3 border border-slate-200 dark:border-slate-700">
+            <Input
+              placeholder={
+                inputMode === 'note'
+                  ? 'Note title (optional)'
+                  : 'Task title (required if no description)'
+              }
+              value={inputTitle}
+              onChange={(e) => setInputTitle(e.target.value)}
+              className="mb-2 text-sm dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 placeholder-slate-400 dark:placeholder-slate-500"
+            />
+            <Textarea
+              placeholder={
+                inputMode === 'note'
+                  ? 'Type your note...'
+                  : 'Type task description (optional if title exists)...'
+              }
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              rows={2}
+              className="text-sm dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 placeholder-slate-400 dark:placeholder-slate-500"
+            />
+            <div className="flex justify-between items-center mt-2">
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={inputMode === 'note' ? 'default' : 'outline'}
+                  onClick={() => setInputMode('note')}
+                  className={cn(inputMode === 'note' && 'bg-blue-500 hover:bg-blue-600 text-white')}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> Note
+                </Button>
+                <Button
+                  size="sm"
+                  variant={inputMode === 'task' ? 'default' : 'outline'}
+                  onClick={() => setInputMode('task')}
+                  className={cn(
+                    inputMode === 'task' && 'bg-green-500 hover:bg-green-600 text-white'
+                  )}
+                >
+                  <ListChecks className="h-4 w-4 mr-2" /> Task
+                </Button>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleCreateItem}
+                disabled={
+                  (!inputValue.trim() && !inputTitle.trim()) ||
+                  (inputMode === 'note' && !inputValue.trim())
+                }
+              >
+                <Send className="h-4 w-4 mr-2" /> Add
+              </Button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
+  )
+}
+
+type TaskCardProps = {
+  task: FeedTask
+  onStatusChange: (args: { taskId: string; status: TaskStatus }) => void
+  onToggleComplete: (taskId: string) => void
+  onDelete: (taskId: string) => void
+}
+
+function TaskCard({ task, onStatusChange, onToggleComplete, onDelete }: TaskCardProps) {
+  const { title, taskMetadata, content } = task
+  const { status, priority, completed } = taskMetadata || {}
+
+  return (
+    <Card className="overflow-hidden bg-white dark:bg-slate-800 shadow-lg rounded-xl">
+      <div className="p-4 flex items-start gap-3">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-6 w-6 rounded-full mt-0.5 border-slate-300 dark:border-slate-600"
+          onClick={() => onToggleComplete(task.id)}
+        >
+          {completed ? (
+            <CheckCircle2 className="h-4 w-4 text-green-500 dark:text-green-400" />
+          ) : (
+            <div className="h-4 w-4 rounded-full border-2 border-slate-400 dark:border-slate-500" />
+          )}
+        </Button>
+        <div className="flex-1">
+          <h3
+            className={cn(
+              'font-medium text-slate-800 dark:text-slate-100',
+              completed && 'line-through text-slate-500 dark:text-slate-400'
+            )}
+          >
+            {title}
+          </h3>
+          {content && content !== title && (
+            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{content}</p>
+          )}
+          <div className="flex gap-2 mt-3">
+            <Badge
+              variant={
+                status === 'todo'
+                  ? 'outline'
+                  : status === 'in-progress'
+                    ? 'default'
+                    : status === 'done'
+                      ? 'secondary'
+                      : 'destructive'
+              }
+              className={cn(
+                status === 'in-progress' && 'bg-yellow-500 text-white dark:bg-yellow-600',
+                status === 'done' && 'bg-green-500 text-white dark:bg-green-600',
+                status === 'archived' && 'bg-slate-500 text-white dark:bg-slate-600'
+              )}
+            >
+              {status}
+            </Badge>
+            <Badge
+              variant={
+                priority === 'low'
+                  ? 'outline'
+                  : priority === 'medium'
+                    ? 'secondary'
+                    : priority === 'high'
+                      ? 'default'
+                      : 'destructive'
+              }
+              className={cn(
+                priority === 'high' && 'bg-red-500 text-white dark:bg-red-600',
+                priority === 'urgent' && 'bg-purple-500 text-white dark:bg-purple-600'
+              )}
+            >
+              {priority}
+            </Badge>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1 self-start">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
+            onClick={() => onStatusChange({ taskId: task.id, status: 'todo' })}
+            disabled={status === 'todo'}
+          >
+            Todo
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
+            onClick={() => onStatusChange({ taskId: task.id, status: 'in-progress' })}
+            disabled={status === 'in-progress'}
+          >
+            Start
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
+            onClick={() => onStatusChange({ taskId: task.id, status: 'done' })}
+            disabled={status === 'done'}
+          >
+            Done
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/50"
+            onClick={() => onDelete(task.id)}
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </Button>
+        </div>
+      </div>
+    </Card>
   )
 }

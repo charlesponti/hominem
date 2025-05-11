@@ -16,7 +16,8 @@ import {
 import { Slider } from '~/components/ui/slider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { calculateTakeHome, formatCurrency, stateTaxRates, type StateTaxCode } from '~/lib/finance'
-import { useIndexedDBCollection } from '~/lib/hooks/use-indexdb-collection'
+import type { SyncableEntity } from '~/lib/hooks/use-local-data'
+import { useLocalData } from '~/lib/hooks/use-local-data'
 import { formatPercent } from '~/lib/number.utils'
 
 const LocationTaxComparison = () => {
@@ -73,12 +74,7 @@ const LocationTaxComparison = () => {
   }
 
   // For cost of living tab
-  const {
-    items: locations,
-    createAsync,
-    deleteAsync,
-  } = useIndexedDBCollection<{
-    id: string
+  interface LocationData extends SyncableEntity {
     place: string
     annualGrossIncome: number
     annualNetIncome: number
@@ -89,8 +85,16 @@ const LocationTaxComparison = () => {
     costIndex: number
     taxRate: number
     savingsRate: number
-  }>({
-    collectionKey: 'locations',
+  }
+
+  const {
+    items: locations,
+    createAsync,
+    deleteAsync,
+  } = useLocalData<LocationData>({
+    queryKey: ['locations'],
+    endpoint: '/api/locations',
+    storeName: 'locations',
     initialData: [],
   })
 

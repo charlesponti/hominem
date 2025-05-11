@@ -76,6 +76,7 @@ export const listInvite = pgTable(
     invitedUserId: uuid('invitedUserId'),
     // The user who sent the invite.
     userId: uuid('userId').notNull(),
+    acceptedAt: timestamp('acceptedAt', { precision: 3, mode: 'string' }),
   },
   (table) => [
     foreignKey({
@@ -105,6 +106,8 @@ export const listInvite = pgTable(
     }),
   ]
 )
+export type ListInviteSelect = typeof listInvite.$inferSelect
+export type ListInviteInsert = typeof listInvite.$inferInsert
 
 export const userListsRelations = relations(userLists, ({ one }) => ({
   list: one(list, {
