@@ -21,11 +21,11 @@ export type {
 
 export type {
   Content,
+  ContentInsert,
   ContentTag,
   ContentType,
   TaskMetadata,
   TaskStatus,
-  TimeTracking,
 } from '../db/schema/notes.schema'
 
 export type {

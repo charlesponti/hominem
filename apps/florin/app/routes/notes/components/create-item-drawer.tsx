@@ -1,4 +1,6 @@
+import type { Content, ContentType, TaskMetadata } from '@hominem/utils/types'
 import { FileText, ListChecks, Send } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import {
   DrawerClose,
@@ -10,30 +12,71 @@ import {
 } from '~/components/ui/drawer'
 import { Input } from '~/components/ui/input'
 import { Textarea } from '~/components/ui/textarea'
+import { useContentEngine } from '~/lib/content/use-content-engine'
 import { cn } from '~/lib/utils'
 
 // Define InputMode type locally or import from a shared location if available
 type InputMode = 'note' | 'task'
 
 interface CreateItemDrawerProps {
-  inputMode: InputMode
-  setInputMode: (mode: InputMode) => void
-  inputValue: string
-  setInputValue: (value: string) => void
-  inputTitle: string
-  setInputTitle: (value: string) => void
-  handleCreateItem: () => void
+  onSuccess?: () => void
+  defaultInputMode?: InputMode
 }
 
-export function CreateItemDrawer({
-  inputMode,
-  setInputMode,
-  inputValue,
-  setInputValue,
-  inputTitle,
-  setInputTitle,
-  handleCreateItem,
-}: CreateItemDrawerProps) {
+const extractHashtags = (content: string): { value: string }[] => {
+  const hashtagRegex = /#(\w+)/g
+  const matches = content.match(hashtagRegex)
+  if (!matches) return []
+
+  return [...new Set(matches.map((tag) => tag.substring(1)))].map((tag) => ({ value: tag }))
+}
+
+export function CreateItemDrawer({ onSuccess, defaultInputMode = 'note' }: CreateItemDrawerProps) {
+  const { createItem, isCreating } = useContentEngine()
+  // Internal state for the form inputs
+  const [inputMode, setInputMode] = useState<InputMode>(defaultInputMode)
+  const [inputValue, setInputValue] = useState('')
+  const [inputTitle, setInputTitle] = useState('')
+
+  const onCreate = () => {
+    const titleToSave = inputTitle.trim()
+    const contentToSave = inputValue.trim()
+
+    if (inputMode === 'note' && !contentToSave) return
+    if (inputMode === 'task' && !titleToSave && !contentToSave) return
+    if (!titleToSave && !contentToSave) return
+
+    let itemType: ContentType = 'note'
+    const additionalData: Partial<Pick<Content, 'taskMetadata' | 'tags'>> = {}
+
+    if (inputMode === 'task') {
+      itemType = 'task'
+      additionalData.taskMetadata = {
+        isActive: false,
+        status: 'todo',
+        priority: 'medium',
+        dueDate: null,
+        completed: false,
+      } as TaskMetadata
+      additionalData.tags = []
+    } else {
+      itemType = 'note'
+      additionalData.tags = extractHashtags(contentToSave)
+    }
+
+    createItem({
+      type: itemType,
+      title: titleToSave,
+      content: contentToSave,
+      ...additionalData,
+    })
+
+    if (onSuccess) onSuccess()
+
+    setInputValue('')
+    setInputTitle('')
+  }
+
   return (
     <DrawerContent>
       <div className="mx-auto w-full max-w-3xl">
@@ -98,14 +141,21 @@ export function CreateItemDrawer({
         </div>
         <DrawerFooter>
           <Button
-            onClick={handleCreateItem}
+            onClick={onCreate}
             disabled={
+              isCreating ||
               (!inputValue.trim() && !inputTitle.trim()) ||
               (inputMode === 'note' && !inputValue.trim())
             }
             className="w-full bg-indigo-500/90 hover:bg-indigo-600/90 text-white backdrop-blur-sm transition-all hover:shadow-md disabled:bg-slate-300/70 disabled:text-slate-500/90 dark:disabled:bg-slate-700/70 dark:disabled:text-slate-500/90"
           >
-            <Send className="h-4 w-4 mr-2" /> Add {inputMode === 'note' ? 'Note' : 'Task'}
+            {isCreating ? (
+              'Adding...'
+            ) : (
+              <>
+                <Send className="h-4 w-4 mr-2" /> Add {inputMode === 'note' ? 'Note' : 'Task'}
+              </>
+            )}
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" className="w-full">

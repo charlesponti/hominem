@@ -1,27 +1,22 @@
-import { ContentService, ForbiddenError, type ContentInput } from '@hominem/utils/services'
+import { ContentService, ForbiddenError, TaskMetadataSchema } from '@hominem/utils/services'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
 import { verifyAuth } from '../middleware/auth'
 
-// Validation schemas for Content
 const contentTagSchema = z.object({
   value: z.string(),
 })
 
-// More specific ContentType enum for validation if needed, or use string and validate in service
-const ContentTypeEnum = z.enum(['note', 'task', 'timer', 'journal', 'document']) // Example
+const ContentTypeEnum = z.enum(['note', 'task', 'timer', 'journal', 'document'])
 
 const createContentSchema = z.object({
-  type: ContentTypeEnum.default('note'), // Use the enum here
+  type: ContentTypeEnum.default('note'),
   content: z.string(),
   title: z.string().optional(),
   tags: z.array(contentTagSchema).optional().default([]),
-  taskMetadata: z.record(z.unknown()).optional(), // Keep as flexible for now
-  timeTracking: z.record(z.unknown()).optional(), // Keep as flexible
+  taskMetadata: TaskMetadataSchema.optional(),
   analysis: z.record(z.unknown()).optional(),
-  // Add any other fields that are part of the generic Content but not in specific metadata
-  // e.g., parentId, customData, etc.
 })
 
 const updateContentSchema = z.object({
@@ -29,10 +24,8 @@ const updateContentSchema = z.object({
   content: z.string().optional(),
   title: z.string().optional(),
   tags: z.array(contentTagSchema).optional(),
-  taskMetadata: z.record(z.unknown()).optional(),
-  timeTracking: z.record(z.unknown()).optional(),
+  taskMetadata: TaskMetadataSchema.optional(),
   analysis: z.record(z.unknown()).optional(),
-  // Add other updatable fields
 })
 
 const contentIdSchema = z.object({
@@ -40,7 +33,7 @@ const contentIdSchema = z.object({
 })
 
 export async function contentRoutes(fastify: FastifyInstance) {
-  const contentService = new ContentService() // This service should now use the unified 'content' table
+  const contentService = new ContentService()
 
   // Create new content
   fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
@@ -78,10 +71,7 @@ export async function contentRoutes(fastify: FastifyInstance) {
         tagsCount: validatedData.tags?.length || 0,
       })
 
-      // Ensure ContentInput matches what ContentService.create expects
-      const result = await contentService.create({ ...validatedData, userId } as ContentInput & {
-        userId: string
-      })
+      const result = await contentService.create({ ...validatedData, userId })
 
       fastify.log.info({
         msg: 'Content created successfully',
@@ -169,7 +159,7 @@ export async function contentRoutes(fastify: FastifyInstance) {
         ...validatedData,
         id,
         userId,
-      } as ContentInput & { id: string; userId: string })
+      })
       return result
     } catch (error) {
       return handleError(error as Error, reply)
@@ -192,8 +182,7 @@ export async function contentRoutes(fastify: FastifyInstance) {
   })
 
   // Sync multiple content items
-  // The body should be an array of Content objects (or a subset for creation/update)
-  const syncContentItemSchema = createContentSchema.extend({ id: z.string().optional() }) // For existing items, ID is present
+  const syncContentItemSchema = createContentSchema.extend({ id: z.string().optional() })
   const syncContentRequestSchema = z.array(syncContentItemSchema)
 
   fastify.post('/sync', { preHandler: verifyAuth }, async (request, reply) => {
@@ -210,10 +199,7 @@ export async function contentRoutes(fastify: FastifyInstance) {
           .send({ error: 'Invalid sync data', details: validationResult.error.format() })
       }
 
-      const itemsToSync = validationResult.data as Array<
-        ContentInput & { id?: string; userId: string }
-      >
-      // Add userId to each item and ensure properties match SyncClientItem expectations
+      const itemsToSync = validationResult.data
       const itemsWithUserId = itemsToSync.map((item) => ({
         ...item,
         userId,

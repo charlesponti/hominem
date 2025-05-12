@@ -3,9 +3,10 @@ import { z } from 'zod'
 import { db } from '../db'
 import {
   content,
-  type Content as ContentSchemaType,
   ContentTypeSchema,
   TaskMetadataSchema,
+  type ContentInsert,
+  type Content as ContentSchemaType,
 } from '../db/schema/notes.schema'
 
 export class NotFoundError extends Error {
@@ -20,18 +21,6 @@ export class ForbiddenError extends Error {
     super(message)
     this.name = 'ForbiddenError'
   }
-}
-
-export type ContentInput = {
-  type: ContentSchemaType['type']
-  content: string
-  title?: string | null
-  tags?: Array<{ value: string }> | null
-  taskMetadata?: z.infer<typeof TaskMetadataSchema> | null
-  analysis?: ContentSchemaType['analysis']
-  userId: string
-  createdAt?: string
-  updatedAt?: string
 }
 
 const UpdateContentZodSchema = z.object({
@@ -60,20 +49,20 @@ type SyncClientItem = Omit<
   updatedAt?: string
 }
 
+export { TaskMetadataSchema } from './../db/schema/notes.schema'
+
 export class ContentService {
-  async create(input: ContentInput): Promise<ContentSchemaType> {
+  async create(input: ContentInsert): Promise<ContentSchemaType> {
     if (!input.userId) {
       throw new ForbiddenError('Not authorized to create content')
     }
     const now = new Date().toISOString()
-    const contentData: typeof content.$inferInsert = {
-      type: input.type,
-      content: input.content,
-      title: input.title,
+    const contentData: ContentInsert = {
+      ...input,
       tags: input.tags === null ? [] : input.tags || [],
+      mentions: input.mentions === null ? [] : input.mentions || [],
       taskMetadata: input.taskMetadata === null ? undefined : input.taskMetadata,
       analysis: input.analysis === null ? undefined : input.analysis,
-      userId: input.userId,
       synced: true,
       createdAt: input.createdAt || now,
       updatedAt: input.updatedAt || now,
@@ -227,6 +216,7 @@ export class ContentService {
           content: incomingItem.content,
           title: incomingItem.title,
           tags: incomingItem.tags,
+          mentions: incomingItem.mentions,
           taskMetadata: incomingItem.taskMetadata,
           analysis: incomingItem.analysis,
           userId, // Use `userId` from the authenticated session.
@@ -247,9 +237,9 @@ export class ContentService {
 
             if (clientTimestamp > serverTimestamp) {
               const updatePayload: UpdateContentInput = {
-                id: id, // Use the id from the loop
+                id: id,
                 userId: userId,
-                type: incomingItem.type, // incomingItem.type is already ContentSchemaType['type']
+                type: incomingItem.type,
                 title: incomingItem.title,
                 content: incomingItem.content,
                 tags: incomingItem.tags,
@@ -275,7 +265,7 @@ export class ContentService {
               }
             }
           } else {
-            const created = await this.create(baseInputData as ContentInput)
+            const created = await this.create(baseInputData as ContentInsert)
             if (created?.id && created?.updatedAt && created?.type) {
               results.created++
               results.items.push({
@@ -286,7 +276,7 @@ export class ContentService {
             }
           }
         } else {
-          const created = await this.create(baseInputData as ContentInput)
+          const created = await this.create(baseInputData as ContentInsert)
           if (created?.id && created?.updatedAt && created?.type) {
             results.created++
             results.items.push({ id: created.id, updatedAt: created.updatedAt, type: created.type })

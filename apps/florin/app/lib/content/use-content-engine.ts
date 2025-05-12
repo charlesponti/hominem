@@ -191,6 +191,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
       }
     },
     enabled: !!userId || !isSignedIn,
+    staleTime: 1000 * 60 * 1, // 1 minute
   })
 
   const createItem = useMutation({

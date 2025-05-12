@@ -28,7 +28,6 @@ const extractHashtags = (content: string): { value: string }[] => {
 export default function NotesPage() {
   const {
     items: allContentItems = [],
-    createItem,
     updateItem,
     deleteItem,
     isLoading,
@@ -39,9 +38,6 @@ export default function NotesPage() {
   const [editNoteData, setEditNoteData] = useState({ title: '', content: '' })
   const feedContainerRef = useRef<HTMLDivElement>(null)
 
-  const [inputValue, setInputValue] = useState('')
-  const [inputTitle, setInputTitle] = useState('')
-  const [inputMode, setInputMode] = useState<InputMode>('note')
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const prevFeedLengthRef = useRef<number>(0)
@@ -134,48 +130,7 @@ export default function NotesPage() {
     deleteItem(id)
   }
 
-  function handleCreateItem() {
-    const contentToSave = inputValue.trim()
-    const titleToSave = inputTitle.trim()
-
-    if (!contentToSave && !titleToSave) return
-
-    switch (inputMode) {
-      case 'task': {
-        if (!titleToSave && !contentToSave) return
-        createItem({
-          type: 'task',
-          title: titleToSave,
-          content: contentToSave,
-          tags: [],
-          taskMetadata: {
-            isActive: false,
-            status: 'todo',
-            priority: 'medium',
-            dueDate: null,
-            completed: false,
-          },
-        })
-        break
-      }
-      case 'note':
-      default: {
-        if (!contentToSave) return
-
-        const extractedTags = extractHashtags(contentToSave)
-
-        createItem({
-          type: 'note',
-          title: titleToSave,
-          content: contentToSave,
-          tags: extractedTags,
-        })
-        break
-      }
-    }
-
-    setInputValue('')
-    setInputTitle('')
+  function handleDrawerCreateSuccess() {
     setIsDrawerOpen(false)
   }
 
@@ -276,15 +231,7 @@ export default function NotesPage() {
             <Plus className="h-7 w-7" />
           </Button>
         </DrawerTrigger>
-        <CreateItemDrawer
-          inputMode={inputMode}
-          setInputMode={setInputMode}
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          inputTitle={inputTitle}
-          setInputTitle={setInputTitle}
-          handleCreateItem={handleCreateItem}
-        />
+        <CreateItemDrawer onSuccess={handleDrawerCreateSuccess} />
       </Drawer>
     </div>
   )
