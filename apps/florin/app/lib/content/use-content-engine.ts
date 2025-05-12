@@ -10,11 +10,11 @@
  * Uses Content type from @hominem/utils/types.
  */
 import { useAuth } from '@clerk/react-router'
+import { useApiClient } from '@hominem/ui'
 import type { Content, ContentType, TaskMetadata } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useToast } from '~/components/ui/use-toast'
-import { useApiClient } from '../hooks/use-api-client'
 import { dbOperation } from '../hooks/use-local-data'
 
 const DB_NAME = 'HominemDataStore'

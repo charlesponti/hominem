@@ -1,5 +1,5 @@
+import { useApiClient } from '@hominem/ui'
 import { useQuery } from '@tanstack/react-query'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 
 interface Category {
   category: string

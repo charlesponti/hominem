@@ -1,6 +1,6 @@
+import { useApiClient } from '@hominem/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { useToast } from '~/components/ui/use-toast'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 import type { SyncableEntity } from '~/lib/hooks/use-local-data'
 import { useLocalData } from '~/lib/hooks/use-local-data'
 

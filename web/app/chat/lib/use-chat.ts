@@ -1,9 +1,9 @@
 import { useAuth } from '@clerk/react-router'
+import { useApiClient } from '@hominem/ui'
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ToolContent, ToolSet } from 'ai'
 import { useCallback, useState } from 'react'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 
 export type ToolCalls = ToolSet[]
 export type ToolResults = ToolContent[]

@@ -3,9 +3,7 @@
     "**/*",
     "**/.server/**/*",
     "**/.client/**/*",
-    ".react-router/types/**/*",
-    "../../web/app/chat/lib/use-chat.ts",
-    "../scratchpad/app/components/possessions/use-possessions.ts"
+    ".react-router/types/**/*"
   ],
   "compilerOptions": {
     "lib": [

@@ -15,9 +15,12 @@ export type {
   PossessionInsert,
   Tag,
   FinanceTransaction as Transaction,
-  User,
-  UserInsert,
 } from '../db/schema'
+
+export type {
+  ListInsert,
+  ListSelect,
+} from '../db/schema/lists.schema'
 
 export type {
   Content,
@@ -46,6 +49,8 @@ export type {
   JobStatus,
   ProcessTransactionOptions,
 } from '../jobs'
+
+export type { User, UserInsert } from '../db/schema/users.schema'
 
 // Legacy aliases - keeping for backward compatibility
 // TODO: Remove these in the future and update references to use imports from '../jobs'

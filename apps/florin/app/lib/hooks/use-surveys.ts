@@ -1,6 +1,6 @@
+import { useApiClient } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 
 export interface SurveyOption {
   id: string

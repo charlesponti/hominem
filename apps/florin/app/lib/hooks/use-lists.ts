@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/react-router'
-import type { List, ListInsert, User } from '@hominem/utils/types'
+import { useApiClient } from '@hominem/ui'
+import type { ListSelect as List, ListInsert } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useApiClient } from './use-api-client'
 
 // Define query keys at the top of the file as constants
 const LISTS_KEY = [['lists', 'getAll']]

@@ -1,6 +1,6 @@
+import { useApiClient } from '@hominem/ui'
 import type { CategorySummary } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
-import { useApiClient } from './use-api-client'
 
 export function useFinanceCategoryBreakdown({
   from,

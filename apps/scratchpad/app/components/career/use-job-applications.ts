@@ -1,9 +1,9 @@
 import { useAuth } from '@clerk/react-router'
+import { useApiClient } from '@hominem/ui'
 import type { JobApplication, JobApplicationInsert } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { JobApplicationStatus } from '~/lib/career'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 
 // Define query keys at the top for consistent cache management
 const APPLICATIONS_KEY = [['applications', 'getAll']]

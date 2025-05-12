@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@clerk/react-router'
+import { useApiClient } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type {
   FileStatus,
@@ -11,7 +12,6 @@ import type {
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 import { fileToBase64 } from '~/lib/files.utils'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'
 
 // Define constants for channel names and message types

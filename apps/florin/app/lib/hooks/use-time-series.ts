@@ -1,7 +1,7 @@
+import { useApiClient } from '@hominem/ui'
 import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 
 export interface TimeSeriesResponse {
   data: TimeSeriesDataPoint[]

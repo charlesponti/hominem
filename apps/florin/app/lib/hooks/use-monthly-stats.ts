@@ -1,5 +1,5 @@
+import { useApiClient } from '@hominem/ui'
 import { useQuery } from '@tanstack/react-query'
-import { useApiClient } from './use-api-client'
 
 export interface MonthlyStats {
   month: string
