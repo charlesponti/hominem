@@ -1,7 +1,6 @@
 'use client'
 
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
-import { DatePicker } from 'apps/florin/app/components/date-picker.js'
 import { format } from 'date-fns'
 import {
   ArrowDownRight,
@@ -13,6 +12,7 @@ import {
   Search,
   UploadCloudIcon,
 } from 'lucide-react'
+import { DatePicker } from '~/components/date-picker'
 import { RouteLink } from '~/components/route-link'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'

@@ -1,6 +1,6 @@
 import type { FinanceAccount } from '@hominem/utils/types'
-import { DatePicker } from 'apps/florin/app/components/date-picker.js'
 import type { Dispatch, SetStateAction } from 'react'
+import { DatePicker } from '~/components/date-picker'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Label } from '~/components/ui/label'
 import {

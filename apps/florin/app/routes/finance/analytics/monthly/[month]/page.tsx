@@ -2,7 +2,7 @@ import { useParams } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
-import { formatCurrency } from '~/lib/utils' // Assuming a utility exists
+import { formatCurrency } from '~/lib/utils'
 
 // Helper function to format month string (e.g., "2024-05" to "May 2024")
 function formatMonthDisplay(monthStr: string | undefined): string {
