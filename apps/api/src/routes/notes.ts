@@ -217,10 +217,10 @@ export async function contentRoutes(fastify: FastifyInstance) {
       const itemsWithUserId = itemsToSync.map((item) => ({
         ...item,
         userId,
+        mentions: [],
         title: !item.title ? null : item.title,
         tags: item.tags || [],
         taskMetadata: !item.taskMetadata ? null : item.taskMetadata,
-        timeTracking: !item.timeTracking ? null : item.timeTracking,
         analysis: !item.analysis ? null : item.analysis,
       }))
 

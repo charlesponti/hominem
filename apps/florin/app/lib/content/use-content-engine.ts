@@ -15,7 +15,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useToast } from '~/components/ui/use-toast'
 import { useApiClient } from '../hooks/use-api-client'
-import { trackContentCreated, trackContentDeleted, trackContentUpdated } from './analytics'
+import { dbOperation } from '../hooks/use-local-data'
 
 const DB_NAME = 'HominemDataStore'
 const DB_VERSION = 1
@@ -30,6 +30,21 @@ export interface UseContentEngineOptions {
   tags?: string[]
   searchText?: string
   querySuffix?: string
+}
+
+const setupContentStore = (store: IDBObjectStore) => {
+  store.createIndex('type', 'type', { unique: false })
+  store.createIndex('synced', 'synced', { unique: false })
+  store.createIndex('updatedAt', 'updatedAt', { unique: false })
+  store.createIndex('userId', 'userId', { unique: false })
+  store.createIndex('userId_type_updatedAt', ['userId', 'type', 'updatedAt'], { unique: false })
+}
+
+const CONTENT_DB_OPERATIONS_OPTIONS = {
+  dbName: DB_NAME,
+  version: DB_VERSION,
+  storeName: STORE_NAME,
+  setupStore: setupContentStore,
 }
 
 const defaultContentFields = (
@@ -59,6 +74,21 @@ const defaultContentFields = (
   analysis: {},
 })
 
+const dbBatchPut = async (items: Content[]): Promise<void> => {
+  if (items.length === 0) return
+  await dbOperation<void>({
+    ...CONTENT_DB_OPERATIONS_OPTIONS,
+    mode: 'readwrite',
+    operation: (store) => {
+      let lastRequest: IDBRequest<IDBValidKey> | null = null
+      for (const item of items) {
+        lastRequest = store.put(item)
+      }
+      return lastRequest as unknown as IDBRequest<void>
+    },
+  })
+}
+
 export function useContentEngine(options: UseContentEngineOptions = {}) {
   const { userId, isSignedIn } = useAuth()
   const apiClient = useApiClient()
@@ -81,67 +111,6 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
       key.push(options.querySuffix)
     }
     return key
-  }
-
-  const dbInit = async (): Promise<IDBDatabase> => {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION)
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' })
-          store.createIndex('type', 'type', { unique: false })
-          store.createIndex('synced', 'synced', { unique: false })
-          store.createIndex('updatedAt', 'updatedAt', { unique: false })
-          store.createIndex('userId', 'userId', { unique: false })
-          store.createIndex('userId_type_updatedAt', ['userId', 'type', 'updatedAt'], {
-            unique: false,
-          })
-        }
-      }
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
-    })
-  }
-
-  const dbOperation = async <T>(
-    mode: IDBTransactionMode,
-    operation: (store: IDBObjectStore) => IDBRequest<T> | IDBRequest<IDBValidKey[]> | Promise<T>
-  ): Promise<T> => {
-    const db = await dbInit()
-    return new Promise<T>((resolve, reject) => {
-      const transaction = db.transaction(STORE_NAME, mode)
-      const store = transaction.objectStore(STORE_NAME)
-      const result = operation(store)
-
-      if (result instanceof Promise) {
-        result.then(resolve).catch(reject)
-      } else {
-        result.onsuccess = () => resolve(result.result as T)
-        result.onerror = () => reject(result.error)
-      }
-    })
-  }
-
-  const dbBatchPut = async (items: Content[]): Promise<void> => {
-    if (items.length === 0) return Promise.resolve()
-    const db = await dbInit()
-    return new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction(STORE_NAME, 'readwrite')
-      const store = transaction.objectStore(STORE_NAME)
-      let completedOperations = 0
-
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
-      transaction.onabort = () => reject(transaction.error)
-
-      for (const item of items) {
-        const request = store.put(item)
-        request.onsuccess = () => {
-          completedOperations++
-        }
-      }
-    })
   }
 
   const applyFilters = (items: Content[]): Content[] => {
@@ -170,7 +139,11 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
     queryKey: getQueryKey(),
     queryFn: async () => {
       try {
-        let localItems = await dbOperation<Content[]>('readonly', (store) => store.getAll())
+        let localItems = await dbOperation<Content[]>({
+          ...CONTENT_DB_OPERATIONS_OPTIONS,
+          mode: 'readonly',
+          operation: (store) => store.getAll(),
+        })
         localItems = localItems.filter((item) => (userId ? item.userId === userId : true))
 
         if (isSignedIn && userId) {
@@ -199,7 +172,11 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
               }
               if (itemsToUpdateInDB.length > 0) {
                 await dbBatchPut(itemsToUpdateInDB)
-                localItems = await dbOperation<Content[]>('readonly', (store) => store.getAll())
+                localItems = await dbOperation<Content[]>({
+                  ...CONTENT_DB_OPERATIONS_OPTIONS,
+                  mode: 'readonly',
+                  operation: (store) => store.getAll(),
+                })
                 localItems = localItems.filter((item) => item.userId === userId)
               }
             }
@@ -239,24 +216,30 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
         synced: false,
       }
 
-      await dbOperation('readwrite', (store) => store.add(newItem))
+      await dbOperation({
+        ...CONTENT_DB_OPERATIONS_OPTIONS,
+        mode: 'readwrite',
+        operation: (store) => store.add(newItem),
+      })
 
       if (isSignedIn && userId) {
         try {
           const serverResponse = await apiClient.post<Content, Content>('/api/content', newItem)
           if (serverResponse) {
-            await dbOperation('readwrite', (store) => {
-              store.delete(newItem.id)
-              return store.put({ ...serverResponse, synced: true })
+            await dbOperation({
+              ...CONTENT_DB_OPERATIONS_OPTIONS,
+              mode: 'readwrite',
+              operation: (store) => {
+                store.delete(newItem.id)
+                return store.put({ ...serverResponse, synced: true })
+              },
             })
-            trackContentCreated(serverResponse.type, { contentId: serverResponse.id })
             return serverResponse
           }
         } catch (apiErr) {
           console.warn('API create error, item will sync later:', apiErr)
         }
       }
-      trackContentCreated(newItem.type, { contentId: newItem.id, synced: false })
       return newItem
     },
     onSuccess: () => {
@@ -270,9 +253,11 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
 
   const updateItem = useMutation({
     mutationFn: async (itemData: PartialWithId<Content>) => {
-      const existingItem = await dbOperation<Content | undefined>('readonly', (store) =>
-        store.get(itemData.id)
-      )
+      const existingItem = await dbOperation<Content | undefined>({
+        ...CONTENT_DB_OPERATIONS_OPTIONS,
+        mode: 'readonly',
+        operation: (store) => store.get(itemData.id),
+      })
       if (!existingItem) throw new Error(`Item with ID ${itemData.id} not found`)
 
       const updatedItem: Content = {
@@ -282,7 +267,11 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
         synced: false,
       }
 
-      await dbOperation('readwrite', (store) => store.put(updatedItem))
+      await dbOperation({
+        ...CONTENT_DB_OPERATIONS_OPTIONS,
+        mode: 'readwrite',
+        operation: (store) => store.put(updatedItem),
+      })
 
       if (isSignedIn && userId) {
         try {
@@ -291,17 +280,19 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
             updatedItem
           )
           if (serverResponse) {
-            await dbOperation('readwrite', (store) =>
-              store.put({ ...serverResponse, synced: true })
-            )
-            trackContentUpdated(serverResponse.type, { contentId: serverResponse.id })
+            await dbOperation({
+              ...CONTENT_DB_OPERATIONS_OPTIONS,
+              mode: 'readwrite',
+              operation: (store) => store.put({ ...serverResponse, synced: true }),
+            })
+
             return serverResponse
           }
         } catch (apiErr) {
           console.warn('API update error, item will sync later:', apiErr)
         }
       }
-      trackContentUpdated(updatedItem.type, { contentId: updatedItem.id, synced: false })
+
       return updatedItem
     },
     onSuccess: () => {
@@ -315,22 +306,25 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      const itemToDelete = await dbOperation<Content | undefined>('readonly', (store) =>
-        store.get(id)
-      )
-      await dbOperation('readwrite', (store) => store.delete(id))
+      const itemToDelete = await dbOperation<Content | undefined>({
+        ...CONTENT_DB_OPERATIONS_OPTIONS,
+        mode: 'readonly',
+        operation: (store) => store.get(id),
+      })
+      await dbOperation({
+        ...CONTENT_DB_OPERATIONS_OPTIONS,
+        mode: 'readwrite',
+        operation: (store) => store.delete(id),
+      })
 
       if (isSignedIn && userId) {
         try {
           await apiClient.delete<null, { success: boolean }>(`/api/content/${id}`)
-          if (itemToDelete) trackContentDeleted(itemToDelete.type, { contentId: id })
         } catch (apiErr) {
           console.warn('API delete error, item marked for sync deletion later:', apiErr)
-          if (itemToDelete) trackContentDeleted(itemToDelete.type, { contentId: id, synced: false })
         }
-      } else if (itemToDelete) {
-        trackContentDeleted(itemToDelete.type, { contentId: id, synced: false })
       }
+
       return id
     },
     onSuccess: () => {
@@ -346,9 +340,11 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
     mutationFn: async () => {
       if (!isSignedIn || !userId) throw new Error('User not authenticated for sync')
 
-      const unsyncedItems = await dbOperation<Content[]>('readonly', (store) =>
-        store.index('synced').getAll(IDBKeyRange.only(false))
-      )
+      const unsyncedItems = await dbOperation<Content[]>({
+        ...CONTENT_DB_OPERATIONS_OPTIONS,
+        mode: 'readonly',
+        operation: (store) => store.index('synced').getAll(IDBKeyRange.only(false)),
+      })
       const userUnsyncedItems = unsyncedItems.filter((item) => item.userId === userId)
 
       if (userUnsyncedItems.length === 0) {
@@ -363,7 +359,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
         )
 
         if (response?.syncedItems) {
-          await dbBatchPut(response.syncedItems.map((item) => ({ ...item, synced: true })))
+          await dbBatchPut(response.syncedItems)
           toast({
             title: 'Content Synced',
             description: 'Content successfully synced with the server.',

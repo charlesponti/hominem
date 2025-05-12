@@ -1,3 +1,11 @@
+/**
+ * Example usage:
+ * const useNotes = () => useLocalData<Note>({
+ *   queryKey: ['notes'],
+ *   endpoint: '/api/notes',
+ *   storeName: 'notes',
+ * })
+ */
 import { useAuth } from '@clerk/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -25,7 +33,7 @@ interface DBInstance {
   isInitialized: boolean
 }
 
-interface UseLocalDataOptions {
+export interface UseLocalDataOptions {
   /** The key to use for React Query cache */
   queryKey: string[]
   /** The endpoint for API operations */
@@ -42,6 +50,76 @@ interface UseLocalDataOptions {
   staleTime?: number
   /** Default query options */
   queryOptions?: Record<string, unknown>
+  /** Optional callback to set up custom indices on the store */
+  setupStore?: (store: IDBObjectStore) => void
+}
+
+// Shared DB instance map for multi-store/multi-db support
+const dbInstances: Record<string, DBInstance> = {}
+
+export function initDB({
+  dbName,
+  version,
+  storeName,
+  setupStore,
+}: {
+  dbName: string
+  version: number
+  storeName: string
+  setupStore?: (store: IDBObjectStore) => void
+}): Promise<IDBDatabase> {
+  const dbKey = `${dbName}::${storeName}`
+  if (!dbInstances[dbKey]) dbInstances[dbKey] = { db: null, isInitialized: false }
+  const dbInstance = dbInstances[dbKey]
+  return new Promise((resolve, reject) => {
+    if (dbInstance.isInitialized && dbInstance.db) {
+      resolve(dbInstance.db)
+      return
+    }
+    const request = indexedDB.open(dbName, version)
+    request.onerror = () => reject(request.error)
+    request.onsuccess = () => {
+      dbInstance.db = request.result
+      dbInstance.isInitialized = true
+      resolve(request.result)
+    }
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result
+      if (!db.objectStoreNames.contains(storeName)) {
+        const store = db.createObjectStore(storeName, { keyPath: 'id' })
+        store.createIndex('synced', 'synced', { unique: false })
+        store.createIndex('updatedAt', 'updatedAt', { unique: false })
+        if (setupStore) setupStore(store)
+      }
+    }
+  })
+}
+
+export function dbOperation<R>({
+  dbName,
+  version,
+  storeName,
+  setupStore,
+  mode,
+  operation,
+}: {
+  dbName: string
+  version: number
+  storeName: string
+  setupStore?: (store: IDBObjectStore) => void
+  mode: IDBTransactionMode
+  operation: (store: IDBObjectStore) => IDBRequest<R>
+}): Promise<R> {
+  return initDB({ dbName, version, storeName, setupStore }).then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const transaction = db.transaction(storeName, mode)
+        const store = transaction.objectStore(storeName)
+        const request = operation(store)
+        request.onsuccess = () => resolve(request.result)
+        request.onerror = () => reject(request.error)
+      })
+  )
 }
 
 /**
@@ -56,68 +134,25 @@ export function useLocalData<T extends SyncableEntity>({
   initialData = [],
   staleTime = 5 * 60 * 1000, // 5 minutes by default
   queryOptions = {},
+  setupStore,
 }: UseLocalDataOptions) {
   const { userId, isSignedIn } = useAuth()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
   const { toast } = useToast()
   const [error, setError] = useState<Error | null>(null)
-  const dbInstance: DBInstance = { db: null, isInitialized: false }
-
-  // Initialize IndexedDB
-  const initDB = (): Promise<IDBDatabase> => {
-    return new Promise((resolve, reject) => {
-      if (dbInstance.isInitialized && dbInstance.db) {
-        resolve(dbInstance.db)
-        return
-      }
-
-      const request = indexedDB.open(dbName, version)
-
-      request.onerror = () => {
-        reject(request.error)
-      }
-
-      request.onsuccess = () => {
-        dbInstance.db = request.result
-        dbInstance.isInitialized = true
-        resolve(request.result)
-      }
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-        if (!db.objectStoreNames.contains(storeName)) {
-          const store = db.createObjectStore(storeName, { keyPath: 'id' })
-          store.createIndex('synced', 'synced', { unique: false })
-          store.createIndex('updatedAt', 'updatedAt', { unique: false })
-        }
-      }
-    })
-  }
-
-  // Helper function for database operations
-  const dbOperation = <R>(
-    mode: IDBTransactionMode,
-    operation: (store: IDBObjectStore) => IDBRequest<R>
-  ): Promise<R> => {
-    return new Promise((resolve, reject) => {
-      initDB()
-        .then((db) => {
-          const transaction = db.transaction(storeName, mode)
-          const store = transaction.objectStore(storeName)
-          const request = operation(store)
-
-          request.onsuccess = () => resolve(request.result)
-          request.onerror = () => reject(request.error)
-        })
-        .catch(reject)
-    })
-  }
 
   // Get all items from the collection
   const getAll = async (): Promise<T[]> => {
     try {
-      return await dbOperation('readonly', (store) => store.getAll())
+      return await dbOperation<T[]>({
+        dbName,
+        version,
+        storeName,
+        setupStore,
+        mode: 'readonly',
+        operation: (store) => store.getAll(),
+      })
     } catch (err) {
       console.error(`Error reading from IndexedDB (${storeName}):`, err)
       setError(err instanceof Error ? err : new Error(`Failed to fetch ${storeName}`))
@@ -147,7 +182,14 @@ export function useLocalData<T extends SyncableEntity>({
           userId,
         } as T
 
-        await dbOperation('readwrite', (store) => store.add(item))
+        await dbOperation({
+          dbName,
+          version,
+          storeName,
+          setupStore,
+          mode: 'readwrite',
+          operation: (store) => store.add(item),
+        })
         return item
       } catch (err) {
         setError(err instanceof Error ? err : new Error(`Failed to create ${storeName}`))
@@ -165,7 +207,14 @@ export function useLocalData<T extends SyncableEntity>({
     mutationFn: async (data: PartialWithId<T>) => {
       try {
         // First get the existing item
-        const existingItem = await dbOperation<T>('readonly', (store) => store.get(data.id))
+        const existingItem = await dbOperation<T>({
+          dbName,
+          version,
+          storeName,
+          setupStore,
+          mode: 'readonly',
+          operation: (store) => store.get(data.id),
+        })
 
         if (!existingItem) {
           throw new Error(`${storeName} with ID ${data.id} not found`)
@@ -178,7 +227,14 @@ export function useLocalData<T extends SyncableEntity>({
           synced: false,
         }
 
-        await dbOperation('readwrite', (store) => store.put(updatedItem))
+        await dbOperation({
+          dbName,
+          version,
+          storeName,
+          setupStore,
+          mode: 'readwrite',
+          operation: (store) => store.put(updatedItem),
+        })
         return updatedItem
       } catch (err) {
         setError(err instanceof Error ? err : new Error(`Failed to update ${storeName}`))
@@ -195,7 +251,14 @@ export function useLocalData<T extends SyncableEntity>({
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       try {
-        await dbOperation('readwrite', (store) => store.delete(id))
+        await dbOperation({
+          dbName,
+          version,
+          storeName,
+          setupStore,
+          mode: 'readwrite',
+          operation: (store) => store.delete(id),
+        })
         return id
       } catch (err) {
         setError(err instanceof Error ? err : new Error(`Failed to delete ${storeName}`))
@@ -217,9 +280,16 @@ export function useLocalData<T extends SyncableEntity>({
 
       try {
         // Get all unsynced items
-        const unsyncedItems = await dbOperation<T[]>('readonly', (store) => {
-          const index = store.index('synced')
-          return index.getAll()
+        const unsyncedItems = await dbOperation<T[]>({
+          dbName,
+          version,
+          storeName,
+          setupStore,
+          mode: 'readonly',
+          operation: (store) => {
+            const index = store.index('synced')
+            return index.getAll()
+          },
         })
 
         if (unsyncedItems.length === 0) {
@@ -233,7 +303,14 @@ export function useLocalData<T extends SyncableEntity>({
         if (response && Array.isArray(response)) {
           await Promise.all(
             response.map((item) =>
-              dbOperation('readwrite', (store) => store.put({ ...item, synced: true }))
+              dbOperation({
+                dbName,
+                version,
+                storeName,
+                setupStore,
+                mode: 'readwrite',
+                operation: (store) => store.put({ ...item, synced: true }),
+              })
             )
           )
         }
@@ -275,7 +352,14 @@ export function useLocalData<T extends SyncableEntity>({
         const serverItems = await apiClient.get<null, T[]>(endpoint)
 
         // Get all local items
-        const localItems = await dbOperation<T[]>('readonly', (store) => store.getAll())
+        const localItems = await dbOperation<T[]>({
+          dbName,
+          version,
+          storeName,
+          setupStore,
+          mode: 'readonly',
+          operation: (store) => store.getAll(),
+        })
 
         // Create a map of local items for quick lookup
         const localItemsMap = new Map(localItems.map((item) => [item.id, item]))
@@ -304,7 +388,14 @@ export function useLocalData<T extends SyncableEntity>({
 
         // Update local database with merged items
         for (const item of itemsToUpdate) {
-          await dbOperation('readwrite', (store) => store.put(item))
+          await dbOperation({
+            dbName,
+            version,
+            storeName,
+            setupStore,
+            mode: 'readwrite',
+            operation: (store) => store.put(item),
+          })
         }
 
         return { updated: itemsToUpdate.length }
@@ -341,16 +432,23 @@ export function useLocalData<T extends SyncableEntity>({
   const importMutation = useMutation({
     mutationFn: async (importData: T[]) => {
       try {
-        await dbOperation('readwrite', (store) => {
-          // Clear existing data
-          store.clear()
+        await dbOperation({
+          dbName,
+          version,
+          storeName,
+          setupStore,
+          mode: 'readwrite',
+          operation: (store) => {
+            // Clear existing data
+            store.clear()
 
-          // Add all imported items
-          for (const item of importData) {
-            store.add(item)
-          }
+            // Add all imported items
+            for (const item of importData) {
+              store.add(item)
+            }
 
-          return store.count()
+            return store.count()
+          },
         })
         return importData
       } catch (err) {
@@ -368,7 +466,14 @@ export function useLocalData<T extends SyncableEntity>({
   // Get a specific item by ID
   const getById = async (id: string): Promise<T | null> => {
     try {
-      return await dbOperation('readonly', (store) => store.get(id))
+      return await dbOperation({
+        dbName,
+        version,
+        storeName,
+        setupStore,
+        mode: 'readonly',
+        operation: (store) => store.get(id),
+      })
     } catch (err) {
       console.error(`Error getting ${storeName} by ID:`, err)
       setError(err instanceof Error ? err : new Error(`Failed to get ${storeName} by ID`))
@@ -418,10 +523,3 @@ export function useLocalData<T extends SyncableEntity>({
     isError: !!error,
   }
 }
-
-// Example usage:
-// const useNotes = () => useLocalData<Note>({
-//   queryKey: ['notes'],
-//   endpoint: '/api/notes',
-//   storeName: 'notes',
-// })
