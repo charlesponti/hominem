@@ -1,7 +1,7 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { ChatMessage } from '..'
+import { ChatMessage } from '../chat-message.js'
 
 describe('Message Component', () => {
   const mockMessage: ChatMessageSelect = {

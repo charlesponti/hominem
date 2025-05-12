@@ -1,11 +1,11 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { Eraser, NotebookPen, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { Button } from '~/components/ui/button.js'
+import { Card } from '~/components/ui/card.js'
 import type { ToolCalls, ToolResults } from '~/lib/hooks/use-chat'
 import { cn } from '~/lib/utils'
-import { Button } from './ui/button'
-import { Card } from './ui/card'
-import { ChatMessage } from './ui/chat-message'
+import { ChatMessage } from './chat-message'
 
 type ChatInterfaceProps = {
   messages: ChatMessageSelect[]

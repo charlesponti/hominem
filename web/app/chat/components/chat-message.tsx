@@ -1,9 +1,9 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { cn } from '~/lib/utils'
-import { Card } from '../card'
-import { MessageContent } from './content'
-import { MessageDetails } from './details'
-import { MessageHeader } from './header'
+import { Card } from '../ui/card.js'
+import { MessageContent } from './content.js'
+import { MessageDetails } from './details.js'
+import { MessageHeader } from './header.js'
 
 export function ChatMessage({ message }: { message: ChatMessageSelect }) {
   const { content, role } = message

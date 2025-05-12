@@ -1,10 +1,10 @@
 'use client'
 
-import { ChatInterface } from '@/components/chat-interface'
-import { Switch } from '@/components/ui/switch'
-import { CHAT_ENDPOINTS, useChat } from '@/lib/hooks/use-chat'
 import { BugIcon } from 'lucide-react'
 import { useState } from 'react'
+import { ChatInterface } from './components/chat-interface'
+import { Switch } from './components/ui/switch'
+import { CHAT_ENDPOINTS, useChat } from './lib/use-chat'
 
 export default function ChatPage() {
   const [showDebugInfo, setShowDebugInfo] = useState(false)

@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/react-router'
 import type { Category, Possession, PossessionInsert } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useApiClient } from './use-api-client'
+import { useApiClient } from '../../../../florin/app/lib/hooks/use-api-client.js'
 
 // Define query keys as constants
 const POSSESSIONS_KEY = ['possessions']

@@ -1,7 +1,7 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
-import { FilePart } from './file-part'
-import { Reasoning } from './reasoning'
-import { ToolCall } from './tool-call'
+import { FilePart } from './file-part.js'
+import { Reasoning } from './reasoning.js'
+import { ToolCall } from './tool-call.js'
 
 interface MessageDetailsProps {
   toolCalls?: ChatMessageSelect['toolCalls']
