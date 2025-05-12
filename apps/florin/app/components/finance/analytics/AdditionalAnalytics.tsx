@@ -1,5 +1,6 @@
 import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types' // Keep only used types
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { formatCurrency } from '~/lib/finance'
 
 interface CategoryBreakdownItem {
   category: string
@@ -24,7 +25,6 @@ interface AdditionalAnalyticsProps {
     | { data?: TimeSeriesDataPoint[]; stats?: TimeSeriesStats | null }
     | null
     | undefined
-  formatCurrency: (value: number | string) => string
   formatDateLabel: (dateStr: string) => string
 }
 
@@ -36,11 +36,10 @@ export function AdditionalAnalytics({
   isLoadingMerchants,
   errorMerchants,
   timeSeriesData,
-  formatCurrency,
   formatDateLabel,
 }: AdditionalAnalyticsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Top Categories */}
       <Card>
         <CardHeader className="pb-2">

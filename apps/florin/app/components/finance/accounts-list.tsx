@@ -1,11 +1,11 @@
-import type { FinanceData } from '~/lib/hooks/use-finance-data'
+import type { FinanceAccount, Transaction } from '@hominem/utils/types'
 import { AccountCard } from './account-card'
 
 interface AccountsListProps {
-  accounts: FinanceData['accounts']
+  accounts: FinanceAccount[]
   loading: boolean
   error: string | null
-  getRecentTransactions: (accountName: string, limit: number) => FinanceData['transactions']
+  getRecentTransactions: (accountName: string, limit: number) => Transaction[]
 }
 
 export function AccountsList({

@@ -1,15 +1,12 @@
 import type { TimeSeriesStats } from '@hominem/utils/types'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { formatCurrency } from '~/lib/finance'
 
 interface AnalyticsStatisticsSummaryProps {
   stats: TimeSeriesStats | null | undefined
-  formatCurrency: (value: number | string) => string
 }
 
-export function AnalyticsStatisticsSummary({
-  stats,
-  formatCurrency,
-}: AnalyticsStatisticsSummaryProps) {
+export function AnalyticsStatisticsSummary({ stats }: AnalyticsStatisticsSummaryProps) {
   return (
     <>
       {stats ? (

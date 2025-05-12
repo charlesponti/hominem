@@ -1,20 +1,19 @@
 import type { TimeSeriesDataPoint } from '@hominem/utils/types'
 import { Link, useNavigate } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { formatCurrency } from '~/lib/finance'
 import { cn } from '~/lib/utils'
 
 interface AnalyticsMonthlyBreakdownProps {
   data: TimeSeriesDataPoint[] | undefined
   compareToPrevious: boolean
   formatDateLabel: (dateStr: string) => string
-  formatCurrency: (value: number | string) => string
 }
 
 export function AnalyticsMonthlyBreakdown({
   data,
   compareToPrevious,
   formatDateLabel,
-  formatCurrency,
 }: AnalyticsMonthlyBreakdownProps) {
   const navigate = useNavigate()
 
@@ -23,7 +22,7 @@ export function AnalyticsMonthlyBreakdown({
   }
 
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader>
         <CardTitle>Monthly Breakdown</CardTitle>
       </CardHeader>

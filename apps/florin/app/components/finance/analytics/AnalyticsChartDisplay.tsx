@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { TabsContent } from '~/components/ui/tabs'
+import { formatCurrency } from '~/lib/finance'
 
 interface ChartDataPoint {
   name: string
@@ -26,7 +26,6 @@ interface AnalyticsChartDisplayProps {
   isLoading: boolean
   error: Error | null
   chartData: ChartDataPoint[] | null | undefined
-  formatCurrency: (value: number | string) => string
 }
 
 export function AnalyticsChartDisplay({
@@ -35,11 +34,10 @@ export function AnalyticsChartDisplay({
   isLoading,
   error,
   chartData,
-  formatCurrency,
 }: AnalyticsChartDisplayProps) {
   return (
     <>
-      <TabsContent value="chart" className="space-y-4">
+      <div className="space-y-4">
         {error ? (
           <Card>
             <CardContent className="pt-6">
@@ -126,7 +124,7 @@ export function AnalyticsChartDisplay({
             </CardContent>
           </Card>
         )}
-      </TabsContent>
+      </div>
     </>
   )
 }

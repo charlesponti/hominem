@@ -1,6 +1,7 @@
 import type { FinanceAccount } from '@hominem/utils/types'
 import type { Dispatch, SetStateAction } from 'react'
 import { DatePicker } from '~/components/date-picker'
+import { AccountSelect } from '~/components/finance/account-select'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Label } from '~/components/ui/label'
 import {
@@ -54,7 +55,7 @@ export function AnalyticsFilters({
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
   return (
-    <Card className="mb-6">
+    <Card>
       <CardHeader>
         <CardTitle className="text-lg">Filters</CardTitle>
       </CardHeader>
@@ -72,25 +73,12 @@ export function AnalyticsFilters({
 
           <div className="space-y-2">
             <Label htmlFor="account">Account</Label>
-            <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-              <SelectTrigger>
-                <SelectValue placeholder="All accounts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All accounts</SelectItem>
-                {accountsLoading ? (
-                  <SelectItem value="disabled" disabled>
-                    Loading accounts...
-                  </SelectItem>
-                ) : (
-                  accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.name}>
-                      {account.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <AccountSelect
+              accounts={accounts}
+              selectedAccount={selectedAccount}
+              setSelectedAccount={setSelectedAccount}
+              className="w-full"
+            />
           </div>
 
           <div className="space-y-2">

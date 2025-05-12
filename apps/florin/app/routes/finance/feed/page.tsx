@@ -1,207 +1,26 @@
 'use client'
 
-import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
+import type { Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { format } from 'date-fns'
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Calendar,
-  ChevronRight,
-  Download,
-  RefreshCcw,
-  Search,
-  UploadCloudIcon,
-} from 'lucide-react'
-import { DatePicker } from '~/components/date-picker'
-import { RouteLink } from '~/components/route-link'
+import { ArrowDownRight, ArrowUpRight, Calendar, ChevronRight } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Input } from '~/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select'
-// Import both hooks from the correct file
+import { Card } from '~/components/ui/card'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
 
-const HermesLogo = () => (
-  <svg viewBox="0 0 24 24" className="h-6 w-6 text-[#FF6600]" fill="currentColor">
-    <title>Hermes Logo</title>
-    <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.33l7.36 3.68-7.36 3.68L4.64 8 12 4.33zm-8 5.34l8 4v7.99l-8-4V9.67zm16 0v8l-8 4v-7.99l8-4z" />
-  </svg>
-)
-
 export default function FinanceFeedPage() {
-  // Get accounts data separately
-  const { accounts, accountsMap, isLoading: accountsLoading } = useFinanceAccounts()
+  const { accountsMap, isLoading: accountsLoading } = useFinanceAccounts()
 
-  // Get transactions data and filters/sorting/pagination state
-  const {
-    transactions, // Use this instead of filteredTransactions
-    isLoading: transactionsLoading, // Rename to avoid conflict
-    error,
-    refetch, // Use this instead of refreshData
-    selectedAccount,
-    setSelectedAccount,
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
-    searchQuery,
-    setSearchQuery,
-    sortField, // Keep sort state if needed for UI, though sorting happens in hook
-    setSortField,
-    sortDirection,
-    setSortDirection,
-    // Pagination state if needed for UI controls (not currently used)
-    // limit, setLimit, offset, setOffset, page, setPage
-  } = useFinanceTransactions()
+  const { transactions, isLoading: transactionsLoading, error, refetch } = useFinanceTransactions()
 
   // Combine loading states
   const loading = accountsLoading || transactionsLoading
 
-  // TODO: Implement total balance calculation if needed
-  // const totalBalance = calculateTotalBalance(accounts); // Example
-  const totalBalance = '0.00' // Placeholder
-
-  // TODO: Implement export functionality if needed
-  const exportTransactions = () => {
-    console.warn('Export functionality not implemented yet.')
-  }
-
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header with logo and balance */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[#FFF8F0] p-6 rounded-md">
-        <div className="flex items-center gap-3">
-          <HermesLogo />
-          <h1 className="text-2xl font-light tracking-tight text-[#333333]">
-            Finance <span className="font-semibold">Gallerie</span>
-          </h1>
-        </div>
-
-        <div className="flex flex-col items-end">
-          <p className="text-sm text-[#917C6F] font-light">Total Balance</p>
-          <p className="text-3xl font-light text-[#333333]">
-            ${Number(totalBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <Card className="border border-[#E8E1D9] shadow-none">
-        <CardHeader className="py-4 px-6 border-b border-[#E8E1D9]">
-          <CardTitle className="text-md font-light text-[#917C6F]">Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="py-4 px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="account" className="text-sm font-medium mb-1 block text-[#917C6F]">
-                Account
-              </label>
-              <Select name="account" value={selectedAccount} onValueChange={setSelectedAccount}>
-                <SelectTrigger className="border-[#E8E1D9] bg-white">
-                  <SelectValue placeholder="All accounts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All accounts</SelectItem>
-                  {/* Type is already applied */}
-                  {accounts.map((account: FinanceAccount) => (
-                    <SelectItem key={account.id} value={account.name}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label htmlFor="from-date" className="text-sm font-medium mb-1 block text-[#917C6F]">
-                From
-              </label>
-              <input
-                type="text"
-                id="from-date"
-                className="hidden"
-                value={dateFrom?.toISOString().split('T')[0]}
-              />
-              <DatePicker date={dateFrom} setDate={setDateFrom} placeholder="Select start date" />
-            </div>
-
-            <div>
-              <label htmlFor="to-date" className="text-sm font-medium mb-1 block text-[#917C6F]">
-                To
-              </label>
-              <input
-                type="text"
-                id="to-date"
-                className="hidden"
-                value={dateTo?.toISOString().split('T')[0]}
-              />
-              <DatePicker date={dateTo} setDate={setDateTo} placeholder="Select end date" />
-            </div>
-
-            <div>
-              <label
-                htmlFor="searchQuery"
-                className="text-sm font-medium mb-1 block text-[#917C6F]"
-              >
-                Search
-              </label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-[#917C6F]" />
-                <Input
-                  name="searchQuery"
-                  placeholder="Search transactions..."
-                  className="pl-8 border-[#E8E1D9]"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Transaction Feed */}
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-light text-[#333333]">Recent Transactions</h2>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="border-[#E8E1D9] text-[#917C6F] hover:text-[#333333]"
-              onClick={() => refetch()} // Use refetch
-            >
-              <RefreshCcw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            {transactions.length ? (
-              <Button
-                variant="outline"
-                className="border-[#E8E1D9] text-[#917C6F] hover:text-[#333333]"
-                onClick={exportTransactions}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            ) : null}
-            <RouteLink
-              to="/finance/import"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-[#FF6600] text-white hover:bg-[#FF6600]/90 h-10 px-4 py-2"
-            >
-              <UploadCloudIcon className="h-4 w-4 mr-2" />
-              Import
-            </RouteLink>
-          </div>
-        </div>
-
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="animate-pulse space-y-4 w-full">

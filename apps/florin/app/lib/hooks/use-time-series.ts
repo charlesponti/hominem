@@ -101,20 +101,10 @@ export function useTimeSeriesData({
     ...(item.trend ? { TrendChange: Number.parseFloat(item.trend.raw) } : {}),
   }))
 
-  // Format currency
-  const formatCurrency = (value: number | string) => {
-    const formattedValue = typeof value === 'string' ? Number.parseFloat(value) : value
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(formattedValue)
-  }
-
   return {
     ...query,
     chartData,
     formatDateLabel,
-    formatCurrency,
     refetch: query.refetch,
   }
 }
