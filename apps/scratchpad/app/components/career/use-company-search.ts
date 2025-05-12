@@ -1,8 +1,7 @@
+import { useApiClient, useDebounce } from '@hominem/ui'
 import type { Company } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useApiClient } from '~/lib/hooks/use-api-client'
-import { useDebounce } from '~/lib/hooks/useDebounce'
 
 export function useCompanySearch() {
   const apiClient = useApiClient()
