@@ -1,4 +1,5 @@
 import { RedirectToSignIn, SignOutButton, useAuth } from '@clerk/react-router'
+import { useApiClient } from '@hominem/ui'
 import type { Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -16,7 +17,6 @@ import {
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 
 export default function AccountPage() {
