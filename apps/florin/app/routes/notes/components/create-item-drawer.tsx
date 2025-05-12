@@ -42,7 +42,7 @@ export function CreateItemDrawer({
           <DrawerDescription>Fill in the details below to add a new {inputMode}.</DrawerDescription>
         </DrawerHeader>
         <div className="p-4 pb-0">
-          <div className="bg-white/70 dark:bg-slate-800/60 backdrop-blur-xl rounded-xl p-5 border border-slate-200/50 dark:border-slate-700/50 relative overflow-hidden shadow-[0_0_15px_rgba(59,130,246,0.15)] dark:shadow-[0_0_15px_rgba(59,130,246,0.25)] before:-z-10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-500/10 before:via-purple-500/10 before:to-pink-500/10 before:opacity-30 dark:before:opacity-40 before:animate-pulse after:-z-10 after:absolute after:inset-0 after:bg-gradient-to-t after:from-indigo-500/5 after:to-blue-500/5 after:opacity-20">
+          <div>
             <Input
               placeholder={
                 inputMode === 'note'
