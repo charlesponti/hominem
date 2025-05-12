@@ -1,18 +1,12 @@
 'use client'
 
-import { SignInButton, SignOutButton, useUser } from '@clerk/react-router'
+import { SignInButton, useUser } from '@clerk/react-router'
 import { CircleDollarSignIcon, Home, Menu, PenTool, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu'
 
 const navItems = [
   {
@@ -161,33 +155,15 @@ export function MainNavigation() {
             {!isLoaded ? (
               <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
             ) : isLoggedIn ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-none text-muted-foreground hover:text-foreground"
-                    aria-label="User menu"
-                  >
-                    <User className="h-[18px] w-[18px]" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="end" className="w-56 mb-2">
-                  <DropdownMenuItem className="py-2">
-                    <span className="font-serif">{user.fullName}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <SignOutButton>
-                      <Button
-                        variant="ghost"
-                        className="w-full flex items-center justify-start gap-2 p-0"
-                      >
-                        Sign out
-                      </Button>
-                    </SignOutButton>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RouteLink to="/account" aria-label="Account settings">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 rounded-none text-muted-foreground hover:text-foreground"
+                >
+                  <User className="h-[18px] w-[18px]" />
+                </Button>
+              </RouteLink>
             ) : (
               <SignInButton>
                 <Button variant="ghost" size="icon" className="rounded-none">
@@ -219,33 +195,11 @@ export function MainNavigation() {
           {!isLoaded ? (
             <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
           ) : isLoggedIn ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                  aria-label="User menu"
-                >
-                  <User className="h-[18px] w-[18px]" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="py-2">
-                  <span className="font-serif">{user.fullName}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <SignOutButton>
-                    <Button
-                      variant="ghost"
-                      className="w-full flex items-center justify-start gap-2 p-0"
-                    >
-                      Sign out
-                    </Button>
-                  </SignOutButton>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <RouteLink to="/account" aria-label="Account settings">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                <User className="h-[18px] w-[18px]" />
+              </Button>
+            </RouteLink>
           ) : (
             <SignInButton>
               <Button variant="ghost" size="icon" className="rounded-full">
