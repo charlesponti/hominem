@@ -13,10 +13,14 @@ export * from './items.schema'
 export * from './lists.schema'
 export * from './movies.schema'
 export * from './music.schema'
-export * from './notes.schema'
 export * from './places.schema'
 export * from './possessions.schema'
 export * from './surveys.schema'
 export * from './tags.schema'
 export * from './travel.schema'
 export * from './users.schema'
+
+export {
+  content,
+  contentRelations,
+} from './notes.schema'

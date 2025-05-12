@@ -141,6 +141,13 @@
       "when": 1746927962843,
       "tag": "0019_melted_azazel",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1747010318880,
+      "tag": "0020_cold_centennial",
+      "breakpoints": true
     }
   ]
 }

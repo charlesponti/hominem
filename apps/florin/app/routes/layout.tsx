@@ -15,8 +15,8 @@ export default function Layout() {
       )}
       <div className="bg-background text-foreground min-h-screen-dynamic min-w-full flex flex-col">
         <MainNavigation />
-        <main className="flex-1 overflow-y-auto md:pl-16 pt-16 md:pt-6">
-          <div className="container md:mx-auto px-0">
+        <main className="flex-1 overflow-hidden md:pl-16 pt-16 md:pt-0">
+          <div className="md:mx-auto px-2">
             <Outlet />
           </div>
         </main>

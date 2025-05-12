@@ -1,4 +1,4 @@
-import type { Content, ContentType, TimeTracking } from '@hominem/utils/types' // Added ContentType
+import type { Content, ContentType, TaskMetadata } from '@hominem/utils/types' // Added TaskMetadata
 import { useState } from 'react'
 import { useContentEngine } from './use-content-engine' // Changed to useContentEngine
 
@@ -7,7 +7,7 @@ import { useContentEngine } from './use-content-engine' // Changed to useContent
  */
 export interface TimerTask extends Content {
   type: 'timer'
-  timeTracking: TimeTracking
+  taskMetadata: TaskMetadata
 }
 
 /**
@@ -44,21 +44,21 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
   }
 
   const {
-    items: allContent, // Changed from content to items
-    createItem, // Changed from createContent to createItem
-    updateItem, // Changed from updateContent to updateItem
-    deleteItem, // Changed from deleteContent to deleteItem
+    items: allContent,
+    createItem,
+    updateItem,
+    deleteItem,
     isLoading,
     error: contentError,
     ...rest
-  } = useContentEngine(contentOptions) // Changed to useContentEngine
+  } = useContentEngine(contentOptions)
 
   // Filter and cast content to timer tasks
   const timerTasks = allContent.filter(
     (item) =>
       item.type === 'timer' &&
-      item.timeTracking && // Ensure timeTracking exists
-      (options.active === undefined || !!item.timeTracking.isActive === options.active)
+      item.taskMetadata &&
+      (options.active === undefined || !!item.taskMetadata.isActive === options.active)
   ) as TimerTask[]
 
   /**
@@ -70,15 +70,13 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
     try {
       const now = new Date().toISOString()
       return createItem({
-        // Changed to createItem
         ...data,
         type: 'timer',
-        timeTracking: data.timeTracking || {
-          duration: 0,
-          isActive: false,
+        taskMetadata: {
+          ...data.taskMetadata,
+          duration: data.taskMetadata?.duration || 0,
+          isActive: data.taskMetadata?.isActive || false,
         },
-        // Explicitly add missing properties required by Omit in useContentEngine
-        // even though useContentEngine provides defaults, the call signature needs them.
         synced: false,
         createdAt: now,
         updatedAt: now,
@@ -94,7 +92,7 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
    */
   const updateTimerTask = (data: Partial<TimerTask> & { id: string }) => {
     try {
-      return updateItem(data) // Changed to updateItem
+      return updateItem(data)
     } catch (err) {
       setTimeTrackingError(err instanceof Error ? err : new Error('Failed to update timer task'))
       throw err
@@ -111,12 +109,10 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
       setTimeTrackingError(err)
       throw err
     }
-
     return updateItem({
-      // Changed to updateItem
       id: taskId,
-      timeTracking: {
-        ...task.timeTracking,
+      taskMetadata: {
+        ...task.taskMetadata,
         startTime: new Date().toISOString(),
         isActive: true,
       },
@@ -133,21 +129,17 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
       setTimeTrackingError(err)
       throw err
     }
-
-    if (!task.timeTracking.startTime || !task.timeTracking.isActive) {
+    if (!task.taskMetadata.startTime || !task.taskMetadata.isActive) {
       return
     }
-
-    const startTime = new Date(task.timeTracking.startTime)
+    const startTime = new Date(task.taskMetadata.startTime)
     const endTime = new Date()
     const elapsedMs = endTime.getTime() - startTime.getTime()
-
     return updateItem({
-      // Changed to updateItem
       id: taskId,
-      timeTracking: {
-        ...task.timeTracking,
-        duration: (task.timeTracking.duration || 0) + elapsedMs,
+      taskMetadata: {
+        ...task.taskMetadata,
+        duration: (task.taskMetadata.duration || 0) + elapsedMs,
         isActive: false,
       },
     })
@@ -163,12 +155,10 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
       setTimeTrackingError(err)
       throw err
     }
-
     return updateItem({
-      // Changed to updateItem
       id: taskId,
-      timeTracking: {
-        ...task.timeTracking,
+      taskMetadata: {
+        ...task.taskMetadata,
         duration: 0,
         isActive: false,
       },
@@ -185,17 +175,15 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
     const task = timerTasks.find((t) => t.id === taskId)
     if (
       !task ||
-      !task.timeTracking ||
-      !task.timeTracking.isActive ||
-      !task.timeTracking.startTime
+      !task.taskMetadata ||
+      !task.taskMetadata.isActive ||
+      !task.taskMetadata.startTime
     ) {
       return 0
     }
-
-    const startTime = new Date(task.timeTracking.startTime)
+    const startTime = new Date(task.taskMetadata.startTime)
     const now = new Date()
-    const elapsedMs = now.getTime() - startTime.getTime() + (task.timeTracking.duration || 0)
-
+    const elapsedMs = now.getTime() - startTime.getTime() + (task.taskMetadata.duration || 0)
     switch (unit) {
       case 'seconds':
         return Math.floor(elapsedMs / 1000)
@@ -214,7 +202,7 @@ export function useTimeTracking(options: UseTimeTrackingOptions = {}) {
    */
   const deleteTimerTask = (taskId: string) => {
     try {
-      return deleteItem(taskId) // Changed to deleteItem
+      return deleteItem(taskId)
     } catch (err) {
       setTimeTrackingError(err instanceof Error ? err : new Error('Failed to delete timer task'))
       throw err

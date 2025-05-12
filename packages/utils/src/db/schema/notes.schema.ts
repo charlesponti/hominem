@@ -12,9 +12,9 @@ export const content = pgTable('notes', {
   title: text('title'),
   content: text('content').notNull(),
   tags: json('tags').$type<Array<ContentTag>>().default([]),
+  mentions: json('mentions').$type<Array<NoteMention> | undefined>().default([]),
   analysis: json('analysis'),
   taskMetadata: json('task_metadata').$type<TaskMetadata>(),
-  timeTracking: json('time_tracking').$type<TimeTracking>(),
   userId: uuid('userId')
     .notNull()
     .references(() => users.id),
@@ -29,6 +29,11 @@ export const contentRelations = relations(content, ({ one }) => ({
     references: [users.id],
   }),
 }))
+
+export type NoteMention = {
+  id: string
+  name: string
+}
 
 /**
  * Define the tag type that's used across the application
@@ -66,24 +71,17 @@ export const PrioritySchema = z.enum(['low', 'medium', 'high', 'urgent'])
 export type Priority = z.infer<typeof PrioritySchema>
 
 /**
- * Time tracking metadata for timer-type content
- */
-export const TimeTrackingSchema = z.object({
-  startTime: z.string().optional(), // ISO string of when timer was last started
-  endTime: z.string().optional(), // ISO string of when timer was last stopped
-  isActive: z.boolean().default(false),
-})
-
-export type TimeTracking = z.infer<typeof TimeTrackingSchema>
-
-/**
- * Task metadata for task-type content
+ * Task metadata for task-type content (now includes time tracking fields)
  */
 export const TaskMetadataSchema = z.object({
   status: TaskStatusSchema.default('todo'),
   priority: PrioritySchema.default('medium'),
   dueDate: z.string().nullable(),
   completed: z.boolean().default(false),
+  startTime: z.string().optional(), // ISO string of when timer was last started
+  endTime: z.string().optional(), // ISO string of when timer was last stopped
+  isActive: z.boolean().default(false),
+  duration: z.number().optional(),
 })
 
 export type TaskMetadata = z.infer<typeof TaskMetadataSchema>

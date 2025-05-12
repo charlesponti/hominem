@@ -6,7 +6,6 @@ import {
   type Content as ContentSchemaType,
   ContentTypeSchema,
   TaskMetadataSchema,
-  TimeTrackingSchema,
 } from '../db/schema/notes.schema'
 
 export class NotFoundError extends Error {
@@ -29,7 +28,6 @@ export type ContentInput = {
   title?: string | null
   tags?: Array<{ value: string }> | null
   taskMetadata?: z.infer<typeof TaskMetadataSchema> | null
-  timeTracking?: z.infer<typeof TimeTrackingSchema> | null
   analysis?: ContentSchemaType['analysis']
   userId: string
   createdAt?: string
@@ -44,15 +42,19 @@ const UpdateContentZodSchema = z.object({
   content: z.string().optional(),
   tags: z.array(z.object({ value: z.string() })).nullish(),
   taskMetadata: TaskMetadataSchema.optional().nullish(),
-  timeTracking: TimeTrackingSchema.optional().nullish(),
   analysis: z.any().optional().nullish(),
 })
 export type UpdateContentInput = z.infer<typeof UpdateContentZodSchema>
 
-// Corrected SyncClientItem type definition
-// Making createdAt and updatedAt optional as client might not send them for new items.
-// id is optional. synced is omitted as server handles it.
-type SyncClientItem = Omit<ContentSchemaType, 'id' | 'synced' | 'createdAt' | 'updatedAt'> & {
+/**
+ * - `createdAt` and `updatedAt` they are not included for new items.
+ * - `id` is optional as it might be a new item.
+ * - `synced` is omitted as server handles it.
+ */
+type SyncClientItem = Omit<
+  ContentSchemaType,
+  'id' | 'synced' | 'createdAt' | 'updatedAt' | 'timeTracking'
+> & {
   id?: string
   createdAt?: string
   updatedAt?: string
@@ -70,7 +72,6 @@ export class ContentService {
       title: input.title,
       tags: input.tags === null ? [] : input.tags || [],
       taskMetadata: input.taskMetadata === null ? undefined : input.taskMetadata,
-      timeTracking: input.timeTracking === null ? undefined : input.timeTracking,
       analysis: input.analysis === null ? undefined : input.analysis,
       userId: input.userId,
       synced: true,
@@ -163,9 +164,6 @@ export class ContentService {
     if (validatedInput.taskMetadata !== undefined)
       updateData.taskMetadata =
         validatedInput.taskMetadata === null ? undefined : validatedInput.taskMetadata
-    if (validatedInput.timeTracking !== undefined)
-      updateData.timeTracking =
-        validatedInput.timeTracking === null ? undefined : validatedInput.timeTracking
     if (validatedInput.analysis !== undefined)
       updateData.analysis = validatedInput.analysis === null ? undefined : validatedInput.analysis
 
@@ -222,21 +220,16 @@ export class ContentService {
       }
 
       try {
-        // Explicitly cast itemDataWithoutId to ensure all properties of ContentInput are potentially present
-        // and then satisfy the ContentInput type for this.create
         const { id } = incomingItem
 
-        // Prepare a base for ContentInput, ensuring all non-optional fields of ContentInput are covered
-        // or will be covered by defaults in this.create
         const baseInputData = {
           type: incomingItem.type,
           content: incomingItem.content,
           title: incomingItem.title,
           tags: incomingItem.tags,
           taskMetadata: incomingItem.taskMetadata,
-          timeTracking: incomingItem.timeTracking,
           analysis: incomingItem.analysis,
-          userId: userId, // ensure userId is from the authenticated session
+          userId, // Use `userId` from the authenticated session.
           createdAt: incomingItem.createdAt,
           updatedAt: incomingItem.updatedAt,
         }
@@ -261,32 +254,43 @@ export class ContentService {
                 content: incomingItem.content,
                 tags: incomingItem.tags,
                 taskMetadata: incomingItem.taskMetadata,
-                timeTracking: incomingItem.timeTracking,
                 analysis: incomingItem.analysis,
               }
               const updated = await this.update(updatePayload)
-              results.updated++
-              results.items.push({
-                id: updated.id,
-                updatedAt: updated.updatedAt,
-                type: updated.type,
-              })
+              if (updated?.id && updated?.updatedAt && updated?.type) {
+                results.updated++
+                results.items.push({
+                  id: updated.id,
+                  updatedAt: updated.updatedAt,
+                  type: updated.type,
+                })
+              }
             } else {
-              results.items.push({
-                id: existing.id,
-                updatedAt: existing.updatedAt,
-                type: existing.type as ContentSchemaType['type'],
-              })
+              if (existing?.id && existing?.updatedAt && existing?.type) {
+                results.items.push({
+                  id: existing.id,
+                  updatedAt: existing.updatedAt,
+                  type: existing.type as ContentSchemaType['type'],
+                })
+              }
             }
           } else {
             const created = await this.create(baseInputData as ContentInput)
-            results.created++
-            results.items.push({ id: created.id, updatedAt: created.updatedAt, type: created.type })
+            if (created?.id && created?.updatedAt && created?.type) {
+              results.created++
+              results.items.push({
+                id: created.id,
+                updatedAt: created.updatedAt,
+                type: created.type,
+              })
+            }
           }
         } else {
           const created = await this.create(baseInputData as ContentInput)
-          results.created++
-          results.items.push({ id: created.id, updatedAt: created.updatedAt, type: created.type })
+          if (created?.id && created?.updatedAt && created?.type) {
+            results.created++
+            results.items.push({ id: created.id, updatedAt: created.updatedAt, type: created.type })
+          }
         }
       } catch (error) {
         console.error(`Error syncing item (Client ID: ${incomingItem.id || 'new'}):`, error)

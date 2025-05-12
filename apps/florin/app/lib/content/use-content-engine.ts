@@ -15,7 +15,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useToast } from '~/components/ui/use-toast'
 import { useApiClient } from '../hooks/use-api-client'
-// Assuming analytics functions are generic enough or will be adapted
 import { trackContentCreated, trackContentDeleted, trackContentUpdated } from './analytics'
 
 const DB_NAME = 'HominemDataStore'
@@ -33,27 +32,31 @@ export interface UseContentEngineOptions {
   querySuffix?: string
 }
 
-const defaultContentFields = (type: ContentType = 'note'): Omit<Content, 'id' | 'content'> => ({
+const defaultContentFields = (
+  type: ContentType = 'note'
+): Omit<Content, 'id' | 'content' | 'userId'> => ({
   type,
   title: '',
   tags: [],
-  synced: false, // Back to boolean
+  synced: false,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  ...(type === 'task' && {
-    taskMetadata: {
-      status: 'todo',
-      priority: 'medium',
-      dueDate: null,
-      completed: false,
-    } as TaskMetadata,
-  }),
-  ...(type === 'timer' && {
-    timeTracking: {
-      duration: 0,
-      isActive: false,
-    },
-  }),
+  mentions: [],
+  taskMetadata:
+    type === 'task' || type === 'timer'
+      ? ({
+          status: 'todo',
+          priority: 'medium',
+          dueDate: null,
+          completed: false,
+          // Time tracking fields for timer
+          startTime: undefined,
+          endTime: undefined,
+          isActive: false,
+          duration: 0,
+        } as TaskMetadata)
+      : null,
+  analysis: {},
 })
 
 export function useContentEngine(options: UseContentEngineOptions = {}) {
@@ -114,15 +117,12 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
       if (result instanceof Promise) {
         result.then(resolve).catch(reject)
       } else {
-        // For IDBRequest objects
         result.onsuccess = () => resolve(result.result as T)
         result.onerror = () => reject(result.error)
       }
-      // Transaction auto-commits
     })
   }
 
-  // Special dbOperation for multiple puts in a single transaction
   const dbBatchPut = async (items: Content[]): Promise<void> => {
     if (items.length === 0) return Promise.resolve()
     const db = await dbInit()
@@ -139,9 +139,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
         const request = store.put(item)
         request.onsuccess = () => {
           completedOperations++
-          // This onsuccess is for individual put, transaction.oncomplete handles overall success
         }
-        // Individual error handling can be added here if needed, but transaction.onerror will catch it
       }
     })
   }
@@ -154,7 +152,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
     }
     if (options.tags && options.tags.length > 0) {
       filtered = filtered.filter((item) =>
-        options.tags?.some((tagValue) => item.tags.some((itemTag) => itemTag.value === tagValue))
+        options.tags?.some((tagValue) => item.tags?.some((itemTag) => itemTag.value === tagValue))
       )
     }
     if (options.searchText) {
@@ -196,7 +194,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
               for (const serverItem of serverContent) {
                 const localItem = localContentMap.get(serverItem.id)
                 if (!localItem || new Date(serverItem.updatedAt) > new Date(localItem.updatedAt)) {
-                  itemsToUpdateInDB.push({ ...serverItem, userId, synced: true }) // boolean true
+                  itemsToUpdateInDB.push({ ...serverItem, userId, synced: true })
                 }
               }
               if (itemsToUpdateInDB.length > 0) {
@@ -220,10 +218,14 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
 
   const createItem = useMutation({
     mutationFn: async (
-      itemData: Omit<Content, 'id' | 'synced' | 'createdAt' | 'updatedAt'> &
-        Partial<Pick<Content, 'synced' | 'createdAt' | 'updatedAt'>>
+      itemData: { type: ContentType; content: string } & Partial<
+        Pick<
+          Content,
+          'title' | 'tags' | 'synced' | 'createdAt' | 'updatedAt' | 'taskMetadata' | 'analysis'
+        >
+      >
     ) => {
-      if (!userId && isSignedIn) {
+      if (!userId) {
         throw new Error('User ID not available for creating item.')
       }
       const now = new Date().toISOString()
@@ -231,10 +233,10 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
         ...defaultContentFields(itemData.type),
         ...itemData,
         id: crypto.randomUUID(),
-        userId: userId || undefined,
+        userId,
         createdAt: itemData.createdAt || now,
         updatedAt: itemData.updatedAt || now,
-        synced: false, // boolean false
+        synced: false,
       }
 
       await dbOperation('readwrite', (store) => store.add(newItem))
@@ -245,7 +247,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
           if (serverResponse) {
             await dbOperation('readwrite', (store) => {
               store.delete(newItem.id)
-              return store.put({ ...serverResponse, synced: true }) // boolean true
+              return store.put({ ...serverResponse, synced: true })
             })
             trackContentCreated(serverResponse.type, { contentId: serverResponse.id })
             return serverResponse
@@ -277,7 +279,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
         ...existingItem,
         ...itemData,
         updatedAt: new Date().toISOString(),
-        synced: false, // boolean false
+        synced: false,
       }
 
       await dbOperation('readwrite', (store) => store.put(updatedItem))
@@ -289,9 +291,8 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
             updatedItem
           )
           if (serverResponse) {
-            await dbOperation(
-              'readwrite',
-              (store) => store.put({ ...serverResponse, synced: true }) // boolean true
+            await dbOperation('readwrite', (store) =>
+              store.put({ ...serverResponse, synced: true })
             )
             trackContentUpdated(serverResponse.type, { contentId: serverResponse.id })
             return serverResponse
@@ -345,9 +346,8 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
     mutationFn: async () => {
       if (!isSignedIn || !userId) throw new Error('User not authenticated for sync')
 
-      const unsyncedItems = await dbOperation<Content[]>(
-        'readonly',
-        (store) => store.index('synced').getAll(IDBKeyRange.only(false)) // Query for boolean false
+      const unsyncedItems = await dbOperation<Content[]>('readonly', (store) =>
+        store.index('synced').getAll(IDBKeyRange.only(false))
       )
       const userUnsyncedItems = unsyncedItems.filter((item) => item.userId === userId)
 
@@ -363,8 +363,7 @@ export function useContentEngine(options: UseContentEngineOptions = {}) {
         )
 
         if (response?.syncedItems) {
-          // Optional chaining for Biome
-          await dbBatchPut(response.syncedItems.map((item) => ({ ...item, synced: true }))) // boolean true
+          await dbBatchPut(response.syncedItems.map((item) => ({ ...item, synced: true })))
           toast({
             title: 'Content Synced',
             description: 'Content successfully synced with the server.',

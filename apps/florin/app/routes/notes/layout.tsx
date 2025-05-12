@@ -13,5 +13,9 @@ export default function NotesLayout() {
     return <RedirectToSignIn />
   }
 
-  return <Outlet />
+  return (
+    <div className="flex flex-col h-full">
+      <Outlet />
+    </div>
+  )
 }

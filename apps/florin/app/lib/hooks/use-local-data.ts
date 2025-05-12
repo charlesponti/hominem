@@ -219,7 +219,7 @@ export function useLocalData<T extends SyncableEntity>({
         // Get all unsynced items
         const unsyncedItems = await dbOperation<T[]>('readonly', (store) => {
           const index = store.index('synced')
-          return index.getAll(false)
+          return index.getAll()
         })
 
         if (unsyncedItems.length === 0) {
@@ -297,6 +297,7 @@ export function useLocalData<T extends SyncableEntity>({
             !localItem.synced
           ) {
             // Local item is newer and not synced - keep it for later sync
+            // biome-ignore lint/correctness/noUnnecessaryContinue: <explanation>
             continue
           }
         }
@@ -406,11 +407,11 @@ export function useLocalData<T extends SyncableEntity>({
     isLoading: query.isLoading,
     isRefetching: query.isRefetching,
     isFetching: query.isFetching,
-    isSyncing: syncMutation.isPending,
-    isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending,
-    isImporting: importMutation.isPending,
+    isSyncing: syncMutation.isLoading,
+    isCreating: createMutation.isLoading,
+    isUpdating: updateMutation.isLoading,
+    isDeleting: deleteMutation.isLoading,
+    isImporting: importMutation.isLoading,
 
     // Error state
     error,
