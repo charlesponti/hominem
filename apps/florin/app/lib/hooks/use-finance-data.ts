@@ -1,7 +1,7 @@
+import { useApiClient } from '@hominem/ui'
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { useApiClient } from '~/lib/hooks/use-api-client'
 
 export function useFinanceAccounts() {
   const api = useApiClient()

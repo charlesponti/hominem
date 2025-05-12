@@ -1,0 +1,17 @@
+{
+  "extends": "@hominem/tsconfigs/react-library.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "ESNext",
+    "types": [
+      "vite/client"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
