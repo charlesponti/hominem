@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
-import type { ListSelect as List, ListInsert } from '@hominem/utils/types'
+import type { ListSelect as List, ListInsert, ListInviteSelect } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -18,13 +18,17 @@ interface ListInvite {
   userId: string
 }
 
+// `userId` and `id` are added by the api.
+type NewList = Omit<ListInsert, 'userId' | 'id'>
+
 /**
  * Hook for creating a new list
  */
 export function useCreateList() {
+  const { userId } = useAuth()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
-  const [data, setData] = useState<ListInsert>({
+  const [data, setData] = useState<NewList>({
     name: '',
     isPublic: false,
   })
@@ -202,7 +206,7 @@ export function useSendListInvite() {
     mutationFn: async (inviteData: { listId: string; email: string }) => {
       try {
         const { listId, email } = inviteData
-        return await apiClient.post<{ email: string }, { invite: any }>(
+        return await apiClient.post<{ email: string }, { invite: List }>(
           `/api/lists/${listId}/invites`,
           { email }
         )
@@ -241,7 +245,7 @@ export function useAcceptListInvite() {
   const acceptInvite = useMutation({
     mutationFn: async (listId: string) => {
       try {
-        return await apiClient.post<null, { message: string; data: any }>(
+        return await apiClient.post<null, { message: string; data: boolean }>(
           `/api/invites/${listId}/accept`,
           null
         )
@@ -279,10 +283,10 @@ export function useListInvites(options = {}) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   }
 
-  const query = useQuery<any[]>({
+  const query = useQuery<List[]>({
     queryKey: LIST_INVITES_KEY,
     queryFn: async () => {
-      return await apiClient.get<null, any[]>('/api/invites')
+      return await apiClient.get<null, List[]>('/api/invites')
     },
     ...defaultOptions,
     ...options,
@@ -312,10 +316,10 @@ export function useListInvitesByList(listId: string, options = {}) {
 
   const queryKey = [...LISTS_KEY, listId, 'invites']
 
-  const query = useQuery<any[]>({
+  const query = useQuery<ListInviteSelect[]>({
     queryKey,
     queryFn: async () => {
-      return await apiClient.get<null, any[]>(`/api/lists/${listId}/invites`)
+      return await apiClient.get<null, ListInviteSelect[]>(`/api/lists/${listId}/invites`)
     },
     ...defaultOptions,
     ...options,

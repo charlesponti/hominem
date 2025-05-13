@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "module": "ESNext",
+    "rootDir": ".",
     "types": [
       "vite/client"
     ]

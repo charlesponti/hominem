@@ -19,6 +19,7 @@ export type {
 
 export type {
   ListInsert,
+  ListInviteSelect,
   ListSelect,
 } from '../db/schema/lists.schema'
 
