@@ -1,4 +1,4 @@
-import { and, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm'
+import { and, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { db } from '../db/index'
 import {
@@ -92,8 +92,12 @@ export function buildWhereConditions(options: QueryOptions) {
 export async function queryTransactions(options: QueryOptions) {
   const whereConditions = buildWhereConditions(options)
   const limit = options.limit || 100
+  const offset = options.offset || 0
+  const sortBy = options.sortBy || 'date'
+  const sortDirection = options.sortDirection || 'desc'
 
-  const result = await db
+  // Build the base query
+  const query = db
     .select({
       id: transactions.id,
       date: transactions.date,
@@ -111,8 +115,34 @@ export async function queryTransactions(options: QueryOptions) {
     .from(transactions)
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .where(whereConditions)
-    .orderBy(sql`${transactions.date} DESC`)
-    .limit(limit)
+
+  // Apply sorting based on the sort field and direction
+  // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+  let result
+  if (sortBy === 'date') {
+    result =
+      sortDirection === 'asc'
+        ? await query.orderBy(transactions.date).limit(limit).offset(offset)
+        : await query.orderBy(desc(transactions.date)).limit(limit).offset(offset)
+  } else if (sortBy === 'amount') {
+    result =
+      sortDirection === 'asc'
+        ? await query.orderBy(sql`${transactions.amount}::numeric`).limit(limit).offset(offset)
+        : await query.orderBy(sql`${transactions.amount}::numeric DESC`).limit(limit).offset(offset)
+  } else if (sortBy === 'description') {
+    result =
+      sortDirection === 'asc'
+        ? await query.orderBy(transactions.description).limit(limit).offset(offset)
+        : await query.orderBy(desc(transactions.description)).limit(limit).offset(offset)
+  } else if (sortBy === 'category') {
+    result =
+      sortDirection === 'asc'
+        ? await query.orderBy(transactions.category).limit(limit).offset(offset)
+        : await query.orderBy(desc(transactions.category)).limit(limit).offset(offset)
+  } else {
+    // Default sort by date
+    result = await query.orderBy(desc(transactions.date)).limit(limit).offset(offset)
+  }
 
   return result
 }

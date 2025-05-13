@@ -12,9 +12,11 @@ export const formatCurrency = (
     currency: 'USD', // Default to USD, can be overridden by options
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: true, // Ensures commas are used for thousands separators
     ...options,
   })
 }
+
 //!TODO Migrate to `api`
 // 2024 Federal Tax Brackets (simplified)
 export const federalBrackets = [

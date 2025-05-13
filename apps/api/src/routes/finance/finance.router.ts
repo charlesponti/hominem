@@ -226,6 +226,8 @@ export async function financeRoutes(fastify: FastifyInstance) {
     account: z.string().optional().describe('Account filter'),
     limit: z.coerce.number().optional().describe('Maximum results to return'),
     description: z.string().optional().describe('Description search term'),
+    sortBy: z.string().optional().describe('Field to sort by'),
+    sortDirection: z.enum(['asc', 'desc']).optional().describe('Sort direction'),
   })
 
   fastify.get('/transactions', { preHandler: verifyAuth }, async (request, reply) => {

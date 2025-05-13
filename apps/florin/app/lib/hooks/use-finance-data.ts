@@ -86,11 +86,10 @@ export function useFinanceTransactions({
     if (searchQuery) params.append('search', searchQuery)
     params.append('limit', limit.toString())
     params.append('offset', offset.toString())
-    // Consider adding sort params if backend supports it
-    // params.append('sort', sortField);
-    // params.append('direction', sortDirection);
+    params.append('sortBy', sortField)
+    params.append('sortDirection', sortDirection)
     return params.toString()
-  }, [selectedAccount, dateFrom, dateTo, searchQuery, limit, offset /*, sortField, sortDirection*/])
+  }, [selectedAccount, dateFrom, dateTo, searchQuery, limit, offset, sortField, sortDirection])
 
   // Query for transactions with dependencies on filters
   const transactionsQuery = useQuery<FinanceTransaction[], Error>({
@@ -103,35 +102,14 @@ export function useFinanceTransactions({
     queryFn: async () => {
       return await api.get<never, FinanceTransaction[]>(`/api/finance/transactions?${queryString}`)
     },
-    staleTime: 1 * 60 * 1000, // 1 minute, transactions might change more often
-    keepPreviousData: true, // Useful for pagination to avoid flickering
+    staleTime: 1 * 60 * 1000,
+    keepPreviousData: true,
   })
 
-  // Perform client-side sorting (if backend doesn't support it)
-  // Note: Client-side filtering is removed as it duplicates backend logic
+  // No need for client-side sorting now, as the data is already sorted by the server
   const sortedTransactions = useMemo(() => {
-    const dataToSort = transactionsQuery.data || []
-    // If backend handles sorting, return data directly: return dataToSort;
-
-    return [...dataToSort].sort((a, b) => {
-      let comparison = 0
-      const valA = a[sortField as keyof FinanceTransaction]
-      const valB = b[sortField as keyof FinanceTransaction]
-
-      if (sortField === 'date') {
-        comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
-      } else if (sortField === 'amount') {
-        comparison = Number.parseFloat(a.amount) - Number.parseFloat(b.amount)
-      } else if (typeof valA === 'string' && typeof valB === 'string') {
-        comparison = valA.localeCompare(valB)
-      } else if (typeof valA === 'number' && typeof valB === 'number') {
-        comparison = valA - valB
-      }
-      // Add more type checks if needed
-
-      return sortDirection === 'asc' ? comparison : -comparison
-    })
-  }, [transactionsQuery.data, sortField, sortDirection])
+    return transactionsQuery.data || []
+  }, [transactionsQuery.data])
 
   // Pagination helpers
   const page = Math.floor(offset / limit)
@@ -141,10 +119,10 @@ export function useFinanceTransactions({
 
   return {
     // Data
-    transactions: sortedTransactions, // Use sorted (and potentially filtered) data
-    rawTransactions: transactionsQuery.data, // Raw data from query if needed
+    transactions: sortedTransactions,
+    rawTransactions: transactionsQuery.data,
     isLoading: transactionsQuery.isLoading,
-    isFetching: transactionsQuery.isFetching, // More granular loading state
+    isFetching: transactionsQuery.isFetching,
     error: transactionsQuery.error,
     refetch: transactionsQuery.refetch,
 
@@ -171,27 +149,5 @@ export function useFinanceTransactions({
     setOffset,
     page,
     setPage,
-    // Consider adding total count from backend if available for better pagination UI
   }
 }
-
-// --- Other Helper Functions (can be moved or kept separate) ---
-
-// Example: Delete All Data Mutation (can be in its own hook like `useFinanceSettings`)
-// import { useMutation, useQueryClient } from '@tanstack/react-query';
-// export function useDeleteAllFinanceData() {
-//   const api = useApiClient();
-//   const queryClient = useQueryClient();
-//   return useMutation({
-//     mutationFn: async () => api.delete('/api/finance'),
-//     onSuccess: () => {
-//       // Invalidate all finance queries
-//       queryClient.invalidateQueries({ queryKey: ['finance'] });
-//     },
-//   });
-// }
-
-// Example: Export Function (can be a standalone utility)
-// export function exportTransactionsCSV(transactions: FinanceTransaction[], accountsMap: Map<string, FinanceAccount>) {
-//    // ... (CSV generation logic from original hook) ...
-// }
