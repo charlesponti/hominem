@@ -3,26 +3,9 @@
 import { RefreshCcw } from 'lucide-react'
 import { AccountsList } from '~/components/finance/accounts-list'
 import { Button } from '~/components/ui/button'
-import {
-  useFinanceAccounts,
-  useFinanceAccountSummary,
-  useFinanceTransactions,
-} from '~/lib/hooks/use-finance-data'
+import { useFinanceAccountSummary } from '~/lib/hooks/use-finance-data'
 
 export default function AccountsPage() {
-  const {
-    accounts,
-    isLoading: accountsLoading,
-    error: accountsError,
-    refetch: refetchAccounts,
-  } = useFinanceAccounts()
-
-  const {
-    isLoading: transactionsLoading,
-    error: transactionsError,
-    refetch: refetchTransactions,
-  } = useFinanceTransactions()
-
   const {
     accountSummary,
     isLoading: summaryLoading,
