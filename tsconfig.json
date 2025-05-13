@@ -42,7 +42,6 @@
   "display": "@hominem/root",
   "include": [
     "apps",
-    "packages",
-    "web/app/chat/lib/use-chat.ts"
+    "packages"
   ]
 }
