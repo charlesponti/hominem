@@ -8,7 +8,6 @@ import { handleError } from '../../lib/errors.js'
 import { verifyAuth } from '../../middleware/auth.js'
 
 export async function financeAccountsRoutes(fastify: FastifyInstance) {
-  // Schema definitions
   const createAccountSchema = z.object({
     name: z.string(),
     type: z.enum(['checking', 'savings', 'investment', 'credit']),
@@ -171,6 +170,24 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
       await FinancialAccountService.deleteAccount(id, userId)
 
       return { success: true, message: 'Account deleted successfully' }
+    } catch (error) {
+      return handleError(error as Error, reply)
+    }
+  })
+
+  // Get accounts with last 5 transactions
+  fastify.get('/summary', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const { userId } = request
+      if (!userId) {
+        reply.code(401)
+        return { error: 'Not authorized' }
+      }
+
+      const accountsWithTransactions =
+        await FinancialAccountService.listAccountsWithRecentTransactions(userId, 5)
+
+      return accountsWithTransactions
     } catch (error) {
       return handleError(error as Error, reply)
     }

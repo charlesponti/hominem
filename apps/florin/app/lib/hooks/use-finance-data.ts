@@ -27,6 +27,27 @@ export function useFinanceAccounts() {
   }
 }
 
+export function useFinanceAccountSummary() {
+  const api = useApiClient()
+
+  const query = useQuery<Array<FinanceAccount & { transactions: FinanceTransaction[] }>, Error>({
+    queryKey: ['finance', 'accounts', 'summary'],
+    queryFn: async () => {
+      return await api.get<never, Array<FinanceAccount & { transactions: FinanceTransaction[] }>>(
+        '/api/finance/accounts/summary'
+      )
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  return {
+    accountSummary: query.data || [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  }
+}
+
 // --- Hook for fetching and managing Finance Transactions ---
 export interface UseFinanceTransactionsOptions {
   initialLimit?: number

@@ -3,38 +3,38 @@
 import { RefreshCcw } from 'lucide-react'
 import { AccountsList } from '~/components/finance/accounts-list'
 import { Button } from '~/components/ui/button'
-import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import {
+  useFinanceAccounts,
+  useFinanceAccountSummary,
+  useFinanceTransactions,
+} from '~/lib/hooks/use-finance-data'
 
 export default function AccountsPage() {
   const {
     accounts,
-    accountsMap,
     isLoading: accountsLoading,
     error: accountsError,
     refetch: refetchAccounts,
   } = useFinanceAccounts()
 
   const {
-    transactions,
     isLoading: transactionsLoading,
     error: transactionsError,
     refetch: refetchTransactions,
   } = useFinanceTransactions()
 
-  const isLoading = accountsLoading || transactionsLoading
-  const combinedError = accountsError || transactionsError
+  const {
+    accountSummary,
+    isLoading: summaryLoading,
+    error: summaryError,
+    refetch: refetchSummary,
+  } = useFinanceAccountSummary()
 
-  const getRecentTransactions = (accountName: string, limit = 3) => {
-    return transactions
-      .filter((tx) => {
-        const account = accountsMap.get(tx.accountId)
-        return account?.name === accountName
-      })
-      .slice(0, limit)
-  }
+  const isLoading = summaryLoading
+  const combinedError = summaryError
 
   const refreshData = async () => {
-    await Promise.all([refetchAccounts(), refetchTransactions()])
+    await refetchSummary()
   }
 
   return (
@@ -50,10 +50,9 @@ export default function AccountsPage() {
       </div>
 
       <AccountsList
-        accounts={accounts}
+        accounts={accountSummary}
         loading={isLoading}
         error={combinedError instanceof Error ? combinedError.message : null}
-        getRecentTransactions={getRecentTransactions}
       />
     </div>
   )

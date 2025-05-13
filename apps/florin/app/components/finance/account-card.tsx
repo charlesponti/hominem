@@ -24,13 +24,13 @@ export function AccountCard({ account, recentTransactions }: AccountCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
-        <div className="text-2xl font-bold">
+        {/* <div className="text-2xl font-bold">
           <span
             className={Number.parseFloat(account.balance) >= 0 ? 'text-green-600' : 'text-red-600'}
           >
             ${Number.parseFloat(account.balance).toLocaleString()}
           </span>
-        </div>
+        </div> */}
 
         <div className="mt-4">
           <h4 className="text-sm font-medium mb-2">Recent Activity</h4>
@@ -45,6 +45,9 @@ export function AccountCard({ account, recentTransactions }: AccountCardProps) {
                 </span>
               </div>
             ))}
+            {recentTransactions.length === 0 && (
+              <div className="text-gray-500 text-sm">No recent transactions</div>
+            )}
           </div>
         </div>
       </CardContent>
