@@ -3,8 +3,7 @@
     "**/*",
     "**/.server/**/*",
     "**/.client/**/*",
-    ".react-router/types/**/*",
-    "../../packages/ui/src/hooks/use-lists.ts"
+    ".react-router/types/**/*"
   ],
   "compilerOptions": {
     "lib": [

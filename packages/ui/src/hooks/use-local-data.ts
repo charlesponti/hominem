@@ -10,7 +10,6 @@ import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useToast } from '~/components/ui/use-toast'
 
 // Base entity interface that all entities should implement
 export interface Entity {
@@ -139,7 +138,6 @@ export function useLocalData<T extends SyncableEntity>({
   const { userId, isSignedIn } = useAuth()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
-  const { toast } = useToast()
   const [error, setError] = useState<Error | null>(null)
 
   // Get all items from the collection
@@ -315,22 +313,10 @@ export function useLocalData<T extends SyncableEntity>({
           )
         }
 
-        toast({
-          title: 'Data synced',
-          description: `Successfully synced ${unsyncedItems.length} items.`,
-        })
-
         return response
       } catch (err) {
         console.error(`Error syncing ${storeName}:`, err)
         setError(err instanceof Error ? err : new Error(`Failed to sync ${storeName}`))
-
-        toast({
-          title: 'Sync failed',
-          description: `Could not sync ${storeName} with server.`,
-          variant: 'destructive',
-        })
-
         throw err
       }
     },

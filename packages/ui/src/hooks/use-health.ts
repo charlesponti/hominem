@@ -1,8 +1,6 @@
-import { useApiClient } from '@hominem/ui'
 import { useEffect, useMemo, useState } from 'react'
-import { useToast } from '~/components/ui/use-toast'
-import type { SyncableEntity } from '~/lib/hooks/use-local-data'
-import { useLocalData } from '~/lib/hooks/use-local-data'
+import type { SyncableEntity } from './use-local-data'
+import { useLocalData } from './use-local-data'
 
 export interface HealthData extends SyncableEntity {
   date: string
@@ -32,8 +30,6 @@ export function useHealth(options: {
   filters?: HealthDataFilter
 }) {
   const { isLoggedIn, userId, filters } = options
-  const apiClient = useApiClient()
-  const { toast } = useToast()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState<HealthDataInput>({
@@ -125,20 +121,8 @@ export function useHealth(options: {
       // Reset form state
       setIsFormOpen(false)
       setEditingId(null)
-
-      toast({
-        title: editingId ? 'Entry updated' : 'Entry created',
-        description: editingId
-          ? 'Your health activity has been updated.'
-          : 'Your new health activity has been saved.',
-      })
     } catch (error) {
       console.error('Error saving health data:', error)
-      toast({
-        title: 'Error',
-        description: 'There was a problem saving your data.',
-        variant: 'destructive',
-      })
     }
   }
 
@@ -151,18 +135,8 @@ export function useHealth(options: {
       if (isLoggedIn && userId) {
         syncDataWithServer()
       }
-
-      toast({
-        title: 'Entry deleted',
-        description: 'The health activity has been removed.',
-      })
     } catch (error) {
       console.error('Error deleting entry:', error)
-      toast({
-        title: 'Error',
-        description: 'There was a problem deleting your data.',
-        variant: 'destructive',
-      })
     }
   }
 
