@@ -4,8 +4,6 @@ import type { FinanceAccount } from '@hominem/utils/types'
 import { RefreshCcw, Search } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { DatePicker } from '~/components/date-picker'
-import { AccountsList } from '~/components/finance/accounts-list'
-import { TotalBalance } from '~/components/finance/total-balance'
 import { TransactionsTable } from '~/components/finance/transactions-table'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
@@ -62,19 +60,6 @@ export default function TransactionsPage() {
     }
   }
 
-  const totalBalance = accounts
-    .reduce((sum, account) => sum + Number.parseFloat(account.balance || '0'), 0)
-    .toFixed(2)
-
-  const getRecentTransactions = (accountName: string, limit = 3) => {
-    return transactions
-      .filter((tx) => {
-        const account = accountsMap.get(tx.accountId)
-        return account?.name === accountName
-      })
-      .slice(0, limit)
-  }
-
   const refreshData = async () => {
     await Promise.all([refetchAccounts(), refetchTransactions()])
   }
@@ -83,7 +68,6 @@ export default function TransactionsPage() {
     <Tabs defaultValue="transactions" className="space-y-4">
       <TabsList>
         <TabsTrigger value="transactions">Transactions</TabsTrigger>
-        <TabsTrigger value="accounts">Accounts</TabsTrigger>
         <TabsTrigger value="analytics" onClick={() => navigate('/finance/analytics')}>
           Analytics
         </TabsTrigger>
@@ -187,20 +171,6 @@ export default function TransactionsPage() {
           sortField={sortField}
           sortDirection={sortDirection}
           handleSort={handleSort}
-        />
-      </TabsContent>
-
-      <TabsContent value="accounts" className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Accounts</h1>
-          <TotalBalance balance={totalBalance} />
-        </div>
-
-        <AccountsList
-          accounts={accounts}
-          loading={accountsLoading}
-          error={accountsError instanceof Error ? accountsError.message : null}
-          getRecentTransactions={getRecentTransactions}
         />
       </TabsContent>
     </Tabs>

@@ -1,3 +1,4 @@
+import type { FinanceAccount, Transaction } from '@hominem/utils/types'
 import { Button } from '~/components/ui/button'
 import {
   Card,
@@ -7,23 +8,22 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card'
-import type { FinanceData } from '~/lib/hooks/use-finance-data'
 
 interface AccountCardProps {
-  account: FinanceData['accounts'][number]
-  recentTransactions: FinanceData['transactions']
+  account: FinanceAccount
+  recentTransactions: Transaction[]
 }
 
 export function AccountCard({ account, recentTransactions }: AccountCardProps) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden flex flex-col">
       <CardHeader className="pb-3">
         <CardTitle>{account.name}</CardTitle>
         <CardDescription>
           {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="text-2xl font-bold">
           <span
             className={Number.parseFloat(account.balance) >= 0 ? 'text-green-600' : 'text-red-600'}
