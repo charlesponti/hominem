@@ -20,7 +20,10 @@ export default function MonthlyAnalyticsPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <h1 className="text-2xl font-bold mb-6">Monthly Analytics: {formattedMonth}</h1>
+      <h1 className="text-xl font-bold mb-6 flex flex-col">
+        Monthly Analytics
+        <span className="text-lg text-primary/40">{formattedMonth}</span>
+      </h1>
 
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -61,41 +64,34 @@ export default function MonthlyAnalyticsPage() {
 
       {stats && !isLoading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Summary Cards */}
-          <Card>
+          {/* Combined Summary Card */}
+          <Card className="lg:col-span-1 md:col-span-2">
             <CardHeader>
-              <CardTitle>Net Income</CardTitle>
+              <CardTitle>Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <p
-                className={`text-2xl font-bold ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}
-              >
-                {formatCurrency(stats.netIncome)}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Total Income</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl text-green-600">{formatCurrency(stats.totalIncome)}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Total Expenses</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl text-red-600">{formatCurrency(stats.totalExpenses)}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl">{stats.transactionCount}</p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Net Income</span>
+                  <span
+                    className={`text-2xl font-bold ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                  >
+                    {formatCurrency(stats.netIncome)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Total Income</span>
+                  <span className="text-xl text-green-600">
+                    {formatCurrency(stats.totalIncome)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Total Expenses</span>
+                  <span className="text-xl text-red-600">
+                    {formatCurrency(stats.totalExpenses)}
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

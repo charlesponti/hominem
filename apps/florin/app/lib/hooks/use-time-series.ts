@@ -95,7 +95,8 @@ export function useTimeSeriesData({
   // Format data for charts
   const chartData = query.data?.data.map((item) => ({
     name: formatDateLabel(item.date),
-    Spending: Math.abs(item.amount),
+    Spending: Math.abs(item.expenses),
+    Income: Math.abs(item.income),
     Count: item.count,
     Average: Math.abs(item.average),
     ...(item.trend ? { TrendChange: Number.parseFloat(item.trend.raw) } : {}),

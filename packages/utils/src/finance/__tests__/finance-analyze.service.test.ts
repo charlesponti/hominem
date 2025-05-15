@@ -233,8 +233,12 @@ describe('Finance Analyze Service', () => {
       // Assert
       expect(result.data[0].trend).toBeDefined()
       expect(result.data[0].trend?.direction).toBe('up')
-      expect(result.data[0].trend?.previousAmount).toBe(300)
-      expect(result.data[2].trend).toBeUndefined() // Last item has no previous
+      expect(result.data[0].trend?.previousAmount).toBe(600)
+      expect(result.data[2].trend).toBeUndefined()
+      // Stats should be null when includeStats is not provided
+      expect(result.stats).toBeNull()
+      // Should call summarizeByMonth with the same options
+      expect(summarizeByMonth).toHaveBeenCalledWith(options)
     })
 
     it('should not include stats when includeStats is false', async () => {
@@ -261,6 +265,37 @@ describe('Finance Analyze Service', () => {
       const result = await generateTimeSeriesData(options)
 
       // Assert
+      expect(result.stats).toBeNull()
+    })
+
+    it('should use provided groupBy in query', async () => {
+      // Arrange: minimal summary data
+      const mockMonthlySummaries = [
+        {
+          month: '2023-01',
+          count: 1,
+          total: '100.00',
+          average: '100.00',
+          income: '100.00',
+          expenses: '0.00',
+        },
+      ]
+      vi.mocked(summarizeByMonth).mockResolvedValue(mockMonthlySummaries)
+
+      const options = {
+        from: '2023-01-01',
+        to: '2023-01-31',
+        groupBy: 'week' as const,
+        userId: 'test-user',
+        includeStats: false,
+      }
+
+      // Act
+      const result = await generateTimeSeriesData(options)
+
+      // Assert
+      expect(summarizeByMonth).toHaveBeenCalledWith(options)
+      expect(result.query.groupBy).toBe('week')
       expect(result.stats).toBeNull()
     })
   })

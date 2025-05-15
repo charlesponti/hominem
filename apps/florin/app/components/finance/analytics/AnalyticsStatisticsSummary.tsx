@@ -10,55 +10,72 @@ export function AnalyticsStatisticsSummary({ stats }: AnalyticsStatisticsSummary
   return (
     <>
       {stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Spending</CardTitle>
+              <CardTitle className="text-base font-semibold text-neutral-900">
+                Total Income
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.formattedTotal}</div>
-              <p className="text-sm text-muted-foreground mt-1">For period {stats.periodCovered}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Average Per Month</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{formatCurrency(stats.average)}</div>
-              <p className="text-sm text-muted-foreground mt-1">Over {stats.count} months</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Spending Range</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col">
-                <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Minimum</div>
-                    <div className="text-lg font-medium">{formatCurrency(stats.min)}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Maximum</div>
-                    <div className="text-lg font-medium">{formatCurrency(stats.max)}</div>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <div className="text-sm text-muted-foreground">Median</div>
-                  <div className="text-lg font-medium">{formatCurrency(stats.median)}</div>
-                </div>
+              <div className="text-2xl font-bold text-black font-mono">
+                {formatCurrency(stats.totalIncome)}
               </div>
+              <p className="text-xs text-muted-foreground mt-1 font-normal">
+                For period {stats.periodCovered}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-neutral-900">
+                Total Expenses
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600 font-mono">
+                {formatCurrency(stats.totalExpenses)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 font-normal">
+                For period {stats.periodCovered}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-neutral-900">
+                Average Income
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-black font-mono">
+                {formatCurrency(stats.averageIncome)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 font-normal">
+                Over {stats.count} months
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-neutral-900">
+                Average Expenses
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600 font-mono">
+                {formatCurrency(stats.averageExpenses)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 font-normal">
+                Over {stats.count} months
+              </p>
             </CardContent>
           </Card>
         </div>
       ) : (
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center">
+            <div className="text-center font-normal text-base text-neutral-700">
               No statistics available. Try enabling stats in filters.
             </div>
           </CardContent>

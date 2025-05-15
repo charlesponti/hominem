@@ -2,11 +2,12 @@
 
 import { subMonths } from 'date-fns'
 import { useState } from 'react'
-import { AdditionalAnalytics } from '~/components/finance/analytics/AdditionalAnalytics'
 import { AnalyticsChartDisplay } from '~/components/finance/analytics/AnalyticsChartDisplay' // Fixed duplicate import
 import { AnalyticsFilters } from '~/components/finance/analytics/AnalyticsFilters'
 import { AnalyticsMonthlyBreakdown } from '~/components/finance/analytics/AnalyticsMonthlyBreakdown'
 import { AnalyticsStatisticsSummary } from '~/components/finance/analytics/AnalyticsStatisticsSummary'
+import { TopCategories } from '~/components/finance/analytics/TopCategories'
+import { TopMerchants } from '~/components/finance/analytics/TopMerchants'
 import { useFinanceCategories } from '~/lib/hooks/use-finance-categories'
 import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
@@ -67,7 +68,7 @@ export default function FinanceAnalyticsPage() {
   })
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-2! py-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Analytics</h1>
       </div>
@@ -94,15 +95,16 @@ export default function FinanceAnalyticsPage() {
           setCompareToPrevious={setCompareToPrevious}
         />
 
+        <AnalyticsStatisticsSummary stats={timeSeriesData?.stats} />
+
         <AnalyticsChartDisplay
           chartType={chartType}
           setChartType={setChartType}
           isLoading={isLoading}
           error={error}
           chartData={chartData}
+          timeSeriesData={timeSeriesData?.data}
         />
-
-        <AnalyticsStatisticsSummary stats={timeSeriesData?.stats} />
 
         <AnalyticsMonthlyBreakdown
           data={timeSeriesData?.data}
@@ -110,15 +112,15 @@ export default function FinanceAnalyticsPage() {
           formatDateLabel={formatDateLabel}
         />
 
-        <AdditionalAnalytics
+        <TopCategories
           categoryBreakdown={categoryBreakdown}
           isLoadingCategories={isLoadingCategories}
           errorCategories={errorCategories}
+        />
+        <TopMerchants
           topMerchants={topMerchants}
           isLoadingMerchants={isLoadingMerchants}
           errorMerchants={errorMerchants}
-          timeSeriesData={timeSeriesData}
-          formatDateLabel={formatDateLabel}
         />
       </div>
     </div>

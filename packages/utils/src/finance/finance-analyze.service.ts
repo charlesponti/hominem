@@ -18,6 +18,11 @@ export interface TimeSeriesDataPoint {
     raw: string
     previousAmount: number
     formattedPreviousAmount: string
+    percentChangeExpenses: string
+    rawExpenses: string
+    previousExpenses: number
+    formattedPreviousExpenses: string
+    directionExpenses: 'up' | 'down'
   }
 }
 
@@ -99,14 +104,15 @@ export async function generateTimeSeriesData(
 
     const current: TimeSeriesDataPoint = {
       date: summary.month,
-      amount: income + expenses, // Calculate net income (expenses are negative)
-      count: summary.count,
+      // Deprecated: amount is income + expenses, but should not be used for net calculations
+      amount: income + expenses,
       income: income,
       expenses: expenses,
+      count: summary.count,
       average: Number.parseFloat(summary.average),
-      formattedAmount: formatCurrency(income + expenses), // Format net income
       formattedIncome: formatCurrency(income),
       formattedExpenses: formatCurrency(expenses),
+      formattedAmount: formatCurrency(income), // Deprecated, kept for compatibility
     }
 
     // Add trend indicators if we have previous data
@@ -116,21 +122,32 @@ export async function generateTimeSeriesData(
       const previousExpenses = Number.parseFloat(
         previousSummary ? previousSummary.expenses || '0' : '0'
       )
-      const previousAmount = previousIncome + previousExpenses // Previous net income (expenses are negative)
-      const currentAmount = current.amount // Current net income
-      const percentChange =
-        previousAmount === 0
-          ? currentAmount === 0
+      const percentChangeIncome =
+        previousIncome === 0
+          ? income === 0
             ? 0
             : Number.POSITIVE_INFINITY
-          : ((currentAmount - previousAmount) / Math.abs(previousAmount)) * 100
+          : ((income - previousIncome) / Math.abs(previousIncome)) * 100
+      const percentChangeExpenses =
+        previousExpenses === 0
+          ? expenses === 0
+            ? 0
+            : Number.POSITIVE_INFINITY
+          : ((expenses - previousExpenses) / Math.abs(previousExpenses)) * 100
 
       current.trend = {
-        direction: currentAmount > previousAmount ? 'up' : 'down',
-        percentChange: Math.abs(percentChange).toFixed(1),
-        raw: percentChange.toFixed(1),
-        previousAmount: previousAmount,
-        formattedPreviousAmount: formatCurrency(previousAmount),
+        // Income trend
+        direction: income > previousIncome ? 'up' : 'down',
+        percentChange: Math.abs(percentChangeIncome).toFixed(1),
+        raw: percentChangeIncome.toFixed(1),
+        previousAmount: previousIncome,
+        formattedPreviousAmount: formatCurrency(previousIncome),
+        // Expenses trend
+        percentChangeExpenses: Math.abs(percentChangeExpenses).toFixed(1),
+        rawExpenses: percentChangeExpenses.toFixed(1),
+        previousExpenses: previousExpenses,
+        formattedPreviousExpenses: formatCurrency(previousExpenses),
+        directionExpenses: expenses > previousExpenses ? 'up' : 'down',
       }
     }
 
