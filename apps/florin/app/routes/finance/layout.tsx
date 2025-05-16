@@ -9,7 +9,7 @@ export default function FinanceLayout() {
   }
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden">
+    <div className="container mx-auto px-2! py-6">
       <Outlet />
     </div>
   )

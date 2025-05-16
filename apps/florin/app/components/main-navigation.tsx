@@ -15,7 +15,7 @@ const navItems = [
   {
     title: 'Analytics',
     icon: ChartLine,
-    url: '/finance/analytics',
+    url: '/analytics',
   },
   {
     title: 'Accounts',

@@ -151,3 +151,41 @@ export function useFinanceTransactions({
     setPage,
   }
 }
+
+// --- Hook for fetching monthly financial statistics ---
+export interface MonthlyStatsData {
+  month: string
+  startDate: string
+  endDate: string
+  totalIncome: number
+  totalExpenses: number
+  netIncome: number
+  transactionCount: number
+  categorySpending: Array<{ name: string | null; amount: number }>
+}
+
+export function useMonthlyStats(monthYear: string | null) {
+  // monthYear in YYYY-MM format
+  const api = useApiClient()
+
+  const query = useQuery<MonthlyStatsData, Error>({
+    queryKey: ['finance', 'stats', 'monthly', monthYear],
+    queryFn: async () => {
+      if (!monthYear) {
+        // Or throw an error, or return default empty state
+        // This depends on how you want to handle an unselected/invalid monthYear
+        return Promise.reject(new Error('Month and year must be provided.'))
+      }
+      return await api.get<never, MonthlyStatsData>(`/api/finance/monthly-stats/${monthYear}`)
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!monthYear, // Only run the query if monthYear is provided
+  })
+
+  return {
+    monthlyStats: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  }
+}

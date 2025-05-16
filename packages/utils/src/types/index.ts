@@ -17,6 +17,8 @@ export type {
   FinanceTransaction as Transaction,
 } from '../db/schema'
 
+export type { BudgetCategory } from '../db/schema/finance.schema'
+
 export type {
   ListInsert,
   ListInviteSelect,

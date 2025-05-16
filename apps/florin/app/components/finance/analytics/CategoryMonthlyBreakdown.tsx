@@ -103,8 +103,8 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: M
 
   // Build the link to monthly analysis filtered by category
   const monthlyAnalyticsUrl = category
-    ? `/finance/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
-    : `/finance/analytics/monthly/${item.date}`
+    ? `/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
+    : `/analytics/monthly/${item.date}`
 
   return (
     <tr
@@ -148,8 +148,8 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
 
   // Build the link to monthly analysis filtered by category
   const monthlyAnalyticsUrl = category
-    ? `/finance/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
-    : `/finance/analytics/monthly/${item.date}`
+    ? `/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
+    : `/analytics/monthly/${item.date}`
 
   return (
     <button

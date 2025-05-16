@@ -21,7 +21,7 @@ export default function AccountsPage() {
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold">Accounts</h1>
         <div className="flex flex-wrap gap-2">

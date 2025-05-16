@@ -1,4 +1,3 @@
-// filepath: app/routes/finance/analytics/categories/page.tsx
 'use client'
 
 import { subMonths } from 'date-fns'
@@ -60,22 +59,20 @@ export default function CategoriesAnalyticsPage() {
           </tr>
         </thead>
         <tbody>
-          {breakdown.map((item) => (
+          {breakdown?.map((item) => (
             <tr
               key={item.category}
               className="border-b hover:bg-muted/50 cursor-pointer"
-              onClick={() =>
-                navigate(`/finance/analytics/category/${encodeURIComponent(item.category)}`)
-              }
+              onClick={() => navigate(`/analytics/category/${encodeURIComponent(item.category)}`)}
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ')
-                  navigate(`/finance/analytics/category/${encodeURIComponent(item.category)}`)
+                  navigate(`/analytics/category/${encodeURIComponent(item.category)}`)
               }}
             >
               <td className="py-2">
                 <Link
-                  to={`/finance/analytics/category/${encodeURIComponent(item.category)}`}
+                  to={`/analytics/category/${encodeURIComponent(item.category)}`}
                   className="hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >

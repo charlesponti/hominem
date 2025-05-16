@@ -1,10 +1,6 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/utils/db'
-import {
-  FinancialAccountService,
-  getBudgetCategories,
-  queryTransactions,
-} from '@hominem/utils/finance'
+import { FinancialAccountService, queryTransactions } from '@hominem/utils/finance'
 import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
 import {
   budgetCategories,
@@ -22,6 +18,7 @@ import { z } from 'zod'
 import { handleError } from '../../lib/errors.js'
 import { verifyAuth } from '../../middleware/auth.js'
 import { rateLimitImport } from '../../middleware/rate-limit.js'
+import { budgetRoutes } from './budget.router.js'
 import { financeAccountsRoutes } from './finance-accounts.js'
 import { financeAnalyzeRoutes } from './finance-analyze.js'
 import { financeExportRoutes } from './finance-export.js'
@@ -31,6 +28,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
   await fastify.register(financeAccountsRoutes, { prefix: '/accounts' })
   await fastify.register(financeAnalyzeRoutes, { prefix: '/analyze' })
   await fastify.register(financeExportRoutes, { prefix: '/export' })
+  await fastify.register(budgetRoutes, { prefix: '/budget' })
 
   const ImportTransactionsSchema = z.object({
     // Base64 encoded from client
@@ -487,23 +485,6 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
       // !TODO: Implement logic to analyze spending categories
       return categories
-    } catch (error) {
-      handleError(error as Error, reply)
-    }
-  })
-
-  // Get Budget Categories
-  fastify.get('/budget-categories', { preHandler: verifyAuth }, async (request, reply) => {
-    try {
-      const { userId } = request
-      if (!userId) {
-        reply.code(401)
-        return { error: 'Not authorized' }
-      }
-
-      const result = await getBudgetCategories({ userId })
-
-      return result
     } catch (error) {
       handleError(error as Error, reply)
     }

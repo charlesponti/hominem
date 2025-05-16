@@ -122,15 +122,15 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel }: MonthItemPr
   return (
     <tr
       className="border-b hover:bg-muted/50 cursor-pointer"
-      onClick={() => navigate(`/finance/analytics/monthly/${item.date}`)}
+      onClick={() => navigate(`/analytics/monthly/${item.date}`)}
       tabIndex={0}
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') navigate(`/finance/analytics/monthly/${item.date}`)
+        if (e.key === 'Enter' || e.key === ' ') navigate(`/analytics/monthly/${item.date}`)
       }}
     >
       <td className="py-2">
         <Link
-          to={`/finance/analytics/monthly/${item.date}`}
+          to={`/analytics/monthly/${item.date}`}
           className="hover:underline"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
@@ -186,9 +186,9 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel }: MonthItem
     <button
       type="button"
       className="w-full text-left rounded-lg border p-4 shadow-sm bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
-      onClick={() => navigate(`/finance/analytics/monthly/${item.date}`)}
+      onClick={() => navigate(`/analytics/monthly/${item.date}`)}
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') navigate(`/finance/analytics/monthly/${item.date}`)
+        if (e.key === 'Enter' || e.key === ' ') navigate(`/analytics/monthly/${item.date}`)
       }}
       aria-label={`View details for ${formatDateLabel(item.date)}`}
     >
@@ -197,7 +197,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel }: MonthItem
           {formatDateLabel(item.date)}
         </span>
         <Link
-          to={`/finance/analytics/monthly/${item.date}`}
+          to={`/analytics/monthly/${item.date}`}
           className="text-primary underline text-xs ml-2"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
