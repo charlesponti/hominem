@@ -87,7 +87,7 @@ export function AnalyticsFilters({
               <SelectTrigger>
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-72 overflow-y-auto">
                 <SelectItem value="all">All categories</SelectItem>
                 {categoriesLoading ? (
                   <SelectItem value="disabled" disabled>

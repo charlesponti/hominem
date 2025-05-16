@@ -16,7 +16,7 @@ export function useFinanceCategories() {
     queryKey: ['financeCategories'],
     queryFn: async () => {
       try {
-        const response = await apiClient.get<never, Category[]>('/api/finance/analyze/categories')
+        const response = await apiClient.get<never, Category[]>('/api/finance/categories')
         return response
           .map((item) => item.category)
           .filter(Boolean)
