@@ -161,6 +161,7 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
       maximum: sql<number>`MAX(${transactions.amount})`,
     })
     .from(transactions)
+    .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .where(whereConditions)
     .groupBy(sql`COALESCE(${transactions.category}, 'Uncategorized')`)
     .having(sql`SUM(${transactions.amount}) < 0`)
@@ -189,6 +190,15 @@ export async function summarizeByMonth(options: QueryOptions) {
   if (options.to) {
     conditions.push(lte(transactions.date, new Date(options.to)))
   }
+  if (options.category) {
+    conditions.push(
+      sql`(${transactions.category} = ${options.category} OR ${transactions.parentCategory} = ${options.category})`
+    )
+  }
+  if (options.account) {
+    conditions.push(like(financeAccounts.name, `%${options.account}%`))
+  }
+
   const whereConditions = conditions.length > 0 ? and(...conditions) : undefined
 
   const result = await db
@@ -201,6 +211,7 @@ export async function summarizeByMonth(options: QueryOptions) {
     })
     .from(transactions)
     .where(whereConditions)
+    .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .groupBy(sql`SUBSTR(${transactions.date}::text, 1, 7)`)
     .orderBy(sql`SUBSTR(${transactions.date}::text, 1, 7) DESC`)
 

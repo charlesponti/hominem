@@ -1,5 +1,5 @@
 import { SignInButton, useUser } from '@clerk/react-router'
-import { CircleDollarSignIcon, Landmark, Menu, PenTool, User, X } from 'lucide-react'
+import { ChartLine, CircleDollarSignIcon, Landmark, Menu, PenTool, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
 import { cn } from '~/lib/utils'
@@ -11,6 +11,11 @@ const navItems = [
     title: 'Finance',
     icon: CircleDollarSignIcon,
     url: '/finance',
+  },
+  {
+    title: 'Analytics',
+    icon: ChartLine,
+    url: '/finance/analytics',
   },
   {
     title: 'Accounts',

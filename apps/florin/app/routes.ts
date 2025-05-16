@@ -15,6 +15,11 @@ export default [
         'finance/analytics/monthly/:month',
         'routes/finance/analytics/monthly/[month]/page.tsx'
       ),
+      route(
+        'finance/analytics/category/:category',
+        'routes/finance/analytics/category/[category]/page.tsx'
+      ),
+      route('finance/analytics/categories', 'routes/finance/analytics/categories/page.tsx'),
     ]),
     layout('routes/notes/layout.tsx', [route('notes', 'routes/notes/page.tsx')]),
 

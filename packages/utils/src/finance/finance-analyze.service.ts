@@ -176,6 +176,21 @@ export async function generateTimeSeriesData(
 }
 
 /**
+ * Generate time series data for a specific category over time
+ */
+export async function generateCategoryTimeSeriesData(
+  options: QueryOptions & {
+    category: string
+    compareToPrevious?: boolean
+    includeStats?: boolean
+    groupBy?: 'month' | 'week' | 'day'
+  }
+): Promise<TimeSeriesResponse> {
+  // Delegate to generic time series generator
+  return generateTimeSeriesData(options)
+}
+
+/**
  * Calculate statistics for time series data
  */
 export function calculateTimeSeriesStats(timeSeriesData: TimeSeriesDataPoint[]): TimeSeriesStats {

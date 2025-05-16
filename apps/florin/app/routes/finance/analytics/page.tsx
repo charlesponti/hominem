@@ -117,6 +117,7 @@ export default function FinanceAnalyticsPage() {
           isLoadingCategories={isLoadingCategories}
           errorCategories={errorCategories}
         />
+
         <TopMerchants
           topMerchants={topMerchants}
           isLoadingMerchants={isLoadingMerchants}
