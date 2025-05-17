@@ -5,7 +5,7 @@ import { Button } from '~/components/ui/button.js'
 import { Card } from '~/components/ui/card.js'
 import type { ToolCalls, ToolResults } from '~/lib/hooks/use-chat'
 import { cn } from '~/lib/utils'
-import { ChatMessage } from './chat-message'
+import { ChatMessage } from './chat-message.js'
 
 type ChatInterfaceProps = {
   messages: ChatMessageSelect[]

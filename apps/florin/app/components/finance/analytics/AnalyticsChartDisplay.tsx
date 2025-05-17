@@ -14,7 +14,7 @@ import {
 } from 'recharts'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { formatCurrency } from '~/lib/finance'
+import { formatCurrency } from '~/lib/finance.utils'
 
 const INCOME_COLOR = '#ABF4B6'
 const EXPENSES_COLOR = '#ef4444'

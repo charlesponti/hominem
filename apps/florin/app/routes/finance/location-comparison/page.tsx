@@ -17,7 +17,12 @@ import {
 } from '~/components/ui/select'
 import { Slider } from '~/components/ui/slider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { calculateTakeHome, formatCurrency, stateTaxRates, type StateTaxCode } from '~/lib/finance'
+import {
+  calculateTakeHome,
+  formatCurrency,
+  stateTaxRates,
+  type StateTaxCode,
+} from '~/lib/finance.utils'
 import { formatPercent } from '~/lib/number.utils'
 
 const LocationTaxComparison = () => {

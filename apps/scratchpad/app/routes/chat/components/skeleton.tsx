@@ -1,4 +1,4 @@
-import { Card } from '../card'
+import { Card } from '../card.js'
 
 export function MessageSkeleton() {
   return (

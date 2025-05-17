@@ -1,6 +1,6 @@
 import type { TimeSeriesStats } from '@hominem/utils/types'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { formatCurrency } from '~/lib/finance'
+import { formatCurrency } from '~/lib/finance.utils'
 
 interface AnalyticsStatisticsSummaryProps {
   stats: TimeSeriesStats | null | undefined

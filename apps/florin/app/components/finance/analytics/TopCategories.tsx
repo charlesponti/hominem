@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { formatCurrency } from '~/lib/finance'
+import { formatCurrency } from '~/lib/finance.utils'
 import type { CategoryBreakdownItem } from './types'
 
 interface TopCategoriesProps {

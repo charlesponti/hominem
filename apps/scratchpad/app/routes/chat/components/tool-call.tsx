@@ -2,7 +2,7 @@ import type { ChatMessageSelect } from '@hominem/utils/types'
 import { ChevronDown, CircleSlash, Cpu, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '~/lib/utils'
-import { Card } from '../card'
+import { Card } from '../card.js'
 
 interface ToolCallProps {
   call: NonNullable<ChatMessageSelect['toolCalls']>[number]

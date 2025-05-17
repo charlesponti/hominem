@@ -15,6 +15,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { BudgetCategoryFormModal } from '~/components/budget-category-form'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Progress } from '~/components/ui/progress'
 import {
@@ -26,7 +27,6 @@ import {
 } from '~/components/ui/select'
 import { useBudgetCategories, useBudgetHistory } from '~/lib/hooks/use-budget-data'
 import { useMonthlyStats } from '~/lib/hooks/use-finance-data'
-import { BudgetCategoryFormModal } from '../../../../components/budget/budget-category-form'
 
 interface BudgetCategoryActual extends BudgetCategory {
   actualSpending: number

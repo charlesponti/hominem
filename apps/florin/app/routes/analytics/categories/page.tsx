@@ -3,7 +3,7 @@
 import { subMonths } from 'date-fns'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { formatCurrency } from '~/lib/finance'
+import { formatCurrency } from '~/lib/finance.utils'
 import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 

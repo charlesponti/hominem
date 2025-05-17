@@ -1,6 +1,6 @@
 import type { TimeSeriesDataPoint } from '@hominem/utils/types'
 import { Link, useNavigate } from 'react-router'
-import { formatCurrency } from '~/lib/finance'
+import { formatCurrency } from '~/lib/finance.utils'
 import { cn } from '~/lib/utils'
 
 interface CategoryMonthlyBreakdownProps {
