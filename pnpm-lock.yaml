@@ -482,9 +482,6 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: '4'
         version: 4.36.1(@tanstack/react-query@4.36.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@types/react-syntax-highlighter':
-        specifier: ^15.5.13
-        version: 15.5.13
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.4.1(vite@5.4.18(@types/node@22.15.2)(lightningcss@1.29.3))
@@ -530,9 +527,6 @@ importers:
       lucide-react:
         specifier: ^0.484.0
         version: 0.484.0(react@19.1.0)
-      mongodb:
-        specifier: ^6.13.0
-        version: 6.16.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
       playwright-chromium:
         specifier: ^1.51.1
         version: 1.52.0
@@ -554,18 +548,12 @@ importers:
       react-hook-form:
         specifier: ^7.55.0
         version: 7.56.1(react@19.1.0)
-      react-markdown:
-        specifier: ^10.1.0
-        version: 10.1.0(@types/react@19.1.2)(react@19.1.0)
       react-plaid-link:
         specifier: ^3.6.1
         version: 3.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-router:
         specifier: ^7.5.2
         version: 7.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      react-syntax-highlighter:
-        specifier: ^15.6.1
-        version: 15.6.1(react@19.1.0)
       recharts:
         specifier: ^2.15.1
         version: 2.15.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -718,6 +706,9 @@ importers:
 
   apps/scratchpad:
     dependencies:
+      '@clerk/react-router':
+        specifier: ^1.3.0
+        version: 1.3.0(react-dom@19.1.0(react@19.1.0))(react-router@7.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       '@hominem/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -745,6 +736,12 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.71.2
         version: 5.74.6(@tanstack/react-query@5.74.4(react@19.1.0))(react@19.1.0)
+      '@types/react-syntax-highlighter':
+        specifier: ^15.5.13
+        version: 15.5.13
+      ai:
+        specifier: ^4.1.54
+        version: 4.3.10(react@19.1.0)(zod@3.24.3)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -766,9 +763,15 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-markdown:
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@19.1.2)(react@19.1.0)
       react-router:
         specifier: ^7.4.1
         version: 7.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-syntax-highlighter:
+        specifier: ^15.6.1
+        version: 15.6.1(react@19.1.0)
       recharts:
         specifier: ^2.15.1
         version: 2.15.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -978,9 +981,6 @@ importers:
       moment:
         specifier: ^2.30.1
         version: 2.30.1
-      mongodb:
-        specifier: ^6.13.0
-        version: 6.16.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
       ollama-ai-provider:
         specifier: ^1.2.0
         version: 1.2.0(zod@3.24.3)
@@ -1002,9 +1002,6 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
-      react-syntax-highlighter:
-        specifier: ^15.6.1
-        version: 15.6.1(react@19.1.0)
       rehype-parse:
         specifier: ^9.0.1
         version: 9.0.1
@@ -12149,6 +12146,7 @@ snapshots:
   '@mongodb-js/saslprep@1.2.2':
     dependencies:
       sparse-bitfield: 3.0.3
+    optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true
@@ -14563,11 +14561,13 @@ snapshots:
 
   '@types/uuid@9.0.8': {}
 
-  '@types/webidl-conversions@7.0.3': {}
+  '@types/webidl-conversions@7.0.3':
+    optional: true
 
   '@types/whatwg-url@11.0.5':
     dependencies:
       '@types/webidl-conversions': 7.0.3
+    optional: true
 
   '@types/ws@8.18.1':
     dependencies:
@@ -15052,7 +15052,8 @@ snapshots:
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.24.4)
 
-  bson@6.10.3: {}
+  bson@6.10.3:
+    optional: true
 
   buffer-equal-constant-time@1.0.1: {}
 
@@ -18076,7 +18077,8 @@ snapshots:
 
   memoize-one@6.0.0: {}
 
-  memory-pager@1.5.0: {}
+  memory-pager@1.5.0:
+    optional: true
 
   merge-descriptors@1.0.3: {}
 
@@ -18290,6 +18292,7 @@ snapshots:
     dependencies:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 14.2.0
+    optional: true
 
   mongodb@6.16.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4):
     dependencies:
@@ -18299,6 +18302,7 @@ snapshots:
     optionalDependencies:
       '@aws-sdk/credential-providers': 3.797.0
       socks: 2.8.4
+    optional: true
 
   morgan@1.10.0:
     dependencies:
@@ -20068,6 +20072,7 @@ snapshots:
   sparse-bitfield@3.0.3:
     dependencies:
       memory-pager: 1.5.0
+    optional: true
 
   spdx-correct@3.2.0:
     dependencies:

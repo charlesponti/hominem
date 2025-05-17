@@ -10,6 +10,7 @@
     "format": "biome format ./src --fix"
   },
   "dependencies": {
+    "@clerk/react-router": "^1.3.0",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.6",
@@ -19,6 +20,8 @@
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.71.1",
     "@tanstack/react-query-devtools": "^5.71.2",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "ai": "^4.1.54",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "daisyui": "^5.0.11",
@@ -26,6 +29,8 @@
     "isbot": "^5.1.17",
     "lucide-react": "^0.487.0",
     "next-themes": "^0.4.6",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.1",
     "react-router": "^7.4.1",
     "recharts": "^2.15.1",
     "sonner": "^2.0.3",

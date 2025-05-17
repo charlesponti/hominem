@@ -1,20 +1,20 @@
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: hominem-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: hominem
-    ports:
-      - "44017:27017"
-    volumes:
-      - hominem-mongodb:/data/db
-    healthcheck:
-      test: ["CMD-SHELL", "mongo --eval 'db.adminCommand('ping')'"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # mongodb:
+  #   image: mongo:latest
+  #   container_name: hominem-mongodb
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: admin
+  #     MONGO_INITDB_ROOT_PASSWORD: password
+  #     MONGO_INITDB_DATABASE: hominem
+  #   ports:
+  #     - "44017:27017"
+  #   volumes:
+  #     - hominem-mongodb:/data/db
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "mongo --eval 'db.adminCommand('ping')'"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   postgres:
     build:
@@ -91,6 +91,6 @@ networks:
 
 volumes:
   hominem-postgres:
-  hominem-mongodb:
+  # hominem-mongodb:
   hominem-redis:
   hominem-chroma:

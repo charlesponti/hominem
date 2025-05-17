@@ -1,5 +1,5 @@
 import { BrainCircuit } from 'lucide-react'
-import { Card } from '../card.js'
+import { Card } from '~/components/ui/card'
 
 interface ReasoningProps {
   reasoning: string
