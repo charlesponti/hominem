@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { createServer } from '../server'
+import { createServer } from '../server.js'
 
 describe('server', () => {
   let testServer: FastifyInstance
