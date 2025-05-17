@@ -4,8 +4,8 @@ import { desc, eq } from 'drizzle-orm'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import crypto from 'node:crypto'
 import { z } from 'zod'
-import { ForbiddenError } from '../../lib/errors.js'
-import { verifyAuth } from '../../middleware/auth'
+import { ForbiddenError } from '../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
 
 const createPossessionSchema = {
   body: z.object({

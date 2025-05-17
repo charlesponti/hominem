@@ -2,7 +2,7 @@ import { db } from '@hominem/utils/db'
 import { list, listInvite, users } from '@hominem/utils/schema'
 import { and, asc, eq } from 'drizzle-orm'
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
-import { verifyAuth } from '../../middleware/auth'
+import { verifyAuth } from '../middleware/auth.js'
 
 export const invitesPlugin: FastifyPluginAsync = async (server) => {
   server.get(

@@ -1,3 +1,5 @@
+import { env } from './lib/env.js'
+
 import { clerkPlugin } from '@clerk/fastify'
 import fastifyCircuitBreaker from '@fastify/circuit-breaker'
 import type { FastifyCookieOptions } from '@fastify/cookie'
@@ -11,41 +13,30 @@ import { Queue } from 'bullmq'
 import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import type { ZodSchema } from 'zod'
 
-import { env } from './lib/env.js'
 import { handleError } from './lib/errors.js'
 import adminPlugin from './plugins/admin.js'
-import bookmarksPlugin from './plugins/bookmarks/index.js'
 import emailPlugin from './plugins/email.js'
 import googlePlugin from './plugins/google/index.js'
-import { invitesPlugin } from './plugins/invites/index.js'
 import listsPlugin from './plugins/lists/index.js'
-import placesPlugin from './plugins/places/index.js'
-import possessionsPlugin from './plugins/possessions/index.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import shutdownPlugin from './plugins/shutdown.js'
+import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
 import { chatPlugin } from './routes/chat.router.js'
 import { companyRoutes } from './routes/company.js'
 import { financeRoutes } from './routes/finance/finance.router.js'
+import { plaidRoutes } from './routes/finance/plaid.router.js'
 import { healthRoutes } from './routes/health.js'
+import { invitesPlugin } from './routes/invites.router.js'
 import { jobApplicationRoutes } from './routes/job-applications.js'
 import { contentRoutes } from './routes/notes.js'
 import { personalFinanceRoutes } from './routes/personal-finance.js'
-import { plaidRoutes } from './routes/plaid/plaid.router.js'
+import placesPlugin from './routes/places.router.js'
+import possessionsPlugin from './routes/possessions.router.js'
 import statusPlugin from './routes/status.js'
 import { surveyRoutes } from './routes/surveys.js'
 import usersPlugin from './routes/user.router.js'
 import { vectorRoutes } from './routes/vector.router.js'
 import { webSocketPlugin } from './websocket/index.js'
-
-// Define queue interface on FastifyInstance
-declare module 'fastify' {
-  interface FastifyInstance {
-    queues: {
-      plaidSync: Queue
-      importTransactions: Queue
-    }
-  }
-}
 
 export async function createServer(
   opts: FastifyServerOptions = {}

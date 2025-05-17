@@ -33,6 +33,10 @@ declare module 'fastify' {
       set: (key: string, value: string, ttl?: number) => Promise<void>
       del: (key: string) => Promise<void>
     }
+    queues: {
+      plaidSync: Queue
+      importTransactions: Queue
+    }
   }
 
   interface FastifyRequest {
