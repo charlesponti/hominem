@@ -25,7 +25,6 @@ import rateLimitPlugin from './plugins/rate-limit.js'
 import shutdownPlugin from './plugins/shutdown.js'
 import { chatPlugin } from './routes/chat.router.js'
 import { companyRoutes } from './routes/company.js'
-import { emailMaskRoutes } from './routes/email-mask.js'
 import { financeRoutes } from './routes/finance/finance.router.js'
 import { healthRoutes } from './routes/health.js'
 import { jobApplicationRoutes } from './routes/job-applications.js'
@@ -127,7 +126,6 @@ export async function createServer(
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(contentRoutes, { prefix: '/api/content' })
     await server.register(vectorRoutes, { prefix: '/api/vectors' })
-    await server.register(emailMaskRoutes, { prefix: '/api/email-mask' })
     await server.register(financeRoutes, { prefix: '/api/finance' })
     await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })
     await server.register(plaidRoutes, { prefix: '/api/plaid' })
