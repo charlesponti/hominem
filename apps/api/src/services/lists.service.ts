@@ -83,7 +83,10 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
 /**
  * Get lists that the user is explicitly a member of (shared with them)
  */
-export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[]> {
+export async function getUserLists(
+  userId: string,
+  itemType?: string
+): Promise<ListWithSpreadOwner[]> {
   try {
     const results = await db
       .select({
@@ -101,6 +104,10 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
       .from(userLists)
       .where(eq(userLists.userId, userId))
       .leftJoin(list, eq(userLists.listId, list.id))
+      .leftJoin(
+        item,
+        and(eq(userLists.listId, item.listId), itemType ? eq(item.type, itemType) : undefined)
+      )
       .leftJoin(users, eq(list.userId, users.id))
       .orderBy(desc(list.createdAt))
 
@@ -139,7 +146,10 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
 /**
  * Get lists that are owned by the user
  */
-export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner[]> {
+export async function getOwnedLists(
+  userId: string,
+  itemType?: string
+): Promise<ListWithSpreadOwner[]> {
   try {
     const results = await db
       .select({
@@ -157,6 +167,7 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       .from(list)
       .where(eq(list.userId, userId))
       .leftJoin(users, eq(users.id, list.userId))
+      .leftJoin(item, and(eq(list.id, item.listId), itemType ? eq(item.type, itemType) : undefined))
       .orderBy(desc(list.createdAt))
 
     return results.map((item) => {
@@ -486,10 +497,12 @@ export async function acceptListInvite(
       await tx
         .update(listInvite)
         .set({ accepted: true, acceptedAt: new Date().toISOString() })
-        .where(and(
-          eq(listInvite.listId, invite.listId),
-          eq(listInvite.invitedUserEmail, invite.invitedUserEmail)
-        ))
+        .where(
+          and(
+            eq(listInvite.listId, invite.listId),
+            eq(listInvite.invitedUserEmail, invite.invitedUserEmail)
+          )
+        )
 
       await tx
         .insert(userLists)

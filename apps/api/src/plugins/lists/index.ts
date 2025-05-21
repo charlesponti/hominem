@@ -52,14 +52,14 @@ const listsPlugin: FastifyPluginAsync = async (server) => {
     { preHandler: verifyAuth },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request
-
       if (!userId) {
         throw ForbiddenError('Unauthorized')
       }
 
+      const { itemType } = request.query as { itemType?: string }
       const [ownedLists, sharedUserLists] = await Promise.all([
-        getOwnedLists(userId),
-        getUserLists(userId),
+        getOwnedLists(userId, itemType),
+        getUserLists(userId, itemType),
       ])
 
       return { lists: [...ownedLists, ...sharedUserLists] }

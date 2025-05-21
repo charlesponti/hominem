@@ -19,6 +19,7 @@ jobs:
       COOKIE_DOMAIN: ${{ secrets.COOKIE_DOMAIN }}
       COOKIE_NAME: ${{ secrets.COOKIE_NAME }}
       COOKIE_SALT: ${{ secrets.COOKIE_SALT }}
+      GOOGLE_API_KEY: "adsfadsfadsfadsfadsfadsfadsfadsf"
       COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
