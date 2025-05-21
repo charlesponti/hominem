@@ -47,24 +47,21 @@ const sendInviteBodySchema = z.object({
 })
 
 const listsPlugin: FastifyPluginAsync = async (server) => {
-  server.get(
-    '/lists',
-    { preHandler: verifyAuth },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const { userId } = request
-      if (!userId) {
-        throw ForbiddenError('Unauthorized')
-      }
-
-      const { itemType } = request.query as { itemType?: string }
-      const [ownedLists, sharedUserLists] = await Promise.all([
-        getOwnedLists(userId, itemType),
-        getUserLists(userId, itemType),
-      ])
-
-      return { lists: [...ownedLists, ...sharedUserLists] }
+  server.get('/lists', { preHandler: verifyAuth }, async (request) => {
+    const { userId } = request
+    if (!userId) {
+      throw ForbiddenError('Unauthorized')
     }
-  )
+
+    const { itemType } = request.query as Record<string, string>
+
+    const [ownedLists, sharedUserLists] = await Promise.all([
+      getOwnedLists(userId, itemType),
+      getUserLists(userId, itemType),
+    ])
+
+    return { lists: [...ownedLists, ...sharedUserLists] }
+  })
 
   server.post(
     '/lists',

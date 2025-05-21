@@ -9,7 +9,7 @@ import {
   type ListInviteSelect,
   type ListSelect,
 } from '@hominem/utils/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq } from 'drizzle-orm'
 
 export interface User {
   id?: string
@@ -19,6 +19,7 @@ export interface User {
 
 export interface ListWithSpreadOwner extends ListSelect {
   owner: { id: string; email: string; name: string | null } | null
+  itemCount?: number
 }
 
 export interface List {
@@ -151,47 +152,103 @@ export async function getOwnedLists(
   itemType?: string
 ): Promise<ListWithSpreadOwner[]> {
   try {
-    const results = await db
-      .select({
-        id: list.id,
-        name: list.name,
-        description: list.description,
-        userId: list.userId,
-        isPublic: list.isPublic,
-        createdAt: list.createdAt,
-        updatedAt: list.updatedAt,
-        owner_id: users.id,
-        owner_email: users.email,
-        owner_name: users.name,
-      })
-      .from(list)
-      .where(eq(list.userId, userId))
-      .leftJoin(users, eq(users.id, list.userId))
-      .leftJoin(item, and(eq(list.id, item.listId), itemType ? eq(item.type, itemType) : undefined))
-      .orderBy(desc(list.createdAt))
+    type OwnedListDbResultBase = {
+      id: string
+      name: string
+      description: string | null
+      userId: string
+      isPublic: boolean
+      createdAt: string
+      updatedAt: string
+      owner_id: string | null
+      owner_email: string | null
+      owner_name: string | null
+    }
+    type OwnedListDbResultWithCount = OwnedListDbResultBase & { itemCount: string }
+    type OwnedListDbResult = OwnedListDbResultBase | OwnedListDbResultWithCount
 
-    return results.map((item) => {
+    let queryResults: OwnedListDbResult[]
+
+    if (itemType) {
+      queryResults = await db
+        .select({
+          id: list.id,
+          name: list.name,
+          description: list.description,
+          userId: list.userId,
+          isPublic: list.isPublic,
+          createdAt: list.createdAt,
+          updatedAt: list.updatedAt,
+          owner_id: users.id,
+          owner_email: users.email,
+          owner_name: users.name,
+          itemCount: count(item.id),
+        })
+        .from(list)
+        .where(eq(list.userId, userId))
+        .leftJoin(users, eq(users.id, list.userId))
+        .leftJoin(item, and(eq(item.listId, list.id), eq(item.type, itemType)))
+        .groupBy(
+          list.id,
+          list.name,
+          list.description,
+          list.userId,
+          list.isPublic,
+          list.createdAt,
+          list.updatedAt,
+          users.id,
+          users.email,
+          users.name
+        )
+        .orderBy(desc(list.createdAt))
+    } else {
+      queryResults = await db
+        .select({
+          id: list.id,
+          name: list.name,
+          description: list.description,
+          userId: list.userId,
+          isPublic: list.isPublic,
+          createdAt: list.createdAt,
+          updatedAt: list.updatedAt,
+          owner_id: users.id,
+          owner_email: users.email,
+          owner_name: users.name,
+        })
+        .from(list)
+        .where(eq(list.userId, userId))
+        .leftJoin(users, eq(users.id, list.userId))
+        .orderBy(desc(list.createdAt))
+    }
+
+    return queryResults.map((dbItem) => {
       const listPart = {
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        userId: item.userId,
-        isPublic: item.isPublic,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
+        id: dbItem.id,
+        name: dbItem.name,
+        description: dbItem.description,
+        userId: dbItem.userId,
+        isPublic: dbItem.isPublic,
+        createdAt: dbItem.createdAt,
+        updatedAt: dbItem.updatedAt,
       }
-      const ownerPart = item.owner_id
+      const ownerPart = dbItem.owner_id
         ? {
-            id: item.owner_id,
-            email: item.owner_email as string,
-            name: item.owner_name,
+            id: dbItem.owner_id,
+            email: dbItem.owner_email as string,
+            name: dbItem.owner_name,
           }
         : null
 
-      return {
+      const listItem: ListWithSpreadOwner = {
         ...(listPart as ListSelect),
         owner: ownerPart,
       }
+
+      if ('itemCount' in dbItem && dbItem.itemCount !== null) {
+        listItem.itemCount = Number(dbItem.itemCount)
+      }
+
+      return listItem
     })
   } catch (error) {
     console.error(`Error fetching owned lists for user ${userId}:`, error)

@@ -44,5 +44,6 @@ declare module 'fastify' {
     user?: User
     userId?: string | null
     clerkId?: string | null
+    query: Record<string, string>
   }
 }
