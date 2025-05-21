@@ -14,9 +14,7 @@ const envSchema = z.object({
   CLERK_SECRET_KEY: z.string(),
   CLERK_PUBLISHABLE_KEY: z.string(),
 
-  GOOGLE_CLIENT_ID: z.string(),
-  GOOGLE_CLIENT_SECRET: z.string(),
-  GOOGLE_REDIRECT_URI: z.string(),
+  GOOGLE_API_KEY: z.string(),
   OPENAI_API_KEY: z.string(),
 
   PLAID_CLIENT_ID: z.string().default(''),

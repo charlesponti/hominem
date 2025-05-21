@@ -41,6 +41,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
 
   try {
     const auth = getAuth(request)
+    console.log('Auth:', auth)
     if (!auth.userId) {
       return reply.code(401).send({ error: 'Unauthorized' })
     }

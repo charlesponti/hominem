@@ -16,7 +16,6 @@ import type { ZodSchema } from 'zod'
 import { handleError } from './lib/errors.js'
 import adminPlugin from './plugins/admin.js'
 import emailPlugin from './plugins/email.js'
-import googlePlugin from './plugins/google/index.js'
 import listsPlugin from './plugins/lists/index.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import shutdownPlugin from './plugins/shutdown.js'
@@ -109,7 +108,6 @@ export async function createServer(
     await server.register(invitesPlugin)
     await server.register(bookmarksPlugin)
     await server.register(possessionsPlugin, { prefix: '/api' })
-    await server.register(googlePlugin, { prefix: '/api/google' })
     await server.register(healthRoutes, { prefix: '/api/health' })
     await server.register(companyRoutes, { prefix: '/api/companies' })
     await server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })

@@ -1,4 +1,3 @@
-// Re-export database schema types
 export type {
   Activity,
   Artist,
@@ -11,6 +10,7 @@ export type {
   JobApplication,
   JobApplicationInsert,
   Place,
+  PlaceInsert,
   Possession,
   PossessionInsert,
   Tag,
@@ -18,6 +18,11 @@ export type {
 } from '../db/schema'
 
 export type { BudgetCategory } from '../db/schema/finance.schema'
+
+export type {
+  Item,
+  ItemInsert,
+} from '../db/schema/items.schema'
 
 export type {
   ListInsert,

@@ -1,548 +1,383 @@
-import { db, takeUniqueOrThrow } from '@hominem/utils/db'
-import { item, list, place as places } from '@hominem/utils/schema'
-import { and, eq, inArray } from 'drizzle-orm'
+import { verifyAuth } from '@/middleware/auth'
+import type { PhotoMedia } from '@/plugins/google/places'
+import { getPlaceDetails, getPlacePhotos, searchPlaces } from '@/plugins/google/places'
+import { db } from '@hominem/utils/db'
+import { item as itemTable, list as listTable, place as placesTable } from '@hominem/utils/schema'
+import type { Place as DbPlaceSchema, ItemInsert, PlaceInsert } from '@hominem/utils/types'
+import { and, eq, or } from 'drizzle-orm'
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
-import { EVENTS, track } from '../analytics/index.js'
-import {
-  type FormattedPlace,
-  type PhotoMedia,
-  getPlaceDetails,
-  getPlacePhotos,
-  searchPlaces,
-} from '../plugins/google/places.js'
+import crypto from 'node:crypto'
+import { z } from 'zod'
 
-const types = {
-  location: {
-    latitude: { type: 'number' },
-    longitude: { type: 'number' },
-  },
+const SearchPlacesQuerySchema = z.object({
+  query: z.string().min(1),
+  latitude: z.coerce.number(),
+  longitude: z.coerce.number(),
+  radius: z.coerce.number().positive(),
+})
+
+const PlaceIdParamSchema = z.object({
+  id: z.string().min(1),
+})
+
+const AddPlaceToListsBodySchema = z.object({
+  listIds: z.array(z.string().uuid()),
+  place: z.object({
+    googleMapsId: z.string(),
+    name: z.string(),
+    address: z.string(),
+    latitude: z.number(),
+    longitude: z.number(),
+    types: z.array(z.string()),
+    imageUrl: z.string().optional().nullable(),
+    websiteUri: z.string().optional().nullable(),
+    phoneNumber: z.string().optional().nullable(),
+  }),
+})
+
+const DeletePlaceFromListParamsSchema = z.object({
+  listId: z.string().uuid(),
+  placeId: z.string().uuid(),
+})
+
+interface NormalizedListInfo {
+  id: string
+  name: string
 }
 
-type Location = {
-  latitude: number
-  longitude: number
+interface NormalizedPlaceResponse {
+  id: string
+  googleMapsId: string
+  name: string
+  address: string
+  location: [number | null | undefined, number | null | undefined]
+  types: string[]
+  imageUrl: string | null
+  websiteUri: string | null
+  phoneNumber: string | null
+  photos: string[]
+  lists: NormalizedListInfo[]
+  description: string | null
+  createdAt: string | null
+  updatedAt: string | null
+  rating?: number | null
+  isPublic?: boolean
+  wifiInfo?: string | null
+  bestFor?: string | null
 }
 
-const CreatePlaceProperties = {
-  ...types.location,
-  name: { type: 'string' },
-  address: { type: 'string' },
-  googleMapsId: { type: 'string' },
-  websiteUri: { type: 'string' },
-  imageUrl: { type: 'string' },
-  types: { type: 'array', items: { type: 'string' } },
-}
+// Normalize a Place (DB or PlaceInsert) for API response
+function normalizePlaceForResponse(
+  place: DbPlaceSchema,
+  associatedLists: NormalizedListInfo[] = [],
+  fetchedPhotos: PhotoMedia[] = []
+): NormalizedPlaceResponse {
+  const [lon, lat] = place.location ?? [null, null]
+  const photosUrls = fetchedPhotos.map((p) => p.imageUrl).filter(Boolean) as string[]
 
-const CreatePlaceRequired = Object.keys(CreatePlaceProperties)
-
-const CreatePlaceResponseProperties = {
-  ...CreatePlaceProperties,
-  id: { type: 'string' },
-  description: { type: 'string' },
-  createdAt: { type: 'string' },
-  updatedAt: { type: 'string' },
+  return {
+    id: place.id,
+    googleMapsId: place.googleMapsId,
+    name: place.name,
+    address: place.address || '',
+    location: [lon, lat],
+    types: place.types ?? [],
+    imageUrl: photosUrls[0] || place.imageUrl || null,
+    websiteUri: place.websiteUri || null,
+    phoneNumber: place.phoneNumber || null,
+    photos: photosUrls,
+    lists: associatedLists,
+    description: place.description || null,
+    createdAt: place.createdAt || null,
+    updatedAt: place.updatedAt || null,
+    rating: place.rating ?? null,
+    isPublic: place.isPublic ?? false,
+    wifiInfo: place.wifiInfo ?? null,
+    bestFor: place.bestFor ?? null,
+  }
 }
-const CreatePlaceResponseRequired = Object.keys(CreatePlaceResponseProperties)
 
 const PlacesPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
-  server.route({
-    method: 'GET',
-    url: '/places/search',
-    schema: {
-      querystring: {
-        type: 'object',
-        required: ['query', 'latitude', 'longitude', 'radius'],
-        properties: {
-          query: { type: 'string' },
-          latitude: { type: 'number' },
-          longitude: { type: 'number' },
-          radius: { type: 'number' },
-        },
-      },
+  server.get(
+    '/places/search',
+    {
+      // schema property removed
     },
-    async handler(request, reply) {
-      const { query, latitude, longitude, radius } = request.query as {
-        query: string
-        latitude: number
-        longitude: number
-        radius: number
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const queryParseResult = SearchPlacesQuerySchema.safeParse(request.query)
+      if (!queryParseResult.success) {
+        return reply.status(400).send({
+          error: 'Invalid query parameters',
+          details: queryParseResult.error.format(),
+        })
       }
+      const { query, latitude, longitude, radius } = queryParseResult.data
 
       try {
-        const places = await searchPlaces({
+        const rawPlacesResult = await searchPlaces({
           query,
           center: { latitude, longitude },
           radius,
           fields: [
             'places.id',
-            'places.shortFormattedAddress',
+            'places.adrFormatAddress',
             'places.displayName',
             'places.location',
+            'places.internationalPhoneNumber',
+            'places.types',
+            'places.websiteUri',
           ],
         })
 
-        const formattedPlaces = places.map((place) => ({
-          address: place.shortFormattedAddress,
-          latitude: place.location?.latitude,
-          longitude: place.location?.longitude,
-          name: place.displayName?.text,
-          googleMapsId: place.id,
+        const searchResults = rawPlacesResult.map((p: PlaceInsert) => ({
+          googleMapsId: p.googleMapsId,
+          name: p.name,
+          address: p.address,
+          location: p.location, // p.location is already [longitude, latitude]
+          types: p.types,
+          imageUrl: p.imageUrl, // This will be null as per PlaceInsert definition from googlePlaceToPlaceInsert
+          websiteUri: p.websiteUri,
+          phoneNumber: p.phoneNumber,
         }))
-
-        return reply.code(200).send(formattedPlaces)
+        return reply.code(200).send(searchResults)
       } catch (err) {
-        console.error('Error fetching places:', err)
-        request.log.error('Could not fetch places', err)
-        return reply.code(500).send()
+        request.log.error({ err }, 'Could not fetch places')
+        return reply.code(500).send({ error: 'Failed to fetch places' })
       }
-    },
-  })
+    }
+  )
 
   server.get(
     '/places/:id',
     {
-      schema: {
-        params: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-          },
-          required: ['id'],
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              address: { type: 'string' },
-              name: { type: 'string' },
-              id: { type: 'string' },
-              googleMapsId: { type: 'string' },
-              imageUrl: { type: 'string' },
-              phoneNumber: { type: 'string' },
-              photos: { type: 'array', items: { type: 'string' } },
-              types: { type: 'array', items: { type: 'string' } },
-              websiteUri: { type: 'string' },
-              location: {
-                latitude: { type: 'number' },
-                longitude: { type: 'number' },
-              },
-              lists: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    name: { type: 'string' },
-                  },
-                },
-              },
-            },
-            required: [
-              'address',
-              'latitude',
-              'longitude',
-              'name',
-              'googleMapsId',
-              'imageUrl',
-              'photos',
-              'types',
-            ],
-          },
-          404: {
-            type: 'null',
-          },
-        },
-      },
+      preHandler: verifyAuth,
+      // schema property removed
     },
-    async (request, reply) => {
-      const { id } = request.params as { id: string }
-      let photos: PhotoMedia[] | undefined
-      let lists: { id: string; name: string }[] = []
-      let place: typeof places.$inferSelect | FormattedPlace | null = null
-
-      try {
-        place = await db
-          .select()
-          .from(places)
-          .where(eq(places.googleMapsId, id))
-          .then(takeUniqueOrThrow)
-      } catch (err) {
-        request.log.error(err, 'Could not fetch place')
-        return reply.code(500).send()
-      }
-
-      // If this place has not been saved before, fetch it from Google.
-      if (!place) {
-        try {
-          place = await getPlaceDetails({
-            placeId: id,
-          })
-
-          // If the place does not exist in Google, return a 404.
-          if (!place) {
-            server.log.error('GET Place - Could not find place from Google')
-            return reply.code(404).send()
-          }
-        } catch (err) {
-          const statusCode = (err as { response: { status: number } })?.response?.status || 500
-
-          server.log.error('GET Place Google Error', err)
-          return reply.code(statusCode).send()
-        }
-      }
-
-      if (!place.googleMapsId) {
-        server.log.error('GET Place - Place does not have a Google Maps ID')
-        return reply.code(404).send()
-      }
-
-      try {
-        photos = await getPlacePhotos({
-          googleMapsId: place.googleMapsId as string,
-          limit: 5,
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const paramsParseResult = PlaceIdParamSchema.safeParse(request.params)
+      if (!paramsParseResult.success) {
+        return reply.status(400).send({
+          error: 'Invalid path parameters',
+          details: paramsParseResult.error.format(),
         })
-      } catch (err) {
-        server.log.error(err, 'Could not fetch photos from Google')
-        return reply.code(500).send()
       }
+      const { id: googleMapsIdOrDbId } = paramsParseResult.data
 
-      if (place?.id) {
-        try {
-          const items = await db
-            .select()
-            .from(item)
-            .where(and(eq(item.itemId, place.id), eq(item.itemType, 'PLACE')))
-            .leftJoin(list, eq(list.id, item.listId))
+      let dbPlace: DbPlaceSchema | null | undefined = null
+      let associatedLists: NormalizedListInfo[] = []
+      let photos: PhotoMedia[] = []
+      const { userId } = request
 
-          lists = items?.map((item) => item?.list).filter(Boolean)
-        } catch (err) {
-          server.log.error(err, 'Could not fetch lists')
-          return reply.code(500).send()
+      try {
+        dbPlace = await db.query.place.findFirst({
+          where: or(
+            eq(placesTable.id, googleMapsIdOrDbId),
+            eq(placesTable.googleMapsId, googleMapsIdOrDbId)
+          ),
+        })
+
+        if (!dbPlace) {
+          // If not in DB, fetch from Google and insert
+          const googlePlace = await getPlaceDetails({ placeId: googleMapsIdOrDbId })
+          const [insertedPlace] = await db.insert(placesTable).values(googlePlace).returning()
+          dbPlace = insertedPlace
         }
+
+        const itemsLinkingToThisPlace = await db.query.item.findMany({
+          where: and(eq(itemTable.itemId, dbPlace.id), eq(itemTable.itemType, 'PLACE')),
+          with: {
+            list: {
+              columns: { id: true, name: true },
+            },
+          },
+        })
+
+        associatedLists = itemsLinkingToThisPlace
+          .map((itemRecord) => itemRecord.list)
+          .filter(
+            (listRecord): listRecord is { id: string; name: string } =>
+              listRecord !== null && listRecord !== undefined
+          )
+          .map((listRecord) => ({ id: listRecord.id, name: listRecord.name }))
+
+        photos = (await getPlacePhotos({ googleMapsId: dbPlace.googleMapsId })) ?? []
+      } catch (err) {
+        request.log.error({ err, googleMapsIdOrDbId }, 'Error fetching place details by ID')
+        return reply.status(500).send({ error: 'Failed to fetch place details' })
       }
 
-      return reply.code(200).send({
-        ...place,
-        imageUrl: photos?.[0]?.imageUrl || '',
-        photos: photos?.map((photo) => photo.imageUrl) || [],
-        lists: lists ?? [],
-      })
+      if (!dbPlace) {
+        return reply.code(404).send({ message: 'Place not found after all checks' })
+      }
+
+      const normalizedPlace = normalizePlaceForResponse(dbPlace, associatedLists, photos)
+      return reply.code(200).send(normalizedPlace)
     }
   )
 
   server.post(
     '/lists/place',
     {
-      schema: {
-        body: {
-          type: 'object',
-          properties: {
-            listIds: {
-              type: 'array',
-              items: { type: 'string' },
-            },
-            place: {
-              type: 'object',
-              properties: CreatePlaceProperties,
-              required: CreatePlaceRequired,
-            },
-          },
-          required: ['listIds', 'place'],
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              lists: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    name: { type: 'string' },
-                    createdAt: { type: 'string' },
-                    updatedAt: { type: 'string' },
-                  },
-                },
-              },
-              place: {
-                type: 'object',
-                properties: CreatePlaceResponseProperties,
-                required: CreatePlaceResponseRequired,
-              },
-            },
-          },
-        },
-      },
+      preHandler: verifyAuth,
+      // schema already removed
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request
       if (!userId) {
-        return reply.code(401).send({ message: 'Unauthorized' })
+        return reply.status(401).send({ error: 'Unauthorized: User ID is missing' })
       }
+      const bodyParseResult = AddPlaceToListsBodySchema.safeParse(request.body)
 
-      const { listIds, place } = request.body as PlacePostBody
-      const filteredListTypes = place.types.filter((type) => {
-        return !/point_of_interest|establishment|political/.test(type)
-      })
-
-      const createdPlace = await db
-        .insert(places)
-        .values({
-          id: crypto.randomUUID(),
-          name: place.name,
-          description: '',
-          address: place.address,
-          googleMapsId: place.googleMapsId,
-          types: filteredListTypes,
-          imageUrl: place.imageUrl,
-          location: [place.latitude, place.longitude],
-          latitude: place.latitude,
-          longitude: place.longitude,
-          websiteUri: place.websiteUri,
-          userId,
+      if (!bodyParseResult.success) {
+        return reply.status(400).send({
+          error: 'Invalid request body',
+          details: bodyParseResult.error.format(),
         })
-        .returning()
-        .then(takeUniqueOrThrow)
+      }
+      const { listIds, place: placeInput } = bodyParseResult.data
 
-      await db
-        .insert(item)
-        .values(
-          [...listIds].map((id) => ({
-            id: crypto.randomUUID(),
-            type: 'PLACE',
-            itemId: createdPlace.id,
-            listId: id,
-            userId,
-          }))
+      let finalPlace: DbPlaceSchema
+      let affectedLists: NormalizedListInfo[] = []
+
+      try {
+        const existingPlace = await db.query.place.findFirst({
+          where: eq(placesTable.googleMapsId, placeInput.googleMapsId),
+        })
+
+        if (existingPlace) {
+          finalPlace = existingPlace
+        } else {
+          const newPlaceData: PlaceInsert = {
+            userId: userId,
+            name: placeInput.name,
+            googleMapsId: placeInput.googleMapsId,
+            address: placeInput.address,
+            location: [placeInput.longitude, placeInput.latitude],
+            latitude: placeInput.latitude,
+            longitude: placeInput.longitude,
+            types: placeInput.types,
+            imageUrl: placeInput.imageUrl || null,
+            websiteUri: placeInput.websiteUri || null,
+            phoneNumber: placeInput.phoneNumber || null,
+            description: null,
+            bestFor: null,
+            wifiInfo: null,
+          }
+          const [insertedPlace] = await db.insert(placesTable).values(newPlaceData).returning()
+          finalPlace = insertedPlace
+        }
+        let fetchedPhotos: PhotoMedia[] = []
+        fetchedPhotos = (await getPlacePhotos({ googleMapsId: finalPlace.googleMapsId })) ?? []
+
+        const itemInsertValues: ItemInsert[] = listIds.map((listId) => ({
+          listId,
+          itemId: finalPlace.id,
+          userId: userId,
+          type: 'PLACE',
+          id: crypto.randomUUID(),
+        }))
+
+        if (itemInsertValues.length > 0) {
+          await db.insert(itemTable).values(itemInsertValues).onConflictDoNothing()
+        }
+
+        const itemsInLists = await db.query.item.findMany({
+          where: and(eq(itemTable.itemId, finalPlace.id), eq(itemTable.itemType, 'PLACE')),
+          with: {
+            list: { columns: { id: true, name: true } },
+          },
+        })
+
+        affectedLists = itemsInLists
+          .map((item) => item.list)
+          .filter((list) => list !== null && list !== undefined)
+          .map((list) => ({ id: list.id, name: list.name }))
+
+        const normalizedFinalPlace = normalizePlaceForResponse(
+          finalPlace,
+          affectedLists,
+          fetchedPhotos
         )
-        .onConflictDoNothing()
 
-      const lists = await db.select().from(list).where(inArray(list.id, listIds))
-
-      // 👇 Track place creation
-      track(userId, EVENTS.PLACE_ADDED, {
-        types: place.types,
-      })
-
-      server.log.info('place added to lists', {
-        userId,
-        placeId: createdPlace.id,
-        listIds,
-      })
-
-      return { place: createdPlace, lists }
+        return reply.code(200).send({ place: normalizedFinalPlace, lists: affectedLists })
+      } catch (err: unknown) {
+        request.log.error({ err, userId, placeInput }, 'Failed to add place to lists')
+        return reply.status(500).send({ error: 'Failed to process request' })
+      }
     }
   )
 
   server.delete(
     '/lists/:listId/place/:placeId',
     {
-      schema: {
-        params: {
-          type: 'object',
-          properties: {
-            listId: { type: 'string' },
-            placeId: { type: 'string' },
-          },
-          required: ['listId', 'placeId'],
-        },
-      },
+      preHandler: verifyAuth,
+      // schema property removed
     },
-    async (request: FastifyRequest) => {
+    async (request: FastifyRequest, reply: FastifyReply) => {
       const { userId } = request
-      const { listId, placeId } = request.params as {
-        listId: string
-        placeId: string
+      if (!userId) {
+        return reply.status(401).send({ error: 'Unauthorized: User ID is missing' })
       }
+      const paramsParseResult = DeletePlaceFromListParamsSchema.safeParse(request.params)
 
-      await db
-        .delete(item)
-        .where(and(eq(item.listId, listId), eq(item.itemId, placeId), eq(item.type, 'PLACE')))
-
-      server.log.info('place removed from list', {
-        userId,
-        placeId,
-        listId,
-      })
-
-      return { success: true }
-    }
-  )
-
-  server.get(
-    '/places/between',
-    {
-      schema: {
-        querystring: {
-          type: 'object',
-          properties: {
-            origin: {
-              type: 'object',
-              properties: types.location,
-              required: ['latitude', 'longitude'],
-            },
-            destination: {
-              type: 'object',
-              properties: types.location,
-              required: ['latitude', 'longitude'],
-            },
-            travelMode: {
-              type: 'string',
-              enum: ['DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'],
-            },
-          },
-          required: ['origin', 'destination', 'travelMode'],
-        },
-        response: {
-          200: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                address: { type: 'string' },
-                name: { type: 'string' },
-                googleMapsId: { type: 'string' },
-                ...types.location,
-              },
-              required: ['latitude', 'longitude', 'name', 'googleMapsId'],
-            },
-            maxItems: 5,
-          },
-        },
-      },
-    },
-    async (request, reply) => {
-      const { origin, destination, travelMode } = request.query as {
-        origin: Location
-        destination: Location
-        travelMode: string
+      if (!paramsParseResult.success) {
+        return reply.status(400).send({
+          error: 'Invalid path parameters',
+          details: paramsParseResult.error.format(),
+        })
       }
+      const { listId, placeId: googleMapsIdOrDbId } = paramsParseResult.data
 
-      // Calculate midpoint between origin and destination
-      const midpoint = {
-        latitude: (origin.latitude + destination.latitude) / 2,
-        longitude: (origin.longitude + destination.longitude) / 2,
+      try {
+        const listAuthCheck = await db.query.list.findFirst({
+          where: and(eq(listTable.id, listId), eq(listTable.userId, userId)),
+        })
+
+        if (!listAuthCheck) {
+          return reply.status(403).send({ error: 'Forbidden: You do not own this list.' })
+        }
+
+        const placeToDelete = await db.query.place.findFirst({
+          where: or(
+            eq(placesTable.id, googleMapsIdOrDbId),
+            eq(placesTable.googleMapsId, googleMapsIdOrDbId)
+          ),
+          columns: { id: true },
+        })
+
+        if (!placeToDelete) {
+          return reply.status(404).send({ error: 'Place not found in database.' })
+        }
+        const internalPlaceId = placeToDelete.id
+
+        const deletedItems = await db
+          .delete(itemTable)
+          .where(
+            and(
+              eq(itemTable.listId, listId),
+              eq(itemTable.itemId, internalPlaceId),
+              eq(itemTable.itemType, 'PLACE'),
+              eq(itemTable.userId, userId)
+            )
+          )
+          .returning({ id: itemTable.id })
+
+        if (deletedItems.length === 0) {
+          return reply.status(404).send({
+            error: 'Place not found in this list, or you do not have permission to remove it.',
+          })
+        }
+
+        return reply.status(200).send({ message: 'Place removed from list successfully' })
+      } catch (err) {
+        request.log.error(
+          { err, userId, listId, googleMapsIdOrDbId },
+          'Error deleting place from list'
+        )
+        return reply.status(500).send({ error: 'Failed to delete place from list' })
       }
-
-      // Calculate rough distance between points for search radius
-      const radius =
-        Math.sqrt(
-          (origin.latitude - destination.latitude) ** 2 +
-            (origin.longitude - destination.longitude) ** 2
-        ) * 50000 // Convert to meters
-
-      // Search for places near the midpoint using Google Places API
-      const nearbySearchParams = new URLSearchParams({
-        location: [midpoint.latitude, midpoint.longitude].join(','),
-        radius: Math.min(radius, 50000).toString(),
-        // biome-ignore lint/style/noNonNullAssertion: <explanation>
-        key: process.env.GOOGLE_MAPS_API_KEY!,
-      })
-      const placesResponse = (await fetch(
-        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${nearbySearchParams}`
-      ).then((res) => res.json())) as {
-        results: {
-          name: string
-          place_id: string
-          vicinity: string
-          geometry: {
-            location: {
-              lat: number
-              lng: number
-            }
-          }
-        }[]
-      }
-
-      const searchResults = placesResponse.results.map((place) => ({
-        name: place.name,
-        googleMapsId: place.place_id,
-        address: place.vicinity,
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
-      }))
-
-      // Get route between points to filter places
-      const directionsParams = new URLSearchParams({
-        origin: `${origin.latitude},${origin.longitude}`,
-        destination: `${destination.latitude},${destination.longitude}`,
-        mode: travelMode.toLowerCase(),
-        // biome-ignore lint/style/noNonNullAssertion: <explanation>
-        key: process.env.GOOGLE_MAPS_API_KEY!,
-      })
-      const route = (await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?${directionsParams}`
-      ).then((res) => res.json())) as {
-        routes: {
-          legs: {
-            steps: {
-              start_location: { lat: number; lng: number }
-            }[]
-          }[]
-        }[]
-      }
-
-      // Filter places that are roughly along the route path
-      const places = searchResults
-        .filter((place) => isPlaceAlongRoute(place, route.routes[0]))
-        .slice(0, 5)
-
-      // 4. Return top 5 places
-      return reply.code(200).send(places)
     }
   )
 }
 
 export default PlacesPlugin
-
-type PlacePostBody = {
-  listIds: string[]
-  place: Location & {
-    name: string
-    address: string
-    imageUrl: string
-    googleMapsId: string
-    types: string[]
-    websiteUri: string
-  }
-}
-
-function isPlaceAlongRoute(
-  place: { latitude: number; longitude: number },
-  route: {
-    legs: { steps: { start_location: { lat: number; lng: number } }[] }[]
-  }
-): boolean {
-  // Maximum distance in kilometers that a place can be from the route
-  const MAX_DISTANCE_KM = 2
-
-  // Check if place is near any step in the route
-  return route.legs.some((leg) =>
-    leg.steps.some((step) => {
-      const distance = getDistanceFromLatLonInKm(
-        place.latitude,
-        place.longitude,
-        step.start_location.lat,
-        step.start_location.lng
-      )
-      return distance <= MAX_DISTANCE_KM
-    })
-  )
-}
-
-// Helper function to calculate distance between two points using Haversine formula
-function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371 // Radius of the earth in km
-  const dLat = deg2rad(lat2 - lat1)
-  const dLon = deg2rad(lon2 - lon1)
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
-}
-
-function deg2rad(deg: number): number {
-  return deg * (Math.PI / 180)
-}

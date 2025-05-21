@@ -48,6 +48,8 @@ export const item = pgTable(
       .onDelete('cascade'),
   ]
 )
+export type ItemInsert = typeof item.$inferInsert
+export type Item = typeof item.$inferSelect
 
 export const itemRelations = relations(item, ({ one, many }) => ({
   list: one(list, {

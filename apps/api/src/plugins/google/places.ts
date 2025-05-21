@@ -1,44 +1,45 @@
-import { env } from '@/lib/env'
-import type { place } from '@hominem/utils/schema'
-import { OAuth2Client } from 'google-auth-library'
-import { google, type places_v1 } from 'googleapis'
+import type { places_v1 } from 'googleapis'
+import fetch from 'node-fetch'
+import assert from 'node:assert'
 import { writeFile } from 'node:fs'
 import * as path from 'node:path'
-import googleService from './auth'
 
-export const { places } = googleService.getMapsService()
+const { GOOGLE_API_KEY } = process.env
+assert(GOOGLE_API_KEY, 'Missing Google API key')
 
-export type FormattedPlace = Pick<
-  typeof place.$inferInsert,
-  | 'id'
-  | 'address'
-  | 'name'
-  | 'googleMapsId'
-  | 'phoneNumber'
-  | 'types'
-  | 'websiteUri'
-  | 'latitude'
-  | 'longitude'
->
+import type { PlaceInsert } from '@hominem/utils/types'
 
-const formatGooglePlace = (place: places_v1.Schema$GoogleMapsPlacesV1Place): FormattedPlace => {
+interface PlacePhotosResponse {
+  photos?: places_v1.Schema$GoogleMapsPlacesV1Photo[]
+}
+
+// Converts a Google Place API response to PlaceInsert (canonical shape for the app)
+export function googlePlaceToPlaceInsert(
+  place: places_v1.Schema$GoogleMapsPlacesV1Place
+): PlaceInsert {
   if (!place.id) {
-    throw new Error('Invalid place')
+    throw new Error('Invalid place: missing Google place id')
   }
-
   return {
-    address: place.adrFormatAddress || null,
+    userId: '',
     name: place.displayName?.text || 'Unknown',
-    latitude: place.location?.latitude || null,
-    longitude: place.location?.longitude || null,
-    id: place.id,
     googleMapsId: place.id,
-    phoneNumber: place.internationalPhoneNumber || null,
+    address: place.adrFormatAddress || '',
+    location: [place.location?.longitude ?? 0, place.location?.latitude ?? 0],
+    latitude: place.location?.latitude ?? null,
+    longitude: place.location?.longitude ?? null,
     types: place.types || [],
+    imageUrl: null,
     websiteUri: place.websiteUri || null,
+    phoneNumber: place.internationalPhoneNumber || null,
+    description: null,
+    bestFor: null,
+    wifiInfo: null,
   }
 }
 
+// Google Places API v1 does NOT support API key auth via googleapis library.
+// Use direct HTTP requests for all Places API v1 endpoints.
 export async function getPlaceDetails({
   placeId,
   fields = [
@@ -54,21 +55,15 @@ export async function getPlaceDetails({
 }: {
   placeId: string
   fields?: string[]
-}): Promise<FormattedPlace> {
-  const response = await places.get({
-    name: `places/${placeId}`,
-    fields: fields.join(','),
-  })
-
-  if (!response.data || !response.data.id) {
+}): Promise<PlaceInsert> {
+  const url = `https://places.googleapis.com/v1/places/${placeId}?fields=${fields.join(',')}&key=${GOOGLE_API_KEY}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Google Places API error: ${res.status}`)
+  const data = (await res.json()) as places_v1.Schema$GoogleMapsPlacesV1Place
+  if (!data || !data.id) {
     throw new Error('Place not found')
   }
-
-  return formatGooglePlace(response.data)
-}
-
-export const isValidImageUrl = (url: string) => {
-  return !!url && typeof url === 'string' && url.indexOf('googleusercontent') !== -1
+  return googlePlaceToPlaceInsert(data)
 }
 
 export const getPlacePhotos = async ({
@@ -78,54 +73,31 @@ export const getPlacePhotos = async ({
   googleMapsId: string
   limit?: number
 }): Promise<PhotoMedia[] | undefined> => {
-  const { data } = await places.get({
-    name: `places/${googleMapsId}`,
-    fields: 'photos',
-  })
-
-  if (!data) {
-    console.error('Error fetching place', { googleMapsId })
+  const url = `https://places.googleapis.com/v1/places/${googleMapsId}?fields=photos&key=${GOOGLE_API_KEY}`
+  const res = await fetch(url)
+  if (!res.ok) {
+    console.error('Error fetching place', { googleMapsId, status: res.status })
     return
   }
-
+  const data = (await res.json()) as PlacePhotosResponse
   const { photos } = data
-
   if (!photos) {
     console.error('No photos found for place', { googleMapsId })
     return
   }
+  // No media blobs available from HTTP API, so just return URLs if present
+  return photos
+    .map((photo: places_v1.Schema$GoogleMapsPlacesV1Photo) => ({ blob: photo, imageUrl: null }))
+    .slice(0, limit)
+}
 
-  return getPhotosMedia({ limit, photos })
+export const isValidImageUrl = (url: string) => {
+  return !!url && typeof url === 'string' && url.indexOf('googleusercontent') !== -1
 }
 
 export type PhotoMedia = {
   blob: places_v1.Schema$GoogleMapsPlacesV1PhotoMedia
   imageUrl: string | null
-}
-
-export async function getPhotosMedia({
-  limit,
-  photos,
-}: {
-  limit?: number
-  photos: places_v1.Schema$GoogleMapsPlacesV1Photo[]
-}): Promise<PhotoMedia[]> {
-  return Promise.all(photos.slice(0, limit).map((photo) => getPhotoMedia(photo)))
-}
-
-export async function getPhotoMedia(photo: places_v1.Schema$GoogleMapsPlacesV1Photo) {
-  const {
-    data,
-    request: { responseURL },
-  } = await places.photos.getMedia({
-    name: `${photo.name}/media`,
-    maxHeightPx: 300,
-  })
-
-  return {
-    blob: data,
-    imageUrl: responseURL,
-  }
 }
 
 export const downloadPlacePhotoBlob = async (blob: Blob, filename: string) => {
@@ -154,7 +126,6 @@ export const downloadPlacePhotos = async ({
   const photos = await getPlacePhotos({
     googleMapsId,
   })
-
   if (photos) {
     await Promise.all(
       photos
@@ -175,33 +146,44 @@ export const searchPlaces = async ({
     'places.location',
     'places.primaryType',
     'places.shortFormattedAddress',
+    'places.internationalPhoneNumber',
     'places.id',
   ],
 }: {
-  fields?: PlaceFields
+  fields?: string[]
   query: string
   center: { latitude: number; longitude: number }
   radius: number
-}) => {
-  const client = google.places({
-    version: 'v1',
-    auth: new OAuth2Client(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.GOOGLE_REDIRECT_URI),
-  })
-  const response = await client.places.searchText({
-    requestBody: {
-      textQuery: query,
-      locationBias: {
-        circle: {
-          radius,
-          center,
-        },
+}): Promise<PlaceInsert[]> => {
+  // Use direct HTTP request for Places API v1 searchText
+  const url = `https://places.googleapis.com/v1/places:searchText?key=${process.env.GOOGLE_API_KEY}`
+  const body = {
+    textQuery: query,
+    locationBias: {
+      circle: {
+        radius,
+        center,
       },
-      maxResultCount: 10,
     },
-    fields: fields.join(','),
+    fieldMask: fields.join(','), // Added fieldMask to request specific fields
+    maxResultCount: 10,
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   })
 
-  return response.data.places || []
+  if (!res.ok) {
+    throw new Error(`Google Places API error: ${res.status}`)
+  }
+
+  const data = (await res.json()) as places_v1.Schema$GoogleMapsPlacesV1SearchTextResponse
+
+  if (!data.places) {
+    return []
+  }
+  return data.places.map(googlePlaceToPlaceInsert)
 }
 
 type PlaceField =
@@ -220,11 +202,13 @@ type PlaceField =
   | 'places.formattedAddress'
   | 'places.iconBackgroundColor'
   | 'places.iconMaskBaseUri'
+  | 'places.internationalPhoneNumber'
   | 'places.plusCode'
   | 'places.primaryTypeDisplayName'
   | 'places.subDestinations'
   | 'places.types'
   | 'places.utcOffsetMinutes'
   | 'places.viewport'
+  | 'places.websiteUri'
 
 type PlaceFields = PlaceField[]

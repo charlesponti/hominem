@@ -39,9 +39,6 @@ const NewListInviteSchema = z.object({
   userId: z.string().uuid(),
 })
 
-// Type for the list invite data
-type NewListInvite = z.infer<typeof NewListInviteSchema>
-
 const listIdParamSchema = z.object({ id: z.string().uuid() })
 const inviteListIdParamSchema = z.object({ listId: z.string().uuid() })
 
