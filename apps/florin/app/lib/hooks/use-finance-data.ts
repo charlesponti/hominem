@@ -92,15 +92,26 @@ export function useFinanceTransactions({
   }, [selectedAccount, dateFrom, dateTo, searchQuery, limit, offset, sortField, sortDirection])
 
   // Query for transactions with dependencies on filters
-  const transactionsQuery = useQuery<FinanceTransaction[], Error>({
+  const transactionsQuery = useQuery<{ data: FinanceTransaction[]; total: number }, Error>({
     // Include all state dependencies in the query key
     queryKey: [
       'finance',
       'transactions',
-      { selectedAccount, dateFrom, dateTo, searchQuery, limit, offset, sortField, sortDirection },
+      {
+        selectedAccount,
+        dateFrom,
+        dateTo,
+        searchQuery,
+        limit,
+        offset,
+        sortField,
+        sortDirection,
+      },
     ],
     queryFn: async () => {
-      return await api.get<never, FinanceTransaction[]>(`/api/finance/transactions?${queryString}`)
+      return await api.get<never, { data: FinanceTransaction[]; total: number }>(
+        `/api/finance/transactions?${queryString}`
+      )
     },
     staleTime: 1 * 60 * 1000,
     keepPreviousData: true,
@@ -108,7 +119,11 @@ export function useFinanceTransactions({
 
   // No need for client-side sorting now, as the data is already sorted by the server
   const sortedTransactions = useMemo(() => {
-    return transactionsQuery.data || []
+    return transactionsQuery.data?.data || []
+  }, [transactionsQuery.data])
+
+  const totalTransactions = useMemo(() => {
+    return transactionsQuery.data?.total || 0
   }, [transactionsQuery.data])
 
   // Pagination helpers
@@ -120,7 +135,8 @@ export function useFinanceTransactions({
   return {
     // Data
     transactions: sortedTransactions,
-    rawTransactions: transactionsQuery.data,
+    totalTransactions,
+    rawTransactions: transactionsQuery.data?.data,
     isLoading: transactionsQuery.isLoading,
     isFetching: transactionsQuery.isFetching,
     error: transactionsQuery.error,
