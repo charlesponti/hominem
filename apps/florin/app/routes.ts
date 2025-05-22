@@ -25,8 +25,6 @@ export default [
       route('finance/runway', 'routes/finance/runway/page.tsx'),
       route('finance/location-comparison', 'routes/finance/location-comparison/page.tsx'),
     ]),
-    layout('routes/notes/layout.tsx', [route('notes', 'routes/notes/page.tsx')]),
-
     route('/account', 'routes/account.tsx'),
     route('/auth/cli', 'routes/auth/cli.tsx'),
   ]),

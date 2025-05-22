@@ -1,5 +1,5 @@
 import { SignInButton, useUser } from '@clerk/react-router'
-import { ChartLine, CircleDollarSignIcon, Landmark, Menu, PenTool, User, X } from 'lucide-react'
+import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
 import { cn } from '~/lib/utils'
@@ -21,11 +21,6 @@ const navItems = [
     title: 'Accounts',
     icon: Landmark,
     url: '/accounts',
-  },
-  {
-    title: 'Notes',
-    icon: PenTool,
-    url: '/notes',
   },
 ]
 
