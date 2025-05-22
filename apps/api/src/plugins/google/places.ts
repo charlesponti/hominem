@@ -1,12 +1,9 @@
 import type { places_v1 } from 'googleapis'
 import fetch from 'node-fetch'
-import assert from 'node:assert'
 import { writeFile } from 'node:fs'
 import * as path from 'node:path'
 
-const { GOOGLE_API_KEY } = process.env
-assert(GOOGLE_API_KEY, 'Missing Google API key')
-
+import { env } from '@/lib/env'
 import type { PlaceInsert } from '@hominem/utils/types'
 
 interface PlacePhotosResponse {
@@ -56,7 +53,7 @@ export async function getPlaceDetails({
   placeId: string
   fields?: string[]
 }): Promise<PlaceInsert> {
-  const url = `https://places.googleapis.com/v1/places/${placeId}?fields=${fields.join(',')}&key=${GOOGLE_API_KEY}`
+  const url = `https://places.googleapis.com/v1/places/${placeId}?fields=${fields.join(',')}&key=${env.GOOGLE_API_KEY}`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Google Places API error: ${res.status}`)
   const data = (await res.json()) as places_v1.Schema$GoogleMapsPlacesV1Place
@@ -73,7 +70,7 @@ export const getPlacePhotos = async ({
   googleMapsId: string
   limit?: number
 }): Promise<PhotoMedia[] | undefined> => {
-  const url = `https://places.googleapis.com/v1/places/${googleMapsId}?fields=photos&key=${GOOGLE_API_KEY}`
+  const url = `https://places.googleapis.com/v1/places/${googleMapsId}?fields=photos&key=${env.GOOGLE_API_KEY}`
   const res = await fetch(url)
   if (!res.ok) {
     console.error('Error fetching place', { googleMapsId, status: res.status })
