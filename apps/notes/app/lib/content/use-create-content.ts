@@ -21,10 +21,8 @@ const defaultContentFields = (
           status: 'todo',
           priority: 'medium',
           dueDate: null,
-          completed: false,
           startTime: undefined,
           endTime: undefined,
-          isActive: false,
           duration: 0,
         }
       : null,
@@ -45,7 +43,8 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
         Content,
         'id' | 'userId' | 'content' | 'type' | 'createdAt' | 'updatedAt' | 'synced' | 'mentions'
       >
-    >
+    >,
+    { previousContent: Content[] | undefined }
   >({
     mutationFn: async (itemData) => {
       if (!isSignedIn || !userId) {
@@ -67,14 +66,53 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
       }
       return serverResponse
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: options.queryKey || [CONTENT_QUERY_KEY_BASE] })
+    onMutate: async (newItemData) => {
+      const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+      await queryClient.cancelQueries({ queryKey })
+      const previousContent = queryClient.getQueryData<Content[]>(queryKey)
+
+      // Optimistically add the new item to the cache
+      const tempId = `temp-${Date.now()}`
+      const optimisticItem: Content = {
+        ...defaultContentFields(newItemData.type),
+        ...newItemData,
+        id: tempId,
+        userId: userId || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        synced: false,
+        mentions: [],
+      }
+
+      queryClient.setQueryData<Content[]>(queryKey, (oldContent = []) => [
+        ...oldContent,
+        optimisticItem,
+      ])
+      return { previousContent }
+    },
+    onSuccess: (data, newItemData, context) => {
+      const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+      queryClient.setQueryData<Content[]>(queryKey, (oldContent = []) =>
+        oldContent.map((content) =>
+          content.id.startsWith('temp-') &&
+          content.title === newItemData.title &&
+          content.type === newItemData.type
+            ? data
+            : content
+        )
+      )
+      queryClient.invalidateQueries({ queryKey })
+
       toast({
         title: `${data.type} created`,
         description: data.title || 'Item successfully created.',
       })
     },
-    onError: (error: Error) => {
+    onError: (error: Error, newItemData, context) => {
+      const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+      if (context?.previousContent) {
+        queryClient.setQueryData(queryKey, context.previousContent)
+      }
       toast({
         variant: 'destructive',
         title: 'Error Creating Item',

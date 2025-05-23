@@ -2,6 +2,7 @@ import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../../components/ui/use-toast'
+import type { Content } from '@hominem/utils/types'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
 
@@ -11,7 +12,12 @@ export function useDeleteContent(options: { queryKey?: unknown[] } = {}) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
-  const deleteItem = useMutation<{ id: string }, Error, string>({
+  const deleteItem = useMutation<
+    { id: string },
+    Error,
+    string, // id of the item to delete
+    { previousContent: Content[] | undefined }
+  >({
     mutationFn: async (id: string) => {
       if (!isSignedIn || !userId) {
         throw new Error('User must be signed in to delete content.')
@@ -22,11 +28,24 @@ export function useDeleteContent(options: { queryKey?: unknown[] } = {}) {
       }
       return response
     },
-    onSuccess: () => {
+    onMutate: async (idToDelete) => {
+      const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+      await queryClient.cancelQueries({ queryKey })
+      const previousContent = queryClient.getQueryData<Content[]>(queryKey)
+      queryClient.setQueryData<Content[]>(queryKey, (oldContent = []) =>
+        oldContent.filter((content) => content.id !== idToDelete)
+      )
+      return { previousContent }
+    },
+    onSuccess: (data, idToDelete, context) => {
       queryClient.invalidateQueries({ queryKey: options.queryKey || [CONTENT_QUERY_KEY_BASE] })
       toast({ title: 'Item Deleted', description: 'Item successfully deleted.' })
     },
-    onError: (error: Error) => {
+    onError: (error: Error, idToDelete, context) => {
+      const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+      if (context?.previousContent) {
+        queryClient.setQueryData(queryKey, context.previousContent)
+      }
       toast({
         variant: 'destructive',
         title: 'Error Deleting Item',

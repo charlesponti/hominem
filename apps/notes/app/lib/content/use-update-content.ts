@@ -17,7 +17,8 @@ export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
     Error,
     { id: string } & Partial<
       Omit<Content, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'synced' | 'mentions'>
-    >
+    >,
+    { previousContent: Content[] | undefined }
   >({
     mutationFn: async (itemData) => {
       if (!isSignedIn || !userId) {
@@ -36,6 +37,17 @@ export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
       }
       return serverResponse
     },
+    onMutate: async (newItemData) => {
+      const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+      await queryClient.cancelQueries({ queryKey })
+      const previousContent = queryClient.getQueryData<Content[]>(queryKey)
+      queryClient.setQueryData<Content[]>(queryKey, (oldContent = []) =>
+        oldContent.map((content) =>
+          content.id === newItemData.id ? { ...content, ...newItemData } : content
+        )
+      )
+      return { previousContent }
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: options.queryKey || [CONTENT_QUERY_KEY_BASE] })
       toast({
@@ -43,7 +55,11 @@ export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
         description: data.title || 'Item successfully updated.',
       })
     },
-    onError: (error: Error) => {
+    onError: (error: Error, newItemData, context) => {
+      const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+      if (context?.previousContent) {
+        queryClient.setQueryData(queryKey, context.previousContent)
+      }
       toast({
         variant: 'destructive',
         title: 'Error Updating Item',
@@ -57,7 +73,16 @@ export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
   }
 
   function toggleTaskCompletion(taskId: string) {
-    updateItem.mutate({ id: taskId, taskMetadata: { status: 'done' } })
+    const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
+    const previousContent = queryClient.getQueryData<Content[]>(queryKey)
+    const currentItem = previousContent?.find((item) => item.id === taskId)
+
+    let newStatus: TaskStatus = 'done'
+    if (currentItem?.taskMetadata?.status === 'done') {
+      newStatus = 'todo'
+    }
+
+    updateItem.mutate({ id: taskId, taskMetadata: { status: newStatus } })
   }
 
   return { updateItem, updateTaskStatus, toggleTaskCompletion }

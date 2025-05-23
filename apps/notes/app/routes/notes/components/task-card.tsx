@@ -14,12 +14,14 @@ type TaskCardProps = {
 }
 
 export function TaskCard({ task, onToggleComplete, onDelete, className = '' }: TaskCardProps) {
-  const { timerTask, startTimer, stopTimer, resetTimer, updateTimerTask, isLoading } =
-    useTimeTracking({ task })
+  const { startTimer, stopTimer, resetTimer, updateTimerTask, isLoading } = useTimeTracking({
+    task,
+  })
 
   // Fallback to prop if timerTask is not loaded yet
   const { title, content: taskContent } = task
-  const { status, priority } = timerTask?.taskMetadata || task.taskMetadata || {}
+  const { status, priority } = task.taskMetadata || {}
+
   // fallback for completed (legacy or derived)
   const completed =
     task.taskMetadata && 'completed' in task.taskMetadata
@@ -144,7 +146,7 @@ export function TaskCard({ task, onToggleComplete, onDelete, className = '' }: T
                     onClick={() =>
                       updateTimerTask({
                         id: task.id,
-                        taskMetadata: { ...timerTask?.taskMetadata, status: 'todo' },
+                        taskMetadata: { ...task?.taskMetadata, status: 'todo' },
                       })
                     }
                     disabled={isLoading}

@@ -26,24 +26,16 @@ export interface UseTimeTrackingOptions {
  * It provides time tracking functionality on top of the core content operations
  */
 export function useTimeTracking(options: UseTimeTrackingOptions) {
+  const { task } = options
   const taskId = options.task.id
   const [timeTrackingError, setTimeTrackingError] = useState<Error | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Set up query key for this specific timer task
-  const queryKey = ['content', `time-tracking-${taskId}`]
-
   // Use the update content hook
-  const { updateItem } = useUpdateContent({ queryKey })
+  const { updateItem } = useUpdateContent()
 
   // Use the delete content hook
-  const deleteItem = useDeleteContent({ queryKey })
-
-  // Use the provided task or cast it to TimerTask if it's a timer
-  const timerTask =
-    options.task && options.task.type === 'timer' && options.task.taskMetadata
-      ? (options.task as TimerTask)
-      : null
+  const deleteItem = useDeleteContent()
 
   /**
    * Update an existing timer task
@@ -72,7 +64,7 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     }
 
     // Get the existing task metadata if available
-    const existingMetadata = timerTask?.taskMetadata || {}
+    const existingMetadata = task.taskMetadata || {}
 
     setIsLoading(true)
     return updateItem.mutate(
@@ -100,11 +92,11 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
       throw err
     }
 
-    if (!timerTask?.taskMetadata?.startTime || timerTask.taskMetadata.status !== 'in-progress') {
+    if (!task.taskMetadata?.startTime || task.taskMetadata.status !== 'in-progress') {
       return
     }
 
-    const startTime = new Date(timerTask.taskMetadata.startTime)
+    const startTime = new Date(task.taskMetadata.startTime)
     const endTime = new Date()
     const elapsedMs = endTime.getTime() - startTime.getTime()
 
@@ -113,8 +105,8 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
       {
         id: taskId,
         taskMetadata: {
-          ...timerTask.taskMetadata,
-          duration: (timerTask.taskMetadata.duration || 0) + elapsedMs,
+          ...task.taskMetadata,
+          duration: (task.taskMetadata.duration || 0) + elapsedMs,
           status: 'done',
         },
       },
@@ -135,7 +127,7 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     }
 
     // Get the existing task metadata if available
-    const existingMetadata = timerTask?.taskMetadata || {}
+    const existingMetadata = task.taskMetadata || {}
 
     setIsLoading(true)
     return updateItem.mutate(
@@ -160,16 +152,16 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     unit: 'milliseconds' | 'seconds' | 'minutes' | 'hours' = 'milliseconds'
   ) => {
     if (
-      !timerTask?.taskMetadata ||
-      timerTask.taskMetadata.status !== 'in-progress' ||
-      !timerTask.taskMetadata.startTime
+      !task?.taskMetadata ||
+      task.taskMetadata.status !== 'in-progress' ||
+      !task.taskMetadata.startTime
     ) {
       return 0
     }
 
-    const startTime = new Date(timerTask.taskMetadata.startTime)
+    const startTime = new Date(task.taskMetadata.startTime)
     const now = new Date()
-    const elapsedMs = now.getTime() - startTime.getTime() + (timerTask.taskMetadata.duration || 0)
+    const elapsedMs = now.getTime() - startTime.getTime() + (task.taskMetadata.duration || 0)
 
     switch (unit) {
       case 'seconds':
@@ -201,7 +193,6 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
   }
 
   return {
-    timerTask,
     updateTimerTask,
     deleteTimerTask,
     startTimer,
