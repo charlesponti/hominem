@@ -10,20 +10,20 @@ import { ElapsedTime } from './elapsed-time'
 
 type TaskCardProps = {
   task: Content
-  onToggleComplete: (taskId: string) => void
   onDelete: (taskId: string) => void
   onEdit: (task: Content) => void
   className?: string
 }
 
-export function TaskCard({
-  task,
-  onToggleComplete, // This prop might be re-evaluated or removed if its functionality is fully covered by the hook
-  onDelete,
-  onEdit,
-  className = '',
-}: TaskCardProps) {
-  const { startTimer, pauseTimer, stopTimer, setTaskToTodoAndResetTime, resetTimerForInProgressTask, isLoading } = useTimeTracking({
+export function TaskCard({ task, onDelete, onEdit, className = '' }: TaskCardProps) {
+  const {
+    startTimer,
+    pauseTimer,
+    stopTimer,
+    setTaskToTodoAndResetTime,
+    resetTimerForInProgressTask,
+    isLoading,
+  } = useTimeTracking({
     task,
   })
 

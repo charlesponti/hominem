@@ -148,6 +148,13 @@
       "when": 1747010318880,
       "tag": "0020_cold_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1747976709084,
+      "tag": "0021_perpetual_odin",
+      "breakpoints": true
     }
   ]
 }

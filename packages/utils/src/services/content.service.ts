@@ -90,21 +90,32 @@ export class ContentService {
     const conditions: SQLWrapper[] = [eq(content.userId, userId)]
 
     if (filters?.types && filters.types.length > 0) {
-      const typeFilters = []
+      const typeFilters: SQLWrapper[] = []
       for (const type of filters.types) {
         typeFilters.push(sql`${content.type} = ${type}`)
       }
       conditions.push(or(...typeFilters) as SQLWrapper)
     }
-    if (filters?.query) {
-      const searchQuery = `%${filters.query.toLowerCase()}%`
-      conditions.push(
-        or(
-          sql`lower(coalesce(${content.title}, '')) like ${searchQuery}`,
-          sql`lower(${content.content}) like ${searchQuery}`
-        ) as SQLWrapper
-      )
+
+    // Full-Text Search logic
+    let ftsQuery = ''
+    if (filters?.query && filters.query.trim() !== '') {
+      ftsQuery = filters.query.trim() // Use websearch_to_tsquery which handles operators like ' & ', ' | '
     }
+
+    // Define the tsvector construction SQL
+    // Coalesce is used for title and the tags subquery to handle NULLs gracefully.
+    const tsvector_sql = sql`(
+      setweight(to_tsvector('english', coalesce(${content.title}, '')), 'A') ||
+      setweight(to_tsvector('english', ${content.content}), 'B') ||
+      setweight(to_tsvector('english', coalesce((SELECT string_agg(tag_item->>'value', ' ') FROM json_array_elements(${content.tags}) AS tag_item), '')), 'C')
+    )`
+
+    if (ftsQuery) {
+      conditions.push(sql`${tsvector_sql} @@ websearch_to_tsquery('english', ${ftsQuery})`)
+    }
+    // End of Full-Text Search logic
+
     if (filters?.tags && filters.tags.length > 0) {
       for (const tag of filters.tags) {
         conditions.push(sql`${content.tags}::jsonb @> ${JSON.stringify([{ value: tag }])}::jsonb`)
@@ -118,11 +129,24 @@ export class ContentService {
         console.warn(`Invalid 'since' date format: ${filters.since}`)
       }
     }
-    const result = await db
+
+    const baseQuery = db
       .select()
       .from(content)
       .where(and(...conditions.filter((c) => !!c)))
-      .orderBy(desc(content.updatedAt))
+
+    // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+    let orderedQuery
+    if (ftsQuery) {
+      orderedQuery = baseQuery.orderBy(
+        sql`ts_rank_cd(${tsvector_sql}, websearch_to_tsquery('english', ${ftsQuery})) DESC`,
+        desc(content.updatedAt)
+      )
+    } else {
+      orderedQuery = baseQuery.orderBy(desc(content.updatedAt))
+    }
+
+    const result = await orderedQuery
     return result as ContentSchemaType[]
   }
 

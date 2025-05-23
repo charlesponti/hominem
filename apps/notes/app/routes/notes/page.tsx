@@ -1,4 +1,5 @@
-import type { Content } from '@hominem/utils/types'
+import type { Content, ContentType } from '@hominem/utils/types'
+import { useDebounce } from '@uidotdev/usehooks'
 import { Hash, Plus, Search, Sparkles, Target } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '~/components/ui/button'
@@ -12,20 +13,10 @@ import { CreateItemDrawer } from './components/create-item-drawer'
 import { NoteCard } from './components/note-card'
 import { TaskCard } from './components/task-card'
 
-const extractHashtags = (content: string): { value: string }[] => {
-  const hashtagRegex = /#(\w+)/g
-  const matches = content.match(hashtagRegex)
-  if (!matches) return []
-
-  return [...new Set(matches.map((tag) => tag.substring(1)))].map((tag) => ({ value: tag }))
-}
-
 export default function NotesPage() {
-  const { isLoading, data: allContentItems } = useContentQuery({ type: ['note', 'task'] })
-  const { updateItem, toggleTaskCompletion } = useUpdateContent()
-  const deleteItem = useDeleteContent()
   const [filter, setFilter] = useState<'all' | 'note' | 'task'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
   const feedContainerRef = useRef<HTMLDivElement>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const prevFeedLengthRef = useRef<number>(0)
@@ -34,13 +25,28 @@ export default function NotesPage() {
   const [noteToEdit, setNoteToEdit] = useState<Content | null>(null)
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create')
 
+  const {
+    data: allContentItems = [] as Content[],
+    isLoading,
+    refetch,
+  } = useContentQuery({
+    searchText: debouncedSearchQuery, // Changed from query to searchText
+    type: filter === 'all' ? undefined : [filter as ContentType], // Changed from types to type and added type assertion
+  })
+  const { updateItem } = useUpdateContent()
+  const deleteItem = useDeleteContent()
+
+  useEffect(() => {
+    refetch()
+  }, [refetch])
+
   // Stats calculations
   const stats = useMemo(() => {
-    const notes = allContentItems.filter((item) => item.type === 'note')
-    const tasks = allContentItems.filter((item) => item.type === 'task')
-    const completedTasks = tasks.filter((task) => task.taskMetadata?.status === 'done')
-    const allTags = allContentItems.flatMap((item) => item.tags || [])
-    const uniqueTags = [...new Set(allTags.map((tag) => tag.value))]
+    const notes = allContentItems.filter((item: Content) => item.type === 'note')
+    const tasks = allContentItems.filter((item: Content) => item.type === 'task')
+    const completedTasks = tasks.filter((task: Content) => task.taskMetadata?.status === 'done')
+    const allTags = allContentItems.flatMap((item: Content) => item.tags || [])
+    const uniqueTags = [...new Set(allTags.map((tag: { value: string }) => tag.value))]
 
     return {
       totalNotes: notes.length,
@@ -65,12 +71,6 @@ export default function NotesPage() {
     prevFeedLengthRef.current = allContentItems.length
   }, [allContentItems.length])
 
-  function handleEditNote(note: Content) {
-    setNoteToEdit(note)
-    setDrawerMode('edit')
-    setIsDrawerOpen(true)
-  }
-
   // Combined handler for editing notes and tasks
   function handleEditItem(item: Content) {
     setNoteToEdit(item) // Reuse existing state, consider renaming to itemToEdit
@@ -79,9 +79,9 @@ export default function NotesPage() {
   }
 
   function removeTagFromNote(noteId: string, tagValue: string) {
-    const item = allContentItems.find((n) => n.id === noteId)
+    const item = allContentItems.find((n: Content) => n.id === noteId)
     if (!item) return
-    const newTags = (item.tags || []).filter((tag) => tag.value !== tagValue)
+    const newTags = (item.tags || []).filter((tag: { value: string }) => tag.value !== tagValue)
     updateItem.mutate({ id: noteId, tags: newTags })
   }
 
@@ -200,14 +200,18 @@ export default function NotesPage() {
                 <Sparkles className="w-12 h-12 text-blue-500 dark:text-blue-400" />
               </div>
               <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                {searchQuery ? 'No matches found' : 'Your creative space awaits'}
+                {debouncedSearchQuery || filter !== 'all'
+                  ? 'No matches found'
+                  : 'Your creative space awaits'}
               </h3>
               <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
-                {searchQuery
-                  ? `No content matches "${searchQuery}". Try a different search term.`
-                  : 'Start capturing your thoughts and organizing your tasks. Every great idea begins here.'}
+                {debouncedSearchQuery
+                  ? `No content matches "${debouncedSearchQuery}"${filter !== 'all' ? ` for ${filter}s` : ''}. Try a different search or filter.`
+                  : filter !== 'all'
+                    ? `No ${filter}s found. Try clearing filters or creating a new one.`
+                    : 'Start capturing your thoughts and organizing your tasks. Every great idea begins here.'}
               </p>
-              {!searchQuery && (
+              {!debouncedSearchQuery && filter === 'all' && (
                 <Button
                   onClick={handleCreateNewItem}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
@@ -221,28 +225,16 @@ export default function NotesPage() {
 
           {allContentItems.length > 0 && (
             <>
-              {/* Filter the items and check if any match the current filters */}
-              {allContentItems.filter((item) => {
-                if (filter !== 'all' && item.type !== filter) return false
-                if (searchQuery) {
-                  const lowerSearchQuery = searchQuery.toLowerCase()
-                  const matchesTitle = item.title?.toLowerCase().includes(lowerSearchQuery)
-                  const matchesContent = item.content.toLowerCase().includes(lowerSearchQuery)
-                  const matchesTags = item.tags?.some((tag) =>
-                    tag.value.toLowerCase().includes(lowerSearchQuery)
-                  )
-                  return matchesTitle || matchesContent || matchesTags
-                }
-                return true
-              }).length === 0 ? (
+              {/* The API now handles filtering, so direct rendering or a message if empty */}
+              {allContentItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     No matches found
                   </h3>
                   <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
-                    {searchQuery
-                      ? `No content matches "${searchQuery}"${filter !== 'all' ? ` in ${filter}s` : ''}.`
-                      : `No ${filter !== 'all' ? `${filter}s` : 'items'} found.`}
+                    {debouncedSearchQuery
+                      ? `No content matches "${debouncedSearchQuery}"${filter !== 'all' ? ` in ${filter}s` : ''}.`
+                      : `No ${filter !== 'all' ? `${filter}s` : 'items'} found for the current filters.`}
                   </p>
                   <Button
                     onClick={() => {
@@ -257,46 +249,26 @@ export default function NotesPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                  {allContentItems
-                    .filter((item) => {
-                      // Apply type filter
-                      if (filter !== 'all' && item.type !== filter) return false
-
-                      // Apply search filter - case insensitive
-                      if (searchQuery) {
-                        const lowerSearchQuery = searchQuery.toLowerCase()
-                        const matchesTitle = item.title?.toLowerCase().includes(lowerSearchQuery)
-                        const matchesContent = item.content.toLowerCase().includes(lowerSearchQuery)
-                        const matchesTags = item.tags?.some((tag) =>
-                          tag.value.toLowerCase().includes(lowerSearchQuery)
-                        )
-
-                        return matchesTitle || matchesContent || matchesTags
-                      }
-
-                      return true
-                    })
-                    .map((item, index) => (
-                      <div key={item.id} className="h-full">
-                        {item.type === 'note' ? (
-                          <NoteCard
-                            note={item}
-                            onEdit={handleEditItem}
-                            onDelete={handleDeleteItem}
-                            onRemoveTag={removeTagFromNote}
-                            className="h-full"
-                          />
-                        ) : (
-                          <TaskCard
-                            task={item}
-                            onToggleComplete={(taskId) => toggleTaskCompletion(taskId)}
-                            onDelete={handleDeleteItem}
-                            onEdit={handleEditItem}
-                            className="h-full"
-                          />
-                        )}
-                      </div>
-                    ))}
+                  {allContentItems.map((item: Content) => (
+                    <div key={item.id} className="h-full">
+                      {item.type === 'note' ? (
+                        <NoteCard
+                          note={item}
+                          onEdit={handleEditItem}
+                          onDelete={handleDeleteItem}
+                          onRemoveTag={removeTagFromNote}
+                          className="h-full"
+                        />
+                      ) : (
+                        <TaskCard
+                          task={item}
+                          onDelete={handleDeleteItem}
+                          onEdit={handleEditItem}
+                          className="h-full"
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </>

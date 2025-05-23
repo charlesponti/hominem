@@ -57,6 +57,7 @@
     "@tanstack/react-form": "^1.0.5",
     "@tanstack/react-query": "^4.36.1",
     "@tanstack/react-query-devtools": "4",
+    "@uidotdev/usehooks": "^2.4.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
