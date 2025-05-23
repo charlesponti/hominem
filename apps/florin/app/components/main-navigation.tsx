@@ -121,7 +121,7 @@ export function MainNavigation() {
         <div className="flex flex-col items-center py-6">
           <RouteLink to="/" className="mb-8">
             <img
-              src="/logo-hominem-transparent.png"
+              src="/logo-florin.png"
               alt="Hominem Logo"
               width={24}
               height={24}
@@ -181,7 +181,7 @@ export function MainNavigation() {
       <header className="fixed top-0 left-0 right-0 h-14 bg-background border-b flex items-center justify-between px-4 z-40">
         <RouteLink to="/" className="flex items-center">
           <img
-            src="/logo-hominem-transparent.png"
+            src="/logo-florin.png"
             alt="Hominem Logo"
             width={24}
             height={24}

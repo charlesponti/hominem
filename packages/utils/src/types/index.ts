@@ -54,6 +54,7 @@ export type {
   ImportRequestParams,
   ImportRequestResponse,
   ImportTransactionsJob,
+  ImportTransactionsJobData,
   JobStats,
   JobStatus,
   ProcessTransactionOptions,

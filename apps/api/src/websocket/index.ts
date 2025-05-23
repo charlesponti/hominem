@@ -1,10 +1,10 @@
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
-import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import type { FastifyInstance } from 'fastify'
-import { WebSocket, WebSocketServer } from 'ws'
+import { WebSocketServer } from 'ws'
 import { client, getHominemUser } from '../middleware/auth.js'
 import { wsHandlers } from './handlers.js'
+import { redisHandlers } from './redis-handlers.js'
 
 const IMPORT_PROGRESS_CHANNEL = REDIS_CHANNELS.IMPORT_PROGRESS
 
@@ -17,25 +17,8 @@ export async function webSocketPlugin(fastify: FastifyInstance) {
 
   // Progress updates via Redis pub/sub
   redisSubscriber.on('message', (channel, message) => {
-    if (channel === IMPORT_PROGRESS_CHANNEL) {
-      try {
-        const progressData = JSON.parse(message)
-
-        // Broadcast to all connected clients
-        for (const client of wss.clients) {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(
-              JSON.stringify({
-                type: IMPORT_PROGRESS_CHANNEL,
-                data: progressData,
-              })
-            )
-          }
-        }
-      } catch (error) {
-        logger.error('Error broadcasting import progress:', error)
-      }
-    }
+    // Use the new Redis handler
+    redisHandlers.process(wss, channel, message)
   })
 
   // Subscribe to Redis channels

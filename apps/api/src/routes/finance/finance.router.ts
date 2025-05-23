@@ -2,6 +2,7 @@ import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/utils/db'
 import { FinancialAccountService, queryTransactions } from '@hominem/utils/finance'
 import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
+import type { ImportTransactionsJob, ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
 import {
   budgetCategories,
   budgetGoals,
@@ -11,7 +12,7 @@ import {
   transactions,
   updateTransactionSchema,
 } from '@hominem/utils/schema'
-import type { ImportTransactionsJob } from '@hominem/utils/types'
+import type { Job } from 'bullmq' // Ensure Job is imported
 import { and, count, desc, eq, gte, lt, or, sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
@@ -96,7 +97,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
             status: 'queued',
             createdAt: Date.now(),
             type: 'import-transactions',
-          },
+          } as ImportTransactionsQueuePayload,
           {
             attempts: 3,
             backoff: {
@@ -196,9 +197,9 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
       // Filter to only get this user's jobs and map to our expected format
       const userJobs = activeJobs
-        .filter((job) => job.data.userId === userId)
-        .map((job) => ({
-          jobId: job.id,
+        .filter((job: Job<ImportTransactionsQueuePayload>) => job.data.userId === userId)
+        .map((job: Job<ImportTransactionsQueuePayload>) => ({
+          jobId: job.id as string,
           userId: job.data.userId,
           fileName: job.data.fileName,
           status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',

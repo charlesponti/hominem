@@ -9,8 +9,6 @@ import './env.ts'
 // Import all worker entry points
 import './plaid-worker'
 import './transaction-import-worker'
-// Legacy worker import is commented out as we're now using BullMQ
-// import './import-transactions-worker'
 
 logger.info('All workers initialized and running')
 

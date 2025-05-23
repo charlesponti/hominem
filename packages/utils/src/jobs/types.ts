@@ -68,12 +68,29 @@ export interface ProcessTransactionOptions {
 export interface ImportTransactionsJob extends BaseJob {
   type: 'import-transactions'
   fileName: string
+  csvContent: string // Added to ensure processor can access it
   accountId?: string
   error?: string
   options: Omit<ProcessTransactionOptions, 'fileName' | 'csvContent' | 'userId'>
   stats: JobStats
   startTime: number
   endTime?: number
+}
+
+/**
+ * Data payload specifically for creating an 'import-transactions' job in BullMQ.
+ * This defines the structure of the `data` field when a job is added to the queue.
+ */
+export interface ImportTransactionsQueuePayload {
+  csvContent: string
+  fileName: string
+  deduplicateThreshold: number
+  batchSize: number
+  batchDelay: number
+  userId: string
+  status: JobStatus // Should be 'queued' when initially added
+  createdAt: number // Timestamp of when the job data was prepared
+  type: 'import-transactions'
 }
 
 /**
