@@ -1,8 +1,8 @@
 import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
+import type { Content } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../../components/ui/use-toast'
-import type { Content } from '@hominem/utils/types'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
 

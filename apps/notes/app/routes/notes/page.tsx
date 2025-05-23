@@ -71,6 +71,13 @@ export default function NotesPage() {
     setIsDrawerOpen(true)
   }
 
+  // Combined handler for editing notes and tasks
+  function handleEditItem(item: Content) {
+    setNoteToEdit(item) // Reuse existing state, consider renaming to itemToEdit
+    setDrawerMode('edit')
+    setIsDrawerOpen(true)
+  }
+
   function removeTagFromNote(noteId: string, tagValue: string) {
     const item = allContentItems.find((n) => n.id === noteId)
     if (!item) return
@@ -218,11 +225,13 @@ export default function NotesPage() {
               {allContentItems.filter((item) => {
                 if (filter !== 'all' && item.type !== filter) return false
                 if (searchQuery) {
-                  const query = searchQuery.toLowerCase()
-                  const titleMatch = item.title?.toLowerCase().includes(query)
-                  const contentMatch = item.content.toLowerCase().includes(query)
-                  const tagMatch = item.tags?.some((tag) => tag.value.toLowerCase().includes(query))
-                  return titleMatch || contentMatch || tagMatch
+                  const lowerSearchQuery = searchQuery.toLowerCase()
+                  const matchesTitle = item.title?.toLowerCase().includes(lowerSearchQuery)
+                  const matchesContent = item.content.toLowerCase().includes(lowerSearchQuery)
+                  const matchesTags = item.tags?.some((tag) =>
+                    tag.value.toLowerCase().includes(lowerSearchQuery)
+                  )
+                  return matchesTitle || matchesContent || matchesTags
                 }
                 return true
               }).length === 0 ? (
@@ -255,43 +264,36 @@ export default function NotesPage() {
 
                       // Apply search filter - case insensitive
                       if (searchQuery) {
-                        const query = searchQuery.toLowerCase()
-                        const titleMatch = item.title?.toLowerCase().includes(query)
-                        const contentMatch = item.content.toLowerCase().includes(query)
-                        const tagMatch = item.tags?.some((tag) =>
-                          tag.value.toLowerCase().includes(query)
+                        const lowerSearchQuery = searchQuery.toLowerCase()
+                        const matchesTitle = item.title?.toLowerCase().includes(lowerSearchQuery)
+                        const matchesContent = item.content.toLowerCase().includes(lowerSearchQuery)
+                        const matchesTags = item.tags?.some((tag) =>
+                          tag.value.toLowerCase().includes(lowerSearchQuery)
                         )
 
-                        return titleMatch || contentMatch || tagMatch
+                        return matchesTitle || matchesContent || matchesTags
                       }
 
                       return true
                     })
                     .map((item, index) => (
-                      <div
-                        key={item.id}
-                        className="flex"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
+                      <div key={item.id} className="h-full">
                         {item.type === 'note' ? (
-                          <div className="flex-1 transform hover:scale-[1.02] transition-all duration-200 animate-in fade-in slide-in-from-bottom-4 h-full">
-                            <NoteCard
-                              note={item}
-                              onEdit={handleEditNote}
-                              onDelete={handleDeleteItem}
-                              onRemoveTag={removeTagFromNote}
-                              className="h-full"
-                            />
-                          </div>
+                          <NoteCard
+                            note={item}
+                            onEdit={handleEditItem}
+                            onDelete={handleDeleteItem}
+                            onRemoveTag={removeTagFromNote}
+                            className="h-full"
+                          />
                         ) : (
-                          <div className="flex-1 transform hover:scale-[1.02] transition-all duration-200 animate-in fade-in slide-in-from-bottom-4 h-full">
-                            <TaskCard
-                              task={item}
-                              onToggleComplete={toggleTaskCompletion}
-                              onDelete={handleDeleteItem}
-                              className="h-full"
-                            />
-                          </div>
+                          <TaskCard
+                            task={item}
+                            onToggleComplete={(taskId) => toggleTaskCompletion(taskId)}
+                            onDelete={handleDeleteItem}
+                            onEdit={handleEditItem}
+                            className="h-full"
+                          />
                         )}
                       </div>
                     ))}

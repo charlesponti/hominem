@@ -35,6 +35,7 @@ export type {
   ContentInsert,
   ContentTag,
   ContentType,
+  Priority,
   TaskMetadata,
   TaskStatus,
 } from '../db/schema/notes.schema'

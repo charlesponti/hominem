@@ -78,6 +78,7 @@ export const TaskMetadataSchema = z.object({
   priority: PrioritySchema.default('medium').optional(),
   dueDate: z.string().nullable().optional(),
   startTime: z.string().optional(), // ISO string of when timer was last started
+  firstStartTime: z.string().optional(), // ISO string of when timer was first started
   endTime: z.string().optional(), // ISO string of when timer was last stopped
   duration: z.number().optional(),
 })
