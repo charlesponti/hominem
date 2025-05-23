@@ -1,6 +1,7 @@
 import type { Content, TaskMetadata } from '@hominem/utils/types'
 import { useState } from 'react'
-import { useContentEngine } from './use-content-engine'
+import { useDeleteContent } from './use-delete-content'
+import { useUpdateContent } from './use-update-content'
 
 /**
  * TimerTask interface represents a Content item with time tracking metadata
@@ -11,13 +12,13 @@ export interface TimerTask extends Content {
 }
 
 /**
- * Optional parameters for filtering timer tasks
+ * Parameters for the useTimeTracking hook
  */
 export interface UseTimeTrackingOptions {
   /**
-   * The ID of the timer task to manage
+   * The task object (optional, if provided will avoid querying for it)
    */
-  taskId: string
+  task: Content
 }
 
 /**
@@ -25,36 +26,37 @@ export interface UseTimeTrackingOptions {
  * It provides time tracking functionality on top of the core content operations
  */
 export function useTimeTracking(options: UseTimeTrackingOptions) {
+  const taskId = options.task.id
   const [timeTrackingError, setTimeTrackingError] = useState<Error | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Only fetch the single timer task by ID
-  const contentOptions = {
-    querySuffix: `time-tracking-${options.taskId}`,
-    id: options.taskId,
-  }
+  // Set up query key for this specific timer task
+  const queryKey = ['content', `time-tracking-${taskId}`]
 
-  const {
-    contentItems,
-    updateItem,
-    deleteItem,
-    isLoading,
-    error: contentError,
-    ...rest
-  } = useContentEngine(contentOptions)
+  // Use the update content hook
+  const { updateItem } = useUpdateContent({ queryKey })
 
-  // Find the timer task by ID
-  const timerTask = (contentItems.find(
-    (item) => item.type === 'timer' && item.id === options.taskId && item.taskMetadata
-  ) || null) as TimerTask | null
+  // Use the delete content hook
+  const deleteItem = useDeleteContent({ queryKey })
+
+  // Use the provided task or cast it to TimerTask if it's a timer
+  const timerTask =
+    options.task && options.task.type === 'timer' && options.task.taskMetadata
+      ? (options.task as TimerTask)
+      : null
 
   /**
    * Update an existing timer task
    */
   const updateTimerTask = (data: Partial<TimerTask> & { id: string }) => {
     try {
-      return updateItem.mutate(data)
+      setIsLoading(true)
+      return updateItem.mutate(data, {
+        onSettled: () => setIsLoading(false),
+      })
     } catch (err) {
       setTimeTrackingError(err instanceof Error ? err : new Error('Failed to update timer task'))
+      setIsLoading(false)
       throw err
     }
   }
@@ -63,63 +65,92 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
    * Start timing for a task
    */
   const startTimer = () => {
-    if (!timerTask) {
-      const err = new Error(`Timer task with ID ${options.taskId} not found`)
+    if (!taskId) {
+      const err = new Error('Task ID is required to start timer')
       setTimeTrackingError(err)
       throw err
     }
-    return updateItem.mutate({
-      id: options.taskId,
-      taskMetadata: {
-        ...timerTask.taskMetadata,
-        startTime: new Date().toISOString(),
-        status: 'in-progress',
+
+    // Get the existing task metadata if available
+    const existingMetadata = timerTask?.taskMetadata || {}
+
+    setIsLoading(true)
+    return updateItem.mutate(
+      {
+        id: taskId,
+        taskMetadata: {
+          ...existingMetadata,
+          startTime: new Date().toISOString(),
+          status: 'in-progress',
+        },
       },
-    })
+      {
+        onSettled: () => setIsLoading(false),
+      }
+    )
   }
 
   /**
    * Stop timing for a task and update duration
    */
   const stopTimer = () => {
-    if (!timerTask) {
-      const err = new Error(`Timer task with ID ${options.taskId} not found`)
+    if (!taskId) {
+      const err = new Error('Task ID is required to stop timer')
       setTimeTrackingError(err)
       throw err
     }
-    if (!timerTask.taskMetadata.startTime || timerTask.taskMetadata.status !== 'in-progress') {
+
+    if (!timerTask?.taskMetadata?.startTime || timerTask.taskMetadata.status !== 'in-progress') {
       return
     }
+
     const startTime = new Date(timerTask.taskMetadata.startTime)
     const endTime = new Date()
     const elapsedMs = endTime.getTime() - startTime.getTime()
-    return updateItem.mutate({
-      id: options.taskId,
-      taskMetadata: {
-        ...timerTask.taskMetadata,
-        duration: (timerTask.taskMetadata.duration || 0) + elapsedMs,
-        status: 'done',
+
+    setIsLoading(true)
+    return updateItem.mutate(
+      {
+        id: taskId,
+        taskMetadata: {
+          ...timerTask.taskMetadata,
+          duration: (timerTask.taskMetadata.duration || 0) + elapsedMs,
+          status: 'done',
+        },
       },
-    })
+      {
+        onSettled: () => setIsLoading(false),
+      }
+    )
   }
 
   /**
    * Reset timer for a task
    */
   const resetTimer = () => {
-    if (!timerTask) {
-      const err = new Error(`Timer task with ID ${options.taskId} not found`)
+    if (!taskId) {
+      const err = new Error('Task ID is required to reset timer')
       setTimeTrackingError(err)
       throw err
     }
-    return updateItem.mutate({
-      id: options.taskId,
-      taskMetadata: {
-        ...timerTask.taskMetadata,
-        duration: 0,
-        status: 'todo',
+
+    // Get the existing task metadata if available
+    const existingMetadata = timerTask?.taskMetadata || {}
+
+    setIsLoading(true)
+    return updateItem.mutate(
+      {
+        id: taskId,
+        taskMetadata: {
+          ...existingMetadata,
+          duration: 0,
+          status: 'todo',
+        },
       },
-    })
+      {
+        onSettled: () => setIsLoading(false),
+      }
+    )
   }
 
   /**
@@ -129,16 +160,17 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     unit: 'milliseconds' | 'seconds' | 'minutes' | 'hours' = 'milliseconds'
   ) => {
     if (
-      !timerTask ||
-      !timerTask.taskMetadata ||
+      !timerTask?.taskMetadata ||
       timerTask.taskMetadata.status !== 'in-progress' ||
       !timerTask.taskMetadata.startTime
     ) {
       return 0
     }
+
     const startTime = new Date(timerTask.taskMetadata.startTime)
     const now = new Date()
     const elapsedMs = now.getTime() - startTime.getTime() + (timerTask.taskMetadata.duration || 0)
+
     switch (unit) {
       case 'seconds':
         return Math.floor(elapsedMs / 1000)
@@ -157,9 +189,13 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
    */
   const deleteTimerTask = () => {
     try {
-      return deleteItem.mutate(options.taskId)
+      setIsLoading(true)
+      return deleteItem.mutate(taskId, {
+        onSettled: () => setIsLoading(false),
+      })
     } catch (err) {
       setTimeTrackingError(err instanceof Error ? err : new Error('Failed to delete timer task'))
+      setIsLoading(false)
       throw err
     }
   }
@@ -172,9 +208,8 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     stopTimer,
     resetTimer,
     getElapsedTime,
-    isLoading,
-    error: timeTrackingError || contentError,
-    ...rest,
-    isError: !!(timeTrackingError || contentError),
+    isLoading: isLoading || updateItem.isLoading || deleteItem.isLoading,
+    error: timeTrackingError,
+    isError: !!timeTrackingError,
   }
 }

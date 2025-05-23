@@ -15,7 +15,7 @@ type TaskCardProps = {
 
 export function TaskCard({ task, onToggleComplete, onDelete, className = '' }: TaskCardProps) {
   const { timerTask, startTimer, stopTimer, resetTimer, updateTimerTask, isLoading } =
-    useTimeTracking({ taskId: task.id })
+    useTimeTracking({ task })
 
   // Fallback to prop if timerTask is not loaded yet
   const { title, content: taskContent } = task
@@ -113,47 +113,58 @@ export function TaskCard({ task, onToggleComplete, onDelete, className = '' }: T
 
           <div className="flex flex-wrap gap-2 justify-between mt-auto pt-2 w-full">
             <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-40"
-                onClick={() =>
-                  updateTimerTask({
-                    id: task.id,
-                    taskMetadata: { ...timerTask?.taskMetadata, status: 'todo' },
-                  })
-                }
-                disabled={status === 'todo' || isLoading}
-              >
-                Todo
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-40"
-                onClick={startTimer}
-                disabled={status === 'in-progress' || isLoading}
-              >
-                Start
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-40"
-                onClick={stopTimer}
-                disabled={status === 'done' || status === 'todo' || isLoading}
-              >
-                Done
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 disabled:opacity-40"
-                onClick={resetTimer}
-                disabled={status === 'todo' || isLoading}
-              >
-                Reset
-              </Button>
+              {/* Show contextual buttons based on task status */}
+              {status === 'todo' && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-8 px-3 bg-yellow-500 hover:bg-yellow-600 text-white"
+                  onClick={startTimer}
+                  disabled={isLoading}
+                >
+                  Start Task
+                </Button>
+              )}
+
+              {status === 'in-progress' && (
+                <>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-8 px-3 bg-green-500 hover:bg-green-600 text-white"
+                    onClick={stopTimer}
+                    disabled={isLoading}
+                  >
+                    Complete
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                    onClick={() =>
+                      updateTimerTask({
+                        id: task.id,
+                        taskMetadata: { ...timerTask?.taskMetadata, status: 'todo' },
+                      })
+                    }
+                    disabled={isLoading}
+                  >
+                    Pause
+                  </Button>
+                </>
+              )}
+
+              {status === 'done' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                  onClick={resetTimer}
+                  disabled={isLoading}
+                >
+                  Reopen
+                </Button>
+              )}
             </div>
             <Button
               variant="ghost"
