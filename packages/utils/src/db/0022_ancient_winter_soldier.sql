@@ -1,0 +1,5 @@
+CREATE INDEX "budget_categories_search_idx" ON "budget_categories" USING gin (to_tsvector('english', "name"));--> statement-breakpoint
+CREATE INDEX "budget_goals_search_idx" ON "budget_goals" USING gin (to_tsvector('english', "name"));--> statement-breakpoint
+CREATE INDEX "finance_accounts_search_idx" ON "finance_accounts" USING gin (to_tsvector('english', "name" || ' ' || coalesce("official_name", '')));--> statement-breakpoint
+CREATE INDEX "financial_institutions_search_idx" ON "financial_institutions" USING gin (to_tsvector('english', "name"));--> statement-breakpoint
+CREATE INDEX "transactions_search_idx" ON "transactions" USING gin (to_tsvector('english', coalesce("description", '') || ' ' || coalesce("merchant_name", '') || ' ' || coalesce("category", '') || ' ' || coalesce("parent_category", '') || ' ' || coalesce("tags", '') || ' ' || coalesce("note", '') || ' ' || coalesce("payment_channel", '') || ' ' || coalesce("source", '')));

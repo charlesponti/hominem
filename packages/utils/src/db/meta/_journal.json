@@ -155,6 +155,13 @@
       "when": 1747976709084,
       "tag": "0021_perpetual_odin",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1747978278103,
+      "tag": "0022_ancient_winter_soldier",
+      "breakpoints": true
     }
   ]
 }

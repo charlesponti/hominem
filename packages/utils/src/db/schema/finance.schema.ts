@@ -1,6 +1,7 @@
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
   boolean,
+  index,
   jsonb,
   numeric,
   pgEnum,
@@ -48,16 +49,25 @@ export const institutionStatusEnum = pgEnum('institution_status', [
 ])
 
 // Financial institutions table
-export const financialInstitutions = pgTable('financial_institutions', {
-  id: text('id').primaryKey(), // Plaid institution ID or custom ID for non-Plaid institutions
-  name: text('name').notNull(),
-  url: text('url'),
-  logo: text('logo'),
-  primaryColor: text('primary_color'),
-  country: text('country'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
+export const financialInstitutions = pgTable(
+  'financial_institutions',
+  {
+    id: text('id').primaryKey(), // Plaid institution ID or custom ID for non-Plaid institutions
+    name: text('name').notNull(),
+    url: text('url'),
+    logo: text('logo'),
+    primaryColor: text('primary_color'),
+    country: text('country'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('financial_institutions_search_idx').using(
+      'gin',
+      sql`to_tsvector('english', ${table.name})`
+    ),
+  ]
+)
 export type FinancialInstitution = typeof financialInstitutions.$inferSelect
 export type FinancialInstitutionInsert = typeof financialInstitutions.$inferInsert
 
@@ -84,93 +94,123 @@ export type PlaidItem = typeof plaidItems.$inferSelect
 export type PlaidItemInsert = typeof plaidItems.$inferInsert
 
 // Tables
-export const financeAccounts = pgTable('finance_accounts', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  type: accountTypeEnum('type').notNull(),
-  balance: numeric('balance').notNull(),
-  interestRate: numeric('interest_rate'),
-  minimumPayment: numeric('minimum_payment'),
-  name: text('name').notNull(),
-  institutionId: text('institution_id').references(() => financialInstitutions.id),
-  plaidAccountId: text('plaid_account_id').unique(),
-  plaidItemId: uuid('plaid_item_id').references(() => plaidItems.id),
-  mask: text('mask'),
-  isoCurrencyCode: text('iso_currency_code'),
-  subtype: text('subtype'),
-  officialName: text('official_name'),
-  limit: numeric('limit'),
-  meta: jsonb('meta'),
-  lastUpdated: timestamp('last_updated'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  userId: uuid('user_id')
-    .references(() => users.id)
-    .notNull(),
-})
+export const financeAccounts = pgTable(
+  'finance_accounts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    type: accountTypeEnum('type').notNull(),
+    balance: numeric('balance').notNull(),
+    interestRate: numeric('interest_rate'),
+    minimumPayment: numeric('minimum_payment'),
+    name: text('name').notNull(),
+    institutionId: text('institution_id').references(() => financialInstitutions.id),
+    plaidAccountId: text('plaid_account_id').unique(),
+    plaidItemId: uuid('plaid_item_id').references(() => plaidItems.id),
+    mask: text('mask'),
+    isoCurrencyCode: text('iso_currency_code'),
+    subtype: text('subtype'),
+    officialName: text('official_name'),
+    limit: numeric('limit'),
+    meta: jsonb('meta'),
+    lastUpdated: timestamp('last_updated'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    userId: uuid('user_id')
+      .references(() => users.id)
+      .notNull(),
+  },
+  (table) => [
+    index('finance_accounts_search_idx').using(
+      'gin',
+      sql`to_tsvector('english', ${table.name} || ' ' || coalesce(${table.officialName}, ''))`
+    ),
+  ]
+)
 export type FinanceAccountInsert = typeof financeAccounts.$inferInsert
 export type FinanceAccount = typeof financeAccounts.$inferSelect
 
-export const transactions = pgTable('transactions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  type: transactionTypeEnum('type').notNull(),
-  amount: numeric('amount').notNull(),
-  date: timestamp('date').notNull(),
-  description: text('description'),
-  merchantName: text('merchant_name'),
-  accountId: uuid('account_id')
-    .references(() => financeAccounts.id)
-    .notNull(),
-  fromAccountId: uuid('from_account_id').references(() => financeAccounts.id),
-  toAccountId: uuid('to_account_id').references(() => financeAccounts.id),
-  eventId: uuid('event_id').references(() => events.id),
-  investmentDetails: jsonb('investment_details'),
-  status: text('status'),
-  category: text('category'),
-  parentCategory: text('parent_category'),
-  excluded: boolean('excluded').default(false),
-  tags: text('tags'),
-  accountMask: text('account_mask'),
-  note: text('note'),
-  recurring: boolean('recurring').default(false),
-  plaidTransactionId: text('plaid_transaction_id').unique(),
-  pending: boolean('pending').default(false),
-  paymentChannel: text('payment_channel'),
-  location: jsonb('location'),
-  source: text('source').default('manual'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  userId: uuid('user_id')
-    .references(() => users.id)
-    .notNull(),
-})
+export const transactions = pgTable(
+  'transactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    type: transactionTypeEnum('type').notNull(),
+    amount: numeric('amount').notNull(),
+    date: timestamp('date').notNull(),
+    description: text('description'),
+    merchantName: text('merchant_name'),
+    accountId: uuid('account_id')
+      .references(() => financeAccounts.id)
+      .notNull(),
+    fromAccountId: uuid('from_account_id').references(() => financeAccounts.id),
+    toAccountId: uuid('to_account_id').references(() => financeAccounts.id),
+    eventId: uuid('event_id').references(() => events.id),
+    investmentDetails: jsonb('investment_details'),
+    status: text('status'),
+    category: text('category'),
+    parentCategory: text('parent_category'),
+    excluded: boolean('excluded').default(false),
+    tags: text('tags'),
+    accountMask: text('account_mask'),
+    note: text('note'),
+    recurring: boolean('recurring').default(false),
+    plaidTransactionId: text('plaid_transaction_id').unique(),
+    pending: boolean('pending').default(false),
+    paymentChannel: text('payment_channel'),
+    location: jsonb('location'),
+    source: text('source').default('manual'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    userId: uuid('user_id')
+      .references(() => users.id)
+      .notNull(),
+  },
+  (table) => [
+    index('transactions_search_idx').using(
+      'gin',
+      sql`to_tsvector('english', coalesce(${table.description}, '') || ' ' || coalesce(${table.merchantName}, '') || ' ' || coalesce(${table.category}, '') || ' ' || coalesce(${table.parentCategory}, '') || ' ' || coalesce(${table.tags}, '') || ' ' || coalesce(${table.note}, '') || ' ' || coalesce(${table.paymentChannel}, '') || ' ' || coalesce(${table.source}, ''))`
+    ),
+  ]
+)
 export type FinanceTransaction = typeof transactions.$inferSelect
 export type FinanceTransactionInsert = typeof transactions.$inferInsert
 export const insertTransactionSchema = createInsertSchema(transactions)
 export const updateTransactionSchema = createSelectSchema(transactions)
 
-export const budgetCategories = pgTable('budget_categories', {
-  id: uuid('id').primaryKey(),
-  name: text('name').notNull(),
-  type: text('type').notNull(),
-  budgetId: uuid('budget_id'),
-  averageMonthlyExpense: numeric('average_monthly_expense'),
-  userId: uuid('user_id')
-    .references(() => users.id)
-    .notNull(),
-})
+export const budgetCategories = pgTable(
+  'budget_categories',
+  {
+    id: uuid('id').primaryKey(),
+    name: text('name').notNull(),
+    type: text('type').notNull(),
+    budgetId: uuid('budget_id'),
+    averageMonthlyExpense: numeric('average_monthly_expense'),
+    userId: uuid('user_id')
+      .references(() => users.id)
+      .notNull(),
+  },
+  (table) => [
+    index('budget_categories_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
+  ]
+)
 
-export const budgetGoals = pgTable('budget_goals', {
-  id: uuid('id').primaryKey(),
-  name: text('name').notNull(),
-  targetAmount: numeric('target_amount').notNull(),
-  currentAmount: numeric('current_amount').notNull(),
-  startDate: timestamp('start_date').notNull(),
-  endDate: timestamp('end_date'),
-  categoryId: uuid('category_id').references(() => budgetCategories.id),
-  userId: uuid('user_id')
-    .references(() => users.id)
-    .notNull(),
-})
+export const budgetGoals = pgTable(
+  'budget_goals',
+  {
+    id: uuid('id').primaryKey(),
+    name: text('name').notNull(),
+    targetAmount: numeric('target_amount').notNull(),
+    currentAmount: numeric('current_amount').notNull(),
+    startDate: timestamp('start_date').notNull(),
+    endDate: timestamp('end_date'),
+    categoryId: uuid('category_id').references(() => budgetCategories.id),
+    userId: uuid('user_id')
+      .references(() => users.id)
+      .notNull(),
+  },
+  (table) => [
+    index('budget_goals_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
+  ]
+)
 
 // Relations
 export const financialInstitutionRelations = relations(financialInstitutions, ({ many }) => ({
