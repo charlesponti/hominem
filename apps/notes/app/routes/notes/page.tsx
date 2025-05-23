@@ -270,7 +270,7 @@ export default function NotesPage() {
                     .map((item, index) => (
                       <div
                         key={item.id}
-                        className="flex h-[150px]"
+                        className="flex"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         {item.type === 'note' ? (
