@@ -10,8 +10,8 @@ import {
   RefreshCcw,
   Search,
 } from 'lucide-react'
-import { useNavigate } from 'react-router'
 import { DatePicker } from '~/components/date-picker'
+import { SortRow } from '~/components/finance/sort-row'
 import { TransactionsTable } from '~/components/finance/transactions-table'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -24,10 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import type { SortField } from '~/lib/hooks/use-finance-data'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
 
-// Pagination Controls Component
 interface PaginationControlsProps {
   currentPage: number
   totalPages: number
@@ -80,8 +80,6 @@ function PaginationControls({
 }
 
 export default function TransactionsPage() {
-  const navigate = useNavigate()
-
   const {
     accounts,
     accountsMap,
@@ -102,10 +100,10 @@ export default function TransactionsPage() {
     setDateTo,
     searchQuery,
     setSearchQuery,
-    sortField,
-    setSortField,
-    sortDirection,
-    setSortDirection,
+    sortOptions, // This will be an array of SortOption
+    addSortOption, // Function to add a sort criterion
+    removeSortOption, // Function to remove a sort criterion
+    updateSortOption, // Function to update an existing sort criterion
     refetch: refetchTransactions,
     // Pagination
     page,
@@ -118,20 +116,16 @@ export default function TransactionsPage() {
   const loading = accountsLoading || transactionsLoading
   const error = accountsError || transactionsError
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortField(field)
-      setSortDirection('desc')
-    }
-  }
-
   const refreshData = async () => {
     await Promise.all([refetchAccounts(), refetchTransactions()])
   }
 
   const totalPages = Math.ceil(filteredTransactionCount / limit) // Use filteredTransactionCount
+
+  const allSortableFields: SortField[] = ['date', 'description', 'amount', 'category']
+  const availableFieldsToAdd = allSortableFields.filter(
+    (field) => !sortOptions.some((option) => option.field === field)
+  )
 
   return (
     <div className="space-y-4">
@@ -219,6 +213,45 @@ export default function TransactionsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+            </div>
+          </div>
+          {/* Add Sort Controls UI */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm font-medium">Sort By</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (availableFieldsToAdd.length > 0) {
+                    addSortOption({ field: availableFieldsToAdd[0], direction: 'desc' })
+                  }
+                }}
+                disabled={availableFieldsToAdd.length === 0}
+              >
+                Add Sort
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              {' '}
+              {/* Changed to flex-wrap and gap-4 */}
+              {sortOptions.map((sort, index) => {
+                const usedFields = sortOptions
+                  .filter((_, i) => i !== index) // Get fields used by *other* sort options
+                  .map((option) => option.field)
+
+                return (
+                  <SortRow
+                    key={sort.field} // It's good practice to ensure this key is stable and unique
+                    sortOption={sort}
+                    index={index}
+                    allSortableFields={allSortableFields}
+                    usedFields={usedFields}
+                    updateSortOption={updateSortOption}
+                    removeSortOption={removeSortOption}
+                  />
+                )
+              })}
             </div>
           </div>
         </CardContent>
@@ -322,14 +355,11 @@ export default function TransactionsPage() {
           {/* Desktop View: Table Layout */}
           <div className="hidden md:block space-y-4">
             <TransactionsTable
-              loading={false} // Loading is handled above
-              error={null} // Error is handled above
+              loading={false}
+              error={null}
               transactions={transactions}
               filteredTransactions={transactions}
               accountsMap={accountsMap}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              handleSort={handleSort}
             />
           </div>
 
@@ -337,7 +367,7 @@ export default function TransactionsPage() {
             currentPage={page}
             totalPages={totalPages}
             onPageChange={setPage}
-            totalItems={filteredTransactionCount} // Use filteredTransactionCount
+            totalItems={filteredTransactionCount}
             itemsPerPage={limit}
           />
         </>

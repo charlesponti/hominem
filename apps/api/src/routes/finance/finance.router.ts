@@ -226,8 +226,15 @@ export async function financeRoutes(fastify: FastifyInstance) {
     limit: z.coerce.number().optional().describe('Maximum results to return'),
     offset: z.coerce.number().optional().describe('Number of results to skip for pagination'), // Added offset
     description: z.string().optional().describe('Description search term'),
-    sortBy: z.string().optional().describe('Field to sort by'),
-    sortDirection: z.enum(['asc', 'desc']).optional().describe('Sort direction'),
+    // Allow sortBy and sortDirection to be a string or an array of strings
+    sortBy: z
+      .union([z.string(), z.array(z.string())])
+      .optional()
+      .describe('Field(s) to sort by'),
+    sortDirection: z
+      .union([z.enum(['asc', 'desc']), z.array(z.enum(['asc', 'desc']))])
+      .optional()
+      .describe('Sort direction(s)'),
   })
 
   fastify.get('/transactions', { preHandler: verifyAuth }, async (request, reply) => {

@@ -2,7 +2,6 @@
 
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { format } from 'date-fns'
-import { ArrowUpDown } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Card, CardContent, CardFooter } from '~/components/ui/card'
 import {
@@ -21,9 +20,6 @@ type TransactionsTableProps = {
   transactions: FinanceTransaction[]
   filteredTransactions: FinanceTransaction[]
   accountsMap: Map<string, FinanceAccount>
-  sortField: string
-  sortDirection: 'asc' | 'desc'
-  handleSort: (field: string) => void
 }
 
 export function TransactionsTable({
@@ -32,9 +28,6 @@ export function TransactionsTable({
   transactions,
   filteredTransactions,
   accountsMap,
-  sortField,
-  sortDirection,
-  handleSort,
 }: TransactionsTableProps) {
   return (
     <Card>
@@ -50,60 +43,17 @@ export function TransactionsTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort('date')}>
-                    <div className="flex items-center min-w-20">
-                      Date
-                      {sortField === 'date' && (
-                        <ArrowUpDown
-                          className={cn(
-                            'ml-2 h-4 w-4',
-                            sortDirection === 'desc' ? 'rotate-180' : ''
-                          )}
-                        />
-                      )}
-                    </div>
+                  <TableHead>
+                    <div className="flex items-center min-w-20">Date</div>
                   </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort('description')}>
-                    <div className="flex items-center">
-                      Description
-                      {sortField === 'description' && (
-                        <ArrowUpDown
-                          className={cn(
-                            'ml-2 h-4 w-4',
-                            sortDirection === 'desc' ? 'rotate-180' : ''
-                          )}
-                        />
-                      )}
-                    </div>
+                  <TableHead>
+                    <div className="flex items-center">Description</div>
                   </TableHead>
-                  <TableHead
-                    className="cursor-pointer text-right"
-                    onClick={() => handleSort('amount')}
-                  >
-                    <div className="flex items-center justify-end">
-                      Amount
-                      {sortField === 'amount' && (
-                        <ArrowUpDown
-                          className={cn(
-                            'ml-2 h-4 w-4',
-                            sortDirection === 'desc' ? 'rotate-180' : ''
-                          )}
-                        />
-                      )}
-                    </div>
+                  <TableHead className="text-right">
+                    <div className="flex items-center justify-end">Amount</div>
                   </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort('category')}>
-                    <div className="flex items-center">
-                      Category
-                      {sortField === 'category' && (
-                        <ArrowUpDown
-                          className={cn(
-                            'ml-2 h-4 w-4',
-                            sortDirection === 'desc' ? 'rotate-180' : ''
-                          )}
-                        />
-                      )}
-                    </div>
+                  <TableHead>
+                    <div className="flex items-center">Category</div>
                   </TableHead>
                   <TableHead>Account</TableHead>
                 </TableRow>

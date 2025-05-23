@@ -124,8 +124,8 @@ export interface QueryOptions {
   type?: TransactionType | TransactionType[]
   limit?: number
   offset?: number
-  sortBy?: string
-  sortDirection?: 'asc' | 'desc'
+  sortBy?: string | string[]
+  sortDirection?: 'asc' | 'desc' | ('asc' | 'desc')[]
   search?: string
 
   // Legacy options (for backward compatibility)

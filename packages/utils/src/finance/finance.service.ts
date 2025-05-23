@@ -109,7 +109,19 @@ export function buildWhereConditions(options: QueryOptions) {
 }
 
 export async function queryTransactions(options: QueryOptions) {
-  const { userId, limit = 100, offset = 0, sortBy = 'date', sortDirection = 'desc' } = options
+  // Ensure sortBy and sortDirection are arrays for consistent handling
+  const sortByArray = Array.isArray(options.sortBy)
+    ? options.sortBy
+    : options.sortBy
+      ? [options.sortBy]
+      : ['date']
+  const sortDirectionArray = Array.isArray(options.sortDirection)
+    ? options.sortDirection
+    : options.sortDirection
+      ? [options.sortDirection]
+      : ['desc']
+
+  const { userId, limit = 100, offset = 0 } = options
 
   if (!userId) {
     // Return empty if no userId is provided, or handle as per application's error strategy
@@ -139,31 +151,56 @@ export async function queryTransactions(options: QueryOptions) {
     .where(whereConditions)
 
   // Apply sorting
-  // biome-ignore lint/suspicious/noImplicitAnyLet: Consistent with existing code style
-  let sortedQuery
-  if (sortBy === 'date') {
-    sortedQuery = baseFilteredQuery.orderBy(
-      sortDirection === 'asc' ? asc(transactions.date) : desc(transactions.date),
-      desc(transactions.id)
-    )
-  } else if (sortBy === 'amount') {
-    sortedQuery = baseFilteredQuery.orderBy(
-      sortDirection === 'asc' ? asc(transactions.amount) : desc(transactions.amount),
-      desc(transactions.id)
-    )
-  } else if (sortBy === 'description') {
-    sortedQuery = baseFilteredQuery.orderBy(
-      sortDirection === 'asc' ? asc(transactions.description) : desc(transactions.description),
-      desc(transactions.id)
-    )
-  } else if (sortBy === 'category') {
-    sortedQuery = baseFilteredQuery.orderBy(
-      sortDirection === 'asc' ? asc(transactions.category) : desc(transactions.category),
-      desc(transactions.id)
-    )
-  } else {
-    // Default sort
-    sortedQuery = baseFilteredQuery.orderBy(desc(transactions.date), desc(transactions.id))
+  const orderByClauses: SQL[] = []
+
+  for (let i = 0; i < sortByArray.length; i++) {
+    const field = sortByArray[i]
+    // Ensure sortDirectionArray has a corresponding entry or default to 'desc'
+    const direction =
+      sortDirectionArray[i] ||
+      (sortDirectionArray.length === 1 && i > 0 ? sortDirectionArray[0] : 'desc')
+
+    switch (field) {
+      case 'date':
+        orderByClauses.push(direction === 'asc' ? asc(transactions.date) : desc(transactions.date))
+        break
+      case 'amount':
+        orderByClauses.push(
+          direction === 'asc' ? asc(transactions.amount) : desc(transactions.amount)
+        )
+        break
+      case 'description':
+        orderByClauses.push(
+          direction === 'asc' ? asc(transactions.description) : desc(transactions.description)
+        )
+        break
+      case 'category':
+        orderByClauses.push(
+          direction === 'asc' ? asc(transactions.category) : desc(transactions.category)
+        )
+        break
+      // Add other sortable fields here
+      default:
+        // Optionally log an unrecognized sort field or handle as an error
+        logger.warn(`Unrecognized sort field: ${field}`)
+        // If it's the first sort field and it's not recognized, apply a default sort to prevent errors
+        if (orderByClauses.length === 0) {
+          orderByClauses.push(desc(transactions.date))
+        }
+        break
+    }
+  }
+
+  // Add a final default sort by ID to ensure stable pagination if 'id' is not already a sort field
+  // and to ensure consistent ordering when other sort fields have identical values.
+  if (!sortByArray.includes('id')) {
+    orderByClauses.push(desc(transactions.id))
+  }
+
+  let sortedQuery = baseFilteredQuery
+  if (orderByClauses.length > 0) {
+    // @ts-expect-error Drizzle's orderBy can take an array of SQL objects
+    sortedQuery = baseFilteredQuery.orderBy(...orderByClauses)
   }
 
   const paginatedTransactions = await sortedQuery.limit(limit).offset(offset)

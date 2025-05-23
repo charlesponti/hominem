@@ -1,7 +1,15 @@
 import { useApiClient } from '@hominem/ui'
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+
+export type SortField = 'date' | 'description' | 'amount' | 'category'
+export type SortDirection = 'asc' | 'desc'
+
+export interface SortOption {
+  field: SortField
+  direction: SortDirection
+}
 
 export function useFinanceAccounts() {
   const api = useApiClient()
@@ -52,15 +60,13 @@ export function useFinanceAccountSummary() {
 export interface UseFinanceTransactionsOptions {
   initialLimit?: number
   initialOffset?: number
-  initialSortField?: string
-  initialSortDirection?: 'asc' | 'desc'
+  initialSortOptions?: SortOption[] // Add initialSortOptions
 }
 
 export function useFinanceTransactions({
   initialLimit = 25,
   initialOffset = 0,
-  initialSortField = 'date',
-  initialSortDirection = 'desc',
+  initialSortOptions = [{ field: 'date', direction: 'desc' }], // Default sort option
 }: UseFinanceTransactionsOptions = {}) {
   const api = useApiClient()
 
@@ -72,11 +78,23 @@ export function useFinanceTransactions({
   const [limit, setLimit] = useState<number>(initialLimit)
   const [offset, setOffset] = useState<number>(initialOffset)
 
-  // Sorting state
-  const [sortField, setSortField] = useState<string>(initialSortField)
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(initialSortDirection)
+  // Sorting state - now an array of SortOption
+  const [sortOptions, setSortOptions] = useState<SortOption[]>(initialSortOptions)
 
-  // Generate query string from filters
+  // Functions to manage sortOptions
+  const addSortOption = useCallback((option: SortOption) => {
+    setSortOptions((prevOptions) => [...prevOptions, option])
+  }, [])
+
+  const removeSortOption = useCallback((index: number) => {
+    setSortOptions((prevOptions) => prevOptions.filter((_, i) => i !== index))
+  }, [])
+
+  const updateSortOption = useCallback((index: number, option: SortOption) => {
+    setSortOptions((prevOptions) => prevOptions.map((item, i) => (i === index ? option : item)))
+  }, [])
+
+  // Generate query string from filters and sortOptions
   const queryString = useMemo(() => {
     const params = new URLSearchParams()
     if (selectedAccount !== 'all') params.append('account', selectedAccount)
@@ -85,10 +103,13 @@ export function useFinanceTransactions({
     if (searchQuery) params.append('search', searchQuery)
     params.append('limit', limit.toString())
     params.append('offset', offset.toString())
-    params.append('sortBy', sortField)
-    params.append('sortDirection', sortDirection)
+    // Append multiple sort parameters
+    for (const sortOption of sortOptions) {
+      params.append('sortBy', sortOption.field)
+      params.append('sortDirection', sortOption.direction)
+    }
     return params.toString()
-  }, [selectedAccount, dateFrom, dateTo, searchQuery, limit, offset, sortField, sortDirection])
+  }, [selectedAccount, dateFrom, dateTo, searchQuery, limit, offset, sortOptions])
 
   const transactionsQuery = useQuery<
     { data: FinanceTransaction[]; filteredCount: number; totalUserCount: number },
@@ -104,8 +125,7 @@ export function useFinanceTransactions({
         searchQuery,
         limit,
         offset,
-        sortField,
-        sortDirection,
+        sortOptions, // Use sortOptions in queryKey
       },
     ],
     queryFn: async () => {
@@ -118,7 +138,6 @@ export function useFinanceTransactions({
     keepPreviousData: true,
   })
 
-  // No need for client-side sorting now, as the data is already sorted by the server
   const sortedTransactions = useMemo(() => {
     return transactionsQuery.data?.data || []
   }, [transactionsQuery.data])
@@ -140,8 +159,8 @@ export function useFinanceTransactions({
   return {
     // Data
     transactions: sortedTransactions,
-    filteredTransactionCount, // Renamed from totalTransactions for clarity
-    totalUserTransactionCount, // Added new total count for the user
+    filteredTransactionCount,
+    totalUserTransactionCount,
     rawTransactions: transactionsQuery.data?.data,
     isLoading: transactionsQuery.isLoading,
     isFetching: transactionsQuery.isFetching,
@@ -159,10 +178,10 @@ export function useFinanceTransactions({
     setSearchQuery,
 
     // Sorting state and setters
-    sortField,
-    setSortField,
-    sortDirection,
-    setSortDirection,
+    sortOptions, // Expose sortOptions
+    addSortOption, // Expose addSortOption
+    removeSortOption, // Expose removeSortOption
+    updateSortOption, // Expose updateSortOption
 
     // Pagination state and setters
     limit,
