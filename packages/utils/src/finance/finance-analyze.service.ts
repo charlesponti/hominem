@@ -1,5 +1,5 @@
 import { summarizeByMonth } from './finance.service'
-import type { QueryOptions } from './types/transaction.types'
+import type { QueryOptions } from './finance.types'
 
 // Define interface for time series data points
 export interface TimeSeriesDataPoint {

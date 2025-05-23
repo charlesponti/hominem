@@ -1,24 +1,54 @@
 /**
+ * Finance account types
+ */
+import type { FinanceAccount, FinanceAccountInsert } from '../db/schema/finance.schema.js'
+
+/**
  * Transaction types used across the monorepo
  */
 import type {
   FinanceTransaction,
   FinanceTransactionInsert,
   TransactionType,
-} from '../../db/schema/finance.schema'
+} from '../db/schema/finance.schema.js'
 
 export type {
+  FinanceAccount,
+  FinanceAccountInsert,
   FinanceTransaction as Transaction,
   FinanceTransactionInsert as TransactionInsert,
   TransactionType,
 }
 
-// Also export the new names directly for new code
-export type { FinanceTransaction, FinanceTransactionInsert }
+export type { TimeSeriesDataPoint, TimeSeriesStats } from './finance-analyze.service.js'
+export interface CategoryAggregate {
+  category: string
+  totalAmount: number
+  count: number
+}
 
-/**
- * Bank-specific transaction formats
- */
+export interface MonthAggregate {
+  month: string
+  totalAmount: number
+  count: number
+}
+
+export type CategorySummary = {
+  category: string
+  count: number
+  total: string
+  average: string
+  minimum: string
+  maximum: string
+}
+
+export type TopMerchant = {
+  merchant: string
+  frequency: number
+  totalSpent: string
+  firstTransaction: string
+  lastTransaction: string
+}
 
 /**
  * Capital One transaction format

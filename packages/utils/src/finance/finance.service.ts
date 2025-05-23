@@ -10,7 +10,7 @@ import {
 } from '../db/schema/finance.schema'
 import type { Possession } from '../db/schema/possessions.schema'
 import { logger } from '../logger'
-import type { CategoryAggregate, CategorySummary, QueryOptions, TopMerchant } from './types'
+import type { CategoryAggregate, CategorySummary, QueryOptions, TopMerchant } from './finance.types'
 
 export interface ItemCategory {
   id: number

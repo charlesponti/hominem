@@ -5,7 +5,7 @@
 import { z } from 'zod'
 
 // Export types
-export * from './types'
+export * from './finance.types'
 
 // Export services and utilities
 export { generateCategoryTimeSeriesData, generateTimeSeriesData } from './finance-analyze.service'

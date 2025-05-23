@@ -45,7 +45,7 @@ export type {
   TimeSeriesDataPoint,
   TimeSeriesStats,
   TopMerchant,
-} from '../finance/types'
+} from '../finance/finance.types'
 
 // Re-export job-related types
 export type {
@@ -54,7 +54,6 @@ export type {
   ImportRequestParams,
   ImportRequestResponse,
   ImportTransactionsJob,
-  ImportTransactionsJobData,
   JobStats,
   JobStatus,
   ProcessTransactionOptions,
