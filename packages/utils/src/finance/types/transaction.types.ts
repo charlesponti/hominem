@@ -7,7 +7,11 @@ import type {
   TransactionType,
 } from '../../db/schema/finance.schema'
 
-export type { FinanceTransaction as Transaction, FinanceTransactionInsert as TransactionInsert, TransactionType }
+export type {
+  FinanceTransaction as Transaction,
+  FinanceTransactionInsert as TransactionInsert,
+  TransactionType,
+}
 
 // Also export the new names directly for new code
 export type { FinanceTransaction, FinanceTransactionInsert }
@@ -92,6 +96,7 @@ export interface QueryOptions {
   offset?: number
   sortBy?: string
   sortDirection?: 'asc' | 'desc'
+  search?: string
 
   // Legacy options (for backward compatibility)
   from?: string

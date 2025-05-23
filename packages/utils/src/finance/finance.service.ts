@@ -86,6 +86,23 @@ export function buildWhereConditions(options: QueryOptions) {
     conditions.push(like(transactions.description, `%${options.description}%`))
   }
 
+  // Add full-text search capability
+  if (options.search && typeof options.search === 'string' && options.search.trim() !== '') {
+    const searchTerm = options.search.trim()
+    const tsVector = sql`to_tsvector('english', 
+      coalesce(${transactions.description}, '') || ' ' || 
+      coalesce(${transactions.merchantName}, '') || ' ' || 
+      coalesce(${transactions.category}, '') || ' ' || 
+      coalesce(${transactions.parentCategory}, '') || ' ' || 
+      coalesce(${transactions.tags}, '') || ' ' || 
+      coalesce(${transactions.note}, '') || ' ' || 
+      coalesce(${transactions.paymentChannel}, '') || ' ' || 
+      coalesce(${transactions.source}, '')
+    )`
+    const tsQuery = sql`websearch_to_tsquery('english', ${searchTerm})`
+    conditions.push(sql`${tsVector} @@ ${tsQuery}`)
+  }
+
   return conditions.length > 0 ? and(...conditions) : undefined
 }
 
