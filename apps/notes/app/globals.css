@@ -368,4 +368,134 @@ body {
   .ring-sidebar {
     box-shadow: 0 0 0 3px hsl(var(--sidebar-ring));
   }
+
+  /* Typography Design System */
+
+  /* Heading & Display Styles */
+  .display-1 {
+    font-size: clamp(2.5rem, 4vw, 5rem);
+    /* Equivalent to clamp(40px, 4vw, 80px) */
+  }
+
+  .display-2 {
+    font-size: clamp(2rem, 3vw, 3.5rem);
+    /* Equivalent to clamp(32px, 3vw, 56px) */
+  }
+
+  .heading-1 {
+    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+    /* Equivalent to clamp(24px, 2.5vw, 36px) */
+  }
+
+  .heading-2 {
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    /* Equivalent to clamp(20px, 2vw, 28px) */
+  }
+
+  .heading-3 {
+    font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+    /* Equivalent to clamp(18px, 1.5vw, 24px) */
+  }
+
+  .heading-4 {
+    font-size: clamp(1rem, 1.25vw, 1.25rem);
+    /* Equivalent to clamp(16px, 1.25vw, 20px) */
+  }
+
+  /* Body Styles */
+  .body-1 {
+    font-size: clamp(1rem, 1.25vw, 1.25rem);
+    /* Equivalent to clamp(16px, 1.25vw, 20px) */
+  }
+
+  .body-2 {
+    font-size: clamp(0.875rem, 1vw, 1rem);
+    /* Equivalent to clamp(14px, 1vw, 16px) */
+  }
+
+  .body-3 {
+    font-size: clamp(0.75rem, 0.875vw, 0.875rem);
+    /* Equivalent to clamp(12px, 0.875vw, 14px) */
+  }
+
+  .body-4 {
+    font-size: clamp(0.625rem, 0.75vw, 0.75rem);
+    /* Equivalent to clamp(10px, 0.75vw, 12px) */
+  }
+
+  /* Subheading Styles */
+  .subheading-1 {
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    /* Equivalent to clamp(20px, 2vw, 28px) */
+  }
+
+  .subheading-2 {
+    font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+    /* Equivalent to clamp(18px, 1.5vw, 24px) */
+  }
+
+  .subheading-3 {
+    font-size: clamp(1rem, 1.25vw, 1.25rem);
+    /* Equivalent to clamp(16px, 1.25vw, 20px) */
+  }
+
+  .subheading-4 {
+    font-size: clamp(0.875rem, 1vw, 1.125rem);
+    /* Equivalent to clamp(14px, 1vw, 18px) */
+  }
+
+  /* Specialized Styles */
+  .price {
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    /* Equivalent to clamp(20px, 2vw, 28px) */
+  }
+
+  /* Alternative approach using media queries for more precise control */
+  /*
+  @media (max-width: 480px) {
+    .display-1 { font-size: 2.5rem; }
+    .display-2 { font-size: 2rem; }
+    .heading-1 { font-size: 1.5rem; }
+    .heading-2 { font-size: 1.25rem; }
+    .heading-3 { font-size: 1.125rem; }
+    .heading-4 { font-size: 1rem; }
+    .body-1 { font-size: 1rem; }
+    .body-2 { font-size: 0.875rem; }
+    .body-3 { font-size: 0.75rem; }
+    .body-4 { font-size: 0.625rem; }
+    .subheading-1 { font-size: 1.25rem; }
+    .subheading-2 { font-size: 1.125rem; }
+    .subheading-3 { font-size: 1rem; }
+    .subheading-4 { font-size: 0.875rem; }
+    .price { font-size: 1.25rem; }
+  }
+
+  @media (min-width: 1200px) {
+    .display-1 { font-size: 5rem; }
+    .display-2 { font-size: 3.5rem; }
+    .heading-1 { font-size: 2.25rem; }
+    .heading-2 { font-size: 1.75rem; }
+    .heading-3 { font-size: 1.5rem; }
+    .heading-4 { font-size: 1.25rem; }
+    .body-1 { font-size: 1.25rem; }
+    .body-2 { font-size: 1rem; }
+    .body-3 { font-size: 0.875rem; }
+    .body-4 { font-size: 0.75rem; }
+    .subheading-1 { font-size: 1.75rem; }
+    .subheading-2 { font-size: 1.5rem; }
+    .subheading-3 { font-size: 1.25rem; }
+    .subheading-4 { font-size: 1.125rem; }
+    .price { font-size: 1.75rem; }
+  }
+  */
+
+  /* Optional: Default typography styles */
+  /*
+  h1 { @extend .heading-1; }
+  h2 { @extend .heading-2; }
+  h3 { @extend .heading-3; }
+  h4 { @extend .heading-4; }
+  p { @extend .body-1; }
+  small { @extend .body-3; }
+  */
 }

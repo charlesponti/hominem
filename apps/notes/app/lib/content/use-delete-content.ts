@@ -1,0 +1,39 @@
+import { useAuth } from '@clerk/react-router'
+import { useApiClient } from '@hominem/ui'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useToast } from '../../components/ui/use-toast'
+
+const CONTENT_QUERY_KEY_BASE = 'content'
+
+export function useDeleteContent(options: { queryKey?: unknown[] } = {}) {
+  const { userId, isSignedIn } = useAuth()
+  const apiClient = useApiClient()
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  const deleteItem = useMutation<{ id: string }, Error, string>({
+    mutationFn: async (id: string) => {
+      if (!isSignedIn || !userId) {
+        throw new Error('User must be signed in to delete content.')
+      }
+      const response = await apiClient.delete<null, { id: string }>(`/api/content/${id}`)
+      if (!response || typeof response.id !== 'string') {
+        throw new Error('API did not return expected confirmation for delete.')
+      }
+      return response
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: options.queryKey || [CONTENT_QUERY_KEY_BASE] })
+      toast({ title: 'Item Deleted', description: 'Item successfully deleted.' })
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Error Deleting Item',
+        description: error.message || 'Could not delete item from server.',
+      })
+    },
+  })
+
+  return deleteItem
+}

@@ -1,4 +1,4 @@
-name: web-deploy
+name: deploy-florin
 
 on:
   workflow_dispatch: # Allow manual trigger
@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Web to Railway
+    name: railway deploy - florin
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     container: ghcr.io/railwayapp/cli:latest

@@ -75,12 +75,10 @@ export type Priority = z.infer<typeof PrioritySchema>
  */
 export const TaskMetadataSchema = z.object({
   status: TaskStatusSchema.default('todo'),
-  priority: PrioritySchema.default('medium'),
-  dueDate: z.string().nullable(),
-  completed: z.boolean().default(false),
+  priority: PrioritySchema.default('medium').optional(),
+  dueDate: z.string().nullable().optional(),
   startTime: z.string().optional(), // ISO string of when timer was last started
   endTime: z.string().optional(), // ISO string of when timer was last stopped
-  isActive: z.boolean().default(false),
   duration: z.number().optional(),
 })
 

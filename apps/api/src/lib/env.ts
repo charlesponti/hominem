@@ -10,6 +10,7 @@ const envSchema = z.object({
 
   APP_URL: z.string().url().default('http://localhost:4444'),
   ROCCO_URL: z.string().url().default('http://localhost:4454'),
+  NOTES_URL: z.string().url().default('http://localhost:4445'),
 
   CLERK_SECRET_KEY: z.string(),
   CLERK_PUBLISHABLE_KEY: z.string(),

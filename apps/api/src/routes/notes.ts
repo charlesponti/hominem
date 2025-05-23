@@ -15,7 +15,7 @@ const createContentSchema = z.object({
   content: z.string(),
   title: z.string().optional(),
   tags: z.array(contentTagSchema).optional().default([]),
-  taskMetadata: TaskMetadataSchema.optional(),
+  taskMetadata: TaskMetadataSchema.optional().nullable(),
   analysis: z.record(z.unknown()).optional(),
 })
 
