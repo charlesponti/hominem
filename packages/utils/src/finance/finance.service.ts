@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { db } from '../db/index'
 import {
@@ -45,8 +45,10 @@ export function parseAmount(amount: string | number): number {
 export function buildWhereConditions(options: QueryOptions) {
   const conditions = []
 
-  if (!options.userId) return undefined
-  conditions.push(eq(transactions.userId, options.userId))
+  // Corrected: Only add userId condition if options.userId is present and valid
+  if (options.userId) {
+    conditions.push(eq(transactions.userId, options.userId))
+  }
 
   // Only filter by transaction type if specified in options
   if (options.type && typeof options.type === 'string') {
@@ -107,14 +109,17 @@ export function buildWhereConditions(options: QueryOptions) {
 }
 
 export async function queryTransactions(options: QueryOptions) {
-  const whereConditions = buildWhereConditions(options)
-  const limit = options.limit || 100
-  const offset = options.offset || 0
-  const sortBy = options.sortBy || 'date'
-  const sortDirection = options.sortDirection || 'desc'
+  const { userId, limit = 100, offset = 0, sortBy = 'date', sortDirection = 'desc' } = options
 
-  // Build the base query
-  const query = db
+  if (!userId) {
+    // Return empty if no userId is provided, or handle as per application's error strategy
+    return { data: [], filteredCount: 0, totalUserCount: 0 }
+  }
+
+  const whereConditions = buildWhereConditions(options) // options already includes userId for filtering
+
+  // Build the base query for filtered transactions
+  const baseFilteredQuery = db
     .select({
       id: transactions.id,
       date: transactions.date,
@@ -133,35 +138,61 @@ export async function queryTransactions(options: QueryOptions) {
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .where(whereConditions)
 
-  // Apply sorting based on the sort field and direction
-  // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
-  let result
+  // Apply sorting
+  // biome-ignore lint/suspicious/noImplicitAnyLet: Consistent with existing code style
+  let sortedQuery
   if (sortBy === 'date') {
-    result =
-      sortDirection === 'asc'
-        ? await query.orderBy(transactions.date).limit(limit).offset(offset)
-        : await query.orderBy(desc(transactions.date)).limit(limit).offset(offset)
+    sortedQuery = baseFilteredQuery.orderBy(
+      sortDirection === 'asc' ? asc(transactions.date) : desc(transactions.date),
+      desc(transactions.id)
+    )
   } else if (sortBy === 'amount') {
-    result =
-      sortDirection === 'asc'
-        ? await query.orderBy(sql`${transactions.amount}::numeric`).limit(limit).offset(offset)
-        : await query.orderBy(sql`${transactions.amount}::numeric DESC`).limit(limit).offset(offset)
+    sortedQuery = baseFilteredQuery.orderBy(
+      sortDirection === 'asc' ? asc(transactions.amount) : desc(transactions.amount),
+      desc(transactions.id)
+    )
   } else if (sortBy === 'description') {
-    result =
-      sortDirection === 'asc'
-        ? await query.orderBy(transactions.description).limit(limit).offset(offset)
-        : await query.orderBy(desc(transactions.description)).limit(limit).offset(offset)
+    sortedQuery = baseFilteredQuery.orderBy(
+      sortDirection === 'asc' ? asc(transactions.description) : desc(transactions.description),
+      desc(transactions.id)
+    )
   } else if (sortBy === 'category') {
-    result =
-      sortDirection === 'asc'
-        ? await query.orderBy(transactions.category).limit(limit).offset(offset)
-        : await query.orderBy(desc(transactions.category)).limit(limit).offset(offset)
+    sortedQuery = baseFilteredQuery.orderBy(
+      sortDirection === 'asc' ? asc(transactions.category) : desc(transactions.category),
+      desc(transactions.id)
+    )
   } else {
-    // Default sort by date
-    result = await query.orderBy(desc(transactions.date)).limit(limit).offset(offset)
+    // Default sort
+    sortedQuery = baseFilteredQuery.orderBy(desc(transactions.date), desc(transactions.id))
   }
 
-  return result
+  const paginatedTransactions = await sortedQuery.limit(limit).offset(offset)
+
+  // Get count of filtered transactions (for pagination)
+  const filteredCountResult = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(transactions)
+    .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id)) // Join needed if it affects 'whereConditions'
+    .where(whereConditions)
+  const filteredCount = Number(filteredCountResult[0]?.count || 0)
+
+  // Get total count of transactions for the user (respecting base filters like excluded/pending)
+  const totalUserBaseConditions = and(
+    eq(transactions.userId, userId),
+    eq(transactions.excluded, false),
+    eq(transactions.pending, false)
+  )
+  const totalUserCountResult = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(transactions)
+    .where(totalUserBaseConditions)
+  const totalUserCount = Number(totalUserCountResult[0]?.count || 0)
+
+  return {
+    data: paginatedTransactions,
+    filteredCount,
+    totalUserCount,
+  }
 }
 
 export async function summarizeByCategory(options: QueryOptions): Promise<CategorySummary[]> {

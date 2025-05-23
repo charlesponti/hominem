@@ -63,7 +63,6 @@ export function useFinanceTransactions({
   initialSortDirection = 'desc',
 }: UseFinanceTransactionsOptions = {}) {
   const api = useApiClient()
-  const { accountsMap } = useFinanceAccounts() // Get accountsMap for client-side filtering/sorting if needed
 
   // Filtering state
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
@@ -91,9 +90,10 @@ export function useFinanceTransactions({
     return params.toString()
   }, [selectedAccount, dateFrom, dateTo, searchQuery, limit, offset, sortField, sortDirection])
 
-  // Query for transactions with dependencies on filters
-  const transactionsQuery = useQuery<{ data: FinanceTransaction[]; total: number }, Error>({
-    // Include all state dependencies in the query key
+  const transactionsQuery = useQuery<
+    { data: FinanceTransaction[]; filteredCount: number; totalUserCount: number },
+    Error
+  >({
     queryKey: [
       'finance',
       'transactions',
@@ -109,9 +109,10 @@ export function useFinanceTransactions({
       },
     ],
     queryFn: async () => {
-      return await api.get<never, { data: FinanceTransaction[]; total: number }>(
-        `/api/finance/transactions?${queryString}`
-      )
+      return await api.get<
+        never,
+        { data: FinanceTransaction[]; filteredCount: number; totalUserCount: number }
+      >(`/api/finance/transactions?${queryString}`)
     },
     staleTime: 1 * 60 * 1000,
     keepPreviousData: true,
@@ -122,8 +123,12 @@ export function useFinanceTransactions({
     return transactionsQuery.data?.data || []
   }, [transactionsQuery.data])
 
-  const totalTransactions = useMemo(() => {
-    return transactionsQuery.data?.total || 0
+  const filteredTransactionCount = useMemo(() => {
+    return transactionsQuery.data?.filteredCount || 0
+  }, [transactionsQuery.data])
+
+  const totalUserTransactionCount = useMemo(() => {
+    return transactionsQuery.data?.totalUserCount || 0
   }, [transactionsQuery.data])
 
   // Pagination helpers
@@ -135,7 +140,8 @@ export function useFinanceTransactions({
   return {
     // Data
     transactions: sortedTransactions,
-    totalTransactions,
+    filteredTransactionCount, // Renamed from totalTransactions for clarity
+    totalUserTransactionCount, // Added new total count for the user
     rawTransactions: transactionsQuery.data?.data,
     isLoading: transactionsQuery.isLoading,
     isFetching: transactionsQuery.isFetching,

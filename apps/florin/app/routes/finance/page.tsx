@@ -111,7 +111,8 @@ export default function TransactionsPage() {
     page,
     setPage,
     limit,
-    totalTransactions,
+    filteredTransactionCount, // Updated from totalTransactions
+    totalUserTransactionCount, // Available if needed, but not directly for pagination of filtered results
   } = useFinanceTransactions()
 
   const loading = accountsLoading || transactionsLoading
@@ -130,7 +131,7 @@ export default function TransactionsPage() {
     await Promise.all([refetchAccounts(), refetchTransactions()])
   }
 
-  const totalPages = Math.ceil(totalTransactions / limit)
+  const totalPages = Math.ceil(filteredTransactionCount / limit) // Use filteredTransactionCount
 
   return (
     <div className="space-y-4">
@@ -336,7 +337,7 @@ export default function TransactionsPage() {
             currentPage={page}
             totalPages={totalPages}
             onPageChange={setPage}
-            totalItems={totalTransactions}
+            totalItems={filteredTransactionCount} // Use filteredTransactionCount
             itemsPerPage={limit}
           />
         </>
