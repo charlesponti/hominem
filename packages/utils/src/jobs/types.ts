@@ -68,7 +68,7 @@ export interface ProcessTransactionOptions {
 export interface ImportTransactionsJob extends BaseJob {
   type: 'import-transactions'
   fileName: string
-  csvContent: string // Added to ensure processor can access it
+  csvContent: string
   accountId?: string
   error?: string
   options: Omit<ProcessTransactionOptions, 'fileName' | 'csvContent' | 'userId'>
