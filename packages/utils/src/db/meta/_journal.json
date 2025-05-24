@@ -162,6 +162,13 @@
       "when": 1747978278103,
       "tag": "0022_ancient_winter_soldier",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1748051197041,
+      "tag": "0023_pale_marvex",
+      "breakpoints": true
     }
   ]
 }

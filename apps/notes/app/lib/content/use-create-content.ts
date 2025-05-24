@@ -16,7 +16,7 @@ const defaultContentFields = (
   title: '',
   tags: [],
   taskMetadata:
-    type === 'task' || type === 'timer'
+    type === 'task'
       ? {
           status: 'todo',
           priority: 'medium',
@@ -102,11 +102,6 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
         )
       )
       queryClient.invalidateQueries({ queryKey })
-
-      toast({
-        title: `${data.type} created`,
-        description: data.title || 'Item successfully created.',
-      })
     },
     onError: (error: Error, newItemData, context) => {
       const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]

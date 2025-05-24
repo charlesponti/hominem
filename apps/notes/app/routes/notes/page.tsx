@@ -1,6 +1,6 @@
 import type { Content, ContentType } from '@hominem/utils/types'
 import { useDebounce } from '@uidotdev/usehooks'
-import { Hash, Plus, Search, Sparkles, Target } from 'lucide-react'
+import { Plus, Search, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Drawer, DrawerTrigger } from '~/components/ui/drawer'
@@ -102,46 +102,11 @@ export default function NotesPage() {
 
   return (
     <div className="relative flex flex-col min-h-screen w-full max-w-7xl mx-auto overflow-y-hidden">
-      <header className="relative z-10 top-0 py-3  border-b border-slate-300">
+      <header className="relative z-10 top-0 py-3 border-b border-slate-300">
         <div className="px-4 md:px-6 max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
-            {/* Quick stats */}
-            <div className="flex flex-row gap-2 col-span-1 md:col-span-1 order-2 md:order-1 justify-center md:justify-start">
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/70 dark:bg-slate-800/70 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  {stats.totalNotes} notes
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/70 dark:bg-slate-800/70 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
-                <Target className="w-4 h-4 text-green-500" />
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  {stats.completedTasks}/{stats.totalTasks} tasks
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/70 dark:bg-slate-800/70 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
-                <Hash className="w-4 h-4 text-purple-500" />
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  {stats.uniqueTags} tags
-                </span>
-              </div>
-            </div>
-
-            {/* Search bar */}
-            <div className="col-span-1 order-1 md:order-2 flex flex-1 w-full justify-center">
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder="Search notes and tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200/50 dark:border-slate-700/50 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 w-full"
-                />
-              </div>
-            </div>
-
             {/* Filter buttons */}
-            <div className="col-span-1 order-3 flex justify-center md:justify-end">
+            <div className="col-span-1 flex justify-center md:justify-end">
               <div className="flex gap-2 p-1 bg-white/70 dark:bg-slate-800/70 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
                 <Button
                   variant={filter === 'all' ? 'default' : 'ghost'}
@@ -179,6 +144,19 @@ export default function NotesPage() {
                 >
                   Tasks
                 </Button>
+              </div>
+            </div>
+
+            {/* Search bar */}
+            <div className="col-span-1 flex flex-1 w-full justify-center">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Search notes and tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200/50 dark:border-slate-700/50 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 w-full"
+                />
               </div>
             </div>
           </div>
@@ -281,7 +259,7 @@ export default function NotesPage() {
         <DrawerTrigger asChild>
           <Button
             size="lg"
-            className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full p-0 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-110 group"
+            className="fixed bottom-2 right-2 z-50 size-12 rounded-full p-0 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-110 group"
             aria-label="Create new item"
             onClick={() => {
               handleCreateNewItem()

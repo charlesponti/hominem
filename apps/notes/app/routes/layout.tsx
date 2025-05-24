@@ -6,8 +6,8 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-background">
       <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-30 bg-background">
-          <div className="flex h-16 items-center px-4 border-b">
+        <header className="sticky top-0 z-30 bg-white border-b">
+          <div className="flex h-16 items-center px-4">
             <div className="flex items-center space-x-2">
               <span className="bg-purple-500 p-2 rounded-md">
                 <Sparkles className="size-4 text-white" />

@@ -1,31 +1,7 @@
-import {
-  boolean,
-  customType,
-  index,
-  json,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm/relations'
+import { relations, sql } from 'drizzle-orm'
+import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
 import { users } from './users.schema'
-
-/**
- * This schema stores all types of content (notes, tasks, timers, etc.)
- */
-
-// Define a custom type for tsvector
-const tsvectorCustomType = customType<{
-  data: string
-  driverData: string
-  config: Record<string, unknown>
-}>({
-  dataType() {
-    return 'tsvector'
-  },
-})
 
 export const content = pgTable(
   'notes',
@@ -38,7 +14,6 @@ export const content = pgTable(
     mentions: json('mentions').$type<Array<NoteMention> | undefined>().default([]),
     analysis: json('analysis'),
     taskMetadata: json('task_metadata').$type<TaskMetadata>(),
-    search_vector: tsvectorCustomType('search_vector'), // New tsvector column
     userId: uuid('userId')
       .notNull()
       .references(() => users.id),
@@ -46,18 +21,16 @@ export const content = pgTable(
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
-  (table) => {
-    return {
-      // Define a GIN index on the search_vector column
-      searchVectorIdx: index('notes_search_idx').using('gin', table.search_vector),
-      // Example of an index on an expression if you were not using a dedicated column:
-      // titleContentTagsSearchIdx: index('notes_title_content_tags_search_idx').using('gin', sql`(
-      //   setweight(to_tsvector('english', coalesce(${table.title}, '')), 'A') ||
-      //   setweight(to_tsvector('english', ${table.content}), 'B') ||
-      //   setweight(to_tsvector('english', coalesce((SELECT string_agg(tag_item->>'value', ' ') FROM json_array_elements(${table.tags}) AS tag_item), '')), 'C')
-      // )`),
-    }
-  }
+  (table) => [
+    index('notes_search_idx').using(
+      'gin',
+      sql`(
+        setweight(to_tsvector('english', coalesce(${table.title}, '')), 'A') ||
+        setweight(to_tsvector('english', ${table.content}), 'B') ||
+        setweight(to_tsvector('english', coalesce(${sql`${table.tags}::text`}, '')), 'C')
+      )`
+    ),
+  ]
 )
 
 export const contentRelations = relations(content, ({ one }) => ({
