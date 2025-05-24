@@ -1,75 +1,53 @@
 'use client'
 
-import type { FinanceAccount } from '@hominem/utils/types'
-import { PlusCircle, RefreshCcw, Search } from 'lucide-react'
-import { DatePicker } from '~/components/date-picker'
-import { SortRow } from '~/components/finance/sort-row'
-import { TransactionsList } from '~/components/finance/transactions-list'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Input } from '~/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select'
-import type { SortField } from '~/lib/hooks/use-finance-data'
+import { RefreshCcw } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { SortDirection, SortField } from '~/lib/hooks/use-finance-data'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 
-interface PaginationControlsProps {
-  currentPage: number
-  totalPages: number
-  onPageChange: (page: number) => void
-  totalItems: number
-  itemsPerPage: number
+export interface SortOption {
+  // Copied from use-finance-data.ts
+  field: SortField
+  direction: SortDirection
 }
 
-function PaginationControls({
-  currentPage,
-  totalPages,
-  onPageChange,
-  totalItems,
-  itemsPerPage,
-}: PaginationControlsProps) {
-  if (totalItems === 0 || totalPages <= 1) {
-    return null
-  }
+export interface Filter {
+  accountId?: string
+  dateFrom?: string
+  dateTo?: string
+  description?: string
+}
 
-  const itemsOnCurrentPage = Math.min(itemsPerPage, totalItems - currentPage * itemsPerPage)
+import { FilterChip } from '~/components/finance/filter-chip'
+import { FilterControls } from '~/components/finance/filter-controls'
+import { PaginationControls } from '~/components/finance/pagination-controls'
+import { SortControls } from '~/components/finance/sort-controls'
+import { TransactionsList } from '~/components/finance/transactions-list'
+import { Button } from '~/components/ui/button'
+import { SearchInput } from '~/components/ui/search-input'
 
-  return (
-    <div className="flex justify-between items-center pt-2 text-sm text-[#917C6F] font-light">
-      <span>
-        Showing {itemsOnCurrentPage} of {totalItems} transactions
-      </span>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 0}
-        >
-          Previous
-        </Button>
-        <span>
-          Page {currentPage + 1} of {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage + 1 >= totalPages}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
-  )
+// Define a type for the augmented sort options
+interface ActiveSortOption extends SortOption {
+  onRemove: () => void
+  onClick: () => void
 }
 
 export default function TransactionsPage() {
+  // Local state for filters, initialized from useFinanceTransactions or default
+  const [currentFilters, setCurrentFilters] = useState<Filter>({})
+
+  // Search input value - managed by SearchInput component
+  const [searchValue, setSearchValue] = useState('')
+
+  // Update current filters when search term changes
+  useEffect(() => {
+    setCurrentFilters((prev: Filter) => ({
+      ...prev,
+      description: searchValue || undefined,
+    }))
+  }, [searchValue])
+
+  // Use specific hooks
   const {
     accounts,
     accountsMap,
@@ -80,168 +58,190 @@ export default function TransactionsPage() {
 
   const {
     transactions,
+    sortOptions,
+    addSortOption,
+    updateSortOption,
+    removeSortOption,
     isLoading: transactionsLoading,
     error: transactionsError,
-    selectedAccount,
-    setSelectedAccount,
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
-    searchQuery,
-    setSearchQuery,
-    sortOptions, // This will be an array of SortOption
-    addSortOption, // Function to add a sort criterion
-    removeSortOption, // Function to remove a sort criterion
-    updateSortOption, // Function to update an existing sort criterion
     refetch: refetchTransactions,
-    // Pagination
+    limit,
     page,
     setPage,
-    limit,
-    filteredTransactionCount, // Updated from totalTransactions
-    totalUserTransactionCount, // Available if needed, but not directly for pagination of filtered results
-  } = useFinanceTransactions()
+    totalTransactions,
+  } = useFinanceTransactions({ filters: currentFilters })
+
+  const [isSortControlsOpen, setIsSortControlsOpen] = useState(false)
+  const [focusedSortIndex, setFocusedSortIndex] = useState<number | null>(null)
+
+  const [isFilterControlsOpen, setIsFilterControlsOpen] = useState(false)
+  const [focusedFilterKey, setFocusedFilterKey] = useState<string | null>(null)
+
+  // Create a ref for the search input
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const activeFilters = Object.entries(currentFilters)
+    .filter(([, value]) => value !== undefined && value !== '')
+    .map(([key, value]) => ({
+      id: key,
+      label: `${key.charAt(0).toUpperCase() + key.slice(1)}: ${String(value)}`,
+      onRemove: () => {
+        setCurrentFilters((prev: Filter) => ({ ...prev, [key]: undefined }))
+        if (key === 'description') {
+          // Also clear the search input value when removing description filter
+          setSearchValue('')
+        }
+        if (key === focusedFilterKey && isFilterControlsOpen) {
+          setIsFilterControlsOpen(false)
+          setFocusedFilterKey(null)
+        }
+      },
+      onClick: () => {
+        if (key === 'description') {
+          // Focus the search input for description filter
+          searchInputRef.current?.focus()
+        } else {
+          setFocusedFilterKey(key)
+          setIsFilterControlsOpen(true)
+        }
+      },
+    }))
+
+  const activeSortOptions: ActiveSortOption[] = sortOptions.map(
+    (sortOption: SortOption, index: number) => ({
+      ...sortOption,
+      onRemove: () => removeSortOption(index),
+      onClick: () => handleSortChipClick(index),
+    })
+  )
 
   const loading = accountsLoading || transactionsLoading
   const error = accountsError || transactionsError
 
-  const refreshData = async () => {
-    await Promise.all([refetchAccounts(), refetchTransactions()])
+  const refreshData = () => {
+    refetchAccounts()
+    refetchTransactions()
   }
 
-  const totalPages = Math.ceil(filteredTransactionCount / limit) // Use filteredTransactionCount
+  const handleSortChipClick = (index: number) => {
+    setFocusedSortIndex(index)
+    setIsSortControlsOpen(true)
+  }
 
-  const allSortableFields: SortField[] = ['date', 'description', 'amount', 'category']
-  const availableFieldsToAdd = allSortableFields.filter(
-    (field) => !sortOptions.some((option) => option.field === field)
-  )
+  const totalPages = limit > 0 ? Math.ceil(totalTransactions / limit) : 0
+
+  // Memoized callback functions to prevent unnecessary re-renders
+  const handleSelectedAccountChange = useCallback((accountId: string) => {
+    setCurrentFilters((prev: Filter) => ({
+      ...prev,
+      accountId: accountId === 'all' ? undefined : accountId,
+    }))
+  }, [])
+
+  const handleDateFromChange = useCallback((date: Date | undefined) => {
+    setCurrentFilters((prev: Filter) => ({
+      ...prev,
+      dateFrom: date?.toISOString().split('T')[0],
+    }))
+  }, [])
+
+  const handleDateToChange = useCallback((date: Date | undefined) => {
+    setCurrentFilters((prev: Filter) => ({
+      ...prev,
+      dateTo: date?.toISOString().split('T')[0],
+    }))
+  }, [])
+
+  const handleSearchQueryChange = useCallback((description: string) => {
+    setSearchValue(description)
+  }, [])
+
+  const handleFilterControlsOpenChange = useCallback((open: boolean) => {
+    setIsFilterControlsOpen(open)
+    if (!open) {
+      setFocusedFilterKey(null)
+    }
+  }, [])
+
+  const handleSortControlsOpenChange = useCallback((open: boolean) => {
+    setIsSortControlsOpen(open)
+    if (!open) {
+      setFocusedSortIndex(null)
+    }
+  }, [])
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold">Transactions</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={refreshData}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+    <div className="container mx-auto p-4">
+      <header className="mb-6">
+        <h2 className="text-2xl font-bold mb-4">Transactions</h2>
+
+        {/* Search Input */}
+        <SearchInput
+          ref={searchInputRef}
+          value={searchValue}
+          onSearchChange={handleSearchQueryChange}
+          placeholder="Search transactions..."
+          className="mb-4 max-w-md"
+        />
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-wrap gap-2">
+            <FilterControls
+              accounts={accounts || []}
+              accountsLoading={accountsLoading}
+              selectedAccount={currentFilters.accountId || 'all'}
+              setSelectedAccount={handleSelectedAccountChange}
+              dateFrom={currentFilters.dateFrom ? new Date(currentFilters.dateFrom) : undefined}
+              setDateFrom={handleDateFromChange}
+              dateTo={currentFilters.dateTo ? new Date(currentFilters.dateTo) : undefined}
+              setDateTo={handleDateToChange}
+              open={isFilterControlsOpen}
+              onOpenChange={handleFilterControlsOpenChange}
+              focusedFilterKey={focusedFilterKey}
+            />
+            <SortControls
+              sortOptions={sortOptions || []}
+              addSortOption={addSortOption}
+              updateSortOption={updateSortOption}
+              removeSortOption={removeSortOption}
+              open={isSortControlsOpen}
+              onOpenChange={handleSortControlsOpenChange}
+              focusedSortIndex={focusedSortIndex}
+            />
+            <Button variant="outline" onClick={refreshData} disabled={loading}>
+              <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Filters - Shared across resolutions */}
-      <Card>
-        <CardHeader className="py-2 px-4">
-          <CardTitle className="text-md text-muted-foreground">Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="py-2 px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="account" className="text-sm font-medium mb-1 block">
-                Account
-              </label>
-              <Select name="account" value={selectedAccount} onValueChange={setSelectedAccount}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All accounts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All accounts</SelectItem>
-                  {accountsLoading ? (
-                    <SelectItem value="loading" disabled>
-                      Loading accounts...
-                    </SelectItem>
-                  ) : (
-                    accounts.map((account: FinanceAccount) => (
-                      <SelectItem key={account.id} value={account.name}>
-                        {account.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label htmlFor="from-date" className="text-sm font-medium mb-1 block">
-                From Date
-              </label>
-              <input
-                type="text"
-                id="from-date"
-                className="hidden"
-                value={dateFrom?.toISOString().split('T')[0] || ''}
-                readOnly
+      {/* Active Filters and Sorts Display */}
+      {(activeFilters.length > 0 || activeSortOptions.length > 0) && (
+        <div className="flex flex-wrap gap-2 items-center mb-4">
+          <span className="text-sm text-muted-foreground">Active criteria:</span>
+          {activeFilters.map((filter) => (
+            <FilterChip
+              key={filter.id}
+              label={filter.label}
+              onRemove={filter.onRemove}
+              onClick={filter.onClick}
+            />
+          ))}
+          {activeSortOptions.map(
+            (
+              sort: ActiveSortOption // Used ActiveSortOption type
+            ) => (
+              <FilterChip
+                key={`sort-${sort.field}`}
+                label={`Sort by ${sort.field} (${sort.direction})`}
+                onRemove={sort.onRemove}
+                onClick={sort.onClick}
               />
-              <DatePicker date={dateFrom} setDate={setDateFrom} placeholder="Select start date" />
-            </div>
-
-            <div>
-              <label htmlFor="to-date" className="text-sm font-medium mb-1 block">
-                To Date
-              </label>
-              <input
-                type="text"
-                id="to-date"
-                className="hidden"
-                value={dateTo?.toISOString().split('T')[0] || ''}
-                readOnly
-              />
-              <DatePicker date={dateTo} setDate={setDateTo} placeholder="Select end date" />
-            </div>
-
-            <div>
-              <label htmlFor="searchQuery" className="text-sm font-medium mb-1 block">
-                Description
-              </label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  name="searchQuery"
-                  placeholder="Search..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 py-2 border-t border-gray-200">
-            <div className="flex flex-wrap items-center gap-4">
-              <h3 className="text-sm font-medium">Sort By</h3>
-              {sortOptions.map((sort, index) => {
-                const usedFields = sortOptions
-                  .filter((_, i) => i !== index) // Get fields used by *other* sort options
-                  .map((option) => option.field)
-
-                return (
-                  <SortRow
-                    key={sort.field} // It's good practice to ensure this key is stable and unique
-                    sortOption={sort}
-                    index={index}
-                    allSortableFields={allSortableFields}
-                    usedFields={usedFields}
-                    updateSortOption={updateSortOption}
-                    removeSortOption={removeSortOption}
-                  />
-                )
-              })}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (availableFieldsToAdd.length > 0) {
-                    addSortOption({ field: availableFieldsToAdd[0], direction: 'desc' })
-                  }
-                }}
-                disabled={availableFieldsToAdd.length === 0}
-              >
-                <PlusCircle className="size-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            )
+          )}
+        </div>
+      )}
 
       {/* Shared Loading, Error, and Empty States */}
       {loading ? (
@@ -254,7 +254,11 @@ export default function TransactionsPage() {
         </div>
       ) : error ? (
         <div className="p-8 text-center text-red-500">
-          {error instanceof Error ? error.message : 'An unknown error occurred'}
+          {typeof error === 'string'
+            ? error
+            : error instanceof Error
+              ? error.message
+              : 'An unknown error occurred'}
         </div>
       ) : transactions.length === 0 ? (
         <div className="p-8 text-center text-[#917C6F]">No transactions found.</div>
@@ -262,18 +266,17 @@ export default function TransactionsPage() {
         <>
           {/* Modern Transactions List - Responsive across all screen sizes */}
           <TransactionsList
-            loading={false}
-            error={null}
+            loading={transactionsLoading}
+            error={transactionsError}
             transactions={transactions}
             accountsMap={accountsMap}
-            showCount={true}
           />
 
           <PaginationControls
             currentPage={page}
             totalPages={totalPages}
             onPageChange={setPage}
-            totalItems={filteredTransactionCount}
+            totalItems={totalTransactions}
             itemsPerPage={limit}
           />
         </>

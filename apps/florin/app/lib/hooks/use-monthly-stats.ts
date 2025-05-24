@@ -9,7 +9,7 @@ export interface MonthlyStats {
   totalExpenses: number
   netIncome: number
   transactionCount: number
-  categorySpending: { name: string; amount: number }[]
+  categorySpending: Array<{ name: string | null; amount: number }>
 }
 
 // Define query keys as constants for consistent cache management
@@ -20,7 +20,7 @@ const MONTHLY_STATS_KEY = ['finance', 'monthly-stats']
  * @param month The month to fetch statistics for, in the format 'YYYY-MM'
  * @param options Additional options to pass to useQuery
  */
-export function useMonthlyStats(month: string | undefined, options = {}) {
+export function useMonthlyStats(month: string | undefined | null, options = {}) {
   const apiClient = useApiClient()
 
   const queryKey = [...MONTHLY_STATS_KEY, month]

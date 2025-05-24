@@ -11,7 +11,6 @@ type TransactionsListProps = {
   error: string | null
   transactions: FinanceTransaction[]
   accountsMap: Map<string, FinanceAccount>
-  showCount?: boolean
 }
 
 function TransactionIcon({ transaction }: { transaction: FinanceTransaction }) {
@@ -125,11 +124,10 @@ export function TransactionsList({
   error,
   transactions,
   accountsMap,
-  showCount = true,
 }: TransactionsListProps) {
   if (loading) {
     return (
-      <div className="space-y-4 max-w-4xl mx-auto">
+      <div className="space-y-4 mx-auto">
         {Array.from({ length: 5 }, (_, i) => `skeleton-${Date.now()}-${i}`).map((key) => (
           <Card key={key} className="p-4 sm:p-6 animate-pulse">
             <div className="flex items-start gap-4">
@@ -174,16 +172,7 @@ export function TransactionsList({
   }
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
-      {/* Count Header */}
-      {showCount && (
-        <div className="flex items-center justify-between py-2 border-b border-gray-100">
-          <div className="text-sm text-gray-600 font-medium">
-            Showing {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-      )}
-
+    <div className="space-y-4 mx-auto">
       {/* Transactions List */}
       <div className="space-y-3">
         {transactions.map((transaction) => {

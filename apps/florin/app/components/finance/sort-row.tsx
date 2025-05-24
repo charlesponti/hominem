@@ -12,7 +12,7 @@ import type { SortDirection, SortField, SortOption } from '~/lib/hooks/use-finan
 interface SortRowProps {
   sortOption: SortOption
   index: number
-  allSortableFields: SortField[]
+  sortableFields: SortField[]
   usedFields: SortField[]
   updateSortOption: (index: number, option: SortOption) => void
   removeSortOption: (index: number) => void
@@ -21,12 +21,12 @@ interface SortRowProps {
 export function SortRow({
   sortOption,
   index,
-  allSortableFields,
+  sortableFields,
   usedFields,
   updateSortOption,
   removeSortOption,
 }: SortRowProps) {
-  const availableFieldsForCurrentSelect = allSortableFields.filter(
+  const availableFieldsForCurrentSelect = sortableFields.filter(
     (field) => !usedFields.includes(field) || field === sortOption.field
   )
 

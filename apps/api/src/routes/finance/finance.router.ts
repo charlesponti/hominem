@@ -226,6 +226,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     limit: z.coerce.number().optional().describe('Maximum results to return'),
     offset: z.coerce.number().optional().describe('Number of results to skip for pagination'), // Added offset
     description: z.string().optional().describe('Description search term'),
+    search: z.string().optional().describe('Free text search across multiple fields'),
     // Allow sortBy and sortDirection to be a string or an array of strings
     sortBy: z
       .union([z.string(), z.array(z.string())])

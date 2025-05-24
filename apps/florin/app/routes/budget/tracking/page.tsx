@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { useBudgetCategories, useBudgetHistory } from '~/lib/hooks/use-budget-data'
-import { useMonthlyStats } from '~/lib/hooks/use-finance-data'
+import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 
 interface BudgetCategoryActual extends BudgetCategory {
   actualSpending: number
@@ -59,22 +59,18 @@ function BudgetTrackingPage() {
     error: errorCategories,
   } = useBudgetCategories()
 
-  const {
-    monthlyStats,
-    isLoading: isLoadingStats,
-    error: errorStats,
-  } = useMonthlyStats(selectedMonthYear)
+  const { stats, isLoading: isLoadingStats, error: errorStats } = useMonthlyStats(selectedMonthYear)
 
   const { historyData, isLoadingHistory, errorHistory } = useBudgetHistory(historyMonths)
 
   const budgetDataWithActuals: BudgetCategoryActual[] = useMemo(() => {
-    if (!budgetCategories || !monthlyStats || !monthlyStats.categorySpending) return []
+    if (!budgetCategories || !stats || !stats.categorySpending) return []
 
     return budgetCategories
       .filter((cat: BudgetCategory) => cat.type === 'expense')
       .map((category: BudgetCategory) => {
         const actualSpending =
-          monthlyStats.categorySpending.find(
+          stats.categorySpending.find(
             (s: { name: string | null; amount: number }) =>
               s.name !== null && s.name === category.name
           )?.amount || 0
@@ -87,13 +83,13 @@ function BudgetTrackingPage() {
           percentageSpent: Math.min(100, percentageSpent),
         }
       })
-  }, [budgetCategories, monthlyStats])
+  }, [budgetCategories, stats])
 
   const totalAllocated = useMemo(
     () => budgetDataWithActuals.reduce((sum, item) => sum + item.allocatedAmount, 0),
     [budgetDataWithActuals]
   )
-  const totalActual = useMemo(() => monthlyStats?.totalExpenses || 0, [monthlyStats])
+  const totalActual = useMemo(() => stats?.totalExpenses || 0, [stats])
 
   const pieData = useMemo(
     () =>
@@ -127,7 +123,9 @@ function BudgetTrackingPage() {
     return (
       <div>
         Error loading data:{' '}
-        {errorCategories?.message || errorStats?.message || errorHistory?.message}
+        {(errorCategories as Error)?.message ||
+          (errorStats as Error)?.message ||
+          (errorHistory as Error)?.message}
       </div>
     )
   }
