@@ -178,10 +178,10 @@ export function useFinanceTransactions({
     setSearchQuery,
 
     // Sorting state and setters
-    sortOptions, // Expose sortOptions
-    addSortOption, // Expose addSortOption
-    removeSortOption, // Expose removeSortOption
-    updateSortOption, // Expose updateSortOption
+    sortOptions,
+    addSortOption,
+    removeSortOption,
+    updateSortOption,
 
     // Pagination state and setters
     limit,

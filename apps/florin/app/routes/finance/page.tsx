@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Calendar,
   ChevronRight,
+  PlusCircle,
   RefreshCcw,
   Search,
 } from 'lucide-react'
@@ -215,26 +216,10 @@ export default function TransactionsPage() {
               </div>
             </div>
           </div>
-          {/* Add Sort Controls UI */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex justify-between items-center mb-2">
+
+          <div className="mt-4 py-2 border-t border-gray-200">
+            <div className="flex flex-wrap items-center gap-4">
               <h3 className="text-sm font-medium">Sort By</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (availableFieldsToAdd.length > 0) {
-                    addSortOption({ field: availableFieldsToAdd[0], direction: 'desc' })
-                  }
-                }}
-                disabled={availableFieldsToAdd.length === 0}
-              >
-                Add Sort
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              {' '}
-              {/* Changed to flex-wrap and gap-4 */}
               {sortOptions.map((sort, index) => {
                 const usedFields = sortOptions
                   .filter((_, i) => i !== index) // Get fields used by *other* sort options
@@ -252,6 +237,18 @@ export default function TransactionsPage() {
                   />
                 )
               })}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (availableFieldsToAdd.length > 0) {
+                    addSortOption({ field: availableFieldsToAdd[0], direction: 'desc' })
+                  }
+                }}
+                disabled={availableFieldsToAdd.length === 0}
+              >
+                <PlusCircle className="size-4" />
+              </Button>
             </div>
           </div>
         </CardContent>

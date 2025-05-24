@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import {
   Select,
@@ -31,10 +31,7 @@ export function SortRow({
   )
 
   return (
-    <div
-      key={sortOption.field}
-      className="flex items-center gap-2 p-2 border rounded-md bg-slate-50"
-    >
+    <div key={sortOption.field} className="flex items-center gap-2">
       <Select
         value={sortOption.field}
         onValueChange={(value) =>
@@ -74,9 +71,9 @@ export function SortRow({
         variant="ghost"
         size="sm"
         onClick={() => removeSortOption(index)}
-        className="h-8 w-8 p-0"
+        className="size-8 p-0"
       >
-        <Trash2 className="h-3 w-3 text-muted-foreground" />
+        <X className="h-4 w-4 text-muted-foreground" />
       </Button>
     </div>
   )
