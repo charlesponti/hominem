@@ -1,20 +1,10 @@
 'use client'
 
-import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
-import { format } from 'date-fns'
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Calendar,
-  ChevronRight,
-  PlusCircle,
-  RefreshCcw,
-  Search,
-} from 'lucide-react'
+import type { FinanceAccount } from '@hominem/utils/types'
+import { PlusCircle, RefreshCcw, Search } from 'lucide-react'
 import { DatePicker } from '~/components/date-picker'
 import { SortRow } from '~/components/finance/sort-row'
-import { TransactionsTable } from '~/components/finance/transactions-table'
-import { Badge } from '~/components/ui/badge'
+import { TransactionsList } from '~/components/finance/transactions-list'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
@@ -27,7 +17,6 @@ import {
 } from '~/components/ui/select'
 import type { SortField } from '~/lib/hooks/use-finance-data'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
-import { cn } from '~/lib/utils'
 
 interface PaginationControlsProps {
   currentPage: number
@@ -271,94 +260,14 @@ export default function TransactionsPage() {
         <div className="p-8 text-center text-[#917C6F]">No transactions found.</div>
       ) : (
         <>
-          {/* Mobile View: Feed Layout */}
-          <div data-testid="transactions-feed" className="md:hidden space-y-4">
-            {transactions.map((transaction: FinanceTransaction) => {
-              const account = accountsMap.get(transaction.accountId)
-              const isNegative = Number.parseFloat(transaction.amount) < 0
-              const formattedDate = format(new Date(transaction.date), 'MMM d, yyyy')
-              const amount = Math.abs(Number.parseFloat(transaction.amount)).toFixed(2)
-
-              return (
-                <Card
-                  key={transaction.id}
-                  className="overflow-hidden border-[#E8E1D9] hover:border-[#FF6600] transition-all duration-300 shadow-sm hover:shadow-md"
-                >
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4">
-                    <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-[#FFF8F0]">
-                      {isNegative ? (
-                        <ArrowUpRight className="h-6 w-6 text-[#FF6600]" />
-                      ) : (
-                        <ArrowDownRight className="h-6 w-6 text-[#00A878]" />
-                      )}
-                    </div>
-
-                    <div className="flex-grow md:mr-10">
-                      <h3 className="font-medium text-[#333333] tracking-tight line-clamp-1">
-                        {transaction.description}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                        <div className="flex items-center text-xs text-[#917C6F]">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {formattedDate}
-                        </div>
-                        <div className="flex items-center text-xs text-[#917C6F]">
-                          <span className="font-light">Account:</span>
-                          <span className="ml-1 font-medium">{account?.name || 'Unknown'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-1 md:min-w-32">
-                      <span
-                        className={cn(
-                          'text-lg font-light',
-                          isNegative ? 'text-[#FF6600]' : 'text-[#00A878]'
-                        )}
-                      >
-                        {isNegative ? '-' : '+'}${amount}
-                      </span>
-
-                      {transaction.category ? (
-                        <Badge
-                          variant="outline"
-                          className="bg-[#FFF8F0] text-[#917C6F] border-[#E8E1D9] font-light"
-                        >
-                          {transaction.category}
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="bg-[#FFF8F0] text-[#917C6F] border-[#E8E1D9] font-light"
-                        >
-                          Other
-                        </Badge>
-                      )}
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="hidden md:flex h-8 w-8 text-[#917C6F] hover:text-[#FF6600]"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </Card>
-              )
-            })}
-          </div>
-
-          {/* Desktop View: Table Layout */}
-          <div className="hidden md:block space-y-4">
-            <TransactionsTable
-              loading={false}
-              error={null}
-              transactions={transactions}
-              filteredTransactions={transactions}
-              accountsMap={accountsMap}
-            />
-          </div>
+          {/* Modern Transactions List - Responsive across all screen sizes */}
+          <TransactionsList
+            loading={false}
+            error={null}
+            transactions={transactions}
+            accountsMap={accountsMap}
+            showCount={true}
+          />
 
           <PaginationControls
             currentPage={page}
