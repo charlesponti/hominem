@@ -1,6 +1,14 @@
 import type { Content } from '@hominem/utils/types'
 import { format } from 'date-fns'
-import { CalendarDays, CheckCircle2, Edit, PauseCircle, PlayCircle, Target, Trash2 } from 'lucide-react'
+import {
+  CalendarDays,
+  CheckCircle2,
+  Edit,
+  PauseCircle,
+  PlayCircle,
+  Target,
+  Trash2,
+} from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { useTimeTracking } from '~/lib/content/use-time-tracking'
@@ -104,9 +112,7 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
             >
               {title}
             </h3>
-            {priority && (
-              <div className={cn('w-2 h-2 rounded-full', getPriorityColor(priority))} />
-            )}
+            {priority && <div className={cn('w-2 h-2 rounded-full', getPriorityColor(priority))} />}
           </div>
           {dueDate && (
             <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">

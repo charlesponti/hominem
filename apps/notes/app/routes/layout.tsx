@@ -13,7 +13,7 @@ export default function Layout() {
                 <Sparkles className="size-4 text-white" />
               </span>
               <Link to="/" className="font-bold text-lg">
-                Notes
+                Sage
               </Link>
             </div>
             <div className="flex flex-1 items-center justify-end space-x-4">

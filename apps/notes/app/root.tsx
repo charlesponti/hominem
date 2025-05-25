@@ -13,6 +13,13 @@ export async function loader(args: Route.LoaderArgs) {
   return rootAuthLoader(args)
 }
 
+export const meta: Route.MetaFunction = () => {
+  return [
+    { title: 'Sage' },
+    { name: 'description', content: 'Organize and manage your personal notes and knowledge' },
+  ]
+}
+
 export const links: Route.LinksFunction = () => [
   // Favicon
   { rel: 'icon', type: 'image/x-icon', href: 'icons/favicon.ico' },

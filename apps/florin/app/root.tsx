@@ -14,6 +14,13 @@ export async function loader(args: Route.LoaderArgs) {
   return rootAuthLoader(args)
 }
 
+export const meta: Route.MetaFunction = () => {
+  return [
+    { title: 'Florin' },
+    { name: 'description', content: 'Manage your personal finances with Florin' },
+  ]
+}
+
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
