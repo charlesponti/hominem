@@ -108,21 +108,18 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               <div className={cn('w-2 h-2 rounded-full', getPriorityColor(priority))} />
             )}
           </div>
-          <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
-            <span>{new Date(task.createdAt).toLocaleDateString()}</span>
-            {dueDate && (
-              <div className="flex items-center gap-1">
-                <CalendarDays className="h-3 w-3" />
-                <span>Due {format(new Date(dueDate), 'MMM d')}</span>
-              </div>
-            )}
-          </div>
+          {dueDate && (
+            <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
+              <CalendarDays className="h-3 w-3" />
+              <span>Due {format(new Date(dueDate), 'MMM d')}</span>
+            </div>
+          )}
         </div>
 
         {/* Task content */}
         {taskContent && taskContent !== title && (
           <div>
-            <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
+            <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed line-clamp-6">
               {taskContent}
             </p>
           </div>
@@ -161,12 +158,12 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-3 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:text-yellow-300 dark:hover:bg-yellow-900/30"
+                className="h-8 w-8 p-0 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:text-yellow-300 dark:hover:bg-yellow-900/30"
                 onClick={startTimer}
                 disabled={isLoading}
+                title="Start task"
               >
-                <PlayCircle className="h-4 w-4 mr-1" />
-                Start
+                <PlayCircle className="h-4 w-4" />
               </Button>
             )}
 
@@ -174,12 +171,12 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/30"
+                className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/30"
                 onClick={startTimer}
                 disabled={isLoading}
+                title="Resume task"
               >
-                <PlayCircle className="h-4 w-4 mr-1" />
-                Resume
+                <PlayCircle className="h-4 w-4" />
               </Button>
             )}
 
@@ -188,21 +185,22 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
+                  className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
                   onClick={pauseTimer}
                   disabled={isLoading}
+                  title="Pause task"
                 >
-                  <PauseCircle className="h-4 w-4 mr-1" />
-                  Pause
+                  <PauseCircle className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
+                  className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
                   onClick={resetTimerForInProgressTask}
                   disabled={isLoading}
+                  title="Reset timer"
                 >
-                  Reset
+                  <Target className="h-4 w-4" />
                 </Button>
               </>
             )}
@@ -211,26 +209,26 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               variant="ghost"
               size="sm"
               onClick={() => onEdit(task)}
-              className="h-8 px-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
               disabled={isLoading}
+              title="Edit task"
             >
-              <Edit className="h-4 w-4 mr-1" />
-              Edit
+              <Edit className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-3 text-slate-600 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+              className="h-8 w-8 p-0 text-slate-600 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
               onClick={() => onDelete(task.id)}
               disabled={isLoading}
+              title="Delete task"
             >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <div className="text-xs text-slate-400 dark:text-slate-500">
-            Task
-          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {new Date(task.createdAt).toLocaleDateString()}
+          </p>
         </div>
       </div>
     </div>
