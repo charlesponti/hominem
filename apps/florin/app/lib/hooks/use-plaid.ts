@@ -148,22 +148,25 @@ export function usePlaidConnections(options = {}) {
     queryKey: PLAID_CONNECTIONS_KEY,
     queryFn: async () => {
       // Use the unified endpoint to get connection data
-      const response = await apiClient.get<null, { 
-        accounts: Array<{
-          id: string
-          name: string
-          type: string
-          balance: string
-          mask: string | null
-          subtype: string | null
-          institutionId?: string
-          plaidItemId?: string
-          institutionName?: string
-          institutionLogo?: string | null
-          isPlaidConnected?: boolean
-        }>
-        connections: PlaidConnection[] 
-      }>('/api/finance/accounts/all')
+      const response = await apiClient.get<
+        null,
+        {
+          accounts: Array<{
+            id: string
+            name: string
+            type: string
+            balance: string
+            mask: string | null
+            subtype: string | null
+            institutionId?: string
+            plaidItemId?: string
+            institutionName?: string
+            institutionLogo?: string | null
+            isPlaidConnected?: boolean
+          }>
+          connections: PlaidConnection[]
+        }
+      >('/api/finance/accounts/all')
       return { connections: response.connections }
     },
     ...defaultOptions,

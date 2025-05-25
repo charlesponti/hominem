@@ -67,32 +67,10 @@ export function useFinanceAccountSummary() {
 export function useAllAccounts() {
   const api = useApiClient()
 
-  const query = useQuery<{ 
-    accounts: Array<FinanceAccount & { 
-      transactions: FinanceTransaction[]
-      institutionName?: string
-      institutionLogo?: string
-      isPlaidConnected?: boolean
-      plaidItemStatus?: string
-      plaidItemError?: string | null
-      plaidLastSyncedAt?: Date | null
-      plaidItemInternalId?: string
-    }>
-    connections: Array<{
-      id: string
-      itemId: string
-      institutionId: string
-      institutionName: string
-      status: string
-      lastSyncedAt: Date | null
-      error: string | null
-      createdAt: Date
-    }>
-  }, Error>({
-    queryKey: ['finance', 'accounts', 'all'],
-    queryFn: async () => {
-      return await api.get<never, { 
-        accounts: Array<FinanceAccount & { 
+  const query = useQuery<
+    {
+      accounts: Array<
+        FinanceAccount & {
           transactions: FinanceTransaction[]
           institutionName?: string
           institutionLogo?: string
@@ -101,20 +79,50 @@ export function useAllAccounts() {
           plaidItemError?: string | null
           plaidLastSyncedAt?: Date | null
           plaidItemInternalId?: string
-        }>
-        connections: Array<{
-          id: string
-          itemId: string
-          institutionId: string
-          institutionName: string
-          status: string
-          lastSyncedAt: Date | null
-          error: string | null
-          createdAt: Date
-        }>
-      }>(
-        '/api/finance/accounts/all'
-      )
+        }
+      >
+      connections: Array<{
+        id: string
+        itemId: string
+        institutionId: string
+        institutionName: string
+        status: string
+        lastSyncedAt: Date | null
+        error: string | null
+        createdAt: Date
+      }>
+    },
+    Error
+  >({
+    queryKey: ['finance', 'accounts', 'all'],
+    queryFn: async () => {
+      return await api.get<
+        never,
+        {
+          accounts: Array<
+            FinanceAccount & {
+              transactions: FinanceTransaction[]
+              institutionName?: string
+              institutionLogo?: string
+              isPlaidConnected?: boolean
+              plaidItemStatus?: string
+              plaidItemError?: string | null
+              plaidLastSyncedAt?: Date | null
+              plaidItemInternalId?: string
+            }
+          >
+          connections: Array<{
+            id: string
+            itemId: string
+            institutionId: string
+            institutionName: string
+            status: string
+            lastSyncedAt: Date | null
+            error: string | null
+            createdAt: Date
+          }>
+        }
+      >('/api/finance/accounts/all')
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   })

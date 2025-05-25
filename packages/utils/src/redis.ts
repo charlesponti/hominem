@@ -4,7 +4,10 @@ import delay from './utils/delay.utils'
 
 const { REDIS_URL } = process.env
 
-export const redis = new Redis(`${REDIS_URL}?family=0`)
+export const redis = new Redis(REDIS_URL || 'redis://localhost:6379', {
+  maxRetriesPerRequest: null,
+  family: 0,
+})
 const MAX_REQUESTS = 50
 
 export async function checkRateLimit(key: string): Promise<boolean> {

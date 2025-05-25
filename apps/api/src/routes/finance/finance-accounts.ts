@@ -207,6 +207,9 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
           plaidItemError: plaidItems.error,
           plaidLastSyncedAt: plaidItems.lastSyncedAt,
           plaidItemInternalId: plaidItems.id,
+          // Get institution ID and name from Plaid item for connections
+          plaidInstitutionId: plaidItems.institutionId,
+          plaidInstitutionName: financialInstitutions.name,
         })
         .from(financeAccounts)
         .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
@@ -217,9 +220,10 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
       const accountsWithTransactions = await Promise.all(
         allAccounts.map(async (account) => {
           // Use the existing service method to get recent transactions
-          const accountWithTransactions = await FinancialAccountService.listAccountsWithRecentTransactions(userId, 5)
-          const accountData = accountWithTransactions.find(acc => acc.id === account.id)
-          
+          const accountWithTransactions =
+            await FinancialAccountService.listAccountsWithRecentTransactions(userId, 5)
+          const accountData = accountWithTransactions.find((acc) => acc.id === account.id)
+
           return {
             ...account,
             transactions: accountData?.transactions || [],
@@ -227,45 +231,37 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
         })
       )
 
-      // Extract unique Plaid connections for connection management UI
-      const uniqueConnections = allAccounts
-        .filter(account => 
-          account.isPlaidConnected && 
-          account.plaidItemInternalId &&
-          account.plaidItemId &&
-          account.institutionId &&
-          account.institutionName &&
-          account.plaidItemStatus
-        )
-        .reduce((connections, account) => {
-          const existing = connections.find(conn => conn.id === account.plaidItemInternalId)
-          if (!existing) {
-            connections.push({
-              id: account.plaidItemInternalId as string,
-              itemId: account.plaidItemId as string,
-              institutionId: account.institutionId as string,
-              institutionName: account.institutionName as string,
-              status: account.plaidItemStatus as string,
-              lastSyncedAt: account.plaidLastSyncedAt,
-              error: account.plaidItemError,
-              createdAt: account.createdAt,
-            })
-          }
-          return connections
-        }, [] as Array<{
-          id: string
-          itemId: string
-          institutionId: string
-          institutionName: string
-          status: string
-          lastSyncedAt: Date | null
-          error: string | null
-          createdAt: Date
-        }>)
+      // Get Plaid connections separately starting from plaidItems table
+      // This ensures we capture all Plaid connections, even those without corresponding finance accounts
+      const plaidConnections = await db
+        .select({
+          id: plaidItems.id,
+          itemId: plaidItems.itemId,
+          institutionId: plaidItems.institutionId,
+          institutionName: financialInstitutions.name,
+          status: plaidItems.status,
+          lastSyncedAt: plaidItems.lastSyncedAt,
+          error: plaidItems.error,
+          createdAt: plaidItems.createdAt,
+        })
+        .from(plaidItems)
+        .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+        .where(eq(plaidItems.userId, userId))
 
-      return { 
+      const uniqueConnections = plaidConnections.map((connection) => ({
+        id: connection.id,
+        itemId: connection.itemId,
+        institutionId: connection.institutionId,
+        institutionName: connection.institutionName || 'Unknown Institution',
+        status: connection.status,
+        lastSyncedAt: connection.lastSyncedAt,
+        error: connection.error,
+        createdAt: connection.createdAt,
+      }))
+
+      return {
         accounts: accountsWithTransactions,
-        connections: uniqueConnections
+        connections: uniqueConnections,
       }
     } catch (error) {
       return handleError(error as Error, reply)

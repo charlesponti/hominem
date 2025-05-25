@@ -31,7 +31,7 @@ const configuration = new Configuration({
   baseOptions: {
     headers: {
       'PLAID-CLIENT-ID': env.PLAID_CLIENT_ID,
-      'PLAID-SECRET': env.PLAID_SECRET,
+      'PLAID-SECRET': env.PLAID_API_KEY,
       'Content-Type': 'application/json',
     },
   },
@@ -242,7 +242,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             await db.insert(transactions).values({
               id: randomUUID(),
               type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
-              amount: Math.abs(transaction.amount),
+              amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
               description: transaction.name,
               merchantName: transaction.merchant_name || null,
@@ -269,7 +269,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
               .update(transactions)
               .set({
                 type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
-                amount: Math.abs(transaction.amount),
+                amount: Math.abs(transaction.amount).toFixed(2),
                 date: new Date(transaction.date),
                 description: transaction.name,
                 merchantName: transaction.merchant_name || null,
@@ -292,6 +292,13 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       if (removed.length > 0) {
         for (const removed_transaction of removed) {
           // Find the transaction to delete
+          if (removed_transaction.transaction_id === undefined) {
+            logger.warn({
+              message: 'Removed transaction does not have a transaction_id',
+              removedTransaction: removed_transaction,
+            })
+            continue
+          }
           const existingTransaction = await db.query.transactions.findFirst({
             where: eq(transactions.plaidTransactionId, removed_transaction.transaction_id),
           })
@@ -347,12 +354,22 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       transactionsProcessed: totalTransactions,
     }
   } catch (error) {
+    let plaidErrorDetail: unknown = null // Initialize with unknown type
+
+    // Check if it's an AxiosError and try to get more details from Plaid's response
+    // Safely access nested properties to avoid runtime errors
+    if (error && typeof error === 'object' && 'isAxiosError' in error && error.isAxiosError) {
+      const axiosError = error as { response?: { data?: unknown } } // Type assertion
+      plaidErrorDetail = axiosError.response?.data // Use optional chaining
+    }
+
     logger.error({
       message: 'Error processing Plaid sync job',
       jobId: job.id,
       userId,
       itemId,
       error: error instanceof Error ? error.message : String(error),
+      plaidError: plaidErrorDetail, // Add Plaid's specific error response
       stack: error instanceof Error ? error.stack : undefined,
     })
 
@@ -393,7 +410,6 @@ function mapPlaidAccountType(plaidType: string): string {
 function determineTransactionType(amount: number): string {
   if (amount < 0) {
     return 'expense'
-  } else {
-    return 'income'
   }
+  return 'income'
 }

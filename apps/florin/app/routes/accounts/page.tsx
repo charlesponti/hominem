@@ -32,10 +32,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useAllAccounts } from '~/lib/hooks/use-finance-data'
-import {
-  useRemovePlaidConnection,
-  useSyncPlaidItem,
-} from '~/lib/hooks/use-plaid'
+import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
 import { cn } from '~/lib/utils'
 
 interface PlaidConnection {
@@ -331,8 +328,8 @@ export default function AccountsPage() {
   const hasAccounts = allAccounts.length > 0
 
   // Separate manually added accounts from Plaid accounts
-  const manualAccounts = allAccounts.filter(account => !account.isPlaidConnected)
-  const plaidAccounts = allAccounts.filter(account => account.isPlaidConnected)
+  const manualAccounts = allAccounts.filter((account) => !account.isPlaidConnected)
+  const plaidAccounts = allAccounts.filter((account) => account.isPlaidConnected)
 
   const refreshData = async () => {
     await refetchAccounts()
@@ -417,15 +414,15 @@ export default function AccountsPage() {
             <h2 className="text-xl font-semibold">Your Accounts</h2>
             <Badge variant="secondary">{allAccounts.length} accounts</Badge>
           </div>
-          
+
           {/* Display all accounts in a unified grid */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {allAccounts.map((account) => {
               // For Plaid accounts, use PlaidAccountCard format
               if (account.isPlaidConnected) {
                 return (
-                  <PlaidAccountCard 
-                    key={account.id} 
+                  <PlaidAccountCard
+                    key={account.id}
                     account={{
                       id: account.id,
                       name: account.name,
@@ -437,7 +434,7 @@ export default function AccountsPage() {
                       plaidItemId: account.plaidItemId || '',
                       institutionName: account.institutionName || '',
                       institutionLogo: account.institutionLogo || null,
-                    }} 
+                    }}
                   />
                 )
               }
@@ -464,14 +461,18 @@ export default function AccountsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             {connections.map((connection) => (
-              <ConnectionCard 
-                key={connection.id} 
+              <ConnectionCard
+                key={connection.id}
                 connection={{
                   ...connection,
-                  status: connection.status as 'active' | 'error' | 'pending_expiration' | 'revoked',
+                  status: connection.status as
+                    | 'active'
+                    | 'error'
+                    | 'pending_expiration'
+                    | 'revoked',
                   lastSyncedAt: connection.lastSyncedAt?.toString() || null,
                   createdAt: connection.createdAt.toString(),
-                }} 
+                }}
               />
             ))}
           </div>

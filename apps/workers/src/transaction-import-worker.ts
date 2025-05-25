@@ -14,6 +14,7 @@ import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import { type Job, Worker } from 'bullmq'
 import { JOB_PROCESSING } from './config'
+import { HealthService } from './health.service'
 import { removeJobFromQueue } from './import-job.utils'
 import { JobStatusService } from './job-status.service'
 
@@ -31,6 +32,7 @@ interface JobProcessingOutput {
 export class TransactionImportWorker {
   private worker: Worker
   private isShuttingDown = false
+  private healthService: HealthService
 
   /**
    * Initialize the worker
@@ -45,16 +47,11 @@ export class TransactionImportWorker {
       // removeOnFail: { count: 5000 },    // Default is true (keep 5000)
     })
 
-    this.worker.on('ready', () => {
-      logger.info(
-        `Transaction Import Worker is connected to Redis and ready to process jobs from queue: ${QUEUE_NAMES.IMPORT_TRANSACTIONS} with concurrency ${CONCURRENCY}`
-      )
-    })
-
     this.setupEventHandlers()
     this.setupSignalHandlers()
 
-    logger.info('Transaction Importer: Initialized')
+    // Initialize health service
+    this.healthService = new HealthService(this.worker, 'Transaction Import Worker')
   }
 
   /**
@@ -268,27 +265,22 @@ export class TransactionImportWorker {
    */
   private setupEventHandlers() {
     this.worker.on('active', (job: Job<ImportTransactionsQueuePayload>) => {
-      logger.info(`Job ${job.id} (${job.data.fileName}) is now active (taken by worker)`)
+      logger.info(`Job ${job.id} (${job.data.fileName}) started processing`)
     })
 
     this.worker.on(
       'completed',
       async (job: Job<ImportTransactionsQueuePayload>, result: JobProcessingOutput | undefined) => {
-        logger.info(`Job ${job.id} 'completed' event: START`)
-
         if (this.isShuttingDown) {
-          logger.warn(
-            `Job ${job.id} 'completed' event: Worker is already shutting down, skipping further processing.`
-          )
+          logger.warn(`Job ${job.id}: Worker shutting down, skipping completion handling`)
           return
         }
 
-        logger.info(`Job ${job.id} completed successfully (reported by BullMQ)`)
+        logger.info(`Job ${job.id} completed successfully`)
 
         const finalStats =
           result?.stats || (job.returnvalue as JobProcessingOutput | undefined)?.stats || {}
 
-        logger.info(`Job ${job.id} 'completed' event: Publishing to Redis...`)
         try {
           await redis.publish(
             REDIS_CHANNELS.IMPORT_PROGRESS,
@@ -308,15 +300,9 @@ export class TransactionImportWorker {
               },
             ])
           )
-          logger.info(`Job ${job.id} 'completed' event: Successfully published to Redis.`)
         } catch (publishError) {
-          logger.error(
-            `Job ${job.id} 'completed' event: Error publishing completion to Redis:`,
-            publishError
-          )
-          // Optionally, decide if this error should trigger a shutdown or be handled differently
+          logger.error(`Job ${job.id}: Error publishing completion to Redis:`, publishError)
         }
-        logger.info(`Job ${job.id} 'completed' event: END`)
       }
     )
 
@@ -426,19 +412,4 @@ export class TransactionImportWorker {
 }
 
 // Bootstrap the worker
-logger.info('Starting transaction import worker...')
 const worker = new TransactionImportWorker()
-
-let hasLogged = false
-setInterval(async () => {
-  try {
-    await redis.ping()
-
-    if (!hasLogged) {
-      logger.info('Transaction import worker: Active')
-      hasLogged = true
-    }
-  } catch (error) {
-    logger.error('Transaction import worker: Health check failed', error)
-  }
-}, 30000)

@@ -160,6 +160,8 @@ export async function plaidRoutes(fastify: FastifyInstance) {
               type: 'exponential',
               delay: 5000,
             },
+            removeOnComplete: true,
+            removeOnFail: 1000, // Keep the last 1000 failed jobs
           }
         )
 
@@ -220,6 +222,8 @@ export async function plaidRoutes(fastify: FastifyInstance) {
               type: 'exponential',
               delay: 5000,
             },
+            removeOnComplete: true,
+            removeOnFail: 1000, // Keep the last 1000 failed jobs
           }
         )
 

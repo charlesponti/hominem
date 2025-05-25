@@ -7,6 +7,7 @@ import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import { type Job, Worker } from 'bullmq'
+import { HealthService } from './health.service'
 import { processSyncJob } from './plaid-sync.processor'
 
 // Configuration
@@ -18,6 +19,7 @@ const CONCURRENCY = 3
 export class PlaidSyncWorker {
   private worker: Worker
   private isShuttingDown = false
+  private healthService: HealthService
 
   /**
    * Initialize the worker
@@ -28,12 +30,15 @@ export class PlaidSyncWorker {
     this.worker = new Worker(QUEUE_NAMES.PLAID_SYNC, this.processJob, {
       connection: redis,
       concurrency: CONCURRENCY,
+      lockDuration: 1000 * 60 * 10, // 10 minutes: time a job can run before considered stalled
+      stalledInterval: 1000 * 60 * 5, // Check for stalled jobs every 5 minutes
     })
 
     this.setupEventHandlers()
     this.setupSignalHandlers()
 
-    logger.info(`Plaid Sync Worker initialized with queue name: ${QUEUE_NAMES.PLAID_SYNC}`)
+    // Initialize health service
+    this.healthService = new HealthService(this.worker, 'Plaid Sync Worker')
   }
 
   /**
@@ -66,8 +71,8 @@ export class PlaidSyncWorker {
       logger.error('Plaid sync worker error:', error)
     })
 
-    this.worker.on('progress', (job, progress) => {
-      logger.debug(`Plaid sync job ${job.id} progress: ${progress}%`)
+    this.worker.on('stalled', (jobId) => {
+      logger.warn(`Plaid sync job ${jobId} stalled`)
     })
   }
 
@@ -118,20 +123,4 @@ export class PlaidSyncWorker {
 }
 
 // Bootstrap the worker
-logger.info('Starting Plaid sync worker...')
 const worker = new PlaidSyncWorker()
-
-let hasLogged = false
-// Add a health check timer to periodically check job status
-setInterval(async () => {
-  try {
-    // Check if Redis connection is alive
-    await redis.ping()
-    if (!hasLogged) {
-      logger.info('Plaid sync worker: Active')
-      hasLogged = true
-    }
-  } catch (error) {
-    logger.error('Plaid sync worker: Health check failed', error)
-  }
-}, 30000) // Check every 30 seconds

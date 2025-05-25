@@ -6,7 +6,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   // Plaid API keys
   PLAID_CLIENT_ID: z.string().default(''),
-  PLAID_SECRET: z.string().default(''),
+  PLAID_API_KEY: z.string().default(''),
   PLAID_ENV: z.enum(['sandbox', 'development', 'production']).default('sandbox'),
 })
 
