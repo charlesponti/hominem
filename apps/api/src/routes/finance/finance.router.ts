@@ -85,8 +85,8 @@ export async function financeRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/import',
     {
-      // Increase file size limit to 5MB to account for CSV files
-      bodyLimit: 5 * 1024 * 1024,
+      // Increase file size limit to 10MB to account for CSV files
+      bodyLimit: 10 * 1024 * 1024,
       preHandler: [verifyAuth, rateLimitImport],
     },
     async (request, reply) => {

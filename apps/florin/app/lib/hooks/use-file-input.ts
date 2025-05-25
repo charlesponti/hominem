@@ -14,6 +14,10 @@ export function useFileInput() {
     })
   }, [])
 
+  const removeFile = useCallback((fileName: string) => {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName))
+  }, [])
+
   const resetFiles = useCallback(() => {
     setFiles([])
   }, [])
@@ -21,6 +25,7 @@ export function useFileInput() {
   return {
     files,
     handleFileChange,
+    removeFile,
     resetFiles,
   }
 }

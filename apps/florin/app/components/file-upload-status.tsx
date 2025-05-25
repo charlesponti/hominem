@@ -21,11 +21,7 @@ export function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }
             {progress !== undefined ? `${Math.round(progress)}%` : ''}
           </span>
         </div>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-        >
+        <div className="w-full">
           {typeof progress === 'number' ? (
             <ProgressBar
               progress={progress}
@@ -40,7 +36,7 @@ export function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }
               <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-progress-indeterminate" />
             </div>
           )}
-        </motion.div>
+        </div>
       </output>
     )
   }
@@ -51,16 +47,12 @@ export function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-sm text-gray-500 font-medium">Queue position</span>
         </div>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-        >
+        <div className="w-full">
           <ProgressBar
             progress={0}
             className="h-2 bg-amber-100 before:bg-gradient-to-r before:from-amber-500 before:to-orange-500"
           />
-        </motion.div>
+        </div>
       </output>
     )
   }
@@ -68,21 +60,17 @@ export function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }
   if (status === 'done') {
     return (
       <output className="space-y-3">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-        >
+        <div className="w-full">
           <ProgressBar
             progress={100}
             className="h-2 bg-green-100 before:bg-gradient-to-r before:from-green-500 before:to-emerald-500"
           />
-        </motion.div>
+        </div>
         {stats && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
           >
             <ProcessingStats stats={stats} />
           </motion.div>
@@ -94,14 +82,10 @@ export function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }
   if (status === 'error') {
     return (
       <output className="mt-2" role="alert">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex items-start gap-2 p-3 rounded-md bg-red-50 text-red-700"
-        >
+        <div className="flex items-start gap-2 p-3 rounded-md bg-red-50 text-red-700">
           <XIcon className="w-5 h-5 mt-0.5 flex-shrink-0" aria-hidden="true" />
           <span className="text-sm">{error}</span>
-        </motion.div>
+        </div>
       </output>
     )
   }

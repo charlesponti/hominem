@@ -32,6 +32,9 @@ export class PlaidSyncWorker {
       concurrency: CONCURRENCY,
       lockDuration: 1000 * 60 * 10, // 10 minutes: time a job can run before considered stalled
       stalledInterval: 1000 * 60 * 5, // Check for stalled jobs every 5 minutes
+      // Auto-cleanup completed and failed jobs to prevent Redis memory bloat
+      removeOnComplete: { count: 100 },
+      removeOnFail: { count: 50 },
     })
 
     this.setupEventHandlers()
@@ -60,18 +63,33 @@ export class PlaidSyncWorker {
    */
   private setupEventHandlers() {
     this.worker.on('completed', (job) => {
+      if (this.isShuttingDown) {
+        logger.warn(`Plaid sync job ${job.id}: Worker shutting down, skipping completion handling`)
+        return
+      }
       logger.info(`Plaid sync job ${job.id} completed successfully`)
     })
 
     this.worker.on('failed', (job, error) => {
+      if (this.isShuttingDown) {
+        logger.warn(`Plaid sync job ${job?.id}: Worker shutting down, skipping failure handling`)
+        return
+      }
       logger.error(`Plaid sync job ${job?.id} failed:`, error)
     })
 
     this.worker.on('error', (error) => {
+      if (this.isShuttingDown) {
+        logger.warn('Plaid sync worker: Ignoring error during shutdown')
+        return
+      }
       logger.error('Plaid sync worker error:', error)
     })
 
     this.worker.on('stalled', (jobId) => {
+      if (this.isShuttingDown) {
+        return
+      }
       logger.warn(`Plaid sync job ${jobId} stalled`)
     })
   }
@@ -108,17 +126,8 @@ export class PlaidSyncWorker {
       await this.handleGracefulShutdown()
     })
 
-    // Handle uncaught exceptions
-    process.on('uncaughtException', async (error) => {
-      logger.error('Plaid sync worker uncaught exception:', error)
-      await this.handleGracefulShutdown()
-    })
-
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', async (reason) => {
-      logger.error('Plaid sync worker unhandled promise rejection:', reason)
-      await this.handleGracefulShutdown()
-    })
+    // Note: Removed uncaughtException and unhandledRejection handlers
+    // These are now handled by the main process in index.ts to avoid conflicts
   }
 }
 

@@ -237,30 +237,29 @@ describe('Plaid Router', () => {
       const { db } = await import('@hominem/utils/db')
 
       const mockPlaidItem = createTestData.plaidItem()
-      const mockLinkedAccounts = [
-        createTestData.financeAccount({ plaidItemId: mockPlaidItem.id }),
-      ]
+      const mockLinkedAccounts = [createTestData.financeAccount({ plaidItemId: mockPlaidItem.id })]
 
       vi.mocked(db.query.plaidItems.findFirst).mockResolvedValue(mockPlaidItem)
       vi.mocked(db.query.financeAccounts.findMany).mockResolvedValue(mockLinkedAccounts)
       vi.mocked(db.query.plaidItems.findMany).mockResolvedValue([])
-      
+
       // Mock plaidClient.itemRemove to throw ITEM_NOT_FOUND error
       const plaidError = {
         response: {
           data: {
             error_code: 'ITEM_NOT_FOUND',
-            error_message: 'The Item you requested cannot be found. This Item does not exist, has been previously removed via /item/remove, or has had access removed by the user.',
+            error_message:
+              'The Item you requested cannot be found. This Item does not exist, has been previously removed via /item/remove, or has had access removed by the user.',
             error_type: 'ITEM_ERROR',
             display_message: null,
             documentation_url: 'https://plaid.com/docs/?ref=error#item-errors',
             request_id: 'D6aPZs72ZYk0HHK',
-            suggested_action: null
-          }
-        }
+            suggested_action: null,
+          },
+        },
       }
       vi.mocked(plaidClient.itemRemove).mockRejectedValue(plaidError)
-      
+
       vi.mocked(db.delete).mockReturnValue({
         where: vi.fn().mockResolvedValue({ rowCount: 1 }),
       } as never)

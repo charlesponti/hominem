@@ -279,16 +279,18 @@ export async function plaidRoutes(fastify: FastifyInstance) {
           fastify.log.info(`Successfully removed Plaid item ${itemId} from Plaid`)
         } catch (plaidError: unknown) {
           // Check if this is an expected "item not found" error
-          const isPlaidError = plaidError && typeof plaidError === 'object' && 'response' in plaidError
-          const errorCode = isPlaidError && 
-            typeof plaidError.response === 'object' && 
-            plaidError.response && 
+          const isPlaidError =
+            plaidError && typeof plaidError === 'object' && 'response' in plaidError
+          const errorCode =
+            isPlaidError &&
+            typeof plaidError.response === 'object' &&
+            plaidError.response &&
             'data' in plaidError.response &&
             typeof plaidError.response.data === 'object' &&
             plaidError.response.data &&
             'error_code' in plaidError.response.data
-            ? plaidError.response.data.error_code
-            : null
+              ? plaidError.response.data.error_code
+              : null
 
           if (errorCode === 'ITEM_NOT_FOUND') {
             fastify.log.info(

@@ -29,7 +29,7 @@ export default function CategoriesAnalyticsPage() {
   if (error) return <div className="p-4 text-center text-red-600">Error loading data</div>
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container">
       <h1 className="text-2xl font-bold mb-4">Categories Breakdown</h1>
       <div className="mb-4 flex items-center gap-2">
         <label htmlFor="account-select" className="font-medium">

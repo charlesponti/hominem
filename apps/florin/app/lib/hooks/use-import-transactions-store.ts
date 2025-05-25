@@ -194,10 +194,17 @@ export function useImportTransactionsStore() {
     }
   }, [isConnected, sendMessage, subscribe, updateImportProgress])
 
+  // Function to remove a file status (for cleanup when user removes files)
+  const removeFileStatus = useCallback((fileName: string) => {
+    setStatuses((prev) => prev.filter((status) => status.file.name !== fileName))
+  }, [])
+
   return {
     isConnected,
     statuses,
     startImport: importMutation.mutateAsync,
+    startSingleFile: (file: File) => importMutation.mutateAsync([file]),
+    removeFileStatus,
     activeJobIds,
     isImporting: importMutation.isLoading,
     isError: importMutation.isError || !!error,

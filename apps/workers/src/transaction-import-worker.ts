@@ -42,9 +42,9 @@ export class TransactionImportWorker {
     this.worker = new Worker(QUEUE_NAMES.IMPORT_TRANSACTIONS, this.processJob, {
       connection: redis,
       concurrency: CONCURRENCY,
-      // Ensure removeOnComplete and removeOnFail are not set to 0, or jobs might get stuck
-      // removeOnComplete: { count: 1000 }, // Default is true (keep 1000)
-      // removeOnFail: { count: 5000 },    // Default is true (keep 5000)
+      // Auto-cleanup completed and failed jobs to prevent Redis memory bloat
+      removeOnComplete: { count: 2 },
+      removeOnFail: { count: 5 },
     })
 
     this.setupEventHandlers()
@@ -282,6 +282,18 @@ export class TransactionImportWorker {
           result?.stats || (job.returnvalue as JobProcessingOutput | undefined)?.stats || {}
 
         try {
+          // Mark job as done in our custom job status system
+          if (job.id) {
+            await JobStatusService.markJobDone(job.id as string, {
+              progress: 100,
+              processingTime: job.processedOn
+                ? Date.now() - job.processedOn
+                : result?.stats?.processingTime || 0,
+              ...finalStats,
+            })
+          }
+
+          // Publish completion status
           await redis.publish(
             REDIS_CHANNELS.IMPORT_PROGRESS,
             JSON.stringify([
@@ -301,7 +313,8 @@ export class TransactionImportWorker {
             ])
           )
         } catch (publishError) {
-          logger.error(`Job ${job.id}: Error publishing completion to Redis:`, publishError)
+          logger.error(`Job ${job.id}: Error in completion handler:`, publishError)
+          // Don't rethrow the error to prevent uncaught exceptions
         }
       }
     )
@@ -309,6 +322,11 @@ export class TransactionImportWorker {
     this.worker.on(
       'failed',
       (job: Job<ImportTransactionsQueuePayload> | undefined, error: Error) => {
+        if (this.isShuttingDown) {
+          logger.warn(`Job ${job?.id}: Worker shutting down, skipping failure handling`)
+          return
+        }
+
         logger.error(`Job ${job?.id} failed:`, error)
 
         if (job) {
@@ -325,8 +343,9 @@ export class TransactionImportWorker {
                 },
               ])
             )
-            .catch((err) => {
-              logger.error(`Error publishing failure for job ${job.id}:`, err)
+            .catch((publishError) => {
+              logger.error(`Error publishing failure for job ${job.id}:`, publishError)
+              // Don't rethrow to prevent uncaught exceptions
             })
         }
       }
@@ -339,6 +358,10 @@ export class TransactionImportWorker {
     this.worker.on(
       'progress',
       (job: Job<ImportTransactionsQueuePayload>, progress: number | object) => {
+        if (this.isShuttingDown) {
+          return // Skip progress reporting during shutdown
+        }
+
         logger.debug(
           `Job ${job.id} progress: ${typeof progress === 'number' ? `${progress}%` : JSON.stringify(progress)}`
         )
@@ -363,6 +386,7 @@ export class TransactionImportWorker {
           )
           .catch((err) => {
             logger.error(`Error publishing progress for job ${job.id}:`, err)
+            // Don't rethrow to prevent uncaught exceptions
           })
       }
     )
@@ -399,15 +423,8 @@ export class TransactionImportWorker {
       await this.handleGracefulShutdown()
     })
 
-    process.on('uncaughtException', async (error) => {
-      logger.error('Transaction import worker uncaught exception:', error)
-      await this.handleGracefulShutdown()
-    })
-
-    process.on('unhandledRejection', async (reason) => {
-      logger.error('Transaction import worker unhandled promise rejection:', reason)
-      await this.handleGracefulShutdown()
-    })
+    // Note: Removed uncaughtException and unhandledRejection handlers
+    // These are now handled by the main process in index.ts to avoid conflicts
   }
 }
 
