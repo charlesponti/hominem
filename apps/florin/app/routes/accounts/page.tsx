@@ -13,6 +13,10 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
+import {
+  AccountConnectionStatus,
+  AccountConnectionSummary,
+} from '~/components/accounts/account-connection-status'
 import { AccountCard } from '~/components/finance/account-card'
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -409,18 +413,42 @@ export default function AccountsPage() {
 
       {/* Unified Accounts Section */}
       {hasAccounts && (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Account Connection Summary */}
+          <AccountConnectionSummary accounts={allAccounts} />
+
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Your Accounts</h2>
             <Badge variant="secondary">{allAccounts.length} accounts</Badge>
           </div>
 
-          {/* Display all accounts in a unified grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {allAccounts.map((account) => {
-              // For Plaid accounts, use PlaidAccountCard format
-              if (account.isPlaidConnected) {
-                return (
+          {/* Manual Accounts Section */}
+          {manualAccounts.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Imported Accounts</h3>
+                <Badge variant="outline">{manualAccounts.length} accounts</Badge>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {manualAccounts.map((account) => (
+                  <div key={account.id} className="space-y-2">
+                    <AccountCard account={account} recentTransactions={account.transactions} />
+                    <AccountConnectionStatus account={account} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Plaid Connected Accounts Section */}
+          {plaidAccounts.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Connected Accounts</h3>
+                <Badge variant="outline">{plaidAccounts.length} accounts</Badge>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {plaidAccounts.map((account) => (
                   <PlaidAccountCard
                     key={account.id}
                     account={{
@@ -436,18 +464,10 @@ export default function AccountsPage() {
                       institutionLogo: account.institutionLogo || null,
                     }}
                   />
-                )
-              }
-              // For manual accounts, use AccountCard format
-              return (
-                <AccountCard
-                  key={account.id}
-                  account={account}
-                  recentTransactions={account.transactions}
-                />
-              )
-            })}
-          </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

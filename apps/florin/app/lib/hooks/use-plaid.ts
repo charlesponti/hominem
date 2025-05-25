@@ -57,6 +57,30 @@ interface SyncJobResponse {
   message: string
 }
 
+interface FinanceAccountResponse {
+  id: string
+  name: string
+  type: string
+  balance: string
+  institutionId: string | null
+  plaidItemId: string | null
+  createdAt: string
+  updatedAt: string
+  userId: string
+}
+
+interface LinkAccountResponse {
+  success: boolean
+  message: string
+  account: FinanceAccountResponse
+}
+
+interface UnlinkAccountResponse {
+  success: boolean
+  message: string
+  account: FinanceAccountResponse
+}
+
 /**
  * Hook for creating a Plaid link token
  */
@@ -322,5 +346,94 @@ export function useRemovePlaidConnection() {
     isError: removeConnection.isError,
     error: removeConnection.error || error,
     data: removeConnection.data,
+  }
+}
+
+/**
+ * Hook for linking an account to a Plaid institution
+ */
+export function useLinkAccountToInstitution() {
+  const queryClient = useQueryClient()
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
+
+  const linkAccount = useMutation({
+    mutationFn: async ({
+      accountId,
+      institutionId,
+      plaidItemId,
+    }: {
+      accountId: string
+      institutionId: string
+      plaidItemId?: string
+    }): Promise<LinkAccountResponse> => {
+      try {
+        const response = await apiClient.post<
+          { institutionId: string; plaidItemId?: string },
+          LinkAccountResponse
+        >(`/api/finance/accounts/${accountId}/link-institution`, {
+          institutionId,
+          plaidItemId,
+        })
+        return response
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to link account'))
+        throw err
+      }
+    },
+    onSuccess: () => {
+      // Invalidate related queries to refresh account data
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] })
+      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY })
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY })
+      setError(null)
+    },
+  })
+
+  return {
+    linkAccount,
+    isLoading: linkAccount.isLoading,
+    isError: linkAccount.isError,
+    error: linkAccount.error || error,
+    data: linkAccount.data,
+  }
+}
+
+/**
+ * Hook for unlinking an account from its institution
+ */
+export function useUnlinkAccountFromInstitution() {
+  const queryClient = useQueryClient()
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
+
+  const unlinkAccount = useMutation({
+    mutationFn: async (accountId: string): Promise<UnlinkAccountResponse> => {
+      try {
+        const response = await apiClient.post<Record<string, never>, UnlinkAccountResponse>(
+          `/api/finance/accounts/${accountId}/unlink-institution`,
+          {}
+        )
+        return response
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to unlink account'))
+        throw err
+      }
+    },
+    onSuccess: () => {
+      // Invalidate related queries to refresh account data
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] })
+      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY })
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY })
+      setError(null)
+    },
+  })
+
+  return {
+    unlinkAccount,
+    isLoading: unlinkAccount.isLoading,
+    isError: unlinkAccount.isError,
+    error: unlinkAccount.error || error,
+    data: unlinkAccount.data,
   }
 }

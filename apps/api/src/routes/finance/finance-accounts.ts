@@ -175,6 +175,106 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // Link an account to a Plaid institution
+  fastify.post('/:id/link-institution', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const { userId } = request
+      if (!userId) {
+        reply.code(401)
+        return { error: 'Not authorized' }
+      }
+
+      const { id } = request.params as { id: string }
+      const linkSchema = z.object({
+        institutionId: z.string().min(1, 'Institution ID is required'),
+        plaidItemId: z.string().optional(),
+      })
+
+      const validated = linkSchema.parse(request.body)
+
+      // Ensure account exists and belongs to user
+      const existingAccount = await FinancialAccountService.getAccountById(id, userId)
+      if (!existingAccount) {
+        reply.code(404)
+        return { error: 'Account not found' }
+      }
+
+      // Verify institution exists
+      const institution = await db.query.financialInstitutions.findFirst({
+        where: eq(financialInstitutions.id, validated.institutionId),
+      })
+
+      if (!institution) {
+        reply.code(404)
+        return { error: 'Institution not found' }
+      }
+
+      // If plaidItemId provided, verify it exists and belongs to user
+      if (validated.plaidItemId) {
+        const plaidItem = await db.query.plaidItems.findFirst({
+          where: and(
+            eq(plaidItems.id, validated.plaidItemId),
+            eq(plaidItems.userId, userId),
+            eq(plaidItems.institutionId, validated.institutionId)
+          ),
+        })
+
+        if (!plaidItem) {
+          reply.code(404)
+          return { error: 'Plaid item not found or does not belong to specified institution' }
+        }
+      }
+
+      // Update account to link with institution
+      const updatedAccount = await FinancialAccountService.updateAccount(id, userId, {
+        institutionId: validated.institutionId,
+        plaidItemId: validated.plaidItemId || null,
+      })
+
+      return {
+        success: true,
+        message: 'Account successfully linked to institution',
+        account: updatedAccount,
+      }
+    } catch (error) {
+      return handleError(error as Error, reply)
+    }
+  })
+
+  // Unlink an account from its institution
+  fastify.post('/:id/unlink-institution', { preHandler: verifyAuth }, async (request, reply) => {
+    try {
+      const { userId } = request
+      if (!userId) {
+        reply.code(401)
+        return { error: 'Not authorized' }
+      }
+
+      const { id } = request.params as { id: string }
+
+      // Ensure account exists and belongs to user
+      const existingAccount = await FinancialAccountService.getAccountById(id, userId)
+      if (!existingAccount) {
+        reply.code(404)
+        return { error: 'Account not found' }
+      }
+
+      // Update account to unlink from institution
+      const updatedAccount = await FinancialAccountService.updateAccount(id, userId, {
+        institutionId: null,
+        plaidItemId: null,
+      })
+
+      return {
+        success: true,
+        message: 'Account successfully unlinked from institution',
+        account: updatedAccount,
+      }
+    } catch (error) {
+      return handleError(error as Error, reply)
+    }
+  })
+
   // Get all accounts with comprehensive data (unified endpoint)
   fastify.get('/all', { preHandler: verifyAuth }, async (request, reply) => {
     try {

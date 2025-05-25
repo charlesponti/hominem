@@ -7,6 +7,7 @@ import {
   budgetCategories,
   budgetGoals,
   financeAccounts,
+  financialInstitutions,
   insertTransactionSchema,
   plaidItems,
   transactions,
@@ -30,6 +31,44 @@ export async function financeRoutes(fastify: FastifyInstance) {
   await fastify.register(financeAnalyzeRoutes, { prefix: '/analyze' })
   await fastify.register(financeExportRoutes, { prefix: '/export' })
   await fastify.register(budgetRoutes, { prefix: '/budget' })
+
+  // Get all financial institutions
+  fastify.get(
+    '/institutions',
+    {
+      preHandler: [verifyAuth],
+      schema: {
+        tags: ['Finance'],
+        summary: 'Get all financial institutions',
+        response: {
+          200: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                logo: { type: 'string', nullable: true },
+                createdAt: { type: 'string' },
+                updatedAt: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        const institutions = await db.query.financialInstitutions.findMany({
+          orderBy: [financialInstitutions.name],
+        })
+
+        return institutions
+      } catch (error) {
+        return handleError(error as Error, reply)
+      }
+    }
+  )
 
   const ImportTransactionsSchema = z.object({
     // Base64 encoded from client
