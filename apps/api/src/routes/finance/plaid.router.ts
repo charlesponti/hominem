@@ -1,7 +1,12 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/utils/db'
-import { financialInstitutions, plaidItems } from '@hominem/utils/schema'
-import { and, eq } from 'drizzle-orm'
+import {
+  financeAccounts,
+  financialInstitutions,
+  plaidItems,
+  transactions,
+} from '@hominem/utils/schema'
+import { and, eq, inArray, ne } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
@@ -258,27 +263,113 @@ export async function plaidRoutes(fastify: FastifyInstance) {
       try {
         // Verify the Plaid item belongs to the user
         const plaidItem = await db.query.plaidItems.findFirst({
-          where: and(eq(plaidItems.userId, userId), eq(plaidItems.id, itemId)),
+          where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
         })
 
         if (!plaidItem) {
           return reply.code(404).send({ error: 'Plaid item not found' })
         }
 
-        // Remove the item from Plaid
-        await plaidClient.itemRemove({
-          access_token: plaidItem.accessToken,
+        // Attempt to remove the item from Plaid
+        // If the item is already removed, we'll catch the error and continue with cleanup
+        try {
+          await plaidClient.itemRemove({
+            access_token: plaidItem.accessToken,
+          })
+          fastify.log.info(`Successfully removed Plaid item ${itemId} from Plaid`)
+        } catch (plaidError: unknown) {
+          // Check if this is an expected "item not found" error
+          const isPlaidError = plaidError && typeof plaidError === 'object' && 'response' in plaidError
+          const errorCode = isPlaidError && 
+            typeof plaidError.response === 'object' && 
+            plaidError.response && 
+            'data' in plaidError.response &&
+            typeof plaidError.response.data === 'object' &&
+            plaidError.response.data &&
+            'error_code' in plaidError.response.data
+            ? plaidError.response.data.error_code
+            : null
+
+          if (errorCode === 'ITEM_NOT_FOUND') {
+            fastify.log.info(
+              `Plaid item ${itemId} was already removed from Plaid, proceeding with database cleanup`
+            )
+          } else {
+            // Re-throw unexpected errors
+            fastify.log.error(`Unexpected error removing Plaid item: ${plaidError}`)
+            throw plaidError
+          }
+        }
+
+        // Comprehensive cleanup: Remove all related data
+
+        // 1. Get all finance accounts linked to this Plaid item
+        const linkedAccounts = await db.query.financeAccounts.findMany({
+          where: eq(financeAccounts.plaidItemId, plaidItem.id),
         })
 
-        // Delete the item from database
-        await db.delete(plaidItems).where(eq(plaidItems.id, itemId))
+        const accountIds = linkedAccounts.map((account) => account.id)
 
-        // Note: We're not deleting transactions or accounts here to preserve history
-        // The accounts will be marked as inactive or potentially flagged as disconnected
+        // 2. Delete all transactions for these accounts
+        if (accountIds.length > 0) {
+          await db
+            .delete(transactions)
+            .where(
+              and(eq(transactions.userId, userId), inArray(transactions.accountId, accountIds))
+            )
+
+          fastify.log.info(
+            `Deleted transactions for ${accountIds.length} accounts linked to Plaid item ${itemId}`
+          )
+        }
+
+        // 3. Delete the finance accounts linked to this Plaid item
+        if (linkedAccounts.length > 0) {
+          await db.delete(financeAccounts).where(eq(financeAccounts.plaidItemId, plaidItem.id))
+
+          fastify.log.info(
+            `Deleted ${linkedAccounts.length} finance accounts linked to Plaid item ${itemId}`
+          )
+        }
+
+        // 4. Check if we should delete the financial institution
+        // Only delete if no other Plaid items reference it
+        const otherItemsForInstitution = await db.query.plaidItems.findMany({
+          where: and(
+            eq(plaidItems.institutionId, plaidItem.institutionId),
+            // Exclude the current item we're about to delete
+            ne(plaidItems.id, plaidItem.id)
+          ),
+        })
+
+        const shouldDeleteInstitution = otherItemsForInstitution.length === 0
+
+        // 5. Delete the Plaid item from database
+        await db.delete(plaidItems).where(eq(plaidItems.itemId, itemId))
+
+        // 6. Delete the financial institution if no other items reference it
+        if (shouldDeleteInstitution) {
+          await db
+            .delete(financialInstitutions)
+            .where(eq(financialInstitutions.id, plaidItem.institutionId))
+
+          fastify.log.info(
+            `Deleted financial institution ${plaidItem.institutionId} as no other items reference it`
+          )
+        }
+
+        fastify.log.info(
+          `Successfully removed Plaid connection and all related data for user ${userId}, item ${itemId}`
+        )
 
         return {
           success: true,
-          message: 'Connection removed successfully',
+          message: 'Connection and all related data removed successfully',
+          deletedData: {
+            accounts: linkedAccounts.length,
+            transactions: accountIds.length > 0 ? 'All transactions for linked accounts' : 0,
+            institution: shouldDeleteInstitution ? 1 : 0,
+          },
         }
       } catch (error) {
         fastify.log.error(`Failed to remove connection: ${error}`)

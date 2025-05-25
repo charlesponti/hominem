@@ -170,15 +170,9 @@ function ConnectionCard({ connection }: { connection: PlaidConnection }) {
           </Alert>
         )}
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Last Synced</p>
-            <p className="font-medium">{formatDate(connection.lastSyncedAt)}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Item ID</p>
-            <p className="font-mono text-xs bg-muted px-2 py-1 rounded">{connection.itemId}</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-sm">
+          <p className="text-muted-foreground">Last Synced</p>
+          <p className="font-medium">{formatDate(connection.lastSyncedAt)}</p>
         </div>
 
         <div className="flex gap-2 pt-2">
