@@ -1,7 +1,7 @@
 'use client'
 
 import { Search as SearchIcon } from 'lucide-react'
-import { forwardRef, useCallback, useEffect, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
 import { Input } from './input'
 
 interface SearchInputProps {
@@ -28,6 +28,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     const [inputValue, setInputValue] = useState(value)
     const [debouncedValue, setDebouncedValue] = useState(value)
     const [isDebouncing, setIsDebouncing] = useState(false)
+    const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null) // To store timer ID
 
     // Effect 1: Sync external 'value' prop changes to internal state
     useEffect(() => {
@@ -36,41 +37,57 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       setInputValue(value)
       setDebouncedValue(value)
       // Since this is an external update, it's not a "debouncing" state.
+      // If a debounce was in progress, this external change supersedes it.
+      if (timerIdRef.current) {
+        clearTimeout(timerIdRef.current)
+        timerIdRef.current = null
+      }
       setIsDebouncing(false)
     }, [value]) // Only depends on the external 'value' prop
 
-    // Effect 2: Debounce 'inputValue' (typically from user typing)
+    // Effect 2: Debounce 'inputValue' (typically from user typing) and notify parent
     useEffect(() => {
       // If inputValue is already the same as debouncedValue, it means:
-      // a) They were just synced by the effect above (due to prop change).
+      // a) They were just synced by Effect 1 (due to prop change).
       // b) A previous debounce for this inputValue just completed.
       // In either case, no new debounce timer is needed for the current inputValue.
       if (inputValue === debouncedValue) {
+        // If we were debouncing but now they match (e.g. prop sync or debounce completed), ensure spinner is off.
+        // This check is mostly for safety; setIsDebouncing(false) should be handled by Effect 1 or the timer callback.
+        if (isDebouncing) {
+          setIsDebouncing(false)
+        }
         return
       }
 
-      // inputValue has changed (likely by user) and is different from debouncedValue.
-      // Start debouncing.
-      setIsDebouncing(true)
+      // inputValue is different from debouncedValue, so a new debounce cycle is needed.
+      // Clear any existing timer because inputValue has changed again.
+      if (timerIdRef.current) {
+        clearTimeout(timerIdRef.current)
+      }
 
-      const timer = setTimeout(() => {
-        setDebouncedValue(inputValue) // Propagate the debounced value
-        setIsDebouncing(false)      // Debouncing finished for this value
+      setIsDebouncing(true) // Indicate that debouncing has started
+
+      timerIdRef.current = setTimeout(() => {
+        setDebouncedValue(inputValue) // Update the internal debouncedValue state
+        setIsDebouncing(false) // Debouncing finished
+
+        // Notify parent if this new debounced value is different from the current 'value' prop
+        if (inputValue !== value) {
+          onSearchChange(inputValue)
+        }
+        timerIdRef.current = null // Clear ref after execution
       }, debounceMs)
 
+      // Cleanup function: clear the timer if the component unmounts or dependencies change
       return () => {
-        clearTimeout(timer) // Clean up timer if inputValue changes again or component unmounts
+        if (timerIdRef.current) {
+          clearTimeout(timerIdRef.current)
+          timerIdRef.current = null
+        }
       }
-    }, [inputValue, debouncedValue, debounceMs]) // Dependencies for debouncing logic
-
-    // Effect 3: Notify parent of actual changes to debouncedValue
-    useEffect(() => {
-      // Only notify the parent if the debouncedValue is different from the current 'value' prop.
-      // This prevents redundant calls if the parent's state is already in sync.
-      if (debouncedValue !== value) {
-        onSearchChange(debouncedValue)
-      }
-    }, [debouncedValue, onSearchChange, value]) // Ensure all dependencies are listed
+      // Dependencies for debouncing and notification logic
+    }, [inputValue, debouncedValue, value, debounceMs, onSearchChange, isDebouncing])
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       setInputValue(e.target.value)
@@ -87,7 +104,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           ref={ref}
           placeholder={placeholder}
           className="pl-8"
-          value={inputValue} // Controlled by internal inputValue
+          value={inputValue}
           onChange={handleInputChange}
           disabled={disabled}
         />
