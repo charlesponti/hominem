@@ -1,12 +1,7 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/utils/db'
-import {
-  financeAccounts,
-  financialInstitutions,
-  plaidItems,
-  transactions,
-} from '@hominem/utils/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import { financialInstitutions, plaidItems } from '@hominem/utils/schema'
+import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
@@ -234,124 +229,6 @@ export async function plaidRoutes(fastify: FastifyInstance) {
         }
       } catch (error) {
         fastify.log.error(`Failed to trigger sync: ${error}`)
-        return handleError(error as Error, reply)
-      }
-    }
-  )
-
-  // Get connected institutions
-  fastify.get(
-    '/connections',
-    {
-      preHandler: [verifyAuth, rateLimit],
-    },
-    async (request, reply) => {
-      const { userId } = request
-      if (!userId) {
-        return reply.code(401).send({ error: 'Not authorized' })
-      }
-
-      try {
-        // Get all Plaid items for the user with institution info
-        const plaidItemsWithInstitutions = await db.query.plaidItems.findMany({
-          where: eq(plaidItems.userId, userId),
-          with: {
-            institution: true,
-          },
-        })
-
-        return {
-          connections: plaidItemsWithInstitutions.map((item) => ({
-            id: item.id,
-            itemId: item.itemId,
-            institutionId: item.institutionId,
-            institutionName: item.institution.name,
-            status: item.status,
-            lastSyncedAt: item.lastSyncedAt,
-            error: item.error,
-          })),
-        }
-      } catch (error) {
-        fastify.log.error(`Failed to get connections: ${error}`)
-        return handleError(error as Error, reply)
-      }
-    }
-  )
-
-  // Get connected accounts for the user
-  fastify.get(
-    '/accounts',
-    {
-      preHandler: [verifyAuth, rateLimit],
-    },
-    async (request, reply) => {
-      const { userId } = request
-      if (!userId) {
-        return reply.code(401).send({ error: 'Not authorized' })
-      }
-
-      try {
-        const accounts = await db
-          .select({
-            id: financeAccounts.id,
-            name: financeAccounts.name,
-            type: financeAccounts.type,
-            balance: financeAccounts.balance,
-            mask: financeAccounts.mask,
-            subtype: financeAccounts.subtype,
-            institutionId: financeAccounts.institutionId,
-            plaidItemId: financeAccounts.plaidItemId,
-            institutionName: financialInstitutions.name,
-            institutionLogo: financialInstitutions.logo,
-          })
-          .from(financeAccounts)
-          .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
-          .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-          .where(eq(financeAccounts.userId, userId))
-
-        return { accounts }
-      } catch (error) {
-        fastify.log.error(`Error fetching accounts: ${error}`)
-        return handleError(error as Error, reply)
-      }
-    }
-  )
-
-  // Get transactions for the user
-  fastify.get(
-    '/transactions',
-    {
-      preHandler: [verifyAuth, rateLimit],
-    },
-    async (request, reply) => {
-      const { userId } = request
-      if (!userId) {
-        return reply.code(401).send({ error: 'Not authorized' })
-      }
-
-      try {
-        const userTransactions = await db
-          .select({
-            id: transactions.id,
-            amount: transactions.amount,
-            date: transactions.date,
-            description: transactions.description,
-            merchantName: transactions.merchantName,
-            type: transactions.type,
-            pending: transactions.pending,
-            category: transactions.category,
-            parentCategory: transactions.parentCategory,
-            accountName: financeAccounts.name,
-            accountMask: financeAccounts.mask,
-          })
-          .from(transactions)
-          .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
-          .where(eq(transactions.userId, userId))
-          .orderBy(desc(transactions.date))
-
-        return { transactions: userTransactions }
-      } catch (error) {
-        fastify.log.error(`Error fetching transactions: ${error}`)
         return handleError(error as Error, reply)
       }
     }

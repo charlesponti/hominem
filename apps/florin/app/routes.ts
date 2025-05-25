@@ -8,6 +8,8 @@ export default [
       route('finance', 'routes/finance/page.tsx'),
       route('finance/import', 'routes/finance/import/page.tsx'),
 
+      route('/finance/banks', 'routes/finance/banks/page.tsx'),
+
       // Accounts
       route('accounts', 'routes/accounts/page.tsx'),
 

@@ -1,7 +1,7 @@
 import { db } from '@hominem/utils/db'
 import { FinancialAccountService } from '@hominem/utils/finance'
-import { financeAccounts } from '@hominem/utils/schema'
-import { and, eq } from 'drizzle-orm'
+import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/utils/schema'
+import { and, eq, sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../../lib/errors.js'
@@ -55,7 +55,7 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
 
       return newAccount
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
@@ -72,7 +72,7 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
       const accounts = await FinancialAccountService.listAccounts(userId)
       return accounts
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
@@ -175,8 +175,8 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
     }
   })
 
-  // Get accounts with last 5 transactions
-  fastify.get('/summary', { preHandler: verifyAuth }, async (request, reply) => {
+  // Get all accounts with comprehensive data (unified endpoint)
+  fastify.get('/all', { preHandler: verifyAuth }, async (request, reply) => {
     try {
       const { userId } = request
       if (!userId) {
@@ -184,10 +184,89 @@ export async function financeAccountsRoutes(fastify: FastifyInstance) {
         return { error: 'Not authorized' }
       }
 
-      const accountsWithTransactions =
-        await FinancialAccountService.listAccountsWithRecentTransactions(userId, 5)
+      // Get all finance accounts with institution and Plaid connection info
+      const allAccounts = await db
+        .select({
+          id: financeAccounts.id,
+          name: financeAccounts.name,
+          type: financeAccounts.type,
+          balance: financeAccounts.balance,
+          mask: financeAccounts.mask,
+          subtype: financeAccounts.subtype,
+          institutionId: financeAccounts.institutionId,
+          plaidItemId: financeAccounts.plaidItemId,
+          createdAt: financeAccounts.createdAt,
+          updatedAt: financeAccounts.updatedAt,
+          // Institution info from joined table
+          institutionName: financialInstitutions.name,
+          institutionLogo: financialInstitutions.logo,
+          // Plaid connection info
+          isPlaidConnected: sql<boolean>`${financeAccounts.plaidItemId} IS NOT NULL`,
+          // Plaid connection status info
+          plaidItemStatus: plaidItems.status,
+          plaidItemError: plaidItems.error,
+          plaidLastSyncedAt: plaidItems.lastSyncedAt,
+          plaidItemInternalId: plaidItems.id,
+        })
+        .from(financeAccounts)
+        .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
+        .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+        .where(eq(financeAccounts.userId, userId))
 
-      return accountsWithTransactions
+      // Get recent transactions for each account using the existing service method
+      const accountsWithTransactions = await Promise.all(
+        allAccounts.map(async (account) => {
+          // Use the existing service method to get recent transactions
+          const accountWithTransactions = await FinancialAccountService.listAccountsWithRecentTransactions(userId, 5)
+          const accountData = accountWithTransactions.find(acc => acc.id === account.id)
+          
+          return {
+            ...account,
+            transactions: accountData?.transactions || [],
+          }
+        })
+      )
+
+      // Extract unique Plaid connections for connection management UI
+      const uniqueConnections = allAccounts
+        .filter(account => 
+          account.isPlaidConnected && 
+          account.plaidItemInternalId &&
+          account.plaidItemId &&
+          account.institutionId &&
+          account.institutionName &&
+          account.plaidItemStatus
+        )
+        .reduce((connections, account) => {
+          const existing = connections.find(conn => conn.id === account.plaidItemInternalId)
+          if (!existing) {
+            connections.push({
+              id: account.plaidItemInternalId as string,
+              itemId: account.plaidItemId as string,
+              institutionId: account.institutionId as string,
+              institutionName: account.institutionName as string,
+              status: account.plaidItemStatus as string,
+              lastSyncedAt: account.plaidLastSyncedAt,
+              error: account.plaidItemError,
+              createdAt: account.createdAt,
+            })
+          }
+          return connections
+        }, [] as Array<{
+          id: string
+          itemId: string
+          institutionId: string
+          institutionName: string
+          status: string
+          lastSyncedAt: Date | null
+          error: string | null
+          createdAt: Date
+        }>)
+
+      return { 
+        accounts: accountsWithTransactions,
+        connections: uniqueConnections
+      }
     } catch (error) {
       return handleError(error as Error, reply)
     }

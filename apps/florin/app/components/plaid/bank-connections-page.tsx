@@ -9,12 +9,10 @@ import {
   Eye,
   EyeOff,
   Plus,
-  RefreshCcw,
+  RefreshCw,
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
-import { AccountCard } from '~/components/finance/account-card'
-import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import {
   AlertDialog,
@@ -31,12 +29,14 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
-import { useAllAccounts } from '~/lib/hooks/use-finance-data'
 import {
+  usePlaidAccounts,
+  usePlaidConnections,
   useRemovePlaidConnection,
   useSyncPlaidItem,
 } from '~/lib/hooks/use-plaid'
 import { cn } from '~/lib/utils'
+import { PlaidConnectButton, PlaidLink } from './plaid-link'
 
 interface PlaidConnection {
   id: string
@@ -188,9 +188,9 @@ function ConnectionCard({ connection }: { connection: PlaidConnection }) {
             disabled={isSyncing || connection.status === 'revoked'}
           >
             {isSyncing ? (
-              <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <RefreshCcw className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-4 h-4 mr-2" />
             )}
             Sync Now
           </Button>
@@ -228,7 +228,7 @@ function ConnectionCard({ connection }: { connection: PlaidConnection }) {
   )
 }
 
-function PlaidAccountCard({
+function AccountCard({
   account,
   showBalance = true,
 }: { account: PlaidAccount; showBalance?: boolean }) {
@@ -301,14 +301,13 @@ function PlaidAccountCard({
   )
 }
 
-export default function AccountsPage() {
+export function BankConnectionsPage() {
   const {
-    accounts: allAccounts,
     connections,
-    isLoading: accountsLoading,
-    error: accountsError,
-    refetch: refetchAccounts,
-  } = useAllAccounts()
+    isLoading: isLoadingConnections,
+    error: connectionsError,
+  } = usePlaidConnections()
+  const { accounts, isLoading: isLoadingAccounts, error: accountsError } = usePlaidAccounts()
 
   const handleConnectionSuccess = (institutionName: string) => {
     toast({
@@ -325,46 +324,32 @@ export default function AccountsPage() {
     })
   }
 
-  const isLoading = accountsLoading
-  const hasError = accountsError
+  const isLoading = isLoadingConnections || isLoadingAccounts
+  const hasError = connectionsError || accountsError
   const hasConnections = connections.length > 0
-  const hasAccounts = allAccounts.length > 0
-
-  // Separate manually added accounts from Plaid accounts
-  const manualAccounts = allAccounts.filter(account => !account.isPlaidConnected)
-  const plaidAccounts = allAccounts.filter(account => account.isPlaidConnected)
-
-  const refreshData = async () => {
-    await refetchAccounts()
-  }
+  const hasAccounts = accounts.length > 0
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bank Accounts</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Bank Connections</h1>
           <p className="text-muted-foreground">
             Manage your connected bank accounts and financial data sources
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={refreshData} disabled={isLoading}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <PlaidConnectButton
-            variant="default"
-            onSuccess={handleConnectionSuccess}
-            onError={(e) =>
-              e instanceof Error
-                ? handleConnectionError(e)
-                : handleConnectionError(new Error('Unknown error'))
-            }
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Bank Account
-          </PlaidConnectButton>
-        </div>
+        <PlaidConnectButton
+          variant="default"
+          onSuccess={handleConnectionSuccess}
+          onError={(e) =>
+            e instanceof Error
+              ? handleConnectionError(e)
+              : handleConnectionError(new Error('Unknown error'))
+          }
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Bank Account
+        </PlaidConnectButton>
       </div>
 
       {hasError ? (
@@ -372,9 +357,13 @@ export default function AccountsPage() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error Loading Data</AlertTitle>
           <AlertDescription>
-            {accountsError instanceof Error
-              ? accountsError.message
-              : accountsError || 'Failed to load banking data'}
+            {(connectionsError instanceof Error
+              ? connectionsError.message
+              : 'Failed to load connections') ||
+              (accountsError instanceof Error
+                ? accountsError.message
+                : 'Failed to load accounts') ||
+              'Failed to load banking data'}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -383,20 +372,20 @@ export default function AccountsPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <div className="text-center space-y-4">
-            <RefreshCcw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-            <p className="text-muted-foreground">Loading your bank accounts...</p>
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            <p className="text-muted-foreground">Loading your bank connections...</p>
           </div>
         </div>
       )}
 
       {/* Empty State */}
-      {!isLoading && !hasConnections && !hasAccounts && !hasError && (
+      {!isLoading && !hasConnections && !hasError && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <div className="p-4 bg-muted rounded-full mb-4">
               <Building2 className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">No Bank Accounts</h3>
+            <h3 className="text-lg font-semibold mb-2">No Bank Connections</h3>
             <p className="text-muted-foreground mb-6 max-w-md">
               Connect your bank accounts to automatically import transactions and get insights into
               your finances.
@@ -410,51 +399,7 @@ export default function AccountsPage() {
         </Card>
       )}
 
-      {/* Unified Accounts Section */}
-      {hasAccounts && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Your Accounts</h2>
-            <Badge variant="secondary">{allAccounts.length} accounts</Badge>
-          </div>
-          
-          {/* Display all accounts in a unified grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {allAccounts.map((account) => {
-              // For Plaid accounts, use PlaidAccountCard format
-              if (account.isPlaidConnected) {
-                return (
-                  <PlaidAccountCard 
-                    key={account.id} 
-                    account={{
-                      id: account.id,
-                      name: account.name,
-                      type: account.type,
-                      balance: account.balance,
-                      mask: account.mask,
-                      subtype: account.subtype,
-                      institutionId: account.institutionId || '',
-                      plaidItemId: account.plaidItemId || '',
-                      institutionName: account.institutionName || '',
-                      institutionLogo: account.institutionLogo || null,
-                    }} 
-                  />
-                )
-              }
-              // For manual accounts, use AccountCard format
-              return (
-                <AccountCard
-                  key={account.id}
-                  account={account}
-                  recentTransactions={account.transactions}
-                />
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Bank Connections Section */}
+      {/* Connections Section */}
       {hasConnections && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -464,15 +409,23 @@ export default function AccountsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             {connections.map((connection) => (
-              <ConnectionCard 
-                key={connection.id} 
-                connection={{
-                  ...connection,
-                  status: connection.status as 'active' | 'error' | 'pending_expiration' | 'revoked',
-                  lastSyncedAt: connection.lastSyncedAt?.toString() || null,
-                  createdAt: connection.createdAt.toString(),
-                }} 
-              />
+              <ConnectionCard key={connection.id} connection={connection} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Accounts Section */}
+      {hasAccounts && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Connected Accounts</h2>
+            <Badge variant="secondary">{accounts.length} accounts</Badge>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {accounts.map((account) => (
+              <AccountCard key={account.id} account={account} />
             ))}
           </div>
         </div>
