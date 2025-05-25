@@ -6,6 +6,7 @@ import { Command } from 'commander'
 import { command as aiCommand } from './commands/ai'
 import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
+import { command as financeCommand } from './commands/finance'
 import { command as initCommand } from './commands/init'
 import { command as notesCommand } from './commands/possessions.js'
 import scrapeCommand from './commands/scraper/scrape'
@@ -14,8 +15,6 @@ import { command as toolsCommand } from './commands/tools'
 import { initDb } from './db/index'
 
 async function init() {
-  // Initialize the application
-  // This is where you can add any global setup code
   await initDb()
   const program = new Command()
 
@@ -29,6 +28,7 @@ async function init() {
   program.addCommand(thothCommand)
   program.addCommand(toolsCommand)
   program.addCommand(convertCommand)
+  program.addCommand(financeCommand)
 
   program.parse(process.argv)
 }
