@@ -13,10 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
-import {
-  AccountConnectionStatus,
-  AccountConnectionSummary,
-} from '~/components/accounts/account-connection-status'
+import { AccountConnectionSummary } from '~/components/accounts/account-connection-status'
 import { AccountCard } from '~/components/finance/account-card'
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -425,10 +422,11 @@ export default function AccountsPage() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {manualAccounts.map((account) => (
-                  <div key={account.id} className="space-y-2">
-                    <AccountCard account={account} recentTransactions={account.transactions} />
-                    <AccountConnectionStatus account={account} />
-                  </div>
+                  <AccountCard
+                    key={account.id}
+                    account={account}
+                    recentTransactions={account.transactions}
+                  />
                 ))}
               </div>
             </div>

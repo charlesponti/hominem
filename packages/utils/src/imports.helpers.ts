@@ -1,7 +1,6 @@
-import crypto from 'node:crypto'
 import { logger } from './logger'
 import { redis } from './redis'
-import type { BaseJob, ImportTransactionsJob, ProcessTransactionOptions } from './types'
+import type { BaseJob } from './types'
 
 export const IMPORT_JOBS_LIST_KEY = 'import:active-jobs'
 export const IMPORT_JOB_PREFIX = 'import:job:'
@@ -135,7 +134,7 @@ export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
 
     return jobs
   } catch (error) {
-    logger.error('Failed to get active jobs:', error)
+    logger.error({ error }, 'Failed to get active jobs')
     return []
   }
 }
@@ -168,61 +167,7 @@ export async function getQueuedJobs<T extends BaseJob>(): Promise<T[]> {
     // Filter out null jobs and only return queued jobs
     return jobs.filter((job) => job.status === 'queued')
   } catch (error) {
-    logger.error('Failed to get queued jobs:', error)
+    logger.error({ error }, 'Failed to get queued jobs')
     return []
-  }
-}
-
-/**
- * Queue an import job
- */
-export async function queueImportJob(
-  options: ProcessTransactionOptions & { userId: string }
-): Promise<ImportTransactionsJob> {
-  const jobId = crypto.randomUUID()
-  const { csvContent, fileName, userId, ...otherOptions } = options
-  try {
-    // Create initial job record
-    const job: ImportTransactionsJob = {
-      jobId,
-      userId,
-      fileName,
-      status: 'queued',
-      type: 'import-transactions',
-      startTime: Date.now(),
-      options: otherOptions,
-      stats: {
-        progress: 0,
-        processingTime: 0,
-        total: 0,
-        created: 0,
-        updated: 0,
-        skipped: 0,
-        merged: 0,
-      },
-    }
-
-    const pipeline = redis.pipeline()
-
-    // Save csvContent to Redis
-    const csvKey = `${IMPORT_JOB_PREFIX}${jobId}:csv`
-    pipeline.set(csvKey, options.csvContent, 'EX', JOB_EXPIRATION_TIME)
-
-    // Save job to Redis
-    pipeline.set(`${IMPORT_JOB_PREFIX}${jobId}`, JSON.stringify(job), 'EX', JOB_EXPIRATION_TIME)
-
-    // Add to active jobs list
-    pipeline.sadd(IMPORT_JOBS_LIST_KEY, jobId)
-
-    // Add to user's jobs list with score as timestamp for sorting
-    pipeline.zadd(`${USER_JOBS_PREFIX}${userId}`, job.startTime, jobId)
-    pipeline.expire(`${USER_JOBS_PREFIX}${userId}`, JOB_EXPIRATION_TIME)
-
-    await pipeline.exec()
-
-    return job
-  } catch (error) {
-    logger.error(`Failed to queue import job ${jobId}:`, error)
-    throw error
   }
 }

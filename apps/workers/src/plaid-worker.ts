@@ -53,7 +53,7 @@ export class PlaidSyncWorker {
     try {
       return await processSyncJob(job)
     } catch (error) {
-      logger.error(`Error processing Plaid sync job ${job.id}:`, error)
+      logger.error({ error, jobId: job.id }, `Error processing Plaid sync job ${job.id}`)
       throw error
     }
   }
@@ -75,7 +75,7 @@ export class PlaidSyncWorker {
         logger.warn(`Plaid sync job ${job?.id}: Worker shutting down, skipping failure handling`)
         return
       }
-      logger.error(`Plaid sync job ${job?.id} failed:`, error)
+      logger.error({ error, jobId: job?.id }, `Plaid sync job ${job?.id} failed`)
     })
 
     this.worker.on('error', (error) => {
@@ -83,7 +83,7 @@ export class PlaidSyncWorker {
         logger.warn('Plaid sync worker: Ignoring error during shutdown')
         return
       }
-      logger.error('Plaid sync worker error:', error)
+      logger.error({ error }, 'Plaid sync worker error')
     })
 
     this.worker.on('stalled', (jobId) => {
@@ -108,7 +108,7 @@ export class PlaidSyncWorker {
       await this.worker.close()
       logger.info('Plaid sync worker closed successfully')
     } catch (error) {
-      logger.error('Error during Plaid sync worker shutdown:', error)
+      logger.error({ error }, 'Error during Plaid sync worker shutdown')
     }
   }
 

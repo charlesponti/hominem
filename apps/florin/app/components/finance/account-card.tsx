@@ -1,5 +1,5 @@
 import type { FinanceAccount, Transaction } from '@hominem/utils/types'
-import { Button } from '~/components/ui/button'
+import { AccountConnectionStatus } from '~/components/accounts/account-connection-status'
 import {
   Card,
   CardContent,
@@ -24,14 +24,6 @@ export function AccountCard({ account, recentTransactions }: AccountCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
-        {/* <div className="text-2xl font-bold">
-          <span
-            className={Number.parseFloat(account.balance) >= 0 ? 'text-green-600' : 'text-red-600'}
-          >
-            ${Number.parseFloat(account.balance).toLocaleString()}
-          </span>
-        </div> */}
-
         <div className="mt-4">
           <h4 className="text-sm font-medium mb-2">Recent Activity</h4>
           <div className="space-y-2">
@@ -52,9 +44,7 @@ export function AccountCard({ account, recentTransactions }: AccountCardProps) {
         </div>
       </CardContent>
       <CardFooter className="bg-muted/50 p-3">
-        <Button variant="ghost" size="sm" className="ml-auto">
-          View Details
-        </Button>
+        <AccountConnectionStatus account={account} />
       </CardFooter>
     </Card>
   )

@@ -165,7 +165,6 @@ async function* processTransactions(
   // Process in batches for better performance while avoiding DB overload
   for (let i = 0; i < transactions.length; i += batchSize) {
     const batchNumber = Math.floor(i / batchSize) + 1
-    const totalBatches = Math.ceil(transactions.length / batchSize)
     const currentIndex = i
 
     // Emit progress event for monitoring
@@ -177,10 +176,6 @@ async function* processTransactions(
       percentage: progressPercentage,
       stats: { ...stats },
     })
-
-    logger.debug(
-      `Processing batch ${batchNumber}/${totalBatches} (${i}-${Math.min(i + batchSize, transactions.length)})`
-    )
 
     const batch = transactions.slice(i, i + batchSize)
 
@@ -272,7 +267,6 @@ export type ProcessTransactionResult = {
   file: string
 }
 
-// Update ProcessTransactionOptions type to require userId
 /**
  * Convert a CSV of transactions into an array of valid transactions.
  */

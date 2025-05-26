@@ -241,25 +241,6 @@ export default function TransactionImportPage() {
           />
         </motion.div>
 
-        {/* Import progress indicators */}
-        <div className="space-y-3">
-          {statusCounts.queued > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-            >
-              <div className="block w-full text-sm font-medium bg-amber-50 text-amber-700 p-3 rounded-md">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-amber-500 rounded-full" />
-                  {statusCounts.queued} file{statusCounts.queued > 1 ? 's' : ''} queued for
-                  processing
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </div>
-
         {/* Single file list with all files */}
         {allFiles.length > 0 && (
           <motion.div
@@ -431,14 +412,12 @@ const FileImport = memo(function FileImport({
     <motion.li
       className={itemClassName}
       key={id} // Use key instead of layoutId for simpler animation
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
       transition={{
-        type: 'spring',
-        stiffness: 400,
-        damping: 25,
-        mass: 0.8,
+        duration: 0.2,
+        ease: 'easeOut',
       }}
     >
       <div className="flex flex-col gap-3">

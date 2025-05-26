@@ -1,5 +1,13 @@
 /**
- * Combined worker service that runs all workers in parallel
+ * Combined worker service that runs all worprocess.on('uncaughtException', (error: Error) => {
+  logger.error({ error }, 'Uncaught exception in main process')
+  gracefulShutdown(1)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error({ error: reason }, 'Unhandled promise rejection in main process')
+  gracefulShutdown(1)
+})arallel
  * This is a centralized entry point for Railway deployment
  * The worker instances are created and started in their respective files
  */

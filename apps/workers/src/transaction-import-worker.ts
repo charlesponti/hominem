@@ -243,7 +243,7 @@ export class TransactionImportWorker {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Error processing job ${job.id}:`, error)
+      logger.error({ error, jobId: job.id }, `Error processing job ${job.id}`)
 
       if (stats.errors) {
         stats.errors.push(errorMessage)
@@ -313,7 +313,10 @@ export class TransactionImportWorker {
             ])
           )
         } catch (publishError) {
-          logger.error(`Job ${job.id}: Error in completion handler:`, publishError)
+          logger.error(
+            { error: publishError, jobId: job.id },
+            `Job ${job.id}: Error in completion handler`
+          )
           // Don't rethrow the error to prevent uncaught exceptions
         }
       }
@@ -327,7 +330,7 @@ export class TransactionImportWorker {
           return
         }
 
-        logger.error(`Job ${job?.id} failed:`, error)
+        logger.error({ error, jobId: job?.id }, `Job ${job?.id} failed`)
 
         if (job) {
           redis
@@ -344,7 +347,10 @@ export class TransactionImportWorker {
               ])
             )
             .catch((publishError) => {
-              logger.error(`Error publishing failure for job ${job.id}:`, publishError)
+              logger.error(
+                { error: publishError, jobId: job.id },
+                `Error publishing failure for job ${job.id}`
+              )
               // Don't rethrow to prevent uncaught exceptions
             })
         }
@@ -352,7 +358,7 @@ export class TransactionImportWorker {
     )
 
     this.worker.on('error', (error: Error) => {
-      logger.error('Worker error:', error)
+      logger.error({ error }, 'Worker error')
     })
 
     this.worker.on(
@@ -385,7 +391,10 @@ export class TransactionImportWorker {
             ])
           )
           .catch((err) => {
-            logger.error(`Error publishing progress for job ${job.id}:`, err)
+            logger.error(
+              { error: err, jobId: job.id },
+              `Error publishing progress for job ${job.id}`
+            )
             // Don't rethrow to prevent uncaught exceptions
           })
       }
@@ -405,7 +414,7 @@ export class TransactionImportWorker {
       await this.worker.close()
       logger.info('Transaction import worker closed successfully')
     } catch (error) {
-      logger.error('Error during transaction import worker shutdown:', error)
+      logger.error({ error }, 'Error during transaction import worker shutdown')
     }
   }
 

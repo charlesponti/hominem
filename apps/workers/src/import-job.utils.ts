@@ -30,13 +30,13 @@ export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
         } catch (e) {
           // Delete corrupted job data from Redis
           const jobKey = jobKeys[index]
-          logger.error(`Failed to parse job data for ${jobKey}:`, e)
+          logger.error({ error: e, jobKey }, `Failed to parse job data for ${jobKey}`)
 
           try {
             await redis.del(jobKey)
             logger.info(`Deleted corrupted job data: ${jobKey}`)
           } catch (delError) {
-            logger.error(`Failed to delete corrupted job ${jobKey}:`, delError)
+            logger.error({ error: delError, jobKey }, `Failed to delete corrupted job ${jobKey}`)
           }
 
           return null
@@ -53,7 +53,7 @@ export async function getActiveJobs(): Promise<ImportTransactionsJob[]> {
     logger.info(`Found ${activeJobs.length} active jobs`)
     return activeJobs
   } catch (error) {
-    logger.error('Failed to get active jobs', error)
+    logger.error({ error }, 'Failed to get active jobs')
     return []
   }
 }
@@ -76,7 +76,7 @@ export async function removeJobFromQueue(jobId: string): Promise<void> {
     await pipeline.exec()
     logger.info(`Successfully removed job ${jobId} and its CSV content`)
   } catch (error) {
-    logger.error(`Failed to remove job ${jobId}`, error)
+    logger.error({ error, jobId }, `Failed to remove job ${jobId}`)
   }
 }
 
@@ -104,7 +104,7 @@ export async function getImportFileContent(jobId: string): Promise<string> {
   } catch (error) {
     await removeJobFromQueue(jobId) // Clean up the job if there's an error
     const message = error instanceof Error ? error.message : String(error)
-    logger.error(`Failed to get import file content for job ${jobId}`, error)
+    logger.error({ error, jobId }, `Failed to get import file content for job ${jobId}`)
     throw new Error(`Failed to get import file content: ${message}`)
   }
 }

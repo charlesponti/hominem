@@ -46,7 +46,7 @@ async function main() {
     fs.writeFileSync(path.join(ASSETS_DIR, 'output.json'), JSON.stringify({ result }, null, 2))
     process.exit(0)
   } catch (error) {
-    logger.error('Error processing email:', error)
+    logger.error({ error }, 'Error processing email')
     process.exit(1)
   }
 }

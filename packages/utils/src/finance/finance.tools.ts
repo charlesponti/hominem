@@ -16,8 +16,8 @@ import {
   queryTransactions,
   updateTransaction,
 } from './finance.service'
+import type { QueryOptions } from './finance.types'
 import FinancialAccountService from './financial-account.service'
-import type { QueryOptions } from './types'
 
 export const budgetCalculatorSchema = z.object({
   monthlyIncome: z.number().positive().describe('Monthly income amount'),
