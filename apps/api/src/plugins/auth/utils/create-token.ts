@@ -2,7 +2,7 @@ import { db } from '@hominem/utils/db'
 import { token, users } from '@hominem/utils/schema'
 import { add } from 'date-fns'
 import { eq } from 'drizzle-orm'
-import { APP_USER_ID, EVENTS, track } from '../../../analytics'
+import { APP_USER_ID, EVENTS, track } from '../../../lib/analytics'
 import { sendEmailToken } from '../../email'
 
 const EMAIL_TOKEN_EXPIRATION_MINUTES = 10

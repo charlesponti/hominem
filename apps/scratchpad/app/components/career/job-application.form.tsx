@@ -1,5 +1,6 @@
 import { useAuth } from '@clerk/react-router'
 import type { JobApplication } from '@hominem/utils/career'
+import { JobApplicationStage, JobApplicationStatus } from '@hominem/utils/career'
 import { Plus, PlusCircle } from 'lucide-react'
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
 import { CompanySelect } from '~/components/company-select'
@@ -13,8 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import { JobApplicationStage, JobApplicationStatus } from '~/lib/career'
-import { useCreateApplication, useDeleteApplication } from '~/lib/hooks/use-job-applications'
+import { useCreateApplication, useDeleteApplication } from './use-job-applications'
 
 export function EditApplicationDialog({
   application,

@@ -20,13 +20,13 @@ import listsPlugin from './plugins/lists/index.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import shutdownPlugin from './plugins/shutdown.js'
 import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
+import { careerRoutes } from './routes/career.js'
 import { chatPlugin } from './routes/chat.router.js'
 import { companyRoutes } from './routes/company.js'
 import { financeRoutes } from './routes/finance/finance.router.js'
 import { plaidRoutes } from './routes/finance/plaid.router.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesPlugin } from './routes/invites.router.js'
-import { jobApplicationRoutes } from './routes/job-applications.js'
 import { contentRoutes } from './routes/notes.js'
 import { personalFinanceRoutes } from './routes/personal-finance.js'
 import placesPlugin from './routes/places.router.js'
@@ -110,7 +110,7 @@ export async function createServer(
     await server.register(possessionsPlugin, { prefix: '/api' })
     await server.register(healthRoutes, { prefix: '/api/health' })
     await server.register(companyRoutes, { prefix: '/api/companies' })
-    await server.register(jobApplicationRoutes, { prefix: '/api/job-applications' })
+    await server.register(careerRoutes, { prefix: '/api/career' })
     await server.register(chatPlugin, { prefix: '/api/chat' })
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(contentRoutes, { prefix: '/api/content' })

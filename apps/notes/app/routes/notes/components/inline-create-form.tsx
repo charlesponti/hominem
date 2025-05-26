@@ -200,7 +200,7 @@ export function InlineCreateForm({
             onChange={(e) => setInputTitle(e.target.value)}
             className="text-sm bg-white/90 dark:bg-slate-700/90 dark:text-slate-100 border-slate-200/70 dark:border-slate-600/70 placeholder-slate-400 dark:placeholder-slate-500 backdrop-blur-sm focus:border-blue-300/80 dark:focus:border-blue-500/80 focus:ring-2 focus:ring-blue-300/30 dark:focus:ring-blue-500/30 transition-all"
           />
-          
+
           <Textarea
             placeholder={
               inputMode === 'note'
@@ -219,7 +219,7 @@ export function InlineCreateForm({
                 value={taskPriority}
                 onValueChange={setTaskPriority}
                 id="task-priority"
-                className='w-full !h-10'
+                className="w-full !h-10"
               />
               <DatePicker
                 value={taskDueDate}

@@ -1,11 +1,11 @@
+import type { JobApplicationStage } from '@hominem/utils/career'
 import type { JobApplication } from '@hominem/utils/types'
 import { Clock, Plus, Trash } from 'lucide-react'
 import { useState } from 'react'
-import type { JobApplicationStage } from '~/lib/career'
-import { useUpdateApplication } from '~/lib/hooks/use-job-applications'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { JobApplicationStageDropdown } from './job-application-stage-dropdown'
+import { useUpdateApplication } from './use-job-applications'
 
 interface StagesDialogProps {
   applicationId: string

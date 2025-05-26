@@ -49,6 +49,7 @@ export const job_applications = pgTable('job_applications', {
   salaryAccepted: text('salary_accepted'),
   jobPosting: text('job_posting'),
   phoneScreen: text('phone_screen'),
+  notes: text('notes'),
 
   // Relationships
   companyId: uuid('company_id')
@@ -66,9 +67,3 @@ export const job_applications = pgTable('job_applications', {
 
 export type JobApplicationInsert = typeof job_applications.$inferInsert
 export type JobApplication = typeof job_applications.$inferSelect
-
-export const application_notes = pgTable('application_notes', {
-  applicationId: uuid('application_id')
-    .notNull()
-    .references(() => job_applications.id),
-})

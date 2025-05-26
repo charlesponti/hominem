@@ -1,6 +1,6 @@
 import { logger } from '@hominem/utils/logger'
 import type { FastifyPluginAsync } from 'fastify'
-import { APP_USER_ID, EVENTS, track } from '../../../analytics'
+import { APP_USER_ID, EVENTS, track } from '../../../lib/analytics'
 import { createToken } from '../utils/create-token'
 
 interface LoginInput {

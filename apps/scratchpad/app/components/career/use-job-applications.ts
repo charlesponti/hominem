@@ -1,9 +1,9 @@
 import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
+import { JobApplicationStatus } from '@hominem/utils/career'
 import type { JobApplication, JobApplicationInsert } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { JobApplicationStatus } from '~/lib/career'
 
 // Define query keys at the top for consistent cache management
 const APPLICATIONS_KEY = [['applications', 'getAll']]
@@ -30,7 +30,7 @@ export function useCreateApplication() {
     mutationFn: async (applicationData: JobApplicationInsert) => {
       try {
         const response = await apiClient.post<JobApplicationInsert, JobApplication>(
-          '/api/job-applications',
+          '/api/career/applications',
           applicationData
         )
         return response
@@ -49,7 +49,7 @@ export function useCreateApplication() {
     data,
     setData,
     error,
-    isLoading: createApplication.isLoading,
+    isLoading: createApplication.isPending,
     isError: createApplication.isError,
     createApplication,
   }
@@ -68,7 +68,7 @@ export function useUpdateApplication() {
     mutationFn: async (applicationData: PartialWithId<JobApplication>) => {
       try {
         const response = await apiClient.put<PartialWithId<JobApplication>, JobApplication>(
-          `/api/job-applications/${applicationData.id}`,
+          `/api/career/applications/${applicationData.id}`,
           applicationData
         )
         return response
@@ -87,7 +87,7 @@ export function useUpdateApplication() {
     data,
     setData,
     error,
-    isLoading: updateApplication.isLoading,
+    isLoading: updateApplication.isPending,
     isError: updateApplication.isError,
     updateApplication,
   }
@@ -104,7 +104,7 @@ export function useDeleteApplication() {
   const deleteApplication = useMutation({
     mutationFn: async (id: string) => {
       try {
-        return await apiClient.delete<null, { success: boolean }>(`/api/job-applications/${id}`)
+        return await apiClient.delete<null, { success: boolean }>(`/api/career/applications/${id}`)
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to delete application'))
         throw err
@@ -118,9 +118,9 @@ export function useDeleteApplication() {
 
   return {
     error,
-    isLoading: deleteApplication.isLoading,
+    isLoading: deleteApplication.isPending,
     isError: deleteApplication.isError,
-    deleteApplication,
+    deleteApplication: deleteApplication.mutateAsync,
   }
 }
 
@@ -140,7 +140,7 @@ export function useApplications(options = {}) {
   const query = useQuery<JobApplication[]>({
     queryKey: APPLICATIONS_KEY,
     queryFn: async () => {
-      return await apiClient.get<null, JobApplication[]>('/api/job-applications')
+      return await apiClient.get<null, JobApplication[]>('/api/career/applications')
     },
     ...defaultOptions,
     ...options,
@@ -170,7 +170,7 @@ export function useApplication(id: string, options = {}) {
   const query = useQuery<JobApplication>({
     queryKey,
     queryFn: async () => {
-      return await apiClient.get<null, JobApplication>(`/api/job-applications/${id}`)
+      return await apiClient.get<null, JobApplication>(`/api/career/applications/${id}`)
     },
     ...defaultOptions,
     ...options,
