@@ -1,8 +1,8 @@
 import type { User } from '@hominem/utils/schema'
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { ForbiddenError } from '../../lib/errors'
-import { verifyAuth } from '../../middleware/auth'
+import { ForbiddenError } from '../lib/errors.js'
+import { verifyAuth } from '../middleware/auth.js'
 import {
   acceptListInvite,
   createList,
@@ -14,7 +14,7 @@ import {
   getUserLists,
   sendListInvite,
   updateList,
-} from '../../services/lists.service'
+} from '../services/lists.service.js'
 
 const ListNameSchema = z.string().min(3).max(50)
 
