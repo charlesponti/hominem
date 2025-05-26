@@ -498,11 +498,11 @@ export function useLocalData<T extends SyncableEntity>({
     isLoading: query.isLoading,
     isRefetching: query.isRefetching,
     isFetching: query.isFetching,
-    isSyncing: syncMutation.isLoading,
-    isCreating: createMutation.isLoading,
-    isUpdating: updateMutation.isLoading,
-    isDeleting: deleteMutation.isLoading,
-    isImporting: importMutation.isLoading,
+    isSyncing: syncMutation.isPending,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isImporting: importMutation.isPending,
 
     // Error state
     error,

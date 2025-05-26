@@ -10,7 +10,7 @@ import type {
   ImportTransactionsJob,
 } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fileToBase64 } from '~/lib/files.utils'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'
 
@@ -20,13 +20,8 @@ const IMPORT_PROGRESS_CHANNEL_SUBSCRIBED = REDIS_CHANNELS.SUBSCRIBED
 const IMPORT_PROGRESS_CHANNEL_TYPE = REDIS_CHANNELS.SUBSCRIBE
 const IMPORT_TRANSACTIONS_KEY = [['finance', 'import-transactions']] as const
 
-const convertJobToFileStatus = (jobs: ImportTransactionsJob[]): FileStatus[] =>
-  jobs.map((job) => ({
-    file: new File([], job.fileName),
-    status: job.status,
-    stats: job.stats,
-    error: job.error,
-  }))
+// Throttle delay for progress updates (in milliseconds)
+const PROGRESS_UPDATE_THROTTLE = 100
 
 export function useImportTransactionsStore() {
   const apiClient = useApiClient()
@@ -35,48 +30,150 @@ export function useImportTransactionsStore() {
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
   const [error, setError] = useState<Error | null>(null)
+  // Throttling refs for progress updates
+  const progressUpdateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const pendingUpdatesRef = useRef<ImportTransactionsJob[]>([])
+
+  // Cache for stable file objects when converting from jobs
+  const fileCache = useRef(new Map<string, File>())
 
   // Get WebSocket store functions
   const { isConnected, connect, sendMessage, subscribe } = useWebSocketStore()
+
+  const getStableFile = useCallback((fileName: string): File => {
+    const cached = fileCache.current.get(fileName)
+    if (cached) {
+      return cached
+    }
+    const newFile = new File([], fileName)
+    fileCache.current.set(fileName, newFile)
+    return newFile
+  }, [])
+
+  const convertJobToFileStatusStable = useCallback(
+    (jobs: ImportTransactionsJob[]): FileStatus[] =>
+      jobs.map((job) => ({
+        file: getStableFile(job.fileName),
+        status: job.status,
+        stats: job.stats,
+        error: job.error,
+      })),
+    [getStableFile]
+  )
 
   // Connect on initialization, providing token function
   useEffect(() => {
     connect(getToken)
   }, [connect, getToken])
 
-  // Process real-time job updates from WebSocket
-  const updateImportProgress = useCallback((jobData: ImportTransactionsJob[]) => {
-    if (!jobData.length) return
+  // Throttled update function to reduce re-render frequency
+  const throttledUpdateProgress = useCallback(
+    (jobData: ImportTransactionsJob[]) => {
+      // Store the latest update
+      pendingUpdatesRef.current = jobData
 
-    setStatuses((prevStatuses) => {
-      // For existing statuses, update them
-      if (prevStatuses.length) {
-        return prevStatuses.map((status) => {
-          const matchingJob = jobData.find((job) => job.fileName === status.file.name)
-
-          if (matchingJob) {
-            const isComplete = matchingJob.status === 'done' || matchingJob.status === 'error'
-
-            // Remove completed jobs from active tracking
-            if (isComplete) {
-              setActiveJobIds((prev) => prev.filter((id) => id !== matchingJob.jobId))
-            }
-
-            return {
-              ...status,
-              status: matchingJob.status,
-              stats: matchingJob.stats,
-              error: matchingJob.error,
-            }
-          }
-
-          return status
-        })
+      // Clear existing timeout
+      if (progressUpdateTimeoutRef.current) {
+        clearTimeout(progressUpdateTimeoutRef.current)
       }
 
-      // If no existing statuses match, convert all jobs to file statuses
-      return convertJobToFileStatus(jobData)
-    })
+      // Set new timeout
+      progressUpdateTimeoutRef.current = setTimeout(() => {
+        const latestJobData = pendingUpdatesRef.current
+        if (!latestJobData.length) return
+
+        // Batch all state updates to prevent multiple re-renders
+        setStatuses((prevStatuses) => {
+          const updatedStatuses = prevStatuses.length
+            ? prevStatuses.map((status) => {
+                const matchingJob = latestJobData.find((job) => job.fileName === status.file.name)
+
+                if (matchingJob) {
+                  return {
+                    ...status,
+                    status: matchingJob.status,
+                    stats: matchingJob.stats,
+                    error: matchingJob.error,
+                  }
+                }
+
+                return status
+              })
+            : convertJobToFileStatusStable(latestJobData)
+
+          return updatedStatuses
+        })
+
+        // Batch active job ID updates
+        const completedJobs = latestJobData.filter(
+          (job) => job.status === 'done' || job.status === 'error'
+        )
+
+        if (completedJobs.length > 0) {
+          const completedJobIds = completedJobs.map((job) => job.jobId)
+          setActiveJobIds((prev) => prev.filter((id) => !completedJobIds.includes(id)))
+        }
+      }, PROGRESS_UPDATE_THROTTLE)
+    },
+    [convertJobToFileStatusStable]
+  )
+
+  // Process real-time job updates from WebSocket
+  const updateImportProgress = useCallback(
+    (jobData: ImportTransactionsJob[]) => {
+      if (!jobData.length) return
+
+      // Use throttled update for frequent progress updates
+      const hasProgressUpdates = jobData.some(
+        (job) => job.status === 'processing' || job.status === 'uploading'
+      )
+
+      if (hasProgressUpdates) {
+        throttledUpdateProgress(jobData)
+      } else {
+        // For non-progress updates (status changes), update immediately
+        setStatuses((prevStatuses) => {
+          const updatedStatuses = prevStatuses.length
+            ? prevStatuses.map((status) => {
+                const matchingJob = jobData.find((job) => job.fileName === status.file.name)
+
+                if (matchingJob) {
+                  return {
+                    ...status,
+                    status: matchingJob.status,
+                    stats: matchingJob.stats,
+                    error: matchingJob.error,
+                  }
+                }
+
+                return status
+              })
+            : convertJobToFileStatusStable(jobData)
+
+          return updatedStatuses
+        })
+
+        // Update active job IDs for completed jobs
+        const completedJobs = jobData.filter(
+          (job) => job.status === 'done' || job.status === 'error'
+        )
+
+        if (completedJobs.length > 0) {
+          const completedJobIds = completedJobs.map((job) => job.jobId)
+          setActiveJobIds((prev) => prev.filter((id) => !completedJobIds.includes(id)))
+        }
+      }
+    },
+    [throttledUpdateProgress, convertJobToFileStatusStable]
+  )
+
+  // Cleanup throttled updates on unmount
+  useEffect(() => {
+    return () => {
+      if (progressUpdateTimeoutRef.current) {
+        clearTimeout(progressUpdateTimeoutRef.current)
+      }
+    }
   }, [])
 
   // Mutation for importing files

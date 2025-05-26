@@ -2,7 +2,7 @@
 
 import type { FileStatus, ImportRequestResponse } from '@hominem/utils/types'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo } from 'react'
 import { DropZone } from '~/components/drop-zone'
 import { FileUploadStatus } from '~/components/file-upload-status'
 import { FileUploadStatusBadge } from '~/components/file-upload-status-badge'
@@ -15,7 +15,15 @@ import { useToast } from '~/lib/hooks/use-toast'
 import { cn } from '~/lib/utils'
 
 export default function TransactionImportPage() {
-  const { files, handleFileChange, removeFile } = useFileInput()
+  const {
+    files,
+    dragActive,
+    handleFileChange,
+    removeFile,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+  } = useFileInput()
   const {
     isConnected,
     statuses,
@@ -27,13 +35,30 @@ export default function TransactionImportPage() {
     error,
   } = useImportTransactionsStore()
   const { toast } = useToast()
-  const [dragActive, setDragActive] = useState(false)
 
   // Combine all files into a single list with status priority
   const allFiles = useMemo(() => {
-    const fileMap = new Map<string, { file: File; status?: FileStatus; priority: number }>()
-    // Add files from statuses first (these have priority)
+    const fileMap = new Map<
+      string,
+      { file: File; status?: FileStatus; priority: number; originalIndex: number }
+    >()
+
+    // Track original file order for stability
+    let originalIndex = 0
+
+    // Add selected files first to maintain their order
+    for (const file of files) {
+      fileMap.set(file.name, {
+        file,
+        status: undefined,
+        priority: 0, // Selected files have highest priority for display
+        originalIndex: originalIndex++,
+      })
+    }
+
+    // Add files from statuses, updating existing entries or adding new ones
     for (const status of statuses) {
+      const existing = fileMap.get(status.file.name)
       const priority =
         {
           processing: 1,
@@ -43,38 +68,36 @@ export default function TransactionImportPage() {
           error: 4,
         }[status.status] || 5
 
-      fileMap.set(status.file.name, {
-        file: status.file,
-        status,
-        priority,
-      })
-    }
-
-    // Add selected files that aren't already being processed
-    for (const file of files) {
-      if (!fileMap.has(file.name)) {
-        fileMap.set(file.name, {
-          file,
-          status: undefined,
-          priority: 0, // Selected files have highest priority for display
+      if (existing) {
+        // Update existing file with status
+        existing.status = status
+        existing.priority = priority
+      } else {
+        // Add new file from status
+        fileMap.set(status.file.name, {
+          file: status.file,
+          status,
+          priority,
+          originalIndex: originalIndex++,
         })
       }
     }
 
-    // Sort by priority (lower number = higher priority) then by name
-    return Array.from(fileMap.values())
-      .sort((a, b) => {
-        if (a.priority !== b.priority) {
-          return a.priority - b.priority
-        }
-        return a.file.name.localeCompare(b.file.name)
-      })
-      .map((item, index) => ({
-        fileName: item.file.name,
-        status: item.status,
-        id: `file-${item.file.name}-${item.status?.status || 'selected'}`,
-        file: item.file,
-      }))
+    // Sort by priority (lower number = higher priority), then by original index for stability
+    const sortedItems = Array.from(fileMap.values()).sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return a.priority - b.priority
+      }
+      return a.originalIndex - b.originalIndex
+    })
+
+    return sortedItems.map((item) => ({
+      fileName: item.file.name,
+      status: item.status,
+      // Stable ID that doesn't change with status updates
+      id: item.file.name, // Use just the filename as the stable key
+      file: item.file,
+    }))
   }, [files, statuses])
 
   // Get counts for different states
@@ -101,15 +124,11 @@ export default function TransactionImportPage() {
     return counts
   }, [allFiles])
 
-  // Handle drag events
-  const handleDragOver = useCallback(() => setDragActive(true), [])
-  const handleDragLeave = useCallback(() => setDragActive(false), [])
-
-  // Handle file drop
-  const handleDrop = useCallback(
+  // Enhanced handleDrop with validation
+  const handleDropWithValidation = useCallback(
     (files: File[]) => {
-      if (files.length) {
-        handleFileChange(files)
+      if (files.length > 0) {
+        handleDrop(files)
       } else {
         toast({
           title: 'Invalid files',
@@ -117,9 +136,8 @@ export default function TransactionImportPage() {
           variant: 'destructive',
         })
       }
-      setDragActive(false)
     },
-    [handleFileChange, toast]
+    [handleDrop, toast]
   )
 
   // Handle file removal (remove from both files and statuses)
@@ -129,6 +147,17 @@ export default function TransactionImportPage() {
       removeFileStatus(fileName)
     },
     [removeFile, removeFileStatus]
+  )
+
+  // Memoize stable callbacks for FileImport components
+  const memoizedStartSingleFile = useCallback(
+    (file: File) => startSingleFile(file),
+    [startSingleFile]
+  )
+
+  const memoizedHandleRemoveFile = useCallback(
+    (fileName: string) => handleRemoveFile(fileName),
+    [handleRemoveFile]
   )
 
   // Handle import completion
@@ -203,7 +232,7 @@ export default function TransactionImportPage() {
               'transition-all duration-300',
               dragActive && 'scale-[1.02] border-blue-400'
             )}
-            onDrop={handleDrop}
+            onDrop={handleDropWithValidation}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onChange={handleFileChange}
@@ -275,7 +304,7 @@ export default function TransactionImportPage() {
             </div>
 
             <ul className="space-y-3">
-              <AnimatePresence mode="popLayout">
+              <AnimatePresence>
                 {allFiles.map((file) => (
                   <FileImport
                     key={file.id}
@@ -284,8 +313,8 @@ export default function TransactionImportPage() {
                     id={file.id}
                     file={file.file}
                     isConnected={isConnected}
-                    onStart={startSingleFile}
-                    onRemove={handleRemoveFile}
+                    onStart={memoizedStartSingleFile}
+                    onRemove={memoizedHandleRemoveFile}
                   />
                 ))}
               </AnimatePresence>
@@ -307,10 +336,19 @@ type FileImportProps = {
   onRemove: (fileName: string) => void
 }
 
-function FileImport({ fileName, status, id, file, isConnected, onStart, onRemove }: FileImportProps) {
+// Memoized FileImport component to prevent unnecessary re-renders
+const FileImport = memo(function FileImport({
+  fileName,
+  status,
+  id,
+  file,
+  isConnected,
+  onStart,
+  onRemove,
+}: FileImportProps) {
   const { toast } = useToast()
 
-  const handleStart = async () => {
+  const handleStart = useCallback(async () => {
     if (!isConnected) {
       toast({
         title: 'Connection required',
@@ -333,13 +371,14 @@ function FileImport({ fileName, status, id, file, isConnected, onStart, onRemove
         variant: 'destructive',
       })
     }
-  }
+  }, [isConnected, onStart, file, fileName, toast])
 
-  const handleRemove = () => {
+  const handleRemove = useCallback(() => {
     onRemove(fileName)
-  }
+  }, [onRemove, fileName])
 
-  const getStatusIndicator = () => {
+  // Memoize status indicator to prevent recreation
+  const statusIndicator = useMemo(() => {
     if (!status) {
       return <div className="h-3 w-3 bg-gray-400 rounded-full" />
     }
@@ -357,15 +396,21 @@ function FileImport({ fileName, status, id, file, isConnected, onStart, onRemove
         <div className="h-3 w-3 bg-gray-400 rounded-full" />
       )
     )
-  }
+  }, [status])
 
-  const canStart = !status && isConnected
-  const canRemove = !status || status.status === 'done' || status.status === 'error'
-  const isProcessing = status?.status === 'processing' || status?.status === 'uploading' || status?.status === 'queued'
+  // Memoize button states
+  const buttonStates = useMemo(
+    () => ({
+      canStart: !status && isConnected,
+      canRemove: !status || status.status === 'done' || status.status === 'error',
+    }),
+    [status, isConnected]
+  )
 
-  return (
-    <motion.li
-      className={cn(
+  // Memoize className computation
+  const itemClassName = useMemo(
+    () =>
+      cn(
         'p-4 rounded-lg',
         'bg-white/50 backdrop-blur-sm',
         'border border-gray-200/50',
@@ -378,8 +423,14 @@ function FileImport({ fileName, status, id, file, isConnected, onStart, onRemove
         status?.status === 'queued' && 'border-l-4 border-l-amber-500',
         status?.status === 'done' && 'border-l-4 border-l-green-500',
         status?.status === 'error' && 'border-l-4 border-l-red-500'
-      )}
-      layoutId={id}
+      ),
+    [status]
+  )
+
+  return (
+    <motion.li
+      className={itemClassName}
+      key={id} // Use key instead of layoutId for simpler animation
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -392,11 +443,11 @@ function FileImport({ fileName, status, id, file, isConnected, onStart, onRemove
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          {getStatusIndicator()}
+          {statusIndicator}
           <span className="font-medium truncate flex-1">{fileName}</span>
           <div className="flex items-center gap-2">
             <FileUploadStatusBadge status={status?.status} />
-            {canStart && (
+            {buttonStates.canStart && (
               <Button
                 size="sm"
                 onClick={handleStart}
@@ -406,7 +457,7 @@ function FileImport({ fileName, status, id, file, isConnected, onStart, onRemove
                 Start
               </Button>
             )}
-            {canRemove && (
+            {buttonStates.canRemove && (
               <Button
                 size="sm"
                 variant="outline"
@@ -422,4 +473,4 @@ function FileImport({ fileName, status, id, file, isConnected, onStart, onRemove
       </div>
     </motion.li>
   )
-}
+})

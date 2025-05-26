@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 
 export function useFileInput() {
   const [files, setFiles] = useState<File[]>([])
+  const [dragActive, setDragActive] = useState(false)
 
   const handleFileChange = useCallback((files: File[]) => {
     const newFiles = Array.from(files)
@@ -22,10 +23,33 @@ export function useFileInput() {
     setFiles([])
   }, [])
 
+  // Drag event handlers
+  const handleDragOver = useCallback(() => {
+    setDragActive(true)
+  }, [])
+
+  const handleDragLeave = useCallback(() => {
+    setDragActive(false)
+  }, [])
+
+  const handleDrop = useCallback(
+    (files: File[]) => {
+      setDragActive(false)
+      if (files.length > 0) {
+        handleFileChange(files)
+      }
+    },
+    [handleFileChange]
+  )
+
   return {
     files,
+    dragActive,
     handleFileChange,
     removeFile,
     resetFiles,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
   }
 }

@@ -1,10 +1,13 @@
 import type { FileStatus } from '@hominem/utils/types'
 import { motion } from 'framer-motion'
 import { XIcon } from 'lucide-react'
+import { memo } from 'react'
 import { ProgressBar } from '~/components/progress-bar'
 import { cn } from '~/lib/utils'
 
-export function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }) {
+export const FileUploadStatus = memo(function FileUploadStatus({
+  uploadStatus,
+}: { uploadStatus?: FileStatus }) {
   if (!uploadStatus) return null
   const { status, error, stats } = uploadStatus
 
@@ -91,9 +94,9 @@ export function FileUploadStatus({ uploadStatus }: { uploadStatus?: FileStatus }
   }
 
   return <output className="text-sm text-gray-500">{status}</output>
-}
+})
 
-function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
+const ProcessingStats = memo(function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
   if (!stats || typeof stats !== 'object') return null
 
   return (
@@ -131,9 +134,12 @@ function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
       ) : null}
     </dl>
   )
-}
+})
 
-function ProcessingStat({ label, value }: { label: string; value?: number }) {
+const ProcessingStat = memo(function ProcessingStat({
+  label,
+  value,
+}: { label: string; value?: number }) {
   if (value === undefined) return null
   return (
     <div>
@@ -141,4 +147,4 @@ function ProcessingStat({ label, value }: { label: string; value?: number }) {
       <dd className="mt-1 text-sm text-gray-900">{value.toLocaleString()}</dd>
     </div>
   )
-}
+})

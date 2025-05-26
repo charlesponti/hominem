@@ -77,9 +77,9 @@ export function TaskCard({ task, onDelete, onEdit, className = '' }: TaskCardPro
               className="h-6 w-6 rounded-full mt-0.5 border-slate-300 dark:border-slate-600 flex-shrink-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               onClick={() => {
                 if (status === 'done') {
-                  setTaskToTodoAndResetTime() // Use the renamed function
+                  setTaskToTodoAndResetTime()
                 } else {
-                  stopTimer() // Handles todo, in-progress, or paused states
+                  stopTimer()
                 }
               }}
               disabled={isLoading}

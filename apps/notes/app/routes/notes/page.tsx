@@ -181,10 +181,7 @@ export default function NotesPage() {
 
       {/* Scrollable Main Content */}
       <main className="flex-1 overflow-hidden">
-        <div 
-          ref={feedContainerRef} 
-          className="h-full overflow-y-auto bg-slate-50 dark:bg-slate-950"
-        >
+        <div ref={feedContainerRef} className="h-full overflow-y-auto">
           <div className="max-w-2xl mx-auto py-4 px-4">
             {/* Inline Create Form */}
             {isFormVisible && (

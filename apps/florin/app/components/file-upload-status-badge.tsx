@@ -1,6 +1,9 @@
+import { memo } from 'react'
 import { cn } from '~/lib/utils'
 
-export function FileUploadStatusBadge({ status }: { status?: string }) {
+export const FileUploadStatusBadge = memo(function FileUploadStatusBadge({
+  status,
+}: { status?: string }) {
   if (!status) return null
 
   const getStatusConfig = (status: string): { bg: string; text: string; label: string } => {
@@ -28,4 +31,4 @@ export function FileUploadStatusBadge({ status }: { status?: string }) {
       {config.label}
     </span>
   )
-}
+})
