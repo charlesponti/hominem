@@ -155,18 +155,6 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel }: MonthItemPr
       {compareToPrevious && (
         <td
           className={cn('text-right py-2 font-mono', {
-            'text-red-500': item.trend?.direction === 'down',
-            'text-green-500': item.trend?.direction === 'up',
-          })}
-        >
-          {item.trend
-            ? `${item.trend.direction === 'up' ? '+' : '-'}${item.trend.percentChange}%`
-            : '-'}
-        </td>
-      )}
-      {compareToPrevious && (
-        <td
-          className={cn('text-right py-2 font-mono', {
             'text-red-500': item.trend?.directionExpenses === 'up',
             'text-green-500': item.trend?.directionExpenses === 'down',
           })}
@@ -316,7 +304,6 @@ export function AnalyticsMonthlyBreakdown({
                 <th className="text-right py-2">Transactions</th>
                 <th className="text-right py-2">Total Amount</th>
                 <th className="text-right py-2">Average</th>
-                {compareToPrevious && <th className="text-right py-2">Change</th>}
                 {compareToPrevious && <th className="text-right py-2">Income Trend</th>}
                 {compareToPrevious && <th className="text-right py-2">Expenses Trend</th>}
               </tr>

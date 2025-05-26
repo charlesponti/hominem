@@ -2,10 +2,12 @@
 
 import type { Content } from '@hominem/utils/types'
 import { Edit, Trash2, X } from 'lucide-react'
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
+import SocialX from '~/components/icons/SocialX'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { cn } from '~/lib/utils'
+import { TweetModal } from './tweet-modal'
 
 interface NoteFeedItemProps {
   note: Content
@@ -22,6 +24,7 @@ export function NoteFeedItem({
   onRemoveTag,
   className = '',
 }: NoteFeedItemProps) {
+  const [showTweetModal, setShowTweetModal] = useState(false)
   // Extract hashtags from content
   const extractHashtags = useMemo(() => {
     const regex = /#(\w+)/g
@@ -121,6 +124,15 @@ export function NoteFeedItem({
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => setShowTweetModal(true)}
+              className="h-8 w-8 p-0 text-slate-600 hover:text-blue-500 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
+              title="Generate tweet"
+            >
+              <SocialX className="size-[14px]" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => onEdit(note)}
               className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
               title="Edit note"
@@ -139,6 +151,13 @@ export function NoteFeedItem({
           </div>
         </div>
       </div>
+
+      <TweetModal
+        open={showTweetModal}
+        onOpenChange={setShowTweetModal}
+        noteContent={note.content}
+        noteTitle={note.title}
+      />
     </div>
   )
 }

@@ -17,7 +17,7 @@ body {
   --font-serif: "EB Garamound", ui-serif, serif;
   --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --color-background: hsl(var(--background));
+  --color-background: var(--background);
   --color-foreground: hsl(var(--foreground));
 
   --color-card: hsl(var(--card));
@@ -241,7 +241,7 @@ body {
   }
 
   .bg-background {
-    background-color: hsl(var(--background));
+    background-color: var(--background);
   }
 
   .text-foreground {
@@ -539,7 +539,7 @@ body {
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: white;
   --foreground: oklch(0.13 0.028 261.692);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.028 261.692);
