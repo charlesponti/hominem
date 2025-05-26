@@ -2,12 +2,12 @@
 
 import { subMonths } from 'date-fns'
 import { useState } from 'react'
-import { AnalyticsChartDisplay } from '~/components/finance/analytics/AnalyticsChartDisplay' // Fixed duplicate import
-import { AnalyticsFilters } from '~/components/finance/analytics/AnalyticsFilters'
-import { AnalyticsMonthlyBreakdown } from '~/components/finance/analytics/AnalyticsMonthlyBreakdown'
-import { AnalyticsStatisticsSummary } from '~/components/finance/analytics/AnalyticsStatisticsSummary'
-import { TopCategories } from '~/components/finance/analytics/TopCategories'
-import { TopMerchants } from '~/components/finance/analytics/TopMerchants'
+import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay' // Fixed duplicate import
+import { AnalyticsFilters } from '~/components/analytics/AnalyticsFilters'
+import { AnalyticsMonthlyBreakdown } from '~/components/analytics/AnalyticsMonthlyBreakdown'
+import { AnalyticsStatisticsSummary } from '~/components/analytics/AnalyticsStatisticsSummary'
+import { TopCategories } from '~/components/analytics/TopCategories'
+import { TopMerchants } from '~/components/analytics/TopMerchants'
 import { useFinanceCategories } from '~/lib/hooks/use-finance-categories'
 import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'

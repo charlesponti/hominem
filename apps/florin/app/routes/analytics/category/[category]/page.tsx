@@ -3,8 +3,8 @@
 import { subMonths } from 'date-fns'
 import { useState } from 'react'
 import { useParams } from 'react-router'
-import { AnalyticsChartDisplay } from '~/components/finance/analytics/AnalyticsChartDisplay'
-import { CategoryMonthlyBreakdown } from '~/components/finance/analytics/CategoryMonthlyBreakdown'
+import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay'
+import { CategoryMonthlyBreakdown } from '~/components/analytics/CategoryMonthlyBreakdown'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 

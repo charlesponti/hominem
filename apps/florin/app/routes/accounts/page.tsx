@@ -1,5 +1,6 @@
 'use client'
 
+import type { FinanceAccount, Transaction } from '@hominem/utils/types'
 import {
   AlertTriangle,
   Building2,
@@ -13,8 +14,10 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
-import { AccountConnectionSummary } from '~/components/accounts/account-connection-status'
-import { AccountCard } from '~/components/finance/account-card'
+import {
+  AccountConnectionStatus,
+  AccountConnectionSummary,
+} from '~/components/accounts/account-connection-status'
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import {
@@ -30,11 +33,17 @@ import {
 } from '~/components/ui/alert-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useAllAccounts } from '~/lib/hooks/use-finance-data'
 import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
-import { cn } from '~/lib/utils'
 
 interface PlaidConnection {
   id: string
@@ -47,17 +56,128 @@ interface PlaidConnection {
   createdAt: string
 }
 
-interface PlaidAccount {
-  id: string
-  name: string
-  type: string
-  balance: string
-  mask: string | null
-  subtype: string | null
-  institutionId: string
-  plaidItemId: string
-  institutionName: string
-  institutionLogo: string | null
+// Unified account card that handles both manual and Plaid-connected accounts
+function UnifiedAccountCard({
+  account,
+  recentTransactions = [],
+  showBalance = true,
+}: {
+  account: FinanceAccount & {
+    transactions?: Transaction[]
+    institutionName?: string
+    institutionLogo?: string | null
+    mask?: string | null
+    subtype?: string | null
+    isPlaidConnected?: boolean
+  }
+  recentTransactions?: Transaction[]
+  showBalance?: boolean
+}) {
+  const [isBalanceVisible, setIsBalanceVisible] = useState(showBalance)
+  const isPlaidAccount = account.isPlaidConnected || false
+
+  const getAccountTypeIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'credit':
+        return <CreditCard className="h-4 w-4" />
+      default:
+        return <Building2 className="h-4 w-4" />
+    }
+  }
+
+  const formatBalance = (balance: string) => {
+    const amount = Number.parseFloat(balance)
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
+
+  const getAccountTypeColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'credit':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'depository':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'investment':
+        return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'loan':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  return (
+    <Card className="overflow-hidden flex flex-col">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-1.5 bg-muted rounded">{getAccountTypeIcon(account.type)}</div>
+            <div>
+              <CardTitle className="text-lg">{account.name}</CardTitle>
+              <CardDescription>
+                {account.institutionName && isPlaidAccount
+                  ? `${account.institutionName}${account.mask ? ` •••• ${account.mask}` : ''}`
+                  : `${account.type.charAt(0).toUpperCase() + account.type.slice(1)}`}
+              </CardDescription>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1">
+        <div className="space-y-4">
+          {/* Balance display for Plaid accounts */}
+          {isPlaidAccount && account.balance && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Balance:</span>
+                <span className="font-semibold">
+                  {isBalanceVisible ? formatBalance(account.balance) : '••••••'}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+              >
+                {isBalanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+          )}
+
+          {/* Recent transactions for manual accounts */}
+          {!isPlaidAccount && recentTransactions.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium mb-2">Recent Activity</h4>
+              <div className="space-y-2">
+                {recentTransactions.slice(0, 3).map((tx) => (
+                  <div key={tx.id} className="flex justify-between text-sm">
+                    <span className="truncate max-w-[180px]">{tx.description}</span>
+                    <span
+                      className={
+                        Number.parseFloat(tx.amount) < 0 ? 'text-red-500' : 'text-green-500'
+                      }
+                    >
+                      ${Math.abs(Number.parseFloat(tx.amount)).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+                {recentTransactions.length === 0 && (
+                  <div className="text-gray-500 text-sm">No recent transactions</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+
+      <CardFooter className="bg-muted/50 p-3">
+        <AccountConnectionStatus account={account} />
+      </CardFooter>
+    </Card>
+  )
 }
 
 function ConnectionCard({ connection }: { connection: PlaidConnection }) {
@@ -220,79 +340,6 @@ function ConnectionCard({ connection }: { connection: PlaidConnection }) {
   )
 }
 
-function PlaidAccountCard({
-  account,
-  showBalance = true,
-}: { account: PlaidAccount; showBalance?: boolean }) {
-  const [isBalanceVisible, setIsBalanceVisible] = useState(showBalance)
-
-  const getAccountTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'credit':
-        return <CreditCard className="h-4 w-4" />
-      default:
-        return <Building2 className="h-4 w-4" />
-    }
-  }
-
-  const formatBalance = (balance: string) => {
-    const amount = Number.parseFloat(balance)
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
-
-  const getAccountTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'credit':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'depository':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'investment':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'loan':
-        return 'bg-orange-100 text-orange-800 border-orange-200'
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
-  }
-
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <div className="p-1.5 bg-muted rounded">{getAccountTypeIcon(account.type)}</div>
-            <div>
-              <h4 className="font-medium">{account.name}</h4>
-              <p className="text-sm text-muted-foreground">
-                {account.institutionName}
-                {account.mask && ` •••• ${account.mask}`}
-              </p>
-            </div>
-          </div>
-          <Badge className={cn('text-xs', getAccountTypeColor(account.type))}>
-            {account.subtype || account.type}
-          </Badge>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">Balance:</span>
-            <span className="font-semibold">
-              {isBalanceVisible ? formatBalance(account.balance) : '••••••'}
-            </span>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => setIsBalanceVisible(!isBalanceVisible)}>
-            {isBalanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 export default function AccountsPage() {
   const {
     accounts: allAccounts,
@@ -322,9 +369,12 @@ export default function AccountsPage() {
   const hasConnections = connections.length > 0
   const hasAccounts = allAccounts.length > 0
 
-  // Separate manually added accounts from Plaid accounts
-  const manualAccounts = allAccounts.filter((account) => !account.isPlaidConnected)
-  const plaidAccounts = allAccounts.filter((account) => account.isPlaidConnected)
+  // Sort accounts to show Plaid-connected accounts first, then manual accounts
+  const sortedAccounts = allAccounts.sort((a, b) => {
+    if (a.isPlaidConnected && !b.isPlaidConnected) return -1
+    if (!a.isPlaidConnected && b.isPlaidConnected) return 1
+    return a.name.localeCompare(b.name)
+  })
 
   const refreshData = async () => {
     await refetchAccounts()
@@ -413,53 +463,15 @@ export default function AccountsPage() {
             <Badge variant="secondary">{allAccounts.length} accounts</Badge>
           </div>
 
-          {/* Manual Accounts Section */}
-          {manualAccounts.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Imported Accounts</h3>
-                <Badge variant="outline">{manualAccounts.length} accounts</Badge>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {manualAccounts.map((account) => (
-                  <AccountCard
-                    key={account.id}
-                    account={account}
-                    recentTransactions={account.transactions}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Plaid Connected Accounts Section */}
-          {plaidAccounts.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Connected Accounts</h3>
-                <Badge variant="outline">{plaidAccounts.length} accounts</Badge>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {plaidAccounts.map((account) => (
-                  <PlaidAccountCard
-                    key={account.id}
-                    account={{
-                      id: account.id,
-                      name: account.name,
-                      type: account.type,
-                      balance: account.balance,
-                      mask: account.mask,
-                      subtype: account.subtype,
-                      institutionId: account.institutionId || '',
-                      plaidItemId: account.plaidItemId || '',
-                      institutionName: account.institutionName || '',
-                      institutionLogo: account.institutionLogo || null,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {sortedAccounts.map((account) => (
+              <UnifiedAccountCard
+                key={account.id}
+                account={account}
+                recentTransactions={account.transactions || []}
+              />
+            ))}
+          </div>
         </div>
       )}
 

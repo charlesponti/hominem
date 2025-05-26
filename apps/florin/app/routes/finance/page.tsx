@@ -2,27 +2,18 @@
 
 import { RefreshCcw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { SortDirection, SortField } from '~/lib/hooks/use-finance-data'
-import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
-
-export interface SortOption {
-  // Copied from use-finance-data.ts
-  field: SortField
-  direction: SortDirection
-}
-
-export interface Filter {
-  accountId?: string
-  dateFrom?: string
-  dateTo?: string
-  description?: string
-}
+import {
+  useFinanceAccounts,
+  useFinanceTransactions,
+  type FilterArgs,
+  type SortOption,
+} from '~/lib/hooks/use-finance-data'
 
 import { FilterChip } from '~/components/finance/filter-chip'
 import { FilterControls } from '~/components/finance/filter-controls'
 import { PaginationControls } from '~/components/finance/pagination-controls'
 import { SortControls } from '~/components/finance/sort-controls'
-import { TransactionsList } from '~/components/finance/transactions-list'
+import { TransactionsList } from '~/components/transactions/transactions-list'
 import { Button } from '~/components/ui/button'
 import { SearchInput } from '~/components/ui/search-input'
 
@@ -34,14 +25,14 @@ interface ActiveSortOption extends SortOption {
 
 export default function TransactionsPage() {
   // Local state for filters, initialized from useFinanceTransactions or default
-  const [currentFilters, setCurrentFilters] = useState<Filter>({})
+  const [currentFilters, setCurrentFilters] = useState<FilterArgs>({})
 
   // Search input value - managed by SearchInput component
   const [searchValue, setSearchValue] = useState('')
 
   // Update current filters when search term changes
   useEffect(() => {
-    setCurrentFilters((prev: Filter) => ({
+    setCurrentFilters((prev: FilterArgs) => ({
       ...prev,
       description: searchValue || undefined,
     }))
@@ -86,7 +77,7 @@ export default function TransactionsPage() {
       id: key,
       label: `${key.charAt(0).toUpperCase() + key.slice(1)}: ${String(value)}`,
       onRemove: () => {
-        setCurrentFilters((prev: Filter) => ({ ...prev, [key]: undefined }))
+        setCurrentFilters((prev: FilterArgs) => ({ ...prev, [key]: undefined }))
         if (key === 'description') {
           // Also clear the search input value when removing description filter
           setSearchValue('')
@@ -132,21 +123,21 @@ export default function TransactionsPage() {
 
   // Memoized callback functions to prevent unnecessary re-renders
   const handleSelectedAccountChange = useCallback((accountId: string) => {
-    setCurrentFilters((prev: Filter) => ({
+    setCurrentFilters((prev: FilterArgs) => ({
       ...prev,
       accountId: accountId === 'all' ? undefined : accountId,
     }))
   }, [])
 
   const handleDateFromChange = useCallback((date: Date | undefined) => {
-    setCurrentFilters((prev: Filter) => ({
+    setCurrentFilters((prev: FilterArgs) => ({
       ...prev,
       dateFrom: date?.toISOString().split('T')[0],
     }))
   }, [])
 
   const handleDateToChange = useCallback((date: Date | undefined) => {
-    setCurrentFilters((prev: Filter) => ({
+    setCurrentFilters((prev: FilterArgs) => ({
       ...prev,
       dateTo: date?.toISOString().split('T')[0],
     }))

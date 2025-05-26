@@ -107,17 +107,6 @@ export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryP
           )}
         </div>
       </div>
-
-      {connectedCount < totalCount && (
-        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-          <p className="text-sm text-yellow-800">
-            <AlertCircleIcon className="h-4 w-4 inline mr-1" />
-            You have {totalCount - connectedCount} unconnected account
-            {totalCount - connectedCount !== 1 ? 's' : ''}. Connecting them will improve transaction
-            categorization and financial insights.
-          </p>
-        </div>
-      )}
     </div>
   )
 }
