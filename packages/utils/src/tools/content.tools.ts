@@ -1,7 +1,7 @@
-import { ContentStrategySchema } from '@/schemas'
 import { google } from '@ai-sdk/google'
 import { generateObject, tool } from 'ai'
 import { z } from 'zod'
+import { ContentStrategySchema } from '../schemas'
 
 export const content_generator = tool({
   description: 'Generate comprehensive content strategy from a simple topic idea',

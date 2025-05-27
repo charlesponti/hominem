@@ -1,7 +1,7 @@
-import { logger } from '@/logger'
 import axios from 'axios'
 import fs from 'node:fs'
 import path from 'node:path'
+import { logger } from '../../logger'
 
 // Helper function to download image
 export async function downloadImage({
