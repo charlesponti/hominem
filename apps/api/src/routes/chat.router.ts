@@ -110,12 +110,24 @@ export async function chatPlugin(fastify: FastifyInstance) {
         return reply.code(403).send({ error: 'Not authorized to access this chat' })
       }
 
-      // Get the complete conversation history with tool calls
-      const history = await chatService.getConversationWithToolCalls(chatId)
-
+      // Parse pagination params (limit & offset)
+      const { limit: limitQuery, offset: offsetQuery } = request.query as Record<string, string | undefined>
+      const limit = Math.min(Math.max(parseInt(limitQuery || '', 10) || 20, 1), 100)
+      const offset = Math.max(parseInt(offsetQuery || '', 10) || 0, 0)
+      // Fetch one page of messages in descending order (newest first)
+      const historyPage = await chatService.getConversationWithToolCalls(chatId, {
+        limit,
+        offset,
+        orderBy: 'desc',
+      })
+      // Return in chronological order for client
+      const messages = historyPage
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      const hasMore = historyPage.length === limit
       return reply.send({
         chatId,
-        messages: history,
+        messages,
+        hasMore,
       })
     } catch (error) {
       logger.error(error)

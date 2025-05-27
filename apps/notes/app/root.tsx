@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
+import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
 import type { Route } from './+types/root'
 import './globals.css'
 import { getQueryClient } from './lib/get-query-client'
@@ -86,9 +87,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
+
+function AppProviders({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient()
 
+  // Get feature flags from environment variables
+  const featureFlags = {
+    twitterIntegration: import.meta.env.VITE_FEATURE_TWITTER_INTEGRATION === 'true',
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FeatureFlagsProvider flags={featureFlags}>
+        <UserProvider>{children}</UserProvider>
+      </FeatureFlagsProvider>
+    </QueryClientProvider>
+  )
+}
+
+export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
   return (
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
@@ -96,11 +113,9 @@ export default function App({ loaderData }: { loaderData: Route.ComponentProps }
       signInFallbackRedirectUrl="/"
       signUpFallbackRedirectUrl="/"
     >
-      <QueryClientProvider client={queryClient}>
-        <UserProvider>
-          <Outlet />
-        </UserProvider>
-      </QueryClientProvider>
+      <AppProviders>
+        <Outlet />
+      </AppProviders>
     </ClerkProvider>
   )
 }

@@ -563,7 +563,7 @@ const twitterOAuthPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) 
 
       const existingTweetIds = new Set(
         existingTweets
-          .map(row => {
+          .map((row) => {
             const metadata = row.tweetId as { tweetId?: string } | null
             return metadata?.tweetId
           })
@@ -571,8 +571,8 @@ const twitterOAuthPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) 
       )
 
       // Insert new tweets as content
-      const newTweets = tweetsData.data.filter(tweet => !existingTweetIds.has(tweet.id))
-      const contentToInsert = newTweets.map(tweet => ({
+      const newTweets = tweetsData.data.filter((tweet) => !existingTweetIds.has(tweet.id))
+      const contentToInsert = newTweets.map((tweet) => ({
         id: randomUUID(),
         type: 'tweet' as const,
         title: `Tweet - ${new Date(tweet.created_at).toLocaleDateString()}`,
@@ -584,12 +584,14 @@ const twitterOAuthPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) 
           status: 'posted' as const,
           postedAt: tweet.created_at,
           importedAt: new Date().toISOString(),
-          metrics: tweet.public_metrics ? {
-            retweets: tweet.public_metrics.retweet_count,
-            likes: tweet.public_metrics.like_count,
-            replies: tweet.public_metrics.reply_count,
-            views: tweet.public_metrics.impression_count,
-          } : undefined,
+          metrics: tweet.public_metrics
+            ? {
+                retweets: tweet.public_metrics.retweet_count,
+                likes: tweet.public_metrics.like_count,
+                replies: tweet.public_metrics.reply_count,
+                views: tweet.public_metrics.impression_count,
+              }
+            : undefined,
           inReplyTo: tweet.in_reply_to_user_id,
         },
         createdAt: tweet.created_at,

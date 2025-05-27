@@ -106,12 +106,14 @@ export const TweetMetadataSchema = z.object({
   status: z.enum(['draft', 'posted', 'failed']).default('draft'),
   postedAt: z.string().optional(), // ISO string of when tweet was posted
   importedAt: z.string().optional(), // ISO string of when tweet was imported
-  metrics: z.object({
-    retweets: z.number().optional(),
-    likes: z.number().optional(),
-    replies: z.number().optional(),
-    views: z.number().optional(),
-  }).optional(),
+  metrics: z
+    .object({
+      retweets: z.number().optional(),
+      likes: z.number().optional(),
+      replies: z.number().optional(),
+      views: z.number().optional(),
+    })
+    .optional(),
   threadPosition: z.number().optional(), // Position in a thread (1-based)
   threadId: z.string().optional(), // ID of the first tweet in a thread
   inReplyTo: z.string().optional(), // Tweet ID this is replying to
