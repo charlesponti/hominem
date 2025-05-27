@@ -30,6 +30,7 @@ import { healthRoutes } from './routes/health.js'
 import { invitesPlugin } from './routes/invites.router.js'
 import listsPlugin from './routes/lists.router.js'
 import { contentRoutes } from './routes/notes.js'
+import oauthPlugin from './routes/oauth/index.js'
 import { personalFinanceRoutes } from './routes/personal-finance.js'
 import placesPlugin from './routes/places.router.js'
 import possessionsPlugin from './routes/possessions.router.js'
@@ -118,6 +119,7 @@ export async function createServer(
     await server.register(contentStrategiesRoutes, { prefix: '/api/content-strategies' })
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(contentRoutes, { prefix: '/api/content' })
+    await server.register(oauthPlugin, { prefix: '/api/oauth' })
     await server.register(vectorRoutes, { prefix: '/api/vectors' })
     await server.register(financeRoutes, { prefix: '/api/finance' })
     await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })

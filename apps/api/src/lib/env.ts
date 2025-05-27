@@ -2,9 +2,9 @@ import 'dotenv/config'
 import { z } from 'zod'
 
 const envSchema = z.object({
-  PORT: z.string().default('3000'),
+  PORT: z.string().default('4040'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  API_URL: z.string().url().default('http://localhost:3000'),
+  API_URL: z.string().url().default('http://localhost:4040'),
   COOKIE_SECRET: z.string().default('supersecret'),
   CHROMA_URL: z.string().optional(),
 
@@ -22,6 +22,9 @@ const envSchema = z.object({
   PLAID_API_KEY: z.string().default(''),
   PLAID_ENV: z.enum(['sandbox', 'development', 'production']).default('sandbox'),
   PLAID_WEBHOOK_SECRET: z.string().default(''),
+
+  TWITTER_CLIENT_ID: z.string().default(''),
+  TWITTER_CLIENT_SECRET: z.string().default(''),
 })
 
 export const env = envSchema.parse(process.env)

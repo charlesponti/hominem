@@ -2,6 +2,7 @@
 
 import { Loader2, RefreshCw, Twitter } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -21,7 +22,9 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
+import { useToast } from '~/components/ui/use-toast'
 import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
+import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
 
 interface TweetModalProps {
   open: boolean
@@ -47,6 +50,11 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
     isGenerating,
   } = useGenerateTweet()
 
+  const { data: twitterAccounts, isLoading: isLoadingAccounts } = useTwitterAccounts()
+  const postTweet = useTwitterPost()
+  const { toast } = useToast()
+
+  const hasTwitterAccount = twitterAccounts && twitterAccounts.length > 0
   const characterCount = generatedTweet.length
   const isOverLimit = characterCount > TWEET_CHARACTER_LIMIT
 
@@ -72,11 +80,35 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
   }
 
   const handlePost = () => {
-    // TODO: Implement Twitter API integration
-    const tweetText = encodeURIComponent(generatedTweet)
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`
-    window.open(twitterUrl, '_blank')
-    handleClose()
+    if (hasTwitterAccount) {
+      // Post using API
+      postTweet.mutate(
+        { text: generatedTweet },
+        {
+          onSuccess: () => {
+            toast({
+              title: 'Tweet posted successfully!',
+              description: 'Your tweet has been published to X.',
+            })
+            handleClose()
+          },
+          onError: (error) => {
+            console.error('Failed to post tweet:', error)
+            toast({
+              title: 'Failed to post tweet',
+              description: 'There was an error posting your tweet. Please try again.',
+              variant: 'destructive',
+            })
+          },
+        }
+      )
+    } else {
+      // Fallback to browser intent
+      const tweetText = encodeURIComponent(generatedTweet)
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`
+      window.open(twitterUrl, '_blank')
+      handleClose()
+    }
   }
 
   return (
@@ -90,6 +122,21 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
           <DialogDescription>
             Generate a tweet from your note content. You can customize the tone and edit the result
             before posting.
+            {!isLoadingAccounts && (
+              <div className="mt-2 flex items-center justify-between">
+                <Badge variant={hasTwitterAccount ? 'default' : 'secondary'} className="text-xs">
+                  {hasTwitterAccount ? '✓ X account connected' : 'No X account connected'}
+                </Badge>
+                {!hasTwitterAccount && (
+                  <Link
+                    to="/account"
+                    className="text-xs text-blue-500 hover:text-blue-600 underline"
+                  >
+                    Connect account
+                  </Link>
+                )}
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -188,11 +235,20 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
           ) : (
             <Button
               onClick={handlePost}
-              disabled={isOverLimit}
+              disabled={isOverLimit || postTweet.isLoading}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              <Twitter className="h-4 w-4 mr-2" />
-              Post to Twitter
+              {postTweet.isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Posting...
+                </>
+              ) : (
+                <>
+                  <Twitter className="h-4 w-4 mr-2" />
+                  {hasTwitterAccount ? 'Post to X' : 'Open in X'}
+                </>
+              )}
             </Button>
           )}
         </DialogFooter>
