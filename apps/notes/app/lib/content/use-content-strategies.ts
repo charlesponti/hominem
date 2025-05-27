@@ -54,12 +54,14 @@ export function useContentStrategy(strategyId: string) {
   const { userId } = useAuth()
   const apiClient = useApiClient()
 
-  const query = useQuery<ContentStrategy>({
+  const query = useQuery<ContentStrategiesSelect>({
     queryKey: [['content-strategies', strategyId]],
     queryFn: async () => {
       if (!userId) throw new Error('User not authenticated')
 
-      return await apiClient.get<null, ContentStrategy>(`/api/content-strategies/${strategyId}`)
+      return await apiClient.get<null, ContentStrategiesSelect>(
+        `/api/content-strategies/${strategyId}`
+      )
     },
     enabled: !!userId && !!strategyId,
   })
@@ -128,14 +130,14 @@ export function useUpdateContentStrategy() {
     mutationFn: async (updateData: UpdateContentStrategyData) => {
       if (!userId) throw new Error('User not authenticated')
 
-      return await apiClient.put<
-        Omit<UpdateContentStrategyData, 'id'>,
-        ContentStrategiesSelect
-      >(`/api/content-strategies/${updateData.id}`, {
-        title: updateData.title,
-        description: updateData.description,
-        strategy: updateData.strategy,
-      })
+      return await apiClient.put<Omit<UpdateContentStrategyData, 'id'>, ContentStrategiesSelect>(
+        `/api/content-strategies/${updateData.id}`,
+        {
+          title: updateData.title,
+          description: updateData.description,
+          strategy: updateData.strategy,
+        }
+      )
     },
     onSuccess: (updatedStrategy) => {
       queryClient.invalidateQueries({ queryKey: CONTENT_STRATEGIES_KEY })
