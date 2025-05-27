@@ -35,7 +35,6 @@ const TWEET_CHARACTER_LIMIT = 280
 type ToneOption = 'professional' | 'casual' | 'engaging' | 'informative'
 export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: TweetModalProps) {
   const [tone, setTone] = useState<ToneOption>('engaging')
-  const [includeHashtags, setIncludeHashtags] = useState(true)
 
   const {
     generateTweet,
@@ -56,7 +55,6 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
     generateTweet({
       content,
       tone,
-      includeHashtags,
     })
   }
 
@@ -65,7 +63,6 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
     regenerateTweet({
       content,
       tone,
-      includeHashtags,
     })
   }
 
@@ -112,19 +109,6 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
                   <SelectItem value="informative">Informative</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Options</Label>
-              <div className="flex items-center space-x-2">
-                <Button
-                  type="button"
-                  variant={includeHashtags ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setIncludeHashtags(!includeHashtags)}
-                >
-                  Include #hashtags
-                </Button>
-              </div>
             </div>
           </div>
 

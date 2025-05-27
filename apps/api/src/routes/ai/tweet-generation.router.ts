@@ -8,7 +8,6 @@ import { verifyAuth } from '../../middleware/auth'
 const generateTweetBodySchema = z.object({
   content: z.string().min(1, 'Content is required'),
   tone: z.enum(['professional', 'casual', 'engaging', 'informative']).default('engaging'),
-  includeHashtags: z.boolean().default(true),
 })
 
 const TWEET_CHARACTER_LIMIT = 280
@@ -16,7 +15,7 @@ const TWEET_CHARACTER_LIMIT = 280
 export async function tweetGenerationRoutes(fastify: FastifyInstance) {
   fastify.post('/generate-tweet', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const { content, tone, includeHashtags } = generateTweetBodySchema.parse(request.body)
+      const { content, tone } = generateTweetBodySchema.parse(request.body)
 
       // Create system prompt based on tone and options
       const systemPrompt = `You are a social media expert specializing in creating engaging Twitter content.
@@ -28,7 +27,6 @@ REQUIREMENTS:
 - Use a ${tone} tone
 - Make it engaging and shareable
 - Preserve the core message and key insights
-- ${includeHashtags ? 'Include relevant hashtags (2-3 max)' : 'Do not include hashtags'}
 - Use proper Twitter formatting (line breaks, emojis where appropriate)
 
 TONE GUIDELINES:

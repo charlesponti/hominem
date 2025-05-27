@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/react-router'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL
 
@@ -81,30 +81,34 @@ export function useApiClient() {
   )
 
   /**
-   * API client methods for common operations
+   * API client methods for common operations - memoized to prevent infinite re-renders
    */
-  const api = {
-    get: <body, returnType>(
-      endpoint: string,
-      options?: Omit<FetchOptions<body>, 'method' | 'body'>
-    ) => fetchApi<body, returnType>(endpoint, { ...options, method: 'GET' }),
+  const api = useMemo(
+    () => ({
+      get: <body, returnType>(
+        endpoint: string,
+        options?: Omit<FetchOptions<body>, 'method' | 'body'>
+      ) => fetchApi<body, returnType>(endpoint, { ...options, method: 'GET' }),
 
-    post: <T, S>(endpoint: string, data?: T, options?: Omit<FetchOptions<T>, 'method'>) =>
-      fetchApi<T, S>(endpoint, { ...options, method: 'POST', body: data }),
+      post: <T, S>(endpoint: string, data?: T, options?: Omit<FetchOptions<T>, 'method'>) =>
+        fetchApi<T, S>(endpoint, { ...options, method: 'POST', body: data }),
 
-    postStream: <T>(
-      endpoint: string,
-      data: T,
-      options?: Omit<FetchOptions<T>, 'method' | 'stream'>
-    ) => fetchApi<T, Response>(endpoint, { ...options, method: 'POST', body: data, stream: true }),
+      postStream: <T>(
+        endpoint: string,
+        data: T,
+        options?: Omit<FetchOptions<T>, 'method' | 'stream'>
+      ) =>
+        fetchApi<T, Response>(endpoint, { ...options, method: 'POST', body: data, stream: true }),
 
-    put: <T, S>(endpoint: string, data: T, options?: Omit<FetchOptions<T>, 'method'>) =>
-      fetchApi<T, S>(endpoint, { ...options, method: 'PUT', body: data }),
+      put: <T, S>(endpoint: string, data: T, options?: Omit<FetchOptions<T>, 'method'>) =>
+        fetchApi<T, S>(endpoint, { ...options, method: 'PUT', body: data }),
 
-    delete: <T, S>(endpoint: string, options?: Omit<FetchOptions<T>, 'method'>) =>
-      // We add body because `fetchApi` use `application/json` as default content type
-      fetchApi<T, S>(endpoint, { ...options, method: 'DELETE', body: {} as T }),
-  }
+      delete: <T, S>(endpoint: string, options?: Omit<FetchOptions<T>, 'method'>) =>
+        // We add body because `fetchApi` use `application/json` as default content type
+        fetchApi<T, S>(endpoint, { ...options, method: 'DELETE', body: {} as T }),
+    }),
+    [fetchApi]
+  )
 
   return {
     ...api,

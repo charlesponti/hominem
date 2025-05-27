@@ -7,7 +7,6 @@ import { useToast } from '../../components/ui/use-toast'
 interface GenerateTweetParams {
   content: string
   tone?: 'professional' | 'casual' | 'engaging' | 'informative'
-  includeHashtags?: boolean
 }
 
 interface TweetResponse {
