@@ -14,6 +14,7 @@ export const content = pgTable(
     mentions: json('mentions').$type<Array<NoteMention> | undefined>().default([]),
     analysis: json('analysis'),
     taskMetadata: json('task_metadata').$type<TaskMetadata>(),
+    tweetMetadata: json('tweet_metadata').$type<TweetMetadata>(),
     userId: uuid('userId')
       .notNull()
       .references(() => users.id),
@@ -64,6 +65,7 @@ export const ContentTypeSchema = z.enum([
   'timer', // Time-trackable task
   'journal', // Journal entry
   'document', // Longer form document
+  'tweet', // Tweet content (posted to or imported from Twitter/X)
 ])
 
 export type ContentType = z.infer<typeof ContentTypeSchema>
@@ -94,6 +96,28 @@ export const TaskMetadataSchema = z.object({
 })
 
 export type TaskMetadata = z.infer<typeof TaskMetadataSchema>
+
+/**
+ * Tweet metadata for tweet-type content
+ */
+export const TweetMetadataSchema = z.object({
+  tweetId: z.string().optional(), // Twitter/X tweet ID when posted/imported
+  url: z.string().optional(), // Direct URL to the tweet
+  status: z.enum(['draft', 'posted', 'failed']).default('draft'),
+  postedAt: z.string().optional(), // ISO string of when tweet was posted
+  importedAt: z.string().optional(), // ISO string of when tweet was imported
+  metrics: z.object({
+    retweets: z.number().optional(),
+    likes: z.number().optional(),
+    replies: z.number().optional(),
+    views: z.number().optional(),
+  }).optional(),
+  threadPosition: z.number().optional(), // Position in a thread (1-based)
+  threadId: z.string().optional(), // ID of the first tweet in a thread
+  inReplyTo: z.string().optional(), // Tweet ID this is replying to
+})
+
+export type TweetMetadata = z.infer<typeof TweetMetadataSchema>
 
 export type Content = typeof content.$inferSelect
 export type ContentInsert = typeof content.$inferInsert

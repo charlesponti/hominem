@@ -1,4 +1,5 @@
 import { RedirectToSignIn, SignOutButton, useAuth } from '@clerk/react-router'
+import { Download, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -14,9 +15,11 @@ export default function AccountPage() {
     isLoading,
     isConnecting,
     isDisconnecting,
+    isSyncing,
     error,
     connectTwitter,
     disconnectTwitter,
+    syncTweets,
     refetch,
   } = useTwitterOAuth()
 
@@ -58,6 +61,25 @@ export default function AccountPage() {
 
   const handleDisconnect = (accountId: string) => {
     disconnectTwitter(accountId)
+  }
+
+  const handleSyncTweets = () => {
+    syncTweets(undefined, {
+      onSuccess: (data) => {
+        toast({
+          title: 'Tweets synced successfully!',
+          description: `Imported ${data.synced} new tweets from your Twitter account.`,
+        })
+      },
+      onError: (error) => {
+        console.error('Failed to sync tweets:', error)
+        toast({
+          title: 'Failed to sync tweets',
+          description: 'There was an error syncing your tweets. Please try again.',
+          variant: 'destructive',
+        })
+      },
+    })
   }
 
   if (!userId) {
@@ -107,6 +129,24 @@ export default function AccountPage() {
                 {accounts.length > 0 ? (
                   <div className="flex items-center space-x-2">
                     <Badge variant="secondary">Connected</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSyncTweets}
+                      disabled={isLoading || isSyncing}
+                    >
+                      {isSyncing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-2" />
+                          Sync Tweets
+                        </>
+                      )}
+                    </Button>
                     {accounts.map((account) => (
                       <Button
                         key={account.id}

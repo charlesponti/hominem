@@ -1,0 +1,1 @@
+ALTER TABLE "notes" ADD COLUMN "tweet_metadata" json;

@@ -1,4 +1,5 @@
 import { db } from '@hominem/utils/db'
+import { logger } from '@hominem/utils/logger'
 import { account } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import { env } from './env.js'
@@ -6,6 +7,30 @@ import { env } from './env.js'
 // Twitter OAuth configuration
 const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID
 const TWITTER_CLIENT_SECRET = env.TWITTER_CLIENT_SECRET
+
+// OAuth 2.0 scopes for Twitter API v2 - Request all available scopes for full functionality
+export const TWITTER_SCOPES = [
+  'tweet.read', // All the Tweets you can view, including Tweets from protected accounts
+  'tweet.write', // Tweet and Retweet for you
+  'tweet.moderate.write', // Hide and unhide replies to your Tweets
+  'users.email', // Email from an authenticated user
+  'users.read', // Any account you can view, including protected accounts
+  'follows.read', // People who follow you and people who you follow
+  'follows.write', // Follow and unfollow people for you
+  'offline.access', // Stay connected to your account until you revoke access
+  'space.read', // All the Spaces you can view
+  'mute.read', // Accounts you've muted
+  'mute.write', // Mute and unmute accounts for you
+  'like.read', // Tweets you've liked and likes you can view
+  'like.write', // Like and un-like Tweets for you
+  'list.read', // Lists, list members, and list followers of lists you've created or are a member of, including private lists
+  'list.write', // Create and manage Lists for you
+  'block.read', // Accounts you've blocked
+  'block.write', // Block and unblock accounts for you
+  'bookmark.read', // Get Bookmarked Tweets from an authenticated user
+  'bookmark.write', // Bookmark and remove Bookmarks from Tweets
+  'media.write', // Upload media
+].join(' ')
 
 // Twitter API response types
 export type TwitterTokenResponse = {
@@ -156,34 +181,54 @@ export async function makeTwitterApiRequest(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const accessToken = await getValidTwitterToken(twitterAccount)
+  try {
+    const accessToken = await getValidTwitterToken(twitterAccount)
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
+    console.error('Making Twitter API request', {
+      url,
+      method: options.method || 'GET',
+      hasAccessToken: !!accessToken,
+      tokenLength: accessToken?.length || 0,
+      scopes: twitterAccount.scope,
+    })
 
-  // If we get a 401, the token might be invalid - try refreshing once
-  if (response.status === 401 && twitterAccount.refreshToken) {
-    try {
-      const { accessToken: newToken } = await refreshTwitterToken(twitterAccount)
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
 
-      // Retry the request with the new token
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          Authorization: `Bearer ${newToken}`,
-        },
-      })
-    } catch (refreshError) {
-      // If refresh fails, return the original 401 response
-      return response
+    logger.info('Twitter API response', {
+      status: response.status,
+      statusText: response.statusText,
+      url,
+    })
+
+    // If we get a 401, the token might be invalid - try refreshing once
+    if (response.status === 401 && twitterAccount.refreshToken) {
+      try {
+        const { accessToken: newToken } = await refreshTwitterToken(twitterAccount)
+
+        // Retry the request with the new token
+        return fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${newToken}`,
+          },
+        })
+      } catch (refreshError) {
+        // If refresh fails, return the original 401 response
+        logger.error('Failed to refresh token:', refreshError)
+        return response
+      }
     }
-  }
 
-  return response
+    return response
+  } catch (error) {
+    logger.error('Error in makeTwitterApiRequest:', error)
+    throw error
+  }
 }

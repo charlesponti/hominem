@@ -31,12 +31,13 @@ interface TweetModalProps {
   onOpenChange: (open: boolean) => void
   noteContent: string
   noteTitle?: string | null
+  contentId?: string // Optional: link to existing content
 }
 
 const TWEET_CHARACTER_LIMIT = 280
 
 type ToneOption = 'professional' | 'casual' | 'engaging' | 'informative'
-export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: TweetModalProps) {
+export function TweetModal({ open, onOpenChange, noteContent, noteTitle, contentId }: TweetModalProps) {
   const [tone, setTone] = useState<ToneOption>('engaging')
 
   const {
@@ -83,12 +84,19 @@ export function TweetModal({ open, onOpenChange, noteContent, noteTitle }: Tweet
     if (hasTwitterAccount) {
       // Post using API
       postTweet.mutate(
-        { text: generatedTweet },
+        { 
+          text: generatedTweet,
+          contentId, // Link to existing content if provided
+          saveAsContent: true, // Always save as content for better tracking
+        },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
+            const message = contentId 
+              ? 'Tweet posted and content updated!' 
+              : 'Tweet posted and saved to notes!'
             toast({
               title: 'Tweet posted successfully!',
-              description: 'Your tweet has been published to X.',
+              description: message,
             })
             handleClose()
           },
