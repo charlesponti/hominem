@@ -118,6 +118,11 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
               setIsOpen(false)
             }
           }}
+          onKeyUp={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false)
+            }
+          }}
         >
           <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
             <CardHeader>
