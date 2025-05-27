@@ -18,10 +18,12 @@ import adminPlugin from './plugins/admin.js'
 import emailPlugin from './plugins/email.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import shutdownPlugin from './plugins/shutdown.js'
+import { aiRoutes } from './routes/ai/index.js'
 import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
 import { careerRoutes } from './routes/career.js'
 import { chatPlugin } from './routes/chat.router.js'
 import { companyRoutes } from './routes/company.js'
+import { contentStrategiesRoutes } from './routes/content-strategies.router.js'
 import { financeRoutes } from './routes/finance/finance.router.js'
 import { plaidRoutes } from './routes/finance/plaid.router.js'
 import { healthRoutes } from './routes/health.js'
@@ -107,11 +109,13 @@ export async function createServer(
     await server.register(placesPlugin)
     await server.register(invitesPlugin)
     await server.register(bookmarksPlugin)
+    await server.register(aiRoutes, { prefix: '/api/ai' })
     await server.register(possessionsPlugin, { prefix: '/api' })
     await server.register(healthRoutes, { prefix: '/api/health' })
     await server.register(companyRoutes, { prefix: '/api/companies' })
     await server.register(careerRoutes, { prefix: '/api/career' })
     await server.register(chatPlugin, { prefix: '/api/chat' })
+    await server.register(contentStrategiesRoutes, { prefix: '/api/content-strategies' })
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(contentRoutes, { prefix: '/api/content' })
     await server.register(vectorRoutes, { prefix: '/api/vectors' })

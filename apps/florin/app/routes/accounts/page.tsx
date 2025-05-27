@@ -9,7 +9,6 @@ import {
   CreditCard,
   Eye,
   EyeOff,
-  Plus,
   RefreshCcw,
   Trash2,
 } from 'lucide-react'
@@ -384,7 +383,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bank Accounts</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Bank Accounts</h1>
           <p className="text-muted-foreground">
             Manage your connected bank accounts and financial data sources
           </p>
@@ -403,7 +402,6 @@ export default function AccountsPage() {
                 : handleConnectionError(new Error('Unknown error'))
             }
           >
-            <Plus className="w-4 h-4 mr-2" />
             Add Bank Account
           </PlaidConnectButton>
         </div>

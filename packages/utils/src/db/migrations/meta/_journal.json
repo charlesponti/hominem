@@ -169,6 +169,13 @@
       "when": 1748051197041,
       "tag": "0023_pale_marvex",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1748301029677,
+      "tag": "0024_nebulous_wallow",
+      "breakpoints": true
     }
   ]
 }

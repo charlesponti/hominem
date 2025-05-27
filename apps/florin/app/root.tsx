@@ -4,7 +4,6 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
-// Import routes
 import type { Route } from './+types/root'
 import { UserProvider } from './context/user-context'
 import './globals.css'

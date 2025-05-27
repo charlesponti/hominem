@@ -1,4 +1,4 @@
-import { Sparkles, User } from 'lucide-react'
+import { Lightbulb, Sparkles, User } from 'lucide-react'
 import { Link, Outlet } from 'react-router'
 import { Toaster } from '~/components/ui/toaster'
 
@@ -15,6 +15,23 @@ export default function Layout() {
               <Link to="/" className="font-bold text-lg">
                 Sage
               </Link>
+            </div>
+            <div className="flex flex-1 items-center justify-center">
+              <nav className="flex items-center space-x-6">
+                <Link
+                  to="/notes"
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Notes
+                </Link>
+                <Link
+                  to="/content-strategy"
+                  className="flex items-center space-x-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <Lightbulb className="size-4" />
+                  <span>Content Strategy</span>
+                </Link>
+              </nav>
             </div>
             <div className="flex flex-1 items-center justify-end space-x-4">
               <nav className="flex items-center space-x-2">

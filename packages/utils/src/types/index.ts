@@ -7,6 +7,7 @@ export type {
   ChatMessageSelect,
   Company,
   FinanceAccount,
+  FinancialInstitution,
   JobApplication,
   JobApplicationInsert,
   Place,
@@ -29,6 +30,11 @@ export type {
   ListInviteSelect,
   ListSelect,
 } from '../db/schema/lists.schema'
+
+export type {
+  ContentStrategiesSelect,
+  ContentStrategy,
+} from '../db/schema/content-strategies.schema'
 
 export type {
   Content,

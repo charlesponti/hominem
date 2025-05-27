@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
-import type { FinancialInstitution } from '@hominem/utils/schema'
+import type { FinancialInstitution } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 
 const FINANCIAL_INSTITUTIONS_KEY = [['financial-institutions']]
