@@ -76,7 +76,14 @@ export async function createServer(
     } as FastifyCookieOptions)
 
     await server.register(fastifyCircuitBreaker)
-    await server.register(fastifyMultipart)
+    await server.register(fastifyMultipart, {
+      limits: {
+        fileSize: 50 * 1024 * 1024, // 50MB
+        files: 1,
+        fieldNameSize: 100,
+        fieldSize: 1024 * 1024, // 1MB for text fields
+      },
+    })
     await server.register(fastifyHelmet)
 
     // Register Clerk plugin if keys are provided and not empty
