@@ -1,14 +1,6 @@
-import { AuthApp } from 'app/components/auth/auth-app'
-import type { Route } from './+types/auth'
+import { SignIn } from '@clerk/react-router'
 
-// Using the proper parameter name without destructuring
-export function meta(args: Route.MetaArgs) {
-  return [
-    { title: 'Log In', foo: 'bar' },
-    { name: 'description', content: 'Authentication demonstration page' },
-  ]
-}
-
+// Render Clerk SignIn component for the /auth route
 export default function Auth() {
-  return <AuthApp />
+  return <SignIn routing="path" path="/auth" />
 }

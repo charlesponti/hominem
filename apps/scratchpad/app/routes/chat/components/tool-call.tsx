@@ -1,7 +1,6 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { ChevronDown, CircleSlash, Cpu, Terminal } from 'lucide-react'
-import { useState } from 'react'
-import { Card } from '~/components/ui/card'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { cn } from '~/lib/utils'
 
 interface ToolCallProps {
@@ -16,24 +15,36 @@ function formatValue(value: unknown): string {
   }
 }
 
-export function ToolCall({ call }: ToolCallProps) {
+export const ToolCall = memo<ToolCallProps>(function ToolCall({ call }) {
   const [isCollapsed, setIsCollapsed] = useState(true)
-  const formattedArgs = formatValue(call.args)
-  const formattedResult = call.result ? formatValue(call.result) : null
+
+  // Memoize formatted values to prevent re-computation on each render
+  const formattedArgs = useMemo(() => formatValue(call.args), [call.args])
+  const formattedResult = useMemo(
+    () => (call.result ? formatValue(call.result) : null),
+    [call.result]
+  )
+
+  // Memoize the toggle function to prevent child re-renders
+  const toggleCollapsed = useCallback(() => {
+    setIsCollapsed((prev) => !prev)
+  }, [])
 
   return (
     <div className="group" data-testid="tool-call">
-      <Card
+      <div
         className={cn(
-          'border border-primary/10 transition-all duration-200 overflow-hidden',
-          'hover:border-primary/20 hover:shadow-md',
+          'border border-primary/10 transition-all duration-200 overflow-hidden rounded-md',
+          'hover:border-primary/20 hover:shadow-sm', // Reduced shadow
           call.isError && 'border-destructive/20 hover:border-destructive/30'
         )}
       >
-        <div className="p-3 space-y-3">
+        <div className="p-2 space-y-2">
+          {' '}
+          {/* Reduced padding */}
           <button
             type="button"
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={toggleCollapsed}
             className="w-full flex items-center justify-between group/header cursor-pointer"
           >
             <div className="flex items-center gap-2 min-w-0">
@@ -68,47 +79,43 @@ export function ToolCall({ call }: ToolCallProps) {
               />
             </div>
           </button>
-
-          <div
-            className={cn(
-              'space-y-2 overflow-hidden transition-all duration-200',
-              isCollapsed && 'hidden'
-            )}
-          >
-            <div className="relative group/args">
-              <div className="absolute -left-2 -right-2 top-0 bottom-0 bg-muted/30 opacity-0 group-hover/args:opacity-100 transition-opacity rounded-md" />
-              <div className="flex items-center gap-1.5 text-xs text-primary/60 px-1">
-                <Cpu size={12} />
-                <span>Input</span>
-              </div>
-              <pre
-                className="relative text-xs font-mono bg-muted/20 p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
-                data-testid="tool-call-args"
-              >
-                {formattedArgs}
-              </pre>
-            </div>
-
-            {formattedResult && (
-              <div className="relative group/result">
-                <div className="absolute -left-2 -right-2 top-0 bottom-0 bg-primary/5 opacity-0 group-hover/result:opacity-100 transition-opacity rounded-md" />
-                <div className="relative space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-primary/60 px-1">
-                    <Cpu size={12} />
-                    <span>Result</span>
-                  </div>
-                  <pre
-                    className="text-xs font-mono bg-primary/5 p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
-                    data-testid="tool-call-result"
-                  >
-                    {formattedResult}
-                  </pre>
+          {!isCollapsed ? (
+            <div className={cn('space-y-2 overflow-hidden transition-all duration-200')}>
+              <div className="relative group/args">
+                <div className="absolute -left-2 -right-2 top-0 bottom-0 bg-muted/30 opacity-0 group-hover/args:opacity-100 transition-opacity rounded-md" />
+                <div className="flex items-center gap-1.5 text-xs text-primary/60 px-1">
+                  <Cpu size={12} />
+                  <span>Input</span>
                 </div>
+                <pre
+                  className="relative text-xs font-mono bg-muted/20 p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
+                  data-testid="tool-call-args"
+                >
+                  {formattedArgs}
+                </pre>
               </div>
-            )}
-          </div>
+
+              {formattedResult && (
+                <div className="relative group/result">
+                  <div className="absolute -left-2 -right-2 top-0 bottom-0 bg-primary/5 opacity-0 group-hover/result:opacity-100 transition-opacity rounded-md" />
+                  <div className="relative space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs text-primary/60 px-1">
+                      <Cpu size={12} />
+                      <span>Result</span>
+                    </div>
+                    <pre
+                      className="text-xs font-mono bg-primary/5 p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all"
+                      data-testid="tool-call-result"
+                    >
+                      {formattedResult}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
-      </Card>
+      </div>
     </div>
   )
-}
+})

@@ -101,6 +101,15 @@ const tailwindConfig = {
         xl: '16px',
         '2xl': '24px',
       },
+      spacing: {
+        safe: 'env(safe-area-inset-bottom)',
+      },
+      padding: {
+        safe: 'env(safe-area-inset-bottom)',
+      },
+      margin: {
+        safe: 'env(safe-area-inset-bottom)',
+      },
     },
   },
   plugins: [require('daisyui'), require('tailwindcss-animate')],

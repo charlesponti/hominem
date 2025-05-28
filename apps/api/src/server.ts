@@ -64,7 +64,7 @@ export async function createServer(
     })
 
     await server.register(fastifyCors, {
-      origin: [env.APP_URL, env.ROCCO_URL, env.NOTES_URL],
+      origin: [env.APP_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
     })

@@ -132,3 +132,38 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile optimizations for chat interface */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Prevent iOS bounce effect */
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for mobile viewport units */
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height when available */
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Ensure safe area handling */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}

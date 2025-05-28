@@ -1,5 +1,6 @@
 import type { ChatMessageFile } from '@hominem/utils/types'
 import { FileIcon, ImageIcon } from 'lucide-react'
+import { memo, useMemo } from 'react'
 import { Card } from '~/components/ui/card'
 import { cn } from '~/lib/utils'
 
@@ -7,9 +8,9 @@ interface FilePartProps {
   part: ChatMessageFile
 }
 
-export function FilePart({ part }: FilePartProps) {
-  const isImage = part.type === 'image'
-  const filename = part.filename || 'Untitled'
+export const FilePart = memo<FilePartProps>(function FilePart({ part }) {
+  const isImage = useMemo(() => part.type === 'image', [part.type])
+  const filename = useMemo(() => part.filename || 'Untitled', [part.filename])
 
   return (
     <Card
@@ -55,4 +56,4 @@ export function FilePart({ part }: FilePartProps) {
       </div>
     </Card>
   )
-}
+})

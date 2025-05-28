@@ -496,7 +496,7 @@ export const tools = {
   get_transactions,
   update_transaction,
   delete_transaction,
-  calculate_transactions, // Added new tool
+  calculate_transactions,
 
   // Budgeting
   get_budget_category_suggestions,

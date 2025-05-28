@@ -8,9 +8,10 @@ const envSchema = z.object({
   COOKIE_SECRET: z.string().default('supersecret'),
   CHROMA_URL: z.string().optional(),
 
-  APP_URL: z.string().url().default('http://localhost:4444'),
   ROCCO_URL: z.string().url().default('http://localhost:4454'),
+  APP_URL: z.string().url().default('http://localhost:4444'),
   NOTES_URL: z.string().url().default('http://localhost:4445'),
+  CHAT_URL: z.string().url().default('http://localhost:4446'),
 
   CLERK_SECRET_KEY: z.string(),
   CLERK_PUBLISHABLE_KEY: z.string(),

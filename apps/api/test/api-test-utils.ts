@@ -91,11 +91,12 @@ export const makeAuthenticatedRequest = async (
   options: {
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
     url: string
-    payload?: Record<string, unknown> // Ensure payload is optional
+    payload?: Record<string, unknown>
     headers?: Record<string, string>
   }
 ) => {
-  const headers = {
+  const headers: Record<string, string> = {
+    'x-user-id': 'test-user-id',
     ...options.headers,
   }
   if (options.payload) {
@@ -106,7 +107,7 @@ export const makeAuthenticatedRequest = async (
     method: options.method,
     url: options.url,
     payload: options.payload,
-    headers, // Use the conditionally constructed headers
+    headers,
   })
 }
 

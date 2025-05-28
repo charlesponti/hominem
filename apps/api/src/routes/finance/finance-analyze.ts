@@ -1,5 +1,6 @@
 import { db } from '@hominem/utils/db'
 import {
+  buildWhereConditions,
   calculateTransactions,
   categoryBreakdownSchema,
   findTopMerchants,
@@ -8,7 +9,7 @@ import {
   summarizeByCategory,
 } from '@hominem/utils/finance'
 import { transactions } from '@hominem/utils/schema'
-import { and, count, desc, eq, gte, lt, or, sql } from 'drizzle-orm'
+import { count, desc, sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../../lib/errors.js'
@@ -66,7 +67,7 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
 
       return result
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
@@ -111,7 +112,7 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
       })
       return result
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
@@ -133,7 +134,7 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
 
       return result
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
@@ -158,7 +159,7 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
 
         return result
       } catch (error) {
-        handleError(error as Error, reply)
+        return handleError(error as Error, reply)
       }
     }
   )
@@ -182,11 +183,12 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
       const endDate = new Date(startDate)
       endDate.setMonth(startDate.getMonth() + 1)
 
-      const monthFilter = and(
-        eq(transactions.userId, userId),
-        gte(transactions.date, startDate), // Use Date object directly
-        lt(transactions.date, endDate) // Use Date object directly
-      )
+      // Use standardized condition building with month date range
+      const monthFilter = buildWhereConditions({
+        userId,
+        from: startDate.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+        to: endDate.toISOString().split('T')[0],
+      })
 
       // --- Database Queries ---
 
@@ -209,21 +211,23 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
       const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {}
 
       // 2. Calculate Spending by Category (only expenses)
+      // Use standardized condition building for category spending with expense type filter
+      const categorySpendingFilter = buildWhereConditions({
+        userId,
+        from: startDate.toISOString().split('T')[0],
+        to: endDate.toISOString().split('T')[0],
+        type: 'expense',
+      })
+
       const categorySpendingResult = await db
         .select({
           category: transactions.category,
-          amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number), // Cast amount to numeric for sum/abs
+          amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number),
         })
         .from(transactions)
-        .where(
-          and(
-            monthFilter,
-            lt(transactions.amount, '0'),
-            or(eq(transactions.type, 'income'), eq(transactions.type, 'expense'))
-          )
-        ) // Compare amount as string
+        .where(categorySpendingFilter)
         .groupBy(transactions.category)
-        .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`)) // Cast amount to numeric for sum/abs
+        .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`))
 
       // --- Format Results ---
       const netIncome = totalIncome - totalExpenses

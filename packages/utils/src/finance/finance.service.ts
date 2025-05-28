@@ -3,7 +3,10 @@ import crypto from 'node:crypto'
 import { db } from '../db/index'
 import {
   budgetCategories,
+  budgetGoals,
   financeAccounts,
+  financialInstitutions,
+  plaidItems,
   transactions,
   type FinanceTransaction,
   type FinanceTransactionInsert,
@@ -42,48 +45,85 @@ export function parseAmount(amount: string | number): number {
   return typeof amount === 'string' ? Number.parseFloat(amount) : amount
 }
 
+/**
+ * Builds standardized WHERE conditions for transaction queries.
+ *
+ * This function provides a centralized way to build database query conditions
+ * for financial transactions. It supports:
+ *
+ * - Fuzzy search for categories (case-insensitive partial matching)
+ * - Multiple category filtering (array support)
+ * - Date range filtering (supports both legacy and new date formats)
+ * - Amount range filtering
+ * - Account filtering (UUID or name-based)
+ * - Full-text search across multiple fields
+ * - Description filtering with fuzzy search
+ *
+ * @param options - Query options containing filter criteria
+ * @returns Combined WHERE conditions or undefined if no conditions
+ */
 export function buildWhereConditions(options: QueryOptions) {
   const conditions = []
 
-  // Corrected: Only add userId condition if options.userId is present and valid
+  // User ID filter - required for most operations
   if (options.userId) {
     conditions.push(eq(transactions.userId, options.userId))
   }
 
-  // Only filter by transaction type if specified in options
+  // Transaction type filter
   if (options.type && typeof options.type === 'string') {
     conditions.push(eq(transactions.type, options.type))
   }
 
+  // Default filters to exclude test/invalid transactions
   conditions.push(eq(transactions.excluded, false))
   conditions.push(eq(transactions.pending, false))
 
-  if (options.from) {
-    conditions.push(gte(transactions.date, new Date(options.from)))
+  // Date range filters - support both new and legacy format
+  const fromDate = options.from ? new Date(options.from) : options.dateFrom
+  const toDate = options.to ? new Date(options.to) : options.dateTo
+
+  if (fromDate) {
+    conditions.push(gte(transactions.date, fromDate))
   }
 
-  if (options.to) {
-    conditions.push(lte(transactions.date, new Date(options.to)))
+  if (toDate) {
+    conditions.push(lte(transactions.date, toDate))
   }
 
+  // Category filter with fuzzy search support
   if (options.category) {
-    conditions.push(
-      sql`(${transactions.category} = ${options.category} OR ${transactions.parentCategory} = ${options.category})`
-    )
+    if (Array.isArray(options.category)) {
+      // Handle array of categories
+      const categoryConditions = options.category.map((cat) => {
+        const categoryPattern = `%${cat}%`
+        return sql`(${transactions.category} ILIKE ${categoryPattern} OR ${transactions.parentCategory} ILIKE ${categoryPattern})`
+      })
+      conditions.push(sql`(${sql.join(categoryConditions, sql` OR `)})`)
+    } else {
+      // Handle single category with fuzzy search
+      const categoryPattern = `%${options.category}%`
+      conditions.push(
+        sql`(${transactions.category} ILIKE ${categoryPattern} OR ${transactions.parentCategory} ILIKE ${categoryPattern})`
+      )
+    }
   }
 
-  if (options.min) {
-    conditions.push(gte(transactions.amount, options.min))
+  // Amount range filters - support both new and legacy format
+  const minAmount = options.min ? options.min : options.amountMin?.toString()
+  const maxAmount = options.max ? options.max : options.amountMax?.toString()
+
+  if (minAmount) {
+    conditions.push(gte(transactions.amount, minAmount))
   }
 
-  if (options.max) {
-    conditions.push(lte(transactions.amount, options.max))
+  if (maxAmount) {
+    conditions.push(lte(transactions.amount, maxAmount))
   }
 
-  console.log('account', options.account)
+  // Account filter - supports both UUID and name-based filtering
   if (options.account) {
     // Check if the account parameter looks like a UUID (account ID)
-    // If it's a UUID, filter by account ID; otherwise, filter by account name
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
         options.account
@@ -95,11 +135,12 @@ export function buildWhereConditions(options: QueryOptions) {
     }
   }
 
+  // Description filter - fuzzy search
   if (options.description) {
     conditions.push(like(transactions.description, `%${options.description}%`))
   }
 
-  // Add full-text search capability
+  // Full-text search across multiple fields
   if (options.search && typeof options.search === 'string' && options.search.trim() !== '') {
     const searchTerm = options.search.trim()
     const tsVector = sql`to_tsvector('english', 
@@ -275,28 +316,8 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
 }
 
 export async function summarizeByMonth(options: QueryOptions) {
-  // Build minimal WHERE conditions directly to avoid default filters
-  const conditions = []
-  if (options.userId) {
-    conditions.push(eq(transactions.userId, options.userId))
-  }
-  if (options.from) {
-    conditions.push(gte(transactions.date, new Date(options.from)))
-  }
-  if (options.to) {
-    conditions.push(lte(transactions.date, new Date(options.to)))
-  }
-  if (options.category) {
-    conditions.push(
-      sql`(${transactions.category} = ${options.category} OR ${transactions.parentCategory} = ${options.category})`
-    )
-  }
-
-  if (options.account) {
-    conditions.push(eq(transactions.accountId, options.account))
-  }
-
-  const whereConditions = conditions.length > 0 ? and(...conditions) : undefined
+  // Use the standardized buildWhereConditions function
+  const whereConditions = buildWhereConditions(options)
 
   const result = await db
     .select({
@@ -534,15 +555,15 @@ export async function calculateTransactions(
     descriptionLike?: string
   }
 ) {
-  let whereConditions = buildWhereConditions(options)
-
-  // Add description filter if provided
-  if (options.descriptionLike) {
-    const conditions = whereConditions
-      ? [whereConditions, like(transactions.description, `%${options.descriptionLike}%`)]
-      : [like(transactions.description, `%${options.descriptionLike}%`)]
-    whereConditions = and(...conditions)
+  // Create a new options object that includes the descriptionLike in the description field
+  // to leverage the standardized condition building
+  const enhancedOptions: QueryOptions = {
+    ...options,
+    // If descriptionLike is provided, use it as the description filter
+    description: options.descriptionLike || options.description,
   }
+
+  const whereConditions = buildWhereConditions(enhancedOptions)
 
   // If calculationType is specified, return just that metric
   if (options.calculationType && options.calculationType !== 'stats') {
@@ -650,4 +671,56 @@ export async function getBudgetCategorySuggestions(options: {
   // You could add more sophisticated logic here, e.g., using ML or keyword mapping
 
   return { suggestions: [...new Set(suggestions)] } // Return unique suggestions
+}
+
+/**
+ * Get all financial institutions
+ */
+export async function getFinancialInstitutions() {
+  try {
+    return await db.query.financialInstitutions.findMany({
+      orderBy: [financialInstitutions.name],
+    })
+  } catch (error) {
+    logger.error('Error fetching financial institutions:', error)
+    throw error
+  }
+}
+
+/**
+ * Get spending categories for a user
+ */
+export async function getSpendingCategories(userId: string) {
+  try {
+    return await db
+      .select({
+        category: transactions.category,
+      })
+      .from(transactions)
+      .where(and(eq(transactions.userId, userId), eq(transactions.type, 'expense')))
+      .groupBy(transactions.category)
+      .orderBy(transactions.category)
+  } catch (error) {
+    logger.error('Error fetching spending categories:', error)
+    throw error
+  }
+}
+
+/**
+ * Delete all finance data for a user
+ */
+export async function deleteAllFinanceData(userId: string) {
+  try {
+    // Delete all finance-related data for the user
+    await db.delete(transactions).where(eq(transactions.userId, userId))
+    await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId))
+    await db.delete(budgetGoals).where(eq(budgetGoals.userId, userId))
+    await db.delete(budgetCategories).where(eq(budgetCategories.userId, userId))
+    await db.delete(plaidItems).where(eq(plaidItems.userId, userId))
+
+    logger.info(`Deleted all finance data for user ${userId}`)
+  } catch (error) {
+    logger.error(`Error deleting finance data for user ${userId}:`, error)
+    throw error
+  }
 }

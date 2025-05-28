@@ -1,7 +1,11 @@
+import { ClerkProvider } from '@clerk/react-router'
+import { QueryClientProvider } from '@tanstack/react-query'
+import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
 import type { Route } from './+types/root'
 import './app.css'
+import { getQueryClient } from './lib/get-query-client'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -21,7 +25,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <Meta />
         <Links />
       </head>
@@ -34,8 +38,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
+const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+function AppProviders({ children }: { children: React.ReactNode }) {
+  const queryClient = getQueryClient()
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+}
+
 export default function App() {
-  return <Outlet />
+  return (
+    <ClerkProvider publishableKey={clerkPublishableKey}>
+      <AppProviders>
+        <Outlet />
+      </AppProviders>
+    </ClerkProvider>
+  )
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

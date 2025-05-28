@@ -13,7 +13,7 @@ export default async function ChatLayout({
   }
 
   return (
-    <div className="h-full overflow-hidden">
+    <div className="fixed inset-0 bg-background h-screen-safe">
       <Outlet />
     </div>
   )

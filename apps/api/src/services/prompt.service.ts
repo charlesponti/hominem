@@ -30,7 +30,16 @@ export class PromptService {
   ): Promise<string> {
     const DEFAULT_PROMPT =
       'You are a helpful AI assistant. Answer questions to the best of your ability.'
-    const contextValues = context ? `\n\nContext: ${JSON.stringify(context)}` : ''
+
+    // Format context as XML
+    let contextValues = ''
+    if (context && Object.keys(context).length > 0) {
+      const xmlContext = Object.entries(context)
+        .map(([key, value]) => `<${key}>${value}</${key}>`)
+        .join('\n')
+      contextValues = `\n\n${xmlContext}`
+    }
+
     let content: string
     try {
       // Check cache first

@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { useAuth } from '@/lib/supabase/auth-context'
+import { useAuth } from '@clerk/react-router'
 import { motion } from 'framer-motion'
 import { Menu } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link as RouterLink } from 'react-router'
 
 export function Navbar() {
-  const { isAuthenticated } = useAuth()
+  const { isSignedIn, isLoaded } = useAuth()
 
   return (
     <motion.div
@@ -32,24 +32,39 @@ export function Navbar() {
                   whileHover={{ x: 5 }}
                   transition={{ type: 'spring', stiffness: 400 }}
                 >
-                  <Link to="/" className="block px-4 py-2 text-sm hover:bg-accent rounded-md">
+                  <RouterLink to="/" className="block px-4 py-2 text-sm hover:bg-accent rounded-md">
                     Home
-                  </Link>
+                  </RouterLink>
                 </motion.div>
                 <motion.div
                   className="w-full"
                   whileHover={{ x: 5 }}
                   transition={{ type: 'spring', stiffness: 400 }}
                 >
-                  <Link to="/about" className="block px-4 py-2 text-sm hover:bg-accent rounded-md">
+                  <RouterLink
+                    to="/about"
+                    className="block px-4 py-2 text-sm hover:bg-accent rounded-md"
+                  >
                     About
-                  </Link>
+                  </RouterLink>
+                </motion.div>
+                <motion.div
+                  className="w-full"
+                  whileHover={{ x: 5 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                >
+                  <RouterLink
+                    to="/chat"
+                    className="block px-4 py-2 text-sm hover:bg-accent rounded-md"
+                  >
+                    Chat
+                  </RouterLink>
                 </motion.div>
               </nav>
             </SheetContent>
           </Sheet>
 
-          <Link to="/" className="flex items-center gap-2 group">
+          <RouterLink to="/" className="flex items-center gap-2 group">
             <motion.div
               className="w-9 h-9 bg-gradient-to-bl from-primary to-red-500 rounded-lg grid place-items-center text-white font-bold text-lg shadow-md"
               whileHover={{ rotate: [0, -10, 10, -10, 0] }}
@@ -64,34 +79,40 @@ export function Navbar() {
             >
               Scratchpad
             </motion.span>
-          </Link>
+          </RouterLink>
         </div>
 
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1 flex items-center gap-2">
             <motion.li whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400 }}>
-              <Link to="/" className="font-medium rounded-full hover:bg-primary/10">
+              <RouterLink to="/" className="font-medium rounded-full hover:bg-primary/10">
                 Home
-              </Link>
+              </RouterLink>
             </motion.li>
             <motion.li whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400 }}>
-              <Link to="/about" className="font-medium rounded-full hover:bg-primary/10">
+              <RouterLink to="/about" className="font-medium rounded-full hover:bg-primary/10">
                 About
-              </Link>
+              </RouterLink>
+            </motion.li>
+            <motion.li whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400 }}>
+              <RouterLink to="/chat" className="font-medium rounded-full hover:bg-primary/10">
+                Chat
+              </RouterLink>
             </motion.li>
           </ul>
         </div>
 
         <div className="navbar-end flex gap-2">
-          {!isAuthenticated ? (
-            <motion.a
-              href="/auth"
-              className="btn btn-sm btn-primary rounded-md px-4 shadow-md hidden md:flex"
+          {isLoaded && !isSignedIn ? (
+            <motion.div
+              className="hidden md:flex"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Log in
-            </motion.a>
+              <RouterLink to="/auth" className="btn btn-sm btn-primary rounded-md px-4 shadow-md">
+                Log in
+              </RouterLink>
+            </motion.div>
           ) : null}
           <ThemeToggle />
         </div>

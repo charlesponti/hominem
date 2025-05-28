@@ -387,6 +387,13 @@ export class ChatService {
   }
 
   /**
+   * Clear all messages for a specific chat
+   */
+  async clearChatMessages(chatId: string) {
+    return db.delete(chatMessage).where(eq(chatMessage.chatId, chatId))
+  }
+
+  /**
    * Reconstruct the full conversation history with tool calls
    * This is useful for replaying a conversation with all tool calls and results
    */

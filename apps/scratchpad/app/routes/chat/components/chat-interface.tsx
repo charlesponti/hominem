@@ -1,61 +1,116 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { Eraser, NotebookPen, Send } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '~/components/ui/button.js'
-import { Card } from '~/components/ui/card.js'
-import type { ToolCalls, ToolResults } from '~/lib/hooks/use-chat'
-import { cn } from '~/lib/utils'
 import { ChatMessage } from './chat-message.js'
+
+const MAX_MESSAGE_LENGTH = 10000
 
 type ChatInterfaceProps = {
   messages: ChatMessageSelect[]
   onSendMessage: (message: string) => void
-  isLoading: boolean
+  // 'isSending' indicates an in-flight sendMessage operation
+  isSending: boolean
   error: boolean
   onReset: () => void
   onNewChat?: () => void
-  toolCalls?: ToolCalls
-  toolResults?: ToolResults
-  showDebugInfo?: boolean
+  // Pagination props for loading older messages
+  hasMore?: boolean
+  isFetchingMore?: boolean
+  fetchMore?: () => void
 }
 
 export function ChatInterface({
   messages,
   onSendMessage,
-  isLoading,
+  isSending,
   error,
   onReset,
   onNewChat,
-  toolCalls = [],
-  toolResults = [],
-  showDebugInfo = false,
+  hasMore = false,
+  isFetchingMore = false,
+  fetchMore,
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
+  const topSentinelRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLFormElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null) // Added ref for the main container
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value)
-  }
+  // Memoized validation states
+  const characterCount = inputValue.length
+  const isOverLimit = characterCount > MAX_MESSAGE_LENGTH
+  const trimmedValue = inputValue.trim()
+  const canSubmit = trimmedValue && !isSending && !isOverLimit
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    setInputValue(value)
+
+    // Auto-resize textarea immediately
+    const textarea = e.target
+    textarea.style.height = 'auto'
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
+  }, [])
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Submit on:
+      // - Enter (without Shift) - normal submission
+      // - Cmd/Ctrl + Enter - force submission even with Shift
+      const shouldSubmit =
+        e.key === 'Enter' &&
+        (!e.shiftKey || // Enter without Shift
+          e.metaKey || // Cmd + Enter (macOS)
+          e.ctrlKey) // Ctrl + Enter (Windows/Linux)
+
+      if (shouldSubmit) {
+        e.preventDefault()
+        const trimmedValue = inputValue.trim()
+
+        // Enhanced validation
+        if (!trimmedValue) return
+        if (trimmedValue.length > MAX_MESSAGE_LENGTH) {
+          console.warn('Message too long (max 10,000 characters)')
+          return
+        }
+        if (isSending) return
+
+        onSendMessage(trimmedValue)
+        setInputValue('')
+        // Reset height after sending
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto'
+        }
+      }
+    },
+    [inputValue, isSending, onSendMessage]
+  )
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
       e.preventDefault()
-      handleSubmit(e)
-    }
-  }
+      const trimmedValue = inputValue.trim()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (inputValue.trim() && !isLoading) {
-      onSendMessage(inputValue)
+      // Enhanced validation
+      if (!trimmedValue) return
+      if (trimmedValue.length > MAX_MESSAGE_LENGTH) {
+        // Could show a toast notification here
+        console.warn('Message too long (max 10,000 characters)')
+        return
+      }
+      if (isSending) return
+
+      onSendMessage(trimmedValue)
       setInputValue('')
       // Reset height after sending
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
       }
-    }
-  }
+    },
+    [inputValue, isSending, onSendMessage]
+  )
 
   // Auto-focus textarea when component mounts
   useEffect(() => {
@@ -64,118 +119,94 @@ export function ChatInterface({
     }
   }, [])
 
-  // Auto-resize textarea
+  // Handle mobile keyboard with a simpler approach
   useEffect(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const adjustHeight = () => {
-      textarea.style.height = 'auto'
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
-    }
-
-    adjustHeight()
-
-    const resizeObserver = new ResizeObserver(adjustHeight)
-    resizeObserver.observe(textarea)
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, []) // Remove inputValue dependency as we're using ResizeObserver
-
-  // Scroll to bottom when messages update
-  useEffect(() => {
-    const element = messageListRef.current
-    if (!element) return
-
-    const scrollToBottom = (force = false) => {
-      const { scrollTop, scrollHeight } = element
-      const wasAtBottom = scrollHeight - scrollTop <= element.clientHeight + 1
-
-      // Only animate if we were already at the bottom or if force=true
-      if (wasAtBottom && !force) return
-
-      const targetScroll = element.scrollHeight - element.clientHeight
-      const startScroll = element.scrollTop
-      const startTime = performance.now()
-      const duration = 300
-
-      const animateScroll = (currentTime: number) => {
-        const elapsed = currentTime - startTime
-        const progress = Math.min(elapsed / duration, 1)
-        const easeOut = (t: number) => 1 - (1 - t) ** 3
-        element.scrollTop = startScroll + (targetScroll - startScroll) * easeOut(progress)
-        if (progress < 1) requestAnimationFrame(animateScroll)
+    const handleResize = () => {
+      // On mobile, when keyboard appears, scroll messages to bottom
+      if (window.innerHeight < 500 && messageListRef.current) {
+        requestAnimationFrame(() => {
+          if (messageListRef.current) {
+            messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+          }
+        })
       }
-
-      requestAnimationFrame(animateScroll)
     }
 
-    // Use a MutationObserver to detect changes in the messages container
-    const observer = new MutationObserver(() => scrollToBottom(false))
-    observer.observe(element, { childList: true, subtree: true })
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
-    // Initial scroll - force scroll to bottom on mount
-    // scrollToBottom(true)
+  // Scroll to bottom when a new message is added
+  useLayoutEffect(() => {
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+    }
+  })
 
+  // Auto-fetch older messages when scrolled to top
+  useEffect(() => {
+    if (!fetchMore || !hasMore) return
+    const container = messageListRef.current
+    const sentinel = topSentinelRef.current
+    if (!container || !sentinel) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingMore) {
+          fetchMore()
+        }
+      },
+      { root: container, threshold: 0.1 }
+    )
+
+    observer.observe(sentinel)
     return () => observer.disconnect()
-  }, []) // Empty dependency array since we're using MutationObserver
+  }, [fetchMore, hasMore, isFetchingMore])
 
   return (
-    <div className="relative flex flex-col h-full">
+    <div ref={chatContainerRef} className="fixed inset-0 flex flex-col touch-manipulation">
+      {/* Messages container - takes remaining space above the form */}
       <div
-        className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-track]:transparent [&::-webkit-scrollbar-thumb]:bg-primary/10 hover:[&::-webkit-scrollbar-thumb]:bg-primary/20"
+        className="flex-1 overflow-y-auto overscroll-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-track]:transparent [&::-webkit-scrollbar-thumb]:bg-primary/10 hover:[&::-webkit-scrollbar-thumb]:bg-primary/20"
         ref={messageListRef}
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'none',
+          paddingBottom: '120px', // Space for fixed form
+        }}
       >
-        <div className="flex flex-col space-y-4 sm:space-y-6 px-2 sm:px-4 pb-[160px] w-full">
+        <div className="flex flex-col space-y-4 sm:space-y-6 px-2 sm:px-4 pt-4 w-full">
           <div className="w-full max-w-[850px] mx-auto space-y-6">
+            {/* Sentinel for older messages auto-load */}
+            <div ref={topSentinelRef} className="h-1" />
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
 
-            {showDebugInfo && toolCalls.length > 0 && (
-              <Card
-                className={cn(
-                  'p-3 sm:p-4 bg-muted/50 border-primary/10 overflow-hidden',
-                  'animate-in fade-in slide-in-from-bottom-2',
-                  isLoading && 'opacity-50'
-                )}
-              >
-                <div className="font-semibold mb-2 text-primary text-sm">Tool Calls</div>
-                <pre className="text-xs overflow-x-auto max-h-32 sm:max-h-40 bg-background/50 p-2 rounded-md whitespace-pre-wrap break-all">
-                  {JSON.stringify(toolCalls, null, 2)}
-                </pre>
-              </Card>
-            )}
-
-            {showDebugInfo && toolResults.length > 0 && (
-              <Card
-                className={cn(
-                  'p-3 sm:p-4 bg-muted/50 border-primary/10 overflow-hidden',
-                  'animate-in fade-in slide-in-from-bottom-2',
-                  isLoading && 'opacity-50'
-                )}
-              >
-                <div className="font-semibold mb-2 text-primary text-sm">Tool Results</div>
-                <pre className="text-xs overflow-x-auto max-h-32 sm:max-h-40 bg-background/50 p-2 rounded-md whitespace-pre-wrap break-all">
-                  {JSON.stringify(toolResults, null, 2)}
-                </pre>
-              </Card>
-            )}
-
-            {isLoading && (
+            {isSending && (
               <div className="flex justify-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary" />
+              </div>
+            )}
+            {error && (
+              <div className="flex justify-center">
+                <div className="text-destructive text-sm p-3 bg-destructive/10 rounded-md border border-destructive/20">
+                  <div className="font-medium">Failed to send message</div>
+                  <div className="text-xs mt-1 opacity-75">
+                    Please check your connection and try again
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/80 to-transparent">
-        <div className="mx-auto max-w-[850px] px-2 sm:px-4 pb-2 sm:pb-4">
+      {/* Form container - fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-background via-background/95 to-background/80 backdrop-blur-sm border-t">
+        <div className="mx-auto max-w-[850px] px-2 sm:px-4 py-2 sm:py-4 pb-safe">
           <form
+            ref={bottomRef}
             onSubmit={handleSubmit}
             className="flex flex-col sm:flex-row gap-2 w-full bg-background/95 backdrop-blur-sm border rounded-lg p-2 shadow-lg"
           >
@@ -186,9 +217,27 @@ export function ChatInterface({
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
-                className="w-full resize-none rounded-md px-3 py-2 text-sm sm:text-base focus-visible:outline-none bg-transparent min-h-[44px] max-h-[200px]"
-                style={{ height: 'auto' }}
+                className="w-full resize-none rounded-md px-3 py-2 text-sm sm:text-base focus-visible:outline-none bg-transparent min-h-[44px] max-h-[200px] touch-manipulation"
+                style={{
+                  height: 'auto',
+                  WebkitAppearance: 'none',
+                  fontSize: '16px', // Prevents zoom on iOS
+                }}
+                autoComplete="off"
+                autoCorrect="on"
+                autoCapitalize="sentences"
+                spellCheck="true"
               />
+              {/* Character counter */}
+              {characterCount > MAX_MESSAGE_LENGTH * 0.8 && (
+                <div
+                  className={`absolute bottom-1 right-2 text-xs ${
+                    isOverLimit ? 'text-destructive' : 'text-muted-foreground'
+                  }`}
+                >
+                  {characterCount}/{MAX_MESSAGE_LENGTH}
+                </div>
+              )}
             </div>
             <div className="flex gap-2 self-end">
               <Button
@@ -226,8 +275,17 @@ export function ChatInterface({
               <Button
                 type="submit"
                 size="icon"
-                disabled={!inputValue.trim() || isLoading}
+                disabled={!canSubmit}
                 className="h-[38px] w-[38px] shrink-0"
+                title={
+                  isOverLimit
+                    ? 'Message too long'
+                    : !trimmedValue
+                      ? 'Enter a message'
+                      : isSending
+                        ? 'Sending...'
+                        : 'Send message'
+                }
               >
                 <Send className="h-4 w-4" />
               </Button>

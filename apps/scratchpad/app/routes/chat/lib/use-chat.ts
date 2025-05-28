@@ -1,12 +1,9 @@
 import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import type { ChatMessageSelect } from '@hominem/utils/types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { ToolContent, ToolSet } from 'ai'
-import { useCallback, useState } from 'react'
-
-export type ToolCalls = ToolSet[]
-export type ToolResults = ToolContent[]
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useMemo } from 'react'
+import { streamToString } from './stream-utils'
 
 export enum CHAT_ENDPOINTS {
   AGENT = '/api/agent',
@@ -25,6 +22,22 @@ interface SendMessageRequest {
   showDebugInfo?: boolean
 }
 
+interface ChatInitResponse {
+  success?: boolean
+  chatId: string
+  messages: ChatMessageSelect[]
+}
+
+interface ChatHistoryResponse {
+  chatId: string
+  messages: ChatMessageSelect[]
+  hasMore: boolean
+}
+
+interface ChatHistoryPage extends ChatHistoryResponse {
+  offset: number
+}
+
 type UseChatOptions = {
   endpoint: CHAT_ENDPOINTS
   initialMessages?: ChatMessageSelect[]
@@ -33,140 +46,160 @@ type UseChatOptions = {
 }
 
 /**
- * Hook for chat functionality
+ * Hook for chat functionality with optimized state management and type safety
  */
 export function useChat({
   endpoint,
-  stream,
+  stream = false,
   initialMessages = [],
   showDebugInfo = false,
 }: UseChatOptions) {
   const { userId } = useAuth()
-  // Use local state only for tool-related data that doesn't belong in the main message flow
-  const [toolCalls, setToolCalls] = useState<ToolSet[]>([])
-  const [toolResults, setToolResults] = useState<ToolContent[]>([])
-
   const api = useApiClient()
   const queryClient = useQueryClient()
 
-  // Query for messages
-  const {
-    data: messages = initialMessages,
-    isLoading: isLoadingMessages,
-    error: messagesError,
-    refetch,
-  } = useQuery({
-    queryKey: ['chat', endpoint],
-    queryFn: async () => {
-      const response = await api.get<null, ChatResponse>(endpoint)
-      return response.messages || initialMessages
-    },
-  })
-
-  // Helper to update message cache
-  const updateMessages = useCallback(
-    (newMessages: ChatMessageSelect[]) => {
-      queryClient.setQueryData(['chat', endpoint], newMessages)
-    },
-    [queryClient, endpoint]
+  // Query keys - memoized to prevent unnecessary re-renders
+  const chatQueryKey = useMemo(() => ['chat', endpoint], [endpoint])
+  const historyQueryKey = useCallback(
+    (chatId: string) => ['chat-history', endpoint, chatId],
+    [endpoint]
   )
 
-  // Helper to add a single message
+  // Initial load: fetch chatId and most recent messages
+  const {
+    data: initialData,
+    isLoading: isLoadingInitial,
+    error: initialError,
+    refetch: refetchInitial,
+  } = useQuery<ChatInitResponse>({
+    queryKey: chatQueryKey,
+    queryFn: async (): Promise<ChatInitResponse> => {
+      const res = await api.get<null, ChatInitResponse>(endpoint)
+      return res
+    },
+    enabled: !!userId,
+  })
+
+  const chatId = initialData?.chatId
+  const latestMessages = initialData?.messages || []
+
+  // Helper to update latest page of messages optimistically
+  const updateLatestMessages = useCallback(
+    (newMessages: ChatMessageSelect[]) => {
+      queryClient.setQueryData(chatQueryKey, (old: ChatInitResponse | undefined) => ({
+        ...old,
+        chatId: chatId || '',
+        messages: newMessages,
+      }))
+    },
+    [queryClient, chatQueryKey, chatId]
+  )
+
+  // Helper to add a single message optimistically
   const addMessage = useCallback(
-    (message: ChatMessageSelect) => {
-      const newMessage = {
-        ...message,
+    (message: Partial<ChatMessageSelect> & { role: string; content: string }) => {
+      const newMessage: ChatMessageSelect = {
         id: message.id || crypto.randomUUID(),
+        chatId: message.chatId || chatId || '',
+        userId: message.userId || userId || '',
+        role: message.role,
+        content: message.content,
+        toolCalls: message.toolCalls || null,
+        reasoning: message.reasoning || null,
+        files: message.files || null,
+        parentMessageId: message.parentMessageId || null,
         messageIndex: message.messageIndex || String(Date.now()),
         createdAt: message.createdAt || new Date().toISOString(),
+        updatedAt: message.updatedAt || new Date().toISOString(),
       }
-      queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) => [
-        ...oldMessages,
-        newMessage,
-      ])
+
+      queryClient.setQueryData(chatQueryKey, (old: ChatInitResponse | undefined) => ({
+        ...old,
+        chatId: chatId || '',
+        messages: [...(old?.messages || []), newMessage],
+      }))
+
       return newMessage
     },
-    [queryClient, endpoint]
+    [queryClient, chatQueryKey, chatId, userId]
   )
 
   // Mutation for sending a message
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      if (!userId) return
+      // Input validation
+      if (!content || typeof content !== 'string') {
+        throw new Error('Message content is required and must be a string')
+      }
+
+      const trimmedContent = content.trim()
+      if (!trimmedContent) {
+        throw new Error('Message cannot be empty')
+      }
+
+      if (trimmedContent.length > 10000) {
+        throw new Error('Message is too long (maximum 10,000 characters)')
+      }
+
+      if (!userId || !chatId) {
+        throw new Error('User ID or Chat ID is missing')
+      }
 
       // Add user message immediately for UI responsiveness
       const userMessage = addMessage({
         role: 'user',
-        content: content,
-        toolCalls: [],
-        chatId: crypto.randomUUID(),
-        id: crypto.randomUUID(),
-        reasoning: null,
-        parentMessageId: null,
-        messageIndex: String(Date.now()),
-        createdAt: new Date().toISOString(),
-        files: [],
-        updatedAt: new Date().toISOString(),
-        userId,
+        content: trimmedContent,
       })
 
       // Handle streaming endpoints
       if (stream) {
-        const response = await api.postStream(endpoint, {
-          messages: [userMessage],
+        const requestBody = {
+          message: trimmedContent,
+          type: 'stream' as const,
           showDebugInfo,
-        })
-        const reader = response.body?.getReader()
-        if (!reader) throw new Error('Stream reader not available')
+        }
 
-        const decoder = new TextDecoder()
-        let responseText = ''
+        const response = await api.postStream(endpoint, requestBody)
 
-        // Create initial streaming message
+        // Initialize a placeholder message in the cache
         const streamId = 'stream-response'
-        const streamMessage: ChatMessageSelect = {
+        const streamMessage = addMessage({
+          id: streamId,
           role: 'assistant',
           content: '',
-          id: streamId,
-          chatId: crypto.randomUUID(),
-          userId: userId,
-          toolCalls: null,
-          reasoning: null,
-          files: null,
-          parentMessageId: null,
-          messageIndex: String(Date.now()),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-        addMessage(streamMessage)
+        })
 
-        // Process stream
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+        // Read stream into cache
+        await streamToString(response, (responseText) => {
+          queryClient.setQueryData(chatQueryKey, (old: ChatInitResponse | undefined) => ({
+            ...old,
+            chatId: chatId || '',
+            messages: (old?.messages || []).map((m) =>
+              m.id === streamId ? { ...m, content: responseText } : m
+            ),
+          }))
+        })
 
-          responseText += decoder.decode(value, { stream: true })
-
-          // Update the streaming message in the cache
-          queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) =>
-            oldMessages.map((m) => (m.id === streamId ? { ...m, content: responseText } : m))
-          )
-        }
-
-        // Finalize the message with a permanent ID
-        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) =>
-          oldMessages.map((m) => (m.id === streamId ? { ...m, id: crypto.randomUUID() } : m))
-        )
+        // Finalize by replacing the temporary id
+        queryClient.setQueryData(chatQueryKey, (old: ChatInitResponse | undefined) => ({
+          ...old,
+          chatId: chatId || '',
+          messages: (old?.messages || []).map((m) =>
+            m.id === streamId ? { ...m, id: crypto.randomUUID() } : m
+          ),
+        }))
 
         return { success: true }
       }
 
       // Handle non-streaming endpoints
-      const requestBody = {
-        messages: initialMessages,
-        message: content,
+      const requestBody: SendMessageRequest = {
+        message: trimmedContent,
+        showDebugInfo,
       }
-      return api.post<SendMessageRequest, ChatResponse>(endpoint, requestBody)
+
+      const response = await api.post<SendMessageRequest, ChatResponse>(endpoint, requestBody)
+      return response
     },
     onSuccess: (data) => {
       if (!data) return
@@ -176,36 +209,91 @@ export function useChat({
       }
 
       if (data.messages) {
-        queryClient.setQueryData(['chat', endpoint], (oldMessages: ChatMessageSelect[] = []) => [
-          ...oldMessages,
-          ...data.messages.map((message) => ({
-            ...message,
-            id: message.id || crypto.randomUUID(),
-            messageIndex: message.messageIndex || String(Date.now()),
-            createdAt: message.createdAt || new Date().toISOString(),
-          })),
-        ])
+        // Append new messages to latest data
+        const updated = [...latestMessages, ...data.messages]
+        updateLatestMessages(updated)
       }
 
-      // Invalidate the query to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['chat', endpoint] })
+      // Refetch initial history and reset pagination
+      refetchInitial()
+      if (chatId) {
+        queryClient.removeQueries({ queryKey: historyQueryKey(chatId) })
+      }
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
       console.error('Chat error:', error)
+
+      // Remove the optimistic user message on error
+      queryClient.setQueryData(chatQueryKey, (old: ChatInitResponse | undefined) => {
+        if (!old?.messages) return old
+
+        // Remove the last message if it was the failed user message
+        const lastMessage = old.messages[old.messages.length - 1]
+        if (lastMessage?.role === 'user' && lastMessage?.content === variables) {
+          return {
+            ...old,
+            messages: old.messages.slice(0, -1),
+          }
+        }
+        return old
+      })
     },
+    retry: (failureCount, error) => {
+      // Retry up to 2 times for network errors, but not for validation errors
+      if (failureCount >= 2) return false
+
+      // Don't retry for 4xx errors (client errors)
+      if (error instanceof Error && error.message.includes('400')) return false
+      if (error instanceof Error && error.message.includes('401')) return false
+      if (error instanceof Error && error.message.includes('403')) return false
+
+      return true
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  })
+
+  // Infinite scroll: fetch older messages pages
+  const PAGE_SIZE = 20
+  const {
+    data: historyPages,
+    isLoading: isLoadingMore,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    error: historyError,
+  } = useInfiniteQuery({
+    queryKey: historyQueryKey(chatId || ''),
+    queryFn: async ({ pageParam = latestMessages.length }): Promise<ChatHistoryPage> => {
+      if (!chatId) throw new Error('Chat ID is missing')
+      const res = await api.get<null, ChatHistoryResponse>(
+        `${endpoint}/history/${chatId}?limit=${PAGE_SIZE}&offset=${pageParam}`
+      )
+      return { ...res, offset: pageParam as number }
+    },
+    enabled: !!chatId,
+    getNextPageParam: (lastPage: ChatHistoryPage) =>
+      lastPage.hasMore ? lastPage.offset + PAGE_SIZE : undefined,
+    initialPageParam: latestMessages.length,
   })
 
   // Mutation for resetting conversation
   const resetConversationMutation = useMutation({
     mutationFn: async () => {
-      // This could be an API call if needed
-      return { success: true }
+      if (!chatId) throw new Error('Chat ID is missing')
+
+      // Call the API to clear chat messages
+      const res = await api.delete<null, { success: boolean; message: string }>(
+        `${endpoint}/${chatId}/messages`
+      )
+      return res
     },
     onSuccess: () => {
-      updateMessages(initialMessages)
-      setToolCalls([])
-      setToolResults([])
-      queryClient.invalidateQueries({ queryKey: ['chat', endpoint] })
+      updateLatestMessages([])
+      queryClient.invalidateQueries({ queryKey: chatQueryKey })
+      // Also clear the history cache
+      if (chatId) {
+        queryClient.removeQueries({ queryKey: historyQueryKey(chatId) })
+      }
     },
   })
 
@@ -215,26 +303,45 @@ export function useChat({
       return api.post<null, { success: boolean }>('/api/chat/new')
     },
     onSuccess: () => {
-      updateMessages(initialMessages)
-      setToolCalls([])
-      setToolResults([])
-      queryClient.invalidateQueries({ queryKey: ['chat', endpoint] })
+      updateLatestMessages([])
+      queryClient.invalidateQueries({ queryKey: chatQueryKey })
     },
   })
 
+  // Combine pages of older messages with the most recent messages - memoized for performance
+  const historyMessages = useMemo(() => {
+    if (!historyPages) return []
+    return historyPages.pages
+      .slice()
+      .reverse()
+      .flatMap((page: ChatHistoryPage) => page.messages)
+  }, [historyPages])
+
+  const allMessages = useMemo(() => {
+    return [...historyMessages, ...latestMessages]
+  }, [historyMessages, latestMessages])
+
   return {
-    messages,
-    isLoading: isLoadingMessages,
+    // Full chronological messages (history + latest)
+    messages: allMessages,
+    // Loading states
+    isLoadingHistory: isLoadingInitial,
+    isFetchingMore: isFetchingNextPage,
+    hasMore: Boolean(hasNextPage),
+    fetchMore: fetchNextPage,
+    isSending: sendMessageMutation.isPending,
+    // Actions
     sendMessage: sendMessageMutation,
     resetConversation: resetConversationMutation,
     startNewChat: startNewChatMutation,
+    // Errors
     error:
-      messagesError ||
+      initialError ||
+      historyError ||
       sendMessageMutation.error ||
       resetConversationMutation.error ||
       startNewChatMutation.error,
-    toolCalls,
-    toolResults,
-    refetch,
+    // Refetch function
+    refetchInitial,
   }
 }

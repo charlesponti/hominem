@@ -1,5 +1,6 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { Bot, Settings, User, Wrench } from 'lucide-react'
+import { memo, useMemo } from 'react'
 
 interface MessageHeaderProps {
   role: ChatMessageSelect['role']
@@ -35,8 +36,8 @@ const roleConfig: Record<
   },
 }
 
-export function MessageHeader({ role }: MessageHeaderProps) {
-  const config = roleConfig[role]
+export const MessageHeader = memo<MessageHeaderProps>(function MessageHeader({ role }) {
+  const config = useMemo(() => roleConfig[role], [role])
   const Icon = config.icon
 
   return (
@@ -49,4 +50,4 @@ export function MessageHeader({ role }: MessageHeaderProps) {
       <span className={`text-sm font-medium ${config.className}`}>{config.label}</span>
     </div>
   )
-}
+})

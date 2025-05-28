@@ -1,11 +1,12 @@
 import { BrainCircuit } from 'lucide-react'
+import { memo } from 'react'
 import { Card } from '~/components/ui/card'
 
 interface ReasoningProps {
   reasoning: string
 }
 
-export function Reasoning({ reasoning }: ReasoningProps) {
+export const Reasoning = memo<ReasoningProps>(function Reasoning({ reasoning }) {
   return (
     <div data-testid="message-reasoning">
       <Card className="border-primary/10 hover:border-primary/20 transition-all duration-200 hover:shadow-md overflow-hidden">
@@ -30,4 +31,4 @@ export function Reasoning({ reasoning }: ReasoningProps) {
       </Card>
     </div>
   )
-}
+})

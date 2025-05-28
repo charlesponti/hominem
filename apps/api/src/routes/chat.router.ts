@@ -1,4 +1,5 @@
-import { google } from '@ai-sdk/google'
+// import { google } from '@ai-sdk/google'
+import { openai } from '@ai-sdk/openai'
 import { logger } from '@hominem/utils/logger'
 import { allTools } from '@hominem/utils/tools'
 import { generateText, streamText } from 'ai'
@@ -12,7 +13,8 @@ import { getPerformanceService } from '../services/performance.service.js'
 import { promptService } from '../services/prompt.service.js'
 import { HominemVectorStore } from '../services/vector.service.js'
 
-const model = google('gemini-1.5-pro')
+// const model = google('gemini-1.5-pro-latest')
+const model = openai('gpt-4o')
 
 // Schema for chat requests
 const chatRequestSchema = z.object({
@@ -24,6 +26,24 @@ const chatRequestSchema = z.object({
 // Schema for generate requests
 const generateRequestSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
+})
+
+// Schema for history query parameters
+const historyQuerySchema = z.object({
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const parsed = Number.parseInt(val || '', 10)
+      return Number.isNaN(parsed) ? 20 : Math.min(Math.max(parsed, 1), 100)
+    }),
+  offset: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const parsed = Number.parseInt(val || '', 10)
+      return Number.isNaN(parsed) ? 0 : Math.max(parsed, 0)
+    }),
 })
 
 // Define utility tools
@@ -110,10 +130,17 @@ export async function chatPlugin(fastify: FastifyInstance) {
         return reply.code(403).send({ error: 'Not authorized to access this chat' })
       }
 
-      // Parse pagination params (limit & offset)
-      const { limit: limitQuery, offset: offsetQuery } = request.query as Record<string, string | undefined>
-      const limit = Math.min(Math.max(parseInt(limitQuery || '', 10) || 20, 1), 100)
-      const offset = Math.max(parseInt(offsetQuery || '', 10) || 0, 0)
+      // Parse and validate pagination params using Zod schema
+      const { success, data, error } = historyQuerySchema.safeParse(request.query)
+      if (!success) {
+        return reply.code(400).send({
+          error: 'Invalid query parameters',
+          errors: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', '),
+        })
+      }
+
+      const { limit, offset } = data
+
       // Fetch one page of messages in descending order (newest first)
       const historyPage = await chatService.getConversationWithToolCalls(chatId, {
         limit,
@@ -121,8 +148,9 @@ export async function chatPlugin(fastify: FastifyInstance) {
         orderBy: 'desc',
       })
       // Return in chronological order for client
-      const messages = historyPage
-        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      const messages = historyPage.sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )
       const hasMore = historyPage.length === limit
       return reply.send({
         chatId,
@@ -272,7 +300,10 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const result = await generateText({
         model,
         temperature: 0.2,
-        system: await promptService.getPrompt('assistant', { userId }),
+        system: await promptService.getPrompt('assistant', {
+          userId,
+          currentDate: new Date().toISOString(),
+        }),
         messages: [...previousMessages, { role: 'user', content: message }],
         tools: {
           search: HominemVectorStore.searchDocumentsTool,
@@ -331,19 +362,16 @@ export async function chatPlugin(fastify: FastifyInstance) {
       const result = await generateText({
         model,
         temperature: 0.2,
-        system: `
-          UserID: ${userId}
-
-          Use the tools provided to answer the question.
-          If tool is applicable, return a very succinct response.
-          Ensure the response is clear and concise.
-          Use the least amount of words possible.
-        `,
+        system: await promptService.getPrompt('assistant', {
+          userId,
+          currentDate: new Date().toISOString(),
+        }),
         messages: [{ role: 'user', content: message }],
         tools: {
           search: HominemVectorStore.searchDocumentsTool,
           ...allTools,
           ...utilityTools,
+          calculate_transactions: allTools.calculate_transactions,
         },
         maxSteps: 5,
       })
@@ -362,6 +390,42 @@ export async function chatPlugin(fastify: FastifyInstance) {
         error instanceof Error ? error : new ApiError(500, 'Error processing generate request'),
         reply
       )
+    }
+  })
+
+  // Delete/clear all messages in a chat
+  fastify.delete('/:chatId/messages', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Unauthorized' })
+    }
+
+    const { chatId } = request.params as { chatId: string }
+    if (!chatId) {
+      return reply.code(400).send({ error: 'Chat ID is required' })
+    }
+
+    try {
+      // Get the chat to verify ownership
+      const chatData = await chatService.getChatById(chatId)
+      if (!chatData) {
+        return reply.code(404).send({ error: 'Chat not found' })
+      }
+
+      if (chatData.userId !== userId) {
+        return reply.code(403).send({ error: 'Not authorized to access this chat' })
+      }
+
+      // Clear all messages for this chat
+      await chatService.clearChatMessages(chatId)
+
+      return reply.send({
+        success: true,
+        message: 'Chat messages cleared successfully',
+      })
+    } catch (error) {
+      logger.error(error)
+      return handleError(error instanceof Error ? error : new Error(String(error)), reply)
     }
   })
 }

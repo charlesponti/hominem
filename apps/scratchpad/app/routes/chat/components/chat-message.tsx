@@ -1,14 +1,20 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
+import { memo } from 'react'
+import { Card } from '~/components/ui/card.js'
 import { cn } from '~/lib/utils'
-import { Card } from '../ui/card.js'
 import { MessageContent } from './content.js'
 import { MessageDetails } from './details.js'
 import { MessageHeader } from './header.js'
 
-export function ChatMessage({ message }: { message: ChatMessageSelect }) {
+interface ChatMessageProps {
+  message: ChatMessageSelect
+}
+
+export const ChatMessage = memo<ChatMessageProps>(function ChatMessage({ message }) {
   const { content, role } = message
 
   const isUndefinedRole = !['user', 'assistant', 'tool', 'system'].includes(role)
+
   return (
     <Card
       className={cn(
@@ -34,4 +40,4 @@ export function ChatMessage({ message }: { message: ChatMessageSelect }) {
       </div>
     </Card>
   )
-}
+})

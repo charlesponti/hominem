@@ -1,4 +1,5 @@
 import type { ChatMessageSelect } from '@hominem/utils/types'
+import { memo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
@@ -7,7 +8,7 @@ interface MessageContentProps {
   content: ChatMessageSelect['content']
 }
 
-export function MessageContent({ content }: MessageContentProps) {
+export const MessageContent = memo<MessageContentProps>(function MessageContent({ content }) {
   if (typeof content !== 'string') {
     console.warn('Message content is not a string:', content)
     return null
@@ -59,4 +60,4 @@ export function MessageContent({ content }: MessageContentProps) {
       </ReactMarkdown>
     </div>
   )
-}
+})

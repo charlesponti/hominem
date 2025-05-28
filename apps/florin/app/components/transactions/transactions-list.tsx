@@ -2,7 +2,7 @@
 
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { format } from 'date-fns'
-import { Calendar, ChevronRight, CreditCard, DollarSign, Tag } from 'lucide-react'
+import { Calendar, CreditCard, DollarSign, Tag } from 'lucide-react'
 import { Card } from '~/components/ui/card'
 import { cn } from '~/lib/utils'
 
@@ -11,32 +11,6 @@ type TransactionsListProps = {
   error: string | null
   transactions: FinanceTransaction[]
   accountsMap: Map<string, FinanceAccount>
-}
-
-function TransactionIcon({ transaction }: { transaction: FinanceTransaction }) {
-  const isNegative = Number.parseFloat(transaction.amount) < 0
-
-  if (transaction.type === 'transfer') {
-    return (
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 border border-blue-100">
-        <ChevronRight className="h-5 w-5 text-blue-600" />
-      </div>
-    )
-  }
-
-  if (transaction.type === 'credit' || isNegative) {
-    return (
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-50 border border-red-100">
-        <CreditCard className="h-5 w-5 text-red-600" />
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 border border-emerald-100">
-      <DollarSign className="h-5 w-5 text-emerald-600" />
-    </div>
-  )
 }
 
 function TransactionAmount({ transaction }: { transaction: FinanceTransaction }) {
@@ -65,7 +39,7 @@ function TransactionMetadata({
   transaction: FinanceTransaction
   account?: FinanceAccount
 }) {
-  const formattedDate = format(new Date(transaction.date), 'MMM d, yyyy')
+  const formattedDate = format(new Date(transaction.date), 'MMM d, yyyy', {})
 
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -99,21 +73,19 @@ function TransactionListItem({
   return (
     <Card className="group p-4 relative overflow-hidden border-0 bg-white shadow-sm ring-1 ring-gray-950/5 transition-all duration-200 hover:shadow-md hover:ring-gray-950/10">
       <div className="w-full flex items-center gap-4">
-        {/* Transaction Icon */}
-        <TransactionIcon transaction={transaction} />
-
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-4 mb-2">
-            <div className="min-w-0 flex-1">
-              <h3 className="text-base font-semibold text-gray-900 leading-6 truncate pr-2">
-                {transaction.description || 'Transaction'}
+            <div className="min-w-0 flex-1 flex flex-col gap-2">
+              <h3 className="text-base font-semibold text-gray-900 leading-6 truncate pr-2 flex justify-between items-center gap-2">
+                <div className="overflow-ellipsis overflow-hidden whitespace-nowrap">
+                  {transaction.description || 'Transaction'}
+                </div>
+                <TransactionAmount transaction={transaction} />
               </h3>
               <TransactionMetadata transaction={transaction} account={account} />
             </div>
           </div>
         </div>
-
-        <TransactionAmount transaction={transaction} />
       </div>
     </Card>
   )

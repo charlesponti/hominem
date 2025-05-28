@@ -1,21 +1,19 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { db } from '@hominem/utils/db'
-import { FinancialAccountService, queryTransactions } from '@hominem/utils/finance'
+import {
+  createNewTransaction,
+  deleteAllFinanceData,
+  deleteTransaction,
+  FinancialAccountService,
+  getFinancialInstitutions,
+  getSpendingCategories,
+  queryTransactions,
+  updateTransaction,
+} from '@hominem/utils/finance'
 import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
 import type { ImportTransactionsJob, ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
-import {
-  budgetCategories,
-  budgetGoals,
-  financeAccounts,
-  financialInstitutions,
-  insertTransactionSchema,
-  plaidItems,
-  transactions,
-  updateTransactionSchema,
-} from '@hominem/utils/schema'
+import { insertTransactionSchema, updateTransactionSchema } from '@hominem/utils/schema'
 import { csvStorageService } from '@hominem/utils/supabase'
 import type { Job } from 'bullmq'
-import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import fs from 'node:fs'
 import { z } from 'zod'
@@ -62,10 +60,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const institutions = await db.query.financialInstitutions.findMany({
-          orderBy: [financialInstitutions.name],
-        })
-
+        const institutions = await getFinancialInstitutions()
         return institutions
       } catch (error) {
         return handleError(error as Error, reply)
@@ -336,11 +331,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
         }
       }
 
-      const [newTransaction] = await db
-        .insert(transactions)
-        .values({ ...validatedData, userId })
-        .returning()
-
+      const newTransaction = await createNewTransaction({ ...validatedData, userId })
       return reply.code(201).send(newTransaction)
     } catch (error) {
       handleError(error as Error, reply)
@@ -359,15 +350,6 @@ export async function financeRoutes(fastify: FastifyInstance) {
     try {
       const validatedData = updateTransactionSchema.partial().parse(request.body) // Allow partial updates
 
-      // Verify transaction exists and belongs to the user
-      const existingTransaction = await db.query.transactions.findFirst({
-        where: and(eq(transactions.id, id), eq(transactions.userId, userId)),
-      })
-
-      if (!existingTransaction) {
-        return reply.code(404).send({ error: 'Transaction not found' })
-      }
-
       // Optional: Validate accountId if provided
       if (validatedData.accountId) {
         const account = await FinancialAccountService.getAccountById(
@@ -379,12 +361,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
         }
       }
 
-      const [updatedTransaction] = await db
-        .update(transactions)
-        .set({ ...validatedData, updatedAt: new Date() })
-        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-        .returning()
-
+      const updatedTransaction = await updateTransaction(id, userId, validatedData)
       return updatedTransaction
     } catch (error) {
       return handleError(error as Error, reply)
@@ -401,14 +378,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
     const { id } = request.params as { id: string }
 
     try {
-      const result = await db
-        .delete(transactions)
-        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-
-      if (result.count === 0) {
-        return reply.code(404).send({ error: 'Transaction not found' })
-      }
-
+      await deleteTransaction(id, userId)
       return { success: true, message: 'Transaction deleted successfully' }
     } catch (error) {
       return handleError(error as Error, reply)
@@ -422,11 +392,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
       return reply.code(401).send({ error: 'Not authorized' })
     }
     try {
-      await db.delete(transactions).where(eq(transactions.userId, userId))
-      await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId))
-      await db.delete(budgetGoals).where(eq(budgetGoals.userId, userId))
-      await db.delete(budgetCategories).where(eq(budgetCategories.userId, userId))
-      await db.delete(plaidItems).where(eq(plaidItems.userId, userId))
+      await deleteAllFinanceData(userId)
       return { success: true, message: 'All finance data deleted' }
     } catch (err) {
       fastify.log.error(`Error deleting finance data: ${err}`)
@@ -447,14 +413,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
       }
 
       // Logic to get spending categories
-      const categories = await db
-        .select({
-          category: transactions.category,
-        })
-        .from(transactions)
-        .where(and(eq(transactions.userId, userId), eq(transactions.type, 'expense')))
-        .groupBy(transactions.category)
-        .orderBy(transactions.category)
+      const categories = await getSpendingCategories(userId)
 
       // !TODO: Implement logic to analyze spending categories
       return categories
