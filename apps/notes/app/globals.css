@@ -257,7 +257,7 @@ body {
   }
 
   .bg-popover {
-    background-color: hsl(var(--popover));
+    background-color: var(--background);
   }
 
   .text-popover-foreground {

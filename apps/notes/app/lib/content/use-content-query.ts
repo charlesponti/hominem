@@ -46,7 +46,7 @@ export function useContentQuery(options: UseContentQueryOptions = {}) {
       if (options.type) {
         const types = Array.isArray(options.type) ? options.type : [options.type]
         for (const t of types) {
-          queryParams.append('types[]', t)
+          queryParams.append('types', t)
         }
       }
       if (options.tags && options.tags.length > 0) {

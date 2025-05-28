@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@clerk/react-router'
 import { Loader2, RefreshCw, Twitter } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -23,7 +24,9 @@ import {
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
 import { useToast } from '~/components/ui/use-toast'
+import { useContentStrategies } from '~/lib/content/use-content-strategies'
 import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
+import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
 import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
 
 interface TweetModalProps {
@@ -36,7 +39,33 @@ interface TweetModalProps {
 
 const TWEET_CHARACTER_LIMIT = 280
 
-type ToneOption = 'professional' | 'casual' | 'engaging' | 'informative'
+type StrategyType = 'default' | 'custom'
+
+const DEFAULT_STRATEGIES = [
+  { value: 'storytelling', label: '📖 Storytelling', description: 'Create a narrative arc' },
+  {
+    value: 'question',
+    label: '❓ Question',
+    description: 'Start with thought-provoking questions',
+  },
+  { value: 'statistic', label: '📊 Statistic', description: 'Lead with compelling data' },
+  { value: 'quote', label: '💬 Quote', description: 'Transform insights into quotable statements' },
+  { value: 'tip', label: '💡 Tip', description: 'Present actionable advice' },
+  {
+    value: 'behind-the-scenes',
+    label: '🎬 Behind the Scenes',
+    description: 'Share process or journey',
+  },
+  {
+    value: 'thread-starter',
+    label: '🧵 Thread Starter',
+    description: 'Create intrigue for threads',
+  },
+  { value: 'controversy', label: '⚡ Controversy', description: 'Present contrarian perspectives' },
+  { value: 'listicle', label: '📝 Listicle', description: 'Break down into numbered points' },
+  { value: 'education', label: '🎓 Education', description: 'Focus on teaching concepts' },
+]
+
 export function TweetModal({
   open,
   onOpenChange,
@@ -44,7 +73,12 @@ export function TweetModal({
   noteTitle,
   contentId,
 }: TweetModalProps) {
-  const [tone, setTone] = useState<ToneOption>('engaging')
+  const [strategyType, setStrategyType] = useState<StrategyType>('default')
+  const [strategy, setStrategy] = useState<string>('storytelling')
+
+  const { isSignedIn } = useAuth()
+  const { strategies: customStrategies, isLoading: isLoadingStrategies } = useContentStrategies()
+  const twitterIntegrationEnabled = useFeatureFlag('twitterIntegration')
 
   const {
     generateTweet,
@@ -62,14 +96,28 @@ export function TweetModal({
   const { toast } = useToast()
 
   const hasTwitterAccount = twitterAccounts && twitterAccounts.length > 0
+  const canPost = twitterIntegrationEnabled && hasTwitterAccount
   const characterCount = generatedTweet.length
   const isOverLimit = characterCount > TWEET_CHARACTER_LIMIT
+
+  const handleStrategyTypeChange = (newType: StrategyType) => {
+    setStrategyType(newType)
+    // Reset strategy selection when changing type
+    if (newType === 'default') {
+      setStrategy('storytelling')
+    } else if (customStrategies.length > 0) {
+      setStrategy(customStrategies[0].id)
+    } else {
+      setStrategy('')
+    }
+  }
 
   const handleGenerate = () => {
     const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent
     generateTweet({
       content,
-      tone,
+      strategyType,
+      strategy,
     })
   }
 
@@ -77,7 +125,8 @@ export function TweetModal({
     const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent
     regenerateTweet({
       content,
-      tone,
+      strategyType,
+      strategy,
     })
   }
 
@@ -87,7 +136,7 @@ export function TweetModal({
   }
 
   const handlePost = () => {
-    if (hasTwitterAccount) {
+    if (canPost) {
       // Post using API
       postTweet.mutate(
         {
@@ -117,7 +166,7 @@ export function TweetModal({
         }
       )
     } else {
-      // Fallback to browser intent
+      // Fallback to browser intent (always available as backup)
       const tweetText = encodeURIComponent(generatedTweet)
       const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`
       window.open(twitterUrl, '_blank')
@@ -134,20 +183,33 @@ export function TweetModal({
             Generate Tweet
           </DialogTitle>
           <DialogDescription>
-            Generate a tweet from your note content. You can customize the tone and edit the result
-            before posting.
+            Generate a tweet from your note content using AI. Customize the content strategy, then
+            edit before posting.
             {!isLoadingAccounts && (
-              <div className="mt-2 flex items-center justify-between">
-                <Badge variant={hasTwitterAccount ? 'default' : 'secondary'} className="text-xs">
-                  {hasTwitterAccount ? '✓ X account connected' : 'No X account connected'}
-                </Badge>
-                {!hasTwitterAccount && (
-                  <Link
-                    to="/account"
-                    className="text-xs text-blue-500 hover:text-blue-600 underline"
-                  >
-                    Connect account
-                  </Link>
+              <div className="mt-2 space-y-2">
+                {twitterIntegrationEnabled ? (
+                  <div className="flex items-center justify-between">
+                    <Badge
+                      variant={hasTwitterAccount ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {hasTwitterAccount
+                        ? '✓ X account connected - can post directly'
+                        : 'No X account connected'}
+                    </Badge>
+                    {!hasTwitterAccount && (
+                      <Link
+                        to="/account"
+                        className="text-xs text-blue-500 hover:text-blue-600 underline"
+                      >
+                        Connect account
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">
+                    ℹ️ Anyone can generate tweets - connect X account to post directly
+                  </Badge>
                 )}
               </div>
             )}
@@ -156,20 +218,100 @@ export function TweetModal({
 
         <div className="space-y-4">
           {/* Settings */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="tone">Tone</Label>
-              <Select value={tone} onValueChange={(value: ToneOption) => setTone(value)}>
+              <Label htmlFor="strategy-type">Strategy Type</Label>
+              <Select
+                value={strategyType}
+                onValueChange={(value: StrategyType) => handleStrategyTypeChange(value)}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select tone" />
+                  <SelectValue placeholder="Select strategy type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="casual">Casual</SelectItem>
-                  <SelectItem value="engaging">Engaging</SelectItem>
-                  <SelectItem value="informative">Informative</SelectItem>
+                  <SelectItem value="default">🎯 Default Strategies</SelectItem>
+                  <SelectItem value="custom">
+                    ⚙️ Custom Strategies{' '}
+                    {!isSignedIn
+                      ? '(Sign in required)'
+                      : customStrategies.length > 0
+                        ? `(${customStrategies.length})`
+                        : '(0)'}
+                  </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="strategy">
+                {strategyType === 'default' ? 'Content Strategy' : 'Your Content Strategy'}
+              </Label>
+              {strategyType === 'default' ? (
+                <Select value={strategy} onValueChange={(value: string) => setStrategy(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select content strategy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEFAULT_STRATEGIES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        <div className="flex flex-col">
+                          <span>{s.label}</span>
+                          <span className="text-xs text-gray-500">{s.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="space-y-2">
+                  {!isSignedIn ? (
+                    <div className="text-center p-4 border rounded bg-blue-50 dark:bg-blue-950">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                        Sign in to use your custom content strategies
+                      </p>
+                      <Link
+                        to="/sign-in"
+                        className="text-sm text-blue-600 hover:text-blue-700 underline font-medium"
+                      >
+                        Sign in to continue
+                      </Link>
+                    </div>
+                  ) : isLoadingStrategies ? (
+                    <div className="flex items-center justify-center p-4 border rounded">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Loading strategies...
+                    </div>
+                  ) : customStrategies.length > 0 ? (
+                    <Select value={strategy} onValueChange={(value: string) => setStrategy(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your content strategy" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customStrategies.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            <div className="flex flex-col">
+                              <span>{s.title}</span>
+                              <span className="text-xs text-gray-500">
+                                {s.description || `Topic: ${s.strategy.topic}`}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-center p-4 border rounded bg-gray-50">
+                      <p className="text-sm text-gray-600 mb-2">No custom strategies found</p>
+                      <Link
+                        to="/content-strategy/create"
+                        className="text-sm text-blue-500 hover:text-blue-600 underline"
+                      >
+                        Create your first strategy
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -236,12 +378,23 @@ export function TweetModal({
           </Button>
 
           {!generatedTweet ? (
-            <Button onClick={handleGenerate} disabled={isGenerating}>
+            <Button
+              onClick={handleGenerate}
+              disabled={
+                isGenerating ||
+                (strategyType === 'custom' &&
+                  (!isSignedIn || !strategy || customStrategies.length === 0))
+              }
+            >
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Generating...
                 </>
+              ) : strategyType === 'custom' && !isSignedIn ? (
+                'Sign in for Custom Strategies'
+              ) : strategyType === 'custom' && customStrategies.length === 0 ? (
+                'Create a Strategy First'
               ) : (
                 'Generate Tweet'
               )}
@@ -260,7 +413,7 @@ export function TweetModal({
               ) : (
                 <>
                   <Twitter className="h-4 w-4 mr-2" />
-                  {hasTwitterAccount ? 'Post to X' : 'Open in X'}
+                  {canPost ? 'Post to X' : 'Open in X'}
                 </>
               )}
             </Button>

@@ -1,4 +1,3 @@
-import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -6,7 +5,8 @@ import { useToast } from '../../components/ui/use-toast'
 
 interface GenerateTweetParams {
   content: string
-  tone?: 'professional' | 'casual' | 'engaging' | 'informative'
+  strategyType?: 'default' | 'custom'
+  strategy?: string // Can be either a default strategy enum value or a custom strategy UUID
 }
 
 interface TweetResponse {
@@ -16,7 +16,6 @@ interface TweetResponse {
 }
 
 export function useGenerateTweet() {
-  const { userId, isSignedIn } = useAuth()
   const apiClient = useApiClient()
   const { toast } = useToast()
   const [generatedTweet, setGeneratedTweet] = useState<string>('')
@@ -24,10 +23,6 @@ export function useGenerateTweet() {
 
   const generateTweet = useMutation<TweetResponse, Error, GenerateTweetParams>({
     mutationFn: async (params) => {
-      if (!isSignedIn || !userId) {
-        throw new Error('User must be signed in to generate tweets.')
-      }
-
       const response = await apiClient.post<GenerateTweetParams, TweetResponse>(
         '/api/ai/generate-tweet',
         params

@@ -1,14 +1,20 @@
-import { ContentService, ForbiddenError, TaskMetadataSchema } from '@hominem/utils/services'
+import {
+  ContentService,
+  ForbiddenError,
+  TaskMetadataSchema,
+  TweetMetadataSchema,
+} from '@hominem/utils/services'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors'
 import { verifyAuth } from '../middleware/auth'
 
+// Content type enum
+const ContentTypeEnum = z.enum(['note', 'task', 'timer', 'journal', 'document', 'tweet'])
+
 const contentTagSchema = z.object({
   value: z.string(),
 })
-
-const ContentTypeEnum = z.enum(['note', 'task', 'timer', 'journal', 'document'])
 
 const createContentSchema = z.object({
   type: ContentTypeEnum.default('note'),
@@ -16,6 +22,7 @@ const createContentSchema = z.object({
   title: z.string().optional(),
   tags: z.array(contentTagSchema).optional().default([]),
   taskMetadata: TaskMetadataSchema.optional().nullable(),
+  tweetMetadata: TweetMetadataSchema.optional().nullable(),
   analysis: z.record(z.unknown()).optional(),
 })
 
@@ -25,6 +32,7 @@ const updateContentSchema = z.object({
   title: z.string().optional(),
   tags: z.array(contentTagSchema).optional(),
   taskMetadata: TaskMetadataSchema.optional(),
+  tweetMetadata: TweetMetadataSchema.optional(),
   analysis: z.record(z.unknown()).optional(),
 })
 
@@ -105,7 +113,13 @@ export async function contentRoutes(fastify: FastifyInstance) {
   })
 
   const listContentQuerySchema = z.object({
-    types: z.array(ContentTypeEnum).optional(),
+    types: z
+      .union([z.array(ContentTypeEnum), ContentTypeEnum])
+      .optional()
+      .transform((val) => {
+        if (!val) return undefined
+        return Array.isArray(val) ? val : [val]
+      }),
     query: z.string().optional(),
     tags: z
       .string()
@@ -122,6 +136,11 @@ export async function contentRoutes(fastify: FastifyInstance) {
       }
 
       const { types, query, tags } = listContentQuerySchema.parse(request.query)
+      fastify.log.info({
+        msg: 'Listing content for user',
+        userId,
+        filters: { types, query, tags },
+      })
       // Call contentService.list with currently supported filters
       const result = await contentService.list(userId, { types, query, tags })
       return result
@@ -207,6 +226,7 @@ export async function contentRoutes(fastify: FastifyInstance) {
         title: !item.title ? null : item.title,
         tags: item.tags || [],
         taskMetadata: !item.taskMetadata ? null : item.taskMetadata,
+        tweetMetadata: !item.tweetMetadata ? null : item.tweetMetadata,
         analysis: !item.analysis ? null : item.analysis,
       }))
 

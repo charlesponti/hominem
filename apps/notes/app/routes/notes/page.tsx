@@ -1,6 +1,6 @@
 import type { Content, ContentType } from '@hominem/utils/types'
 import { useDebounce } from '@uidotdev/usehooks'
-import { Plus, Search, Sparkles } from 'lucide-react'
+import { Plus, Search, Sparkles, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -12,8 +12,14 @@ import { InlineCreateForm } from './components/inline-create-form'
 import { NoteFeedItem } from './components/note-feed-item'
 import { TaskFeedItem } from './components/task-feed-item'
 
+const CONTENT_TYPE_OPTIONS: { value: ContentType; label: string }[] = [
+  { value: 'note', label: 'Notes' },
+  { value: 'task', label: 'Tasks' },
+  { value: 'tweet', label: 'Tweets' },
+]
+
 export default function NotesPage() {
-  const [filter, setFilter] = useState<'all' | 'note' | 'task'>('all')
+  const [selectedTypes, setSelectedTypes] = useState<ContentType[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
   const feedContainerRef = useRef<HTMLDivElement>(null)
@@ -29,11 +35,29 @@ export default function NotesPage() {
     isLoading,
     refetch,
   } = useContentQuery({
-    searchText: debouncedSearchQuery, // Changed from query to searchText
-    type: filter === 'all' ? undefined : [filter as ContentType], // Changed from types to type and added type assertion
+    searchText: debouncedSearchQuery,
+    type: selectedTypes.length > 0 ? selectedTypes : undefined,
   })
   const { updateItem } = useUpdateContent()
   const deleteItem = useDeleteContent()
+
+  // Helper functions for multiselect type filters
+  const toggleContentType = (type: ContentType) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    )
+  }
+
+  const removeContentType = (type: ContentType) => {
+    setSelectedTypes((prev) => prev.filter((t) => t !== type))
+  }
+
+  const isAllSelected = selectedTypes.length === 0
+  const getFilterDisplayText = () => {
+    if (isAllSelected) return ''
+    if (selectedTypes.length === 1) return ` in ${selectedTypes[0]}s`
+    return ' in selected content types'
+  }
 
   useEffect(() => {
     refetch()
@@ -43,6 +67,7 @@ export default function NotesPage() {
   const stats = useMemo(() => {
     const notes = allContentItems.filter((item: Content) => item.type === 'note')
     const tasks = allContentItems.filter((item: Content) => item.type === 'task')
+    const tweets = allContentItems.filter((item: Content) => item.type === 'tweet')
     const completedTasks = tasks.filter((task: Content) => task.taskMetadata?.status === 'done')
     const allTags = allContentItems.flatMap((item: Content) => item.tags || [])
     const uniqueTags = [...new Set(allTags.map((tag: { value: string }) => tag.value))]
@@ -50,6 +75,7 @@ export default function NotesPage() {
     return {
       totalNotes: notes.length,
       totalTasks: tasks.length,
+      totalTweets: tweets.length,
       completedTasks: completedTasks.length,
       uniqueTags: uniqueTags.length,
       completionRate:
@@ -110,45 +136,48 @@ export default function NotesPage() {
       <header className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 z-10">
         <div className="py-4 px-4 md:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
-            {/* Filter buttons */}
+            {/* Filter chips */}
             <div className="col-span-1 flex justify-center md:justify-start">
-              <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                <Button
-                  variant={filter === 'all' ? 'default' : 'ghost'}
-                  onClick={() => setFilter('all')}
-                  size="sm"
-                  className={cn(
-                    'transition-all duration-200 hover:scale-105',
-                    filter === 'all' &&
-                      'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  )}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filter === 'note' ? 'default' : 'ghost'}
-                  onClick={() => setFilter('note')}
-                  size="sm"
-                  className={cn(
-                    'transition-all duration-200 hover:scale-105',
-                    filter === 'note' &&
-                      'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  )}
-                >
-                  Notes
-                </Button>
-                <Button
-                  variant={filter === 'task' ? 'default' : 'ghost'}
-                  onClick={() => setFilter('task')}
-                  size="sm"
-                  className={cn(
-                    'transition-all duration-200 hover:scale-105',
-                    filter === 'task' &&
-                      'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  )}
-                >
-                  Tasks
-                </Button>
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* Available content type options */}
+                {CONTENT_TYPE_OPTIONS.map((option) => {
+                  const isSelected = selectedTypes.includes(option.value)
+                  return (
+                    <Button
+                      key={option.value}
+                      variant={isSelected ? 'default' : 'outline'}
+                      onClick={() => toggleContentType(option.value)}
+                      size="sm"
+                      className={cn(
+                        'transition-all duration-200 hover:scale-105',
+                        isSelected &&
+                          'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      )}
+                    >
+                      {option.label}
+                      {isSelected && (
+                        <X
+                          className="ml-1 h-3 w-3"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeContentType(option.value)
+                          }}
+                        />
+                      )}
+                    </Button>
+                  )
+                })}
+                {/* Show All button when filters are active */}
+                {selectedTypes.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setSelectedTypes([])}
+                    size="sm"
+                    className="text-slate-500 hover:text-slate-700"
+                  >
+                    Show All
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -192,7 +221,9 @@ export default function NotesPage() {
                   onCancel={handleFormCancel}
                   itemToEdit={itemToEdit}
                   mode={formMode}
-                  defaultInputMode={filter === 'task' ? 'task' : 'note'}
+                  defaultInputMode={
+                    selectedTypes.includes('task') && selectedTypes.length === 1 ? 'task' : 'note'
+                  }
                 />
               </div>
             )}
@@ -210,18 +241,18 @@ export default function NotesPage() {
                   <Sparkles className="w-12 h-12 text-blue-500 dark:text-blue-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  {debouncedSearchQuery || filter !== 'all'
+                  {debouncedSearchQuery || selectedTypes.length > 0
                     ? 'No matches found'
                     : 'Your creative space awaits'}
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
                   {debouncedSearchQuery
-                    ? `No content matches "${debouncedSearchQuery}"${filter !== 'all' ? ` for ${filter}s` : ''}. Try a different search or filter.`
-                    : filter !== 'all'
-                      ? `No ${filter}s found. Try clearing filters or creating a new one.`
+                    ? `No content matches "${debouncedSearchQuery}"${getFilterDisplayText()}. Try a different search or filter.`
+                    : selectedTypes.length > 0
+                      ? 'No content found for selected filters. Try clearing filters or creating new content.'
                       : 'Start capturing your thoughts and organizing your tasks. Every great idea begins here.'}
                 </p>
-                {!debouncedSearchQuery && filter === 'all' && (
+                {!debouncedSearchQuery && selectedTypes.length === 0 && (
                   <Button
                     onClick={handleCreateNewItem}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
@@ -243,13 +274,13 @@ export default function NotesPage() {
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
                       {debouncedSearchQuery
-                        ? `No content matches "${debouncedSearchQuery}"${filter !== 'all' ? ` in ${filter}s` : ''}.`
-                        : `No ${filter !== 'all' ? `${filter}s` : 'items'} found for the current filters.`}
+                        ? `No content matches "${debouncedSearchQuery}"${getFilterDisplayText()}.`
+                        : 'No content found for the current filters.'}
                     </p>
                     <Button
                       onClick={() => {
                         setSearchQuery('')
-                        setFilter('all')
+                        setSelectedTypes([])
                       }}
                       variant="outline"
                       className="transition-all duration-200"
@@ -261,19 +292,19 @@ export default function NotesPage() {
                   <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                     {allContentItems.map((item: Content, index: number) => (
                       <div key={item.id}>
-                        {item.type === 'note' ? (
+                        {item.type === 'task' ? (
+                          <TaskFeedItem
+                            task={item}
+                            onDelete={handleDeleteItem}
+                            onEdit={handleEditItem}
+                            className={index === allContentItems.length - 1 ? 'border-b-0' : ''}
+                          />
+                        ) : (
                           <NoteFeedItem
                             note={item}
                             onEdit={handleEditItem}
                             onDelete={handleDeleteItem}
                             onRemoveTag={removeTagFromNote}
-                            className={index === allContentItems.length - 1 ? 'border-b-0' : ''}
-                          />
-                        ) : (
-                          <TaskFeedItem
-                            task={item}
-                            onDelete={handleDeleteItem}
-                            onEdit={handleEditItem}
                             className={index === allContentItems.length - 1 ? 'border-b-0' : ''}
                           />
                         )}

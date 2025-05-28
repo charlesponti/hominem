@@ -124,17 +124,15 @@ export function NoteFeedItem({
             {new Date(note.createdAt).toLocaleDateString()}
           </p>
           <div className="flex items-center gap-1">
-            {isTwitterEnabled && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowTweetModal(true)}
-                className="h-8 w-8 p-0 text-slate-600 hover:text-blue-500 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
-                title="Generate tweet"
-              >
-                <SocialX className="size-[14px]" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTweetModal(true)}
+              className="h-8 w-8 p-0 text-slate-600 hover:text-blue-500 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
+              title="Generate tweet"
+            >
+              <SocialX className="size-[14px]" />
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -157,14 +155,12 @@ export function NoteFeedItem({
         </div>
       </div>
 
-      {isTwitterEnabled && (
-        <TweetModal
-          open={showTweetModal}
-          onOpenChange={setShowTweetModal}
-          noteContent={note.content}
-          noteTitle={note.title}
-        />
-      )}
+      <TweetModal
+        open={showTweetModal}
+        onOpenChange={setShowTweetModal}
+        noteContent={note.content}
+        noteTitle={note.title}
+      />
     </div>
   )
 }

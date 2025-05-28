@@ -22,6 +22,8 @@ export * from './travel.schema'
 export * from './users.schema'
 
 export {
+  ContentTypeSchema,
+  TweetMetadataSchema,
   content,
   contentRelations,
 } from './notes.schema'

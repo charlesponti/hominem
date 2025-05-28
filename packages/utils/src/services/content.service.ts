@@ -49,7 +49,7 @@ type SyncClientItem = Omit<
   updatedAt?: string
 }
 
-export { TaskMetadataSchema } from './../db/schema/notes.schema'
+export { TaskMetadataSchema, TweetMetadataSchema } from './../db/schema/notes.schema'
 
 export class ContentService {
   async create(input: ContentInsert): Promise<ContentSchemaType> {
