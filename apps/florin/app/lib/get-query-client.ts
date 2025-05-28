@@ -5,6 +5,10 @@ function makeQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 30 * 1000,
+        retry: 2, // Only retry 2 times before giving up
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+        refetchOnWindowFocus: false, // Don't refetch when window gains focus
+        refetchOnReconnect: false, // Don't refetch when network reconnects
       },
     },
   })

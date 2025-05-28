@@ -32,7 +32,7 @@ export function useMonthlyStats(month: string | undefined | null, options = {}) 
         throw new Error('Month parameter is required')
       }
 
-      return await apiClient.get<never, MonthlyStats>(`/api/finance/monthly-stats/${month}`)
+      return await apiClient.get<never, MonthlyStats>(`/api/finance/analyze/monthly-stats/${month}`)
     },
     enabled: !!month,
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Clock,
   CreditCard,
+  ExternalLink,
   Eye,
   EyeOff,
   RefreshCcw,
@@ -18,6 +19,7 @@ import {
   AccountConnectionSummary,
 } from '~/components/accounts/account-connection-status'
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
+import { RouteLink } from '~/components/route-link'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import {
   AlertDialog,
@@ -172,8 +174,14 @@ function UnifiedAccountCard({
         </div>
       </CardContent>
 
-      <CardFooter className="bg-muted/50 p-3">
+      <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
         <AccountConnectionStatus account={account} />
+        <Button variant="outline" size="sm" asChild>
+          <RouteLink to={`/accounts/${account.id}`}>
+            <ExternalLink className="h-4 w-4 mr-2" />
+            View Details
+          </RouteLink>
+        </Button>
       </CardFooter>
     </Card>
   )
@@ -396,7 +404,7 @@ export default function AccountsPage() {
           <PlaidConnectButton
             variant="default"
             onSuccess={handleConnectionSuccess}
-            onError={(e) =>
+            onError={(e: Error | unknown) =>
               e instanceof Error
                 ? handleConnectionError(e)
                 : handleConnectionError(new Error('Unknown error'))

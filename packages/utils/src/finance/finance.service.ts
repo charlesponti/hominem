@@ -80,8 +80,19 @@ export function buildWhereConditions(options: QueryOptions) {
     conditions.push(lte(transactions.amount, options.max))
   }
 
+  console.log('account', options.account)
   if (options.account) {
-    conditions.push(like(financeAccounts.name, `%${options.account}%`))
+    // Check if the account parameter looks like a UUID (account ID)
+    // If it's a UUID, filter by account ID; otherwise, filter by account name
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        options.account
+      )
+    if (isUuid) {
+      conditions.push(eq(transactions.accountId, options.account))
+    } else {
+      conditions.push(like(financeAccounts.name, `%${options.account}%`))
+    }
   }
 
   if (options.description) {
@@ -280,8 +291,9 @@ export async function summarizeByMonth(options: QueryOptions) {
       sql`(${transactions.category} = ${options.category} OR ${transactions.parentCategory} = ${options.category})`
     )
   }
+
   if (options.account) {
-    conditions.push(like(financeAccounts.name, `%${options.account}%`))
+    conditions.push(eq(transactions.accountId, options.account))
   }
 
   const whereConditions = conditions.length > 0 ? and(...conditions) : undefined

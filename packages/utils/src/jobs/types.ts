@@ -82,7 +82,7 @@ export interface ImportTransactionsJob extends BaseJob {
  * This defines the structure of the `data` field when a job is added to the queue.
  */
 export interface ImportTransactionsQueuePayload {
-  csvContent: string
+  csvFilePath: string
   fileName: string
   deduplicateThreshold: number
   batchSize: number
@@ -97,7 +97,7 @@ export interface ImportTransactionsQueuePayload {
  * Request parameters for starting an import job
  */
 export interface ImportRequestParams {
-  csvContent: string
+  csvFilePath: string
   fileName: string
   deduplicateThreshold: number
 }

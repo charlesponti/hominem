@@ -13,12 +13,15 @@ import {
   transactions,
   updateTransactionSchema,
 } from '@hominem/utils/schema'
-import type { Job } from 'bullmq' // Ensure Job is imported
-import { and, count, desc, eq, gte, lt, or, sql } from 'drizzle-orm'
+import { csvStorageService } from '@hominem/utils/supabase'
+import type { Job } from 'bullmq'
+import { and, eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
+import fs from 'node:fs'
 import { z } from 'zod'
 import { handleError } from '../../lib/errors.js'
 import { verifyAuth } from '../../middleware/auth.js'
+import { handleFileUpload } from '../../middleware/file-upload.js'
 import { rateLimitImport } from '../../middleware/rate-limit.js'
 import { budgetRoutes } from './budget.router.js'
 import { financeAccountsRoutes } from './finance-accounts.js'
@@ -70,23 +73,18 @@ export async function financeRoutes(fastify: FastifyInstance) {
     }
   )
 
-  const ImportTransactionsSchema = z.object({
-    // Base64 encoded from client
-    csvContent: z.string().min(1, 'CSV content cannot be empty'),
-    fileName: z
-      .string()
-      .min(1, 'Filename is required')
-      .regex(/\.csv$/i, 'File must be a CSV'),
-    deduplicateThreshold: z.number().min(0).max(100).default(60),
-    batchSize: z.number().min(1).max(100).optional().default(20),
-    batchDelay: z.number().min(100).max(1000).optional().default(200),
+  // Update schema to handle file uploads instead of base64 content
+  const ImportTransactionsParamsSchema = z.object({
+    deduplicateThreshold: z.coerce.number().min(0).max(100).default(60),
+    batchSize: z.coerce.number().min(1).max(100).optional().default(20),
+    batchDelay: z.coerce.number().min(100).max(1000).optional().default(200),
   })
 
   fastify.post(
     '/import',
     {
-      // Increase file size limit to 10MB to account for CSV files
-      bodyLimit: 10 * 1024 * 1024,
+      // Increase file size limit to 50MB for CSV files
+      bodyLimit: 50 * 1024 * 1024,
       preHandler: [verifyAuth, rateLimitImport],
     },
     async (request, reply) => {
@@ -96,25 +94,45 @@ export async function financeRoutes(fastify: FastifyInstance) {
       }
 
       try {
-        const validated = ImportTransactionsSchema.safeParse(request.body)
-        if (!validated.success) {
-          reply.code(400)
-          return {
-            error: 'Validation failed',
-            details: validated.error.issues,
-          }
+        // Parse query parameters for options
+        const options = ImportTransactionsParamsSchema.parse(request.query)
+
+        // Handle multipart file upload
+        const uploadedFile = await handleFileUpload(request)
+
+        if (!uploadedFile) {
+          return reply.code(400).send({ error: 'No file uploaded' })
         }
+
+        if (!uploadedFile.mimetype.includes('csv')) {
+          // Clean up the temp file
+          fs.unlinkSync(uploadedFile.filepath)
+          return reply.code(400).send({ error: 'Only CSV files are supported' })
+        }
+
+        // Read the CSV file content
+        const csvContent = fs.readFileSync(uploadedFile.filepath, 'utf-8')
+
+        // Upload CSV file to Supabase storage
+        const csvFilePath = await csvStorageService.uploadCsvFile(
+          uploadedFile.filename,
+          csvContent,
+          userId
+        )
+
+        // Clean up the temp file
+        fs.unlinkSync(uploadedFile.filepath)
 
         // Check if a job with the same filename already exists for this user
         const userJobs = await getUserJobs<ImportTransactionsJob>(userId, 1, 100)
         const existingJob = userJobs.jobs.find(
           (job) =>
-            job.fileName === validated.data.fileName &&
+            job.fileName === uploadedFile.filename &&
             (job.status === 'queued' || job.status === 'uploading' || job.status === 'processing')
         )
 
         if (existingJob) {
-          fastify.log.info(`Found existing job ${existingJob.jobId} for ${validated.data.fileName}`)
+          fastify.log.info(`Found existing job ${existingJob.jobId} for ${uploadedFile.filename}`)
 
           return {
             success: true,
@@ -125,14 +143,16 @@ export async function financeRoutes(fastify: FastifyInstance) {
           }
         }
 
-        // Use BullMQ instead of Redis directly
+        // Use BullMQ with file path instead of CSV content
         const job = await fastify.queues.importTransactions.add(
           QUEUE_NAMES.IMPORT_TRANSACTIONS,
           {
-            ...validated.data,
+            csvFilePath,
+            fileName: uploadedFile.filename,
+            deduplicateThreshold: options.deduplicateThreshold,
+            batchSize: options.batchSize,
+            batchDelay: options.batchDelay,
             userId,
-            // BullMQ provides the job ID, so we don't need to create one
-            fileName: validated.data.fileName,
             status: 'queued',
             createdAt: Date.now(),
             type: 'import-transactions',
@@ -146,12 +166,12 @@ export async function financeRoutes(fastify: FastifyInstance) {
           }
         )
 
-        fastify.log.info(`Queued import job ${job.id}`)
+        fastify.log.info(`Queued import job ${job.id} with file ${csvFilePath}`)
 
         return {
           success: true,
           jobId: job.id,
-          fileName: validated.data.fileName,
+          fileName: uploadedFile.filename,
           status: 'queued',
         }
       } catch (error) {
@@ -367,7 +387,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
       return updatedTransaction
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
@@ -391,103 +411,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
 
       return { success: true, message: 'Transaction deleted successfully' }
     } catch (error) {
-      handleError(error as Error, reply)
-    }
-  })
-
-  const monthlyStatsParamsSchema = z.object({
-    month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
-  })
-
-  fastify.get('/monthly-stats/:month', { preHandler: verifyAuth }, async (request, reply) => {
-    const { userId } = request
-    if (!userId) {
-      return reply.code(401).send({ error: 'Not authorized' })
-    }
-
-    try {
-      const params = monthlyStatsParamsSchema.parse(request.params)
-      const { month } = params // Format: YYYY-MM
-
-      // Calculate start and end dates for the month (inclusive start, exclusive end)
-      const startDate = new Date(`${month}-01T00:00:00.000Z`)
-      const endDate = new Date(startDate)
-      endDate.setMonth(startDate.getMonth() + 1)
-
-      const monthFilter = and(
-        eq(transactions.userId, userId),
-        gte(transactions.date, startDate), // Use Date object directly
-        lt(transactions.date, endDate) // Use Date object directly
-      )
-
-      // --- Database Queries ---
-
-      // 1. Calculate Total Income, Total Expenses, and Transaction Count
-      const totalsResult = await db
-        .select({
-          totalIncome:
-            sql<number>`sum(case when ${transactions.amount} > 0 then ${transactions.amount} else 0 end)`.mapWith(
-              Number
-            ),
-          totalExpenses:
-            sql<number>`sum(case when ${transactions.amount} < 0 then abs(${transactions.amount}) else 0 end)`.mapWith(
-              Number
-            ),
-          transactionCount: count(),
-        })
-        .from(transactions)
-        .where(monthFilter)
-
-      const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {}
-
-      // 2. Calculate Spending by Category (only expenses)
-      const categorySpendingResult = await db
-        .select({
-          category: transactions.category,
-          amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number), // Cast amount to numeric for sum/abs
-        })
-        .from(transactions)
-        .where(
-          and(
-            monthFilter,
-            lt(transactions.amount, '0'),
-            or(eq(transactions.type, 'income'), eq(transactions.type, 'expense'))
-          )
-        ) // Compare amount as string
-        .groupBy(transactions.category)
-        .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`)) // Cast amount to numeric for sum/abs
-
-      // --- Format Results ---
-      const netIncome = totalIncome - totalExpenses
-
-      const stats = {
-        month,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        totalIncome,
-        totalExpenses,
-        netIncome,
-        transactionCount,
-        categorySpending: categorySpendingResult.map((c) => ({
-          name: c.category,
-          amount: c.amount,
-        })),
-        // Optionally fetch top transactions or other details here if needed
-      }
-
-      return stats
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return reply.code(400).send({
-          error: 'Validation failed',
-          details: error.issues,
-        })
-      }
-      fastify.log.error(`Error fetching monthly stats: ${error}`)
-      return reply.code(500).send({
-        error: 'Failed to retrieve monthly statistics',
-        details: error instanceof Error ? error.message : String(error),
-      })
+      return handleError(error as Error, reply)
     }
   })
 
@@ -535,7 +459,7 @@ export async function financeRoutes(fastify: FastifyInstance) {
       // !TODO: Implement logic to analyze spending categories
       return categories
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 }

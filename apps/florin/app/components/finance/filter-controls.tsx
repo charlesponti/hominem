@@ -93,7 +93,7 @@ export function FilterControls({
                 </SelectItem>
               ) : (
                 accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.name}>
+                  <SelectItem key={account.id} value={account.id}>
                     {account.name}
                   </SelectItem>
                 ))

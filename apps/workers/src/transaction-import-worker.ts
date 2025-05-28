@@ -5,6 +5,7 @@ import './env.ts'
  */
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts'
 import { processTransactionsFromCSV } from '@hominem/utils/finance'
+import { IMPORT_JOB_PREFIX } from '@hominem/utils/imports'
 import type {
   ImportTransactionsJob,
   ImportTransactionsQueuePayload,
@@ -12,10 +13,10 @@ import type {
 } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
+import { csvStorageService } from '@hominem/utils/supabase'
 import { type Job, Worker } from 'bullmq'
 import { JOB_PROCESSING } from './config'
 import { HealthService } from './health.service'
-import { removeJobFromQueue } from './import-job.utils'
 import { JobStatusService } from './job-status.service'
 
 // Configuration
@@ -24,6 +25,23 @@ const CONCURRENCY = 3
 interface JobProcessingOutput {
   stats?: Partial<JobStats>
   success?: boolean
+}
+
+/**
+ * Remove a job from the import queue
+ * Note: CSV files are now stored in Supabase storage, not Redis
+ */
+export async function removeJobFromQueue(jobId: string): Promise<void> {
+  try {
+    const jobKey = `${IMPORT_JOB_PREFIX}${jobId}`
+
+    logger.info(`Removing job ${jobId} from Redis`)
+
+    await redis.del(jobKey)
+    logger.info(`Successfully removed job ${jobId}`)
+  } catch (error) {
+    logger.error({ error, jobId }, `Failed to remove job ${jobId}`)
+  }
 }
 
 /**
@@ -55,32 +73,32 @@ export class TransactionImportWorker {
   }
 
   /**
-   * Decode and validate the CSV content
+   * Download and validate the CSV content from Supabase storage
    */
-  private static async decodeAndValidateContent(
+  private static async downloadAndValidateContent(
     jobId: string,
-    csvContentBase64: string
+    filePath: string
   ): Promise<string> {
     try {
-      const decodedContent = Buffer.from(csvContentBase64, 'base64').toString('utf-8')
+      const csvContent = await csvStorageService.downloadCsvFile(filePath)
 
-      if (!decodedContent || decodedContent.trim().length === 0) {
-        throw new Error('Decoded CSV content is empty')
+      if (!csvContent || csvContent.trim().length === 0) {
+        throw new Error('Downloaded CSV content is empty')
       }
 
-      if (!decodedContent.includes(',') || !decodedContent.includes('\n')) {
-        logger.warn(`Job ${jobId}: Decoded content doesn't appear to be a valid CSV format`)
+      if (!csvContent.includes(',') || !csvContent.includes('\n')) {
+        logger.warn(`Job ${jobId}: Downloaded content doesn't appear to be a valid CSV format`)
       }
 
       logger.info(
-        `Job ${jobId}: Successfully decoded CSV content (length: ${decodedContent.length})`
+        `Job ${jobId}: Successfully downloaded CSV content (length: ${csvContent.length})`
       )
 
-      return decodedContent
-    } catch (decodeError) {
+      return csvContent
+    } catch (downloadError) {
       await removeJobFromQueue(jobId)
       throw new Error(
-        `Failed to decode CSV content: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}`
+        `Failed to download CSV content: ${downloadError instanceof Error ? downloadError.message : String(downloadError)}`
       )
     }
   }
@@ -95,7 +113,7 @@ export class TransactionImportWorker {
     startTime: number,
     updateBullJobProgress: (progress: number) => Promise<void>
   ): Promise<void> {
-    const { jobId, fileName, userId, accountId, options } = jobData
+    const { jobId, fileName, userId, options } = jobData
     let processedCount = 0
     const totalLinesToProcess = Math.max(
       1,
@@ -113,45 +131,72 @@ export class TransactionImportWorker {
 
     stats.total = 0
 
-    for await (const result of processTransactionsFromCSV({
-      fileName,
-      csvContent: decodedContent,
-      userId,
-      accountId: accountId,
-      deduplicateThreshold: options?.deduplicateThreshold,
-      batchSize: options?.batchSize,
-      batchDelay: options?.batchDelay,
-      maxRetries: JOB_PROCESSING.MAX_RETRIES,
-      retryDelay: JOB_PROCESSING.RETRY_DELAY,
-    })) {
-      processedCount++
-      stats.total = (stats.total || 0) + 1
+    try {
+      for await (const result of processTransactionsFromCSV({
+        fileName,
+        csvContent: decodedContent,
+        userId,
+        deduplicateThreshold: options?.deduplicateThreshold,
+        batchSize: options?.batchSize,
+        batchDelay: options?.batchDelay,
+        maxRetries: JOB_PROCESSING.MAX_RETRIES,
+        retryDelay: JOB_PROCESSING.RETRY_DELAY,
+      })) {
+        processedCount++
+        stats.total = (stats.total || 0) + 1
 
-      if (result.action) {
-        if (isCountableActionKey(result.action)) {
-          stats[result.action] = (stats[result.action] ?? 0) + 1
-        } else {
-          logger.warn(
-            `Job ${jobId}: Received unexpected action key '${result.action}' from processor`
-          )
+        if (result.action) {
+          if (isCountableActionKey(result.action)) {
+            stats[result.action] = (stats[result.action] ?? 0) + 1
+          } else {
+            logger.warn(
+              `Job ${jobId}: Received unexpected action key '${result.action}' from processor`
+            )
+          }
+        }
+
+        const currentProgress = Math.min(
+          99,
+          Math.round((processedCount / totalLinesToProcess) * 100)
+        )
+
+        if (jobData.stats) {
+          jobData.stats.progress = currentProgress
+        }
+        stats.progress = currentProgress
+
+        if (currentProgress !== lastReportedProgress) {
+          await updateBullJobProgress(currentProgress)
+          lastReportedProgress = currentProgress
         }
       }
+      logger.info(
+        `Job ${jobId} CSV processing: ${processedCount} items processed. Stats: ${JSON.stringify(stats)}`
+      )
+    } catch (processingError) {
+      logger.error(
+        {
+          error: processingError,
+          jobId,
+          processedCount,
+          totalLinesToProcess,
+          fileName,
+        },
+        `Error during CSV processing iteration for job ${jobId}`
+      )
 
-      const currentProgress = Math.min(99, Math.round((processedCount / totalLinesToProcess) * 100))
-
-      if (jobData.stats) {
-        jobData.stats.progress = currentProgress
+      // Add error to stats
+      const errorMessage =
+        processingError instanceof Error ? processingError.message : String(processingError)
+      if (stats.errors) {
+        stats.errors.push(`CSV Processing Error: ${errorMessage}`)
+      } else {
+        stats.errors = [`CSV Processing Error: ${errorMessage}`]
       }
-      stats.progress = currentProgress
 
-      if (currentProgress !== lastReportedProgress) {
-        await updateBullJobProgress(currentProgress)
-        lastReportedProgress = currentProgress
-      }
+      // Re-throw to let the main error handler deal with it
+      throw processingError
     }
-    logger.info(
-      `Job ${jobId} CSV processing: ${processedCount} items processed. Stats: ${JSON.stringify(stats)}`
-    )
   }
 
   /**
@@ -186,11 +231,23 @@ export class TransactionImportWorker {
     try {
       await job.updateProgress(0)
 
+      if (!job.data.csvFilePath) {
+        throw new Error(`CSV file path not found in job ${job.id}`)
+      }
+
+      await JobStatusService.markJobProcessing(job.id as string)
+      logger.info(`Job ${job.id}: Marked as processing by JobStatusService`)
+
+      const decodedContent = await TransactionImportWorker.downloadAndValidateContent(
+        job.id as string,
+        job.data.csvFilePath
+      )
+
       const jobDataForProcessor: ImportTransactionsJob = {
         jobId: job.id as string,
         userId: job.data.userId,
         fileName: job.data.fileName,
-        csvContent: job.data.csvContent,
+        csvContent: decodedContent,
         type: 'import-transactions',
         status: 'processing',
         options: {
@@ -201,18 +258,6 @@ export class TransactionImportWorker {
         stats: { progress: 0 },
         startTime: job.timestamp,
       }
-
-      if (!jobDataForProcessor.csvContent) {
-        throw new Error(`CSV content not found in job ${job.id}`)
-      }
-
-      await JobStatusService.markJobProcessing(job.id as string)
-      logger.info(`Job ${job.id}: Marked as processing by JobStatusService`)
-
-      const decodedContent = await TransactionImportWorker.decodeAndValidateContent(
-        job.id as string,
-        jobDataForProcessor.csvContent
-      )
 
       const updateBullJobProgress = async (progress: number) => {
         await job.updateProgress(progress)

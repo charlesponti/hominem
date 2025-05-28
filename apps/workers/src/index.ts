@@ -55,11 +55,29 @@ process.on('SIGINT', () => {
 
 // Handle uncaught exceptions gracefully
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught exception in main process:', error)
+  logger.error(
+    {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        cause: error.cause,
+      },
+    },
+    'Uncaught exception in main process:'
+  )
+  console.error('Full uncaught exception details:', error)
   gracefulShutdown(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled promise rejection in main process:', reason)
+  logger.error(
+    {
+      error: reason,
+      promise: promise.toString(),
+    },
+    'Unhandled promise rejection in main process:'
+  )
+  console.error('Full unhandled rejection details:', reason)
   gracefulShutdown(1)
 })

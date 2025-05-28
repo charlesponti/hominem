@@ -54,7 +54,7 @@ export function useApiClient() {
             ...defaultHeaders,
             ...headers,
           },
-          body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
+          body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
           credentials: 'include',
         })
 
@@ -103,8 +103,11 @@ export function useApiClient() {
       ) =>
         fetchApi<T, Response>(endpoint, { ...options, method: 'POST', body: data, stream: true }),
 
-      postFormData: <S>(endpoint: string, formData: FormData, options?: Omit<FetchOptions<FormData>, 'method'>) =>
-        fetchApi<FormData, S>(endpoint, { ...options, method: 'POST', body: formData }),
+      postFormData: <S>(
+        endpoint: string,
+        formData: FormData,
+        options?: Omit<FetchOptions<FormData>, 'method'>
+      ) => fetchApi<FormData, S>(endpoint, { ...options, method: 'POST', body: formData }),
 
       put: <T, S>(endpoint: string, data: T, options?: Omit<FetchOptions<T>, 'method'>) =>
         fetchApi<T, S>(endpoint, { ...options, method: 'PUT', body: data }),

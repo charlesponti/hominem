@@ -30,7 +30,7 @@ export function AccountSelect({
       <SelectContent>
         <SelectItem value="all">All accounts</SelectItem>
         {accounts.map((account) => (
-          <SelectItem key={account.id} value={account.name}>
+          <SelectItem key={account.id} value={account.id}>
             {account.name}
           </SelectItem>
         ))}

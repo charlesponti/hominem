@@ -3,15 +3,9 @@
 import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
-import type {
-  FileStatus,
-  ImportRequestParams,
-  ImportRequestResponse,
-  ImportTransactionsJob,
-} from '@hominem/utils/types'
+import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fileToBase64 } from '~/lib/files.utils'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'
 
 // Define constants for channel names and message types
@@ -196,28 +190,29 @@ export function useImportTransactionsStore() {
         const results = await Promise.all(
           files.map(async (file) => {
             try {
-              const base64 = await fileToBase64(file)
-              const response = await apiClient.post<ImportRequestParams, ImportRequestResponse>(
+              const formData = new FormData()
+              formData.append('file', file)
+              formData.append('fileName', file.name)
+              formData.append('deduplicateThreshold', '60')
+
+              // Use the API client's FormData method
+              const result = await apiClient.postFormData<ImportRequestResponse>(
                 '/api/finance/import',
-                {
-                  csvContent: base64,
-                  fileName: file.name,
-                  deduplicateThreshold: 60,
-                }
+                formData
               )
 
-              if (!response.success) {
+              if (!result.success) {
                 throw new Error('Import failed')
               }
 
               // Update status after successful upload
               setStatuses((prev) =>
                 prev.map((status) =>
-                  status.file.name === file.name ? { ...status, status: response.status } : status
+                  status.file.name === file.name ? { ...status, status: result.status } : status
                 )
               )
 
-              return response
+              return result
             } catch (error) {
               // Update status to error on failure
               setStatuses((prev) =>

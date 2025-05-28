@@ -238,6 +238,9 @@ export async function parseTransactionString(
   return new Promise((resolve, reject) => {
     try {
       const transactions: ParsedTransactions = []
+      let rowIndex = 0
+      let successfulRows = 0
+      let failedRows = 0
 
       parse(csvString, { columns: true }, (err, data) => {
         if (err) {
@@ -245,11 +248,42 @@ export async function parseTransactionString(
           return
         }
 
+        logger.info(`Starting to process ${data.length} CSV rows`)
+
         for (const row of data) {
-          // Always pass the required userId
-          const transaction = convertCopilotTransaction(row, userId)
-          transactions.push([row.account, transaction])
+          rowIndex++
+          try {
+            // Always pass the required userId
+            const transaction = convertCopilotTransaction(row, userId)
+            transactions.push([row.account, transaction])
+            successfulRows++
+          } catch (conversionError) {
+            failedRows++
+            // Log the error but continue processing other rows
+            logger.warn('Failed to convert CSV row to transaction', {
+              rowIndex,
+              error:
+                conversionError instanceof Error
+                  ? conversionError.message
+                  : String(conversionError),
+              rowData: {
+                amount: row.amount,
+                date: row.date,
+                name: row.name,
+                account: row.account,
+                type: row.type,
+              },
+            })
+            // Skip this invalid row and continue with the next one
+          }
         }
+
+        logger.info('CSV parsing completed', {
+          totalRows: data.length,
+          successfulRows,
+          failedRows,
+          successRate: data.length > 0 ? Math.round((successfulRows / data.length) * 100) : 0,
+        })
 
         resolve(transactions)
       })

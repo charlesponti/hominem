@@ -41,6 +41,20 @@ export function convertCopilotTransaction(
   data: CopilotTransaction,
   userId: string
 ): Omit<TransactionInsert, 'accountId'> {
+  // Validate required fields exist
+  if (!data.amount) {
+    throw new Error('Missing required field: amount')
+  }
+  if (!data.date) {
+    throw new Error('Missing required field: date')
+  }
+  if (!data.name) {
+    throw new Error('Missing required field: name (description)')
+  }
+  if (!data.type) {
+    throw new Error('Missing required field: type')
+  }
+
   // Clean the amount field
   const cleanAmountString = data.amount.toString().replace(/[^0-9.-]/g, '')
   const type = translateTransactionType(data.type)
@@ -48,7 +62,13 @@ export function convertCopilotTransaction(
   // Validate that amount is a valid number
   const parsedAmount = Number.parseFloat(cleanAmountString)
   if (Number.isNaN(parsedAmount)) {
-    throw Error('Invalid amount')
+    throw new Error(`Invalid amount: "${data.amount}" could not be converted to a number`)
+  }
+
+  // Validate date
+  const parsedDate = new Date(data.date)
+  if (Number.isNaN(parsedDate.getTime())) {
+    throw new Error(`Invalid date: "${data.date}" could not be converted to a valid date`)
   }
 
   let finalAmount = parsedAmount
@@ -73,7 +93,7 @@ export function convertCopilotTransaction(
     id: crypto.randomUUID(),
     type,
     amount: finalAmount.toFixed(2), // Convert back to string
-    date: new Date(data.date),
+    date: parsedDate, // Use the validated parsed date
     description: data.name,
     category: data.category,
     parentCategory: data['parent category'] || data.parent_category || '',

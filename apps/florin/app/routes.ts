@@ -12,6 +12,7 @@ export default [
 
       // Accounts
       route('accounts', 'routes/accounts/page.tsx'),
+      route('accounts/:id', 'routes/accounts/[id]/page.tsx'),
 
       // Budget
       route('budget', 'routes/budget/page.tsx'),

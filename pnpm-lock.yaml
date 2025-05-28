@@ -138,6 +138,9 @@ importers:
       '@sentry/tracing':
         specifier: ^7.120.3
         version: 7.120.3
+      '@supabase/supabase-js':
+        specifier: ^2.49.4
+        version: 2.49.4
       '@total-typescript/ts-reset':
         specifier: ^0.6.1
         version: 0.6.1
@@ -1116,6 +1119,9 @@ importers:
       '@hominem/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@supabase/supabase-js':
+        specifier: ^2.49.4
+        version: 2.49.4
       bullmq:
         specifier: ^4.17.0
         version: 4.18.2
@@ -1228,6 +1234,9 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../ai
+      '@supabase/supabase-js':
+        specifier: ^2.49.4
+        version: 2.49.4
       ai:
         specifier: ^4.1.54
         version: 4.3.10(react@19.1.0)(zod@3.24.3)

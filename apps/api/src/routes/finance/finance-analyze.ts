@@ -1,3 +1,4 @@
+import { db } from '@hominem/utils/db'
 import {
   calculateTransactions,
   categoryBreakdownSchema,
@@ -6,6 +7,8 @@ import {
   getBudgetCategorySuggestions,
   summarizeByCategory,
 } from '@hominem/utils/finance'
+import { transactions } from '@hominem/utils/schema'
+import { and, count, desc, eq, gte, lt, or, sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../../lib/errors.js'
@@ -159,4 +162,100 @@ export async function financeAnalyzeRoutes(fastify: FastifyInstance) {
       }
     }
   )
+
+  const monthlyStatsParamsSchema = z.object({
+    month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
+  })
+
+  fastify.get('/monthly-stats/:month', { preHandler: verifyAuth }, async (request, reply) => {
+    const { userId } = request
+    if (!userId) {
+      return reply.code(401).send({ error: 'Not authorized' })
+    }
+
+    try {
+      const params = monthlyStatsParamsSchema.parse(request.params)
+      const { month } = params // Format: YYYY-MM
+
+      // Calculate start and end dates for the month (inclusive start, exclusive end)
+      const startDate = new Date(`${month}-01T00:00:00.000Z`)
+      const endDate = new Date(startDate)
+      endDate.setMonth(startDate.getMonth() + 1)
+
+      const monthFilter = and(
+        eq(transactions.userId, userId),
+        gte(transactions.date, startDate), // Use Date object directly
+        lt(transactions.date, endDate) // Use Date object directly
+      )
+
+      // --- Database Queries ---
+
+      // 1. Calculate Total Income, Total Expenses, and Transaction Count
+      const totalsResult = await db
+        .select({
+          totalIncome:
+            sql<number>`sum(case when ${transactions.amount} > 0 then ${transactions.amount} else 0 end)`.mapWith(
+              Number
+            ),
+          totalExpenses:
+            sql<number>`sum(case when ${transactions.amount} < 0 then abs(${transactions.amount}) else 0 end)`.mapWith(
+              Number
+            ),
+          transactionCount: count(),
+        })
+        .from(transactions)
+        .where(monthFilter)
+
+      const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {}
+
+      // 2. Calculate Spending by Category (only expenses)
+      const categorySpendingResult = await db
+        .select({
+          category: transactions.category,
+          amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number), // Cast amount to numeric for sum/abs
+        })
+        .from(transactions)
+        .where(
+          and(
+            monthFilter,
+            lt(transactions.amount, '0'),
+            or(eq(transactions.type, 'income'), eq(transactions.type, 'expense'))
+          )
+        ) // Compare amount as string
+        .groupBy(transactions.category)
+        .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`)) // Cast amount to numeric for sum/abs
+
+      // --- Format Results ---
+      const netIncome = totalIncome - totalExpenses
+
+      const stats = {
+        month,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        totalIncome,
+        totalExpenses,
+        netIncome,
+        transactionCount,
+        categorySpending: categorySpendingResult.map((c) => ({
+          name: c.category,
+          amount: c.amount,
+        })),
+        // Optionally fetch top transactions or other details here if needed
+      }
+
+      return stats
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({
+          error: 'Validation failed',
+          details: error.issues,
+        })
+      }
+      fastify.log.error(`Error fetching monthly stats: ${error}`)
+      return reply.code(500).send({
+        error: 'Failed to retrieve monthly statistics',
+        details: error instanceof Error ? error.message : String(error),
+      })
+    }
+  })
 }

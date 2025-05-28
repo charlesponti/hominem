@@ -39,7 +39,7 @@ export async function handleFileUpload(request: FastifyRequest): Promise<Uploade
       size: buffer.length,
     }
   } catch (error) {
-    logger.error('File upload error:', error)
+    logger.error(error, 'File upload error:')
     return null
   }
 }
