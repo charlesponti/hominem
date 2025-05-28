@@ -1,4 +1,4 @@
-import { useAuth } from '../../lib/supabase/auth-context'
+import { useAuth } from '@clerk/react-router'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -6,13 +6,13 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isLoaded, userId } = useAuth()
 
-  if (isLoading) {
+  if (!isLoaded) {
     return <div className="loading">Loading authentication state...</div>
   }
 
-  if (!isAuthenticated) {
+  if (!userId) {
     return fallback || <div className="auth-required">Please login to access this page</div>
   }
 
