@@ -1,7 +1,22 @@
-import { Outlet, useNavigation } from 'react-router'
+import { getAuth } from '@clerk/react-router/ssr.server'
+import { Outlet, redirect, useNavigation } from 'react-router'
+import { cn } from '~/lib/utils'
 import { MainNavigation } from '../components/main-navigation'
+import type { Route } from './+types/layout'
 
-export default function Layout() {
+export async function loader(loaderArgs: Route.LoaderArgs) {
+  const { userId } = await getAuth(loaderArgs)
+
+  // If the user is authenticated, redirect to the `/finance` page
+  if (new URL(loaderArgs.request.url).pathname === '/' && userId) {
+    return redirect('/finance')
+  }
+
+  return { userId }
+}
+
+export default function Layout({ loaderData }: Route.ComponentProps) {
+  const { userId } = loaderData
   const navigation = useNavigation()
   const isNavigating = navigation.state !== 'idle'
 
@@ -14,8 +29,12 @@ export default function Layout() {
         </div>
       )}
       <div className="bg-background text-foreground min-h-screen-dynamic min-w-full flex flex-col">
-        <MainNavigation />
-        <main className="flex-1 overflow-hidden md:pl-16 pt-16 md:pt-0">
+        {userId ? <MainNavigation /> : null}
+        <main
+          className={cn('flex-1 overflow-hidden pt-16 md:pt-0', {
+            'md:pl-16': userId,
+          })}
+        >
           <div className="md:mx-auto px-2">
             <Outlet />
           </div>

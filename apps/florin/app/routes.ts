@@ -4,11 +4,8 @@ export default [
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
     layout('routes/finance/layout.tsx', [
-      route('feed', 'routes/finance/feed/page.tsx'),
       route('finance', 'routes/finance/page.tsx'),
-      route('finance/import', 'routes/finance/import/page.tsx'),
-
-      route('/finance/banks', 'routes/finance/banks/page.tsx'),
+      route('import', 'routes/import/page.tsx'),
 
       // Accounts
       route('accounts', 'routes/accounts/page.tsx'),

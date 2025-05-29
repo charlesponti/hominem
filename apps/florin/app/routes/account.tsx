@@ -134,7 +134,7 @@ export default function AccountPage() {
                 </p>
               </div>
               <RouteLink
-                to="/finance/import"
+                to="/import"
                 className={buttonVariants({ variant: 'outline', className: 'mt-2 sm:mt-0' })}
               >
                 Go to Import Page

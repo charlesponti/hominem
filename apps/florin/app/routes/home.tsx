@@ -1,23 +1,16 @@
-import { useUser } from '@clerk/react-router'
-import {
-  ArrowRight,
-  BarChart2,
-  CreditCard,
-  LineChart,
-  PlusCircle,
-  Upload,
-  Wallet,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { SignUpButton, useUser } from '@clerk/react-router'
+import { ArrowRight, BarChart2 } from 'lucide-react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import styles from './home.module.css'
 
 export function meta() {
   return [
-    { title: 'Florin - Get Started with Personal Finance' },
+    { title: 'Florin - Personal Finance Made Simple' },
     {
       name: 'description',
-      content: "Take control of your financial future with Florin's simple, powerful tools.",
+      content:
+        "Take control of your financial future with Florin's simple, powerful tools. Track all your accounts, categorize transactions automatically, and gain visual insights into your spending.",
     },
   ]
 }
@@ -25,7 +18,6 @@ export function meta() {
 export default function Home() {
   const { user, isLoaded } = useUser()
   const navigate = useNavigate()
-  const [selectedOption, setSelectedOption] = useState<string | null>(null)
 
   // Redirect authenticated users to their dashboard
   useEffect(() => {
@@ -38,116 +30,41 @@ export default function Home() {
     return null
   }
 
-  const handleOptionSelect = (option: string) => {
-    setSelectedOption(option)
-  }
-
-  const handleGetStarted = () => {
-    if (selectedOption) {
-      navigate('/login', { state: { onboardingOption: selectedOption } })
-    } else {
-      navigate('/login')
-    }
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-grow flex flex-col items-center justify-center p-6">
-        <div className="max-w-3xl w-full">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-3">
-            How would you like to get started?
+      {/* Background gradient */}
+      <div className={styles.heroGradient} />
+
+      <main className="flex-grow flex flex-col items-center justify-center px-6 py-16">
+        <div className="max-w-4xl w-full text-center">
+          {/* Hero Section */}
+          <h1 className="font-serif text-4xl md:text-6xl font-bold mb-6 tracking-tighter">
+            Take control of <span className="text-green-600 italic">your money.</span>
           </h1>
-          <p className="text-gray-600 text-center mb-12 md:text-lg">
-            Choose an option to customize your experience
-          </p>
+          <h2 className="font-sans text-xl font-bold text-center mb-12 text-gray-500">
+            Everything you need to understand, plan, and control your money
+          </h2>
 
-          <div className="grid md:grid-cols-3 gap-4 mb-8">
-            {/* Option 1: Manual setup */}
-            <button
-              type="button"
-              className={`${styles.onboardingCard} ${selectedOption === 'manual' ? 'ring-2 ring-blue-500' : ''}`}
-              onClick={() => handleOptionSelect('manual')}
-            >
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                <PlusCircle className="text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Start from scratch</h3>
-              <p className="text-gray-600 text-sm">Manually add your accounts and transactions</p>
-            </button>
-
-            {/* Option 2: Upload data */}
-            <button
-              type="button"
-              className={`${styles.onboardingCard} ${selectedOption === 'upload' ? 'ring-2 ring-blue-500' : ''}`}
-              onClick={() => handleOptionSelect('upload')}
-            >
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                <Upload className="text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Upload statements</h3>
-              <p className="text-gray-600 text-sm">
-                Import CSV files from your bank or credit card
-              </p>
-            </button>
-
-            {/* Option 3: Demo data */}
-            <button
-              type="button"
-              className={`${styles.onboardingCard} ${selectedOption === 'demo' ? 'ring-2 ring-blue-500' : ''}`}
-              onClick={() => handleOptionSelect('demo')}
-            >
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                <BarChart2 className="text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Try a demo</h3>
-              <p className="text-gray-600 text-sm">
-                Explore with sample data to see how Florin works
-              </p>
-            </button>
+          {/* CTA Button */}
+          <div className="mb-16">
+            <SignUpButton>
+              <button
+                type="button"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                Get Started Free
+                <ArrowRight className="inline-block ml-2 h-5 w-5" />
+              </button>
+            </SignUpButton>
+            <p className="text-sm text-gray-500 mt-3">No credit card required</p>
           </div>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={handleGetStarted}
-              className={`py-3 px-8 rounded-md font-medium text-white transition-all ${selectedOption ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-              disabled={!selectedOption}
-            >
-              Get Started
-              <ArrowRight className="inline-block ml-2 h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-gray-200">
-            <h2 className="text-xl font-semibold text-center mb-6">Why people love Florin</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-                  <Wallet className="text-blue-600 h-5 w-5" />
-                </div>
-                <h3 className="font-medium mb-1">All accounts in one place</h3>
-                <p className="text-gray-600 text-sm">
-                  Track checking, savings, credit cards, and investments
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-                  <CreditCard className="text-blue-600 h-5 w-5" />
-                </div>
-                <h3 className="font-medium mb-1">Automatic categorization</h3>
-                <p className="text-gray-600 text-sm">
-                  We sort your transactions so you don't have to
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-                  <LineChart className="text-blue-600 h-5 w-5" />
-                </div>
-                <h3 className="font-medium mb-1">Visual insights</h3>
-                <p className="text-gray-600 text-sm">
-                  See where your money goes with clear charts and reports
-                </p>
-              </div>
+          {/* Dashboard Preview */}
+          <div className={styles.heroImage}>
+            <div className="text-white text-center">
+              <BarChart2 className="h-16 w-16 mx-auto mb-4 opacity-80" />
+              <p className="text-lg font-medium">Dashboard Preview</p>
+              <p className="text-sm opacity-75">Coming Soon</p>
             </div>
           </div>
         </div>
