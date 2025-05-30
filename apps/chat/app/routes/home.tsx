@@ -1,5 +1,6 @@
-import { useTheme } from 'app/components/ui/theme-provider'
+import { getAuth } from '@clerk/react-router/ssr.server'
 import { motion } from 'framer-motion'
+import { redirect } from 'react-router'
 import { HeroSection } from '../components/home'
 import type { Route } from './+types/home'
 
@@ -10,9 +11,17 @@ export function meta(args: Route.MetaArgs) {
   ]
 }
 
-export default function Home() {
-  const { theme } = useTheme()
+export async function loader(args: Route.LoaderArgs) {
+  const { userId } = await getAuth(args)
 
+  if (!userId) {
+    return redirect('/chat')
+  }
+
+  return { userId }
+}
+
+export default function Home() {
   return (
     <div className="flex flex-col items-center relative overflow-hidden">
       {/* Floating abstract shapes */}

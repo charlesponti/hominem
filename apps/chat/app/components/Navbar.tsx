@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useAuth } from '@clerk/react-router'
 import { motion } from 'framer-motion'
 import { Menu } from 'lucide-react'
@@ -36,18 +35,7 @@ export function Navbar() {
                     Home
                   </RouterLink>
                 </motion.div>
-                <motion.div
-                  className="w-full"
-                  whileHover={{ x: 5 }}
-                  transition={{ type: 'spring', stiffness: 400 }}
-                >
-                  <RouterLink
-                    to="/about"
-                    className="block px-4 py-2 text-sm hover:bg-accent rounded-md"
-                  >
-                    About
-                  </RouterLink>
-                </motion.div>
+
                 <motion.div
                   className="w-full"
                   whileHover={{ x: 5 }}
@@ -89,11 +77,7 @@ export function Navbar() {
                 Home
               </RouterLink>
             </motion.li>
-            <motion.li whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400 }}>
-              <RouterLink to="/about" className="font-medium rounded-full hover:bg-primary/10">
-                About
-              </RouterLink>
-            </motion.li>
+
             <motion.li whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400 }}>
               <RouterLink to="/chat" className="font-medium rounded-full hover:bg-primary/10">
                 Chat
@@ -114,7 +98,6 @@ export function Navbar() {
               </RouterLink>
             </motion.div>
           ) : null}
-          <ThemeToggle />
         </div>
       </div>
     </motion.div>

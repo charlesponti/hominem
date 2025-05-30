@@ -1,7 +1,7 @@
-import { defineWorkspace } from "vitest/config";
+import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
-	"./apps/api/vitest.config.mts",
-	"./apps/scratchpad/vitest.config.mts",
-	"./packages/utils/vitest.config.mts",
-]);
+  './apps/api/vitest.config.mts',
+  './apps/chat/vitest.config.mts',
+  './packages/utils/vitest.config.mts',
+])

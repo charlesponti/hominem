@@ -5,7 +5,6 @@ export default [
     index('routes/home.tsx'),
     route('/chat', 'routes/chat/page.tsx'),
     route('/about', 'routes/about.tsx'),
-    route('/auth', 'routes/auth.tsx'),
-    route('/profile', 'routes/profile.tsx'),
+    route('/profile', 'routes/profile/page.tsx'),
   ]),
 ] as RouteConfig

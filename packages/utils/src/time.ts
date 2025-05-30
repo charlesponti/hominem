@@ -1,5 +1,3 @@
-import * as chrono from 'chrono-node'
-
 export const TIME_UNITS = {
   SECOND: 1000,
   MINUTE: 60 * 1000,
@@ -13,11 +11,23 @@ export const TIME_UNITS = {
 export function getDatesFromText(text: string) {
   const fullDate = text.match(/\d{4}-\d{2}-\d{2}/)
   const year = text.match(/(?<![\d.])\d{4}(?![\d.])/)
-  const dates = chrono.parse(text) || []
-  const parsedDates = dates.map((date) => ({
-    start: date.start.date().toISOString(),
-    end: date.end?.date().toISOString(),
-  }))
+
+  // Parse basic date formats without chrono-node
+  const parsedDates: Array<{ start: string; end?: string }> = []
+
+  if (fullDate) {
+    try {
+      const date = new Date(fullDate[0])
+      if (!Number.isNaN(date.getTime())) {
+        parsedDates.push({
+          start: date.toISOString(),
+          end: undefined,
+        })
+      }
+    } catch {
+      // Ignore invalid dates
+    }
+  }
 
   return {
     dates: parsedDates,
