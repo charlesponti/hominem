@@ -1,12 +1,14 @@
-import { getAuth } from '@clerk/react-router/ssr.server'
-import { redirect, type LoaderFunctionArgs, Outlet } from 'react-router'
+import { getServerSession } from '@/lib/supabase/server'
+import { Outlet, redirect, type LoaderFunctionArgs } from 'react-router'
 
 export async function loader(loaderArgs: LoaderFunctionArgs) {
-  const { userId } = await getAuth(loaderArgs)
-  if (!userId) {
+  const session = await getServerSession(loaderArgs.request)
+
+  if (!session?.user) {
     return redirect('/')
   }
-  return { userId }
+
+  return { userId: session.user.id }
 }
 
 export default function ChatLayout() {

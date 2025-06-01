@@ -1,4 +1,3 @@
-import { ClerkProvider } from '@clerk/react-router'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
@@ -6,6 +5,7 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 import type { Route } from './+types/root'
 import './app.css'
 import { getQueryClient } from './lib/get-query-client'
+import { AuthProvider } from './lib/supabase/auth-context'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -38,21 +38,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const queryClient = getQueryClient()
 
 function AppProviders({ children }: { children: React.ReactNode }) {
-  const queryClient = getQueryClient()
-
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  )
 }
 
 export default function App() {
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey}>
-      <AppProviders>
-        <Outlet />
-      </AppProviders>
-    </ClerkProvider>
+    <AppProviders>
+      <Outlet />
+    </AppProviders>
   )
 }
 

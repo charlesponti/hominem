@@ -1,5 +1,5 @@
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { useAuth } from '@/lib/supabase/auth-hooks'
+import { useSupabaseApiClient } from '@hominem/ui'
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
@@ -54,9 +54,11 @@ export function useChat({
   initialMessages = [],
   showDebugInfo = false,
 }: UseChatOptions) {
-  const { userId } = useAuth()
-  const api = useApiClient()
+  const { user } = useAuth()
+  const api = useSupabaseApiClient()
   const queryClient = useQueryClient()
+
+  const userId = user?.id
 
   // Query keys - memoized to prevent unnecessary re-renders
   const chatQueryKey = useMemo(() => ['chat', endpoint], [endpoint])
@@ -74,7 +76,7 @@ export function useChat({
   } = useQuery<ChatInitResponse>({
     queryKey: chatQueryKey,
     queryFn: async (): Promise<ChatInitResponse> => {
-      const res = await api.get<null, ChatInitResponse>(endpoint)
+      const res = await api.get<ChatInitResponse>(endpoint)
       return res
     },
     enabled: !!userId,
@@ -159,7 +161,7 @@ export function useChat({
           showDebugInfo,
         }
 
-        const response = await api.postStream(endpoint, requestBody)
+        const response = await api.stream(endpoint, requestBody)
 
         // Initialize a placeholder message in the cache
         const streamId = 'stream-response'
@@ -265,7 +267,7 @@ export function useChat({
     queryKey: historyQueryKey(chatId || ''),
     queryFn: async ({ pageParam = latestMessages.length }): Promise<ChatHistoryPage> => {
       if (!chatId) throw new Error('Chat ID is missing')
-      const res = await api.get<null, ChatHistoryResponse>(
+      const res = await api.get<ChatHistoryResponse>(
         `${endpoint}/history/${chatId}?limit=${PAGE_SIZE}&offset=${pageParam}`
       )
       return { ...res, offset: pageParam as number }
@@ -282,7 +284,7 @@ export function useChat({
       if (!chatId) throw new Error('Chat ID is missing')
 
       // Call the API to clear chat messages
-      const res = await api.delete<null, { success: boolean; message: string }>(
+      const res = await api.delete<{ success: boolean; message: string }>(
         `${endpoint}/${chatId}/messages`
       )
       return res

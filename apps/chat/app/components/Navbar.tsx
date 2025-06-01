@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { useAuth } from '@clerk/react-router'
+import { useAuth } from '@/lib/supabase/auth-hooks'
 import { motion } from 'framer-motion'
 import { Menu } from 'lucide-react'
 import { Link as RouterLink } from 'react-router'
 
 export function Navbar() {
-  const { isSignedIn, isLoaded } = useAuth()
+  const { user, isLoading } = useAuth()
 
   return (
     <motion.div
@@ -87,7 +87,7 @@ export function Navbar() {
         </div>
 
         <div className="navbar-end flex gap-2">
-          {isLoaded && !isSignedIn ? (
+          {!isLoading && !user ? (
             <motion.div
               className="hidden md:flex"
               whileHover={{ scale: 1.05 }}

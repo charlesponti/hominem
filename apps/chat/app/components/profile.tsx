@@ -1,10 +1,9 @@
-import { useClerk, useUser } from '@clerk/react-router'
+import { useAuth } from '@/lib/supabase/auth-hooks'
 
 export function Profile() {
-  const { user, isLoaded } = useUser()
-  const { signOut } = useClerk()
+  const { user, isLoading, logout } = useAuth()
 
-  if (!isLoaded) {
+  if (isLoading) {
     return <div className="loading">Loading user data...</div>
   }
 
@@ -14,7 +13,7 @@ export function Profile() {
 
   const handleLogout = async () => {
     try {
-      await signOut()
+      await logout()
     } catch (error) {
       console.error('Logout error:', error)
     }
@@ -25,14 +24,14 @@ export function Profile() {
       <h2>User Profile</h2>
       <div className="profile-info">
         <p>
-          <strong>Email:</strong> {user.primaryEmailAddress?.emailAddress || 'No email'}
+          <strong>Email:</strong> {user.email || 'No email'}
         </p>
         <p>
           <strong>User ID:</strong> {user.id}
         </p>
         <p>
           <strong>Last Sign In:</strong>{' '}
-          {user.lastSignInAt ? new Date(user.lastSignInAt).toLocaleString() : 'Never'}
+          {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}
         </p>
       </div>
 

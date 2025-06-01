@@ -1,5 +1,5 @@
 {
-  "name": "scratchpad",
+  "name": "@hominem/chat",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,13 +10,13 @@
     "format": "biome format ./src --fix"
   },
   "dependencies": {
-    "@clerk/react-router": "^1.3.0",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-slot": "^1.1.2",
     "@react-router/node": "^7.4.1",
     "@react-router/serve": "^7.4.1",
+    "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.71.1",
     "@tanstack/react-query-devtools": "^5.71.2",

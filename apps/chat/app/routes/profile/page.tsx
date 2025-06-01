@@ -1,16 +1,16 @@
 import { Profile } from '@/components/profile'
-import { getAuth } from '@clerk/react-router/ssr.server'
+import { getServerSession } from '@/lib/supabase/server'
 import { redirect } from 'react-router'
 import type { Route } from './+types/page'
 
 export async function loader(loaderArgs: Route.LoaderArgs) {
-  const { userId } = await getAuth(loaderArgs)
+  const session = await getServerSession(loaderArgs.request)
 
-  if (!userId) {
+  if (!session?.user) {
     return redirect('/')
   }
 
-  return { userId }
+  return { userId: session.user.id }
 }
 
 // Using the proper parameter name without destructuring
