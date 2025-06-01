@@ -9,7 +9,11 @@
   "scripts": {
     "test": "NODE_ENV=test vitest --run --coverage",
     "format": "biome format ./src --fix",
-    "db:update": "drizzle-kit generate && drizzle-kit migrate"
+    "db:update": "drizzle-kit generate && drizzle-kit migrate",
+    "scrape": "npx playwright test",
+    "scrape:headed": "npx playwright test --headed",
+    "scrape:debug": "npx playwright test --debug",
+    "scrape:ui": "npx playwright test --ui"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +25,7 @@
     "@hominem/ai": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@libsql/client": "^0.15.4",
+    "@playwright/test": "^1.51.1",
     "ai": "^4.1.54",
     "chalk": "^5.4.1",
     "cheerio": "^1.0.0",

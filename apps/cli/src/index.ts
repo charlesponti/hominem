@@ -9,7 +9,6 @@ import convertCommand from './commands/convert'
 import { command as financeCommand } from './commands/finance'
 import { command as initCommand } from './commands/init'
 import { command as notesCommand } from './commands/possessions.js'
-import scrapeCommand from './commands/scraper/scrape'
 import thothCommand from './commands/thoth'
 import { command as toolsCommand } from './commands/tools'
 import { initDb } from './db/index'
@@ -22,7 +21,6 @@ async function init() {
 
   program.addCommand(authCommand)
   program.addCommand(initCommand)
-  program.addCommand(scrapeCommand)
   program.addCommand(aiCommand)
   program.addCommand(notesCommand)
   program.addCommand(thothCommand)
