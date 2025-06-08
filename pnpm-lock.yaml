@@ -289,6 +289,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.71.2
         version: 5.79.0(@tanstack/react-query@5.79.0(react@19.1.0))(react@19.1.0)
+      '@tanstack/react-virtual':
+        specifier: ^3.13.9
+        version: 3.13.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@types/react-syntax-highlighter':
         specifier: ^15.5.13
         version: 15.5.13
@@ -395,6 +398,9 @@ importers:
       '@libsql/client':
         specifier: ^0.15.4
         version: 0.15.8
+      '@playwright/test':
+        specifier: ^1.51.1
+        version: 1.52.0
       ai:
         specifier: ^4.1.54
         version: 4.3.16(react@19.1.0)(zod@3.25.42)
@@ -4820,8 +4826,17 @@ packages:
       react: ^19.1.0
       react-dom: ^19.1.0
 
+  '@tanstack/react-virtual@3.13.9':
+    resolution: {integrity: sha512-SPWC8kwG/dWBf7Py7cfheAPOxuvIv4fFQ54PdmYbg7CpXfsKxkucak43Q0qKsxVthhUJQ1A7CIMAIplq4BjVwA==}
+    peerDependencies:
+      react: ^19.1.0
+      react-dom: ^19.1.0
+
   '@tanstack/store@0.7.1':
     resolution: {integrity: sha512-PjUQKXEXhLYj2X5/6c1Xn/0/qKY0IVFxTJweopRfF26xfjVyb14yALydJrHupDh3/d+1WKmfEgZPBVCmDkzzwg==}
+
+  '@tanstack/virtual-core@3.13.9':
+    resolution: {integrity: sha512-3jztt0jpaoJO5TARe2WIHC1UQC3VMLAFUW5mmMo0yrkwtDB2AQP0+sh10BVUpWrnvHjSLvzFizydtEGLCJKFoQ==}
 
   '@testing-library/dom@9.3.4':
     resolution: {integrity: sha512-FlS4ZWlp97iiNWig0Muq8p+3rVDjRiYE+YKGbAqXOu9nwJFFOdL00kFpz42M+4huzYi86vAK1sOOfyOG45muIQ==}
@@ -14643,7 +14658,15 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       use-sync-external-store: 1.5.0(react@19.1.0)
 
+  '@tanstack/react-virtual@3.13.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@tanstack/virtual-core': 3.13.9
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
   '@tanstack/store@0.7.1': {}
+
+  '@tanstack/virtual-core@3.13.9': {}
 
   '@testing-library/dom@9.3.4':
     dependencies:
