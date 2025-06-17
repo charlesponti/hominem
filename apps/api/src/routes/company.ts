@@ -14,7 +14,6 @@ const companyNameSchema = z.object({
 })
 
 export async function companyRoutes(fastify: FastifyInstance) {
-  // Search companies by name
   fastify.get('/search', async (request, reply) => {
     try {
       const { query } = searchParamSchema.parse(request.query)
@@ -27,11 +26,10 @@ export async function companyRoutes(fastify: FastifyInstance) {
 
       return results
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 
-  // Create a company with just a name
   fastify.post('/', async (request, reply) => {
     try {
       const { name } = companyNameSchema.parse(request.body)
@@ -44,13 +42,13 @@ export async function companyRoutes(fastify: FastifyInstance) {
           website: '',
           industry: '',
           size: '',
-          location: {},
+          location: '',
         })
         .returning()
 
       return results[0]
     } catch (error) {
-      handleError(error as Error, reply)
+      return handleError(error as Error, reply)
     }
   })
 }
