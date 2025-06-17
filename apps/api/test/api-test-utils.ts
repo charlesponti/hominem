@@ -121,8 +121,8 @@ export const parseJsonResponse = <T = ApiResponse>(response: { body: string }): 
 /**
  * Common assertion helpers
  */
-export const assertSuccessResponse = (response: { statusCode: number; body: string }) => {
-  const body = parseJsonResponse(response)
+export const assertSuccessResponse = <T>(response: { statusCode: number; body: string }) => {
+  const body = parseJsonResponse<T>(response)
   expect(response.statusCode).toBe(200)
   // Don't require specific success field - let API consumers handle the response structure
   return body
