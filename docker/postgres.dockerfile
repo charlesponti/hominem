@@ -1,5 +1,23 @@
-FROM postgres:latest
+# Updated for PostgreSQL 15 compatibility with Railway
+FROM postgres:15
 
+# Install build dependencies and pgvector
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    postgresql-server-dev-${PG_MAJOR} \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pgvector extension
+RUN cd /tmp && \
+    git clone --branch v0.7.4 https://github.com/pgvector/pgvector.git && \
+    cd pgvector && \
+    make clean && \
+    make OPTFLAGS="" && \
+    make install && \
+    rm -rf /tmp/pgvector
+
+# Install other PostgreSQL extensions
 # postgis	Spatial database extension for geographic objects.
 # pgrouting	Routing and network analysis on PostGIS.
 # postgis_tiger_geocoder	Geocoding extension for address standardization.

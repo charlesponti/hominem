@@ -1,3 +1,6 @@
+-- Enable pgvector extension (for vector/embedding storage)
+CREATE EXTENSION IF NOT EXISTS vector;
+
 -- Enable core PostGIS extensions
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS postgis_topology;
