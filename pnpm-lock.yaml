@@ -1286,6 +1286,9 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../ai
+      '@supabase/storage-js':
+        specifier: ^2.7.3
+        version: 2.7.3
       '@supabase/supabase-js':
         specifier: ^2.49.4
         version: 2.49.8
@@ -4811,6 +4814,9 @@ packages:
 
   '@supabase/storage-js@2.7.1':
     resolution: {integrity: sha512-asYHcyDR1fKqrMpytAS1zjyEfvxuOIp1CIXX7ji4lHHcJKqyk+sLl/Vxgm4sN6u8zvuUtae9e4kDxQP2qrwWBA==}
+
+  '@supabase/storage-js@2.7.3':
+    resolution: {integrity: sha512-SAvZhTk764yqn37z9M6xeq3zc4Q3Wne5qIWhtqrvlIQksiZN6NMgC8YIYDhPo503dFzIlyy+bURytDGpOMEVVg==}
 
   '@supabase/supabase-js@2.49.8':
     resolution: {integrity: sha512-zzBQLgS/jZs7btWcIAc7V5yfB+juG7h0AXxKowMJuySsO5vK+F7Vp+HCa07Z+tu9lZtr3sT9fofkc86bdylmtw==}
@@ -14797,6 +14803,10 @@ snapshots:
       cookie: 1.0.2
 
   '@supabase/storage-js@2.7.1':
+    dependencies:
+      '@supabase/node-fetch': 2.6.15
+
+  '@supabase/storage-js@2.7.3':
     dependencies:
       '@supabase/node-fetch': 2.6.15
 
