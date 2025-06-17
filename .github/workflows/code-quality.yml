@@ -14,8 +14,8 @@ jobs:
       APP_URL: ${{ secrets.APP_URL }}
       NEXT_PUBLIC_API_URL: "http://localhost:3000"
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      CLERK_PUBLISHABLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      CLERK_SECRET_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
