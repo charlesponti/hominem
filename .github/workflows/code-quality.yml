@@ -77,11 +77,12 @@ jobs:
             echo "Waiting for postgres..."
             sleep 2
           done
-          # Wait for redis to be ready  
-          until redis-cli -h localhost -p 6379 ping; do
+          # Wait for redis to be ready using netcat
+          until nc -z localhost 6379; do
             echo "Waiting for redis..."
             sleep 2
           done
+          echo "All services are ready!"
 
       - name: 🏗️ Build
         run: pnpm turbo run build
