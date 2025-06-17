@@ -31,6 +31,18 @@ export default function Layout() {
                   <Lightbulb className="size-4" />
                   <span>Content Strategy</span>
                 </Link>
+                <Link
+                  to="/goals"
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Goals
+                </Link>
+                <Link
+                  to="/habits"
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Habits
+                </Link>
               </nav>
             </div>
             <div className="flex flex-1 items-center justify-end space-x-4">

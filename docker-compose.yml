@@ -1,20 +1,4 @@
 services:
-  # mongodb:
-  #   image: mongo:latest
-  #   container_name: hominem-mongodb
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: admin
-  #     MONGO_INITDB_ROOT_PASSWORD: password
-  #     MONGO_INITDB_DATABASE: hominem
-  #   ports:
-  #     - "44017:27017"
-  #   volumes:
-  #     - hominem-mongodb:/data/db
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "mongo --eval 'db.adminCommand('ping')'"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
 
   postgres:
     build:
@@ -32,25 +16,12 @@ services:
       - 4432:5432
     volumes:
       - hominem-postgres:/var/lib/postgresql/data
+      - ./docker/init-extensions.sql:/docker-entrypoint-initdb.d/init-extensions.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-  
-  postgres-test:
-    build:
-      context: .
-      dockerfile: docker/postgres.dockerfile
-    container_name: hominem-postgres-test
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: hominem-test
-    networks:
-      - hominem
-    ports:
-      - 4433:5432
 
   rabbitmq:
     image: rabbitmq:management-alpine
@@ -91,6 +62,5 @@ networks:
 
 volumes:
   hominem-postgres:
-  # hominem-mongodb:
   hominem-redis:
   hominem-chroma:

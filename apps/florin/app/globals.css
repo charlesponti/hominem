@@ -192,6 +192,7 @@ body {
     --sidebar-ring: 210 15% 80%;
   }
 }
+
 @layer base {
   * {
     @apply border-border;
@@ -199,19 +200,14 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-}
-/*
-  ---break---
-*/
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
   button {
     cursor: pointer;
+  }
+}
+
+@layer components {
+  .foobar {
+    @apply text-foreground bg-card;
   }
 }
 
@@ -252,6 +248,10 @@ body {
     background-color: var(--background);
   }
 
+  .foobar {
+    color: brown
+  }
+  
   .text-popover-foreground {
     color: hsl(var(--popover-foreground));
   }

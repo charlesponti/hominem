@@ -31,10 +31,9 @@ export type {
   ListSelect,
 } from '../db/schema/lists.schema'
 
-export type {
-  ContentStrategiesSelect,
-  ContentStrategy,
-} from '../db/schema/content-strategies.schema'
+export type { ContentStrategiesSelect } from '../db/schema/content-strategies.schema'
+
+export type { ContentStrategy } from '../schemas/content-strategy.schema'
 
 export type {
   Content,

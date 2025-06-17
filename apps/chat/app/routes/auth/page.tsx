@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Navigate } from 'react-router'
 
 export default function AuthPage() {
-  const { user, login, signup, loginWithGoogle, loginWithGitHub, isLoading } = useAuth()
+  const { user, login, signup, signInWithGoogle, signInWithGitHub, isLoading } = useAuth()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,9 +33,9 @@ export default function AuthPage() {
   const handleSocialLogin = async (provider: 'google' | 'github') => {
     try {
       if (provider === 'google') {
-        await loginWithGoogle()
+        await signInWithGoogle()
       } else {
-        await loginWithGitHub()
+        await signInWithGitHub()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Social login failed')

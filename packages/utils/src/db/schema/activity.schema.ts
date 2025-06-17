@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
   varchar,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 
 export const activities = pgTable('activities', {
@@ -18,7 +19,6 @@ export const activities = pgTable('activities', {
   durationType: text('durationType'),
   interval: text('interval').notNull(),
   score: integer('score'),
-  metrics: json('metrics').notNull(),
   startDate: timestamp('startDate').notNull(),
   endDate: timestamp('endDate').notNull(),
   isCompleted: boolean('isCompleted').default(false),
@@ -32,6 +32,15 @@ export const activities = pgTable('activities', {
   recurrenceRule: text('recurrenceRule').notNull(),
   completedInstances: integer('completedInstances').notNull(),
   streakCount: integer('streakCount').notNull(),
+  // Fields for enhanced Habit Tracking
+  targetValue: integer('targetValue'),
+  currentValue: integer('currentValue').default(0),
+  unit: text('unit'),
+  reminderSettings: json('reminderSettings'),
+  // Fields for enhanced Goal Setting
+  goalCategory: text('goalCategory'),
+  parentGoalId: uuid('parentGoalId').references((): AnyPgColumn => activities.id),
+  milestones: json('milestones'),
 })
 export type Activity = typeof activities.$inferSelect
 export type NewActivity = typeof activities.$inferInsert

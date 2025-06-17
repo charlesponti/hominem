@@ -52,3 +52,31 @@ app.hominem.localhost {
 	import common
 	reverse_proxy localhost:4444
 }
+
+chat.hominem.localhost {
+	import common
+	
+	# Handle streaming endpoints with special configuration
+	@streaming path /api/chat-stream
+	handle @streaming {
+		reverse_proxy localhost:3000 {
+			# Disable buffering for streaming
+			flush_interval -1
+			# Keep connections alive
+			header_up Connection {>Connection}
+			header_up Upgrade {>Upgrade}
+		}
+	}
+	
+	# Handle file uploads with larger timeouts
+	@uploads path /api/upload /api/files/*
+	handle @uploads {
+		reverse_proxy localhost:3000 {
+			# Extended timeouts for file uploads
+			timeout 120s
+		}
+	}
+	
+	# All other requests
+	reverse_proxy localhost:3000
+}

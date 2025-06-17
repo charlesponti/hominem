@@ -1,5 +1,5 @@
-# Updated for PostgreSQL 15 compatibility with Railway
-FROM postgres:15
+# Updated for PostgreSQL 17 with pgvector support
+FROM postgres:17
 
 # Install build dependencies and pgvector
 RUN apt-get update && apt-get install -y \

@@ -1,21 +1,48 @@
 import { createServerClient } from '@supabase/ssr'
 
 export function createSupabaseServerClient(request: Request) {
-  const cookies = request.headers.get('cookie') || ''
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
 
-  return createServerClient(process.env.VITE_SUPABASE_URL!, process.env.VITE_SUPABASE_ANON_KEY!, {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      'Missing required Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
+    )
+  }
+
+  // Parse cookies from request headers
+  const cookieHeader = request.headers.get('Cookie') || ''
+  const cookies = new Map<string, string>()
+
+  // Parse cookie string into key-value pairs
+  if (cookieHeader) {
+    for (const cookie of cookieHeader.split(';')) {
+      const [name, ...rest] = cookie.trim().split('=')
+      if (name && rest.length > 0) {
+        cookies.set(name.trim(), rest.join('=').trim())
+      }
+    }
+  }
+
+  return createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
-      get(name: string) {
-        const cookie = cookies.split(';').find((c) => c.trim().startsWith(`${name}=`))
-        return cookie ? cookie.split('=')[1] : undefined
+      getAll() {
+        return Array.from(cookies.entries()).map(([name, value]) => ({
+          name,
+          value,
+        }))
       },
-      set(name: string, value: string, options: any) {
-        // For server-side rendering, we can't set cookies directly
-        // This will be handled by the client-side auth state
-      },
-      remove(name: string, options: any) {
-        // For server-side rendering, we can't remove cookies directly
-        // This will be handled by the client-side auth state
+      setAll(cookiesToSet) {
+        // In server context, we can't set cookies directly
+        // This would typically be handled by the response headers
+        // For React Router, cookie setting should be handled in the response
+        for (const { name, value } of cookiesToSet) {
+          if (value) {
+            cookies.set(name, value)
+          } else {
+            cookies.delete(name)
+          }
+        }
       },
     },
   })

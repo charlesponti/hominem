@@ -82,6 +82,48 @@ Make sure to deploy the output of `npm run build`
 
 This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
 
+## Environment Setup
+
+### Supabase Configuration
+
+This application uses Supabase for authentication and file storage. You'll need to set up the following environment variables:
+
+```bash
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Client-side variables (for Vite)
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+#### Setting up Supabase Storage
+
+The application automatically creates a storage bucket called `chat-files` for file uploads. The bucket is configured with:
+
+- Public access for easy file sharing
+- File size limit of 10MB
+- Allowed MIME types: images, PDFs, documents, audio, and video files
+
+If you need to manually create the bucket:
+
+1. Go to your Supabase dashboard
+2. Navigate to Storage
+3. Create a new bucket named `chat-files`
+4. Set it as public
+5. Configure the allowed MIME types and file size limits as needed
+
+### Development
+
+Start the development server with HMR:
+
+```bash
+npm run dev
+```
+
+Your application will be available at `http://localhost:5173`.
+
 ---
 
 Built with ❤️ using React Router.

@@ -7,6 +7,8 @@ export default [
     route('/content-strategy', 'routes/content-strategy/saved.tsx'),
     route('/content-strategy/create', 'routes/content-strategy/create.tsx'),
     route('/content-strategy/:id', 'routes/content-strategy/view.tsx'),
+    route('/goals', 'routes/goals/page.tsx'),
+    route('/habits', 'routes/habits/page.tsx'),
     route('/account', 'routes/account.tsx'),
   ]),
 ] as RouteConfig

@@ -1,0 +1,40 @@
+name: deploy-postgres
+
+on:
+  workflow_run:
+    workflows: ["docker-publish-postgres"]
+    types:
+      - completed
+  workflow_dispatch:
+
+env:
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+jobs:
+  deploy-postgres:
+    name: Deploy PostgreSQL to Railway
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy PostgreSQL Service
+        run: |
+          railway service connect postgres-hominem || railway service create postgres-hominem
+          railway up --config config/postgres-railway.json
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Set Environment Variables
+        run: |
+          railway variables set POSTGRES_DB=hominem
+          railway variables set POSTGRES_USER=postgres
+          railway variables set POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          railway variables set PGDATA=/var/lib/postgresql/data/pgdata
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

@@ -203,23 +203,37 @@ export function useChat({
       const response = await api.post<SendMessageRequest, ChatResponse>(endpoint, requestBody)
       return response
     },
-    onSuccess: (data) => {
-      if (!data) return
+    onSuccess: (responseData) => {
+      if (!responseData) return
 
-      if ('success' in data) {
-        return
-      }
+      if (
+        'messages' in responseData &&
+        Array.isArray(responseData.messages) &&
+        responseData.messages.length > 0
+      ) {
+        const messagesFromServer = responseData.messages
+        const firstMessageChatId = messagesFromServer[0].chatId
 
-      if (data.messages) {
-        // Append new messages to latest data
-        const updated = [...latestMessages, ...data.messages]
-        updateLatestMessages(updated)
-      }
+        const currentActiveChatState = queryClient.getQueryData<ChatInitResponse>(chatQueryKey)
+        const activeDisplayChatId = currentActiveChatState?.chatId
 
-      // Refetch initial history and reset pagination
-      refetchInitial()
-      if (chatId) {
-        queryClient.removeQueries({ queryKey: historyQueryKey(chatId) })
+        if (firstMessageChatId && firstMessageChatId === activeDisplayChatId) {
+          queryClient.setQueryData<ChatInitResponse | undefined>(chatQueryKey, (oldData) => {
+            const currentMessages = oldData?.messages || []
+            return {
+              ...(oldData || {}),
+              chatId: activeDisplayChatId,
+              messages: [...currentMessages, ...messagesFromServer],
+            }
+          })
+          if (activeDisplayChatId) {
+            queryClient.invalidateQueries({ queryKey: historyQueryKey(activeDisplayChatId) })
+          }
+        } else if (firstMessageChatId) {
+          // Messages are for a different chat or active chat is not loaded.
+          // Invalidate history of the chat these messages belong to.
+          queryClient.invalidateQueries({ queryKey: historyQueryKey(firstMessageChatId) })
+        }
       }
     },
     onError: (error, variables, context) => {
@@ -280,22 +294,42 @@ export function useChat({
 
   // Mutation for resetting conversation
   const resetConversationMutation = useMutation({
-    mutationFn: async () => {
-      if (!chatId) throw new Error('Chat ID is missing')
-
-      // Call the API to clear chat messages
+    mutationFn: async (chatIdToReset: string | undefined) => {
+      if (!chatIdToReset) throw new Error('Chat ID to reset is missing')
       const res = await api.delete<{ success: boolean; message: string }>(
-        `${endpoint}/${chatId}/messages`
+        `${endpoint}/${chatIdToReset}/messages`
       )
       return res
     },
-    onSuccess: () => {
-      updateLatestMessages([])
-      queryClient.invalidateQueries({ queryKey: chatQueryKey })
-      // Also clear the history cache
-      if (chatId) {
-        queryClient.removeQueries({ queryKey: historyQueryKey(chatId) })
+    onMutate: async () => {
+      // Capture the chatId of the currently active chat at the moment of mutation.
+      // This context will be used in onSuccess/onError.
+      const currentActiveChat = queryClient.getQueryData<ChatInitResponse>(chatQueryKey)
+      return { chatIdAtMutationStart: currentActiveChat?.chatId }
+    },
+    onSuccess: (data, variables, context) => {
+      const resetChatId = variables // This is chatIdToReset passed to mutate()
+      const activeChatIdWhenMutated = context?.chatIdAtMutationStart
+
+      if (!resetChatId) return
+
+      // If the chat that was active when reset was initiated is the same one that was reset
+      if (activeChatIdWhenMutated === resetChatId) {
+        queryClient.setQueryData<ChatInitResponse | undefined>(chatQueryKey, (oldData) => ({
+          ...(oldData || {}),
+          chatId: resetChatId,
+          messages: [],
+        }))
+      } else {
+        // The active chat changed since reset was initiated.
+        // Invalidate the main query key to ensure the UI reflects the current active chat correctly.
+        queryClient.invalidateQueries({ queryKey: chatQueryKey })
       }
+
+      // Always remove the history for the specific chat that was reset.
+      queryClient.removeQueries({ queryKey: historyQueryKey(resetChatId) })
+      // And ensure the main chat query is fresh if it happened to be the one reset.
+      queryClient.invalidateQueries({ queryKey: chatQueryKey })
     },
   })
 

@@ -16,9 +16,10 @@ describe('Message Component', () => {
     updatedAt: new Date().toISOString(),
     toolCalls: [
       {
+        toolCallId: 'tc-1',
         toolName: 'test-tool',
         args: { test: 'arg' },
-        result: 'test result',
+        result: 'test result', // This will be overridden by a tool-result with same toolCallId if present
         isError: false,
         type: 'tool-call',
       },
@@ -51,8 +52,39 @@ describe('Message Component', () => {
 
     const toolCall = screen.getByTestId('tool-call')
     expect(toolCall).toBeInTheDocument()
-    expect(screen.getByTestId('tool-call-args')).toHaveTextContent('test')
+    expect(screen.getByTestId('tool-call-args')).toHaveTextContent('{"test":"arg"}') // Stringified JSON
     expect(screen.getByTestId('tool-call-result')).toHaveTextContent('test result')
+  })
+
+  it('correctly processes and renders tool-call and tool-result pairs', () => {
+    const messageWithToolCallAndResult: ChatMessageSelect = {
+      ...mockMessage,
+      toolCalls: [
+        {
+          toolCallId: 'tc-2',
+          toolName: 'another-tool',
+          args: { query: 'search this' },
+          type: 'tool-call',
+          isError: false,
+        },
+        {
+          toolCallId: 'tc-2',
+          toolName: 'another-tool', // toolName might be redundant in tool-result if always paired
+          result: 'search complete',
+          type: 'tool-result',
+          isError: false,
+        },
+      ],
+    }
+    render(<ChatMessage message={messageWithToolCallAndResult} />)
+
+    // Ensure only one tool call component is rendered for tc-2
+    const toolCalls = screen.getAllByTestId('tool-call')
+    expect(toolCalls).toHaveLength(1)
+
+    expect(screen.getByTestId('tool-call-args')).toHaveTextContent('{"query":"search this"}')
+    expect(screen.getByTestId('tool-call-result')).toHaveTextContent('search complete')
+    expect(screen.queryByText('Error')).not.toBeInTheDocument()
   })
 
   it('renders reasoning when present', () => {
@@ -86,6 +118,8 @@ describe('Message Component', () => {
         ? [
             {
               ...mockMessage.toolCalls[0],
+              toolCallId: 'tc-error-1', // Ensure it has a toolCallId
+              result: 'Error occurred', // Result might contain error details
               isError: true,
             },
           ]
@@ -94,5 +128,7 @@ describe('Message Component', () => {
 
     render(<ChatMessage message={messageWithToolError} />)
     expect(screen.getByTestId('tool-call-error')).toBeInTheDocument()
+    // Check if the result also shows the error message if applicable by ToolCall component
+    expect(screen.getByTestId('tool-call-result')).toHaveTextContent('Error occurred')
   })
 })

@@ -18,7 +18,7 @@ export const ChatMessage = memo<ChatMessageProps>(function ChatMessage({ message
   return (
     <Card
       className={cn(
-        'group p-3 sm:p-4 min-w-0',
+        'group p-3 sm:p-4 min-w-0 mb-4', // Added mb-4 for consistent spacing
         {
           'bg-[#fbfbfb]/50 hover:bg-[#fbfbfb]/70': role === 'user',
           'bg-[#fffbf7]/50 hover:bg-[#fffbf7]/70': role === 'assistant',

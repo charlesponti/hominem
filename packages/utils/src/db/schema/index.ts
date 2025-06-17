@@ -20,6 +20,7 @@ export * from './surveys.schema'
 export * from './tags.schema'
 export * from './travel.schema'
 export * from './users.schema'
+export * from './vector-documents.schema'
 
 export {
   ContentTypeSchema,

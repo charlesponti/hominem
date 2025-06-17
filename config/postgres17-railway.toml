@@ -1,0 +1,21 @@
+# Railway PostgreSQL 17 Service Configuration
+
+service_name = "postgres-17"
+dockerfile_path = "docker/postgres.dockerfile"
+
+[build]
+builder = "dockerfile"
+
+[deploy]
+healthcheck_path = "/"
+healthcheck_timeout = 300
+restart_policy = "always"
+
+[env]
+POSTGRES_DB = "hominem"
+POSTGRES_USER = "postgres"
+POSTGRES_PASSWORD = { from = "POSTGRES_PASSWORD" }
+PGDATA = "/var/lib/postgresql/data"
+
+[networking]
+ports = [5432]
