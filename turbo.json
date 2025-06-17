@@ -20,7 +20,12 @@
     "OPENAI_API_KEY",
     "OPENAI_ORG_ID",
     "REDIS_URL",
-    "SENDGRID_API_KEY"
+    "SENDGRID_API_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_ANON_KEY"
   ],
   "tasks": {
     "build": {
