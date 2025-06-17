@@ -1,10 +1,10 @@
-autobuild
-autoincrement
+aggregations
+autopay
+autovacuum
 biomejs
 buildscript
 chartjs
 checkpointer
-chromadb
 chrono
 cmdk
 davinci

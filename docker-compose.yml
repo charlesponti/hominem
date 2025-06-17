@@ -24,24 +24,14 @@ services:
       retries: 5
 
   rabbitmq:
-    image: rabbitmq:management-alpine
+    image: rabbitmq:3-management
     container_name: hominem-rabbitmq
     ports:
-      - "5672:5672" # RabbitMQ default port
-      - "15672:15672" # RabbitMQ Management UI port
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
-  
-  chroma:
-    image: chromadb/chroma:0.6.3
-    container_name: hominem-chroma
-    volumes:
-      - hominem-chroma:/chroma/.chroma/index 
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
 
   redis:
     image: redis:latest
@@ -63,4 +53,3 @@ networks:
 volumes:
   hominem-postgres:
   hominem-redis:
-  hominem-chroma:

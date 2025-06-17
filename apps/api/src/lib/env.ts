@@ -6,7 +6,6 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_URL: z.string().url().default('http://localhost:4040'),
   COOKIE_SECRET: z.string().default('supersecret'),
-  CHROMA_URL: z.string().optional(),
 
   ROCCO_URL: z.string().url().default('http://localhost:4454'),
   APP_URL: z.string().url().default('http://localhost:4444'),
@@ -28,4 +27,12 @@ const envSchema = z.object({
   TWITTER_CLIENT_SECRET: z.string().default(''),
 })
 
-export const env = envSchema.parse(process.env)
+export const env = new Proxy({} as z.infer<typeof envSchema>, {
+  get(target, prop) {
+    const parsed = envSchema.parse(process.env)
+    if (prop in parsed) {
+      return parsed[prop as keyof z.infer<typeof envSchema>]
+    }
+    throw new Error(`Environment variable ${String(prop)} is not defined or invalid.`)
+  },
+})
