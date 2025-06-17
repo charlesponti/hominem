@@ -21,7 +21,6 @@ import shutdownPlugin from './plugins/shutdown.js'
 import { aiRoutes } from './routes/ai/index.js'
 import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
 import { careerRoutes } from './routes/career.js'
-import { chatPlugin } from './routes/chat.router.js'
 import { companyRoutes } from './routes/company.js'
 import { contentStrategiesRoutes } from './routes/content-strategies.router.js'
 import { financeRoutes } from './routes/finance/finance.router.js'
@@ -122,7 +121,6 @@ export async function createServer(
     await server.register(healthRoutes, { prefix: '/api/health' })
     await server.register(companyRoutes, { prefix: '/api/companies' })
     await server.register(careerRoutes, { prefix: '/api/career' })
-    await server.register(chatPlugin, { prefix: '/api/chat' })
     await server.register(contentStrategiesRoutes, { prefix: '/api/content-strategies' })
     await server.register(surveyRoutes, { prefix: '/api/surveys' })
     await server.register(contentRoutes, { prefix: '/api/content' })
