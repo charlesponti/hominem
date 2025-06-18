@@ -23,6 +23,16 @@ class FinancialAccountService {
 
   public async createAccount(account: Omit<FinanceAccountInsert, 'id'>) {
     try {
+      // Enhanced logging of account data being inserted
+      logger.info('Creating account with data:', {
+        name: account.name,
+        type: account.type,
+        balance: account.balance,
+        userId: account.userId,
+        institutionId: account.institutionId,
+        meta: account.meta,
+      })
+
       const [createdAccount] = await db
         .insert(financeAccounts)
         .values({
@@ -35,9 +45,30 @@ class FinancialAccountService {
         throw new Error(`Failed to create account: ${account.name}`)
       }
 
+      logger.info(
+        `Successfully created account: ${createdAccount.name} with ID: ${createdAccount.id}`
+      )
       return createdAccount
     } catch (error) {
-      logger.error(`Error creating account ${account.name}:`, error)
+      // Enhanced error logging with full error details
+      logger.error(`Error creating account ${account.name}:`, {
+        error: {
+          name: error instanceof Error ? error.name : 'Unknown',
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          cause: error instanceof Error ? error.cause : undefined,
+        },
+        accountData: {
+          name: account.name,
+          type: account.type,
+          balance: account.balance,
+          userId: account.userId,
+          institutionId: account.institutionId,
+        },
+      })
+
+      // Also log to console for debugging
+      console.error(`Full account creation error for ${account.name}:`, error)
       throw error
     }
   }

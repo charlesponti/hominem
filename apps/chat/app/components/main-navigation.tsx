@@ -1,26 +1,14 @@
-import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router'
-import { useAuth } from '~/lib/supabase'
-import { cn } from '~/lib/utils'
-import { RouteLink } from './route-link'
-import { Button } from './ui/button'
+import { Link as RouterLink, useLocation } from 'react-router'
+import { useAuth } from '~/lib/supabase/auth-context'
 
 const navItems = [
   {
-    title: 'Finance',
-    icon: CircleDollarSignIcon,
-    url: '/finance',
-  },
-  {
-    title: 'Analytics',
-    icon: ChartLine,
-    url: '/analytics',
-  },
-  {
-    title: 'Accounts',
-    icon: Landmark,
-    url: '/accounts',
+    title: 'Chat',
+    url: '/chat',
   },
 ]
 
@@ -133,16 +121,10 @@ export function MainNavigation() {
         <div className="flex h-16 items-center px-4">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <RouteLink to="/" className="flex items-center space-x-2">
-              <img
-                src="/logo-florin.png"
-                alt="Florin Logo"
-                width={24}
-                height={24}
-                className="transition-opacity hover:opacity-80"
-              />
-              <span className="font-bold text-lg">Florin</span>
-            </RouteLink>
+            <RouterLink to="/" className="flex items-center space-x-2">
+              <span className="text-2xl">💬</span>
+              <span className="font-bold text-lg">Chat</span>
+            </RouterLink>
           </div>
 
           {/* Center Navigation */}
@@ -150,7 +132,7 @@ export function MainNavigation() {
             <div className="flex flex-1 items-center justify-center">
               <nav className="flex items-center space-x-6">
                 {navItems.map((item) => (
-                  <RouteLink
+                  <RouterLink
                     key={item.title}
                     to={item.url}
                     className={cn(
@@ -159,7 +141,7 @@ export function MainNavigation() {
                     )}
                   >
                     {item.title}
-                  </RouteLink>
+                  </RouterLink>
                 ))}
               </nav>
             </div>
@@ -170,11 +152,11 @@ export function MainNavigation() {
             {isLoading ? (
               <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
             ) : isLoggedIn ? (
-              <Link to="/account">
+              <RouterLink to="/profile">
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <User className="h-5 w-5" />
                 </Button>
-              </Link>
+              </RouterLink>
             ) : (
               <Button onClick={handleSignIn} disabled={isSigningIn}>
                 {isSigningIn ? 'Signing in...' : 'Sign In'}
@@ -192,27 +174,21 @@ export function MainNavigation() {
       <header className="sticky top-0 z-50 bg-background border-b">
         <div className="flex h-16 items-center px-4">
           {/* Logo */}
-          <RouteLink to="/" className="flex items-center space-x-2">
-            <img
-              src="/logo-florin.png"
-              alt="Florin Logo"
-              width={24}
-              height={24}
-              className="transition-opacity hover:opacity-80"
-            />
-            <span className="font-bold text-lg">Florin</span>
-          </RouteLink>
+          <RouterLink to="/" className="flex items-center space-x-2">
+            <span className="text-2xl">💬</span>
+            <span className="font-bold text-lg">Chat</span>
+          </RouterLink>
 
           {/* Right Side */}
           <div className="flex flex-1 items-center justify-end space-x-2">
             {isLoading ? (
               <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
             ) : isLoggedIn ? (
-              <Link to="/account">
+              <RouterLink to="/profile">
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <User className="h-5 w-5" />
                 </Button>
-              </Link>
+              </RouterLink>
             ) : (
               <Button size="sm" onClick={handleSignIn} disabled={isSigningIn}>
                 {isSigningIn ? 'Signing in...' : 'Sign In'}
@@ -237,7 +213,7 @@ export function MainNavigation() {
           <div className="p-6">
             <nav className="flex flex-col space-y-4">
               {navItems.map((item) => (
-                <RouteLink
+                <RouterLink
                   key={item.title}
                   to={item.url}
                   onClick={closeMenu}
@@ -246,9 +222,8 @@ export function MainNavigation() {
                     pathname === item.url ? 'text-primary' : 'text-foreground hover:text-primary'
                   )}
                 >
-                  <item.icon className="h-5 w-5 mr-3" />
                   {item.title}
-                </RouteLink>
+                </RouterLink>
               ))}
             </nav>
           </div>

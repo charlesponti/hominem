@@ -1,39 +1,32 @@
-import { useUser } from '~/lib/supabase'
-import { getAuth } from '~/lib/supabase/ssr.server'
 import { Check, Copy, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { getServerSession, useAuth } from '~/lib/supabase'
 import type { Route } from './+types/cli'
 
 export async function loader(args: Route.LoaderArgs) {
-  // Get the Clerk auth state from the request
-  const auth = await getAuth(args)
-  const { userId, getToken } = auth
+  // Get the Supabase session from the request
+  const { user, session } = await getServerSession(args.request)
 
   // If no user is logged in, return null token
-  if (!userId) {
+  if (!user || !session) {
     return { token: null, error: null }
   }
 
   try {
-    // Generate a JWT token for the Clerk user that can be used with the CLI
-    const token = await getToken({
-      template: 'hominem-cli',
-    })
-
-    // Return the token
-    return { token, error: null }
+    // Return the Supabase access token that can be used with the CLI
+    return { token: session.access_token, error: null }
   } catch (error) {
-    console.error('Token generation error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate token'
+    console.error('Token retrieval error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to retrieve token'
     return { token: null, error: errorMessage }
   }
 }
 
 export default function AuthCli({ loaderData }: Route.ComponentProps) {
-  const { user, isLoaded } = useUser()
+  const { user, isLoading } = useAuth()
   const [searchParams] = useSearchParams()
   const urlToken = searchParams.get('token')
   const [copied, setCopied] = useState(false)
@@ -60,10 +53,8 @@ export default function AuthCli({ loaderData }: Route.ComponentProps) {
   }
 
   // Protected route that requires authentication
-  if (isLoaded && !user) {
-    // This will likely be handled by a route protection mechanism,
-    // but keeping it for compatibility
-    return <Navigate to="/sign-in" replace />
+  if (!isLoading && !user) {
+    return <Navigate to="/" replace />
   }
 
   return (
@@ -113,7 +104,7 @@ export default function AuthCli({ loaderData }: Route.ComponentProps) {
 
             <div className="pt-2">
               <Button onClick={() => window.location.reload()} className="w-full">
-                Generate New Token
+                Refresh Token
               </Button>
             </div>
 

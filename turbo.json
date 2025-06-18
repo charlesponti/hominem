@@ -6,8 +6,6 @@
   ],
   "globalEnv": [
     "APP_URL",
-    "COOKIE_NAME",
-    "COOKIE_SALT",
     "COOKIE_SECRET",
     "DATABASE_URL",
     "GITHUB_TOKEN",

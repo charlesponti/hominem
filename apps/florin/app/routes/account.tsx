@@ -180,9 +180,9 @@ export default function AccountPage() {
                 <h3 className="font-medium">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">End your current session.</p>
               </div>
-              <SignOutButton>
-                <Button variant="outline">Sign Out</Button>
-              </SignOutButton>
+              <Button variant="outline" onClick={logout}>
+                Sign Out
+              </Button>
             </div>
           </CardContent>
         </Card>

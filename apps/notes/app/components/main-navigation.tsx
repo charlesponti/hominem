@@ -1,26 +1,27 @@
-import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
+import { Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAuth } from '~/lib/supabase'
 import { cn } from '~/lib/utils'
-import { RouteLink } from './route-link'
 import { Button } from './ui/button'
 
 const navItems = [
   {
-    title: 'Finance',
-    icon: CircleDollarSignIcon,
-    url: '/finance',
+    title: 'Notes',
+    url: '/notes',
   },
   {
-    title: 'Analytics',
-    icon: ChartLine,
-    url: '/analytics',
+    title: 'Content Strategy',
+    icon: Lightbulb,
+    url: '/content-strategy',
   },
   {
-    title: 'Accounts',
-    icon: Landmark,
-    url: '/accounts',
+    title: 'Goals',
+    url: '/goals',
+  },
+  {
+    title: 'Habits',
+    url: '/habits',
   },
 ]
 
@@ -133,16 +134,12 @@ export function MainNavigation() {
         <div className="flex h-16 items-center px-4">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <RouteLink to="/" className="flex items-center space-x-2">
-              <img
-                src="/logo-florin.png"
-                alt="Florin Logo"
-                width={24}
-                height={24}
-                className="transition-opacity hover:opacity-80"
-              />
-              <span className="font-bold text-lg">Florin</span>
-            </RouteLink>
+            <Link to="/" className="flex items-center space-x-2">
+              <span className="bg-purple-500 p-2 rounded-md">
+                <Sparkles className="size-4 text-white" />
+              </span>
+              <span className="font-bold text-lg">Sage</span>
+            </Link>
           </div>
 
           {/* Center Navigation */}
@@ -150,16 +147,17 @@ export function MainNavigation() {
             <div className="flex flex-1 items-center justify-center">
               <nav className="flex items-center space-x-6">
                 {navItems.map((item) => (
-                  <RouteLink
+                  <Link
                     key={item.title}
                     to={item.url}
                     className={cn(
-                      'text-sm font-medium transition-colors hover:text-gray-900',
+                      'flex items-center space-x-1 text-sm font-medium transition-colors hover:text-gray-900',
                       pathname === item.url ? 'text-gray-900' : 'text-gray-600'
                     )}
                   >
-                    {item.title}
-                  </RouteLink>
+                    {item.icon && <item.icon className="size-4" />}
+                    <span>{item.title}</span>
+                  </Link>
                 ))}
               </nav>
             </div>
@@ -192,16 +190,12 @@ export function MainNavigation() {
       <header className="sticky top-0 z-50 bg-background border-b">
         <div className="flex h-16 items-center px-4">
           {/* Logo */}
-          <RouteLink to="/" className="flex items-center space-x-2">
-            <img
-              src="/logo-florin.png"
-              alt="Florin Logo"
-              width={24}
-              height={24}
-              className="transition-opacity hover:opacity-80"
-            />
-            <span className="font-bold text-lg">Florin</span>
-          </RouteLink>
+          <Link to="/" className="flex items-center space-x-2">
+            <span className="bg-purple-500 p-2 rounded-md">
+              <Sparkles className="size-4 text-white" />
+            </span>
+            <span className="font-bold text-lg">Sage</span>
+          </Link>
 
           {/* Right Side */}
           <div className="flex flex-1 items-center justify-end space-x-2">
@@ -237,7 +231,7 @@ export function MainNavigation() {
           <div className="p-6">
             <nav className="flex flex-col space-y-4">
               {navItems.map((item) => (
-                <RouteLink
+                <Link
                   key={item.title}
                   to={item.url}
                   onClick={closeMenu}
@@ -246,9 +240,9 @@ export function MainNavigation() {
                     pathname === item.url ? 'text-primary' : 'text-foreground hover:text-primary'
                   )}
                 >
-                  <item.icon className="h-5 w-5 mr-3" />
+                  {item.icon && <item.icon className="h-5 w-5 mr-3" />}
                   {item.title}
-                </RouteLink>
+                </Link>
               ))}
             </nav>
           </div>

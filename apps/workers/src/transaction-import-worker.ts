@@ -4,6 +4,7 @@ import './env.ts'
  * Transaction import worker using BullMQ
  */
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts'
+import { db } from '@hominem/utils/db'
 import { processTransactionsFromCSV } from '@hominem/utils/finance'
 import { IMPORT_JOB_PREFIX } from '@hominem/utils/imports'
 import type {
@@ -15,6 +16,7 @@ import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import { csvStorageService } from '@hominem/utils/supabase'
 import { type Job, Worker } from 'bullmq'
+import { sql } from 'drizzle-orm'
 import { JOB_PROCESSING } from './config'
 import { HealthService } from './health.service'
 import { JobStatusService } from './job-status.service'
@@ -104,6 +106,42 @@ export class TransactionImportWorker {
   }
 
   /**
+   * Get internal user ID from Supabase ID
+   */
+  static async getUserIdFromSupabaseId(supabaseId: string): Promise<string | null> {
+    try {
+      const result = await db.execute(
+        sql`SELECT id FROM users WHERE supabase_id = ${supabaseId} LIMIT 1`
+      )
+      return result.length > 0 ? (result[0] as any).id : null
+    } catch (error) {
+      logger.error('Error getting user ID from Supabase ID:', {
+        supabaseId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return null
+    }
+  }
+
+  /**
+   * Validate that a user exists in the database by Supabase ID
+   */
+  static async validateUserExists(supabaseId: string): Promise<boolean> {
+    try {
+      const result = await db.execute(
+        sql`SELECT id FROM users WHERE supabase_id = ${supabaseId} LIMIT 1`
+      )
+      return result.length > 0
+    } catch (error) {
+      logger.error('Error validating user exists:', {
+        supabaseId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return false
+    }
+  }
+
+  /**
    * Process the CSV content
    */
   private static async processCSVContent(
@@ -174,13 +212,21 @@ export class TransactionImportWorker {
         `Job ${jobId} CSV processing: ${processedCount} items processed. Stats: ${JSON.stringify(stats)}`
       )
     } catch (processingError) {
+      // Enhanced error logging for CSV processing
       logger.error(
         {
-          error: processingError,
+          error: {
+            name: processingError instanceof Error ? processingError.name : 'Unknown',
+            message:
+              processingError instanceof Error ? processingError.message : String(processingError),
+            stack: processingError instanceof Error ? processingError.stack : undefined,
+          },
           jobId,
           processedCount,
           totalLinesToProcess,
           fileName,
+          csvContentLength: decodedContent.length,
+          csvPreview: `${decodedContent.substring(0, 200)}...`,
         },
         `Error during CSV processing iteration for job ${jobId}`
       )
@@ -238,6 +284,40 @@ export class TransactionImportWorker {
       await JobStatusService.markJobProcessing(job.id as string)
       logger.info(`Job ${job.id}: Marked as processing by JobStatusService`)
 
+      // Convert Supabase ID to internal user ID
+      logger.info(`Job ${job.id}: Converting Supabase ID to internal user ID`, {
+        supabaseId: job.data.userId,
+      })
+
+      const internalUserId = await TransactionImportWorker.getUserIdFromSupabaseId(job.data.userId)
+      if (!internalUserId) {
+        const errorMessage = `User with Supabase ID ${job.data.userId} does not exist in the database`
+        logger.error(`Job ${job.id}: ${errorMessage}`)
+        stats.errors = [errorMessage]
+        stats.processingTime = Date.now() - startTime
+
+        await JobStatusService.markJobError(job.id as string, errorMessage, stats)
+        throw new Error(errorMessage)
+      }
+
+      logger.info(`Job ${job.id}: Found internal user ID`, {
+        supabaseId: job.data.userId,
+        internalUserId,
+      })
+
+      // Update job data to use internal user ID for processing
+      const jobDataWithInternalUserId = {
+        ...job.data,
+        userId: internalUserId,
+      }
+
+      // Debug Supabase configuration
+      logger.info(`Job ${job.id}: Attempting to download CSV from Supabase`, {
+        csvFilePath: job.data.csvFilePath,
+        supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+        supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET',
+      })
+
       const decodedContent = await TransactionImportWorker.downloadAndValidateContent(
         job.id as string,
         job.data.csvFilePath
@@ -265,7 +345,7 @@ export class TransactionImportWorker {
       }
 
       await TransactionImportWorker.processCSVContent(
-        jobDataForProcessor,
+        jobDataWithInternalUserId,
         decodedContent,
         stats,
         startTime,
@@ -288,7 +368,28 @@ export class TransactionImportWorker {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error({ error, jobId: job.id }, `Error processing job ${job.id}`)
+
+      // Enhanced error logging
+      logger.error(
+        {
+          error: {
+            name: error instanceof Error ? error.name : 'Unknown',
+            message: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined,
+            cause: error instanceof Error ? error.cause : undefined,
+          },
+          jobId: job.id,
+          jobData: {
+            fileName: job.data.fileName,
+            userId: job.data.userId,
+            csvFilePath: job.data.csvFilePath,
+          },
+        },
+        `Error processing job ${job.id}`
+      )
+
+      // Also log the full error to console for debugging
+      console.error(`Full error details for job ${job.id}:`, error)
 
       if (stats.errors) {
         stats.errors.push(errorMessage)

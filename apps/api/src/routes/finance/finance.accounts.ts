@@ -97,6 +97,105 @@ financeAccountsRoutes.get('/', requireAuth, async (c) => {
   }
 })
 
+// Get all accounts with comprehensive data (unified endpoint)
+financeAccountsRoutes.get('/all', requireAuth, async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    return c.json({ error: 'Not authorized' }, 401)
+  }
+
+  try {
+    // Get all finance accounts with institution and Plaid connection info
+    const allAccounts = await db
+      .select({
+        id: financeAccounts.id,
+        name: financeAccounts.name,
+        type: financeAccounts.type,
+        balance: financeAccounts.balance,
+        mask: financeAccounts.mask,
+        subtype: financeAccounts.subtype,
+        institutionId: financeAccounts.institutionId,
+        plaidItemId: financeAccounts.plaidItemId,
+        createdAt: financeAccounts.createdAt,
+        updatedAt: financeAccounts.updatedAt,
+        // Institution info from joined table
+        institutionName: financialInstitutions.name,
+        institutionLogo: financialInstitutions.logo,
+        // Plaid connection info
+        isPlaidConnected: sql<boolean>`${financeAccounts.plaidItemId} IS NOT NULL`,
+        // Plaid connection status info
+        plaidItemStatus: plaidItems.status,
+        plaidItemError: plaidItems.error,
+        plaidLastSyncedAt: plaidItems.lastSyncedAt,
+        plaidItemInternalId: plaidItems.id,
+        // Get institution ID and name from Plaid item for connections
+        plaidInstitutionId: plaidItems.institutionId,
+        plaidInstitutionName: financialInstitutions.name,
+      })
+      .from(financeAccounts)
+      .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
+      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+      .where(eq(financeAccounts.userId, userId))
+
+    // Get recent transactions for each account using the existing service method
+    const accountsWithTransactions = await Promise.all(
+      allAccounts.map(async (account) => {
+        // Use the existing service method to get recent transactions
+        const accountWithTransactions =
+          await FinancialAccountService.listAccountsWithRecentTransactions(userId, 5)
+        const accountData = accountWithTransactions.find((acc) => acc.id === account.id)
+
+        return {
+          ...account,
+          transactions: accountData?.transactions || [],
+        }
+      })
+    )
+
+    // Get Plaid connections separately starting from plaidItems table
+    // This ensures we capture all Plaid connections, even those without corresponding finance accounts
+    const plaidConnections = await db
+      .select({
+        id: plaidItems.id,
+        itemId: plaidItems.itemId,
+        institutionId: plaidItems.institutionId,
+        institutionName: financialInstitutions.name,
+        status: plaidItems.status,
+        lastSyncedAt: plaidItems.lastSyncedAt,
+        error: plaidItems.error,
+        createdAt: plaidItems.createdAt,
+      })
+      .from(plaidItems)
+      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+      .where(eq(plaidItems.userId, userId))
+
+    const uniqueConnections = plaidConnections.map((connection) => ({
+      id: connection.id,
+      itemId: connection.itemId,
+      institutionId: connection.institutionId,
+      institutionName: connection.institutionName || 'Unknown Institution',
+      status: connection.status,
+      lastSyncedAt: connection.lastSyncedAt,
+      error: connection.error,
+      createdAt: connection.createdAt,
+    }))
+
+    return c.json({
+      accounts: accountsWithTransactions,
+      connections: uniqueConnections,
+    })
+  } catch (error) {
+    console.error('Error fetching all accounts:', error)
+    return c.json(
+      {
+        error: 'Failed to fetch accounts',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})
+
 // Get account by ID
 financeAccountsRoutes.get(
   '/:id',
@@ -342,102 +441,3 @@ financeAccountsRoutes.post(
     }
   }
 )
-
-// Get all accounts with comprehensive data (unified endpoint)
-financeAccountsRoutes.get('/all', requireAuth, async (c) => {
-  const userId = c.get('userId')
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
-  }
-
-  try {
-    // Get all finance accounts with institution and Plaid connection info
-    const allAccounts = await db
-      .select({
-        id: financeAccounts.id,
-        name: financeAccounts.name,
-        type: financeAccounts.type,
-        balance: financeAccounts.balance,
-        mask: financeAccounts.mask,
-        subtype: financeAccounts.subtype,
-        institutionId: financeAccounts.institutionId,
-        plaidItemId: financeAccounts.plaidItemId,
-        createdAt: financeAccounts.createdAt,
-        updatedAt: financeAccounts.updatedAt,
-        // Institution info from joined table
-        institutionName: financialInstitutions.name,
-        institutionLogo: financialInstitutions.logo,
-        // Plaid connection info
-        isPlaidConnected: sql<boolean>`${financeAccounts.plaidItemId} IS NOT NULL`,
-        // Plaid connection status info
-        plaidItemStatus: plaidItems.status,
-        plaidItemError: plaidItems.error,
-        plaidLastSyncedAt: plaidItems.lastSyncedAt,
-        plaidItemInternalId: plaidItems.id,
-        // Get institution ID and name from Plaid item for connections
-        plaidInstitutionId: plaidItems.institutionId,
-        plaidInstitutionName: financialInstitutions.name,
-      })
-      .from(financeAccounts)
-      .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
-      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-      .where(eq(financeAccounts.userId, userId))
-
-    // Get recent transactions for each account using the existing service method
-    const accountsWithTransactions = await Promise.all(
-      allAccounts.map(async (account) => {
-        // Use the existing service method to get recent transactions
-        const accountWithTransactions =
-          await FinancialAccountService.listAccountsWithRecentTransactions(userId, 5)
-        const accountData = accountWithTransactions.find((acc) => acc.id === account.id)
-
-        return {
-          ...account,
-          transactions: accountData?.transactions || [],
-        }
-      })
-    )
-
-    // Get Plaid connections separately starting from plaidItems table
-    // This ensures we capture all Plaid connections, even those without corresponding finance accounts
-    const plaidConnections = await db
-      .select({
-        id: plaidItems.id,
-        itemId: plaidItems.itemId,
-        institutionId: plaidItems.institutionId,
-        institutionName: financialInstitutions.name,
-        status: plaidItems.status,
-        lastSyncedAt: plaidItems.lastSyncedAt,
-        error: plaidItems.error,
-        createdAt: plaidItems.createdAt,
-      })
-      .from(plaidItems)
-      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-      .where(eq(plaidItems.userId, userId))
-
-    const uniqueConnections = plaidConnections.map((connection) => ({
-      id: connection.id,
-      itemId: connection.itemId,
-      institutionId: connection.institutionId,
-      institutionName: connection.institutionName || 'Unknown Institution',
-      status: connection.status,
-      lastSyncedAt: connection.lastSyncedAt,
-      error: connection.error,
-      createdAt: connection.createdAt,
-    }))
-
-    return c.json({
-      accounts: accountsWithTransactions,
-      connections: uniqueConnections,
-    })
-  } catch (error) {
-    console.error('Error fetching all accounts:', error)
-    return c.json(
-      {
-        error: 'Failed to fetch accounts',
-        details: error instanceof Error ? error.message : String(error),
-      },
-      500
-    )
-  }
-})

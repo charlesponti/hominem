@@ -1,18 +1,18 @@
-import { getAuth } from '~/lib/supabase/ssr.server'
 import { Outlet, redirect, useNavigation } from 'react-router'
+import { getServerSession } from '~/lib/supabase'
 import { cn } from '~/lib/utils'
 import { MainNavigation } from '../components/main-navigation'
 import type { Route } from './+types/layout'
 
 export async function loader(loaderArgs: Route.LoaderArgs) {
-  const { userId } = await getAuth(loaderArgs)
+  const { user } = await getServerSession(loaderArgs.request)
 
   // If the user is authenticated, redirect to the `/finance` page
-  if (new URL(loaderArgs.request.url).pathname === '/' && userId) {
+  if (new URL(loaderArgs.request.url).pathname === '/' && user?.id) {
     return redirect('/finance')
   }
 
-  return { userId }
+  return { userId: user?.id }
 }
 
 export default function Layout({ loaderData }: Route.ComponentProps) {
@@ -29,7 +29,7 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
         </div>
       )}
       <div className="bg-background text-foreground min-h-screen-dynamic min-w-full flex flex-col">
-        {userId ? <MainNavigation /> : null}
+        <MainNavigation />
         <main
           className={cn('flex-1 overflow-hidden pt-16 md:pt-0', {
             'md:pl-16': userId,

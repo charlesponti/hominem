@@ -15,6 +15,7 @@ export const financeRoutes = new Hono()
 // Register all finance sub-routes
 financeRoutes.route('/institutions', financeInstitutionsRoutes)
 financeRoutes.route('/imports', financeImportsRoutes)
+financeRoutes.route('/import', financeImportsRoutes) // Alias for singular form
 financeRoutes.route('/transactions', financeTransactionsRoutes)
 financeRoutes.route('/categories', financeCategoriesRoutes)
 financeRoutes.route('/data', financeDataRoutes)

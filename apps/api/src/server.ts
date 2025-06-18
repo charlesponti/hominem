@@ -16,6 +16,7 @@ import rateLimitPlugin from './plugins/rate-limit.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { bookmarksRoutes } from './routes/bookmarks/index.js'
 import { contentStrategiesRoutes } from './routes/content-strategies.js'
+import { contentRoutes } from './routes/content.js'
 import { financeRoutes } from './routes/finance/index.js'
 import { plaidRoutes } from './routes/finance/plaid/index.js'
 import { healthRoutes } from './routes/health.js'
@@ -133,6 +134,7 @@ export function createServer(): Hono<AppEnv> {
   app.route('/api/user', userRoutes)
   app.route('/api/places', placesRoutes)
   app.route('/api/bookmarks', bookmarksRoutes)
+  app.route('/api/content', contentRoutes)
   app.route('/api/ai', aiRoutes)
   app.route('/api/oauth', oauthRoutes)
 

@@ -6,6 +6,7 @@ import type { Route } from './+types/root'
 import { UserProvider } from './context/user-context'
 import './globals.css'
 import { getQueryClient } from './lib/get-query-client'
+import { AuthProvider } from './lib/supabase/auth-context'
 
 // No loader needed for Supabase auth
 
@@ -84,9 +85,11 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <UserProvider>
-        <Outlet />
-      </UserProvider>
+      <AuthProvider>
+        <UserProvider>
+          <Outlet />
+        </UserProvider>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }

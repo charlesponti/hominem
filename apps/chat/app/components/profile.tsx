@@ -1,4 +1,4 @@
-import { useAuth } from '@/lib/supabase/auth-hooks'
+import { useAuth } from '~/lib/supabase/auth-context'
 
 export function Profile() {
   const { user, isLoading, logout } = useAuth()
