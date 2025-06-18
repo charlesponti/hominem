@@ -8,6 +8,7 @@ import { financeExportRoutes } from './finance.export.js'
 import { financeImportsRoutes } from './finance.imports.js'
 import { financeInstitutionsRoutes } from './finance.institutions.js'
 import { financeTransactionsRoutes } from './finance.transactions.js'
+import { financePersonalRoutes } from './personal/index.js'
 
 export const financeRoutes = new Hono()
 
@@ -21,3 +22,4 @@ financeRoutes.route('/accounts', financeAccountsRoutes)
 financeRoutes.route('/budget', financeBudgetRoutes)
 financeRoutes.route('/analyze', financeAnalyzeRoutes)
 financeRoutes.route('/export', financeExportRoutes)
+financeRoutes.route('/personal', financePersonalRoutes)

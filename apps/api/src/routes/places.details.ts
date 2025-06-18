@@ -5,9 +5,9 @@ import { zValidator } from '@hono/zod-validator'
 import { and, eq, or } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import type { PhotoMedia } from '../lib/google/places.js'
+import { getPlaceDetails, getPlacePhotos } from '../lib/google/places.js'
 import { requireAuth } from '../middleware/auth.js'
-import type { PhotoMedia } from '../plugins/google/places.js'
-import { getPlaceDetails, getPlacePhotos } from '../plugins/google/places.js'
 import { normalizePlaceForResponse, type NormalizedListInfo } from './places.utils.js'
 
 const PlaceIdParamSchema = z.object({

@@ -25,6 +25,7 @@ import { locationRoutes } from './routes/location.js'
 import { oauthRoutes } from './routes/oauth/index.js'
 import { placesRoutes } from './routes/places/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
+import { statusRoutes } from './routes/status.js'
 import { userRoutes } from './routes/user/index.js'
 import { vectorRoutes } from './routes/vector.js'
 
@@ -46,7 +47,6 @@ import { vectorRoutes } from './routes/vector.js'
 // import placesPlugin from './routes/places.router.js'
 // import possessionsPlugin from './routes/possessions.router.js'
 // import statusPlugin from './routes/status.js'
-// import { surveyRoutes } from './routes/surveys.js'
 // import usersPlugin from './routes/user.router.js'
 // import { vectorRoutes } from './routes/vector.router.js'
 // import webSocketPlugin from './websocket/index.js'
@@ -121,6 +121,7 @@ export function createServer(): Hono<AppEnv> {
 
   // Register routes - healthRoutes, financeRoutes, listsRoutes, locationRoutes, possessionsRoutes, contentStrategiesRoutes, vectorRoutes, and invitesRoutes are converted to Hono so far
   app.route('/api/health', healthRoutes)
+  app.route('/api/status', statusRoutes)
   app.route('/api/finance/plaid', plaidRoutes)
   app.route('/api/finance', financeRoutes)
   app.route('/api/lists', listsRoutes)
@@ -148,7 +149,6 @@ export function createServer(): Hono<AppEnv> {
   // app.route('/api/companies', companyRoutes)
   // app.route('/api/career', careerRoutes)
   // app.route('/api/content-strategies', contentStrategiesRoutes)
-  // app.route('/api/surveys', surveyRoutes)
   // app.route('/api/content', contentRoutes)
   // app.route('/api/oauth', oauthPlugin)
   // app.route('/api/vectors', vectorRoutes)

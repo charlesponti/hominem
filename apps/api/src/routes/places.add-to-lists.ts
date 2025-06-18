@@ -6,9 +6,9 @@ import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import crypto from 'node:crypto'
 import { z } from 'zod'
+import type { PhotoMedia } from '../lib/google/places.js'
+import { getPlacePhotos } from '../lib/google/places.js'
 import { requireAuth } from '../middleware/auth.js'
-import type { PhotoMedia } from '../plugins/google/places.js'
-import { getPlacePhotos } from '../plugins/google/places.js'
 import { normalizePlaceForResponse, type NormalizedListInfo } from './places.utils.js'
 
 const AddPlaceToListsBodySchema = z.object({

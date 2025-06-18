@@ -1,5 +1,5 @@
 import type { Place as DbPlaceSchema } from '@hominem/utils/types'
-import type { PhotoMedia } from '../plugins/google/places.js'
+import type { PhotoMedia } from '../lib/google/places.js'
 
 export interface NormalizedListInfo {
   id: string

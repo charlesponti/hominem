@@ -2,7 +2,7 @@ import type { PlaceInsert } from '@hominem/utils/types'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { searchPlaces } from '../plugins/google/places.js'
+import { searchPlaces } from '../lib/google/places.js'
 
 const SearchPlacesQuerySchema = z.object({
   query: z.string().min(1),
