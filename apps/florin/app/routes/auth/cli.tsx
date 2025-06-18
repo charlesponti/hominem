@@ -1,5 +1,5 @@
-import { useUser } from '@clerk/react-router'
-import { getAuth } from '@clerk/react-router/ssr.server'
+import { useUser } from '~/lib/supabase'
+import { getAuth } from '~/lib/supabase/ssr.server'
 import { Check, Copy, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'

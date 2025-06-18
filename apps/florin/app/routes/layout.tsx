@@ -1,4 +1,4 @@
-import { getAuth } from '@clerk/react-router/ssr.server'
+import { getAuth } from '~/lib/supabase/ssr.server'
 import { Outlet, redirect, useNavigation } from 'react-router'
 import { cn } from '~/lib/utils'
 import { MainNavigation } from '../components/main-navigation'

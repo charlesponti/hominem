@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/react-router'
+import { useAuth } from '~/lib/supabase'
 import { useApiClient } from '@hominem/ui'
 import type { FinancialInstitution } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'

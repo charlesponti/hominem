@@ -1,6 +1,7 @@
 import type { MultipartFile } from '@fastify/multipart'
 import type { User } from '@hominem/utils/schema'
 import type { MailService } from '@sendgrid/mail'
+import type { Queue } from 'bullmq'
 import type { PerformanceService } from '../services/performance.service'
 
 declare module '@fastify/secure-session' {
@@ -43,7 +44,19 @@ declare module 'fastify' {
     file: MultipartFile
     user?: User
     userId?: string | null
-    clerkId?: string | null
+    supabaseId?: string | null
     query: Record<string, string>
+  }
+}
+
+declare module 'hono' {
+  interface ContextVariableMap {
+    user?: User
+    userId?: string | null
+    supabaseId?: string | null
+    queues: {
+      plaidSync: Queue
+      importTransactions: Queue
+    }
   }
 }

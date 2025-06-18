@@ -19,7 +19,7 @@ export const users = pgTable(
     id: uuid('id').primaryKey().notNull(),
     name: text('name'),
     image: text('image'),
-    clerkId: text('clerk_id').unique(),
+    supabaseId: text('supabase_id').unique(),
     isAdmin: boolean('isAdmin').default(false).notNull(),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
@@ -28,7 +28,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex('User_email_key').using('btree', table.email.asc().nullsLast()),
     index('email_idx').on(table.email),
-    index('clerk_id_idx').on(table.clerkId),
+    index('supabase_id_idx').on(table.supabaseId),
   ]
 )
 export type UserInsert = typeof users.$inferInsert

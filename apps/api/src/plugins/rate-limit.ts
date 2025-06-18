@@ -1,84 +1,41 @@
-import { redis } from '@hominem/utils/redis'
-import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
-import fp from 'fastify-plugin'
-import fastifyRateLimit from '@fastify/rate-limit'
+import type { Context, Next } from 'hono'
 
 interface RateLimitOptions {
-  getCustomError?: (request: FastifyRequest, key: string) => Error
   maxHits: number
-  onRateLimit?: (request: FastifyRequest, key: string) => void
   segment: string
   windowLength: number
 }
 
-const rateLimitPlugin: FastifyPluginAsync<RateLimitOptions> = async (fastify, opts) => {
-  const noop = () => {}
-  const {
-    getCustomError,
-    maxHits,
-    onRateLimit = noop,
-    segment: keyPrefix,
-    windowLength: expInMilliseconds,
-  } = opts
+// Simple in-memory rate limiting (for production, use Redis)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
-  async function verifyKeyExpiration(cacheKey: string) {
-    const ttl = await redis.ttl(cacheKey)
-    const expirationMissing = ttl === -1
-    if (expirationMissing) {
-      await redis.expire(cacheKey, expInMilliseconds / 1000)
-    }
-  }
+export const rateLimitMiddleware = (options: RateLimitOptions) => {
+  return async (c: Context, next: Next) => {
+    const { maxHits, windowLength } = options
+    const clientIp = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+    const key = `${options.segment}:${clientIp}`
+    const now = Date.now()
 
-  async function rateLimit(request: FastifyRequest, key: string) {
-    const cacheKey = `${keyPrefix}::${key}`
+    const record = rateLimitStore.get(key)
 
-    const UNAVAILABLE_REDIS_STATUSES = ['reconnecting', 'error']
+    if (!record || now > record.resetTime) {
+      // Reset or create new record
+      rateLimitStore.set(key, {
+        count: 1,
+        resetTime: now + windowLength,
+      })
+    } else {
+      // Increment existing record
+      record.count++
 
-    if (UNAVAILABLE_REDIS_STATUSES.includes(redis.status)) {
-      return
-    }
-
-    let rateLimitError = null
-    try {
-      const cachedValue = await redis.get(cacheKey)
-
-      if (cachedValue === null) {
-        // Set expiration time for the key
-        await redis.set(cacheKey, 1, 'PX', expInMilliseconds)
-        return
+      if (record.count > maxHits) {
+        return c.json({ error: 'Too many requests' }, 429)
       }
-
-      const valueToInt = Number.parseInt(cachedValue, 10)
-      const counter = Number.isNaN(valueToInt) ? 0 : valueToInt
-
-      if (counter >= maxHits) {
-        await verifyKeyExpiration(cacheKey)
-        onRateLimit(request, key)
-
-        if (!getCustomError) {
-          throw new Error('Rate limit exceeded')
-        }
-
-        rateLimitError = getCustomError(request, key)
-      } else if (cachedValue) {
-        await Promise.all([redis.incr(cacheKey), verifyKeyExpiration(cacheKey)])
-      } else {
-        await redis.set(cacheKey, counter + 1, 'PX', expInMilliseconds)
-      }
-    } catch (error) {
-      // Unexpected error probably means Redis shortage
-      // Rate limit is temporarily disabled
     }
 
-    if (rateLimitError) {
-      throw rateLimitError
-    }
+    await next()
   }
-
-  fastify.decorate('rateLimit', rateLimit)
-  fastify.register(fastifyRateLimit, opts)
 }
 
-export default fp(rateLimitPlugin, {
-  name: 'rate-limit',
-})
+// Default export for backward compatibility
+export default rateLimitMiddleware

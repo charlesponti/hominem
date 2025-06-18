@@ -1,185 +1,198 @@
-import { env } from './lib/env.js'
-
-import { clerkPlugin } from '@clerk/fastify'
-import fastifyCircuitBreaker from '@fastify/circuit-breaker'
-import type { FastifyCookieOptions } from '@fastify/cookie'
-import fastifyCookie from '@fastify/cookie'
-import fastifyCors from '@fastify/cors'
-import fastifyHelmet from '@fastify/helmet'
-import fastifyMultipart from '@fastify/multipart'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { redis } from '@hominem/utils/redis'
+import type { users } from '@hominem/utils/schema'
+import { serve } from '@hono/node-server'
 import { Queue } from 'bullmq'
-import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
-import type { ZodSchema } from 'zod'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { logger } from 'hono/logger'
+import { secureHeaders } from 'hono/secure-headers'
+import { env } from './lib/env.js'
+import { cache } from './lib/redis.js'
+import { initSentry, sentryErrorHandler, sentryMiddleware } from './lib/sentry.js'
+import { createWebSocketManager } from './lib/websocket.js'
 
-import { handleError } from './lib/errors.js'
-import adminPlugin from './plugins/admin.js'
-import emailPlugin from './plugins/email.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
-import shutdownPlugin from './plugins/shutdown.js'
 import { aiRoutes } from './routes/ai/index.js'
-import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
-import { careerRoutes } from './routes/career.js'
-import { companyRoutes } from './routes/company.js'
-import { contentStrategiesRoutes } from './routes/content-strategies.router.js'
-import { financeRoutes } from './routes/finance/finance.router.js'
-import { plaidRoutes } from './routes/finance/plaid.router.js'
+import { bookmarksRoutes } from './routes/bookmarks/index.js'
+import { contentStrategiesRoutes } from './routes/content-strategies.js'
+import { financeRoutes } from './routes/finance/index.js'
+import { plaidRoutes } from './routes/finance/plaid/index.js'
 import { healthRoutes } from './routes/health.js'
-import { invitesPlugin } from './routes/invites.router.js'
-import listsPlugin from './routes/lists.router.js'
-import { contentRoutes } from './routes/notes.js'
-import oauthPlugin from './routes/oauth/index.js'
-import { personalFinanceRoutes } from './routes/personal-finance.js'
-import placesPlugin from './routes/places.router.js'
-import possessionsPlugin from './routes/possessions.router.js'
-import statusPlugin from './routes/status.js'
-import { surveyRoutes } from './routes/surveys.js'
-import usersPlugin from './routes/user.router.js'
-import { vectorRoutes } from './routes/vector.router.js'
-import { webSocketPlugin } from './websocket/index.js'
+import { invitesRoutes } from './routes/invites/index.js'
+import { listsRoutes } from './routes/lists.js'
+import { locationRoutes } from './routes/location.js'
+import { oauthRoutes } from './routes/oauth/index.js'
+import { placesRoutes } from './routes/places/index.js'
+import { possessionsRoutes } from './routes/possessions.js'
+import { userRoutes } from './routes/user/index.js'
+import { vectorRoutes } from './routes/vector.js'
 
-export async function createServer(
-  opts: FastifyServerOptions = {}
-): Promise<FastifyInstance | null> {
-  try {
-    const server = fastify(opts)
+// TODO: Import other routes as they get converted to Hono
+// import adminPlugin from './plugins/admin.js'
+// import emailPlugin from './plugins/email.js'
+// import { aiRoutes } from './routes/ai/index.js'
+// import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
+// import { careerRoutes } from './routes/career.js'
+// import { companyRoutes } from './routes/company.js'
+// import { contentStrategiesRoutes } from './routes/content-strategies.router.js'
+// import { financeRoutes } from './routes/finance/finance.router.js'
+// import { plaidRoutes } from './routes/finance/plaid.router.js'
+// import invitesPlugin from './routes/invites.router.js'
+// import listsPlugin from './routes/lists.router.js'
+// import { contentRoutes } from './routes/notes.js'
+// import oauthPlugin from './routes/oauth/index.js'
+// import { personalFinanceRoutes } from './routes/personal-finance.js'
+// import placesPlugin from './routes/places.router.js'
+// import possessionsPlugin from './routes/possessions.router.js'
+// import statusPlugin from './routes/status.js'
+// import { surveyRoutes } from './routes/surveys.js'
+// import usersPlugin from './routes/user.router.js'
+// import { vectorRoutes } from './routes/vector.router.js'
+// import webSocketPlugin from './websocket/index.js'
 
-    // Set up BullMQ queues using consistent queue names from utils/consts
-    const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
-    const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
-      connection: redis,
-    })
+export interface AppEnv {
+  Bindings: Record<string, unknown>
+  Variables: {
+    queues: {
+      plaidSync: Queue
+      importTransactions: Queue
+    }
+    userId?: string
+    user?: typeof users.$inferSelect
+    supabaseId?: string
+    cache?: typeof cache
+  }
+}
 
-    // Add queues to fastify instance
-    server.decorate('queues', {
+export function createServer(): Hono<AppEnv> {
+  // Initialize Sentry
+  initSentry()
+
+  const app = new Hono<AppEnv>()
+
+  // Set up BullMQ queues using consistent queue names from utils/consts
+  const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
+  const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
+    connection: redis,
+  })
+
+  // Add queues and cache to app context
+  app.use('*', async (c, next) => {
+    c.set('queues', {
       plaidSync: plaidSyncQueue,
       importTransactions: importTransactionsQueue,
     })
+    c.set('cache', cache)
+    await next()
+  })
 
-    // Set up global error handler
-    server.setErrorHandler((error, _request, reply) => {
-      return handleError(error, reply)
-    })
+  // Set up global error handler
+  app.onError((err, c) => {
+    console.error('Global error handler:', err)
+    sentryErrorHandler(err, c)
+    return c.json({ error: err.message || 'Internal Server Error' }, 500)
+  })
 
-    await server.register(fastifyCors, {
+  // Global middleware
+  app.use('*', logger())
+  app.use('*', secureHeaders())
+  app.use('*', sentryMiddleware())
+
+  app.use(
+    '*',
+    cors({
       origin: [env.APP_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization'],
     })
+  )
 
-    await server.register(fastifyCookie, {
-      secret: env.COOKIE_SECRET,
-      hook: 'onRequest',
-      parseOptions: {},
-    } as FastifyCookieOptions)
-
-    await server.register(fastifyCircuitBreaker)
-    await server.register(fastifyMultipart, {
-      limits: {
-        fileSize: 50 * 1024 * 1024, // 50MB
-        files: 1,
-        fieldNameSize: 100,
-        fieldSize: 1024 * 1024, // 1MB for text fields
-      },
-    })
-    await server.register(fastifyHelmet)
-
-    // Register Clerk plugin if keys are provided and not empty
-    if (
-      env.CLERK_SECRET_KEY &&
-      env.CLERK_PUBLISHABLE_KEY &&
-      env.CLERK_SECRET_KEY !== '' &&
-      env.CLERK_PUBLISHABLE_KEY !== ''
-    ) {
-      await server.register(clerkPlugin, {
-        secretKey: env.CLERK_SECRET_KEY,
-        publishableKey: env.CLERK_PUBLISHABLE_KEY,
-      })
-    } else {
-      server.log.warn('Clerk keys are not provided. Authentication is disabled.')
-    }
-
-    // Register rate limit plugin with Redis client
-    await server.register(rateLimitPlugin, {
+  // Apply rate limiting
+  app.use(
+    '*',
+    rateLimitPlugin({
       maxHits: 100,
       segment: 'api',
       windowLength: 60000, // 1 minute
     })
+  )
 
-    await server.register(shutdownPlugin)
-    await server.register(statusPlugin)
-    await server.register(emailPlugin)
-    await server.register(adminPlugin)
-    await server.register(usersPlugin)
-    await server.register(listsPlugin)
-    await server.register(placesPlugin)
-    await server.register(invitesPlugin)
-    await server.register(bookmarksPlugin)
-    await server.register(aiRoutes, { prefix: '/api/ai' })
-    await server.register(possessionsPlugin, { prefix: '/api' })
-    await server.register(healthRoutes, { prefix: '/api/health' })
-    await server.register(companyRoutes, { prefix: '/api/companies' })
-    await server.register(careerRoutes, { prefix: '/api/career' })
-    await server.register(contentStrategiesRoutes, { prefix: '/api/content-strategies' })
-    await server.register(surveyRoutes, { prefix: '/api/surveys' })
-    await server.register(contentRoutes, { prefix: '/api/content' })
-    await server.register(oauthPlugin, { prefix: '/api/oauth' })
-    await server.register(vectorRoutes, { prefix: '/api/vectors' })
-    await server.register(financeRoutes, { prefix: '/api/finance' })
-    await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })
-    await server.register(plaidRoutes, { prefix: '/api/plaid' })
-    await server.register(webSocketPlugin)
+  // Register routes - healthRoutes, financeRoutes, listsRoutes, locationRoutes, possessionsRoutes, contentStrategiesRoutes, vectorRoutes, and invitesRoutes are converted to Hono so far
+  app.route('/api/health', healthRoutes)
+  app.route('/api/finance/plaid', plaidRoutes)
+  app.route('/api/finance', financeRoutes)
+  app.route('/api/lists', listsRoutes)
+  app.route('/api/location', locationRoutes)
+  app.route('/api/possessions', possessionsRoutes)
+  app.route('/api/content-strategies', contentStrategiesRoutes)
+  app.route('/api/vectors', vectorRoutes)
+  app.route('/api/invites', invitesRoutes)
+  app.route('/api/user', userRoutes)
+  app.route('/api/places', placesRoutes)
+  app.route('/api/bookmarks', bookmarksRoutes)
+  app.route('/api/ai', aiRoutes)
+  app.route('/api/oauth', oauthRoutes)
 
-    // --- Add onClose hooks ---
-    server.addHook('onClose', async (instance) => {
-      await instance.queues.plaidSync.close()
-      await instance.queues.importTransactions.close()
-    })
-    // --- End onClose hooks ---
+  // TODO: Convert remaining routes from Fastify plugins to Hono routes
+  // app.route('/api/admin', adminPlugin)
+  // app.route('/api/email', emailPlugin)
+  // app.route('/api/users', usersPlugin)
+  // app.route('/api/lists', listsPlugin)
+  // app.route('/api/places', placesPlugin)
+  // app.route('/api/invites', invitesPlugin)
+  // app.route('/api/bookmarks', bookmarksPlugin)
+  // app.route('/api/ai', aiRoutes)
+  // app.route('/api/possessions', possessionsPlugin)
+  // app.route('/api/companies', companyRoutes)
+  // app.route('/api/career', careerRoutes)
+  // app.route('/api/content-strategies', contentStrategiesRoutes)
+  // app.route('/api/surveys', surveyRoutes)
+  // app.route('/api/content', contentRoutes)
+  // app.route('/api/oauth', oauthPlugin)
+  // app.route('/api/vectors', vectorRoutes)
+  // app.route('/api/finance', financeRoutes)
+  // app.route('/api/personal-finance', personalFinanceRoutes)
+  // app.route('/api/plaid', plaidRoutes)
+  // app.route('/api/status', statusPlugin)
+  // app.route('/ws', webSocketPlugin)
 
-    server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
-      return (data) => schema.parse(data)
-    })
-
-    server.setSerializerCompiler(({ schema }: { schema: ZodSchema }) => {
-      return (data) => schema.parse(data)
-    })
-
-    return server
-  } catch (error) {
-    console.error(error)
-    return null
-  }
+  return app
 }
 
 export async function startServer() {
-  const server = await createServer({
-    logger: {
-      level: process.env.LOG_LEVEL || 'info',
-      transport:
-        env.NODE_ENV === 'production'
-          ? undefined
-          : {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                translateTime: true,
-                ignore: 'pid,hostname',
-              },
-            },
-    },
-    disableRequestLogging: process.env.ENABLE_REQUEST_LOGGING !== 'true',
+  const app = createServer()
+
+  const port = Number.parseInt(env.PORT, 10)
+  const server = serve({
+    fetch: app.fetch,
+    port,
+    hostname: '0.0.0.0',
   })
 
-  if (!server) {
-    process.exit(1)
+  // Create WebSocket manager
+  const wsManager = createWebSocketManager()
+
+  // Handle WebSocket upgrade requests
+  server.on('upgrade', wsManager.handleUpgrade)
+
+  console.log(`Server is running on port ${port}`)
+
+  // Handle graceful shutdown
+  const gracefulShutdown = async () => {
+    console.log('Shutting down gracefully...')
+    // Close WebSocket connections
+    await wsManager.close()
+    // Close cache
+    await cache.quit()
+    // Close server
+    server.close()
+    process.exit(0)
   }
 
-  try {
-    await server.listen({ port: Number.parseInt(env.PORT, 10), host: '0.0.0.0' })
-  } catch (err) {
-    server.log.error(err)
-    process.exit(1)
-  }
+  process.on('SIGTERM', gracefulShutdown)
+  process.on('SIGINT', gracefulShutdown)
+
+  return server
 }

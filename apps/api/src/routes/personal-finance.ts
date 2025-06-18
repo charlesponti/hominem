@@ -2,7 +2,7 @@ import { runwayCalculationSchema } from '@hominem/utils/finance'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { handleError } from '../lib/errors.js'
-import { verifyAuth } from '../middleware/auth.js'
+import { requireAuth } from '../middleware/auth.js'
 
 // Mock cost of living indices for demo
 // In production, this would use real cost of living data APIs
@@ -86,7 +86,7 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
   })
 
   // Calculate budget endpoint
-  fastify.post('/budget', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/budget', { preHandler: requireAuth }, async (request, reply) => {
     try {
       const { userId } = request
       if (!userId) {
@@ -142,7 +142,7 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
   })
 
   // Calculate runway endpoint
-  fastify.post('/runway', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/runway', { preHandler: requireAuth }, async (request, reply) => {
     try {
       const { userId } = request
       if (!userId) {
@@ -214,7 +214,7 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
   })
 
   // Calculate music streaming earnings
-  fastify.post('/music-streaming', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/music-streaming', { preHandler: requireAuth }, async (request, reply) => {
     try {
       const { userId } = request
       if (!userId) {
@@ -274,7 +274,7 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
   })
 
   // Calculate sales tax
-  fastify.post('/sales-tax', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/sales-tax', { preHandler: requireAuth }, async (request, reply) => {
     try {
       const { userId } = request
       if (!userId) {
@@ -301,7 +301,7 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
   })
 
   // Calculate cost of living comparison between locations
-  fastify.post('/location-comparison', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/location-comparison', { preHandler: requireAuth }, async (request, reply) => {
     try {
       const { userId } = request
       if (!userId) {
@@ -370,7 +370,7 @@ export async function personalFinanceRoutes(fastify: FastifyInstance) {
 
   // Calculate travel costs
   // !TODO use real travel cost APIs
-  fastify.post('/travel-cost', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/travel-cost', { preHandler: requireAuth }, async (request, reply) => {
     try {
       const { userId } = request
       if (!userId) {

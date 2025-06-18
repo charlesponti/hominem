@@ -1,11 +1,15 @@
-import { RedirectToSignIn, useAuth } from '@clerk/react-router'
-import { Outlet } from 'react-router'
+import { Navigate, Outlet } from 'react-router'
+import { useAuth } from '~/lib/supabase'
 
 export default function FinanceLayout() {
-  const { userId } = useAuth()
+  const { user, isLoading } = useAuth()
 
-  if (!userId) {
-    return <RedirectToSignIn />
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
   }
 
   return (

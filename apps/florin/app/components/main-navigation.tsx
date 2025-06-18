@@ -1,7 +1,7 @@
-import { SignInButton, useUser } from '@clerk/react-router'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { useLocation } from 'react-router'
+import { Link, useLocation } from 'react-router'
+import { useAuth } from '~/lib/supabase'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
@@ -27,8 +27,8 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoaded } = useUser()
-  const isLoggedIn = isLoaded && user
+  const { user, isLoading } = useAuth()
+  const isLoggedIn = !isLoading && user
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
@@ -150,7 +150,7 @@ export function MainNavigation() {
           </nav>
 
           <div className="mt-auto pt-6">
-            {!isLoaded ? (
+            {isLoading ? (
               <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
             ) : isLoggedIn ? (
               <RouteLink to="/account" aria-label="Account settings">
@@ -163,11 +163,11 @@ export function MainNavigation() {
                 </Button>
               </RouteLink>
             ) : (
-              <SignInButton>
+              <Link to="/auth">
                 <Button variant="ghost" size="icon" className="rounded-none">
                   <User className="h-[18px] w-[18px]" />
                 </Button>
-              </SignInButton>
+              </Link>
             )}
           </div>
         </div>
@@ -190,7 +190,7 @@ export function MainNavigation() {
         </RouteLink>
 
         <div className="flex items-center gap-2">
-          {!isLoaded ? (
+          {isLoading ? (
             <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
           ) : isLoggedIn ? (
             <RouteLink to="/account" aria-label="Account settings">
@@ -199,11 +199,11 @@ export function MainNavigation() {
               </Button>
             </RouteLink>
           ) : (
-            <SignInButton>
+            <Link to="/auth">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <User className="h-[18px] w-[18px]" />
               </Button>
-            </SignInButton>
+            </Link>
           )}
 
           <Button variant="ghost" size="icon" className="ml-1" onClick={toggleMenu}>

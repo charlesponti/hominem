@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { ForbiddenError, handleError } from '../lib/errors'
-import { verifyAuth } from '../middleware/auth'
+import { requireAuth } from '../middleware/auth'
 
 const createSurveySchema = z.object({
   name: z.string(),
@@ -24,7 +24,7 @@ const voteSchema = z.object({
 
 export async function surveyRoutes(fastify: FastifyInstance) {
   // Create a new survey
-  fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/', { preHandler: requireAuth }, async (request, reply) => {
     const { userId } = request
     if (!userId) {
       throw ForbiddenError('Not authorized to create a survey')
@@ -56,7 +56,7 @@ export async function surveyRoutes(fastify: FastifyInstance) {
   })
 
   // List all surveys for authenticated user
-  fastify.get('/', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.get('/', { preHandler: requireAuth }, async (request, reply) => {
     const { userId } = request
     if (!userId) {
       throw ForbiddenError('Not authorized to create a survey')
@@ -78,7 +78,7 @@ export async function surveyRoutes(fastify: FastifyInstance) {
   })
 
   // Vote on a survey
-  fastify.post('/vote', { preHandler: verifyAuth }, async (request, reply) => {
+  fastify.post('/vote', { preHandler: requireAuth }, async (request, reply) => {
     const { userId } = request
     if (!userId) {
       throw ForbiddenError('Not authorized to create a survey')

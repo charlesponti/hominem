@@ -55,7 +55,7 @@ vi.mock('@hominem/utils/db', () => ({
 }))
 
 vi.mock('../../middleware/auth.js', () => ({
-  verifyAuth: vi.fn((request, reply, done) => {
+  requireAuth: vi.fn((request, reply, done) => {
     request.userId = 'test-user-id'
     done()
   }),

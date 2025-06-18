@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/react-router'
+import { useAuth } from '~/lib/supabase'
 import { useApiClient } from '@hominem/ui'
 import type { Content, TaskStatus } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
