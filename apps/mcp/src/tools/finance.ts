@@ -223,37 +223,6 @@ export function registerFinanceTools(server: McpServer) {
   )
 
   server.tool(
-    'get_budget_category_suggestions',
-    financeTools.get_budget_category_suggestions.parameters.omit({ userId: undefined }).shape,
-    async (args) => {
-      try {
-        const response = await apiClient.post(
-          '/api/finance/analyze/budget-category-suggestions',
-          args
-        )
-        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
-      } catch (error) {
-        return handleApiError(error, 'get_budget_category_suggestions')
-      }
-    }
-  )
-
-  server.tool(
-    'get_budget_categories',
-    financeTools.get_budget_categories.parameters.omit({ userId: undefined }).shape,
-    async (args) => {
-      try {
-        const response = await apiClient.get('/api/finance/analyze/budget-categories', {
-          params: args,
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
-      } catch (error) {
-        return handleApiError(error, 'get_budget_categories')
-      }
-    }
-  )
-
-  server.tool(
     'calculate_savings_goal_timeline',
     financeTools.savingsGoalCalculatorTool.parameters.shape,
     async (args) => {

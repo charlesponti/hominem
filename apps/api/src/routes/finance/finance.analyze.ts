@@ -5,7 +5,6 @@ import {
   categoryBreakdownSchema,
   findTopMerchants,
   generateTimeSeriesData,
-  getBudgetCategorySuggestions,
   summarizeByCategory,
 } from '@hominem/utils/finance'
 import { transactions } from '@hominem/utils/schema'
@@ -188,39 +187,6 @@ financeAnalyzeRoutes.post(
       return c.json(
         {
           error: 'Failed to calculate transactions',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500
-      )
-    }
-  }
-)
-
-// Get Budget Category Suggestions
-financeAnalyzeRoutes.post(
-  '/budget-category-suggestions',
-  requireAuth,
-  zValidator('json', budgetCategorySuggestionsSchema),
-  async (c) => {
-    const userId = c.get('userId')
-    if (!userId) {
-      return c.json({ error: 'Not authorized' }, 401)
-    }
-
-    try {
-      const validated = c.req.valid('json')
-
-      const result = await getBudgetCategorySuggestions({
-        ...validated,
-        userId,
-      })
-
-      return c.json(result)
-    } catch (error) {
-      console.error('Error getting budget category suggestions:', error)
-      return c.json(
-        {
-          error: 'Failed to get budget category suggestions',
           details: error instanceof Error ? error.message : String(error),
         },
         500

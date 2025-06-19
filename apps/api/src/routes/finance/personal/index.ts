@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { financeBudgetRoutes } from './budget.js'
 import { financeLocationComparisonRoutes } from './location-comparison.js'
 import { financeMusicStreamingRoutes } from './music-streaming.js'
 import { financeRunwayRoutes } from './runway.js'
@@ -9,7 +8,6 @@ import { financeTravelCostRoutes } from './travel-cost.js'
 export const financePersonalRoutes = new Hono()
 
 // Register all personal finance sub-routes
-financePersonalRoutes.route('/budget', financeBudgetRoutes)
 financePersonalRoutes.route('/runway', financeRunwayRoutes)
 financePersonalRoutes.route('/music-streaming', financeMusicStreamingRoutes)
 financePersonalRoutes.route('/sales-tax', financeSalesTaxRoutes)

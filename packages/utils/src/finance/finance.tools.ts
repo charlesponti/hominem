@@ -1,11 +1,10 @@
 import { tool } from 'ai'
-import { and, eq, like, sql } from 'drizzle-orm'
+import { and, eq, like } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
 import { db } from '../db/index'
 import {
   budgetCategories,
-  transactions,
   type FinanceAccountInsert,
   type FinanceTransactionInsert,
 } from '../db/schema/finance.schema'
@@ -116,12 +115,6 @@ export const updateTransactionSchema = z.object({
 export const deleteTransactionSchema = z.object({
   transactionId: z.string().describe('ID of the transaction to delete'),
   userId: z.string().describe('User ID who owns this transaction'),
-})
-
-export const getBudgetCategorySuggestionsSchema = z.object({
-  description: z.string().describe('Transaction description to get category suggestions for'),
-  limit: z.number().optional().default(5).describe('Maximum number of suggestions to return'),
-  userId: z.string().describe('User ID who owns the transactions'),
 })
 
 export const getBudgetCategoriesSchema = z.object({
@@ -351,39 +344,6 @@ export const loanCalculatorTool = tool({
   },
 })
 
-export const get_budget_category_suggestions = tool({
-  description: 'Get suggested budget categories based on transaction description',
-  parameters: getBudgetCategorySuggestionsSchema,
-  async execute(args) {
-    // Query similar transactions to get category suggestions
-    const similarTransactions = await db
-      .select({
-        category: transactions.category,
-        parentCategory: transactions.parentCategory,
-        count: sql<number>`COUNT(*)`,
-      })
-      .from(transactions)
-      .where(
-        and(
-          like(transactions.description, `%${args.description}%`),
-          eq(transactions.userId, args.userId)
-        )
-      )
-      .groupBy(transactions.category, transactions.parentCategory)
-      .orderBy(sql`count DESC`)
-      .limit(args.limit)
-
-    return {
-      suggestions: similarTransactions.map((tx) => ({
-        category: tx.category,
-        parentCategory: tx.parentCategory,
-        frequency: tx.count,
-      })),
-      message: `Found ${similarTransactions.length} category suggestions for "${args.description}"`,
-    }
-  },
-})
-
 export const get_budget_categories = tool({
   description: 'A tool to get budget categories by id, name, or type.',
   parameters: getBudgetCategoriesSchema,
@@ -499,7 +459,6 @@ export const tools = {
   calculate_transactions,
 
   // Budgeting
-  get_budget_category_suggestions,
   get_budget_categories,
 
   budgetCalculatorTool,
