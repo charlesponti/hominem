@@ -29,6 +29,6 @@ financePlaidCreateLinkTokenRoutes.post('/', requireAuth, async (c) => {
     })
   } catch (error) {
     console.error(`Failed to create Plaid link token: ${error}`)
-    return c.json({ error: 'Failed to create link token' }, 500)
+    return c.json({ error: 'Internal Server Error' }, 500)
   }
 })

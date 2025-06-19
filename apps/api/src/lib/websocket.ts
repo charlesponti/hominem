@@ -28,7 +28,11 @@ export function createWebSocketManager(): WebSocketManager {
 
   // Progress updates via Redis pub/sub
   redisSubscriber.on('message', (channel: string, message: string) => {
-    redisHandlers.process(wss, channel, message)
+    try {
+      redisHandlers.process(wss, channel, message)
+    } catch (error) {
+      logger.error('Redis message handler error:', error)
+    }
   })
 
   // Subscribe to Redis channels
@@ -50,7 +54,18 @@ export function createWebSocketManager(): WebSocketManager {
 
     // Message handler
     ws.on('message', async (message) => {
-      await wsHandlers.process(ws, message.toString())
+      try {
+        await wsHandlers.process(ws, message.toString())
+      } catch (error) {
+        logger.error('WebSocket message handler error:', error)
+        // Optionally send error response to client
+        ws.send(
+          JSON.stringify({
+            type: 'error',
+            message: 'Failed to process message',
+          })
+        )
+      }
     })
 
     // Error handler
@@ -113,13 +128,20 @@ export function createWebSocketManager(): WebSocketManager {
     return new Promise((resolve) => {
       // Clean up Redis subscription
       redisSubscriber.unsubscribe(IMPORT_PROGRESS_CHANNEL)
-      redisSubscriber.quit().finally(() => {
-        // Close WebSocket server
-        wss.close(() => {
-          logger.info('WebSocket server closed')
-          resolve()
+      redisSubscriber.quit()
+        .then(() => {
+          logger.info('Redis subscriber closed successfully')
         })
-      })
+        .catch((error) => {
+          logger.error('Error closing Redis subscriber:', error)
+        })
+        .finally(() => {
+          // Close WebSocket server
+          wss.close(() => {
+            logger.info('WebSocket server closed')
+            resolve()
+          })
+        })
     })
   }
 

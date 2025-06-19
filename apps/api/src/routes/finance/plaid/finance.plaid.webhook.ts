@@ -1,10 +1,10 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/utils/db'
 import { plaidItems } from '@hominem/utils/schema'
-import { zValidator } from '@hono/zod-validator'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { verifyPlaidWebhookSignature } from '../../../lib/plaid.js'
 
 const webhookSchema = z.object({
   webhook_type: z.string(),
@@ -21,8 +21,30 @@ const webhookSchema = z.object({
 export const financePlaidWebhookRoutes = new Hono()
 
 // Handle Plaid webhooks
-financePlaidWebhookRoutes.post('/', zValidator('json', webhookSchema), async (c) => {
-  const { webhook_type, webhook_code, item_id, error } = c.req.valid('json')
+financePlaidWebhookRoutes.post('/', async (c) => {
+  // Get raw body for signature verification
+  const rawBody = await c.req.text()
+  const headers = Object.fromEntries(c.req.raw.headers.entries())
+
+  // Verify webhook signature
+  if (!verifyPlaidWebhookSignature(headers, rawBody)) {
+    return c.json({ error: 'Invalid webhook signature' }, 401)
+  }
+
+  // Parse and validate the JSON body
+  let parsedBody: Record<string, unknown>
+  try {
+    parsedBody = JSON.parse(rawBody) as Record<string, unknown>
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  const parseResult = webhookSchema.safeParse(parsedBody)
+  if (!parseResult.success) {
+    return c.json({ error: 'Invalid webhook payload' }, 400)
+  }
+
+  const { webhook_type, webhook_code, item_id, error } = parseResult.data
 
   try {
     // Find the plaid item

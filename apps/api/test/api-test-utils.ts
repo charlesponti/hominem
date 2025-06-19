@@ -1,3 +1,4 @@
+import type { Queue } from 'bullmq'
 import type { Hono } from 'hono'
 import { afterAll, beforeAll, beforeEach, expect, vi } from 'vitest'
 import type { AppEnv } from '../src/server.js'
@@ -11,7 +12,10 @@ export const globalMocks = {
   queue: {
     add: vi.fn(),
     close: vi.fn(() => Promise.resolve()),
-  },
+    getJob: vi.fn(),
+    getJobs: vi.fn(),
+    // Add other queue methods as needed
+  } as Partial<Queue>,
 
   // Auth middleware mock
   verifyAuth: vi.fn((c, next) => {
@@ -38,7 +42,17 @@ export const createTestServer = async (options: { logger?: boolean } = {}) => {
     throw new Error('Server is null')
   }
 
-  // Hono doesn't need explicit setup like Fastify
+  // Override the queues middleware for testing with mock queues
+  server.use('*', async (c, next) => {
+    const mockQueues = {
+      plaidSync: globalMocks.queue,
+      importTransactions: globalMocks.queue,
+    }
+    // @ts-expect-error - Using mock queues for testing
+    c.set('queues', mockQueues)
+    await next()
+  })
+
   return server
 }
 

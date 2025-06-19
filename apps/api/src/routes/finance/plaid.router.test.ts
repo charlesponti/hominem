@@ -70,6 +70,16 @@ vi.mock('../../middleware/rate-limit.js', () => ({
   }),
 }))
 
+// Mock BullMQ Queue
+const mockQueueAdd = vi.fn()
+const mockQueueClose = vi.fn(() => Promise.resolve())
+vi.mock('bullmq', () => ({
+  Queue: vi.fn().mockImplementation(() => ({
+    add: mockQueueAdd,
+    close: mockQueueClose,
+  })),
+}))
+
 vi.mock('../../lib/plaid.js', () => ({
   plaidClient: {
     linkTokenCreate: vi.fn(),
@@ -332,13 +342,12 @@ describe('Plaid Router', () => {
 
     it('should return 500 if queue fails', async () => {
       const { db } = await import('@hominem/utils/db')
-      const { globalMocks } = await import('../../../test/api-test-utils.js')
 
       const testPlaidItem = createTestData.plaidItem({ id: 'test-plaid-item-id' })
       vi.mocked(db.query.plaidItems.findFirst).mockResolvedValue(testPlaidItem)
 
-      // Mock queue failure
-      vi.mocked(globalMocks.queue.add).mockRejectedValue(new Error('Queue error'))
+      // Mock queue failure using the exported mock function
+      mockQueueAdd.mockRejectedValue(new Error('Queue error'))
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
@@ -347,7 +356,7 @@ describe('Plaid Router', () => {
       })
 
       const body = await assertErrorResponse(response, 500)
-      expect(body.error).toBe('Internal Server Error')
+      expect(body.error).toBe('Failed to queue sync job')
     })
   })
 
@@ -356,7 +365,6 @@ describe('Plaid Router', () => {
       const { verifyPlaidWebhookSignature } = await import('../../lib/plaid.js')
       const { db } = await import('@hominem/utils/db')
       const { parseJsonResponse } = await import('../../../test/api-test-utils.js') // Import parseJsonResponse
-      const { globalMocks } = await import('../../../test/api-test-utils.js')
 
       const mockPlaidItem = createTestData.plaidItem()
 
@@ -364,7 +372,7 @@ describe('Plaid Router', () => {
       vi.mocked(db.query.plaidItems.findFirst).mockResolvedValue(mockPlaidItem)
 
       // Reset queue mock to success for this test
-      vi.mocked(globalMocks.queue.add).mockResolvedValue({} as never)
+      mockQueueAdd.mockResolvedValue({} as never)
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',

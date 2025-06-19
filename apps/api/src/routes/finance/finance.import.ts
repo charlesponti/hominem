@@ -10,7 +10,7 @@ import { z } from 'zod'
 import { requireAuth } from '../../middleware/auth.js'
 import { handleFileUpload } from '../../middleware/file-upload.js'
 
-export const financeImportsRoutes = new Hono()
+export const financeImportRoutes = new Hono()
 
 const ImportTransactionsParamsSchema = z.object({
   deduplicateThreshold: z.coerce.number().min(0).max(100).default(60),
@@ -23,7 +23,7 @@ const JobIdParamsSchema = z.object({
 })
 
 // Import transactions from CSV file
-financeImportsRoutes.post(
+financeImportRoutes.post(
   '/',
   requireAuth,
   zValidator('query', ImportTransactionsParamsSchema),
@@ -134,7 +134,7 @@ financeImportsRoutes.post(
 )
 
 // Check import status
-financeImportsRoutes.get(
+financeImportRoutes.get(
   '/:jobId',
   requireAuth,
   zValidator('param', JobIdParamsSchema),
@@ -180,7 +180,7 @@ financeImportsRoutes.get(
 )
 
 // Get active import jobs
-financeImportsRoutes.get('/active', requireAuth, async (c) => {
+financeImportRoutes.get('/active', requireAuth, async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
