@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/react-router'
+import { useAuth } from '~/lib/supabase'
 import { useApiClient } from '@hominem/ui'
 import type { ContentStrategiesSelect, ContentStrategy } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'

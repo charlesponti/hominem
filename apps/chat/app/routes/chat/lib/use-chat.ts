@@ -1,8 +1,8 @@
-import { useAuth } from '@/lib/supabase/auth-hooks'
 import { useSupabaseApiClient } from '@hominem/ui'
 import type { ChatMessageSelect } from '@hominem/utils/types'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
+import { useAuth } from '~/lib/supabase/auth-context'
 import { streamToString } from './stream-utils'
 
 export enum CHAT_ENDPOINTS {

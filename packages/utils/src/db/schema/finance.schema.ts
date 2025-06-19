@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
@@ -190,6 +191,8 @@ export const budgetCategories = pgTable(
   },
   (table) => [
     index('budget_categories_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
+    // Ensure each user can only have one budget category with a given name
+    uniqueIndex('budget_categories_name_user_id_unique').on(table.name, table.userId),
   ]
 )
 

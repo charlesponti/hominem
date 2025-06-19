@@ -1,4 +1,3 @@
-import type { MultipartFile } from '@fastify/multipart'
 import { db } from '@hominem/utils/db'
 import { logger } from '@hominem/utils/logger'
 import { vectorDocuments, type NewVectorDocument } from '@hominem/utils/schema'
@@ -149,10 +148,11 @@ export namespace HominemVectorStore {
     }
   }
 
-  export async function getImageEmbedding(image: MultipartFile): Promise<number[][]> {
+  export async function getImageEmbedding(image: File): Promise<number[][]> {
     try {
-      const buffer = await image.toBuffer()
-      const base64 = Buffer.from(buffer).toString('base64')
+      const arrayBuffer = await image.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const base64 = buffer.toString('base64')
       const embedding = await generateEmbedding(base64)
       return [embedding]
     } catch (e) {

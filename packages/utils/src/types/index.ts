@@ -31,19 +31,28 @@ export type {
   ListSelect,
 } from '../db/schema/lists.schema'
 
-export type { ContentStrategiesSelect } from '../db/schema/content-strategies.schema'
+export type { ContentStrategiesInsert, ContentStrategiesSelect } from '../db/schema/content.schema'
 
 export type { ContentStrategy } from '../schemas/content-strategy.schema'
 
 export type {
-  Content,
-  ContentInsert,
   ContentTag,
-  ContentType,
+  Note,
+  NoteContentType,
+  NoteInsert,
   Priority,
   TaskMetadata,
   TaskStatus,
 } from '../db/schema/notes.schema'
+
+export type {
+  Content,
+  ContentInsert,
+  ContentStatus,
+  ContentType,
+  SEOMetadata,
+  SocialMediaMetadata,
+} from '../db/schema/content.schema'
 
 export type {
   CategorySummary,

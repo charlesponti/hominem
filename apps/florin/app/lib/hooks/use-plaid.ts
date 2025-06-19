@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
+import { useAuth } from '~/lib/supabase'
 import { useApiClient } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'

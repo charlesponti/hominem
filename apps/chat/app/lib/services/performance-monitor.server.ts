@@ -40,29 +40,34 @@ interface SystemMetrics {
 // In-memory storage for metrics (in production, use a proper metrics system)
 const performanceCache = new LRUCache<string, PerformanceMetric>({
   max: 10000,
-  ttl: 24 * 60 * 60 * 1000 // 24 hours
+  ttl: 24 * 60 * 60 * 1000, // 24 hours
 })
 
 const apiMetricsCache = new LRUCache<string, APIMetrics>({
   max: 10000,
-  ttl: 24 * 60 * 60 * 1000 // 24 hours
+  ttl: 24 * 60 * 60 * 1000, // 24 hours
 })
 
 const errorMetricsCache = new LRUCache<string, ErrorMetric>({
   max: 5000,
-  ttl: 7 * 24 * 60 * 60 * 1000 // 7 days
+  ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
 })
 
 const systemMetricsCache = new LRUCache<string, SystemMetrics>({
   max: 1000,
-  ttl: 60 * 60 * 1000 // 1 hour
+  ttl: 60 * 60 * 1000, // 1 hour
 })
 
 export class PerformanceMonitor {
   /**
    * Record a performance metric
    */
-  static recordMetric(name: string, duration: number, metadata?: Record<string, any>, tags?: string[]) {
+  static recordMetric(
+    name: string,
+    duration: number,
+    metadata?: Record<string, any>,
+    tags?: string[]
+  ) {
     const id = `${name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const metric: PerformanceMetric = {
       id,
@@ -70,11 +75,10 @@ export class PerformanceMonitor {
       duration,
       timestamp: Date.now(),
       metadata,
-      tags
+      tags,
     }
 
     performanceCache.set(id, metric)
-    console.log(`Performance: ${name} took ${duration}ms`, metadata)
   }
 
   /**
@@ -87,15 +91,15 @@ export class PerformanceMonitor {
     tags?: string[]
   ): Promise<T> {
     const startTime = performance.now()
-    
+
     try {
       const result = await fn()
       const duration = performance.now() - startTime
-      this.recordMetric(name, duration, metadata, tags)
+      PerformanceMonitor.recordMetric(name, duration, metadata, tags)
       return result
     } catch (error) {
       const duration = performance.now() - startTime
-      this.recordMetric(name, duration, { ...metadata, error: true }, tags)
+      PerformanceMonitor.recordMetric(name, duration, { ...metadata, error: true }, tags)
       throw error
     }
   }
@@ -105,13 +109,13 @@ export class PerformanceMonitor {
    */
   static createTimer(name: string, metadata?: Record<string, any>, tags?: string[]) {
     const startTime = performance.now()
-    
+
     return {
       end: () => {
         const duration = performance.now() - startTime
-        this.recordMetric(name, duration, metadata, tags)
+        PerformanceMonitor.recordMetric(name, duration, metadata, tags)
         return duration
-      }
+      },
     }
   }
 
@@ -122,21 +126,28 @@ export class PerformanceMonitor {
     const id = `api-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const metrics: APIMetrics = {
       ...params,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     apiMetricsCache.set(id, metrics)
-    
+
     // Log slow requests
     if (params.duration > 1000) {
-      console.warn(`Slow API request: ${params.method} ${params.endpoint} took ${params.duration}ms`)
+      console.warn(
+        `Slow API request: ${params.method} ${params.endpoint} took ${params.duration}ms`
+      )
     }
   }
 
   /**
    * Record error metrics
    */
-  static recordError(error: Error, endpoint?: string, userId?: string, metadata?: Record<string, any>) {
+  static recordError(
+    error: Error,
+    endpoint?: string,
+    userId?: string,
+    metadata?: Record<string, any>
+  ) {
     const id = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const errorMetric: ErrorMetric = {
       id,
@@ -145,7 +156,7 @@ export class PerformanceMonitor {
       endpoint,
       userId,
       metadata,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     errorMetricsCache.set(id, errorMetric)
@@ -161,7 +172,7 @@ export class PerformanceMonitor {
       memoryUsage: process.memoryUsage(),
       timestamp: Date.now(),
       uptime: process.uptime(),
-      activeConnections
+      activeConnections,
     }
 
     systemMetricsCache.set(id, metrics)
@@ -181,37 +192,39 @@ export class PerformanceMonitor {
     const cutoff = now - timeWindow
 
     // Get API metrics within time window
-    const recentApiMetrics = Array.from(apiMetricsCache.values())
-      .filter(metric => metric.timestamp > cutoff)
+    const recentApiMetrics = Array.from(apiMetricsCache.values()).filter(
+      (metric) => metric.timestamp > cutoff
+    )
 
     // Get error metrics within time window
-    const recentErrors = Array.from(errorMetricsCache.values())
-      .filter(error => error.timestamp > cutoff)
+    const recentErrors = Array.from(errorMetricsCache.values()).filter(
+      (error) => error.timestamp > cutoff
+    )
 
     const totalRequests = recentApiMetrics.length
     const totalDuration = recentApiMetrics.reduce((sum, metric) => sum + metric.duration, 0)
     const averageResponseTime = totalRequests > 0 ? totalDuration / totalRequests : 0
 
     const errorRate = totalRequests > 0 ? recentErrors.length / totalRequests : 0
-    const slowRequests = recentApiMetrics.filter(metric => metric.duration > 1000).length
+    const slowRequests = recentApiMetrics.filter((metric) => metric.duration > 1000).length
 
     // Calculate top endpoints
     const endpointStats = new Map<string, { count: number; totalDuration: number }>()
-    
-    recentApiMetrics.forEach(metric => {
+
+    for (const metric of recentApiMetrics) {
       const key = `${metric.method} ${metric.endpoint}`
       const existing = endpointStats.get(key) || { count: 0, totalDuration: 0 }
       endpointStats.set(key, {
         count: existing.count + 1,
-        totalDuration: existing.totalDuration + metric.duration
+        totalDuration: existing.totalDuration + metric.duration,
       })
-    })
+    }
 
     const topEndpoints = Array.from(endpointStats.entries())
       .map(([endpoint, stats]) => ({
         endpoint,
         count: stats.count,
-        avgDuration: stats.totalDuration / stats.count
+        avgDuration: stats.totalDuration / stats.count,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10)
@@ -221,7 +234,7 @@ export class PerformanceMonitor {
       totalRequests,
       errorRate,
       slowRequests,
-      topEndpoints
+      topEndpoints,
     }
   }
 
@@ -245,8 +258,8 @@ export class PerformanceMonitor {
         performance: { size: performanceCache.size, max: performanceCache.max },
         apiMetrics: { size: apiMetricsCache.size, max: apiMetricsCache.max },
         errors: { size: errorMetricsCache.size, max: errorMetricsCache.max },
-        system: { size: systemMetricsCache.size, max: systemMetricsCache.max }
-      }
+        system: { size: systemMetricsCache.size, max: systemMetricsCache.max },
+      },
     }
   }
 
@@ -270,17 +283,24 @@ export class PerformanceMonitor {
   }> {
     const now = Date.now()
     const hoursBack = hours
-    const trends: Array<{ hour: number; avgResponseTime: number; requestCount: number; errorCount: number }> = []
+    const trends: Array<{
+      hour: number
+      avgResponseTime: number
+      requestCount: number
+      errorCount: number
+    }> = []
 
     for (let i = hoursBack - 1; i >= 0; i--) {
       const hourStart = now - (i + 1) * 60 * 60 * 1000
       const hourEnd = now - i * 60 * 60 * 1000
 
-      const hourMetrics = Array.from(apiMetricsCache.values())
-        .filter(metric => metric.timestamp >= hourStart && metric.timestamp < hourEnd)
+      const hourMetrics = Array.from(apiMetricsCache.values()).filter(
+        (metric) => metric.timestamp >= hourStart && metric.timestamp < hourEnd
+      )
 
-      const hourErrors = Array.from(errorMetricsCache.values())
-        .filter(error => error.timestamp >= hourStart && error.timestamp < hourEnd)
+      const hourErrors = Array.from(errorMetricsCache.values()).filter(
+        (error) => error.timestamp >= hourStart && error.timestamp < hourEnd
+      )
 
       const requestCount = hourMetrics.length
       const totalDuration = hourMetrics.reduce((sum, metric) => sum + metric.duration, 0)
@@ -290,7 +310,7 @@ export class PerformanceMonitor {
         hour: Math.floor(hourStart / (60 * 60 * 1000)),
         avgResponseTime,
         requestCount,
-        errorCount: hourErrors.length
+        errorCount: hourErrors.length,
       })
     }
 
@@ -333,17 +353,18 @@ export class PerformanceMonitor {
         systemMetricsCache.delete(key)
       }
     }
-
-    console.log('Performance metrics cleanup completed')
   }
 }
 
 // Auto-cleanup every hour
 if (typeof window === 'undefined') {
-  setInterval(() => {
-    PerformanceMonitor.cleanup()
-    PerformanceMonitor.recordSystemMetrics()
-  }, 60 * 60 * 1000) // Every hour
+  setInterval(
+    () => {
+      PerformanceMonitor.cleanup()
+      PerformanceMonitor.recordSystemMetrics()
+    },
+    60 * 60 * 1000
+  ) // Every hour
 }
 
 /**
@@ -357,11 +378,11 @@ export function withPerformanceMonitoring(
   return async (request: Request): Promise<Response> => {
     const startTime = performance.now()
     const timer = PerformanceMonitor.createTimer(operation)
-    
+
     try {
       const response = await handler(request)
       const duration = timer.end()
-      
+
       // Record API metrics
       PerformanceMonitor.recordAPIMetrics({
         endpoint: new URL(request.url).pathname,
@@ -369,20 +390,20 @@ export function withPerformanceMonitoring(
         statusCode: response.status,
         duration,
         userAgent: request.headers.get('user-agent') || undefined,
-        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
       })
 
       return response
     } catch (error) {
       const duration = timer.end()
-      
+
       if (options?.trackErrors !== false) {
         PerformanceMonitor.recordError(
           error instanceof Error ? error : new Error(String(error)),
           new URL(request.url).pathname
         )
       }
-      
+
       throw error
     }
   }

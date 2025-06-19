@@ -209,7 +209,6 @@ export function ChatInterface({
       textareaRef.current.setSelectionRange(length, length)
     }
 
-    console.log('Web search mode enabled')
     // TODO: Implement actual web search API integration
   }, [])
 
@@ -260,10 +259,8 @@ export function ChatInterface({
     const newVoiceMode = !isVoiceMode
     setIsVoiceMode(newVoiceMode)
 
-    if (newVoiceMode) {
-      console.log('Voice mode enabled - AI responses will be read aloud')
-    } else {
-      console.log('Voice mode disabled')
+    // !TODO Implement this
+    if (!newVoiceMode) {
       // Stop any ongoing TTS
       stopTTS()
     }

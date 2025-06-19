@@ -1,4 +1,4 @@
-import type { FastifyReply } from 'fastify'
+import type { Context } from 'hono'
 import { ZodError } from 'zod'
 
 export class ApiError extends Error {
@@ -11,26 +11,35 @@ export class ApiError extends Error {
   }
 }
 
-export function handleError(error: Error, reply: FastifyReply) {
+export function handleError(error: Error, c: Context) {
   if (error instanceof ApiError) {
-    return reply.status(error.statusCode).send({
-      error: error.message,
-    })
+    return c.json(
+      {
+        error: error.message,
+      },
+      error.statusCode as 400 | 401 | 403 | 404 | 500
+    )
   }
 
   if (error instanceof ZodError) {
-    return reply.status(400).send({
-      error: 'Validation Error',
-      details: error.errors,
-    })
+    return c.json(
+      {
+        error: 'Validation Error',
+        details: error.errors,
+      },
+      400
+    )
   }
 
   // Log unknown errors
   console.error(error)
 
-  return reply.status(500).send({
-    error: 'Internal Server Error',
-  })
+  return c.json(
+    {
+      error: 'Internal Server Error',
+    },
+    500
+  )
 }
 
 export function NotFoundError(message = 'Not found') {

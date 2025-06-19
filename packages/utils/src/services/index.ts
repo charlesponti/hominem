@@ -1,4 +1,5 @@
 export * from './boltai.schema'
 export * from './content.service'
+export * from './notes.service'
 export * from './openai-export.schema'
 export * from './typing-mind.schema'

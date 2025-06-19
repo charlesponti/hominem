@@ -1,7 +1,7 @@
-import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import type { Content, ContentType } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '~/lib/supabase'
 import { useToast } from '../../components/ui/use-toast'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
@@ -26,11 +26,12 @@ const defaultContentFields = (
           duration: 0,
         }
       : null,
+  tweetMetadata: type === 'tweet' ? { status: 'draft' as const } : null,
   analysis: {},
 })
 
 export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
-  const { userId, isSignedIn } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -47,7 +48,7 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
     { previousContent: Content[] | undefined }
   >({
     mutationFn: async (itemData) => {
-      if (!isSignedIn || !userId) {
+      if (!isAuthenticated || !user) {
         throw new Error('User must be signed in to create content.')
       }
       const payloadForApi: Omit<
@@ -77,7 +78,7 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
         ...defaultContentFields(newItemData.type),
         ...newItemData,
         id: tempId,
-        userId: userId || '',
+        userId: user?.id || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         synced: false,

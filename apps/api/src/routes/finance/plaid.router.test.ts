@@ -55,19 +55,29 @@ vi.mock('@hominem/utils/db', () => ({
 }))
 
 vi.mock('../../middleware/auth.js', () => ({
-  verifyAuth: vi.fn((request, reply, done) => {
-    request.userId = 'test-user-id'
-    done()
+  requireAuth: vi.fn(async (c, next) => {
+    c.set('userId', 'test-user-id')
+    await next()
   }),
 }))
 
 vi.mock('../../middleware/rate-limit.js', () => ({
-  rateLimit: vi.fn((request, reply, done) => {
-    done()
+  rateLimit: vi.fn(async (c, next) => {
+    await next()
   }),
-  rateLimitImport: vi.fn((request, reply, done) => {
-    done()
+  rateLimitImport: vi.fn(async (c, next) => {
+    await next()
   }),
+}))
+
+// Mock BullMQ Queue
+const mockQueueAdd = vi.fn()
+const mockQueueClose = vi.fn(() => Promise.resolve())
+vi.mock('bullmq', () => ({
+  Queue: vi.fn().mockImplementation(() => ({
+    add: mockQueueAdd,
+    close: mockQueueClose,
+  })),
 }))
 
 vi.mock('../../lib/plaid.js', () => ({
@@ -100,7 +110,7 @@ interface PlaidApiResponse {
 describe('Plaid Router', () => {
   const { getServer } = useApiTestLifecycle()
 
-  describe('POST /api/plaid/create-link-token', () => {
+  describe('POST /api/finance/plaid/create-link-token', () => {
     test('creates link token successfully', async () => {
       const { plaidClient } = await import('../../lib/plaid.js')
 
@@ -113,10 +123,11 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/create-link-token',
+        url: '/api/finance/plaid/create-link-token',
       })
 
-      const body = assertSuccessResponse(response) as PlaidApiResponse
+      const body = (await assertSuccessResponse(response)) as PlaidApiResponse
+      expect(body.success).toBe(true)
       expect(body.linkToken).toBe('test-link-token')
       expect(body.expiration).toBe('2025-05-26T00:00:00Z')
     })
@@ -128,14 +139,14 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/create-link-token',
+        url: '/api/finance/plaid/create-link-token',
       })
-      const body = assertErrorResponse(response)
+      const body = await assertErrorResponse(response)
       expect(body.error).toBe('Internal Server Error') // Changed from 'Plaid error'
     })
   })
 
-  describe('POST /api/plaid/exchange-token', () => {
+  describe('POST /api/finance/plaid/exchange-token', () => {
     test('exchanges token successfully for new institution', async () => {
       const { plaidClient } = await import('../../lib/plaid.js')
       const { db } = await import('@hominem/utils/db')
@@ -156,7 +167,7 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/exchange-token',
+        url: '/api/finance/plaid/exchange-token',
         payload: {
           publicToken: 'test-public-token',
           institutionId: 'test-institution-id',
@@ -164,23 +175,23 @@ describe('Plaid Router', () => {
         },
       })
 
-      assertSuccessResponse(response)
+      await assertSuccessResponse(response)
     })
 
     test('validates required fields', async () => {
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/exchange-token',
+        url: '/api/finance/plaid/exchange-token',
         payload: {
           // Missing required fields
         },
       })
 
-      assertErrorResponse(response, 400)
+      await assertErrorResponse(response, 400)
     })
   })
 
-  describe('DELETE /api/plaid/connections/:itemId', () => {
+  describe('DELETE /api/finance/plaid/connections/:itemId', () => {
     test('performs comprehensive cleanup successfully', async () => {
       const { plaidClient } = await import('../../lib/plaid.js')
       const { db } = await import('@hominem/utils/db')
@@ -205,13 +216,13 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'DELETE',
-        url: '/api/plaid/connections/test-item-id',
+        url: '/api/finance/plaid/connections/test-item-id',
       })
 
-      const body = assertSuccessResponse(response) as PlaidApiResponse
-      // Verify the response structure includes deleted data counts
-      expect(body.deletedData?.accounts).toBe(2)
-      expect(body.deletedData?.institution).toBe(1)
+      const body = (await assertSuccessResponse(response)) as PlaidApiResponse
+      // Verify the response structure matches the actual implementation
+      expect(body.success).toBe(true)
+      expect(body.message).toBe('Successfully disconnected account')
 
       // Verify plaidClient.itemRemove was called
       expect(plaidClient.itemRemove).toHaveBeenCalledWith({
@@ -226,10 +237,10 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'DELETE',
-        url: '/api/plaid/connections/non-existent-item',
+        url: '/api/finance/plaid/connections/non-existent-item',
       })
 
-      assertErrorResponse(response, 404)
+      await assertErrorResponse(response, 404)
     })
 
     test('handles ITEM_NOT_FOUND from Plaid and continues with cleanup', async () => {
@@ -266,13 +277,13 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'DELETE',
-        url: '/api/plaid/connections/test-item-id',
+        url: '/api/finance/plaid/connections/test-item-id',
       })
 
-      const body = assertSuccessResponse(response) as PlaidApiResponse
-      // Verify the response still includes deleted data counts even when Plaid item was already removed
-      expect(body.deletedData?.accounts).toBe(1)
-      expect(body.deletedData?.institution).toBe(1)
+      const body = (await assertSuccessResponse(response)) as PlaidApiResponse
+      // Verify the response still succeeds even when Plaid item was already removed
+      expect(body.success).toBe(true)
+      expect(body.message).toBe('Successfully disconnected account')
 
       // Verify plaidClient.itemRemove was called and failed as expected
       expect(plaidClient.itemRemove).toHaveBeenCalledWith({
@@ -281,7 +292,7 @@ describe('Plaid Router', () => {
     })
   })
 
-  describe('POST /api/plaid/sync/:itemId', () => {
+  describe('POST /api/finance/plaid/sync/:itemId', () => {
     // Changed describe block
     it('should return 200 and sync accounts successfully', async () => {
       const { db } = await import('@hominem/utils/db')
@@ -307,11 +318,13 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/sync/test-plaid-item-id', // Corrected URL
+        url: '/api/finance/plaid/sync/test-plaid-item-id', // Corrected URL
         // payload: { plaidItemId: 'test-plaid-item-id' }, // Removed from payload
       })
 
-      assertSuccessResponse(response)
+      const body = (await assertSuccessResponse(response)) as PlaidApiResponse
+      expect(body.success).toBe(true)
+      expect(body.message).toBe('Sync job queued successfully')
     })
 
     it('should return 400 if Plaid item not found', async () => {
@@ -321,39 +334,37 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/sync/test-plaid-item-id', // Corrected URL
+        url: '/api/finance/plaid/sync/test-plaid-item-id', // Corrected URL
         // payload: { plaidItemId: 'test-plaid-item-id' }, // Removed from payload
       })
-      assertErrorResponse(response, 404)
+      await assertErrorResponse(response, 404)
     })
 
     it('should return 500 if queue fails', async () => {
       const { db } = await import('@hominem/utils/db')
-      const { globalMocks } = await import('../../../test/api-test-utils.js')
 
       const testPlaidItem = createTestData.plaidItem({ id: 'test-plaid-item-id' })
       vi.mocked(db.query.plaidItems.findFirst).mockResolvedValue(testPlaidItem)
 
-      // Mock queue failure
-      vi.mocked(globalMocks.queue.add).mockRejectedValue(new Error('Queue error'))
+      // Mock queue failure using the exported mock function
+      mockQueueAdd.mockRejectedValue(new Error('Queue error'))
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/sync/test-plaid-item-id', // Corrected URL
+        url: '/api/finance/plaid/sync/test-plaid-item-id', // Corrected URL
         // payload: { plaidItemId: 'test-plaid-item-id' }, // Removed from payload
       })
 
-      const body = assertErrorResponse(response, 500)
-      expect(body.error).toBe('Internal Server Error')
+      const body = await assertErrorResponse(response, 500)
+      expect(body.error).toBe('Failed to queue sync job')
     })
   })
 
-  describe('POST /api/plaid/webhook', () => {
+  describe('POST /api/finance/plaid/webhook', () => {
     test('handles valid transaction webhook', async () => {
       const { verifyPlaidWebhookSignature } = await import('../../lib/plaid.js')
       const { db } = await import('@hominem/utils/db')
       const { parseJsonResponse } = await import('../../../test/api-test-utils.js') // Import parseJsonResponse
-      const { globalMocks } = await import('../../../test/api-test-utils.js')
 
       const mockPlaidItem = createTestData.plaidItem()
 
@@ -361,11 +372,11 @@ describe('Plaid Router', () => {
       vi.mocked(db.query.plaidItems.findFirst).mockResolvedValue(mockPlaidItem)
 
       // Reset queue mock to success for this test
-      vi.mocked(globalMocks.queue.add).mockResolvedValue({} as never)
+      mockQueueAdd.mockResolvedValue({} as never)
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/webhook',
+        url: '/api/finance/plaid/webhook',
         payload: {
           webhook_type: 'TRANSACTIONS',
           webhook_code: 'DEFAULT_UPDATE',
@@ -374,9 +385,9 @@ describe('Plaid Router', () => {
       })
 
       // Custom assertion for this specific endpoint
-      expect(response.statusCode).toBe(200)
-      const body = parseJsonResponse<PlaidApiResponse>(response)
-      expect(body.received).toBe(true)
+      expect(response.status).toBe(200)
+      const body = await parseJsonResponse<PlaidApiResponse>(response)
+      expect(body.success).toBe(true)
     })
 
     test('rejects invalid webhook signature', async () => {
@@ -386,7 +397,7 @@ describe('Plaid Router', () => {
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
-        url: '/api/plaid/webhook',
+        url: '/api/finance/plaid/webhook',
         payload: {
           webhook_type: 'TRANSACTIONS',
           webhook_code: 'DEFAULT_UPDATE',
@@ -394,7 +405,7 @@ describe('Plaid Router', () => {
         },
       })
 
-      assertErrorResponse(response, 401)
+      await assertErrorResponse(response, 401)
     })
   })
 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
+import { useAuth } from '~/lib/supabase'
 import { AlertCircle, Building2, CreditCard, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { usePlaidLink, type PlaidLinkOnExit, type PlaidLinkOnSuccess } from 'react-plaid-link'

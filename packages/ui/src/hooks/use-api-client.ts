@@ -1,7 +1,13 @@
-import { useAuth } from '@clerk/react-router'
+import { createClient } from '@supabase/supabase-js'
 import { useCallback, useMemo, useState } from 'react'
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Create Supabase client for browser usage
+const supabase =
+  SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null
 
 type FetchOptions<T> = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -16,17 +22,16 @@ type ApiState = {
 }
 
 /**
- * React hook for API client that handles fetch requests with authentication
+ * React hook for API client that handles fetch requests with Supabase authentication
  */
 export function useApiClient() {
-  const { getToken } = useAuth()
   const [state, setState] = useState<ApiState>({
     isLoading: false,
     error: null,
   })
 
   /**
-   * Base fetch function with authentication
+   * Base fetch function with Supabase authentication
    */
   const fetchApi = useCallback(
     async <T, S>(endpoint: string, options: FetchOptions<T> = {}): Promise<S> => {
@@ -42,10 +47,14 @@ export function useApiClient() {
           defaultHeaders['Content-Type'] = 'application/json'
         }
 
-        // Get token from Clerk client-side
-        const token = await getToken()
-        if (token) {
-          defaultHeaders.Authorization = `Bearer ${token}`
+        // Get token from Supabase session
+        if (supabase) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+          if (session?.access_token) {
+            defaultHeaders.Authorization = `Bearer ${session.access_token}`
+          }
         }
 
         const res = await fetch(`${API_URL}${endpoint}`, {
@@ -80,7 +89,7 @@ export function useApiClient() {
         throw error
       }
     },
-    [getToken]
+    []
   )
 
   /**

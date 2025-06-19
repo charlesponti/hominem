@@ -1,5 +1,5 @@
-import { getServerSession } from '@/lib/supabase/server'
 import { Outlet, redirect, type LoaderFunctionArgs } from 'react-router'
+import { getServerSession } from '~/lib/supabase/server'
 
 export async function loader(loaderArgs: LoaderFunctionArgs) {
   const session = await getServerSession(loaderArgs.request)

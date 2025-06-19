@@ -78,7 +78,22 @@ export class SupabaseStorageService {
     const { data, error } = await this.client.storage.from(this.bucketName).download(filePath)
 
     if (error) {
-      throw new Error(`Failed to download file: ${error.message}`)
+      // Enhanced error logging for Supabase download issues
+      console.error('Supabase download error details:', {
+        error,
+        errorMessage: error.message,
+        errorName: error.name,
+        filePath,
+        bucketName: this.bucketName,
+      })
+      throw new Error(
+        `Failed to download file: ${JSON.stringify({
+          message: error.message,
+          name: error.name,
+          filePath,
+          bucketName: this.bucketName,
+        })}`
+      )
     }
 
     if (!data) {

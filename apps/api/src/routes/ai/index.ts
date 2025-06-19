@@ -1,10 +1,6 @@
-import type { FastifyInstance } from 'fastify'
-import { contentStrategyRoutes } from './content-strategy.router.js'
-import { tourRoutes } from './tour.router.js'
-import { tweetGenerationRoutes } from './tweet-generation.router.js'
+import { Hono } from 'hono'
+import { aiTourRoutes } from './ai.tour.js'
 
-export async function aiRoutes(fastify: FastifyInstance) {
-  await fastify.register(contentStrategyRoutes)
-  await fastify.register(tourRoutes)
-  await fastify.register(tweetGenerationRoutes)
-}
+export const aiRoutes = new Hono()
+
+aiRoutes.route('/tour', aiTourRoutes)

@@ -12,8 +12,8 @@ const envSchema = z.object({
   NOTES_URL: z.string().url().default('http://localhost:4445'),
   CHAT_URL: z.string().url().default('http://localhost:4446'),
 
-  CLERK_SECRET_KEY: z.string(),
-  CLERK_PUBLISHABLE_KEY: z.string(),
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string(),
 
   GOOGLE_API_KEY: z.string().default(''),
   OPENAI_API_KEY: z.string(),
@@ -25,6 +25,10 @@ const envSchema = z.object({
 
   TWITTER_CLIENT_ID: z.string().default(''),
   TWITTER_CLIENT_SECRET: z.string().default(''),
+
+  SENDGRID_API_KEY: z.string().default(''),
+  SENDGRID_SENDER_EMAIL: z.string().default(''),
+  SENDGRID_SENDER_NAME: z.string().default(''),
 })
 
 export const env = new Proxy({} as z.infer<typeof envSchema>, {

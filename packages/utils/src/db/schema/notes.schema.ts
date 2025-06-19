@@ -3,11 +3,11 @@ import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-or
 import { z } from 'zod'
 import { users } from './users.schema'
 
-export const content = pgTable(
+export const notes = pgTable(
   'notes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    type: text('type').notNull().$type<ContentType>().default('note'),
+    type: text('type').notNull().$type<NoteContentType>().default('note'),
     title: text('title'),
     content: text('content').notNull(),
     tags: json('tags').$type<Array<ContentTag>>().default([]),
@@ -34,9 +34,9 @@ export const content = pgTable(
   ]
 )
 
-export const contentRelations = relations(content, ({ one }) => ({
+export const notesRelations = relations(notes, ({ one }) => ({
   user: one(users, {
-    fields: [content.userId],
+    fields: [notes.userId],
     references: [users.id],
   }),
 }))
@@ -56,19 +56,18 @@ export const ContentTagSchema = z.object({
 export type ContentTag = z.infer<typeof ContentTagSchema>
 
 /**
- * ContentType defines the type of content for specialized behavior
- * This allows us to extend with new content types without creating new data silos
+ * ContentType defines the type of personal notes for specialized behavior
+ * These are private user notes, not publishable content
  */
-export const ContentTypeSchema = z.enum([
+export const NoteContentTypeSchema = z.enum([
   'note', // Standard note
   'task', // Task with status tracking
   'timer', // Time-trackable task
   'journal', // Journal entry
   'document', // Longer form document
-  'tweet', // Tweet content (posted to or imported from Twitter/X)
 ])
 
-export type ContentType = z.infer<typeof ContentTypeSchema>
+export type NoteContentType = z.infer<typeof NoteContentTypeSchema>
 
 /**
  * Task status schema for task-type content
@@ -121,5 +120,5 @@ export const TweetMetadataSchema = z.object({
 
 export type TweetMetadata = z.infer<typeof TweetMetadataSchema>
 
-export type Content = typeof content.$inferSelect
-export type ContentInsert = typeof content.$inferInsert
+export type Note = typeof notes.$inferSelect
+export type NoteInsert = typeof notes.$inferInsert

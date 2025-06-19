@@ -1,6 +1,7 @@
-import sharp from 'sharp'
-import pdf from 'pdf-parse'
 import mammoth from 'mammoth'
+import { Buffer } from 'node:buffer'
+import PDFParser from 'pdf2json'
+import sharp from 'sharp'
 import { openai } from './openai.server.js'
 
 export interface ProcessedFile {
@@ -11,7 +12,7 @@ export interface ProcessedFile {
   size: number
   content?: string
   textContent?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   thumbnail?: string
   duration?: number
   transcription?: string
@@ -28,7 +29,7 @@ export async function processFile(
     originalName,
     type: getFileType(mimetype),
     mimetype,
-    size: buffer.byteLength
+    size: buffer.byteLength,
   }
 
   try {
@@ -48,28 +49,29 @@ export async function processFile(
     console.error(`Error processing file ${originalName}:`, error)
     return {
       ...baseFile,
-      metadata: { error: 'Failed to process file' }
+      metadata: { error: 'Failed to process file' },
     }
   }
 }
 
 async function processImage(buffer: ArrayBuffer, file: ProcessedFile): Promise<ProcessedFile> {
   const imageBuffer = Buffer.from(buffer)
-  
+
   // Get image metadata
   const metadata = await sharp(imageBuffer).metadata()
-  
+
   // Create thumbnail
   const thumbnailBuffer = await sharp(imageBuffer)
     .resize(200, 200, { fit: 'inside' })
     .jpeg({ quality: 80 })
     .toBuffer()
-  
+
   const thumbnail = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`
 
   // Use GPT-4 Vision to analyze the image if it's not too large
   let textContent = ''
-  if (buffer.byteLength < 20 * 1024 * 1024) { // 20MB limit for Vision API
+  if (buffer.byteLength < 20 * 1024 * 1024) {
+    // 20MB limit for Vision API
     try {
       const base64Image = Buffer.from(buffer).toString('base64')
       const response = await openai.chat.completions.create({
@@ -80,20 +82,20 @@ async function processImage(buffer: ArrayBuffer, file: ProcessedFile): Promise<P
             content: [
               {
                 type: 'text',
-                text: 'Please describe this image in detail. Focus on key elements, text, and context that would be useful for answering questions about it.'
+                text: 'Please describe this image in detail. Focus on key elements, text, and context that would be useful for answering questions about it.',
               },
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:${file.mimetype};base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:${file.mimetype};base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
-        max_tokens: 500
+        max_tokens: 500,
       })
-      
+
       textContent = response.choices[0]?.message?.content || ''
     } catch (error) {
       console.warn('Failed to analyze image with GPT-4 Vision:', error)
@@ -109,8 +111,8 @@ async function processImage(buffer: ArrayBuffer, file: ProcessedFile): Promise<P
       height: metadata.height,
       format: metadata.format,
       hasAlpha: metadata.hasAlpha,
-      colorSpace: metadata.space
-    }
+      colorSpace: metadata.space,
+    },
   }
 }
 
@@ -124,8 +126,20 @@ async function processDocument(
   try {
     if (mimetype === 'application/pdf') {
       const pdfBuffer = Buffer.from(buffer)
-      const data = await pdf(pdfBuffer)
-      textContent = data.text
+      textContent = await new Promise<string>((resolve, reject) => {
+        const parser = new PDFParser(undefined, true)
+        parser.on('pdfParser_dataError', (data) => {
+          reject(data.parserError)
+        })
+        parser.on('pdfParser_dataReady', () => {
+          try {
+            resolve(parser.getRawTextContent())
+          } catch (e) {
+            reject(e)
+          }
+        })
+        parser.parseBuffer(pdfBuffer)
+      })
     } else if (
       mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       mimetype === 'application/msword'
@@ -146,16 +160,17 @@ async function processDocument(
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful assistant that summarizes documents. Provide a concise summary highlighting the key points and main topics.'
+              content:
+                'You are a helpful assistant that summarizes documents. Provide a concise summary highlighting the key points and main topics.',
             },
             {
               role: 'user',
-              content: `Please summarize this document:\n\n${textContent.slice(0, 10000)}${textContent.length > 10000 ? '...' : ''}`
-            }
+              content: `Please summarize this document:\n\n${textContent.slice(0, 10000)}${textContent.length > 10000 ? '...' : ''}`,
+            },
           ],
-          max_tokens: 300
+          max_tokens: 300,
         })
-        
+
         summary = response.choices[0]?.message?.content || ''
       } catch (error) {
         console.warn('Failed to summarize document:', error)
@@ -169,15 +184,15 @@ async function processDocument(
       metadata: {
         characterCount: textContent.length,
         wordCount: textContent.split(/\s+/).length,
-        summary
-      }
+        summary,
+      },
     }
   } catch (error) {
     console.error('Error processing document:', error)
     return {
       ...file,
       textContent: '',
-      metadata: { error: 'Failed to extract text from document' }
+      metadata: { error: 'Failed to extract text from document' },
     }
   }
 }
@@ -188,8 +203,8 @@ async function processAudio(buffer: ArrayBuffer, file: ProcessedFile): Promise<P
   return {
     ...file,
     metadata: {
-      needsTranscription: true
-    }
+      needsTranscription: true,
+    },
   }
 }
 
@@ -199,8 +214,8 @@ async function processVideo(buffer: ArrayBuffer, file: ProcessedFile): Promise<P
   return {
     ...file,
     metadata: {
-      needsProcessing: true
-    }
+      needsProcessing: true,
+    },
   }
 }
 
@@ -221,10 +236,10 @@ function getFileType(mimetype: string): ProcessedFile['type'] {
 
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }

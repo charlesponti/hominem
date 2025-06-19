@@ -1,20 +1,6 @@
 import { vi } from 'vitest'
 
-vi.mock('@hominem/utils/redis', () => ({
-  redis: {
-    duplicate: vi.fn(() => ({
-      on: vi.fn(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-      quit: vi.fn(() => new Promise((resolve) => resolve(null))),
-    })),
-    zadd: vi.fn(),
-    zremrangebyscore: vi.fn(),
-    zcard: vi.fn(),
-  },
-  checkRateLimit: vi.fn(),
-  waitForRateLimit: vi.fn(),
-}))
+// Redis is running in Docker for tests - no mocking needed
 
 vi.mock('sendgrid', () => ({
   setApiKey: vi.fn(),

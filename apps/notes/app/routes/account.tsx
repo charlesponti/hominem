@@ -1,13 +1,14 @@
-import { RedirectToSignIn, SignOutButton, useAuth } from '@clerk/react-router'
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { useToast } from '~/components/ui/use-toast'
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
+import { useAuth } from '~/lib/supabase'
 
 export default function AccountPage() {
-  const { userId } = useAuth()
+  const { user, logout } = useAuth()
   const { toast } = useToast()
   const { refetch } = useTwitterOAuth()
 
@@ -59,8 +60,20 @@ export default function AccountPage() {
     })
   }
 
-  if (!userId) {
-    return <RedirectToSignIn />
+  const handleSignOut = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
   }
 
   return (
@@ -99,9 +112,9 @@ export default function AccountPage() {
                 <h3 className="font-medium">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">End your current session.</p>
               </div>
-              <SignOutButton>
-                <Button variant="outline">Sign Out</Button>
-              </SignOutButton>
+              <Button variant="outline" onClick={handleSignOut}>
+                Sign Out
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -1,10 +1,11 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import type { BudgetCategory } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useAuth } from '~/lib/supabase'
+import { useMonthlyStats } from './use-monthly-stats'
 
 const BUDGET_DATA_KEY_PREFIX = 'budget_data'
 
@@ -186,5 +187,209 @@ export function useBudgetHistory(months = 6) {
     isLoadingHistory: query.isLoading,
     errorHistory: query.error,
     refetchHistory: query.refetch,
+  }
+}
+
+// Personal budget calculation types
+export type PersonalBudgetInput = {
+  income: number
+  expenses: Array<{
+    category: string
+    amount: number
+  }>
+}
+
+export type PersonalBudgetResult = {
+  income: number
+  totalExpenses: number
+  surplus: number
+  savingsRate: number
+  categories: Array<{
+    category: string
+    amount: number
+    percentage: number
+  }>
+  projections: Array<{
+    month: number
+    savings: number
+    totalSaved: number
+  }>
+  calculatedAt: string
+  source: 'manual' | 'categories'
+}
+
+// Hook for personal budget calculation
+export function usePersonalBudgetCalculation() {
+  const api = useApiClient()
+  const { getAuthHeaders, userId } = useAuthHeaders()
+  const queryClient = useQueryClient()
+
+  const calculateBudget = useMutation<PersonalBudgetResult, Error, PersonalBudgetInput | undefined>(
+    {
+      mutationFn: async (manualData) => {
+        const headers = await getAuthHeaders()
+        return await api.post<PersonalBudgetInput | undefined, PersonalBudgetResult>(
+          '/api/finance/budget/calculate',
+          manualData,
+          { headers }
+        )
+      },
+      onSuccess: () => {
+        // Optionally invalidate related queries
+        queryClient.invalidateQueries({ queryKey: [BUDGET_DATA_KEY_PREFIX] })
+      },
+    }
+  )
+
+  return {
+    calculateBudget,
+    isLoading: calculateBudget.isPending,
+    isError: calculateBudget.isError,
+    error: calculateBudget.error,
+    data: calculateBudget.data,
+  }
+}
+
+// Hook for budget vs actual analysis
+export function useBudgetVsActual(monthYear?: string) {
+  const { categories } = useBudgetCategories()
+  const { stats: actualSpending, isLoading: statsLoading } = useMonthlyStats(
+    monthYear || new Date().toISOString().slice(0, 7)
+  )
+
+  const budgetVsActual = useMemo(() => {
+    if (!categories || !actualSpending) return []
+
+    return categories
+      .filter((cat) => cat.type === 'expense')
+      .map((category) => {
+        const budgetedAmount = Number.parseFloat(category.averageMonthlyExpense || '0')
+        const actualAmount =
+          actualSpending.categorySpending?.find(
+            (spending: { name: string; amount: number }) => spending.name === category.name
+          )?.amount || 0
+
+        const variance = actualAmount - budgetedAmount
+        const percentageUsed = budgetedAmount > 0 ? (actualAmount / budgetedAmount) * 100 : 0
+
+        return {
+          ...category,
+          budgetedAmount,
+          actualAmount,
+          variance,
+          percentageUsed,
+          isOverBudget: variance > 0,
+          status: percentageUsed > 100 ? 'over' : percentageUsed > 90 ? 'warning' : 'good',
+        }
+      })
+  }, [categories, actualSpending])
+
+  const totals = useMemo(() => {
+    const totalBudgeted = budgetVsActual.reduce((sum, item) => sum + item.budgetedAmount, 0)
+    const totalActual = budgetVsActual.reduce((sum, item) => sum + item.actualAmount, 0)
+    const totalVariance = totalActual - totalBudgeted
+
+    return {
+      totalBudgeted,
+      totalActual,
+      totalVariance,
+      overallPercentage: totalBudgeted > 0 ? (totalActual / totalBudgeted) * 100 : 0,
+    }
+  }, [budgetVsActual])
+
+  return {
+    budgetVsActual,
+    totals,
+    isLoading: !categories || statsLoading,
+  }
+}
+
+interface TransactionCategory {
+  name: string
+  transactionCount: number
+  totalAmount: number
+  averageAmount: number
+  suggestedBudget: number
+}
+
+interface BulkCreateFromTransactionsInput {
+  categories: Array<{
+    name: string
+    type: 'income' | 'expense'
+    allocatedAmount?: number
+  }>
+}
+
+export function useTransactionCategories() {
+  const api = useApiClient()
+  const { getAuthHeaders, userId } = useAuthHeaders()
+  const queryKey = [BUDGET_DATA_KEY_PREFIX, 'transaction-categories', userId]
+
+  const query = useQuery<TransactionCategory[], Error>({
+    queryKey,
+    queryFn: async () => {
+      const headers = await getAuthHeaders()
+      return await api.get<never, TransactionCategory[]>(
+        '/api/finance/budget/transaction-categories',
+        { headers }
+      )
+    },
+    enabled: !!userId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+
+  return {
+    categories: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  }
+}
+
+export function useBulkCreateFromTransactions() {
+  const api = useApiClient()
+  const queryClient = useQueryClient()
+  const { getAuthHeaders, userId } = useAuthHeaders()
+  const [error, setError] = useState<Error | null>(null)
+
+  const mutation = useMutation<
+    { 
+      success: boolean
+      message: string
+      categories: BudgetCategory[]
+      created: number
+      skipped: number
+    },
+    Error,
+    BulkCreateFromTransactionsInput
+  >({
+    mutationFn: async (data) => {
+      const headers = await getAuthHeaders()
+      return await api.post<
+        BulkCreateFromTransactionsInput,
+        { 
+          success: boolean
+          message: string
+          categories: BudgetCategory[]
+          created: number
+          skipped: number
+        }
+      >('/api/finance/budget/bulk-create-from-transactions', data, { headers })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [BUDGET_DATA_KEY_PREFIX, 'categories', userId] })
+      queryClient.invalidateQueries({
+        queryKey: [BUDGET_DATA_KEY_PREFIX, 'transaction-categories', userId],
+      })
+    },
+    onError: (err) => setError(err),
+  })
+
+  return {
+    bulkCreate: mutation.mutateAsync,
+    isLoading: mutation.isLoading,
+    error: mutation.error || error,
+    isSuccess: mutation.isSuccess,
+    data: mutation.data,
   }
 }

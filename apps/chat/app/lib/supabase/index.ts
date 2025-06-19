@@ -1,6 +1,4 @@
-export { AuthProvider, useAuthContext } from './auth-context'
-export { useAuth } from './auth-hooks'
-export { supabase } from './client'
+export { AuthProvider, useAuth, useAuthContext } from './auth-context'
+export { createClient } from './client'
 export { ProtectedRoute } from './protected-route'
 export { getServerSession, requireAuth } from './server'
-export type { AuthContextType, AuthState } from './types'

@@ -1,5 +1,3 @@
-import { ClerkProvider } from '@clerk/react-router'
-import { rootAuthLoader } from '@clerk/react-router/ssr.server'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
@@ -8,11 +6,10 @@ import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
 import type { Route } from './+types/root'
 import './globals.css'
 import { getQueryClient } from './lib/get-query-client'
+import { AuthProvider } from './lib/supabase/auth-context'
 import { UserProvider } from './lib/user-context'
 
-export async function loader(args: Route.LoaderArgs) {
-  return rootAuthLoader(args)
-}
+// No loader needed for Supabase auth
 
 export const meta: Route.MetaFunction = () => {
   return [
@@ -86,7 +83,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+// Supabase configuration is handled in the client
 
 function AppProviders({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient()
@@ -98,25 +95,20 @@ function AppProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <FeatureFlagsProvider flags={featureFlags}>
-        <UserProvider>{children}</UserProvider>
-      </FeatureFlagsProvider>
+      <AuthProvider>
+        <FeatureFlagsProvider flags={featureFlags}>
+          <UserProvider>{children}</UserProvider>
+        </FeatureFlagsProvider>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }
 
-export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
+export default function App() {
   return (
-    <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
-      loaderData={loaderData}
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
-    >
-      <AppProviders>
-        <Outlet />
-      </AppProviders>
-    </ClerkProvider>
+    <AppProviders>
+      <Outlet />
+    </AppProviders>
   )
 }
 

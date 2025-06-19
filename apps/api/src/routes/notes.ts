@@ -1,239 +1,239 @@
-import {
-  ContentService,
-  ForbiddenError,
-  TaskMetadataSchema,
-  TweetMetadataSchema,
-} from '@hominem/utils/services'
-import type { FastifyInstance } from 'fastify'
+import { NotesService } from '@hominem/utils/services'
+import { zValidator } from '@hono/zod-validator'
+import { Hono } from 'hono'
 import { z } from 'zod'
-import { handleError } from '../lib/errors'
-import { verifyAuth } from '../middleware/auth'
+import { ForbiddenError } from '../lib/errors.js'
+import { requireAuth } from '../middleware/auth.js'
 
-// Content type enum
-const ContentTypeEnum = z.enum(['note', 'task', 'timer', 'journal', 'document', 'tweet'])
+export const notesRoutes = new Hono()
 
-const contentTagSchema = z.object({
-  value: z.string(),
-})
+const notesService = new NotesService()
 
-const createContentSchema = z.object({
-  type: ContentTypeEnum.default('note'),
+// Note creation schema (personal notes only)
+const createNoteSchema = z.object({
+  type: z.enum(['note', 'task', 'timer', 'journal', 'document']).default('note'),
+  title: z.string().optional(),
   content: z.string(),
-  title: z.string().optional(),
-  tags: z.array(contentTagSchema).optional().default([]),
-  taskMetadata: TaskMetadataSchema.optional().nullable(),
-  tweetMetadata: TweetMetadataSchema.optional().nullable(),
-  analysis: z.record(z.unknown()).optional(),
+  tags: z
+    .array(z.object({ value: z.string() }))
+    .optional()
+    .default([]),
+  mentions: z
+    .array(z.object({ id: z.string(), name: z.string() }))
+    .optional()
+    .default([]),
+  taskMetadata: z
+    .object({
+      status: z.enum(['todo', 'in-progress', 'done', 'archived']).default('todo'),
+      priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium').optional(),
+      dueDate: z.string().nullable().optional(),
+      startTime: z.string().optional(),
+      firstStartTime: z.string().optional(),
+      endTime: z.string().optional(),
+      duration: z.number().optional(),
+    })
+    .optional(),
 })
 
-const updateContentSchema = z.object({
-  type: ContentTypeEnum.optional(),
+// Note update schema
+const updateNoteSchema = z.object({
+  type: z.enum(['note', 'task', 'timer', 'journal', 'document']).optional(),
+  title: z.string().optional(),
   content: z.string().optional(),
-  title: z.string().optional(),
-  tags: z.array(contentTagSchema).optional(),
-  taskMetadata: TaskMetadataSchema.optional(),
-  tweetMetadata: TweetMetadataSchema.optional(),
-  analysis: z.record(z.unknown()).optional(),
+  tags: z.array(z.object({ value: z.string() })).optional(),
+  mentions: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
+  taskMetadata: z
+    .object({
+      status: z.enum(['todo', 'in-progress', 'done', 'archived']).default('todo'),
+      priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium').optional(),
+      dueDate: z.string().nullable().optional(),
+      startTime: z.string().optional(),
+      firstStartTime: z.string().optional(),
+      endTime: z.string().optional(),
+      duration: z.number().optional(),
+    })
+    .optional(),
 })
 
-const contentIdSchema = z.object({
-  id: z.string(),
+// Note list query schema
+const listNotesSchema = z.object({
+  types: z
+    .string()
+    .optional()
+    .transform(
+      (val) => val?.split(',') as ('note' | 'task' | 'timer' | 'journal' | 'document')[] | undefined
+    ),
+  query: z.string().optional(),
+  tags: z
+    .string()
+    .optional()
+    .transform((val) => val?.split(',') as string[] | undefined),
+  since: z.string().optional(),
 })
 
-export async function contentRoutes(fastify: FastifyInstance) {
-  const contentService = new ContentService()
+// Note ID param schema
+const noteIdSchema = z.object({
+  id: z.string().uuid('Invalid note ID format'),
+})
 
-  // Create new content
-  fastify.post('/', { preHandler: verifyAuth }, async (request, reply) => {
-    try {
-      const userId = request.userId
-      if (!userId) {
-        fastify.log.error('Create content failed: Missing user ID')
-        return reply.status(401).send({ error: 'User ID is required' })
-      }
+// Get all notes for user
+notesRoutes.get('/', requireAuth, zValidator('query', listNotesSchema), async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
 
-      fastify.log.info(`Creating content for user ${userId}`)
+  try {
+    const filters = c.req.valid('query')
+    const notes = await notesService.list(userId, filters)
+    return c.json({ notes })
+  } catch (error) {
+    console.error('Error fetching notes:', error)
+    return c.json(
+      {
+        error: 'Failed to fetch notes',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})
 
-      const validationResult = createContentSchema.safeParse(request.body)
-      if (!validationResult.success) {
-        const validationErrors = validationResult.error.format()
-        fastify.log.error({
-          msg: 'Create content validation failed',
-          userId,
-          errors: validationErrors,
-        })
-        return reply.status(400).send({
-          error: 'Invalid content data',
-          details: validationErrors,
-        })
-      }
+// Create new note
+notesRoutes.post('/', requireAuth, zValidator('json', createNoteSchema), async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
 
-      const validatedData = validationResult.data
+  try {
+    const noteData = c.req.valid('json')
+    const newNote = await notesService.create({
+      ...noteData,
+      userId,
+    })
+    return c.json({ note: newNote }, 201)
+  } catch (error) {
+    console.error('Error creating note:', error)
+    return c.json(
+      {
+        error: 'Failed to create note',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})
 
-      fastify.log.info({
-        msg: 'Attempting to create content',
-        userId,
-        contentType: validatedData.type,
-        contentLength: validatedData.content.length,
-        hasTitle: !!validatedData.title,
-        tagsCount: validatedData.tags?.length || 0,
-      })
+// Get note by ID
+notesRoutes.get('/:id', requireAuth, zValidator('param', noteIdSchema), async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
 
-      const result = await contentService.create({ ...validatedData, userId })
-
-      fastify.log.info({
-        msg: 'Content created successfully',
-        userId,
-        contentId: result.id,
-        contentType: result.type,
-      })
-
-      return result
-    } catch (error) {
-      fastify.log.error({
-        msg: 'Create content error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        errorName: error instanceof Error ? error.name : 'Unknown',
-        userId: request.userId,
-      })
-
-      if (error instanceof ForbiddenError) {
-        // Keep if ForbiddenError is still relevant
-        return reply.status(403).send({ error: error.message })
-      }
-      if (error instanceof z.ZodError) {
-        return reply.status(400).send({
-          error: 'Validation failed',
-          details: error.format(),
-        })
-      }
-      return handleError(error as Error, reply)
+  try {
+    const { id } = c.req.valid('param')
+    const note = await notesService.getById(id, userId)
+    return c.json({ note })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Content not found') {
+      return c.json({ error: 'Note not found' }, 404)
     }
-  })
+    console.error('Error fetching note:', error)
+    return c.json(
+      {
+        error: 'Failed to fetch note',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})
 
-  const listContentQuerySchema = z.object({
-    types: z
-      .union([z.array(ContentTypeEnum), ContentTypeEnum])
-      .optional()
-      .transform((val) => {
-        if (!val) return undefined
-        return Array.isArray(val) ? val : [val]
-      }),
-    query: z.string().optional(),
-    tags: z
-      .string()
-      .transform((val) => (val ? val.split(',') : undefined))
-      .optional(),
-  })
-
-  // List content with optional filters
-  fastify.get('/', { preHandler: verifyAuth }, async (request, reply) => {
-    try {
-      const userId = request.userId
-      if (!userId) {
-        return reply.status(401).send({ error: 'User ID is required' })
-      }
-
-      const { types, query, tags } = listContentQuerySchema.parse(request.query)
-      fastify.log.info({
-        msg: 'Listing content for user',
-        userId,
-        filters: { types, query, tags },
-      })
-      // Call contentService.list with currently supported filters
-      const result = await contentService.list(userId, { types, query, tags })
-      return result
-    } catch (error) {
-      return handleError(error as Error, reply)
+// Update note
+notesRoutes.put(
+  '/:id',
+  requireAuth,
+  zValidator('param', noteIdSchema),
+  zValidator('json', updateNoteSchema),
+  async (c) => {
+    const userId = c.get('userId')
+    if (!userId) {
+      throw ForbiddenError('Unauthorized')
     }
-  })
 
-  // Get content by ID
-  fastify.get('/:id', { preHandler: verifyAuth }, async (request, reply) => {
     try {
-      const userId = request.userId
-      if (!userId) {
-        return reply.status(401).send({ error: 'User ID is required' })
-      }
-      const { id } = contentIdSchema.parse(request.params)
-      const result = await contentService.getById(id, userId)
-      return result
-    } catch (error) {
-      return handleError(error as Error, reply)
-    }
-  })
-
-  // Update content
-  fastify.put('/:id', { preHandler: verifyAuth }, async (request, reply) => {
-    try {
-      const userId = request.userId
-      if (!userId) {
-        return reply.status(401).send({ error: 'User ID is required' })
-      }
-      const { id } = contentIdSchema.parse(request.params)
-      const validatedData = updateContentSchema.parse(request.body)
-      // Ensure ContentInput matches what ContentService.update expects
-      const result = await contentService.update({
-        ...validatedData,
+      const { id } = c.req.valid('param')
+      const updateData = c.req.valid('json')
+      const updatedNote = await notesService.update({
         id,
         userId,
+        ...updateData,
       })
-      return result
+      return c.json({ note: updatedNote })
     } catch (error) {
-      return handleError(error as Error, reply)
-    }
-  })
-
-  // Delete content
-  fastify.delete('/:id', { preHandler: verifyAuth }, async (request, reply) => {
-    try {
-      const userId = request.userId
-      if (!userId) {
-        return reply.status(401).send({ error: 'User ID is required' })
+      if (error instanceof Error && error.message === 'Content not found') {
+        return c.json({ error: 'Note not found' }, 404)
       }
-      const { id } = contentIdSchema.parse(request.params)
-      const result = await contentService.delete(id, userId)
-      return result
-    } catch (error) {
-      return handleError(error as Error, reply)
+      console.error('Error updating note:', error)
+      return c.json(
+        {
+          error: 'Failed to update note',
+          details: error instanceof Error ? error.message : String(error),
+        },
+        500
+      )
     }
-  })
+  }
+)
 
-  // Sync multiple content items
-  const syncContentItemSchema = createContentSchema.extend({ id: z.string().optional() })
-  const syncContentRequestSchema = z.array(syncContentItemSchema)
+// Delete note
+notesRoutes.delete('/:id', requireAuth, zValidator('param', noteIdSchema), async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
 
-  fastify.post('/sync', { preHandler: verifyAuth }, async (request, reply) => {
-    try {
-      const userId = request.userId
-      if (!userId) {
-        return reply.status(401).send({ error: 'User ID is required' })
-      }
-
-      const validationResult = syncContentRequestSchema.safeParse(request.body)
-      if (!validationResult.success) {
-        return reply
-          .status(400)
-          .send({ error: 'Invalid sync data', details: validationResult.error.format() })
-      }
-
-      const itemsToSync = validationResult.data
-      const itemsWithUserId = itemsToSync.map((item) => ({
-        ...item,
-        userId,
-        mentions: [],
-        title: !item.title ? null : item.title,
-        tags: item.tags || [],
-        taskMetadata: !item.taskMetadata ? null : item.taskMetadata,
-        tweetMetadata: !item.tweetMetadata ? null : item.tweetMetadata,
-        analysis: !item.analysis ? null : item.analysis,
-      }))
-
-      const result = await contentService.sync(itemsWithUserId, userId)
-      return result
-    } catch (error) {
-      return handleError(error as Error, reply)
+  try {
+    const { id } = c.req.valid('param')
+    await notesService.delete(id, userId)
+    return c.body(null, 204)
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Content not found') {
+      return c.json({ error: 'Note not found' }, 404)
     }
-  })
-}
+    console.error('Error deleting note:', error)
+    return c.json(
+      {
+        error: 'Failed to delete note',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})
+
+// Sync notes (for offline sync)
+notesRoutes.post('/sync', requireAuth, async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
+
+  try {
+    const body = await c.req.json()
+    const itemsToSync = body.items || []
+    const result = await notesService.sync(itemsToSync, userId)
+    return c.json(result)
+  } catch (error) {
+    console.error('Error syncing notes:', error)
+    return c.json(
+      {
+        error: 'Failed to sync notes',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})

@@ -669,8 +669,7 @@ export async function getBudgetCategorySuggestions(options: {
   }
 
   // You could add more sophisticated logic here, e.g., using ML or keyword mapping
-
-  return { suggestions: [...new Set(suggestions)] } // Return unique suggestions
+  return { suggestions: [...new Set(suggestions)] }
 }
 
 /**

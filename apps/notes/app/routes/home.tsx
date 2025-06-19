@@ -1,14 +1,4 @@
-import { getAuth } from '@clerk/react-router/ssr.server'
-import { Link, redirect } from 'react-router'
-import type { Route } from '../+types/root'
-
-export async function loader(loaderArgs: Route.LoaderArgs) {
-  const auth = await getAuth(loaderArgs)
-
-  if (auth.userId) {
-    return redirect('/notes')
-  }
-}
+import { Link } from 'react-router'
 
 export default function HomePage() {
   return (

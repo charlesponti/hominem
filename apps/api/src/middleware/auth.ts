@@ -1,59 +1,71 @@
-import { createClerkClient, getAuth } from '@clerk/fastify'
 import { db } from '@hominem/utils/db'
 import { users } from '@hominem/utils/schema'
+import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import { env } from '../lib/env.js'
+import type { Context, Next } from 'hono'
+import { randomUUID } from 'node:crypto'
+import { env } from '../lib/env'
 
-export const client = createClerkClient({
-  publishableKey: env.CLERK_PUBLISHABLE_KEY,
-  secretKey: env.CLERK_SECRET_KEY,
-})
+export const supabaseClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
 
-export async function getHominemUser(clerkId: string): Promise<typeof users.$inferSelect | null> {
-  if (!clerkId) return null
+export async function getHominemUser(
+  supabaseId: string
+): Promise<typeof users.$inferSelect | null> {
+  if (!supabaseId) return null
 
-  const [user] = await db.select().from(users).where(eq(users.clerkId, clerkId))
+  const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseId))
 
-  // Create a user for this clerk user if one does not exist
+  // Create a user for this supabase user if one does not exist
   if (!user) {
-    const clerkUser = await client.users.getUser(clerkId)
-    if (clerkUser) {
-      const [newUser] = await db.insert(users).values({
-        id: crypto.randomUUID(),
-        email: clerkUser.emailAddresses[0].emailAddress,
-        clerkId,
-      })
-
+    const { data: supabaseUser, error } = await supabaseClient.auth.admin.getUserById(supabaseId)
+    if (supabaseUser?.user && !error) {
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          id: randomUUID(),
+          email: supabaseUser.user.email || '',
+          supabaseId,
+        })
+        .returning()
       return newUser
     }
   }
 
-  return user || null
+  return user
 }
 
-export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
-  // Skip authentication for specific public routes
-  const publicRoutes = ['/health', '/api/health', '/status', '/api/status']
-  if (publicRoutes.includes(request.url)) {
-    return
-  }
-
+export const authenticateUser = async (c: Context, next: Next) => {
   try {
-    const auth = getAuth(request)
-    if (!auth.userId) {
-      return reply.code(401).send({ error: 'Unauthorized' })
+    const authHeader = c.req.header('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: 'Missing or invalid authorization header' }, 401)
     }
 
-    const user = await getHominemUser(auth.userId)
-    if (!user) {
-      return reply.status(401).send({ error: 'Unauthorized' })
+    const token = authHeader.substring(7)
+    const {
+      data: { user },
+      error,
+    } = await supabaseClient.auth.getUser(token)
+
+    if (error || !user) {
+      return c.json({ error: 'Invalid token' }, 401)
     }
 
-    request.user = user
-    request.userId = user.id
+    const hominemUser = await getHominemUser(user.id)
+    if (!hominemUser) {
+      return c.json({ error: 'User not found' }, 401)
+    }
+
+    // Set user data in context
+    c.set('user', hominemUser)
+    c.set('userId', hominemUser.id)
+    c.set('supabaseId', user.id)
+
+    await next()
   } catch (error) {
-    request.log.error(error)
-    return reply.status(401).send({ error: 'Unauthorized' })
+    return c.json({ error: 'Authentication failed' }, 500)
   }
 }
+
+// Middleware for routes that require authentication
+export const requireAuth = authenticateUser

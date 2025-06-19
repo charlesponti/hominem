@@ -55,7 +55,6 @@ export class ChatDatabaseService {
         })
         .returning()
 
-      console.log(`Created new chat: ${chatId} for user: ${params.userId}`)
       return newChat
     } catch (error) {
       console.error('Failed to create chat:', error)
@@ -145,7 +144,6 @@ export class ChatDatabaseService {
       // Update chat's updatedAt timestamp
       await db.update(chat).set({ updatedAt: now }).where(eq(chat.id, params.chatId))
 
-      console.log(`Added message: ${messageId} to chat: ${params.chatId}`)
       return newMessage
     } catch (error) {
       console.error('Failed to add message:', error)
@@ -185,7 +183,6 @@ export class ChatDatabaseService {
         })
         .where(eq(chat.id, chatId))
 
-      console.log(`Updated chat title: ${chatId}`)
       return true
     } catch (error) {
       console.error('Failed to update chat title:', error)
@@ -198,10 +195,7 @@ export class ChatDatabaseService {
    */
   static async deleteChat(chatId: string): Promise<boolean> {
     try {
-      // Messages will be automatically deleted due to CASCADE foreign key
       await db.delete(chat).where(eq(chat.id, chatId))
-
-      console.log(`Deleted chat: ${chatId}`)
       return true
     } catch (error) {
       console.error('Failed to delete chat:', error)
