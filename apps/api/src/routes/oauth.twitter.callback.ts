@@ -99,8 +99,6 @@ oauthTwitterCallbackRoutes.get('/', zValidator('query', TwitterCallbackSchema), 
           expiresAt,
         })
         .where(eq(account.id, existingAccount[0].id))
-
-      console.log(`Updated Twitter account for user ${userId}`)
     } else {
       // Create new account record
       await db.insert(account).values({
@@ -115,8 +113,6 @@ oauthTwitterCallbackRoutes.get('/', zValidator('query', TwitterCallbackSchema), 
         tokenType: 'bearer',
         scope: TWITTER_SCOPES,
       })
-
-      console.log(`Created Twitter account for user ${userId}`)
     }
 
     // Redirect to success page

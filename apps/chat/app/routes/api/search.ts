@@ -38,8 +38,6 @@ export async function action({ request }: ActionFunctionArgs) {
         )
       }
 
-      console.log(`Performing web search for: "${query}"`)
-
       // Use cache for search results
       const searchData = await SearchCache.getOrCreate(query, maxResults, async () => {
         // For now, implement a simple web search using DuckDuckGo Instant Answer API

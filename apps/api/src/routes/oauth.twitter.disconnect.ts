@@ -42,7 +42,6 @@ oauthTwitterDisconnectRoutes.post(
       // Delete the account
       await db.delete(account).where(eq(account.id, accountId))
 
-      console.log(`Disconnected Twitter account ${accountId} for user ${userId}`)
       return c.json({
         success: true,
         message: 'Twitter account disconnected',

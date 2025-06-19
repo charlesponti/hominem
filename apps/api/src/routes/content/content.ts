@@ -2,16 +2,16 @@ import { ContentService } from '@hominem/utils/services'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { ForbiddenError } from '../lib/errors.js'
-import { requireAuth } from '../middleware/auth.js'
+import { ForbiddenError } from '../../lib/errors.js'
+import { requireAuth } from '../../middleware/auth.js'
 
 export const contentRoutes = new Hono()
 
 const contentService = new ContentService()
 
-// Content creation schema
+// Content creation schema (publishable content only)
 const createContentSchema = z.object({
-  type: z.enum(['note', 'task', 'timer', 'journal', 'document', 'tweet']).default('note'),
+  type: z.enum(['tweet', 'essay', 'blog_post', 'social_post']).default('tweet'),
   title: z.string().optional(),
   content: z.string(),
   tags: z

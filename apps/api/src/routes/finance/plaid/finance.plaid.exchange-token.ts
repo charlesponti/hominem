@@ -70,10 +70,6 @@ financePlaidExchangeTokenRoutes.post(
             updatedAt: new Date(),
           })
           .where(eq(plaidItems.id, existingItem.id))
-
-        console.log(
-          `Updated existing Plaid item for user ${userId} and institution ${institutionName}`
-        )
       } else {
         // Insert new plaid item
         await db.insert(plaidItems).values({
@@ -87,8 +83,6 @@ financePlaidExchangeTokenRoutes.post(
           updatedAt: new Date(),
           userId,
         })
-
-        console.log(`Created new Plaid item for user ${userId} and institution ${institutionName}`)
       }
 
       // Queue sync job
@@ -112,7 +106,6 @@ financePlaidExchangeTokenRoutes.post(
         }
       )
 
-      console.log(`Exchanged public token for user ${userId} and institution ${institutionName}`)
       return c.json({
         success: true,
         message: 'Successfully linked account. Your transactions will begin importing shortly.',

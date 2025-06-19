@@ -41,10 +41,6 @@ export async function action({ request }: ActionFunctionArgs) {
         )
       }
 
-      console.log(
-        `Transcribing audio file: ${audioFile.name}, size: ${audioFile.size} bytes, type: ${audioFile.type}`
-      )
-
       // Generate hash for caching
       const audioBuffer = await audioFile.arrayBuffer()
       const audioHash = crypto.createHash('sha256').update(Buffer.from(audioBuffer)).digest('hex')

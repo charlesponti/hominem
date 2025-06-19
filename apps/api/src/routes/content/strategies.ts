@@ -1,9 +1,12 @@
+import { google } from '@ai-sdk/google'
 import { ContentStrategySchema } from '@hominem/utils/schemas'
+import { contentTools } from '@hominem/utils/tools'
 import { zValidator } from '@hono/zod-validator'
+import { generateText } from 'ai'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../middleware/auth.js'
-import { ContentStrategiesService } from '../services/content-strategies.service.js'
+import { requireAuth } from '../../middleware/auth.js'
+import { ContentStrategiesService } from '../../services/content-strategies.service.js'
 
 export const contentStrategiesRoutes = new Hono()
 
@@ -38,27 +41,11 @@ contentStrategiesRoutes.post(
         return c.json({ error: 'User ID is required' }, 401)
       }
 
-      console.log(`Creating content strategy for user ${userId}`)
-
       const validatedData = c.req.valid('json')
-
-      console.log({
-        msg: 'Attempting to create content strategy',
-        userId,
-        title: validatedData.title,
-        hasDescription: !!validatedData.description,
-      })
 
       const result = await contentStrategiesService.create({
         ...validatedData,
         userId,
-      })
-
-      console.log({
-        msg: 'Content strategy created successfully',
-        userId,
-        contentStrategyId: result.id,
-        title: result.title,
       })
 
       return c.json(result, 201)
@@ -152,12 +139,6 @@ contentStrategiesRoutes.put(
         return c.json({ error: 'Content strategy not found' }, 404)
       }
 
-      console.log({
-        msg: 'Content strategy updated successfully',
-        userId,
-        contentStrategyId: result.id,
-      })
-
       return c.json(result)
     } catch (error) {
       console.error('Update content strategy error:', error)
@@ -191,12 +172,6 @@ contentStrategiesRoutes.delete(
         return c.json({ error: 'Content strategy not found' }, 404)
       }
 
-      console.log({
-        msg: 'Content strategy deleted successfully',
-        userId,
-        contentStrategyId: id,
-      })
-
       return c.body(null, 204)
     } catch (error) {
       console.error('Delete content strategy error:', error)
@@ -207,6 +182,70 @@ contentStrategiesRoutes.delete(
         },
         500
       )
+    }
+  }
+)
+
+// AI generation schema (moved from ai.content-strategy.ts)
+const generateStrategySchema = z.object({
+  topic: z.string().min(1, 'Topic is required'),
+  audience: z.string().min(1, 'Audience is required'),
+  platforms: z.array(z.string()).min(1, 'At least one platform is required'),
+})
+
+// Generate content strategy using AI
+contentStrategiesRoutes.post(
+  '/generate',
+  requireAuth,
+  zValidator('json', generateStrategySchema),
+  async (c) => {
+    try {
+      const { topic, audience, platforms } = c.req.valid('json')
+
+      const result = await generateText({
+        model: google('gemini-1.5-pro-latest'),
+        tools: {
+          content_generator: contentTools.content_generator,
+        },
+        system:
+          'You are a professional content strategist who helps create comprehensive content plans tailored to specific topics and audiences.',
+        messages: [
+          {
+            role: 'user',
+            content: `Create a comprehensive content strategy for the topic "${topic}" targeting the audience "${audience}". Include the following elements:
+        
+1. Key insights about the topic and audience.
+2. A detailed content plan including:
+    - Blog post ideas with titles, outlines, word counts, SEO keywords, and CTAs.
+    - Social media content ideas for platforms like ${platforms.join(', ')}.
+    - Visual content ideas such as infographics and image search terms.
+3. Monetization ideas and competitive analysis.
+        
+Ensure all content ideas are tailored to both the topic and audience.`,
+          },
+        ],
+        maxSteps: 5,
+      })
+
+      // Extract tool call result
+      const toolCall = result.response.messages.find((message) => message.role === 'tool')
+
+      if (toolCall && Array.isArray(toolCall.content) && toolCall.content.length > 0) {
+        const toolResult = toolCall.content[0] as { result: unknown }
+        return c.json(toolResult.result ?? {})
+      }
+
+      console.error(
+        'Content strategy generation did not produce the expected tool call output.',
+        result
+      )
+      return c.json({ error: 'Failed to extract content strategy from AI response' }, 500)
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return c.json({ error: 'Invalid input', details: error.issues }, 400)
+      }
+      console.error('Content Strategy API error:', error)
+      return c.json({ error: 'Failed to generate content strategy' }, 500)
     }
   }
 )

@@ -31,7 +31,6 @@ financePlaidDisconnectRoutes.delete('/:itemId', requireAuth, async (c) => {
       await plaidClient.itemRemove({
         access_token: plaidItem.accessToken,
       })
-      console.log(`Removed Plaid item ${itemId} from Plaid`)
     } catch (plaidError) {
       console.warn(`Failed to remove item from Plaid (continuing anyway): ${plaidError}`)
     }
@@ -46,7 +45,6 @@ financePlaidDisconnectRoutes.delete('/:itemId', requireAuth, async (c) => {
       })
       .where(eq(plaidItems.id, plaidItem.id))
 
-    console.log(`Disconnected Plaid item for user ${userId} and item ${itemId}`)
     return c.json({
       success: true,
       message: 'Successfully disconnected account',

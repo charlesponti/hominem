@@ -15,14 +15,14 @@ import { createWebSocketManager } from './lib/websocket.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { bookmarksRoutes } from './routes/bookmarks/index.js'
-import { contentStrategiesRoutes } from './routes/content-strategies.js'
-import { contentRoutes } from './routes/content.js'
+import { content } from './routes/content/index.js'
 import { financeRoutes } from './routes/finance/index.js'
 import { plaidRoutes } from './routes/finance/plaid/index.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
 import { listsRoutes } from './routes/lists.js'
 import { locationRoutes } from './routes/location.js'
+import { notesRoutes } from './routes/notes.js'
 import { oauthRoutes } from './routes/oauth/index.js'
 import { placesRoutes } from './routes/places/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
@@ -128,13 +128,13 @@ export function createServer(): Hono<AppEnv> {
   app.route('/api/lists', listsRoutes)
   app.route('/api/location', locationRoutes)
   app.route('/api/possessions', possessionsRoutes)
-  app.route('/api/content-strategies', contentStrategiesRoutes)
   app.route('/api/vectors', vectorRoutes)
   app.route('/api/invites', invitesRoutes)
   app.route('/api/user', userRoutes)
   app.route('/api/places', placesRoutes)
   app.route('/api/bookmarks', bookmarksRoutes)
-  app.route('/api/content', contentRoutes)
+  app.route('/api/content', content)
+  app.route('/api/notes', notesRoutes)
   app.route('/api/ai', aiRoutes)
   app.route('/api/oauth', oauthRoutes)
 

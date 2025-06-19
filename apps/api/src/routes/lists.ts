@@ -285,16 +285,9 @@ listsRoutes.post(
       const listName = listDetails && !('error' in listDetails) ? listDetails.name : 'a shared list'
       const appUrl = process.env.APP_URL || 'http://localhost:3000'
 
-      try {
-        // Note: Email functionality would need to be injected via context or service
-        // For now, we'll log the email that would be sent
-        console.log(`Would send email to ${invitedUserEmail} for list "${listName}"`)
-
-        // TODO: Implement email sending through Hono context or service
-        // await c.get('emailService').sendEmail(...)
-      } catch (emailError) {
-        console.error('Failed to send invite email:', emailError)
-      }
+      // TODO: Implement email sending through Hono context or service
+      // await c.get('emailService').sendEmail(...)
+      // TODO: Send email to invited user
 
       return c.json({ invite: createdInvite }, 201)
     } catch (error) {

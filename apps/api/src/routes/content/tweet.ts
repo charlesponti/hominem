@@ -3,8 +3,10 @@ import { zValidator } from '@hono/zod-validator'
 import { generateText } from 'ai'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../middleware/auth.js'
-import { ContentStrategiesService } from '../services/content-strategies.service.js'
+import { requireAuth } from '../../middleware/auth.js'
+import { ContentStrategiesService } from '../../services/content-strategies.service.js'
+
+export const contentTweetRoutes = new Hono()
 
 const generateTweetBodySchema = z.object({
   content: z.string().min(1, 'Content is required'),
@@ -55,11 +57,9 @@ function getDefaultStrategyPrompt(strategy: string): string {
   return defaultStrategies[strategy] || defaultStrategies.storytelling
 }
 
-export const aiTweetGenerationRoutes = new Hono()
-
 // Generate tweet from content using AI
-aiTweetGenerationRoutes.post(
-  '/',
+contentTweetRoutes.post(
+  '/generate',
   requireAuth,
   zValidator('json', generateTweetBodySchema),
   async (c) => {
@@ -140,8 +140,6 @@ Return only the tweet text, nothing else.`
 
       // Check character count
       const characterCount = tweetText.length
-
-      console.log(`Generated tweet: ${characterCount} characters`)
 
       return c.json({
         text: tweetText,

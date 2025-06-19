@@ -49,10 +49,6 @@ export async function action({ request }: ActionFunctionArgs) {
         )
       }
 
-      console.log(
-        `Generating speech for text: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}", voice: ${voice}, speed: ${speed}`
-      )
-
       // Try to get from cache first, or generate new TTS
       const result = await TTSCache.getOrCreate(text, voice, speed, async () => {
         // Generate speech using OpenAI TTS

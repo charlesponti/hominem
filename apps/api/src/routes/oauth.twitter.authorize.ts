@@ -42,7 +42,6 @@ oauthTwitterAuthorizeRoutes.get('/', requireAuth, async (c) => {
     authUrl.searchParams.set('code_challenge', codeChallenge)
     authUrl.searchParams.set('code_challenge_method', 'S256')
 
-    console.log(`Generated Twitter OAuth URL for user ${userId}`)
     return c.json({
       success: true,
       authUrl: authUrl.toString(),

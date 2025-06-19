@@ -5,7 +5,7 @@ import { Hono } from 'hono'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth } from '../../middleware/auth.js'
 
 const TourCostBreakdown = z.object({
   transportation: z.object({

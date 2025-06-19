@@ -51,7 +51,6 @@ financePlaidSyncRoutes.post('/:itemId', requireAuth, async (c) => {
       }
     )
 
-    console.log(`Queued manual sync for user ${userId} and item ${itemId}`)
     return c.json({
       success: true,
       message: 'Sync job queued successfully',

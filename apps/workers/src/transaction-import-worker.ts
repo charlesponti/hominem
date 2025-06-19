@@ -14,9 +14,10 @@ import type {
 } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
+import { users } from '@hominem/utils/schema'
 import { csvStorageService } from '@hominem/utils/supabase'
 import { type Job, Worker } from 'bullmq'
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { JOB_PROCESSING } from './config'
 import { HealthService } from './health.service'
 import { JobStatusService } from './job-status.service'
@@ -36,11 +37,8 @@ interface JobProcessingOutput {
 export async function removeJobFromQueue(jobId: string): Promise<void> {
   try {
     const jobKey = `${IMPORT_JOB_PREFIX}${jobId}`
-
-    logger.info(`Removing job ${jobId} from Redis`)
-
     await redis.del(jobKey)
-    logger.info(`Successfully removed job ${jobId}`)
+    logger.info(`Removed job ${jobId} from Redis`)
   } catch (error) {
     logger.error({ error, jobId }, `Failed to remove job ${jobId}`)
   }
@@ -92,10 +90,6 @@ export class TransactionImportWorker {
         logger.warn(`Job ${jobId}: Downloaded content doesn't appear to be a valid CSV format`)
       }
 
-      logger.info(
-        `Job ${jobId}: Successfully downloaded CSV content (length: ${csvContent.length})`
-      )
-
       return csvContent
     } catch (downloadError) {
       await removeJobFromQueue(jobId)
@@ -106,21 +100,12 @@ export class TransactionImportWorker {
   }
 
   /**
-   * Get internal user ID from Supabase ID
+   * Get internal user ID from Supabase ID, create user if not exists
    */
   static async getUserIdFromSupabaseId(supabaseId: string): Promise<string | null> {
-    try {
-      const result = await db.execute(
-        sql`SELECT id FROM users WHERE supabase_id = ${supabaseId} LIMIT 1`
-      )
-      return result.length > 0 ? (result[0] as any).id : null
-    } catch (error) {
-      logger.error('Error getting user ID from Supabase ID:', {
-        supabaseId,
-        error: error instanceof Error ? error.message : String(error),
-      })
-      return null
-    }
+    const result = await db.select({ id: users.id }).from(users).where(eq(users.id, supabaseId))
+
+    return result[0].id
   }
 
   /**
@@ -146,16 +131,13 @@ export class TransactionImportWorker {
    */
   private static async processCSVContent(
     jobData: ImportTransactionsJob,
-    decodedContent: string,
-    stats: JobStats,
-    startTime: number,
     updateBullJobProgress: (progress: number) => Promise<void>
   ): Promise<void> {
-    const { jobId, fileName, userId, options } = jobData
+    const { jobId, fileName, userId, options, csvContent } = jobData
     let processedCount = 0
     const totalLinesToProcess = Math.max(
       1,
-      decodedContent.split('\n').length - (decodedContent.includes('\n') ? 1 : 0)
+      csvContent.split('\n').length - (csvContent.includes('\n') ? 1 : 0)
     )
     let lastReportedProgress = -1
 
@@ -167,12 +149,12 @@ export class TransactionImportWorker {
       return countableActionKeys.includes(key as (typeof countableActionKeys)[number])
     }
 
-    stats.total = 0
+    jobData.stats.total = 0
 
     try {
       for await (const result of processTransactionsFromCSV({
         fileName,
-        csvContent: decodedContent,
+        csvContent,
         userId,
         deduplicateThreshold: options?.deduplicateThreshold,
         batchSize: options?.batchSize,
@@ -181,11 +163,11 @@ export class TransactionImportWorker {
         retryDelay: JOB_PROCESSING.RETRY_DELAY,
       })) {
         processedCount++
-        stats.total = (stats.total || 0) + 1
+        jobData.stats.total = (jobData.stats.total || 0) + 1
 
         if (result.action) {
           if (isCountableActionKey(result.action)) {
-            stats[result.action] = (stats[result.action] ?? 0) + 1
+            jobData.stats[result.action] = (jobData.stats[result.action] ?? 0) + 1
           } else {
             logger.warn(
               `Job ${jobId}: Received unexpected action key '${result.action}' from processor`
@@ -201,16 +183,13 @@ export class TransactionImportWorker {
         if (jobData.stats) {
           jobData.stats.progress = currentProgress
         }
-        stats.progress = currentProgress
+        jobData.stats.progress = currentProgress
 
         if (currentProgress !== lastReportedProgress) {
           await updateBullJobProgress(currentProgress)
           lastReportedProgress = currentProgress
         }
       }
-      logger.info(
-        `Job ${jobId} CSV processing: ${processedCount} items processed. Stats: ${JSON.stringify(stats)}`
-      )
     } catch (processingError) {
       // Enhanced error logging for CSV processing
       logger.error(
@@ -225,8 +204,8 @@ export class TransactionImportWorker {
           processedCount,
           totalLinesToProcess,
           fileName,
-          csvContentLength: decodedContent.length,
-          csvPreview: `${decodedContent.substring(0, 200)}...`,
+          csvContentLength: csvContent.length,
+          csvPreview: `${csvContent.substring(0, 200)}...`,
         },
         `Error during CSV processing iteration for job ${jobId}`
       )
@@ -234,10 +213,10 @@ export class TransactionImportWorker {
       // Add error to stats
       const errorMessage =
         processingError instanceof Error ? processingError.message : String(processingError)
-      if (stats.errors) {
-        stats.errors.push(`CSV Processing Error: ${errorMessage}`)
+      if (jobData.stats.errors) {
+        jobData.stats.errors.push(`CSV Processing Error: ${errorMessage}`)
       } else {
-        stats.errors = [`CSV Processing Error: ${errorMessage}`]
+        jobData.stats.errors = [`CSV Processing Error: ${errorMessage}`]
       }
 
       // Re-throw to let the main error handler deal with it
@@ -282,62 +261,11 @@ export class TransactionImportWorker {
       }
 
       await JobStatusService.markJobProcessing(job.id as string)
-      logger.info(`Job ${job.id}: Marked as processing by JobStatusService`)
-
-      // Convert Supabase ID to internal user ID
-      logger.info(`Job ${job.id}: Converting Supabase ID to internal user ID`, {
-        supabaseId: job.data.userId,
-      })
-
-      const internalUserId = await TransactionImportWorker.getUserIdFromSupabaseId(job.data.userId)
-      if (!internalUserId) {
-        const errorMessage = `User with Supabase ID ${job.data.userId} does not exist in the database`
-        logger.error(`Job ${job.id}: ${errorMessage}`)
-        stats.errors = [errorMessage]
-        stats.processingTime = Date.now() - startTime
-
-        await JobStatusService.markJobError(job.id as string, errorMessage, stats)
-        throw new Error(errorMessage)
-      }
-
-      logger.info(`Job ${job.id}: Found internal user ID`, {
-        supabaseId: job.data.userId,
-        internalUserId,
-      })
-
-      // Update job data to use internal user ID for processing
-      const jobDataWithInternalUserId = {
-        ...job.data,
-        userId: internalUserId,
-      }
-
-      // Debug Supabase configuration
-      logger.info(`Job ${job.id}: Attempting to download CSV from Supabase`, {
-        csvFilePath: job.data.csvFilePath,
-        supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
-        supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET',
-      })
 
       const decodedContent = await TransactionImportWorker.downloadAndValidateContent(
         job.id as string,
         job.data.csvFilePath
       )
-
-      const jobDataForProcessor: ImportTransactionsJob = {
-        jobId: job.id as string,
-        userId: job.data.userId,
-        fileName: job.data.fileName,
-        csvContent: decodedContent,
-        type: 'import-transactions',
-        status: 'processing',
-        options: {
-          deduplicateThreshold: job.data.deduplicateThreshold,
-          batchSize: job.data.batchSize,
-          batchDelay: job.data.batchDelay,
-        },
-        stats: { progress: 0 },
-        startTime: job.timestamp,
-      }
 
       const updateBullJobProgress = async (progress: number) => {
         await job.updateProgress(progress)
@@ -345,10 +273,21 @@ export class TransactionImportWorker {
       }
 
       await TransactionImportWorker.processCSVContent(
-        jobDataWithInternalUserId,
-        decodedContent,
-        stats,
-        startTime,
+        {
+          jobId: job.id as string,
+          userId: job.data.userId,
+          fileName: job.data.fileName,
+          csvContent: decodedContent,
+          type: 'import-transactions',
+          status: 'processing',
+          options: {
+            deduplicateThreshold: job.data.deduplicateThreshold,
+            batchSize: job.data.batchSize,
+            batchDelay: job.data.batchDelay,
+          },
+          stats: { progress: 0 },
+          startTime: job.timestamp,
+        },
         updateBullJobProgress
       )
 
@@ -396,11 +335,10 @@ export class TransactionImportWorker {
       } else {
         stats.errors = [errorMessage]
       }
+
       stats.processingTime = Date.now() - startTime
 
-      logger.info(`Job ${job.id}: Attempting to mark job error with JobStatusService...`)
       await JobStatusService.markJobError(job.id as string, errorMessage, stats)
-      logger.info(`Job ${job.id}: Marked as error by JobStatusService`)
 
       throw error
     }

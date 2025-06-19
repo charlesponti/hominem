@@ -74,8 +74,6 @@ financeImportsRoutes.post(
       )
 
       if (existingJob) {
-        console.log(`Found existing job ${existingJob.jobId} for ${uploadedFile.filename}`)
-
         return c.json({
           success: true,
           jobId: existingJob.jobId,
@@ -110,8 +108,6 @@ financeImportsRoutes.post(
           },
         }
       )
-
-      console.log(`Queued import job ${job.id} with file ${csvFilePath}`)
 
       return c.json({
         success: true,

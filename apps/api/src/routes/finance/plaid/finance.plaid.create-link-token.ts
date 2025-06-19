@@ -22,7 +22,6 @@ financePlaidCreateLinkTokenRoutes.post('/', requireAuth, async (c) => {
       webhook: `${env.API_URL}/api/finance/plaid/webhook`,
     })
 
-    console.log(`Created Plaid link token for user ${userId}`)
     return c.json({
       success: true,
       linkToken: createTokenResponse.data.link_token,

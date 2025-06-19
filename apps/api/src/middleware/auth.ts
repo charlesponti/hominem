@@ -58,7 +58,7 @@ export const authenticateUser = async (c: Context, next: Next) => {
 
     // Set user data in context
     c.set('user', hominemUser)
-    c.set('userId', user.id)
+    c.set('userId', hominemUser.id)
     c.set('supabaseId', user.id)
 
     await next()

@@ -83,7 +83,7 @@ async function main() {
     path.resolve(SCRATCHPAD_DIR, './products.json'),
     JSON.stringify(products, null, 2)
   )
-  console.log('Results saved to results.json')
+  console.info('Results saved to results.json')
 }
 
 main()

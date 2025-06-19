@@ -24,8 +24,6 @@ export const financePlaidWebhookRoutes = new Hono()
 financePlaidWebhookRoutes.post('/', zValidator('json', webhookSchema), async (c) => {
   const { webhook_type, webhook_code, item_id, error } = c.req.valid('json')
 
-  console.log(`Received Plaid webhook: ${webhook_type}/${webhook_code} for item ${item_id}`)
-
   try {
     // Find the plaid item
     const plaidItem = await db.query.plaidItems.findFirst({
@@ -60,7 +58,6 @@ financePlaidWebhookRoutes.post('/', zValidator('json', webhookSchema), async (c)
             removeOnFail: 1000,
           }
         )
-        console.log(`Queued sync job for webhook ${webhook_type}/${webhook_code}`)
       } else if (webhook_code === 'DEFAULT_UPDATE') {
         // Regular transaction update - queue sync job
         const queues = c.get('queues')
@@ -82,7 +79,6 @@ financePlaidWebhookRoutes.post('/', zValidator('json', webhookSchema), async (c)
             removeOnFail: 1000,
           }
         )
-        console.log(`Queued sync job for default transaction update`)
       }
     } else if (webhook_type === 'ITEM') {
       if (webhook_code === 'ERROR') {
@@ -91,11 +87,10 @@ financePlaidWebhookRoutes.post('/', zValidator('json', webhookSchema), async (c)
           .update(plaidItems)
           .set({
             status: 'error',
-            error: error ? error.error_code + ': ' + error.error_message : 'Unknown error',
+            error: error ? `${error.error_code}: ${error.error_message}` : 'Unknown error',
             updatedAt: new Date(),
           })
           .where(eq(plaidItems.itemId, item_id))
-        console.log(`Updated item ${item_id} status to error`)
       } else if (webhook_code === 'PENDING_EXPIRATION') {
         // Update item status to pending expiration
         await db
@@ -105,7 +100,6 @@ financePlaidWebhookRoutes.post('/', zValidator('json', webhookSchema), async (c)
             updatedAt: new Date(),
           })
           .where(eq(plaidItems.itemId, item_id))
-        console.log(`Updated item ${item_id} status to pending expiration`)
       }
     }
 

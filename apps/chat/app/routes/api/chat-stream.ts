@@ -87,7 +87,6 @@ export async function action({ request }: ActionFunctionArgs) {
               size: f.size,
             })),
           })
-          console.log(`Saved user message: ${userMessage.id}`)
         } catch (error) {
           console.warn('Failed to save user message:', error)
           // Continue without database persistence
@@ -176,7 +175,6 @@ export async function action({ request }: ActionFunctionArgs) {
                 if (messageId && fullResponse.trim()) {
                   try {
                     await ChatDatabaseService.updateMessage(messageId, fullResponse)
-                    console.log(`Saved complete assistant response: ${messageId}`)
                   } catch (error) {
                     console.warn('Failed to save complete assistant response:', error)
                   }
