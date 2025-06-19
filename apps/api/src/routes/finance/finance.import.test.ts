@@ -1,5 +1,5 @@
-import fs from 'node:fs'
 import type { ImportTransactionsJob } from '@hominem/utils/jobs'
+import fs from 'node:fs'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
   assertErrorResponse,
@@ -443,7 +443,6 @@ describe('Finance Import Routes', () => {
       // Check if the response is 404 - meaning the route isn't found
       if (response.status === 404) {
         // Route not found, which means we need to check the actual route setup
-        console.log('Import active route not found - checking if route is registered')
         return
       }
 
@@ -484,7 +483,6 @@ describe('Finance Import Routes', () => {
 
       // Check if the response is 404 - meaning the route isn't found
       if (response.status === 404) {
-        console.log('Import active route not found - skipping test')
         return
       }
 

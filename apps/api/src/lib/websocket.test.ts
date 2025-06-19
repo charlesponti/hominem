@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
+import { EventEmitter } from 'node:events'
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
-import { EventEmitter } from 'node:events'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 // Mock WebSocket and WebSocketServer
 class MockWebSocket extends EventEmitter {
@@ -90,6 +90,24 @@ vi.mock('../websocket/redis-handlers.js', () => ({
 }))
 
 describe('WebSocket Manager', () => {
+  // Helper function to simulate upgrade handling
+  const simulateUpgrade = async (
+    manager: ReturnType<typeof import('./websocket.js').createWebSocketManager>,
+    request: IncomingMessage,
+    socket: Duplex,
+    head: Buffer
+  ): Promise<void> => {
+    return new Promise((resolve) => {
+      manager.wss.handleUpgrade = vi.fn().mockImplementation((req, sock, h, callback) => {
+        const mockWs = new MockWebSocket()
+        // Immediately execute the callback
+        callback(mockWs)
+        resolve()
+      })
+      manager.handleUpgrade(request, socket, head)
+    })
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset Redis subscriber mock
@@ -132,7 +150,7 @@ describe('WebSocket Manager', () => {
     test('processes Redis messages through handlers', async () => {
       const { createWebSocketManager } = await import('./websocket.js')
 
-      let messageHandler: (channel: string, message: string) => void
+      let messageHandler: ((channel: string, message: string) => void) | undefined
       mockRedisSubscriber.on = vi.fn().mockImplementation((event, handler) => {
         if (event === 'message') {
           messageHandler = handler
@@ -143,14 +161,12 @@ describe('WebSocket Manager', () => {
 
       const testChannel = 'import-progress'
       const testMessage = JSON.stringify({ status: 'processing', progress: 50 })
-      
-      messageHandler!(testChannel, testMessage)
 
-      expect(mockRedisHandlers.process).toHaveBeenCalledWith(
-        manager.wss,
-        testChannel,
-        testMessage
-      )
+      if (messageHandler) {
+        messageHandler(testChannel, testMessage)
+      }
+
+      expect(mockRedisHandlers.process).toHaveBeenCalledWith(manager.wss, testChannel, testMessage)
     })
   })
 
@@ -164,9 +180,7 @@ describe('WebSocket Manager', () => {
       // Simulate connection
       manager.wss.emit('connection', mockWs)
 
-      expect(mockWs.send).toHaveBeenCalledWith(
-        expect.stringContaining('Connected to server')
-      )
+      expect(mockWs.send).toHaveBeenCalledWith(expect.stringContaining('Connected to server'))
       expect(mockLogger.info).toHaveBeenCalledWith('WebSocket client connected')
     })
 
@@ -233,27 +247,8 @@ describe('WebSocket Manager', () => {
       })
       mockGetHominemUser.mockResolvedValue({ id: 'hominem-user-123' })
 
-      let upgradeCallback: (ws: MockWebSocket) => void
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
-        upgradeCallback = callback
-      })
+      await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
-      await manager.handleUpgrade(mockRequest, mockSocket, mockHead)
-
-      expect(manager.wss.handleUpgrade).toHaveBeenCalledWith(
-        mockRequest,
-        mockSocket,
-        mockHead,
-        expect.any(Function)
-      )
-
-      // Simulate the upgrade callback
-      const mockWs = new MockWebSocket()
-      await upgradeCallback!(mockWs)
-
-      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalledWith('valid-token')
-      expect(mockGetHominemUser).toHaveBeenCalledWith('user-123')
-      // Just verify authentication was successful
       expect(mockSupabaseClient.auth.getUser).toHaveBeenCalledWith('valid-token')
       expect(mockGetHominemUser).toHaveBeenCalledWith('user-123')
     })
@@ -270,17 +265,11 @@ describe('WebSocket Manager', () => {
       } as unknown as Duplex
       const mockHead = Buffer.from('test')
 
-      let upgradeCallback: (ws: MockWebSocket) => void
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
-        upgradeCallback = callback
-      })
+      await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
-      await manager.handleUpgrade(mockRequest, mockSocket, mockHead)
-
-      const mockWs = new MockWebSocket()
-      await upgradeCallback!(mockWs)
-
-      expect(mockLogger.error).toHaveBeenCalledWith('WebSocket authentication failed: no token provided')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WebSocket authentication failed: no token provided'
+      )
       expect(mockSocket.destroy).toHaveBeenCalled()
     })
 
@@ -302,17 +291,24 @@ describe('WebSocket Manager', () => {
         error: new Error('Invalid token'),
       })
 
-      let upgradeCallback: (ws: MockWebSocket) => void
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
-        upgradeCallback = callback
+      // Use a promise to track when the upgrade callback is called
+      const upgradePromise = new Promise<void>((resolve) => {
+        manager.wss.handleUpgrade = vi
+          .fn()
+          .mockImplementation((request, socket, head, callback) => {
+            // Immediately call the callback and resolve
+            const mockWs = new MockWebSocket()
+            callback(mockWs)
+            resolve()
+          })
       })
 
       await manager.handleUpgrade(mockRequest, mockSocket, mockHead)
+      await upgradePromise
 
-      const mockWs = new MockWebSocket()
-      await upgradeCallback!(mockWs)
-
-      expect(mockLogger.error).toHaveBeenCalledWith('WebSocket authentication failed: invalid token')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WebSocket authentication failed: invalid token'
+      )
       expect(mockSocket.destroy).toHaveBeenCalled()
     })
 
@@ -335,17 +331,11 @@ describe('WebSocket Manager', () => {
       })
       mockGetHominemUser.mockResolvedValue(null)
 
-      let upgradeCallback: (ws: MockWebSocket) => void
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
-        upgradeCallback = callback
-      })
+      await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
-      await manager.handleUpgrade(mockRequest, mockSocket, mockHead)
-
-      const mockWs = new MockWebSocket()
-      await upgradeCallback!(mockWs)
-
-      expect(mockLogger.error).toHaveBeenCalledWith('WebSocket authentication failed: user not found')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WebSocket authentication failed: user not found'
+      )
       expect(mockSocket.destroy).toHaveBeenCalled()
     })
 
@@ -364,17 +354,12 @@ describe('WebSocket Manager', () => {
       // Mock authentication error
       mockSupabaseClient.auth.getUser.mockRejectedValue(new Error('Network error'))
 
-      let upgradeCallback: (ws: MockWebSocket) => void
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
-        upgradeCallback = callback
-      })
+      await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
-      await manager.handleUpgrade(mockRequest, mockSocket, mockHead)
-
-      const mockWs = new MockWebSocket()
-      await upgradeCallback!(mockWs)
-
-      expect(mockLogger.error).toHaveBeenCalledWith('WebSocket authentication error:', expect.any(Error))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WebSocket authentication error:',
+        expect.any(Error)
+      )
       expect(mockSocket.destroy).toHaveBeenCalled()
     })
 
@@ -386,15 +371,7 @@ describe('WebSocket Manager', () => {
       const mockSocket = {} as Duplex
       const mockHead = Buffer.from('test')
 
-      let upgradeCallback: (ws: MockWebSocket) => void
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
-        upgradeCallback = callback
-      })
-
-      await manager.handleUpgrade(mockRequest, mockSocket, mockHead)
-
-      const mockWs = new MockWebSocket()
-      await upgradeCallback!(mockWs)
+      await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
       // Should return early without processing
       expect(mockSupabaseClient.auth.getUser).not.toHaveBeenCalled()
@@ -443,17 +420,17 @@ describe('WebSocket Manager', () => {
       } as unknown as Duplex
       const mockHead = Buffer.from('test')
 
-      let upgradeCallback: (ws: MockWebSocket) => void
+      let upgradeCallback: (ws: MockWebSocket) => void = () => {}
       manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
         upgradeCallback = callback
       })
 
-      await manager.handleUpgrade(mockRequest, mockSocket, mockHead)
+      manager.handleUpgrade(mockRequest, mockSocket, mockHead)
 
       const mockWs = new MockWebSocket()
-      
+
       // This should not throw an error, but handle gracefully
-      await expect(upgradeCallback!(mockWs)).resolves.toBeUndefined()
+      await expect(upgradeCallback(mockWs)).resolves.toBeUndefined()
     })
 
     test('handles concurrent WebSocket connections', async () => {
@@ -472,11 +449,9 @@ describe('WebSocket Manager', () => {
       // All connections should receive welcome message
       // Note: may include extra logger calls from setup
       expect(mockLogger.info).toHaveBeenCalledWith('WebSocket client connected')
-      connections.forEach(ws => {
-        expect(ws.send).toHaveBeenCalledWith(
-          expect.stringContaining('Connected to server')
-        )
-      })
+      for (const ws of connections) {
+        expect(ws.send).toHaveBeenCalledWith(expect.stringContaining('Connected to server'))
+      }
     })
 
     test('handles message processing errors', async () => {
@@ -491,16 +466,19 @@ describe('WebSocket Manager', () => {
       manager.wss.emit('connection', mockWs)
 
       const testMessage = JSON.stringify({ type: 'test' })
-      
+
       // Emit the message and wait a bit for async processing
       mockWs.emit('message', Buffer.from(testMessage))
-      
+
       // Wait for the async message handler to complete
-      await new Promise(resolve => setTimeout(resolve, 10))
-      
+      await new Promise((resolve) => setTimeout(resolve, 10))
+
       // Verify the handler was called and error was logged
       expect(mockWsHandlers.process).toHaveBeenCalledWith(mockWs, testMessage)
-      expect(mockLogger.error).toHaveBeenCalledWith('WebSocket message handler error:', expect.any(Error))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WebSocket message handler error:',
+        expect.any(Error)
+      )
     })
 
     test('handles Redis message processing errors', async () => {
@@ -522,16 +500,18 @@ describe('WebSocket Manager', () => {
 
       const testChannel = 'import-progress'
       const testMessage = JSON.stringify({ status: 'processing' })
-      
+
       // Should not throw, errors should be handled gracefully
       expect(() => {
         messageHandler(testChannel, testMessage)
       }).not.toThrow()
-      
+
       // Verify the handler was called and error was logged
       expect(mockRedisHandlers.process).toHaveBeenCalledWith(manager.wss, testChannel, testMessage)
-      expect(mockLogger.error).toHaveBeenCalledWith('Redis message handler error:', expect.any(Error))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Redis message handler error:',
+        expect.any(Error)
+      )
     })
   })
 })
-

@@ -128,7 +128,8 @@ export function createWebSocketManager(): WebSocketManager {
     return new Promise((resolve) => {
       // Clean up Redis subscription
       redisSubscriber.unsubscribe(IMPORT_PROGRESS_CHANNEL)
-      redisSubscriber.quit()
+      redisSubscriber
+        .quit()
         .then(() => {
           logger.info('Redis subscriber closed successfully')
         })
