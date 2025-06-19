@@ -1,5 +1,6 @@
 'use client'
 
+import type { BudgetCategory } from '@hominem/utils/schema'
 import { AlertTriangle, Calendar, Target, TrendingDown, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import {
@@ -23,8 +24,20 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Progress } from '~/components/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select'
 import { formatCurrency } from '~/lib/finance.utils'
-import { useBudgetCategories, useBudgetVsActual } from '~/lib/hooks/use-budget-data'
+import {
+  useBudgetCategories,
+  useBudgetHistory,
+  useBudgetVsActual,
+} from '~/lib/hooks/use-budget-data'
+import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 

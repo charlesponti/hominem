@@ -218,6 +218,13 @@
       "when": 1750190317130,
       "tag": "0030_migrate_clerk_to_supabase",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1750315647088,
+      "tag": "0031_last_sandman",
+      "breakpoints": true
     }
   ]
 }

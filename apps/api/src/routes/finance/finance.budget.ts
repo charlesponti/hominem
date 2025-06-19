@@ -1,9 +1,10 @@
 import { db } from '@hominem/utils/db'
-import { summarizeByMonth } from '@hominem/utils/finance'
-import { budgetCategories } from '@hominem/utils/schema'
+import { getSpendingCategories, summarizeByMonth } from '@hominem/utils/finance'
+import { budgetCategories, transactions } from '@hominem/utils/schema'
 import { zValidator } from '@hono/zod-validator'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
+import crypto from 'node:crypto'
 import { z } from 'zod'
 import { requireAuth } from '../../middleware/auth.js'
 
@@ -45,6 +46,17 @@ const uuidParamSchema = z.object({
   id: z.string().uuid('Invalid ID format'),
 })
 
+// Zod schema for bulk creating budget categories from transaction categories
+const bulkCreateFromTransactionsSchema = z.object({
+  categories: z.array(
+    z.object({
+      name: z.string().min(1, 'Name is required'),
+      type: z.enum(['income', 'expense'], { message: "Type must be 'income' or 'expense'" }),
+      allocatedAmount: z.number().min(0).optional(),
+    })
+  ),
+})
+
 // Create a new budget category
 financeBudgetRoutes.post(
   '/categories',
@@ -59,6 +71,24 @@ financeBudgetRoutes.post(
     try {
       const validatedData = c.req.valid('json')
       const { allocatedAmount, ...restOfData } = validatedData
+
+      // Check if category with this name already exists for this user
+      const existingCategory = await db.query.budgetCategories.findFirst({
+        where: and(
+          eq(budgetCategories.name, restOfData.name),
+          eq(budgetCategories.userId, userId)
+        ),
+      })
+
+      if (existingCategory) {
+        return c.json(
+          {
+            error: 'Category already exists',
+            message: `A budget category named "${restOfData.name}" already exists for this user`,
+          },
+          409
+        )
+      }
 
       const [newCategory] = await db
         .insert(budgetCategories)
@@ -421,6 +451,130 @@ financeBudgetRoutes.post(
       return c.json(
         {
           error: 'Failed to calculate budget',
+          details: error instanceof Error ? error.message : String(error),
+        },
+        500
+      )
+    }
+  }
+)
+
+// Get transaction categories for the user
+financeBudgetRoutes.get('/transaction-categories', requireAuth, async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    return c.json({ error: 'Not authorized' }, 401)
+  }
+
+  try {
+    // Get distinct categories from transactions
+    const transactionCategories = await db
+      .select({
+        category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`,
+        count: sql<number>`COUNT(*)`,
+        totalAmount: sql<number>`SUM(${transactions.amount})`,
+        avgAmount: sql<number>`AVG(${transactions.amount})`,
+      })
+      .from(transactions)
+      .where(eq(transactions.userId, userId))
+      .groupBy(sql`COALESCE(${transactions.category}, 'Uncategorized')`)
+      .orderBy(sql`COUNT(*) DESC`)
+
+    // Filter out empty/null categories and format the response
+    const categories = transactionCategories
+      .filter(
+        (row) => row.category && row.category !== 'Uncategorized' && row.category.trim() !== ''
+      )
+      .map((row) => ({
+        name: row.category,
+        transactionCount: row.count,
+        totalAmount: Number.parseFloat(row.totalAmount.toString()),
+        averageAmount: Number.parseFloat(row.avgAmount.toString()),
+        suggestedBudget: Math.abs(Number.parseFloat(row.avgAmount.toString()) * 12), // Monthly average * 12
+      }))
+
+    return c.json(categories)
+  } catch (error) {
+    console.error('Error fetching transaction categories:', error)
+    return c.json(
+      {
+        error: 'Failed to fetch transaction categories',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})
+
+// Bulk create budget categories from transaction categories
+financeBudgetRoutes.post(
+  '/bulk-create-from-transactions',
+  requireAuth,
+  zValidator('json', bulkCreateFromTransactionsSchema),
+  async (c) => {
+    const userId = c.get('userId')
+    if (!userId) {
+      return c.json({ error: 'Not authorized' }, 401)
+    }
+
+    try {
+      const { categories } = c.req.valid('json')
+
+      if (categories.length === 0) {
+        return c.json({ error: 'No categories provided' }, 400)
+      }
+
+      // Get existing budget category names for this user
+      const existingCategories = await db.query.budgetCategories.findMany({
+        where: eq(budgetCategories.userId, userId),
+        columns: { name: true },
+      })
+      const existingNames = new Set(existingCategories.map(cat => cat.name.toLowerCase()))
+
+      // Filter out categories that already exist (case-insensitive comparison)
+      const newCategories = categories.filter(
+        cat => !existingNames.has(cat.name.toLowerCase())
+      )
+
+      if (newCategories.length === 0) {
+        return c.json({
+          success: true,
+          message: 'All categories already exist',
+          categories: [],
+          skipped: categories.length,
+        })
+      }
+
+      // Create only the new categories
+      const createdCategories = await db
+        .insert(budgetCategories)
+        .values(
+          newCategories.map((cat) => ({
+            id: crypto.randomUUID(),
+            name: cat.name,
+            type: cat.type,
+            averageMonthlyExpense: cat.allocatedAmount?.toString() || '0',
+            userId,
+          }))
+        )
+        .returning()
+
+      return c.json({
+        success: true,
+        message: `Created ${createdCategories.length} new budget categories${
+          categories.length - newCategories.length > 0 
+            ? `, skipped ${categories.length - newCategories.length} existing categories`
+            : ''
+        }`,
+        categories: createdCategories,
+        created: createdCategories.length,
+        skipped: categories.length - newCategories.length,
+      })
+    } catch (error) {
+      console.error('Error bulk creating budget categories:', error)
+      return c.json(
+        {
+          error: 'Failed to create budget categories',
           details: error instanceof Error ? error.message : String(error),
         },
         500

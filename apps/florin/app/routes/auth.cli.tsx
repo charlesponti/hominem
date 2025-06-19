@@ -4,7 +4,7 @@ import { Navigate, useSearchParams } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { getServerSession, useAuth } from '~/lib/supabase'
-import type { Route } from './+types/cli'
+import type { Route } from './+types/auth.cli'
 
 export async function loader(args: Route.LoaderArgs) {
   // Get the Supabase session from the request

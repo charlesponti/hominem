@@ -5,13 +5,13 @@ import { cn } from '~/lib/utils'
 const navigationItems = [
   {
     title: 'Dashboard',
-    href: '/budget/dashboard',
+    href: '/budget',
     icon: PieChart,
     description: 'Overview and projections',
   },
   {
     title: 'Impact Calculator',
-    href: '/budget',
+    href: '/budget/impact',
     icon: Calculator,
     description: 'Analyze purchase impacts',
   },

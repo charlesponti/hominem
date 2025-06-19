@@ -303,3 +303,93 @@ export function useBudgetVsActual(monthYear?: string) {
     isLoading: !categories || statsLoading,
   }
 }
+
+interface TransactionCategory {
+  name: string
+  transactionCount: number
+  totalAmount: number
+  averageAmount: number
+  suggestedBudget: number
+}
+
+interface BulkCreateFromTransactionsInput {
+  categories: Array<{
+    name: string
+    type: 'income' | 'expense'
+    allocatedAmount?: number
+  }>
+}
+
+export function useTransactionCategories() {
+  const api = useApiClient()
+  const { getAuthHeaders, userId } = useAuthHeaders()
+  const queryKey = [BUDGET_DATA_KEY_PREFIX, 'transaction-categories', userId]
+
+  const query = useQuery<TransactionCategory[], Error>({
+    queryKey,
+    queryFn: async () => {
+      const headers = await getAuthHeaders()
+      return await api.get<never, TransactionCategory[]>(
+        '/api/finance/budget/transaction-categories',
+        { headers }
+      )
+    },
+    enabled: !!userId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+
+  return {
+    categories: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  }
+}
+
+export function useBulkCreateFromTransactions() {
+  const api = useApiClient()
+  const queryClient = useQueryClient()
+  const { getAuthHeaders, userId } = useAuthHeaders()
+  const [error, setError] = useState<Error | null>(null)
+
+  const mutation = useMutation<
+    { 
+      success: boolean
+      message: string
+      categories: BudgetCategory[]
+      created: number
+      skipped: number
+    },
+    Error,
+    BulkCreateFromTransactionsInput
+  >({
+    mutationFn: async (data) => {
+      const headers = await getAuthHeaders()
+      return await api.post<
+        BulkCreateFromTransactionsInput,
+        { 
+          success: boolean
+          message: string
+          categories: BudgetCategory[]
+          created: number
+          skipped: number
+        }
+      >('/api/finance/budget/bulk-create-from-transactions', data, { headers })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [BUDGET_DATA_KEY_PREFIX, 'categories', userId] })
+      queryClient.invalidateQueries({
+        queryKey: [BUDGET_DATA_KEY_PREFIX, 'transaction-categories', userId],
+      })
+    },
+    onError: (err) => setError(err),
+  })
+
+  return {
+    bulkCreate: mutation.mutateAsync,
+    isLoading: mutation.isLoading,
+    error: mutation.error || error,
+    isSuccess: mutation.isSuccess,
+    data: mutation.data,
+  }
+}
