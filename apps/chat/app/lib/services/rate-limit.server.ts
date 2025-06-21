@@ -222,6 +222,15 @@ export function withRateLimit(
   getIdentifier: (request: Request) => string = getClientIP
 ) {
   return async (request: Request, operation: () => Promise<Response>): Promise<Response> => {
+    // Check for rate limit bypass (for testing)
+    const bypassHeader = request.headers.get('X-Rate-Limit-Bypass')
+    const bypassEnv = process.env.BYPASS_RATE_LIMITS === 'true'
+
+    if (bypassHeader === 'test' || bypassEnv) {
+      console.log(`Rate limiting bypassed for ${type} endpoint`)
+      return await operation()
+    }
+
     const identifier = getIdentifier(request)
     return RateLimitService.enforce(type, identifier, operation)
   }

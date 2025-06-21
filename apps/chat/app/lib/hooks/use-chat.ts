@@ -3,7 +3,7 @@ import type { ChatMessageSelect } from '@hominem/utils/types'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
 import { useAuth } from '~/lib/supabase/auth-context'
-import { streamToString } from './stream-utils'
+import { streamToString } from '../stream-utils.js'
 
 export enum CHAT_ENDPOINTS {
   AGENT = '/api/agent',

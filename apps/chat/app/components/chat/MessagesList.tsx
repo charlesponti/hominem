@@ -17,7 +17,7 @@ export function MessagesList({
   })
 
   return (
-    <div className="flex-1 overflow-auto p-4 pb-32">
+    <div className="flex-1 overflow-auto px-4 py-32">
       <div className="max-w-4xl mx-auto space-y-4">
         {messages.map((message) => (
           <div

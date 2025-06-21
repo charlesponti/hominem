@@ -1,9 +1,9 @@
 import { db } from '@hominem/utils/db'
-import { vectorDocuments, type NewVectorDocument, type VectorDocument } from '@hominem/utils/schema'
+import { vectorDocuments, type VectorDocument, type NewVectorDocument } from '@hominem/utils/schema'
 import { tool } from 'ai'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { openai } from './openai.server'
+import { llm } from './llm.server'
 
 // Define types for document search results
 export interface DocumentSearchResult {
@@ -27,32 +27,33 @@ const SearchToolSchema = z.object({
   threshold: z.number().optional().default(0.7).describe('Similarity threshold (0-1)'),
 })
 
-export namespace HominemVectorStore {
-  // Create a custom tool for search
-  export const searchDocumentsTool = tool({
-    description: 'Search the vector database for relevant information',
-    parameters: SearchToolSchema,
-    execute: async ({
-      query,
-      userId,
-      limit = 10,
-      threshold = 0.7,
-    }: z.infer<typeof SearchToolSchema>) => {
-      return await HominemVectorStore.searchDocuments(query, userId, limit, threshold)
-    },
-  })
+export class VectorStore {
+  private model = llm.getModel()
 
   /**
-   * Generate embeddings for text using OpenAI
+   * Generate embeddings for text using the AI package
    */
-  const generateEmbedding = async (text: string): Promise<number[]> => {
+  private async generateEmbedding(text: string): Promise<number[]> {
     try {
-      const response = await openai.embeddings.create({
-        model: 'text-embedding-ada-002',
-        input: text.replace(/\n/g, ' '), // Clean up newlines
+      // Use OpenAI's embeddings API directly since the AI package doesn't expose it yet
+      const response = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          input: text.replace(/\n/g, ' '), // Clean up newlines
+          model: 'text-embedding-ada-002',
+        }),
       })
 
-      return response.data[0].embedding
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      return result.data[0].embedding
     } catch (error) {
       console.error('Error generating embedding:', error)
       throw new Error('Failed to generate embedding')
@@ -62,7 +63,7 @@ export namespace HominemVectorStore {
   /**
    * Chunk large text into smaller segments for better embedding
    */
-  const chunkText = (text: string, maxChunkSize = 1500, overlap = 200): string[] => {
+  private chunkText(text: string, maxChunkSize = 1500, overlap = 200): string[] {
     if (text.length <= maxChunkSize) {
       return [text]
     }
@@ -94,60 +95,9 @@ export namespace HominemVectorStore {
   }
 
   /**
-   * Search documents using vector similarity with pgvector
-   */
-  export const searchDocuments = async (
-    query: string,
-    userId?: string,
-    limit = 10,
-    threshold = 0.7
-  ): Promise<DocumentSearchResponse> => {
-    try {
-      // Generate embedding for the search query
-      const queryEmbedding = await generateEmbedding(query)
-
-      // Build the vector similarity search query
-      const results = await db
-        .select({
-          id: vectorDocuments.id,
-          content: vectorDocuments.content,
-          metadata: vectorDocuments.metadata,
-          title: vectorDocuments.title,
-          source: vectorDocuments.source,
-          sourceType: vectorDocuments.sourceType,
-          similarity: sql<number>`1 - (${vectorDocuments.embedding} <=> ${queryEmbedding}::vector)`,
-        })
-        .from(vectorDocuments)
-        .where(
-          and(
-            userId ? eq(vectorDocuments.userId, userId) : sql`true`,
-            sql`1 - (${vectorDocuments.embedding} <=> ${queryEmbedding}::vector) >= ${threshold}`
-          )
-        )
-        .orderBy(sql`${vectorDocuments.embedding} <=> ${queryEmbedding}::vector`)
-        .limit(limit)
-
-      return {
-        results: results.map((row) => ({
-          id: row.id,
-          score: row.similarity,
-          document: row.content,
-          metadata: row.metadata ? JSON.parse(row.metadata) : {},
-          title: row.title || undefined,
-          source: row.source || undefined,
-          sourceType: row.sourceType || undefined,
-        })),
-      }
-    } catch (error) {
-      console.error('Vector search error:', error)
-      return { results: [] }
-    }
-  }
-
-  /**
    * Add a document to the vector store with embedding
    */
-  export async function addDocument(
+  async addDocument(
     content: string,
     userId: string,
     metadata: Record<string, string | number> = {},
@@ -159,7 +109,7 @@ export namespace HominemVectorStore {
   ): Promise<{ success: boolean; id: string }> {
     try {
       // Generate embedding for the content
-      const embedding = await generateEmbedding(content)
+      const embedding = await this.generateEmbedding(content)
 
       // Prepare the document data
       const documentData: NewVectorDocument = {
@@ -192,6 +142,136 @@ export namespace HominemVectorStore {
   }
 
   /**
+   * Search for similar documents using vector similarity
+   */
+  async searchDocuments(
+    query: string,
+    userId?: string,
+    limit = 10,
+    threshold = 0.7
+  ): Promise<DocumentSearchResult[]> {
+    try {
+      // Generate embedding for the query
+      const queryEmbedding = await this.generateEmbedding(query)
+
+      // Build the SQL query with conditions
+      const conditions = [
+        sql`1 - (embedding <=> ${JSON.stringify(queryEmbedding)}) >= ${threshold}`,
+      ]
+
+      if (userId) {
+        conditions.push(eq(vectorDocuments.userId, userId))
+      }
+
+      // Execute the query
+      const results = await db
+        .select({
+          id: vectorDocuments.id,
+          score: sql<number>`1 - (embedding <=> ${JSON.stringify(queryEmbedding)})`,
+          metadata: vectorDocuments.metadata,
+          document: vectorDocuments.content,
+          title: vectorDocuments.title,
+          source: vectorDocuments.source,
+          sourceType: vectorDocuments.sourceType,
+        })
+        .from(vectorDocuments)
+        .where(and(...conditions))
+        .orderBy(desc(sql`1 - (embedding <=> ${JSON.stringify(queryEmbedding)})`))
+        .limit(limit)
+
+      return results.map((result) => ({
+        id: result.id,
+        score: result.score,
+        metadata: JSON.parse(result.metadata as string),
+        document: result.document,
+        title: result.title || undefined,
+        source: result.source || undefined,
+        sourceType: result.sourceType || undefined,
+      }))
+    } catch (error) {
+      console.error('Error searching documents:', error)
+      return []
+    }
+  }
+
+  /**
+   * Add multiple documents to the vector store
+   */
+  async addDocuments(
+    documents: Array<{
+      content: string
+      userId: string
+      metadata?: Record<string, string | number>
+      title?: string
+      source?: string
+      sourceType?: string
+    }>
+  ): Promise<Array<{ success: boolean; id: string }>> {
+    return Promise.all(
+      documents.map((doc) =>
+        this.addDocument(doc.content, doc.userId, doc.metadata || {}, {
+          title: doc.title,
+          source: doc.source,
+          sourceType: doc.sourceType,
+        })
+      )
+    )
+  }
+}
+
+// Initialize the vector store instance
+const vectorStore = new VectorStore()
+
+export namespace HominemVectorStore {
+  // Create a custom tool for search
+  export const searchDocumentsTool = tool({
+    description: 'Search the vector database for relevant information',
+    parameters: SearchToolSchema,
+    execute: async ({
+      query,
+      userId,
+      limit = 10,
+      threshold = 0.7,
+    }: z.infer<typeof SearchToolSchema>) => {
+      return await HominemVectorStore.searchDocuments(query, userId, limit, threshold)
+    },
+  })
+
+  /**
+   * Search documents using vector similarity with pgvector
+   */
+  export const searchDocuments = async (
+    query: string,
+    userId?: string,
+    limit = 10,
+    threshold = 0.7
+  ): Promise<DocumentSearchResponse> => {
+    try {
+      const results = await vectorStore.searchDocuments(query, userId, limit, threshold)
+      return { results }
+    } catch (error) {
+      console.error('Vector search error:', error)
+      return { results: [] }
+    }
+  }
+
+  /**
+   * Add a document to the vector store with embedding
+   */
+  export async function addDocument(
+    content: string,
+    userId: string,
+    metadata: Record<string, string | number> = {},
+    options: {
+      title?: string
+      source?: string
+      sourceType?: string
+    } = {}
+  ): Promise<{ success: boolean; id: string }> {
+    return vectorStore.addDocument(content, userId, metadata, options)
+  }
+
+  /**
    * Add a large document by chunking it into smaller pieces
    */
   export async function addDocumentWithChunking(
@@ -208,7 +288,7 @@ export namespace HominemVectorStore {
   ): Promise<{ success: boolean; ids: string[] }> {
     try {
       const { maxChunkSize = 1500, overlap = 200, ...docOptions } = options
-      const chunks = chunkText(content, maxChunkSize, overlap)
+      const chunks = vectorStore.chunkText(content, maxChunkSize, overlap)
       const ids: string[] = []
 
       // Add each chunk as a separate document
@@ -220,7 +300,7 @@ export namespace HominemVectorStore {
           isChunk: 1, // Use 1 instead of true for the boolean value
         }
 
-        const result = await addDocument(chunks[i], userId, chunkMetadata, {
+        const result = await vectorStore.addDocument(chunks[i], userId, chunkMetadata, {
           ...docOptions,
           title: docOptions.title ? `${docOptions.title} (Part ${i + 1})` : undefined,
         })
@@ -258,22 +338,21 @@ export namespace HominemVectorStore {
     } = {}
   ): Promise<{ success: boolean }> {
     try {
-      // Generate new embedding for the updated content
-      const embedding = await generateEmbedding(content)
-
-      // Update the document
+      // Update the document using the vector store
       await db
         .update(vectorDocuments)
         .set({
           content,
           metadata: JSON.stringify(metadata),
-          embedding: embedding,
           title: options.title,
           source: options.source,
           sourceType: options.sourceType,
           updatedAt: new Date(),
         })
         .where(and(eq(vectorDocuments.id, id), eq(vectorDocuments.userId, userId)))
+
+      // Re-add the document to update its embedding
+      await vectorStore.addDocument(content, userId, metadata, options)
 
       return { success: true }
     } catch (error) {
@@ -322,3 +401,6 @@ export namespace HominemVectorStore {
     }
   }
 }
+
+// Optionally export the singleton for direct use
+export const vectorStoreInstance = vectorStore

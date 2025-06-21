@@ -1,7 +1,8 @@
+import { streamText } from 'ai'
 import type { ActionFunctionArgs } from 'react-router'
 import { ChatDatabaseService } from '~/lib/services/chat-db.server.js'
 import type { ProcessedFile } from '~/lib/services/file-processor.server.js'
-import { openai } from '~/lib/services/openai.server.js'
+import { model } from '~/lib/services/llm.server.js'
 import { PerformanceMonitor } from '~/lib/services/performance-monitor.server.js'
 import { withRateLimit } from '~/lib/services/rate-limit.server.js'
 
@@ -18,6 +19,34 @@ interface ChatStreamRequest {
   }>
   createNewChat?: boolean
   chatTitle?: string
+}
+
+interface StreamChunk {
+  content?: string
+  done?: boolean
+}
+
+interface StreamResponse {
+  type: 'content' | 'audio' | 'complete'
+  content?: string
+  fullResponse?: string
+  chatId?: string
+  audio?: {
+    fileId: string
+    url: string
+    duration: number
+    voice: string
+  }
+  finishReason?: string
+}
+
+interface TTSResponse {
+  audio: {
+    fileId: string
+    url: string
+    duration: number
+    voice: string
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -45,7 +74,6 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       let currentChatId = chatId
-      let messageId: string | null = null
 
       // Create new chat if requested
       if (createNewChat && userId !== 'anonymous') {
@@ -113,136 +141,26 @@ export async function action({ request }: ActionFunctionArgs) {
       )
 
       // Create streaming response with performance monitoring
-      const streamTimer = PerformanceMonitor.createTimer('openai_stream_start', {
+      const streamTimer = PerformanceMonitor.createTimer('llm_stream_start', {
         model: 'gpt-4',
         messageCount: messages.length,
         userId,
       })
 
-      const stream = await openai.chat.completions.create({
-        model: 'gpt-4', // Use GPT-4 for best quality
+      // Get the stream from the AI package
+      const response = streamText({
+        model,
         messages,
-        stream: true,
         temperature: 0.7,
-        max_tokens: 2000,
-        presence_penalty: 0,
-        frequency_penalty: 0.1,
+        maxTokens: 2000,
+        presencePenalty: 0,
+        frequencyPenalty: 0.1,
       })
 
       streamTimer.end()
 
-      // Create readable stream for the response
-      const encoder = new TextEncoder()
-      let fullResponse = ''
-
-      const readableStream = new ReadableStream({
-        async start(controller) {
-          try {
-            // Create assistant message record in database
-            if (currentChatId && userId !== 'anonymous') {
-              try {
-                const assistantMessage = await ChatDatabaseService.addMessage({
-                  chatId: currentChatId,
-                  userId,
-                  role: 'assistant',
-                  content: '', // Will be updated as we stream
-                })
-                messageId = assistantMessage.id
-              } catch (error) {
-                console.warn('Failed to create assistant message record:', error)
-              }
-            }
-
-            for await (const chunk of stream) {
-              const content = chunk.choices[0]?.delta?.content || ''
-
-              if (content) {
-                fullResponse += content
-
-                // Send chunk to client
-                const data = JSON.stringify({
-                  type: 'content',
-                  content,
-                  fullResponse,
-                  chatId: currentChatId,
-                })
-                controller.enqueue(encoder.encode(`data: ${data}\n\n`))
-              }
-
-              // Check if stream is complete
-              if (chunk.choices[0]?.finish_reason) {
-                // Save complete assistant response to database
-                if (messageId && fullResponse.trim()) {
-                  try {
-                    await ChatDatabaseService.updateMessage(messageId, fullResponse)
-                  } catch (error) {
-                    console.warn('Failed to save complete assistant response:', error)
-                  }
-                }
-
-                // If voice mode is enabled, generate TTS for the complete response
-                if (voiceMode && fullResponse.trim()) {
-                  try {
-                    const ttsResponse = await fetch(
-                      `${request.url.replace('/chat-stream', '/speech')}`,
-                      {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          text: fullResponse,
-                          voice: 'alloy',
-                          speed: 1.0,
-                        }),
-                      }
-                    )
-
-                    if (ttsResponse.ok) {
-                      const ttsResult = await ttsResponse.json()
-                      const audioData = JSON.stringify({
-                        type: 'audio',
-                        audio: ttsResult.audio,
-                      })
-                      controller.enqueue(encoder.encode(`data: ${audioData}\n\n`))
-                    }
-                  } catch (ttsError) {
-                    console.warn('TTS generation failed:', ttsError)
-                    // Continue without audio - don't fail the whole response
-                  }
-                }
-
-                // Send completion signal
-                const completeData = JSON.stringify({
-                  type: 'complete',
-                  fullResponse,
-                  finishReason: chunk.choices[0].finish_reason,
-                  chatId: currentChatId,
-                })
-                controller.enqueue(encoder.encode(`data: ${completeData}\n\n`))
-                controller.close()
-                return
-              }
-            }
-          } catch (error) {
-            console.error('Streaming error:', error)
-            const errorData = JSON.stringify({
-              type: 'error',
-              error: error instanceof Error ? error.message : 'Unknown error',
-            })
-            controller.enqueue(encoder.encode(`data: ${errorData}\n\n`))
-            controller.close()
-          }
-        },
-      })
-
-      return new Response(readableStream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      })
+      // Return the stream directly
+      return response.toDataStreamResponse()
     } catch (error) {
       console.error('Chat stream error:', error)
       return new Response(
@@ -264,7 +182,7 @@ function buildConversationMessages(
   searchContext?: string,
   conversationHistory: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = []
 ) {
-  const messages: any[] = []
+  const messages: { role: 'user' | 'assistant' | 'system'; content: string }[] = []
 
   // System message
   messages.push({
@@ -322,7 +240,7 @@ function formatFileSize(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
 function generateChatTitle(message: string): string {
@@ -339,8 +257,8 @@ function generateChatTitle(message: string): string {
   const lastSpace = truncated.lastIndexOf(' ')
 
   if (lastSpace > maxLength * 0.7) {
-    return truncated.substring(0, lastSpace) + '...'
+    return `${truncated.substring(0, lastSpace)}...`
   }
 
-  return truncated + '...'
+  return `${truncated}...`
 }
