@@ -52,7 +52,6 @@ export default function AuthCli({ loaderData }: Route.ComponentProps) {
       })
   }
 
-  // Protected route that requires authentication
   if (!isLoading && !user) {
     return <Navigate to="/" replace />
   }

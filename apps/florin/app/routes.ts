@@ -11,24 +11,24 @@ export default [
         route('tracking', 'routes/budget.tracking.tsx'),
       ]),
     ]),
-    layout('routes/finance._layout.tsx', [
-      route('finance', 'routes/finance.tsx'),
-      route('import', 'routes/import.tsx'),
 
-      // Accounts
-      route('accounts', 'routes/accounts.index.tsx'),
-      route('accounts/:id', 'routes/accounts.$id.tsx'),
+    route('finance', 'routes/finance.tsx'),
+    route('import', 'routes/import.tsx'),
 
-      // Analytics
-      route('analytics', 'routes/analytics.tsx'),
-      route('analytics/monthly/:month', 'routes/analytics.monthly.$month.tsx'),
-      route('analytics/category/:category', 'routes/analytics.category.$category.tsx'),
-      route('analytics/categories', 'routes/analytics.categories.tsx'),
+    // Accounts
+    route('accounts', 'routes/accounts.tsx'),
+    route('accounts/:id', 'routes/accounts.$id.tsx'),
 
-      // Random
-      route('finance/runway', 'routes/finance.runway.tsx'),
-      route('finance/location-comparison', 'routes/finance.location-comparison.tsx'),
-    ]),
+    // Analytics
+    route('analytics', 'routes/analytics.tsx'),
+    route('analytics/monthly/:month', 'routes/analytics.monthly.$month.tsx'),
+    route('analytics/category/:category', 'routes/analytics.category.$category.tsx'),
+    route('analytics/categories', 'routes/analytics.categories.tsx'),
+
+    // Random
+    route('finance/runway', 'routes/finance.runway.tsx'),
+    route('finance/location-comparison', 'routes/finance.location-comparison.tsx'),
+
     route('/account', 'routes/account.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
   ]),

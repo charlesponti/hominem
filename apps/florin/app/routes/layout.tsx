@@ -7,9 +7,14 @@ import type { Route } from './+types/layout'
 export async function loader(loaderArgs: Route.LoaderArgs) {
   const { user } = await getServerSession(loaderArgs.request)
 
-  // If the user is authenticated, redirect to the `/finance` page
   if (new URL(loaderArgs.request.url).pathname === '/' && user?.id) {
+    // If the user is authenticated, redirect to the `/finance` page
     return redirect('/finance')
+  }
+
+  if (new URL(loaderArgs.request.url).pathname !== '/' && !user?.id) {
+    // If the user is not authenticated, redirect to the `/auth` page
+    return redirect('/auth')
   }
 
   return { userId: user?.id }
