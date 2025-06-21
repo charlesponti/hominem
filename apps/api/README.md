@@ -26,3 +26,13 @@ The API uses Supabase for authentication. You'll need to set up the following en
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 All authenticated routes will use Supabase's JWT verification to validate requests.
+
+## Budget Categories
+
+Budget categories have a unique constraint on `name + userId`, ensuring that:
+- Each user can only have one budget category with a given name
+- Different users can have budget categories with the same name
+- The bulk create endpoint (`/api/finance/budget/bulk-create-from-transactions`) automatically skips existing categories and only creates new ones
+- Single category creation returns a 409 error if a category with the same name already exists for that user
+
+This prevents duplicate categories when syncing from transaction data while allowing users to have predictable, unique category names.

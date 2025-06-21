@@ -1,5 +1,5 @@
 import { db } from '@hominem/utils/db'
-import { getSpendingCategories, summarizeByMonth } from '@hominem/utils/finance'
+import { summarizeByMonth } from '@hominem/utils/finance'
 import { budgetCategories, transactions } from '@hominem/utils/schema'
 import { zValidator } from '@hono/zod-validator'
 import { and, eq, sql } from 'drizzle-orm'
@@ -74,10 +74,7 @@ financeBudgetRoutes.post(
 
       // Check if category with this name already exists for this user
       const existingCategory = await db.query.budgetCategories.findFirst({
-        where: and(
-          eq(budgetCategories.name, restOfData.name),
-          eq(budgetCategories.userId, userId)
-        ),
+        where: and(eq(budgetCategories.name, restOfData.name), eq(budgetCategories.userId, userId)),
       })
 
       if (existingCategory) {
@@ -529,12 +526,10 @@ financeBudgetRoutes.post(
         where: eq(budgetCategories.userId, userId),
         columns: { name: true },
       })
-      const existingNames = new Set(existingCategories.map(cat => cat.name.toLowerCase()))
+      const existingNames = new Set(existingCategories.map((cat) => cat.name.toLowerCase()))
 
       // Filter out categories that already exist (case-insensitive comparison)
-      const newCategories = categories.filter(
-        cat => !existingNames.has(cat.name.toLowerCase())
-      )
+      const newCategories = categories.filter((cat) => !existingNames.has(cat.name.toLowerCase()))
 
       if (newCategories.length === 0) {
         return c.json({
@@ -562,7 +557,7 @@ financeBudgetRoutes.post(
       return c.json({
         success: true,
         message: `Created ${createdCategories.length} new budget categories${
-          categories.length - newCategories.length > 0 
+          categories.length - newCategories.length > 0
             ? `, skipped ${categories.length - newCategories.length} existing categories`
             : ''
         }`,

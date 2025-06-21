@@ -152,7 +152,7 @@ export default function BudgetCategories() {
       })
 
       const result = await bulkCreate({ categories: categoriesToCreate })
-      
+
       setIsSetupDialogOpen(false)
       setSelectedTransactionCategories(new Set())
       refetch()

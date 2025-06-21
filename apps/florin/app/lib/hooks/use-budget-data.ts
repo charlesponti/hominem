@@ -353,7 +353,7 @@ export function useBulkCreateFromTransactions() {
   const [error, setError] = useState<Error | null>(null)
 
   const mutation = useMutation<
-    { 
+    {
       success: boolean
       message: string
       categories: BudgetCategory[]
@@ -367,7 +367,7 @@ export function useBulkCreateFromTransactions() {
       const headers = await getAuthHeaders()
       return await api.post<
         BulkCreateFromTransactionsInput,
-        { 
+        {
           success: boolean
           message: string
           categories: BudgetCategory[]

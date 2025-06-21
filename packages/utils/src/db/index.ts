@@ -8,6 +8,11 @@ const DATABASE_URL =
     ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
     : process.env.DATABASE_URL
 
+console.log({
+  env: process.env.NODE_ENV,
+  databaseUrl: DATABASE_URL,
+})
+
 let client: ReturnType<typeof postgres> | null = null
 let db: PostgresJsDatabase<typeof schema>
 
