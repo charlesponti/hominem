@@ -12,10 +12,10 @@ import {
 import { useCallback, useState } from 'react'
 import { Button } from '~/components/ui/button.js'
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
-import type { ProcessedFile } from '~/lib/services/file-processor.server.js'
+import type { UploadedFile } from '~/lib/types/upload.js'
 
 interface FileUploaderProps {
-  onFilesUploaded?: (files: ProcessedFile[]) => void
+  onFilesUploaded?: (files: UploadedFile[]) => void
   maxFiles?: number
   className?: string
 }
@@ -59,7 +59,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
     setIsDragOver(false)
   }, [])
 
-  const getFileIcon = (type: ProcessedFile['type']) => {
+  const getFileIcon = (type: string) => {
     switch (type) {
       case 'image':
         return <Image className="h-4 w-4" />
@@ -143,8 +143,8 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
       {/* Error Messages */}
       {uploadState.errors.length > 0 && (
         <div className="space-y-2">
-          {uploadState.errors.map((error, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-destructive">
+          {uploadState.errors.map((error) => (
+            <div key={error} className="flex items-center gap-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
               <span>{error}</span>
             </div>

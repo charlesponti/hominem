@@ -1,8 +1,27 @@
+import type { User } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
 import { Navigate, Outlet } from 'react-router'
-import { useAuth } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function NotesLayout() {
-  const { user, isLoading } = useAuth()
+  const { getUser } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
 
   // Show loading state while checking auth
   if (isLoading) {

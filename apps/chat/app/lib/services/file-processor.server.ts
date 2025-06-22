@@ -2,21 +2,8 @@ import mammoth from 'mammoth'
 import { Buffer } from 'node:buffer'
 import PDFParser from 'pdf2json'
 import sharp from 'sharp'
+import type { ProcessedFile } from '~/lib/types/chat.js'
 import { openai } from './openai.server.js'
-
-export interface ProcessedFile {
-  id: string
-  originalName: string
-  type: 'image' | 'document' | 'audio' | 'video' | 'unknown'
-  mimetype: string
-  size: number
-  content?: string
-  textContent?: string
-  metadata?: Record<string, unknown>
-  thumbnail?: string
-  duration?: number
-  transcription?: string
-}
 
 export async function processFile(
   buffer: ArrayBuffer,
@@ -75,7 +62,7 @@ async function processImage(buffer: ArrayBuffer, file: ProcessedFile): Promise<P
     try {
       const base64Image = Buffer.from(buffer).toString('base64')
       const response = await openai.chat.completions.create({
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'user',
@@ -156,7 +143,7 @@ async function processDocument(
     if (textContent.length > 1000) {
       try {
         const response = await openai.chat.completions.create({
-          model: 'gpt-4',
+          model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',

@@ -1,8 +1,8 @@
 'use client'
 
-import { useAuth } from '~/lib/supabase'
 import { useApiClient } from '@hominem/ui'
 import { useQuery } from '@tanstack/react-query'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 // Define query keys
 const PLAID_ACCOUNTS_BY_INSTITUTION_KEY = (institutionId: string) => [
@@ -26,11 +26,10 @@ interface PlaidAccountByInstitution {
  * Hook for fetching Plaid accounts for a specific institution
  */
 export function usePlaidAccountsByInstitution(institutionId: string | null, options = {}) {
-  const { userId } = useAuth()
+  const { supabase } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const defaultOptions = {
-    enabled: !!userId && !!institutionId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   }
 
@@ -40,6 +39,12 @@ export function usePlaidAccountsByInstitution(institutionId: string | null, opti
       if (!institutionId) {
         throw new Error('Institution ID is required')
       }
+
+      // Check if user is authenticated
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
 
       // Use the unified endpoint and filter for Plaid accounts by institution
       const response = await apiClient.get<

@@ -6,8 +6,6 @@ import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
 import type { Route } from './+types/root'
 import './globals.css'
 import { getQueryClient } from './lib/get-query-client'
-import { AuthProvider } from './lib/supabase/auth-context'
-import { UserProvider } from './lib/user-context'
 
 // No loader needed for Supabase auth
 
@@ -95,11 +93,7 @@ function AppProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <FeatureFlagsProvider flags={featureFlags}>
-          <UserProvider>{children}</UserProvider>
-        </FeatureFlagsProvider>
-      </AuthProvider>
+      <FeatureFlagsProvider flags={featureFlags}>{children}</FeatureFlagsProvider>
     </QueryClientProvider>
   )
 }

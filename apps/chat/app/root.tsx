@@ -1,11 +1,19 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import {
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  redirect,
+  Scripts,
+  ScrollRestoration,
+} from 'react-router'
 
 import type { Route } from './+types/root'
 import './app.css'
 import { getQueryClient } from './lib/get-query-client'
-import { AuthProvider } from './lib/supabase/auth-context'
+import { getServerSession } from './lib/supabase'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -19,6 +27,19 @@ export const links: Route.LinksFunction = () => [
     href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
   },
 ]
+
+export async function loader(loaderArgs: Route.LoaderArgs) {
+  const { user, hominemUser } = await getServerSession(loaderArgs.request)
+
+  if (!user && new URL(loaderArgs.request.url).pathname !== '/') {
+    return redirect('/')
+  }
+
+  return {
+    supabaseUserId: user?.id || null,
+    hominemUserId: hominemUser?.id || null,
+  }
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -41,11 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 const queryClient = getQueryClient()
 
 function AppProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
-    </QueryClientProvider>
-  )
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
 
 export default function App() {

@@ -1,53 +1,11 @@
-import { streamText } from 'ai'
+import { streamText, tool } from 'ai'
 import type { ActionFunctionArgs } from 'react-router'
+import { z } from 'zod'
 import { ChatDatabaseService } from '~/lib/services/chat-db.server.js'
-import type { ProcessedFile } from '~/lib/services/file-processor.server.js'
 import { model } from '~/lib/services/llm.server.js'
 import { PerformanceMonitor } from '~/lib/services/performance-monitor.server.js'
 import { withRateLimit } from '~/lib/services/rate-limit.server.js'
-
-interface ChatStreamRequest {
-  message: string
-  chatId?: string
-  userId?: string
-  files?: ProcessedFile[]
-  searchContext?: string
-  voiceMode?: boolean
-  conversationHistory?: Array<{
-    role: 'user' | 'assistant' | 'system'
-    content: string
-  }>
-  createNewChat?: boolean
-  chatTitle?: string
-}
-
-interface StreamChunk {
-  content?: string
-  done?: boolean
-}
-
-interface StreamResponse {
-  type: 'content' | 'audio' | 'complete'
-  content?: string
-  fullResponse?: string
-  chatId?: string
-  audio?: {
-    fileId: string
-    url: string
-    duration: number
-    voice: string
-  }
-  finishReason?: string
-}
-
-interface TTSResponse {
-  audio: {
-    fileId: string
-    url: string
-    duration: number
-    voice: string
-  }
-}
+import type { ChatStreamRequest, MessageRole, ProcessedFile } from '~/lib/types/chat.js'
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -57,14 +15,36 @@ export async function action({ request }: ActionFunctionArgs) {
   return withRateLimit('chatStream')(request, async () => {
     try {
       const body: ChatStreamRequest = await request.json()
+
+      // Handle both custom format and AI SDK format
+      let message: string
+      let conversationHistory: Array<{
+        role: MessageRole
+        content: string
+      }> = []
+
+      if (body.messages) {
+        // AI SDK format - extract the last message as the current message
+        // and use the rest as conversation history
+        const aiMessages = body.messages
+        if (aiMessages.length === 0) {
+          return new Response('No messages provided', { status: 400 })
+        }
+
+        const lastMessage = aiMessages[aiMessages.length - 1]
+        message = lastMessage.content
+        conversationHistory = aiMessages.slice(0, -1)
+      } else {
+        // Custom format
+        message = body.message || ''
+        conversationHistory = body.conversationHistory || []
+      }
+
       const {
-        message,
         chatId,
         userId = 'anonymous',
         files = [],
         searchContext,
-        voiceMode = false,
-        conversationHistory = [],
         createNewChat = false,
         chatTitle,
       } = body
@@ -82,7 +62,7 @@ export async function action({ request }: ActionFunctionArgs) {
             'db_create_chat',
             () =>
               ChatDatabaseService.createChat({
-                title: chatTitle || generateChatTitle(message),
+                title: chatTitle || generateChatTitle(message || 'New Chat'),
                 userId,
               }),
             { userId }
@@ -155,12 +135,47 @@ export async function action({ request }: ActionFunctionArgs) {
         maxTokens: 2000,
         presencePenalty: 0,
         frequencyPenalty: 0.1,
+        // Example tools following the AI SDK pattern
+        tools: {
+          weather: tool({
+            description: 'Get the weather in a location (fahrenheit)',
+            parameters: z.object({
+              location: z.string().describe('The location to get the weather for'),
+            }),
+            execute: async ({ location }) => {
+              // Simulate weather API call
+              const temperature = Math.round(Math.random() * (90 - 32) + 32)
+              return {
+                location,
+                temperature,
+                description: temperature > 70 ? 'Sunny' : temperature > 50 ? 'Cloudy' : 'Cold',
+              }
+            },
+          }),
+          convertFahrenheitToCelsius: tool({
+            description: 'Convert a temperature in fahrenheit to celsius',
+            parameters: z.object({
+              temperature: z.number().describe('The temperature in fahrenheit to convert'),
+            }),
+            execute: async ({ temperature }) => {
+              const celsius = Math.round((temperature - 32) * (5 / 9))
+              return {
+                celsius,
+              }
+            },
+          }),
+        },
       })
 
       streamTimer.end()
 
-      // Return the stream directly
-      return response.toDataStreamResponse()
+      // Return the stream using toDataStreamResponse which is compatible with useChat
+      return response.toDataStreamResponse({
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
+      })
     } catch (error) {
       console.error('Chat stream error:', error)
       return new Response(
@@ -180,9 +195,9 @@ function buildConversationMessages(
   message: string,
   files: ProcessedFile[],
   searchContext?: string,
-  conversationHistory: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = []
+  conversationHistory: Array<{ role: MessageRole; content: string }> = []
 ) {
-  const messages: { role: 'user' | 'assistant' | 'system'; content: string }[] = []
+  const messages: { role: MessageRole; content: string }[] = []
 
   // System message
   messages.push({

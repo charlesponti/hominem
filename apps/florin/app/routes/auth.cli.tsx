@@ -1,9 +1,11 @@
+import type { User } from '@supabase/supabase-js'
 import { Check, Copy, Terminal } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { getServerSession, useAuth } from '~/lib/supabase'
+import { getServerSession } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import type { Route } from './+types/auth.cli'
 
 export async function loader(args: Route.LoaderArgs) {
@@ -26,10 +28,27 @@ export async function loader(args: Route.LoaderArgs) {
 }
 
 export default function AuthCli({ loaderData }: Route.ComponentProps) {
-  const { user, isLoading } = useAuth()
+  const { getUser } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [searchParams] = useSearchParams()
   const urlToken = searchParams.get('token')
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
 
   // Get data from the loader
   const { token: loaderToken, error: loaderError } = loaderData

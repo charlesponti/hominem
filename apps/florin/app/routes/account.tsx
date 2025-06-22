@@ -1,7 +1,8 @@
 import { useApiClient } from '@hominem/ui'
 import type { Transaction as FinanceTransaction } from '@hominem/utils/types'
+import type { User } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { RouteLink } from '~/components/route-link'
 import {
@@ -18,16 +19,39 @@ import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
-import { useAuth } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function AccountPage() {
-  const { user, logout } = useAuth()
+  const { getUser, signOut } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
   const api = useApiClient()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
   const { accountsMap } = useFinanceAccounts()
   const { transactions } = useFinanceTransactions()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      setUser(null)
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />
@@ -180,7 +204,7 @@ export default function AccountPage() {
                 <h3 className="font-medium">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">End your current session.</p>
               </div>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={handleLogout}>
                 Sign Out
               </Button>
             </div>

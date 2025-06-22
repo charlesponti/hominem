@@ -1,6 +1,4 @@
-import crypto from 'node:crypto'
 import type { ActionFunctionArgs } from 'react-router'
-import { TranscriptionCache } from '~/lib/services/cache.server.js'
 import { openai } from '~/lib/services/openai.server.js'
 import { withRateLimit } from '~/lib/services/rate-limit.server.js'
 import { jsonResponse } from '~/lib/utils/json-response'
@@ -43,25 +41,19 @@ export async function action({ request }: ActionFunctionArgs) {
 
       // Generate hash for caching
       const audioBuffer = await audioFile.arrayBuffer()
-      const audioHash = crypto.createHash('sha256').update(Buffer.from(audioBuffer)).digest('hex')
+      const fileExtension = getFileExtension(audioFile.type)
+      const fileName = `audio${fileExtension}`
 
-      // Try to get from cache first
-      const transcription = await TranscriptionCache.getOrCreate(audioHash, async () => {
-        // Create a new File object with proper extension for OpenAI
-        const fileExtension = getFileExtension(audioFile.type)
-        const fileName = `audio${fileExtension}`
+      // Convert to File with proper name
+      const processedFile = new File([audioBuffer], fileName, { type: audioFile.type })
 
-        // Convert to File with proper name
-        const processedFile = new File([audioBuffer], fileName, { type: audioFile.type })
-
-        // Transcribe using OpenAI Whisper
-        return await openai.audio.transcriptions.create({
-          file: processedFile,
-          model: 'whisper-1',
-          language: 'en', // Can be made configurable
-          response_format: 'verbose_json', // Get detailed response with timestamps
-          timestamp_granularities: ['word'],
-        })
+      // Transcribe using OpenAI Whisper
+      const transcription = await openai.audio.transcriptions.create({
+        file: processedFile,
+        model: 'whisper-1',
+        language: 'en', // Can be made configurable
+        response_format: 'verbose_json', // Get detailed response with timestamps
+        timestamp_granularities: ['word'],
       })
 
       return jsonResponse({

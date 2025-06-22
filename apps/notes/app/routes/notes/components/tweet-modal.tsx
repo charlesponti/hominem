@@ -1,7 +1,8 @@
 'use client'
 
+import type { User } from '@supabase/supabase-js'
 import { Loader2, RefreshCw, Twitter } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -27,7 +28,7 @@ import { useContentStrategies } from '~/lib/content/use-content-strategies'
 import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
 import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
 import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
-import { useAuth } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 interface TweetModalProps {
   open: boolean
@@ -75,10 +76,26 @@ export function TweetModal({
 }: TweetModalProps) {
   const [strategyType, setStrategyType] = useState<StrategyType>('default')
   const [strategy, setStrategy] = useState<string>('storytelling')
+  const [user, setUser] = useState<User | null>(null)
 
-  const { isAuthenticated } = useAuth()
+  const { getUser } = useSupabaseAuth()
   const { strategies: customStrategies, isLoading: isLoadingStrategies } = useContentStrategies()
   const twitterIntegrationEnabled = useFeatureFlag('twitterIntegration')
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
+
+  const isAuthenticated = !!user
 
   const {
     generateTweet,

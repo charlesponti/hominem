@@ -1,9 +1,9 @@
 'use client'
 
-import { useAuth } from '~/lib/supabase'
 import { useApiClient } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 // Define query keys at the top of the file as constants
 const PLAID_CONNECTIONS_KEY = [['plaid', 'connections']]
@@ -160,17 +160,22 @@ export function useExchangeToken() {
  * @deprecated Use useAllAccounts() instead for unified account and connection data
  */
 export function usePlaidConnections(options = {}) {
-  const { userId } = useAuth()
+  const { supabase } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const defaultOptions = {
-    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   }
 
   const query = useQuery<{ connections: PlaidConnection[] }>({
     queryKey: PLAID_CONNECTIONS_KEY,
     queryFn: async () => {
+      // Check if user is authenticated
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
       // Use the unified endpoint to get connection data
       const response = await apiClient.get<
         null,
@@ -211,17 +216,22 @@ export function usePlaidConnections(options = {}) {
  * @deprecated Use useAllAccounts() instead for unified account data
  */
 export function usePlaidAccounts(options = {}) {
-  const { userId } = useAuth()
+  const { supabase } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const defaultOptions = {
-    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   }
 
   const query = useQuery<{ accounts: PlaidAccount[] }>({
     queryKey: PLAID_ACCOUNTS_KEY,
     queryFn: async () => {
+      // Check if user is authenticated
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
       // Use the unified endpoint and filter for Plaid accounts only
       const response = await apiClient.get<
         null,

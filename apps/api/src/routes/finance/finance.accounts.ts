@@ -63,7 +63,8 @@ financeAccountsRoutes.post('/', requireAuth, zValidator('json', createAccountSch
 
     return c.json(newAccount, 201)
   } catch (error) {
-    console.error('Error creating account:', error)
+    // Log detailed error for diagnostics
+    console.log({ err: error, userId: c.get('userId') }, 'Error creating finance account')
     return c.json(
       {
         error: 'Failed to create account',
@@ -86,7 +87,8 @@ financeAccountsRoutes.get('/', requireAuth, async (c) => {
     const accounts = await FinancialAccountService.listAccounts(userId)
     return c.json(accounts)
   } catch (error) {
-    console.error('Error listing accounts:', error)
+    // Log detailed error for diagnostics
+    console.log({ err: error, userId: c.get('userId') }, 'Error listing finance accounts')
     return c.json(
       {
         error: 'Failed to list accounts',
@@ -185,7 +187,8 @@ financeAccountsRoutes.get('/all', requireAuth, async (c) => {
       connections: uniqueConnections,
     })
   } catch (error) {
-    console.error('Error fetching all accounts:', error)
+    // Log detailed error for diagnostics
+    console.log({ err: error, userId: c.get('userId') }, 'Error fetching all finance accounts')
     return c.json(
       {
         error: 'Failed to fetch accounts',
@@ -218,7 +221,11 @@ financeAccountsRoutes.get(
 
       return c.json(account)
     } catch (error) {
-      console.error('Error fetching account:', error)
+      // Log detailed error for diagnostics
+      console.log(
+        { err: error, userId: c.get('userId'), id: c.req.valid('param').id },
+        'Error fetching finance account by ID'
+      )
       return c.json(
         {
           error: 'Failed to fetch account',
@@ -276,7 +283,11 @@ financeAccountsRoutes.put(
 
       return c.json(updatedAccount)
     } catch (error) {
-      console.error('Error updating account:', error)
+      // Log detailed error for diagnostics
+      console.log(
+        { err: error, userId: c.get('userId'), id: c.req.valid('param').id },
+        'Error updating finance account'
+      )
       return c.json(
         {
           error: 'Failed to update account',
@@ -313,7 +324,11 @@ financeAccountsRoutes.delete(
 
       return c.json({ success: true, message: 'Account deleted successfully' })
     } catch (error) {
-      console.error('Error deleting account:', error)
+      // Log detailed error for diagnostics
+      console.log(
+        { err: error, userId: c.get('userId'), id: c.req.valid('param').id },
+        'Error deleting finance account'
+      )
       return c.json(
         {
           error: 'Failed to delete account',
@@ -386,7 +401,11 @@ financeAccountsRoutes.post(
         account: updatedAccount,
       })
     } catch (error) {
-      console.error('Error linking account to institution:', error)
+      // Log detailed error for diagnostics
+      console.log(
+        { err: error, userId: c.get('userId'), id: c.req.valid('param').id },
+        'Error linking finance account to institution'
+      )
       return c.json(
         {
           error: 'Failed to link account to institution',
@@ -430,7 +449,11 @@ financeAccountsRoutes.post(
         account: updatedAccount,
       })
     } catch (error) {
-      console.error('Error unlinking account from institution:', error)
+      // Log detailed error for diagnostics
+      console.log(
+        { err: error, userId: c.get('userId'), id: c.req.valid('param').id },
+        'Error unlinking finance account from institution'
+      )
       return c.json(
         {
           error: 'Failed to unlink account from institution',

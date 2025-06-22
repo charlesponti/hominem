@@ -1,9 +1,10 @@
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link as RouterLink, useLocation } from 'react-router'
-import { useAuth } from '~/lib/supabase/auth-context'
+import { Button } from '~/components/ui/button'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { cn } from '~/lib/utils'
 
 const navItems = [
   {
@@ -15,12 +16,29 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoading, signInWithGoogle } = useAuth()
+  const { getUser, signInWithGoogle } = useSupabaseAuth()
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const isLoggedIn = !isLoading && user
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
   const [isSigningIn, setIsSigningIn] = useState(false)
+
+  // Get user on mount
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error loading user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadUser()
+  }, [getUser])
 
   useEffect(() => {
     // Check if we're on the client side
@@ -117,7 +135,7 @@ export function MainNavigation() {
   // Desktop navbar
   if (!isMobile) {
     return (
-      <header className="sticky top-0 z-50 bg-background border-b">
+      <header className="sticky top-0 z-50 backdrop-blur-sm border-b">
         <div className="flex h-16 items-center px-4">
           {/* Logo */}
           <div className="flex items-center space-x-2">

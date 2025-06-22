@@ -1,3 +1,4 @@
+import type { User } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
@@ -5,14 +6,28 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { useToast } from '~/components/ui/use-toast'
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
-import { useAuth } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function AccountPage() {
-  const { user, logout } = useAuth()
+  const { getUser, signOut } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
   const { toast } = useToast()
   const { refetch } = useTwitterOAuth()
 
   const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -62,7 +77,8 @@ export default function AccountPage() {
 
   const handleSignOut = async () => {
     try {
-      await logout()
+      await signOut()
+      setUser(null)
     } catch (error) {
       toast({
         title: 'Error',

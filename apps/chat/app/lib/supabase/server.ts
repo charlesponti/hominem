@@ -1,4 +1,5 @@
 import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr'
+import { UserDatabaseService } from '~/lib/services/user.server'
 
 export function createSupabaseServerClient(request: Request) {
   const headers = new Headers()
@@ -33,26 +34,32 @@ export async function getServerSession(request: Request) {
 
   try {
     const {
-      data: { session },
+      data: { user },
       error,
-    } = await supabase.auth.getSession()
+    } = await supabase.auth.getUser()
 
-    if (error || !session) {
-      return { user: null, session: null }
+    if (error || !user) {
+      return { user: null, session: null, hominemUser: null }
     }
 
-    return { user: session.user, session }
+    // Get or create the hominem user record
+    const hominemUser = await UserDatabaseService.findOrCreateUser(user)
+    if (!hominemUser) {
+      throw new Error('Failed to get or create hominem user:')
+    }
+
+    return { user: user, session: null, hominemUser }
   } catch (error) {
-    return { user: null, session: null }
+    return { user: null, session: null, hominemUser: null }
   }
 }
 
 export async function requireAuth(request: Request) {
-  const { user, session } = await getServerSession(request)
+  const { user, session, hominemUser } = await getServerSession(request)
 
-  if (!user || !session) {
+  if (!user || !session || !hominemUser) {
     throw new Response('Unauthorized', { status: 401 })
   }
 
-  return { user, session }
+  return { user, session, hominemUser }
 }

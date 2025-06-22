@@ -1,11 +1,11 @@
 'use client'
 
-import { useAuth } from '~/lib/supabase'
 import { useApiClient } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'
 
 // Define constants for channel names and message types
@@ -20,7 +20,7 @@ const PROGRESS_UPDATE_THROTTLE = 100
 export function useImportTransactionsStore() {
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
-  const { getToken } = useAuth()
+  const { supabase } = useSupabaseAuth()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
   const [error, setError] = useState<Error | null>(null)
@@ -57,8 +57,14 @@ export function useImportTransactionsStore() {
 
   // Connect on initialization, providing token function
   useEffect(() => {
+    const getToken = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      return session?.access_token || null
+    }
     connect(getToken)
-  }, [connect, getToken])
+  }, [connect, supabase])
 
   // Throttled update function to reduce re-render frequency
   const throttledUpdateProgress = useCallback(

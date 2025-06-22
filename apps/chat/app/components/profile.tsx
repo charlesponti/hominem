@@ -1,7 +1,25 @@
-import { useAuth } from '~/lib/supabase/auth-context'
+import type { User } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export function Profile() {
-  const { user, isLoading, logout } = useAuth()
+  const { getUser, signOut } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error loading user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadUser()
+  }, [getUser])
 
   if (isLoading) {
     return <div className="loading">Loading user data...</div>
@@ -13,7 +31,8 @@ export function Profile() {
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await signOut()
+      setUser(null)
     } catch (error) {
       console.error('Logout error:', error)
     }

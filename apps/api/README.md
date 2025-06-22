@@ -27,6 +27,11 @@ The API uses Supabase for authentication. You'll need to set up the following en
 
 All authenticated routes will use Supabase's JWT verification to validate requests.
 
+## Database
+
+The API uses a PostgreSQL database. You'll need to set up the following environment variable:
+- `DATABASE_URL`: connection string for your PostgreSQL database.
+
 ## Budget Categories
 
 Budget categories have a unique constraint on `name + userId`, ensuring that:

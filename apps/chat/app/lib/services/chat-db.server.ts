@@ -1,40 +1,8 @@
-import { db } from '@hominem/utils/db'
 import { chat, chatMessage, type Chat, type ChatMessageSelect } from '@hominem/utils/schema'
 import { and, desc, eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-
-export interface CreateChatParams {
-  title: string
-  userId: string
-}
-
-export interface CreateMessageParams {
-  chatId: string
-  userId: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  files?: Array<{
-    type: 'image' | 'file'
-    filename?: string
-    mimeType?: string
-    [key: string]: unknown
-  }>
-  toolCalls?: Array<{
-    type: 'tool-call' | 'tool-result'
-    toolName: string
-    toolCallId?: string
-    args?: Record<string, unknown>
-    result?: unknown
-    isError?: boolean
-  }>
-  reasoning?: string
-  parentMessageId?: string
-  messageIndex?: string
-}
-
-export interface ChatWithMessages extends Chat {
-  messages: ChatMessageSelect[]
-}
+import type { ChatWithMessages, CreateChatParams, CreateMessageParams } from '~/lib/types/chat.js'
+import { db } from '../db.server'
 
 export class ChatDatabaseService {
   /**
@@ -233,7 +201,12 @@ export class ChatDatabaseService {
     Array<{
       role: 'user' | 'assistant' | 'system'
       content: string
-      files?: any[]
+      files?: Array<{
+        type: 'image' | 'file'
+        filename?: string
+        mimeType?: string
+        [key: string]: unknown
+      }>
     }>
   > {
     try {

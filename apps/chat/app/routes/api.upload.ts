@@ -1,19 +1,10 @@
 import type { ActionFunctionArgs } from 'react-router'
-import { processFile, type ProcessedFile } from '~/lib/services/file-processor.server.js'
+import { processFile } from '~/lib/services/file-processor.server.js'
 import { isValidFileType, storeFile } from '~/lib/services/file-storage.server.js'
 import { indexProcessedFile } from '~/lib/services/vector-file-integration.server.js'
+import { requireAuth } from '~/lib/supabase/server.js'
+import type { FailedUpload, UploadResponse, UploadedFile } from '~/lib/types/upload.js'
 import { jsonResponse } from '~/lib/utils/json-response'
-
-interface UploadedFile extends ProcessedFile {
-  url: string
-  uploadedAt: Date
-  vectorIds?: string[]
-}
-
-interface FailedUpload {
-  name: string
-  error: string
-}
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -21,9 +12,12 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
+    // Require authentication and get user
+    const { user } = await requireAuth(request)
+    const userId = user.id
+
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
-    const userId = formData.get('userId') as string // TODO: Get from authenticated session
 
     if (!files.length) {
       return jsonResponse({ error: 'No files provided' }, { status: 400 })
@@ -40,15 +34,15 @@ export async function action({ request }: ActionFunctionArgs) {
         // Convert File to ArrayBuffer
         const buffer = await file.arrayBuffer()
 
-        // Store the file
-        const storedFile = await storeFile(buffer, file.name, file.type)
+        // Store the file with user authentication
+        const storedFile = await storeFile(buffer, file.name, file.type, userId, request)
 
         // Process the file based on its type
         const processedFile = await processFile(buffer, file.name, file.type, storedFile.id)
 
-        // Index the file in the vector store if user ID is provided and file has text content
+        // Index the file in the vector store if file has text content
         let vectorIds: string[] = []
-        if (userId && (processedFile.textContent || processedFile.content)) {
+        if (processedFile.textContent || processedFile.content) {
           const indexResult = await indexProcessedFile(processedFile, userId, storedFile.url)
           vectorIds = indexResult.vectorIds
         }
@@ -77,12 +71,14 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     })
 
-    return jsonResponse({
+    const responseData: UploadResponse = {
       success: true,
       files: successful,
       failed,
       message: `Successfully uploaded ${successful.length} of ${files.length} files`,
-    })
+    }
+
+    return jsonResponse(responseData)
   } catch (error) {
     console.error('Upload error:', error)
     return jsonResponse(

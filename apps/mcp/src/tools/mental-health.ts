@@ -58,7 +58,7 @@ export function registerMentalWellnessTool(server: McpServer) {
           ],
         }
       } catch (error) {
-        console.error('[MCP Health Error]', error)
+        console.error('[MCP Mental Wellness Error]', error)
         return {
           content: [
             {

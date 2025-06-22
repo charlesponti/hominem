@@ -1,5 +1,4 @@
 import type { ActionFunctionArgs } from 'react-router'
-import { SearchCache } from '~/lib/services/cache.server.js'
 import { withRateLimit } from '~/lib/services/rate-limit.server.js'
 import { jsonResponse } from '~/lib/utils/json-response'
 
@@ -38,21 +37,14 @@ export async function action({ request }: ActionFunctionArgs) {
         )
       }
 
-      // Use cache for search results
-      const searchData = await SearchCache.getOrCreate(query, maxResults, async () => {
-        // For now, implement a simple web search using DuckDuckGo Instant Answer API
-        // In production, you'd want to use a more robust search API like Tavily, SerpAPI, or Google Custom Search
-        const searchResults = await performWebSearch(query, maxResults)
+      const searchResults = await performWebSearch(query, maxResults)
 
-        return {
-          success: true,
-          query,
-          results: searchResults,
-          summary: generateSearchSummary(searchResults),
-        }
+      return jsonResponse({
+        success: true,
+        query,
+        results: searchResults,
+        summary: generateSearchSummary(searchResults),
       })
-
-      return jsonResponse(searchData)
     } catch (error) {
       console.error('Search error:', error)
 

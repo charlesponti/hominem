@@ -1,4 +1,7 @@
 {
+  "[dockerfile]": {
+    "editor.defaultFormatter": "docker.docker"
+  },
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
   },
@@ -18,8 +21,7 @@
     "editor.defaultFormatter": "biomejs.biome"
   },
   "biome.enabled": true,
-  "biome.lspBin": "node_modules/.bin/biome",
-  "biome.searchInPath": true,
+  "biome.lsp.bin": "node_modules/.bin/biome",
   "editor.codeActionsOnSave": {
     "source.sortImports": "always"
   },
@@ -36,14 +38,10 @@
       "file": ".cursor/rules/react-hooks.md"
     },
   ],
-  "github.copilot.chat.followUps": "always",
   "github.copilot.nextEditSuggestions.enabled": true,
   "javascript.preferences.importModuleSpecifier": "shortest",
   "rust-analyzer.completion.autoimport.enable": true,
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.preferences.importModuleSpecifier": "shortest",
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "[dockerfile]": {
-    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
-  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

@@ -1,7 +1,8 @@
+import type { User } from '@supabase/supabase-js'
 import { ArrowRight, BarChart2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { useAuth } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import styles from './home.module.css'
 
 export function meta() {
@@ -16,8 +17,25 @@ export function meta() {
 }
 
 export default function Home() {
-  const { user, isLoading } = useAuth()
+  const { getUser } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
 
   // Redirect authenticated users to their dashboard
   useEffect(() => {

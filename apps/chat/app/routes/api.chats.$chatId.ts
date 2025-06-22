@@ -1,9 +1,9 @@
+import type { LoaderFunctionArgs } from 'react-router'
 import { ChatDatabaseService } from '~/lib/services/chat-db.server.js'
 import { jsonResponse } from '~/lib/utils/json-response'
-import type { Route } from './+types/chats.$chatId'
 
 // GET /api/chats/:chatId - Get specific chat with messages
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const { chatId } = params
 
   if (!chatId) {

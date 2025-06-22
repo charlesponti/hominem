@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+// Redirect any console.log/info/warn to stderr so library logs don't break MCP stdio protocol
+console.log = (...args: unknown[]) => console.error(...args)
+console.info = (...args: unknown[]) => console.error(...args)
+console.warn = (...args: unknown[]) => console.error(...args)
+
 import { McpServer as Server } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { registerFinanceTools } from './tools/finance'

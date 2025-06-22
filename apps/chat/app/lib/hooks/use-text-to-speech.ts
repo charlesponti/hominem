@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 export interface TTSState {
   isSpeaking: boolean
@@ -20,17 +20,13 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     isSpeaking: false,
     isLoading: false,
     error: null,
-    currentAudio: null
+    currentAudio: null,
   })
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const currentAbortControllerRef = useRef<AbortController | null>(null)
 
-  const speak = useCallback(async (
-    text: string, 
-    voice: string = 'alloy',
-    speed: number = 1.0
-  ): Promise<void> => {
+  const speak = useCallback(async (text: string, voice = 'alloy', speed = 1.0): Promise<void> => {
     // Stop any current speech
     stop()
 
@@ -38,10 +34,10 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
       return
     }
 
-    setState(prev => ({ 
-      ...prev, 
-      isLoading: true, 
-      error: null 
+    setState((prev) => ({
+      ...prev,
+      isLoading: true,
+      error: null,
     }))
 
     try {
@@ -53,10 +49,10 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
       const response = await fetch('/api/speech', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ text, voice, speed }),
-        signal: abortController.signal
+        signal: abortController.signal,
       })
 
       if (!response.ok) {
@@ -75,41 +71,40 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
       audioRef.current = audio
 
       audio.onloadstart = () => {
-        setState(prev => ({ ...prev, isLoading: true }))
+        setState((prev) => ({ ...prev, isLoading: true }))
       }
 
       audio.oncanplaythrough = () => {
-        setState(prev => ({ 
-          ...prev, 
+        setState((prev) => ({
+          ...prev,
           isLoading: false,
           isSpeaking: true,
-          currentAudio: result.audio.url
+          currentAudio: result.audio.url,
         }))
       }
 
       audio.onended = () => {
-        setState(prev => ({ 
-          ...prev, 
+        setState((prev) => ({
+          ...prev,
           isSpeaking: false,
-          currentAudio: null
+          currentAudio: null,
         }))
         audioRef.current = null
       }
 
       audio.onerror = () => {
-        setState(prev => ({ 
-          ...prev, 
+        setState((prev) => ({
+          ...prev,
           isLoading: false,
           isSpeaking: false,
           error: 'Failed to play audio',
-          currentAudio: null
+          currentAudio: null,
         }))
         audioRef.current = null
       }
 
       // Start playing
       await audio.play()
-
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         // Request was aborted, ignore
@@ -117,12 +112,12 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
       }
 
       console.error('Text-to-speech error:', error)
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         isSpeaking: false,
         error: error instanceof Error ? error.message : 'Failed to generate speech',
-        currentAudio: null
+        currentAudio: null,
       }))
     }
   }, [])
@@ -141,25 +136,25 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
       audioRef.current = null
     }
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isSpeaking: false,
       isLoading: false,
-      currentAudio: null
+      currentAudio: null,
     }))
   }, [])
 
   const pause = useCallback(() => {
     if (audioRef.current && state.isSpeaking) {
       audioRef.current.pause()
-      setState(prev => ({ ...prev, isSpeaking: false }))
+      setState((prev) => ({ ...prev, isSpeaking: false }))
     }
   }, [state.isSpeaking])
 
   const resume = useCallback(() => {
     if (audioRef.current && !state.isSpeaking && state.currentAudio) {
       audioRef.current.play()
-      setState(prev => ({ ...prev, isSpeaking: true }))
+      setState((prev) => ({ ...prev, isSpeaking: true }))
     }
   }, [state.isSpeaking, state.currentAudio])
 
@@ -168,6 +163,6 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     speak,
     stop,
     pause,
-    resume
+    resume,
   }
 }

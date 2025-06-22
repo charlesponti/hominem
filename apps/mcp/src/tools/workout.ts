@@ -61,7 +61,7 @@ export function registerWorkoutTool(server: McpServer) {
           ],
         }
       } catch (error) {
-        console.error('[MCP Health Error]', error)
+        console.error('[MCP Workout Error]', error)
         return {
           content: [
             {

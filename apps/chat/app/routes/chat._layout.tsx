@@ -1,19 +1,8 @@
-import { Outlet, redirect, type LoaderFunctionArgs } from 'react-router'
-import { getServerSession } from '~/lib/supabase/server'
-
-export async function loader(loaderArgs: LoaderFunctionArgs) {
-  const session = await getServerSession(loaderArgs.request)
-
-  if (!session?.user) {
-    return redirect('/')
-  }
-
-  return { userId: session.user.id }
-}
+import { Outlet } from 'react-router'
 
 export default function ChatLayout() {
   return (
-    <div className="fixed inset-0 bg-background h-screen-safe">
+    <div className="bg-background flex h-screen">
       <Outlet />
     </div>
   )

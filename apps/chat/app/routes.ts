@@ -7,7 +7,10 @@ export default [
     route('health', 'routes/health.tsx'),
 
     // Chat routes with their own layout
-    layout('routes/chat._layout.tsx', [route('chat', 'routes/chat.tsx')]),
+    layout('routes/chat._layout.tsx', [
+      route('chat', 'routes/chat.tsx'),
+      route('chat/:chatId', 'routes/chat.$chatId.tsx'),
+    ]),
 
     // Profile
     route('profile', 'routes/profile.tsx'),

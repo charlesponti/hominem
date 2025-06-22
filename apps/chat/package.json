@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.10",
+    "@ai-sdk/react": "^1.2.12",
     "@hominem/ai": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
@@ -31,6 +32,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "daisyui": "^5.0.11",
+    "dotenv": "^16.5.0",
     "drizzle-orm": "^0.42.0",
     "framer-motion": "^12.6.3",
     "isbot": "^5.1.17",
@@ -43,6 +45,7 @@
     "pdf-parse": "^1.1.1",
     "pdf2json": "^3.1.6",
     "pdf2pic": "^3.2.0",
+    "postgres": "^3.4.7",
     "react-markdown": "^10.1.0",
     "react-router": "^7.4.1",
     "react-syntax-highlighter": "^15.6.1",

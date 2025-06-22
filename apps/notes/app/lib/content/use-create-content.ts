@@ -1,40 +1,46 @@
 import { useApiClient } from '@hominem/ui'
 import type { Content, ContentType } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '~/lib/supabase'
+import { useEffect, useState } from 'react'
+import { createClient } from '~/lib/supabase'
 import { useToast } from '../../components/ui/use-toast'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
 
 const defaultContentFields = (
-  type: ContentType = 'note'
+  type: ContentType = 'tweet'
 ): Omit<
   Content,
-  'id' | 'content' | 'userId' | 'createdAt' | 'updatedAt' | 'synced' | 'mentions'
+  'id' | 'content' | 'userId' | 'createdAt' | 'updatedAt' | 'publishedAt' | 'scheduledFor'
 > => ({
   type,
-  title: '',
+  title: null,
+  excerpt: null,
+  status: 'draft',
   tags: [],
-  taskMetadata:
-    type === 'task'
-      ? {
-          status: 'todo',
-          priority: 'medium',
-          dueDate: null,
-          startTime: undefined,
-          endTime: undefined,
-          duration: 0,
-        }
-      : null,
-  tweetMetadata: type === 'tweet' ? { status: 'draft' as const } : null,
-  analysis: {},
+  socialMediaMetadata: null,
+  seoMetadata: null,
+  contentStrategyId: null,
 })
 
 export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
-  const { user, isAuthenticated } = useAuth()
+  const [user, setUser] = useState<{ id: string } | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const supabase = createClient()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
   const { toast } = useToast()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUser(user)
+      setIsAuthenticated(!!user)
+    }
+    getUser()
+  }, [supabase])
 
   const createItem = useMutation<
     Content,
@@ -42,7 +48,14 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
     { type: ContentType; content: string } & Partial<
       Omit<
         Content,
-        'id' | 'userId' | 'content' | 'type' | 'createdAt' | 'updatedAt' | 'synced' | 'mentions'
+        | 'id'
+        | 'userId'
+        | 'content'
+        | 'type'
+        | 'createdAt'
+        | 'updatedAt'
+        | 'publishedAt'
+        | 'scheduledFor'
       >
     >,
     { previousContent: Content[] | undefined }
@@ -51,10 +64,7 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
       if (!isAuthenticated || !user) {
         throw new Error('User must be signed in to create content.')
       }
-      const payloadForApi: Omit<
-        Content,
-        'id' | 'userId' | 'createdAt' | 'updatedAt' | 'synced' | 'mentions'
-      > & { content: string } = {
+      const payloadForApi = {
         ...defaultContentFields(itemData.type),
         ...itemData,
       }
@@ -81,8 +91,8 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
         userId: user?.id || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        synced: false,
-        mentions: [],
+        publishedAt: null,
+        scheduledFor: null,
       }
 
       queryClient.setQueryData<Content[]>(queryKey, (oldContent = []) => [

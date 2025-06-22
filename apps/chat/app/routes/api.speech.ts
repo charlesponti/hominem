@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs } from 'react-router'
-import { TTSCache } from '~/lib/services/cache.server.js'
 import { storeFile } from '~/lib/services/file-storage.server.js'
 import { openai } from '~/lib/services/openai.server.js'
 import { withRateLimit } from '~/lib/services/rate-limit.server.js'
+import { requireAuth } from '~/lib/supabase/server.js'
 import { jsonResponse } from '~/lib/utils/json-response'
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -12,6 +12,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
   return withRateLimit('tts')(request, async () => {
     try {
+      // Require authentication and get user
+      const { user } = await requireAuth(request)
+      const userId = user.id
+
       const { text, voice = 'alloy', speed = 1.0 } = await request.json()
 
       if (!text || typeof text !== 'string') {
@@ -49,25 +53,25 @@ export async function action({ request }: ActionFunctionArgs) {
         )
       }
 
-      // Try to get from cache first, or generate new TTS
-      const result = await TTSCache.getOrCreate(text, voice, speed, async () => {
-        // Generate speech using OpenAI TTS
-        const mp3Response = await openai.audio.speech.create({
-          model: 'tts-1', // or 'tts-1-hd' for higher quality
-          voice: voice as any,
-          input: text,
-          response_format: 'mp3',
-          speed: speed,
-        })
+      // Generate speech using OpenAI TTS
+      const mp3Response = await openai.audio.speech.create({
+        model: 'tts-1',
+        voice,
+        input: text,
+        response_format: 'mp3',
+        speed: speed,
+      })
 
-        // Convert response to buffer
-        const buffer = Buffer.from(await mp3Response.arrayBuffer())
+      // Convert response to buffer
+      const buffer = Buffer.from(await mp3Response.arrayBuffer())
 
-        // Store the audio file
-        const fileName = `speech-${Date.now()}-${voice}-${speed}.mp3`
-        const storedFile = await storeFile(buffer, fileName, 'audio/mpeg')
+      // Store the audio file
+      const fileName = `speech-${Date.now()}-${voice}-${speed}.mp3`
+      const storedFile = await storeFile(buffer, fileName, 'audio/mpeg', userId, request)
 
-        return {
+      return jsonResponse({
+        success: true,
+        audio: {
           fileId: storedFile.id,
           fileName: storedFile.filename,
           url: `/api/files/${storedFile.id}`,
@@ -75,12 +79,7 @@ export async function action({ request }: ActionFunctionArgs) {
           duration: estimateAudioDuration(text),
           voice,
           speed,
-        }
-      })
-
-      return jsonResponse({
-        success: true,
-        audio: result,
+        },
       })
     } catch (error) {
       console.error('Text-to-speech error:', error)

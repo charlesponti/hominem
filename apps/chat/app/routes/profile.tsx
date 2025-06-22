@@ -1,7 +1,7 @@
-import { Profile } from '@/components/profile'
-import { getServerSession } from '@/lib/supabase/server'
 import { redirect } from 'react-router'
-import type { Route } from './+types/page'
+import { Profile } from '~/components/profile'
+import { getServerSession } from '~/lib/supabase/server'
+import type { Route } from './+types/profile'
 
 export async function loader(loaderArgs: Route.LoaderArgs) {
   const session = await getServerSession(loaderArgs.request)

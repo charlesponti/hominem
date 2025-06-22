@@ -1,7 +1,7 @@
 import { useApiClient } from '@hominem/ui'
 import type { Content, ContentType } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { useToast } from '../../components/ui/use-toast'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
@@ -14,13 +14,12 @@ export interface UseContentQueryOptions {
 }
 
 export function useContentQuery(options: UseContentQueryOptions = {}) {
-  const { user, isAuthenticated } = useAuth()
+  const { supabase } = useSupabaseAuth()
   const apiClient = useApiClient()
   const { toast } = useToast()
 
   const getQueryKey = (): unknown[] => {
-    const key: unknown[] = [CONTENT_QUERY_KEY_BASE]
-    if (user?.id) key.push(user.id)
+    const key: unknown[] = [CONTENT_QUERY_KEY_BASE, 'user']
     if (options.type) {
       key.push(`type: ${Array.isArray(options.type) ? options.type.join(',') : options.type}`)
     }
@@ -39,7 +38,10 @@ export function useContentQuery(options: UseContentQueryOptions = {}) {
   const contentQuery = useQuery<Content[], Error>({
     queryKey: getQueryKey(),
     queryFn: async () => {
-      if (!isAuthenticated || !user) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
         return []
       }
       const queryParams = new URLSearchParams()
@@ -61,7 +63,6 @@ export function useContentQuery(options: UseContentQueryOptions = {}) {
       const serverContent = await apiClient.get<null, Content[]>(url)
       return serverContent || []
     },
-    enabled: !!isAuthenticated && !!user,
     staleTime: 1000 * 60 * 1,
     onError: (error: Error) => {
       toast({

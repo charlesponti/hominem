@@ -1,7 +1,8 @@
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { useAuth } from '~/lib/supabase'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 import { Button } from './ui/button'
 
@@ -28,7 +29,9 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoading, signInWithGoogle } = useAuth()
+  const { getUser, signInWithGoogle } = useSupabaseAuth()
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const isLoggedIn = !isLoading && user
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -126,6 +129,22 @@ export function MainNavigation() {
       setIsSigningIn(false)
     }
   }
+
+  // Get user data on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
 
   // Desktop navbar
   if (!isMobile) {

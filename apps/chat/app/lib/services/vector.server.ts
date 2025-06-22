@@ -1,5 +1,5 @@
 import { db } from '@hominem/utils/db'
-import { vectorDocuments, type VectorDocument, type NewVectorDocument } from '@hominem/utils/schema'
+import { vectorDocuments, type NewVectorDocument, type VectorDocument } from '@hominem/utils/schema'
 import { tool } from 'ai'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
