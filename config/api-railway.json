@@ -5,7 +5,7 @@
     "dockerfilePath": "docker/api.dockerfile"
   },
   "deploy": {
-    "healthcheckPath": "/status",
+    "healthcheckPath": "/api/status",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3

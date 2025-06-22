@@ -120,7 +120,6 @@ export function createServer(): Hono<AppEnv> {
     })
   )
 
-  // Register routes - healthRoutes, financeRoutes, listsRoutes, locationRoutes, possessionsRoutes, contentStrategiesRoutes, vectorRoutes, and invitesRoutes are converted to Hono so far
   app.route('/api/health', healthRoutes)
   app.route('/api/status', statusRoutes)
   app.route('/api/finance/plaid', plaidRoutes)
@@ -137,28 +136,6 @@ export function createServer(): Hono<AppEnv> {
   app.route('/api/notes', notesRoutes)
   app.route('/api/ai', aiRoutes)
   app.route('/api/oauth', oauthRoutes)
-
-  // TODO: Convert remaining routes from Fastify plugins to Hono routes
-  // app.route('/api/admin', adminPlugin)
-  // app.route('/api/email', emailPlugin)
-  // app.route('/api/users', usersPlugin)
-  // app.route('/api/lists', listsPlugin)
-  // app.route('/api/places', placesPlugin)
-  // app.route('/api/invites', invitesPlugin)
-  // app.route('/api/bookmarks', bookmarksPlugin)
-  // app.route('/api/ai', aiRoutes)
-  // app.route('/api/possessions', possessionsPlugin)
-  // app.route('/api/companies', companyRoutes)
-  // app.route('/api/career', careerRoutes)
-  // app.route('/api/content-strategies', contentStrategiesRoutes)
-  // app.route('/api/content', contentRoutes)
-  // app.route('/api/oauth', oauthPlugin)
-  // app.route('/api/vectors', vectorRoutes)
-  // app.route('/api/finance', financeRoutes)
-  // app.route('/api/personal-finance', personalFinanceRoutes)
-  // app.route('/api/plaid', plaidRoutes)
-  // app.route('/api/status', statusPlugin)
-  // app.route('/ws', webSocketPlugin)
 
   return app
 }

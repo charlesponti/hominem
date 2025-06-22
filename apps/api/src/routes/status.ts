@@ -7,7 +7,6 @@ export const statusRoutes = new Hono()
 // System health check endpoint
 statusRoutes.get('/', async (c) => {
   try {
-    // Test database connection
     await db.select().from(health).limit(1)
 
     return c.json({
@@ -29,9 +28,4 @@ statusRoutes.get('/', async (c) => {
       500
     )
   }
-})
-
-// Legacy /health endpoint for backward compatibility
-statusRoutes.get('/health', async (c) => {
-  return c.json({ status: 'ok', serverTime: new Date().toISOString() })
 })

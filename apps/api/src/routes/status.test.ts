@@ -28,25 +28,6 @@ describe('Status Routes', () => {
     expect(body.uptime).toBeGreaterThan(0)
   })
 
-  test('GET /api/status/health - should return simple health check', async () => {
-    const app = createServer()
-
-    const res = await app.request('/api/status/health')
-    const body = (await res.json()) as {
-      status: string
-      serverTime: string
-    }
-
-    expect(res.status).toBe(200)
-    expect(body).toMatchObject({
-      status: 'ok',
-      serverTime: expect.any(String),
-    })
-
-    // Verify serverTime is a valid ISO string
-    expect(() => new Date(body.serverTime)).not.toThrow()
-  })
-
   test('GET /api/status - should handle database connection errors gracefully', async () => {
     // This test would require mocking the database to fail
     // For now, we'll just test the happy path since database mocking
