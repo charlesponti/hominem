@@ -10,5 +10,6 @@ export default [
     route('/goals', 'routes/goals/page.tsx'),
     route('/habits', 'routes/habits/page.tsx'),
     route('/account', 'routes/account.tsx'),
+    route('/auth/callback', 'routes/auth.callback.tsx'),
   ]),
 ] as RouteConfig

@@ -26,5 +26,8 @@ export default [
     route('api/speech', 'routes/api.speech.ts'),
     route('api/chat-stream', 'routes/api.chat-stream.ts'),
     route('api/files/:fileId', 'routes/api.files.$fileId.ts'),
+
+    // Auth routes
+    route('/auth/callback', 'routes/auth.callback.tsx'),
   ]),
 ] as RouteConfig

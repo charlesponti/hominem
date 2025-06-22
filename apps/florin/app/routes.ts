@@ -31,5 +31,6 @@ export default [
 
     route('/account', 'routes/account.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
+    route('/auth/callback', 'routes/auth.callback.tsx'),
   ]),
 ] as RouteConfig
