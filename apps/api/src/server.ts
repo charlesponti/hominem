@@ -103,7 +103,7 @@ export function createServer(): Hono<AppEnv> {
   app.use(
     '*',
     cors({
-      origin: [env.APP_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
+      origin: [env.FLORIN_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Content-Type', 'Authorization'],
@@ -156,11 +156,11 @@ export async function startServer() {
   // Handle WebSocket upgrade requests
   server.on('upgrade', wsManager.handleUpgrade)
 
-  console.log(`Server is running on port ${port}`)
+  console.info(`Server is running on port ${port}`)
 
   // Handle graceful shutdown
   const gracefulShutdown = async () => {
-    console.log('Shutting down gracefully...')
+    console.info('Shutting down gracefully...')
     // Close WebSocket connections
     await wsManager.close()
     // Close cache

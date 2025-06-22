@@ -7,8 +7,8 @@ const envSchema = z.object({
   API_URL: z.string().url().default('http://localhost:4040'),
   COOKIE_SECRET: z.string().default('supersecret'),
 
+  FLORIN_URL: z.string().url().default('http://localhost:4444'),
   ROCCO_URL: z.string().url().default('http://localhost:4454'),
-  APP_URL: z.string().url().default('http://localhost:4444'),
   NOTES_URL: z.string().url().default('http://localhost:4445'),
   CHAT_URL: z.string().url().default('http://localhost:4446'),
 
