@@ -1,8 +1,51 @@
-import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import type { ListSelect as List, ListInsert, ListInviteSelect } from '@hominem/utils/types'
+import { createClient } from '@supabase/supabase-js'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Create Supabase client for browser usage
+const supabase =
+  SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null
+
+// Hook to get current user from Supabase
+function useSupabaseUser() {
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false)
+      return
+    }
+
+    // Get initial session
+    const getInitialSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      setUserId(session?.user?.id ?? null)
+      setIsLoading(false)
+    }
+
+    getInitialSession()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUserId(session?.user?.id ?? null)
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return { userId, isLoading }
+}
 
 // Define query keys at the top of the file as constants
 const LISTS_KEY = [['lists', 'getAll']]
@@ -25,7 +68,7 @@ type NewList = Omit<ListInsert, 'userId' | 'id'>
  * Hook for creating a new list
  */
 export function useCreateList() {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseUser()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
   const [data, setData] = useState<NewList>({
@@ -133,7 +176,7 @@ export function useDeleteList() {
  * Hook for fetching all lists with customizable options
  */
 export function useLists(options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseUser()
   const apiClient = useApiClient()
 
   // Default options with sensible values
@@ -164,7 +207,7 @@ export function useLists(options = {}) {
  * Hook for fetching a specific list by ID
  */
 export function useList(id: string, options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseUser()
   const apiClient = useApiClient()
 
   // Default options with sensible values
@@ -199,34 +242,28 @@ export function useList(id: string, options = {}) {
 export function useSendListInvite() {
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
-  const [data, setData] = useState<ListInvite | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
   const sendInvite = useMutation({
-    mutationFn: async (inviteData: { listId: string; email: string }) => {
+    mutationFn: async (inviteData: ListInvite) => {
       try {
-        const { listId, email } = inviteData
-        return await apiClient.post<{ email: string }, { invite: List }>(
-          `/api/lists/${listId}/invites`,
-          { email }
+        const response = await apiClient.post<ListInvite, { success: boolean }>(
+          '/api/lists/invite',
+          inviteData
         )
+        return response
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to send list invite'))
+        setError(err instanceof Error ? err : new Error('Failed to send invite'))
         throw err
       }
     },
-    onSuccess: (result, variables) => {
-      // Invalidate both lists and invites queries
-      queryClient.invalidateQueries({ queryKey: LISTS_KEY })
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: LIST_INVITES_KEY })
-      queryClient.invalidateQueries({ queryKey: [...LISTS_KEY, variables.listId, 'invites'] })
       setError(null)
     },
   })
 
   return {
-    data,
-    setData,
     error,
     isLoading: sendInvite.isPending,
     isError: sendInvite.isError,
@@ -243,19 +280,19 @@ export function useAcceptListInvite() {
   const [error, setError] = useState<Error | null>(null)
 
   const acceptInvite = useMutation({
-    mutationFn: async (listId: string) => {
+    mutationFn: async (inviteId: string) => {
       try {
-        return await apiClient.post<null, { message: string; data: boolean }>(
-          `/api/invites/${listId}/accept`,
-          null
+        const response = await apiClient.post<{ inviteId: string }, { success: boolean }>(
+          '/api/lists/accept-invite',
+          { inviteId }
         )
+        return response
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to accept list invite'))
+        setError(err instanceof Error ? err : new Error('Failed to accept invite'))
         throw err
       }
     },
     onSuccess: () => {
-      // Invalidate both lists and invites queries
       queryClient.invalidateQueries({ queryKey: LISTS_KEY })
       queryClient.invalidateQueries({ queryKey: LIST_INVITES_KEY })
       setError(null)
@@ -271,10 +308,10 @@ export function useAcceptListInvite() {
 }
 
 /**
- * Hook for fetching list invites
+ * Hook for fetching all list invites
  */
 export function useListInvites(options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseUser()
   const apiClient = useApiClient()
 
   // Default options with sensible values
@@ -283,10 +320,10 @@ export function useListInvites(options = {}) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   }
 
-  const query = useQuery<List[]>({
+  const query = useQuery<ListInviteSelect[]>({
     queryKey: LIST_INVITES_KEY,
     queryFn: async () => {
-      return await apiClient.get<null, List[]>('/api/invites')
+      return await apiClient.get<null, ListInviteSelect[]>('/api/lists/invites')
     },
     ...defaultOptions,
     ...options,
@@ -305,7 +342,7 @@ export function useListInvites(options = {}) {
  * Hook for fetching invites for a specific list
  */
 export function useListInvitesByList(listId: string, options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseUser()
   const apiClient = useApiClient()
 
   // Default options with sensible values
@@ -314,7 +351,7 @@ export function useListInvitesByList(listId: string, options = {}) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   }
 
-  const queryKey = [...LISTS_KEY, listId, 'invites']
+  const queryKey = [...LIST_INVITES_KEY, listId]
 
   const query = useQuery<ListInviteSelect[]>({
     queryKey,

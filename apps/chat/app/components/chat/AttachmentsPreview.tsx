@@ -1,6 +1,6 @@
 import { X } from 'lucide-react'
 import { Button } from '~/components/ui/button.js'
-import type { AttachmentsPreviewProps } from './types.js'
+import type { AttachmentsPreviewProps } from '~/lib/types/chat'
 
 export function AttachmentsPreview({ files, onRemoveFile, onRemoveAll }: AttachmentsPreviewProps) {
   if (files.length === 0) return null
@@ -16,7 +16,7 @@ export function AttachmentsPreview({ files, onRemoveFile, onRemoveAll }: Attachm
       <div className="flex flex-wrap gap-2">
         {files.map((file) => (
           <div key={file.id} className="flex items-center gap-2 px-2 py-1 bg-muted rounded text-xs">
-            <span className="truncate max-w-[120px]">{file.originalName}</span>
+            <span className="truncate max-w-[120px]">{file.name}</span>
             <Button
               type="button"
               variant="ghost"

@@ -1,16 +1,16 @@
-import { useState, useCallback } from 'react'
-import type { ProcessedFile } from '~/lib/services/file-processor.server.js'
+import { useCallback, useState } from 'react'
+import type { UploadResponse, UploadedFile } from '~/lib/types/upload.js'
 
 export interface UploadState {
   isUploading: boolean
   progress: number
-  uploadedFiles: ProcessedFile[]
+  uploadedFiles: UploadedFile[]
   errors: string[]
 }
 
 export interface UseFileUploadReturn {
   uploadState: UploadState
-  uploadFiles: (files: FileList | File[]) => Promise<ProcessedFile[]>
+  uploadFiles: (files: FileList | File[]) => Promise<UploadedFile[]>
   removeFile: (fileId: string) => void
   clearAll: () => void
 }
@@ -20,57 +20,56 @@ export function useFileUpload(): UseFileUploadReturn {
     isUploading: false,
     progress: 0,
     uploadedFiles: [],
-    errors: []
+    errors: [],
   })
 
-  const uploadFiles = useCallback(async (files: FileList | File[]): Promise<ProcessedFile[]> => {
+  const uploadFiles = useCallback(async (files: FileList | File[]): Promise<UploadedFile[]> => {
     const fileArray = Array.from(files)
-    
-    setUploadState(prev => ({
+
+    setUploadState((prev) => ({
       ...prev,
       isUploading: true,
       progress: 0,
-      errors: []
+      errors: [],
     }))
 
     try {
       const formData = new FormData()
-      fileArray.forEach(file => {
+      for (const file of fileArray) {
         formData.append('files', file)
-      })
+      }
 
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData
+        body: formData,
       })
 
-      const result = await response.json()
+      const result: UploadResponse = await response.json()
 
       if (!response.ok) {
         throw new Error(result.error || 'Upload failed')
       }
 
       const newFiles = result.files || []
-      const uploadErrors = result.failed?.map((f: any) => `${f.name}: ${f.error}`) || []
+      const uploadErrors = result.failed?.map((f) => `${f.name}: ${f.error}`) || []
 
-      setUploadState(prev => ({
+      setUploadState((prev) => ({
         ...prev,
         isUploading: false,
         progress: 100,
         uploadedFiles: [...prev.uploadedFiles, ...newFiles],
-        errors: uploadErrors
+        errors: uploadErrors,
       }))
 
       return newFiles
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed'
-      
-      setUploadState(prev => ({
+
+      setUploadState((prev) => ({
         ...prev,
         isUploading: false,
         progress: 0,
-        errors: [errorMessage]
+        errors: [errorMessage],
       }))
 
       throw error
@@ -78,9 +77,9 @@ export function useFileUpload(): UseFileUploadReturn {
   }, [])
 
   const removeFile = useCallback((fileId: string) => {
-    setUploadState(prev => ({
+    setUploadState((prev) => ({
       ...prev,
-      uploadedFiles: prev.uploadedFiles.filter(file => file.id !== fileId)
+      uploadedFiles: prev.uploadedFiles.filter((file) => file.id !== fileId),
     }))
   }, [])
 
@@ -89,7 +88,7 @@ export function useFileUpload(): UseFileUploadReturn {
       isUploading: false,
       progress: 0,
       uploadedFiles: [],
-      errors: []
+      errors: [],
     })
   }, [])
 
@@ -97,6 +96,6 @@ export function useFileUpload(): UseFileUploadReturn {
     uploadState,
     uploadFiles,
     removeFile,
-    clearAll
+    clearAll,
   }
 }

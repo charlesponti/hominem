@@ -1,44 +1,8 @@
 import { randomUUID } from 'node:crypto'
-import { supabaseAdmin } from '../supabase/client.server'
+import { createSupabaseServerClient } from '../supabase/server'
 
 const STORAGE_BUCKET = process.env.STORAGE_BUCKET || 'chat-files'
 const MAX_FILE_SIZE = Number(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 // 10MB
-
-// Helper function to ensure the storage bucket exists
-async function ensureStorageBucket() {
-  try {
-    const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets()
-
-    if (listError) {
-      console.error('Error listing buckets:', listError)
-      return
-    }
-
-    const bucketExists = buckets.some((bucket) => bucket.name === STORAGE_BUCKET)
-
-    if (!bucketExists) {
-      const { error: createError } = await supabaseAdmin.storage.createBucket(STORAGE_BUCKET, {
-        public: true,
-        allowedMimeTypes: [
-          'image/*',
-          'application/pdf',
-          'text/plain',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'application/msword',
-          'audio/*',
-          'video/*',
-        ],
-        fileSizeLimit: MAX_FILE_SIZE,
-      })
-
-      if (createError) {
-        console.error('Error creating bucket:', createError)
-      }
-    }
-  } catch (error) {
-    console.error('Error ensuring storage bucket:', error)
-  }
-}
 
 export interface StoredFile {
   id: string
@@ -53,10 +17,11 @@ export interface StoredFile {
 export async function storeFile(
   buffer: ArrayBuffer,
   originalName: string,
-  mimetype: string
+  mimetype: string,
+  userId: string,
+  request: Request
 ): Promise<StoredFile> {
-  // Ensure the storage bucket exists
-  await ensureStorageBucket()
+  const { supabase } = createSupabaseServerClient(request)
 
   if (buffer.byteLength > MAX_FILE_SIZE) {
     throw new Error(`File size exceeds maximum limit of ${MAX_FILE_SIZE} bytes`)
@@ -64,22 +29,20 @@ export async function storeFile(
 
   const id = randomUUID()
   const extension = getFileExtension(originalName, mimetype)
-  const filename = `${id}${extension}`
+  const filename = `${userId}/${id}${extension}` // Organize files by user ID
 
-  // Upload to Supabase Storage
-  const { data, error } = await supabaseAdmin.storage
-    .from(STORAGE_BUCKET)
-    .upload(filename, buffer, {
-      contentType: mimetype,
-      upsert: false,
-    })
+  // Upload to Supabase Storage using user authentication
+  const { data, error } = await supabase.storage.from(STORAGE_BUCKET).upload(filename, buffer, {
+    contentType: mimetype,
+    upsert: false,
+  })
 
   if (error) {
     throw new Error(`Failed to upload file: ${error.message}`)
   }
 
   // Get public URL
-  const { data: urlData } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(filename)
+  const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(filename)
 
   return {
     id,
@@ -92,26 +55,33 @@ export async function storeFile(
   }
 }
 
-export async function getFile(fileId: string): Promise<ArrayBuffer | null> {
+export async function getFile(
+  fileId: string,
+  userId: string,
+  request: Request
+): Promise<ArrayBuffer | null> {
   try {
-    // List files to find the one that starts with the fileId
-    const { data: files, error: listError } = await supabaseAdmin.storage
+    const { supabase } = createSupabaseServerClient(request)
+
+    // List files in the user's directory
+    const { data: files, error: listError } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .list()
+      .list(userId)
 
     if (listError) {
       console.error('Error listing files:', listError)
       return null
     }
 
-    const file = files.find((file) => file.name.startsWith(fileId))
+    const file = files?.find((f: { name: string }) => f.name.startsWith(fileId))
 
     if (!file) {
       return null
     }
 
-    // Download the file
-    const { data, error } = await supabaseAdmin.storage.from(STORAGE_BUCKET).download(file.name)
+    // Download the file from user's directory
+    const filePath = `${userId}/${file.name}`
+    const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(filePath)
 
     if (error) {
       console.error('Error downloading file:', error)
@@ -125,26 +95,33 @@ export async function getFile(fileId: string): Promise<ArrayBuffer | null> {
   }
 }
 
-export async function deleteFile(fileId: string): Promise<boolean> {
+export async function deleteFile(
+  fileId: string,
+  userId: string,
+  request: Request
+): Promise<boolean> {
   try {
-    // List files to find the one that starts with the fileId
-    const { data: files, error: listError } = await supabaseAdmin.storage
+    const { supabase } = createSupabaseServerClient(request)
+
+    // List files in the user's directory
+    const { data: files, error: listError } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .list()
+      .list(userId)
 
     if (listError) {
       console.error('Error listing files:', listError)
       return false
     }
 
-    const file = files.find((file) => file.name.startsWith(fileId))
+    const file = files?.find((f: { name: string }) => f.name.startsWith(fileId))
 
     if (!file) {
       return false
     }
 
-    // Delete the file
-    const { error } = await supabaseAdmin.storage.from(STORAGE_BUCKET).remove([file.name])
+    // Delete the file from user's directory
+    const filePath = `${userId}/${file.name}`
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).remove([filePath])
 
     if (error) {
       console.error('Error deleting file:', error)
@@ -158,26 +135,33 @@ export async function deleteFile(fileId: string): Promise<boolean> {
   }
 }
 
-export async function getFileUrl(fileId: string): Promise<string | null> {
+export async function getFileUrl(
+  fileId: string,
+  userId: string,
+  request: Request
+): Promise<string | null> {
   try {
-    // List files to find the one that starts with the fileId
-    const { data: files, error: listError } = await supabaseAdmin.storage
+    const { supabase } = createSupabaseServerClient(request)
+
+    // List files in the user's directory to find the one that starts with the fileId
+    const { data: files, error: listError } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .list()
+      .list(userId)
 
     if (listError) {
       console.error('Error listing files:', listError)
       return null
     }
 
-    const file = files.find((file) => file.name.startsWith(fileId))
+    const file = files?.find((f: { name: string }) => f.name.startsWith(fileId))
 
     if (!file) {
       return null
     }
 
-    // Get public URL
-    const { data } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(file.name)
+    // Get public URL for the file in user's directory
+    const filePath = `${userId}/${file.name}`
+    const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(filePath)
 
     return data.publicUrl
   } catch (error) {

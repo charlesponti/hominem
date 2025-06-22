@@ -6,7 +6,6 @@ export * from './career.schema'
 export * from './categories.schema'
 export * from './chats.schema'
 export * from './company.schema'
-export * from './content-strategies.schema'
 export * from './documents.schema'
 export * from './finance.schema'
 export * from './health.schema'
@@ -23,8 +22,27 @@ export * from './users.schema'
 export * from './vector-documents.schema'
 
 export {
-  ContentTypeSchema,
+  NoteContentTypeSchema,
+  notes,
+  notesRelations,
   TweetMetadataSchema,
+} from './notes.schema'
+
+export {
   content,
   contentRelations,
-} from './notes.schema'
+  ContentStatusSchema,
+  contentStrategies,
+  contentStrategiesRelations,
+  ContentTypeSchema,
+  SEOMetadataSchema,
+  SocialMediaMetadataSchema,
+  type Content,
+  type ContentInsert,
+  type ContentStatus,
+  type ContentStrategiesInsert,
+  type ContentStrategiesSelect,
+  type ContentType,
+  type SEOMetadata,
+  type SocialMediaMetadata,
+} from './content.schema'

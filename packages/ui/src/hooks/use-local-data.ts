@@ -6,10 +6,58 @@
  *   storeName: 'notes',
  * })
  */
-import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
+import { createClient } from '@supabase/supabase-js'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Create Supabase client for browser usage
+const supabase =
+  SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null
+
+// Hook to get current user from Supabase
+function useSupabaseUser() {
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isSignedIn, setIsSignedIn] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false)
+      return
+    }
+
+    // Get initial session
+    const getInitialSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const user = session?.user
+      setUserId(user?.id ?? null)
+      setIsSignedIn(!!user)
+      setIsLoading(false)
+    }
+
+    getInitialSession()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user
+      setUserId(user?.id ?? null)
+      setIsSignedIn(!!user)
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return { userId, isSignedIn, isLoading }
+}
 
 // Base entity interface that all entities should implement
 export interface Entity {
@@ -135,7 +183,7 @@ export function useLocalData<T extends SyncableEntity>({
   queryOptions = {},
   setupStore,
 }: UseLocalDataOptions) {
-  const { userId, isSignedIn } = useAuth()
+  const { userId, isSignedIn } = useSupabaseUser()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
   const [error, setError] = useState<Error | null>(null)

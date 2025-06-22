@@ -9,7 +9,7 @@ This repo uses the following technologies:
     - [_circuit breaker_](https://martinfowler.com/bliki/CircuitBreaker.html)
   - rate limiting: [**@fastify/rate-limit**](https://www.npmjs.com/package/@fastify/rate-limit)
 - **Authentication**
-  - [**Clerk**](https://clerk.com): User authentication and management
+  - [**Supabase**](https://supabase.io): User authentication and management
 - **Data**
   - object-relational database: [*PostgreSQL*](https://www.postgresql.org/): 
   - object-relational mapping: [*Drizzle*](https://orm.drizzle.team)
@@ -20,56 +20,24 @@ This repo uses the following technologies:
   - [*Sendgrid*](https://sendgrid.com/): Email delivery service
 
 
-## Application Features
-- **chat**
-  - **single-response**: users can request a single response to a question or statement. (no history)
-- **health**: track health data including activities, duration, and calories burned
-- **notes**: take notes with NLP analysis for insights
-- **surveys**: create surveys and collect responses
-- **job applications**: track job applications and their status
-- **companies**: manage company information
-
 ## Authentication
-The API uses Clerk for authentication. You'll need to set up the following environment variables:
-- `CLERK_SECRET_KEY`
-- `CLERK_PUBLISHABLE_KEY`
+The API uses Supabase for authentication. You'll need to set up the following environment variables:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-All authenticated routes will use Clerk's JWT verification to validate requests.
+All authenticated routes will use Supabase's JWT verification to validate requests.
 
-## API Endpoints
+## Database
 
-### Health
+The API uses a PostgreSQL database. You'll need to set up the following environment variable:
+- `DATABASE_URL`: connection string for your PostgreSQL database.
 
-- `GET /api/health` - Get health data with optional filters
-- `GET /api/health/:id` - Get health data by ID
-- `POST /api/health` - Add new health data
-- `PUT /api/health/:id` - Update health data
-- `DELETE /api/health/:id` - Delete health data
+## Budget Categories
 
-### Notes
+Budget categories have a unique constraint on `name + userId`, ensuring that:
+- Each user can only have one budget category with a given name
+- Different users can have budget categories with the same name
+- The bulk create endpoint (`/api/finance/budget/bulk-create-from-transactions`) automatically skips existing categories and only creates new ones
+- Single category creation returns a 409 error if a category with the same name already exists for that user
 
-- `GET /api/notes` - Get all notes for authenticated user
-- `POST /api/notes` - Create a new note
-- `PUT /api/notes/:id` - Update a note
-- `DELETE /api/notes/:id` - Delete a note
-- `POST /api/notes/:id/analyze` - Analyze a note with NLP
-
-### Surveys
-
-- `GET /api/surveys` - Get all surveys for authenticated user
-- `POST /api/surveys` - Create a new survey
-- `POST /api/surveys/vote` - Vote on a survey
-
-### Applications
-
-- `GET /api/applications` - Get all applications for authenticated user
-- `GET /api/applications/:id` - Get application by ID
-- `POST /api/applications` - Create a new application
-- `PUT /api/applications/:id` - Update an application
-- `DELETE /api/applications/:id` - Delete an application
-- `PUT /api/applications/bulk` - Bulk create/update applications
-
-### Companies
-
-- `GET /api/companies/search` - Search companies by name
-- `POST /api/companies` - Create a company
+This prevents duplicate categories when syncing from transaction data while allowing users to have predictable, unique category names.

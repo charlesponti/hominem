@@ -5,28 +5,28 @@ const RATE_LIMITS = {
   transcription: {
     requests: 10, // 10 requests
     window: 60 * 1000, // per minute
-    burst: 3 // allow 3 requests immediately
+    burst: 3, // allow 3 requests immediately
   },
   tts: {
     requests: 20, // 20 requests
     window: 60 * 1000, // per minute
-    burst: 5
+    burst: 5,
   },
   chatStream: {
     requests: 30, // 30 requests
     window: 60 * 1000, // per minute
-    burst: 10
+    burst: 10,
   },
   search: {
     requests: 50, // 50 requests
     window: 60 * 1000, // per minute
-    burst: 10
+    burst: 10,
   },
   upload: {
     requests: 20, // 20 uploads
     window: 60 * 1000, // per minute
-    burst: 5
-  }
+    burst: 5,
+  },
 }
 
 interface RateLimitRecord {
@@ -41,7 +41,7 @@ const rateLimitCaches: Record<keyof typeof RATE_LIMITS, LRUCache<string, RateLim
   tts: new LRUCache({ max: 10000, ttl: RATE_LIMITS.tts.window }),
   chatStream: new LRUCache({ max: 10000, ttl: RATE_LIMITS.chatStream.window }),
   search: new LRUCache({ max: 10000, ttl: RATE_LIMITS.search.window }),
-  upload: new LRUCache({ max: 10000, ttl: RATE_LIMITS.upload.window })
+  upload: new LRUCache({ max: 10000, ttl: RATE_LIMITS.upload.window }),
 }
 
 export type RateLimitType = keyof typeof RATE_LIMITS
@@ -58,16 +58,16 @@ export class RateLimitService {
     const config = RATE_LIMITS[type]
     const cache = rateLimitCaches[type]
     const now = Date.now()
-    
+
     // Get or create rate limit record
     let record = cache.get(identifier)
-    
+
     if (!record || now >= record.resetTime) {
       // Create new window
       record = {
         count: 0,
         resetTime: now + config.window,
-        burstUsed: 0
+        burstUsed: 0,
       }
     }
 
@@ -89,23 +89,23 @@ export class RateLimitService {
       allowed: isAllowed,
       remaining,
       resetTime: record.resetTime,
-      retryAfter
+      retryAfter,
     }
   }
 
   static async enforce(
-    type: RateLimitType, 
+    type: RateLimitType,
     identifier: string,
     operation: () => Promise<Response>
   ): Promise<Response> {
-    const result = this.check(type, identifier)
+    const result = RateLimitService.check(type, identifier)
 
     if (!result.allowed) {
       return new Response(
         JSON.stringify({
           error: 'Rate limit exceeded',
           type: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: result.retryAfter
+          retryAfter: result.retryAfter,
         }),
         {
           status: 429,
@@ -114,54 +114,46 @@ export class RateLimitService {
             'Retry-After': result.retryAfter?.toString() || '60',
             'X-RateLimit-Limit': RATE_LIMITS[type].requests.toString(),
             'X-RateLimit-Remaining': result.remaining.toString(),
-            'X-RateLimit-Reset': result.resetTime.toString()
-          }
+            'X-RateLimit-Reset': result.resetTime.toString(),
+          },
         }
       )
     }
 
-    try {
-      const response = await operation()
-      
-      // Add rate limit headers to successful responses
-      response.headers.set('X-RateLimit-Limit', RATE_LIMITS[type].requests.toString())
-      response.headers.set('X-RateLimit-Remaining', result.remaining.toString())
-      response.headers.set('X-RateLimit-Reset', result.resetTime.toString())
-      
-      return response
-    } catch (error) {
-      // If operation fails, we might want to refund the rate limit
-      // For now, we'll keep it simple and not refund
-      throw error
-    }
+    const response = await operation()
+
+    // Add rate limit headers to successful responses
+    response.headers.set('X-RateLimit-Limit', RATE_LIMITS[type].requests.toString())
+    response.headers.set('X-RateLimit-Remaining', result.remaining.toString())
+    response.headers.set('X-RateLimit-Reset', result.resetTime.toString())
+    // !TODO If operation fails, Refund the rate limit
+
+    return response
   }
 
   static getStats(type: RateLimitType) {
     const cache = rateLimitCaches[type]
     const config = RATE_LIMITS[type]
-    
+
     return {
       type,
       config,
       activeUsers: cache.size,
-      maxUsers: cache.max
+      maxUsers: cache.max,
     }
   }
 
   static getAllStats() {
-    return Object.keys(RATE_LIMITS).map(type => 
-      this.getStats(type as RateLimitType)
-    )
+    return Object.keys(RATE_LIMITS).map((type) => RateLimitService.getStats(type as RateLimitType))
   }
 
   static clearUserLimits(identifier: string, type?: RateLimitType) {
     if (type) {
       rateLimitCaches[type].delete(identifier)
     } else {
-      // Clear from all caches
-      Object.values(rateLimitCaches).forEach(cache => {
+      for (const cache of Object.values(rateLimitCaches)) {
         cache.delete(identifier)
-      })
+      }
     }
   }
 }
@@ -170,18 +162,18 @@ export class RateLimitService {
 export class IPRateLimitService {
   private static readonly globalCache = new LRUCache<string, RateLimitRecord>({
     max: 50000, // Support up to 50k unique IPs
-    ttl: 60 * 1000 // 1 minute TTL
+    ttl: 60 * 1000, // 1 minute TTL
   })
 
-  static check(ip: string, requests: number = 100, windowMs: number = 60 * 1000): RateLimitResult {
+  static check(ip: string, requests = 100, windowMs: number = 60 * 1000): RateLimitResult {
     const now = Date.now()
-    let record = this.globalCache.get(ip)
-    
+    let record = IPRateLimitService.globalCache.get(ip)
+
     if (!record || now >= record.resetTime) {
       record = {
         count: 0,
         resetTime: now + windowMs,
-        burstUsed: 0
+        burstUsed: 0,
       }
     }
 
@@ -189,14 +181,14 @@ export class IPRateLimitService {
 
     if (isAllowed) {
       record.count++
-      this.globalCache.set(ip, record)
+      IPRateLimitService.globalCache.set(ip, record)
     }
 
     return {
       allowed: isAllowed,
       remaining: Math.max(0, requests - record.count),
       resetTime: record.resetTime,
-      retryAfter: isAllowed ? undefined : Math.ceil((record.resetTime - now) / 1000)
+      retryAfter: isAllowed ? undefined : Math.ceil((record.resetTime - now) / 1000),
     }
   }
 }
@@ -209,7 +201,7 @@ export function getClientIP(request: Request): string {
     'X-Forwarded-For', // Standard proxy header
     'X-Real-IP', // Nginx
     'X-Client-IP', // Apache
-    'True-Client-IP' // Cloudflare Enterprise
+    'True-Client-IP', // Cloudflare Enterprise
   ]
 
   for (const header of headers) {
@@ -230,6 +222,15 @@ export function withRateLimit(
   getIdentifier: (request: Request) => string = getClientIP
 ) {
   return async (request: Request, operation: () => Promise<Response>): Promise<Response> => {
+    // Check for rate limit bypass (for testing)
+    const bypassHeader = request.headers.get('X-Rate-Limit-Bypass')
+    const bypassEnv = process.env.BYPASS_RATE_LIMITS === 'true'
+
+    if (bypassHeader === 'test' || bypassEnv) {
+      console.log(`Rate limiting bypassed for ${type} endpoint`)
+      return await operation()
+    }
+
     const identifier = getIdentifier(request)
     return RateLimitService.enforce(type, identifier, operation)
   }
@@ -242,7 +243,7 @@ export function withUserRateLimit(
 ) {
   return async (request: Request, operation: () => Promise<Response>): Promise<Response> => {
     let identifier: string
-    
+
     try {
       const userId = await getUserId(request)
       identifier = userId || getClientIP(request)
@@ -256,27 +257,25 @@ export function withUserRateLimit(
 
 // Background cleanup for rate limit caches
 export function scheduleRateLimitCleanup(): NodeJS.Timeout {
-  return setInterval(() => {
-    console.log('Cleaning up rate limit caches...')
-    
-    // LRU caches automatically clean up expired entries
-    // This is just for logging and monitoring
-    const stats = RateLimitService.getAllStats()
-    console.log('Rate limit stats:', stats)
-    
-    // Emergency cleanup if any cache gets too large
-    Object.entries(rateLimitCaches).forEach(([type, cache]) => {
-      if (cache.size > cache.max * 0.9) {
-        console.warn(`Rate limit cache for ${type} is ${cache.size}/${cache.max} - cleaning up`)
-        // Clear oldest 25% of entries
-        const entries = Array.from(cache.keys())
-        const toClear = Math.floor(entries.length * 0.25)
-        for (let i = 0; i < toClear; i++) {
-          cache.delete(entries[i])
+  return setInterval(
+    () => {
+      // LRU caches automatically clean up expired entries
+      // This is just for logging and monitoring
+      const stats = RateLimitService.getAllStats()
+
+      // Emergency cleanup if any cache gets too large
+      for (const [type, cache] of Object.entries(rateLimitCaches)) {
+        if (cache.size > cache.max * 0.9) {
+          const entries = Array.from(cache.keys())
+          const toClear = Math.floor(entries.length * 0.25)
+          for (let i = 0; i < toClear; i++) {
+            cache.delete(entries[i])
+          }
         }
       }
-    })
-  }, 5 * 60 * 1000) // Every 5 minutes
+    },
+    5 * 60 * 1000
+  ) // Every 5 minutes
 }
 
 // Initialize cleanup on module load (server-side only)

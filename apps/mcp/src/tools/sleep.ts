@@ -58,7 +58,7 @@ export function registerSleepTool(server: McpServer) {
           ],
         }
       } catch (error) {
-        console.error('[MCP Health Error]', error)
+        console.error('[MCP Sleep Error]', error)
         return {
           content: [
             {

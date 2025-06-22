@@ -67,6 +67,18 @@ async function processTransactionRow({
 
   if (!accountEntity) {
     try {
+      // First, try to find existing account in database to handle race conditions
+      const existingAccounts = await FinancialAccountService.listAccounts(userId)
+      const existingAccount = existingAccounts.find((acc) => acc.name === account)
+
+      if (existingAccount) {
+        // Account exists in database but not in our map, add it to map
+        accountsMap.set(account, existingAccount)
+        logger.info(`Found existing account: ${account} for user ${userId}`)
+        return existingAccount
+      }
+
+      // Account doesn't exist, create it
       accountEntity = await FinancialAccountService.createAccount({
         type: 'checking',
         balance: '0',

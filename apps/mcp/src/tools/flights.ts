@@ -91,7 +91,7 @@ export function registerFlightsTool(server: McpServer) {
           ],
         }
       } catch (error) {
-        console.error('[MCP Health Error]', error)
+        console.error('[MCP Flights Error]', error)
         return {
           content: [
             {

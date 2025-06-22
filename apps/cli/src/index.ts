@@ -11,10 +11,8 @@ import { command as initCommand } from './commands/init'
 import { command as notesCommand } from './commands/possessions.js'
 import thothCommand from './commands/thoth'
 import { command as toolsCommand } from './commands/tools'
-import { initDb } from './db/index'
 
 async function init() {
-  await initDb()
   const program = new Command()
 
   program.version('1.0.0').description('Collection of useful tools')

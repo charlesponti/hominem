@@ -1,40 +1,8 @@
-import { db } from '@hominem/utils/db'
 import { chat, chatMessage, type Chat, type ChatMessageSelect } from '@hominem/utils/schema'
 import { and, desc, eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-
-export interface CreateChatParams {
-  title: string
-  userId: string
-}
-
-export interface CreateMessageParams {
-  chatId: string
-  userId: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  files?: Array<{
-    type: 'image' | 'file'
-    filename?: string
-    mimeType?: string
-    [key: string]: unknown
-  }>
-  toolCalls?: Array<{
-    type: 'tool-call' | 'tool-result'
-    toolName: string
-    toolCallId?: string
-    args?: Record<string, unknown>
-    result?: unknown
-    isError?: boolean
-  }>
-  reasoning?: string
-  parentMessageId?: string
-  messageIndex?: string
-}
-
-export interface ChatWithMessages extends Chat {
-  messages: ChatMessageSelect[]
-}
+import type { ChatWithMessages, CreateChatParams, CreateMessageParams } from '~/lib/types/chat.js'
+import { db } from '../db.server'
 
 export class ChatDatabaseService {
   /**
@@ -55,7 +23,6 @@ export class ChatDatabaseService {
         })
         .returning()
 
-      console.log(`Created new chat: ${chatId} for user: ${params.userId}`)
       return newChat
     } catch (error) {
       console.error('Failed to create chat:', error)
@@ -145,7 +112,6 @@ export class ChatDatabaseService {
       // Update chat's updatedAt timestamp
       await db.update(chat).set({ updatedAt: now }).where(eq(chat.id, params.chatId))
 
-      console.log(`Added message: ${messageId} to chat: ${params.chatId}`)
       return newMessage
     } catch (error) {
       console.error('Failed to add message:', error)
@@ -185,7 +151,6 @@ export class ChatDatabaseService {
         })
         .where(eq(chat.id, chatId))
 
-      console.log(`Updated chat title: ${chatId}`)
       return true
     } catch (error) {
       console.error('Failed to update chat title:', error)
@@ -198,10 +163,7 @@ export class ChatDatabaseService {
    */
   static async deleteChat(chatId: string): Promise<boolean> {
     try {
-      // Messages will be automatically deleted due to CASCADE foreign key
       await db.delete(chat).where(eq(chat.id, chatId))
-
-      console.log(`Deleted chat: ${chatId}`)
       return true
     } catch (error) {
       console.error('Failed to delete chat:', error)
@@ -239,7 +201,12 @@ export class ChatDatabaseService {
     Array<{
       role: 'user' | 'assistant' | 'system'
       content: string
-      files?: any[]
+      files?: Array<{
+        type: 'image' | 'file'
+        filename?: string
+        mimeType?: string
+        [key: string]: unknown
+      }>
     }>
   > {
     try {

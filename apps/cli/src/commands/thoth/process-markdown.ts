@@ -1,5 +1,3 @@
-import { db } from '@/db/index'
-import { markdownEntries } from '@/db/schema'
 import { detectTask } from '@hominem/utils/markdown'
 import { Command } from 'commander'
 import { consola } from 'consola'
@@ -8,6 +6,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import readline from 'node:readline'
+import { apiClient } from '../../lib/api-client.js'
 
 export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-heading')
   .description('Group markdown content by heading across files and save to separate files')
@@ -36,16 +35,16 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
         async function flushParagraphBuffer() {
           if (!paragraphBuffer.length) return
           const paragraph = paragraphBuffer.join(' ')
-          await db.insert(markdownEntries).values({
-            section: currentHeading || baseName,
-            text: paragraph,
-            filePath,
-            isTask: false,
-            isComplete: false,
-            textAnalysis: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
+          try {
+            await apiClient.createContent({
+              type: 'note',
+              title: currentHeading || baseName,
+              content: paragraph,
+              tags: [{ value: 'markdown-import' }, { value: 'file-section' }],
+            })
+          } catch (error) {
+            consola.error(`Failed to create content for paragraph: ${error}`)
+          }
           paragraphBuffer = []
         }
 
@@ -59,16 +58,22 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
             await flushParagraphBuffer()
             // insert bullet point as its own row
             const { isTask, isComplete } = detectTask(trimmed)
-            await db.insert(markdownEntries).values({
-              filePath,
-              text: trimmed,
-              section: currentHeading || baseName,
-              isTask,
-              isComplete,
-              textAnalysis: null,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            })
+            try {
+              await apiClient.createContent({
+                type: isTask ? 'task' : 'note',
+                title: currentHeading || baseName,
+                content: trimmed,
+                tags: [{ value: 'markdown-import' }, { value: 'bullet-point' }],
+                taskMetadata: isTask
+                  ? {
+                      status: isComplete ? 'done' : 'todo',
+                      priority: 'medium',
+                    }
+                  : undefined,
+              })
+            } catch (error) {
+              consola.error(`Failed to create content for bullet point: ${error}`)
+            }
           } else if (trimmed) {
             paragraphBuffer.push(trimmed)
           } else {

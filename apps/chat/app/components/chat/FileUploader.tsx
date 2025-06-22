@@ -1,51 +1,53 @@
+import {
+  AlertCircle,
+  CheckCircle,
+  FileText,
+  Image,
+  Music,
+  Paperclip,
+  Upload,
+  Video,
+  X,
+} from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Button } from '~/components/ui/button.js'
-import { 
-  Paperclip, 
-  X, 
-  FileText, 
-  Image, 
-  Music, 
-  Video, 
-  Upload,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react'
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
-import type { ProcessedFile } from '~/lib/services/file-processor.server.js'
+import type { UploadedFile } from '~/lib/types/upload.js'
 
 interface FileUploaderProps {
-  onFilesUploaded?: (files: ProcessedFile[]) => void
+  onFilesUploaded?: (files: UploadedFile[]) => void
   maxFiles?: number
   className?: string
 }
 
-export function FileUploader({ 
-  onFilesUploaded, 
-  maxFiles = 5, 
-  className = '' 
-}: FileUploaderProps) {
+export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: FileUploaderProps) {
   const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload()
   const [isDragOver, setIsDragOver] = useState(false)
 
-  const handleFileSelect = useCallback(async (files: FileList | File[]) => {
-    try {
-      const newFiles = await uploadFiles(files)
-      onFilesUploaded?.(newFiles)
-    } catch (error) {
-      console.error('Upload failed:', error)
-    }
-  }, [uploadFiles, onFilesUploaded])
+  const handleFileSelect = useCallback(
+    async (files: FileList | File[]) => {
+      try {
+        const newFiles = await uploadFiles(files)
+        onFilesUploaded?.(newFiles)
+      } catch (error) {
+        console.error('Upload failed:', error)
+      }
+    },
+    [uploadFiles, onFilesUploaded]
+  )
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-    
-    const files = e.dataTransfer.files
-    if (files.length > 0) {
-      handleFileSelect(files)
-    }
-  }, [handleFileSelect])
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragOver(false)
+
+      const files = e.dataTransfer.files
+      if (files.length > 0) {
+        handleFileSelect(files)
+      }
+    },
+    [handleFileSelect]
+  )
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -57,7 +59,7 @@ export function FileUploader({
     setIsDragOver(false)
   }, [])
 
-  const getFileIcon = (type: ProcessedFile['type']) => {
+  const getFileIcon = (type: string) => {
     switch (type) {
       case 'image':
         return <Image className="h-4 w-4" />
@@ -77,7 +79,7 @@ export function FileUploader({
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
   }
 
   return (
@@ -95,10 +97,7 @@ export function FileUploader({
       >
         <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground mb-2">
-          {uploadState.isUploading 
-            ? 'Uploading files...' 
-            : 'Drop files here or click to upload'
-          }
+          {uploadState.isUploading ? 'Uploading files...' : 'Drop files here or click to upload'}
         </p>
         <Button
           type="button"
@@ -133,7 +132,7 @@ export function FileUploader({
             <span>{uploadState.progress}%</span>
           </div>
           <div className="w-full bg-secondary rounded-full h-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${uploadState.progress}%` }}
             />
@@ -144,8 +143,8 @@ export function FileUploader({
       {/* Error Messages */}
       {uploadState.errors.length > 0 && (
         <div className="space-y-2">
-          {uploadState.errors.map((error, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-destructive">
+          {uploadState.errors.map((error) => (
+            <div key={error} className="flex items-center gap-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
               <span>{error}</span>
             </div>
@@ -157,34 +156,23 @@ export function FileUploader({
       {uploadState.uploadedFiles.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium">Uploaded Files ({uploadState.uploadedFiles.length})</h4>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              className="text-xs"
-            >
+            <h4 className="text-sm font-medium">
+              Uploaded Files ({uploadState.uploadedFiles.length})
+            </h4>
+            <Button type="button" variant="ghost" size="sm" onClick={clearAll} className="text-xs">
               Clear All
             </Button>
           </div>
-          
+
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {uploadState.uploadedFiles.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center gap-3 p-3 bg-muted rounded-lg"
-              >
+              <div key={file.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 {/* File Icon */}
-                <div className="flex-shrink-0">
-                  {getFileIcon(file.type)}
-                </div>
+                <div className="flex-shrink-0">{getFileIcon(file.type)}</div>
 
                 {/* File Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {file.originalName}
-                  </p>
+                  <p className="text-sm font-medium truncate">{file.originalName}</p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{formatFileSize(file.size)}</span>
                     <span>•</span>
@@ -197,7 +185,7 @@ export function FileUploader({
                       </>
                     )}
                   </div>
-                  
+
                   {/* File Preview/Content */}
                   {file.content && (
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">

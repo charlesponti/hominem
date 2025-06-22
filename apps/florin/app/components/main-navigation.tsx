@@ -1,7 +1,8 @@
-import { SignInButton, useUser } from '@clerk/react-router'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { useLocation } from 'react-router'
+import { Link, useLocation } from 'react-router'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
@@ -27,11 +28,14 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoaded } = useUser()
-  const isLoggedIn = isLoaded && user
+  const { getUser, signInWithGoogle } = useSupabaseAuth()
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const isLoggedIn = !isLoading && user
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
     // Check if we're on the client side
@@ -114,60 +118,86 @@ export function MainNavigation() {
     }
   }
 
-  // Desktop sidebar
+  const handleSignIn = async () => {
+    try {
+      setIsSigningIn(true)
+      await signInWithGoogle()
+    } catch (error) {
+      console.error('Sign in failed:', error)
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
+  // Get user data on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
+
+  // Desktop navbar
   if (!isMobile) {
     return (
-      <header className="fixed left-0 top-0 h-screen flex flex-col w-14 md:w-16 border-r bg-background z-40">
-        <div className="flex flex-col items-center py-6">
-          <RouteLink to="/" className="mb-8">
-            <img
-              src="/logo-florin.png"
-              alt="Hominem Logo"
-              width={24}
-              height={24}
-              className="transition-opacity hover:opacity-80"
-            />
-          </RouteLink>
+      <header className="sticky top-0 z-50 bg-background border-b">
+        <div className="flex h-16 items-center px-4">
+          {/* Logo */}
+          <div className="flex items-center space-x-2">
+            <RouteLink to="/" className="flex items-center space-x-2">
+              <img
+                src="/logo-florin.png"
+                alt="Florin Logo"
+                width={24}
+                height={24}
+                className="transition-opacity hover:opacity-80"
+              />
+              <span className="font-bold text-lg">Florin</span>
+            </RouteLink>
+          </div>
 
-          <nav className="flex flex-col items-center gap-8 mb-auto">
-            {navItems.map((item) => (
-              <RouteLink
-                key={item.title}
-                to={item.url}
-                className={cn(
-                  'flex items-center justify-center h-10 w-10 rounded-none transition-colors relative',
-                  pathname === item.url
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <item.icon className="h-[18px] w-[18px]" />
-                {pathname === item.url && (
-                  <span className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-[2px] h-5 bg-primary" />
-                )}
-              </RouteLink>
-            ))}
-          </nav>
+          {/* Center Navigation */}
+          {isLoggedIn && (
+            <div className="flex flex-1 items-center justify-center">
+              <nav className="flex items-center space-x-6">
+                {navItems.map((item) => (
+                  <RouteLink
+                    key={item.title}
+                    to={item.url}
+                    className={cn(
+                      'text-sm font-medium transition-colors hover:text-gray-900',
+                      pathname === item.url ? 'text-gray-900' : 'text-gray-600'
+                    )}
+                  >
+                    {item.title}
+                  </RouteLink>
+                ))}
+              </nav>
+            </div>
+          )}
 
-          <div className="mt-auto pt-6">
-            {!isLoaded ? (
+          {/* Right Side Auth */}
+          <div className="flex flex-1 items-center justify-end">
+            {isLoading ? (
               <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
             ) : isLoggedIn ? (
-              <RouteLink to="/account" aria-label="Account settings">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-none text-muted-foreground hover:text-foreground"
-                >
-                  <User className="h-[18px] w-[18px]" />
+              <Link to="/account">
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
                 </Button>
-              </RouteLink>
+              </Link>
             ) : (
-              <SignInButton>
-                <Button variant="ghost" size="icon" className="rounded-none">
-                  <User className="h-[18px] w-[18px]" />
-                </Button>
-              </SignInButton>
+              <Button onClick={handleSignIn} disabled={isSigningIn}>
+                {isSigningIn ? 'Signing in...' : 'Sign In'}
+              </Button>
             )}
           </div>
         </div>
@@ -175,97 +205,71 @@ export function MainNavigation() {
     )
   }
 
-  // Mobile top bar with full screen menu
+  // Mobile navbar
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-14 bg-background border-b flex items-center justify-between px-4 z-40">
-        <RouteLink to="/" className="flex items-center">
-          <img
-            src="/logo-florin.png"
-            alt="Hominem Logo"
-            width={24}
-            height={24}
-            className="transition-opacity hover:opacity-80"
-          />
-        </RouteLink>
+      <header className="sticky top-0 z-50 bg-background border-b">
+        <div className="flex h-16 items-center px-4">
+          {/* Logo */}
+          <RouteLink to="/" className="flex items-center space-x-2">
+            <img
+              src="/logo-florin.png"
+              alt="Florin Logo"
+              width={24}
+              height={24}
+              className="transition-opacity hover:opacity-80"
+            />
+            <span className="font-bold text-lg">Florin</span>
+          </RouteLink>
 
-        <div className="flex items-center gap-2">
-          {!isLoaded ? (
-            <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
-          ) : isLoggedIn ? (
-            <RouteLink to="/account" aria-label="Account settings">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                <User className="h-[18px] w-[18px]" />
-              </Button>
-            </RouteLink>
-          ) : (
-            <SignInButton>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <User className="h-[18px] w-[18px]" />
-              </Button>
-            </SignInButton>
-          )}
-
-          <Button variant="ghost" size="icon" className="ml-1" onClick={toggleMenu}>
-            {menuOpen ? (
-              <X className="h-5 w-5 transition-all duration-300 ease-out" />
+          {/* Right Side */}
+          <div className="flex flex-1 items-center justify-end space-x-2">
+            {isLoading ? (
+              <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
+            ) : isLoggedIn ? (
+              <Link to="/account">
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
             ) : (
-              <Menu className="h-5 w-5 transition-all duration-300 ease-out" />
+              <Button size="sm" onClick={handleSignIn} disabled={isSigningIn}>
+                {isSigningIn ? 'Signing in...' : 'Sign In'}
+              </Button>
             )}
-          </Button>
+
+            <Button variant="ghost" size="icon" onClick={toggleMenu}>
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
       </header>
 
-      {/* Full-screen Mobile Menu */}
-      {menuOpen && (
+      {/* Mobile Menu */}
+      {menuOpen && isLoggedIn && (
         <div
           className={cn(
-            'fixed inset-0 z-50 bg-background flex flex-col pt-14',
+            'fixed inset-0 z-50 bg-background flex flex-col pt-16',
             animateExit ? 'menu-container-exit' : 'menu-container-enter'
           )}
         >
-          <div className="relative w-full h-full overflow-auto p-6 flex flex-col">
-            <h2 className="font-serif text-xl mb-8 opacity-0 animate-[menuSlideUp_0.4s_cubic-bezier(0.22,1,0.36,1)_0.1s_forwards]">
-              Navigation
-            </h2>
-
-            <nav className="flex flex-col space-y-4 mb-8">
-              {navItems.map((item, index) => (
+          <div className="p-6">
+            <nav className="flex flex-col space-y-4">
+              {navItems.map((item) => (
                 <RouteLink
                   key={item.title}
                   to={item.url}
                   onClick={closeMenu}
                   className={cn(
-                    'flex items-center py-3 border-b border-muted transition-colors',
-                    pathname === item.url
-                      ? 'text-primary border-primary'
-                      : 'text-foreground border-muted hover:text-primary'
+                    'flex items-center py-3 text-lg font-medium transition-colors',
+                    pathname === item.url ? 'text-primary' : 'text-foreground hover:text-primary'
                   )}
-                  style={{
-                    opacity: 0,
-                    animation: `menuSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${0.1 + index * 0.05}s forwards`,
-                  }}
                 >
-                  <div className="w-10 flex items-center justify-center">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <span className="ml-4 text-lg font-light">{item.title}</span>
+                  <item.icon className="h-5 w-5 mr-3" />
+                  {item.title}
                 </RouteLink>
               ))}
             </nav>
-
-            <div
-              className="mt-auto opacity-0"
-              style={{
-                animation: 'menuSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards',
-              }}
-            >
-              <div className="border-t border-muted pt-4">
-                <p className="text-sm text-muted-foreground">
-                  © {new Date().getFullYear()} Hominem. All rights reserved.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       )}

@@ -1,8 +1,8 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
+import type { User } from '@supabase/supabase-js'
 import { Loader2, RefreshCw, Twitter } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -28,6 +28,7 @@ import { useContentStrategies } from '~/lib/content/use-content-strategies'
 import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
 import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
 import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 interface TweetModalProps {
   open: boolean
@@ -75,10 +76,26 @@ export function TweetModal({
 }: TweetModalProps) {
   const [strategyType, setStrategyType] = useState<StrategyType>('default')
   const [strategy, setStrategy] = useState<string>('storytelling')
+  const [user, setUser] = useState<User | null>(null)
 
-  const { isSignedIn } = useAuth()
+  const { getUser } = useSupabaseAuth()
   const { strategies: customStrategies, isLoading: isLoadingStrategies } = useContentStrategies()
   const twitterIntegrationEnabled = useFeatureFlag('twitterIntegration')
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
+
+  const isAuthenticated = !!user
 
   const {
     generateTweet,
@@ -232,7 +249,7 @@ export function TweetModal({
                   <SelectItem value="default">🎯 Default Strategies</SelectItem>
                   <SelectItem value="custom">
                     ⚙️ Custom Strategies{' '}
-                    {!isSignedIn
+                    {!isAuthenticated
                       ? '(Sign in required)'
                       : customStrategies.length > 0
                         ? `(${customStrategies.length})`
@@ -264,7 +281,7 @@ export function TweetModal({
                 </Select>
               ) : (
                 <div className="space-y-2">
-                  {!isSignedIn ? (
+                  {!isAuthenticated ? (
                     <div className="text-center p-4 border rounded bg-blue-50 dark:bg-blue-950">
                       <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
                         Sign in to use your custom content strategies
@@ -383,7 +400,7 @@ export function TweetModal({
               disabled={
                 isGenerating ||
                 (strategyType === 'custom' &&
-                  (!isSignedIn || !strategy || customStrategies.length === 0))
+                  (!isAuthenticated || !strategy || customStrategies.length === 0))
               }
             >
               {isGenerating ? (
@@ -391,7 +408,7 @@ export function TweetModal({
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Generating...
                 </>
-              ) : strategyType === 'custom' && !isSignedIn ? (
+              ) : strategyType === 'custom' && !isAuthenticated ? (
                 'Sign in for Custom Strategies'
               ) : strategyType === 'custom' && customStrategies.length === 0 ? (
                 'Create a Strategy First'

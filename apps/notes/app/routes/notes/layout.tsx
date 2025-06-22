@@ -1,16 +1,36 @@
-import { RedirectToSignIn, useAuth } from '@clerk/react-router'
-import { Outlet } from 'react-router'
+import type { User } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
+import { Navigate, Outlet } from 'react-router'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function NotesLayout() {
-  const { userId, isLoaded } = useAuth()
+  const { getUser } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Show nothing while Clerk is loading
-  if (!isLoaded) {
-    return null
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return <div>Loading...</div>
   }
 
-  if (!userId) {
-    return <RedirectToSignIn />
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/auth" replace />
   }
 
   return (

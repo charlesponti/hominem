@@ -1,6 +1,5 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
 import { AlertCircle, Building2, CreditCard, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { usePlaidLink, type PlaidLinkOnExit, type PlaidLinkOnSuccess } from 'react-plaid-link'
@@ -9,6 +8,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useCreateLinkToken, useExchangeToken } from '~/lib/hooks/use-plaid'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 
 interface PlaidLinkProps {
@@ -26,7 +26,8 @@ export function PlaidLink({
   variant = 'default',
   children,
 }: PlaidLinkProps) {
-  const { userId } = useAuth()
+  const { getUser } = useSupabaseAuth()
+  const [user, setUser] = useState(null)
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 
@@ -37,6 +38,21 @@ export function PlaidLink({
   } = useCreateLinkToken()
 
   const { exchangeToken, isLoading: isExchanging, error: exchangeError } = useExchangeToken()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
+
+  const userId = user?.id
 
   // Initialize link token only when user clicks the button
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>

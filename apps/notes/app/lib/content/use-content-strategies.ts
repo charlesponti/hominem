@@ -1,8 +1,8 @@
-import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import type { ContentStrategiesSelect, ContentStrategy } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { createClient } from '~/lib/supabase'
 
 // Query keys
 const CONTENT_STRATEGIES_KEY = [['content-strategies']]
@@ -26,17 +26,19 @@ type UpdateContentStrategyData = {
  * Hook to fetch all content strategies for the current user
  */
 export function useContentStrategies() {
-  const { userId } = useAuth()
+  const supabase = createClient()
   const apiClient = useApiClient()
 
   const query = useQuery<ContentStrategiesSelect[]>({
     queryKey: CONTENT_STRATEGIES_KEY,
     queryFn: async () => {
-      if (!userId) throw new Error('User not authenticated')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
 
       return await apiClient.get<null, ContentStrategiesSelect[]>('/api/content-strategies')
     },
-    enabled: !!userId,
   })
 
   return {
@@ -51,19 +53,22 @@ export function useContentStrategies() {
  * Hook to fetch a specific content strategy by ID
  */
 export function useContentStrategy(strategyId: string) {
-  const { userId } = useAuth()
+  const supabase = createClient()
   const apiClient = useApiClient()
 
   const query = useQuery<ContentStrategiesSelect>({
     queryKey: [['content-strategies', strategyId]],
     queryFn: async () => {
-      if (!userId) throw new Error('User not authenticated')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
 
       return await apiClient.get<null, ContentStrategiesSelect>(
         `/api/content-strategies/${strategyId}`
       )
     },
-    enabled: !!userId && !!strategyId,
+    enabled: !!strategyId,
   })
 
   return {
@@ -78,7 +83,7 @@ export function useContentStrategy(strategyId: string) {
  * Hook to create a new content strategy
  */
 export function useCreateContentStrategy() {
-  const { userId } = useAuth()
+  const supabase = createClient()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
   const [data, setData] = useState<CreateContentStrategyData>({
@@ -89,7 +94,10 @@ export function useCreateContentStrategy() {
 
   const createStrategy = useMutation({
     mutationFn: async (strategyData: CreateContentStrategyData) => {
-      if (!userId) throw new Error('User not authenticated')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
 
       return await apiClient.post<CreateContentStrategyData, ContentStrategiesSelect>(
         '/api/content-strategies',
@@ -121,14 +129,17 @@ export function useCreateContentStrategy() {
  * Hook to update an existing content strategy
  */
 export function useUpdateContentStrategy() {
-  const { userId } = useAuth()
+  const supabase = createClient()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
   const [data, setData] = useState<ContentStrategy | null>(null)
 
   const updateStrategy = useMutation({
     mutationFn: async (updateData: UpdateContentStrategyData) => {
-      if (!userId) throw new Error('User not authenticated')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
 
       return await apiClient.put<Omit<UpdateContentStrategyData, 'id'>, ContentStrategiesSelect>(
         `/api/content-strategies/${updateData.id}`,
@@ -159,13 +170,16 @@ export function useUpdateContentStrategy() {
  * Hook to delete a content strategy
  */
 export function useDeleteContentStrategy() {
-  const { userId } = useAuth()
+  const supabase = createClient()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
 
   const deleteStrategy = useMutation({
     mutationFn: async (strategyId: string) => {
-      if (!userId) throw new Error('User not authenticated')
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
 
       await apiClient.delete<null, void>(`/api/content-strategies/${strategyId}`)
       return strategyId

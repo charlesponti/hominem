@@ -1,6 +1,7 @@
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
 import type { WebSocketServer } from 'ws'
+import { WebSocket } from 'ws'
 
 // Define Redis message handler types
 export interface RedisMessage {

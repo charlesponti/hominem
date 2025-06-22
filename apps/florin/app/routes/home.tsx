@@ -1,7 +1,8 @@
-import { SignUpButton, useUser } from '@clerk/react-router'
+import type { User } from '@supabase/supabase-js'
 import { ArrowRight, BarChart2 } from 'lucide-react'
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import styles from './home.module.css'
 
 export function meta() {
@@ -16,17 +17,34 @@ export function meta() {
 }
 
 export default function Home() {
-  const { user, isLoaded } = useUser()
+  const { getUser } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
 
   // Redirect authenticated users to their dashboard
   useEffect(() => {
-    if (isLoaded && user) {
+    if (!isLoading && user) {
       navigate('/finance', { replace: true })
     }
-  }, [isLoaded, user, navigate])
+  }, [isLoading, user, navigate])
 
-  if (!isLoaded || (isLoaded && user)) {
+  if (isLoading || (!isLoading && user)) {
     return null
   }
 
@@ -47,7 +65,7 @@ export default function Home() {
 
           {/* CTA Button */}
           <div className="mb-16">
-            <SignUpButton>
+            <Link to="/auth">
               <button
                 type="button"
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
@@ -55,7 +73,7 @@ export default function Home() {
                 Get Started Free
                 <ArrowRight className="inline-block ml-2 h-5 w-5" />
               </button>
-            </SignUpButton>
+            </Link>
             <p className="text-sm text-gray-500 mt-3">No credit card required</p>
           </div>
 

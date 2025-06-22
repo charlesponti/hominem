@@ -1,17 +1,33 @@
-import { RedirectToSignIn, SignOutButton, useAuth } from '@clerk/react-router'
+import type { User } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { useToast } from '~/components/ui/use-toast'
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function AccountPage() {
-  const { userId } = useAuth()
+  const { getUser, signOut } = useSupabaseAuth()
+  const [user, setUser] = useState<User | null>(null)
   const { toast } = useToast()
   const { refetch } = useTwitterOAuth()
 
   const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+
+    fetchUser()
+  }, [getUser])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -59,8 +75,21 @@ export default function AccountPage() {
     })
   }
 
-  if (!userId) {
-    return <RedirectToSignIn />
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      setUser(null)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
   }
 
   return (
@@ -99,9 +128,9 @@ export default function AccountPage() {
                 <h3 className="font-medium">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">End your current session.</p>
               </div>
-              <SignOutButton>
-                <Button variant="outline">Sign Out</Button>
-              </SignOutButton>
+              <Button variant="outline" onClick={handleSignOut}>
+                Sign Out
+              </Button>
             </div>
           </CardContent>
         </Card>
