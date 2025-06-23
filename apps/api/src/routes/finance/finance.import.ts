@@ -133,6 +133,44 @@ financeImportRoutes.post(
   }
 )
 
+// Get active import jobs
+financeImportRoutes.get('/active', requireAuth, async (c) => {
+  const userId = c.get('userId')
+  if (!userId) {
+    return c.json({ error: 'Not authorized' }, 401)
+  }
+
+  try {
+    // Get queues from context
+    const queues = c.get('queues')
+
+    // With BullMQ, we can get active jobs directly
+    const activeJobs = await queues.importTransactions.getJobs(['active', 'waiting', 'delayed'])
+
+    // Filter to only get this user's jobs and map to our expected format
+    const userJobs = activeJobs
+      .filter((job: Job<ImportTransactionsQueuePayload>) => job.data.userId === userId)
+      .map((job: Job<ImportTransactionsQueuePayload>) => ({
+        jobId: job.id as string,
+        userId: job.data.userId,
+        fileName: job.data.fileName,
+        status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
+        progress: job.progress,
+      }))
+
+    return c.json({ jobs: userJobs })
+  } catch (error) {
+    console.error(`Error fetching active jobs: ${error}`)
+    return c.json(
+      {
+        error: 'Failed to retrieve active import jobs',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
+  }
+})
+
 // Check import status
 financeImportRoutes.get(
   '/:jobId',
@@ -178,41 +216,3 @@ financeImportRoutes.get(
     }
   }
 )
-
-// Get active import jobs
-financeImportRoutes.get('/active', requireAuth, async (c) => {
-  const userId = c.get('userId')
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
-  }
-
-  try {
-    // Get queues from context
-    const queues = c.get('queues')
-
-    // With BullMQ, we can get active jobs directly
-    const activeJobs = await queues.importTransactions.getJobs(['active', 'waiting', 'delayed'])
-
-    // Filter to only get this user's jobs and map to our expected format
-    const userJobs = activeJobs
-      .filter((job: Job<ImportTransactionsQueuePayload>) => job.data.userId === userId)
-      .map((job: Job<ImportTransactionsQueuePayload>) => ({
-        jobId: job.id as string,
-        userId: job.data.userId,
-        fileName: job.data.fileName,
-        status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
-        progress: job.progress,
-      }))
-
-    return c.json({ jobs: userJobs })
-  } catch (error) {
-    console.error(`Error fetching active jobs: ${error}`)
-    return c.json(
-      {
-        error: 'Failed to retrieve active import jobs',
-        details: error instanceof Error ? error.message : String(error),
-      },
-      500
-    )
-  }
-})

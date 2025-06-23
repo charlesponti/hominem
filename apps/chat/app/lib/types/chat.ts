@@ -2,6 +2,9 @@
 import type { ChatMessageSelect } from '@hominem/utils/schema'
 import type { ProcessedFile } from './upload'
 
+// Re-export ProcessedFile for convenience
+export type { ProcessedFile } from './upload'
+
 // ============================================================================
 // Core Chat Types
 // ============================================================================

@@ -1,7 +1,7 @@
 import type { User } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { getCurrentUser } from './auth'
+import { useSupabaseAuth } from './use-auth'
 
 interface UseRequireAuthOptions {
   redirectTo?: string
@@ -15,13 +15,14 @@ export function useRequireAuth({
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
+  const { getUser } = useSupabaseAuth()
 
   useEffect(() => {
     let mounted = true
 
     const checkAuth = async () => {
       try {
-        const currentUser = await getCurrentUser()
+        const currentUser = await getUser()
 
         if (mounted) {
           setUser(currentUser)
@@ -50,7 +51,7 @@ export function useRequireAuth({
     return () => {
       mounted = false
     }
-  }, [navigate, redirectTo, requireAuth])
+  }, [navigate, redirectTo, requireAuth, getUser])
 
   return { user, isLoading, isAuthenticated: !!user }
 }

@@ -156,6 +156,16 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   const isLoading = status === 'streaming' || status === 'submitted'
   const canSubmit = (trimmedValue || attachedFiles.length > 0) && !isLoading && !isOverLimit
 
+  // Check if there's a streaming message (last message is assistant and streaming)
+  const hasStreamingMessage =
+    messages.length > 0 &&
+    messages[messages.length - 1].role === 'assistant' &&
+    status === 'streaming'
+
+  // Show thinking component only when submitted but no streaming message yet
+  const showThinkingComponent =
+    status === 'submitted' || (status === 'streaming' && !hasStreamingMessage)
+
   // Auto-speak responses in voice mode
   useEffect(() => {
     if (isVoiceMode && messages.length > 0) {
@@ -347,10 +357,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   return (
     <div className="flex flex-col h-full w-full max-w-3xl mx-auto bg-background text-foreground">
       {/* Messages Area */}
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 pb-32 md:pb-40 space-y-4"
-      >
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Error Display */}
         {chatError && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
@@ -359,11 +366,19 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
           </div>
         )}
 
-        {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
+        {messages.map((message, index) => (
+          <ChatMessage
+            key={message.id}
+            message={message}
+            isStreaming={
+              status === 'streaming' &&
+              index === messages.length - 1 &&
+              message.role === 'assistant'
+            }
+          />
         ))}
 
-        {isLoading && (
+        {showThinkingComponent && (
           <div className="bg-muted mr-12 p-4 rounded-lg">
             <div className="text-sm opacity-70 mb-2">AI Assistant</div>
             <div className="flex items-center gap-2">
@@ -375,7 +390,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
       </div>
 
       {/* Input Area */}
-      <div className="fixed w-full max-w-3xl bottom-0 md:bottom-10 border rounded-t-lg md:rounded-lg backdrop-blur-lg p-2 space-y-2">
+      <div className="border-t bg-background p-4 space-y-2 pb-safe">
         {/* Attachments Preview */}
         {attachedFiles.length > 0 && (
           <AttachmentsPreview
@@ -409,7 +424,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="w-full resize-none rounded-lg border border-border px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full resize-none rounded-lg border border-border px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation"
               rows={1}
               style={{
                 minHeight: '44px',
@@ -429,7 +444,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
         {/* Chat Controls */}
         <div className="flex items-center justify-between">
           {/* Action Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {/* Web Search */}
             <Button
               variant="outline"

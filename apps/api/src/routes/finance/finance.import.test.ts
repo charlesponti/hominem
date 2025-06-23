@@ -440,12 +440,6 @@ describe('Finance Import Routes', () => {
         url: '/api/finance/import/active',
       })
 
-      // Check if the response is 404 - meaning the route isn't found
-      if (response.status === 404) {
-        // Route not found, which means we need to check the actual route setup
-        return
-      }
-
       const body = await assertSuccessResponse<ImportApiResponse>(response)
       expect(body.jobs).toHaveLength(2) // Only user's jobs
       expect(body.jobs?.[0].jobId).toBe('job-1')
@@ -463,12 +457,6 @@ describe('Finance Import Routes', () => {
         url: '/api/finance/import/active',
       })
 
-      // Check if the response is 404 - meaning the route isn't found
-      if (response.status === 404) {
-        console.log('Import active route not found - skipping test')
-        return
-      }
-
       const body = await assertSuccessResponse<ImportApiResponse>(response)
       expect(body.jobs).toEqual([])
     })
@@ -480,11 +468,6 @@ describe('Finance Import Routes', () => {
         method: 'GET',
         url: '/api/finance/import/active',
       })
-
-      // Check if the response is 404 - meaning the route isn't found
-      if (response.status === 404) {
-        return
-      }
 
       const body = await assertErrorResponse(response, 500)
       expect(body.error).toBe('Failed to retrieve active import jobs')

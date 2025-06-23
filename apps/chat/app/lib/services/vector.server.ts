@@ -63,7 +63,7 @@ export class VectorStore {
   /**
    * Chunk large text into smaller segments for better embedding
    */
-  private chunkText(text: string, maxChunkSize = 1500, overlap = 200): string[] {
+  public chunkText(text: string, maxChunkSize = 1500, overlap = 200): string[] {
     if (text.length <= maxChunkSize) {
       return [text]
     }

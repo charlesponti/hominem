@@ -1,4 +1,4 @@
-import type { ProcessedFile } from './file-processor.server'
+import type { ProcessedFile } from '../types/upload.js'
 import { HominemVectorStore } from './vector.server'
 
 /**

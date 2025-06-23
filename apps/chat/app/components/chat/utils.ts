@@ -1,4 +1,4 @@
-import type { SearchResponse, SearchResult } from './types.js'
+import type { SearchResponse, SearchResult } from './types'
 
 export async function performWebSearch(query: string): Promise<SearchResponse> {
   try {
@@ -10,7 +10,7 @@ export async function performWebSearch(query: string): Promise<SearchResponse> {
 
     const result = (await response.json()) as SearchResponse
 
-    if (result.success) {
+    if (result.success && result.results) {
       const context = `Search results for "${result.query}":\n${result.results
         .map((r: SearchResult, i: number) => `${i + 1}. ${r.title}: ${r.snippet}`)
         .join('\n')}`

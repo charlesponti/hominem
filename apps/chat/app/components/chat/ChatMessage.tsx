@@ -1,10 +1,15 @@
 import type { Message } from 'ai'
 
 // Component for text parts
-function TextPart({ text, index }: { text: string; index: number }) {
+function TextPart({
+  text,
+  index,
+  isStreaming,
+}: { text: string; index: number; isStreaming?: boolean }) {
   return (
     <div key={`text-${text.slice(0, 20)}-${index}`} className="whitespace-pre-wrap">
       {text}
+      {isStreaming && <span className="inline-block w-2 h-4 bg-foreground animate-pulse ml-1" />}
     </div>
   )
 }
@@ -64,15 +69,21 @@ function ReasoningPart({ reasoning, index }: { reasoning: string; index: number 
 }
 
 // Component for fallback content
-function FallbackContent({ content }: { content: string }) {
-  return <div className="whitespace-pre-wrap">{content}</div>
+function FallbackContent({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
+  return (
+    <div className="whitespace-pre-wrap">
+      {content}
+      {isStreaming && <span className="inline-block w-2 h-4 bg-foreground animate-pulse ml-1" />}
+    </div>
+  )
 }
 
 interface ChatMessageProps {
   message: Message
+  isStreaming?: boolean
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) {
   return (
     <div
       className={`p-4 rounded-lg ${
@@ -93,6 +104,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   key={`text-${part.text.slice(0, 20)}-${index}`}
                   text={part.text}
                   index={index}
+                  isStreaming={isStreaming}
                 />
               )
             }
@@ -124,7 +136,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
       {/* Fallback for simple content */}
       {message.content && (!message.parts || message.parts.length === 0) && (
-        <FallbackContent content={message.content} />
+        <FallbackContent content={message.content} isStreaming={isStreaming} />
       )}
     </div>
   )
