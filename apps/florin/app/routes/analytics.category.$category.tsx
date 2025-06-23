@@ -6,7 +6,6 @@ import { useParams } from 'react-router'
 import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay'
 import { CategoryMonthlyBreakdown } from '~/components/analytics/CategoryMonthlyBreakdown'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
-import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
 export default function CategoryAnalyticsPage() {
   const { category } = useParams<{ category: string }>()
@@ -16,24 +15,7 @@ export default function CategoryAnalyticsPage() {
   const [dateTo] = useState<Date>(new Date())
   const [chartType, setChartType] = useState<'area' | 'bar'>('area')
 
-  const {
-    data: timeSeries,
-    formatDateLabel,
-    isLoading,
-    error,
-    chartData,
-  } = useTimeSeriesData({
-    dateFrom,
-    dateTo,
-    category,
-    account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    groupBy: 'month',
-    compareToPrevious: true,
-    includeStats: false,
-  })
-
-  if (isLoading) return <div className="p-4 text-center">Loading…</div>
-  if (error) return <div className="p-4 text-center text-red-600">Error loading data</div>
+  if (accountsLoading) return <div className="p-4 text-center">Loading accounts…</div>
 
   return (
     <div className="container">
@@ -61,16 +43,21 @@ export default function CategoryAnalyticsPage() {
         <AnalyticsChartDisplay
           chartType={chartType}
           setChartType={setChartType}
-          isLoading={isLoading}
-          error={error}
-          chartData={chartData}
-          timeSeriesData={timeSeries?.data}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          selectedAccount={selectedAccount}
+          selectedCategory={category}
+          groupBy="month"
+          compareToPrevious={true}
         />
 
         <CategoryMonthlyBreakdown
-          data={timeSeries?.data}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          selectedAccount={selectedAccount}
+          selectedCategory={category}
           compareToPrevious={true}
-          formatDateLabel={formatDateLabel}
+          groupBy="month"
           category={category}
         />
       </div>

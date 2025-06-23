@@ -14,7 +14,9 @@ import {
 } from 'recharts'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
 const INCOME_COLOR = '#ABF4B6'
 const EXPENSES_COLOR = '#ef4444'
@@ -33,25 +35,103 @@ interface TimeSeriesDataPoint {
 interface AnalyticsChartDisplayProps {
   chartType: 'area' | 'bar'
   setChartType: Dispatch<SetStateAction<'area' | 'bar'>>
-  isLoading: boolean
-  error: Error | null
-  chartData: ChartDataPoint[] | null | undefined
-  timeSeriesData?: TimeSeriesDataPoint[]
+  dateFrom?: Date
+  dateTo?: Date
+  selectedAccount?: string
+  selectedCategory?: string
+  groupBy?: 'month' | 'week' | 'day'
+  compareToPrevious?: boolean
 }
 
 export function AnalyticsChartDisplay({
   chartType,
   setChartType,
-  timeSeriesData,
+  dateFrom,
+  dateTo,
+  selectedAccount,
+  selectedCategory,
+  groupBy = 'month',
+  compareToPrevious = false,
 }: AnalyticsChartDisplayProps) {
+  const {
+    data: timeSeriesData,
+    isLoading,
+    error,
+  } = useTimeSeriesData({
+    dateFrom,
+    dateTo,
+    account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    category: selectedCategory || undefined,
+    includeStats: false,
+    compareToPrevious,
+    groupBy,
+  })
+
   const incomeExpensesChartData = useMemo(() => {
-    if (!timeSeriesData) return []
-    return timeSeriesData.map((point) => ({
+    if (!timeSeriesData?.data) return []
+    return timeSeriesData.data.map((point) => ({
       name: point.date,
       Income: point.income,
       Expenses: Math.abs(point.expenses),
     }))
-  }, [timeSeriesData])
+  }, [timeSeriesData?.data])
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+              <span>Trends</span>
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16" />
+              </div>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 w-full max-w-full">
+            <Skeleton className="h-full w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 w-full max-w-full flex items-center justify-center">
+            <div className="text-center text-red-500">
+              {error.message || 'Unable to load chart data. Please try again later.'}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!incomeExpensesChartData.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 w-full max-w-full flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              No data available for the selected period
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <>

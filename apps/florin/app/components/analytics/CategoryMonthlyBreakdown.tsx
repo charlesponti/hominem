@@ -1,13 +1,19 @@
 import type { TimeSeriesDataPoint } from '@hominem/utils/types'
 import { Link, useNavigate } from 'react-router'
+import { Card, CardContent } from '~/components/ui/card'
+import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { cn } from '~/lib/utils'
 
 interface CategoryMonthlyBreakdownProps {
-  data: TimeSeriesDataPoint[] | undefined
-  compareToPrevious: boolean
-  formatDateLabel: (dateStr: string) => string
-  category: string | undefined
+  dateFrom?: Date
+  dateTo?: Date
+  selectedAccount?: string
+  selectedCategory?: string
+  compareToPrevious?: boolean
+  groupBy?: 'month' | 'week' | 'day'
+  category?: string
 }
 
 const DeltaIcon = ({ delta }: { delta: number }) => {
@@ -204,23 +210,107 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
 }
 
 export function CategoryMonthlyBreakdown({
-  data,
-  compareToPrevious,
-  formatDateLabel,
+  dateFrom,
+  dateTo,
+  selectedAccount,
+  selectedCategory,
+  compareToPrevious = false,
+  groupBy = 'month',
   category,
 }: CategoryMonthlyBreakdownProps) {
   const navigate = useNavigate()
 
-  if (!data || data.length === 0) {
-    return null
+  const {
+    data: timeSeriesData,
+    isLoading,
+    error,
+    formatDateLabel,
+  } = useTimeSeriesData({
+    dateFrom,
+    dateTo,
+    account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    category: selectedCategory || undefined,
+    includeStats: false,
+    compareToPrevious,
+    groupBy,
+  })
+
+  const data = timeSeriesData?.data
+
+  if (isLoading) {
+    const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
+    const mobileSkeletonItems = Array.from({ length: 3 }, (_, i) => i)
+
+    return (
+      <div>
+        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
+        <div className="space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <div className="overflow-x-auto hidden md:block bg-white px-4 rounded-2xl py-4 border-2 border-muted">
+            <div className="space-y-3">
+              {skeletonItems.map((item) => (
+                <div
+                  key={`category-breakdown-skeleton-${item}`}
+                  className="flex justify-between items-center"
+                >
+                  <Skeleton className="h-4 w-24" />
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="block md:hidden space-y-4">
+            {mobileSkeletonItems.map((item) => (
+              <Skeleton
+                key={`mobile-category-breakdown-skeleton-${item}`}
+                className="h-32 w-full"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  // Trends & Anomalies logic - focus on expenses since this is category analysis
+  if (error) {
+    return (
+      <div>
+        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-500">
+              {error.message || 'Unable to load category breakdown. Please try again later.'}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div>
+        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              No data available for the selected period
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Trends & Anomalies logic
   let trendsContent = null
   if (data.length > 1) {
     let maxExpensesChange = 0
     let maxExpensesIdx = 1
-
     for (let i = 1; i < data.length; i++) {
       const prev = data[i - 1]
       const curr = data[i]
@@ -230,10 +320,8 @@ export function CategoryMonthlyBreakdown({
         maxExpensesIdx = i
       }
     }
-
     const prevMonth = data[maxExpensesIdx - 1]
     const currMonth = data[maxExpensesIdx]
-
     trendsContent = (
       <TrendsContent
         prevMonth={prevMonth}
@@ -247,14 +335,10 @@ export function CategoryMonthlyBreakdown({
   return (
     <div>
       <div>
-        <h3 className="text-3xl font-semibold py-4">
-          {category ? `${category} - ` : ''}Monthly Spending
-        </h3>
+        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
         {/* Trends & Anomalies section */}
         {trendsContent || (
-          <div className="text-sm text-muted-foreground mb-2">
-            No significant changes in spending
-          </div>
+          <div className="text-sm text-muted-foreground mb-2">No significant changes</div>
         )}
       </div>
       <div>
@@ -265,8 +349,8 @@ export function CategoryMonthlyBreakdown({
               <tr className="border-b">
                 <th className="text-left py-2">Period</th>
                 <th className="text-right py-2">Transactions</th>
-                <th className="text-right py-2">Amount Spent</th>
-                <th className="text-right py-2">Average Transaction</th>
+                <th className="text-right py-2">Total Spent</th>
+                <th className="text-right py-2">Average</th>
                 {compareToPrevious && <th className="text-right py-2">Spending Trend</th>}
               </tr>
             </thead>

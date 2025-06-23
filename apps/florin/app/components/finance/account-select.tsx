@@ -12,6 +12,7 @@ interface AccountSelectProps {
   selectedAccount: string
   setSelectedAccount: (value: string) => void
   className?: string
+  isLoading?: boolean
 }
 
 export function AccountSelect({
@@ -19,6 +20,7 @@ export function AccountSelect({
   selectedAccount,
   setSelectedAccount,
   className,
+  isLoading = false,
 }: AccountSelectProps) {
   return (
     <Select name="account" value={selectedAccount} onValueChange={setSelectedAccount}>
@@ -27,11 +29,21 @@ export function AccountSelect({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All accounts</SelectItem>
-        {accounts.map((account) => (
-          <SelectItem key={account.id} value={account.id}>
-            {account.name}
+        {isLoading ? (
+          <SelectItem value="loading" disabled>
+            Loading accounts...
           </SelectItem>
-        ))}
+        ) : accounts.length === 0 ? (
+          <SelectItem value="no-accounts" disabled>
+            No accounts available
+          </SelectItem>
+        ) : (
+          accounts.map((account) => (
+            <SelectItem key={account.id} value={account.id}>
+              {account.name}
+            </SelectItem>
+          ))
+        )}
       </SelectContent>
     </Select>
   )

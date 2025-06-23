@@ -1,4 +1,6 @@
+import type { FinanceAccount } from '@hominem/utils/types'
 import { X } from 'lucide-react'
+import type { Dispatch, SetStateAction } from 'react'
 import { DatePicker } from '~/components/date-picker'
 import { AccountSelect } from '~/components/finance/account-select'
 import {
@@ -18,7 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import { Skeleton } from '~/components/ui/skeleton'
 import { Switch } from '~/components/ui/switch'
+import { useFinanceCategories } from '~/lib/hooks/use-finance-categories'
+import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 
 interface AnalyticsFiltersProps {
   dateFrom: Date | undefined
@@ -27,12 +32,8 @@ interface AnalyticsFiltersProps {
   setDateTo: Dispatch<SetStateAction<Date | undefined>>
   selectedAccount: string
   setSelectedAccount: Dispatch<SetStateAction<string>>
-  accounts: FinanceAccount[]
-  accountsLoading: boolean
   selectedCategory: string
   setSelectedCategory: Dispatch<SetStateAction<string>>
-  categories: string[]
-  categoriesLoading: boolean
   groupBy: 'month' | 'week' | 'day'
   setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>
   includeStats: boolean
@@ -40,9 +41,6 @@ interface AnalyticsFiltersProps {
   compareToPrevious: boolean
   setCompareToPrevious: Dispatch<SetStateAction<boolean>>
 }
-
-import type { FinanceAccount } from '@hominem/utils/types'
-import type { Dispatch, SetStateAction } from 'react'
 
 interface FilterChipsProps {
   dateFrom: Date | undefined
@@ -60,7 +58,8 @@ interface FilterChipsProps {
   compareToPrevious: boolean
   setCompareToPrevious: Dispatch<SetStateAction<boolean>>
   accounts: FinanceAccount[]
-  categories: string[]
+  categories: { id: string; name: string }[]
+  isLoading: boolean
 }
 
 function FilterChips({
@@ -80,7 +79,12 @@ function FilterChips({
   setCompareToPrevious,
   accounts,
   categories,
+  isLoading,
 }: FilterChipsProps) {
+  if (isLoading) {
+    return <Skeleton className="h-6 w-32" />
+  }
+
   const chips = []
   if (dateFrom) {
     chips.push({
@@ -105,9 +109,11 @@ function FilterChips({
     })
   }
   if (selectedCategory && selectedCategory !== 'all') {
+    const categoryLabel =
+      categories.find((c) => c.id === selectedCategory)?.name || selectedCategory
     chips.push({
       key: 'category',
-      label: selectedCategory,
+      label: categoryLabel,
       onRemove: () => setSelectedCategory('all'),
     })
   }
@@ -166,11 +172,8 @@ export function AnalyticsFilters({
   setDateTo,
   selectedAccount,
   setSelectedAccount,
-  accounts,
   selectedCategory,
   setSelectedCategory,
-  categories,
-  categoriesLoading,
   groupBy,
   setGroupBy,
   includeStats,
@@ -178,6 +181,24 @@ export function AnalyticsFilters({
   compareToPrevious,
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
+  const { accounts, isLoading: accountsLoading } = useFinanceAccounts()
+  const { categories, isLoading: categoriesLoading } = useFinanceCategories()
+
+  const isLoading = accountsLoading || categoriesLoading
+
+  // Ensure we have valid data even during loading
+  const safeAccounts = accounts || []
+  const safeCategories = categories || []
+
+  // Debug logging
+  console.log('AnalyticsFilters render:', {
+    accountsLoading,
+    categoriesLoading,
+    isLoading,
+    accountsCount: safeAccounts.length,
+    categoriesCount: safeCategories.length,
+  })
+
   return (
     <Accordion type="single" collapsible defaultValue={undefined}>
       <AccordionItem value="filters">
@@ -200,8 +221,9 @@ export function AnalyticsFilters({
                 setIncludeStats={setIncludeStats}
                 compareToPrevious={compareToPrevious}
                 setCompareToPrevious={setCompareToPrevious}
-                accounts={accounts}
-                categories={categories}
+                accounts={safeAccounts}
+                categories={safeCategories}
+                isLoading={isLoading}
               />
             </span>
           </AccordionTrigger>
@@ -220,35 +242,37 @@ export function AnalyticsFilters({
 
                 <div className="space-y-2">
                   <Label htmlFor="account">Account</Label>
-                  <AccountSelect
-                    accounts={accounts}
-                    selectedAccount={selectedAccount}
-                    setSelectedAccount={setSelectedAccount}
-                    className="w-full"
-                  />
+                  {accountsLoading ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <AccountSelect
+                      accounts={safeAccounts}
+                      selectedAccount={selectedAccount}
+                      setSelectedAccount={setSelectedAccount}
+                      className="w-full"
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All categories" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72 overflow-y-auto">
-                      <SelectItem value="all">All categories</SelectItem>
-                      {categoriesLoading ? (
-                        <SelectItem value="disabled" disabled>
-                          Loading categories...
-                        </SelectItem>
-                      ) : (
-                        categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
+                  {categoriesLoading ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All categories" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72 overflow-y-auto">
+                        <SelectItem value="all">All categories</SelectItem>
+                        {safeCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
                           </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 <div className="space-y-2">

@@ -1,31 +1,58 @@
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
-import type { TopMerchantItem } from './types'
+import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants'
 
 interface TopMerchantsProps {
-  topMerchants: TopMerchantItem[] | undefined
-  isLoadingMerchants: boolean
-  errorMerchants: unknown
+  dateFrom?: Date
+  dateTo?: Date
+  selectedAccount?: string
+  selectedCategory?: string
 }
 
 export function TopMerchants({
-  topMerchants,
-  isLoadingMerchants,
-  errorMerchants,
+  dateFrom,
+  dateTo,
+  selectedAccount,
+  selectedCategory,
 }: TopMerchantsProps) {
+  const {
+    data: topMerchants,
+    isLoading,
+    error,
+  } = useFinanceTopMerchants({
+    from: dateFrom?.toISOString().split('T')[0],
+    to: dateTo?.toISOString().split('T')[0],
+    account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    category: selectedCategory || undefined,
+    limit: 5,
+  })
+
+  const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">Top Merchants</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoadingMerchants ? (
-          <div>Loading...</div>
-        ) : errorMerchants instanceof Error ? (
-          <div className="text-red-500">
-            {errorMerchants.message || 'Your merchants are not available. Please try again later.'}
+        {isLoading ? (
+          <div className="space-y-3">
+            {skeletonItems.map((item) => (
+              <div key={`merchant-skeleton-${item}`} className="flex justify-between items-center">
+                <Skeleton className="h-4 w-32" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-8" />
+                </div>
+              </div>
+            ))}
           </div>
-        ) : errorMerchants ? (
+        ) : error instanceof Error ? (
+          <div className="text-red-500">
+            {error.message || 'Your merchants are not available. Please try again later.'}
+          </div>
+        ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching merchants.</div>
         ) : topMerchants && topMerchants.length > 0 ? (
           <table className="w-full text-sm">
@@ -47,7 +74,9 @@ export function TopMerchants({
             </tbody>
           </table>
         ) : (
-          <div>No data</div>
+          <div className="text-center text-muted-foreground py-4">
+            No merchant data available for the selected period
+          </div>
         )}
       </CardContent>
     </Card>

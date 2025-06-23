@@ -1,12 +1,18 @@
 import type { TimeSeriesDataPoint } from '@hominem/utils/types'
 import { Link, useNavigate } from 'react-router'
+import { Card, CardContent } from '~/components/ui/card'
+import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { cn } from '~/lib/utils'
 
 interface AnalyticsMonthlyBreakdownProps {
-  data: TimeSeriesDataPoint[] | undefined
-  compareToPrevious: boolean
-  formatDateLabel: (dateStr: string) => string
+  dateFrom?: Date
+  dateTo?: Date
+  selectedAccount?: string
+  selectedCategory?: string
+  compareToPrevious?: boolean
+  groupBy?: 'month' | 'week' | 'day'
 }
 
 const DeltaIcon = ({ delta }: { delta: number }) => {
@@ -238,14 +244,96 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel }: MonthItem
 }
 
 export function AnalyticsMonthlyBreakdown({
-  data,
-  compareToPrevious,
-  formatDateLabel,
+  dateFrom,
+  dateTo,
+  selectedAccount,
+  selectedCategory,
+  compareToPrevious = false,
+  groupBy = 'month',
 }: AnalyticsMonthlyBreakdownProps) {
   const navigate = useNavigate()
 
+  const {
+    data: timeSeriesData,
+    isLoading,
+    error,
+    formatDateLabel,
+  } = useTimeSeriesData({
+    dateFrom,
+    dateTo,
+    account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    category: selectedCategory || undefined,
+    includeStats: false,
+    compareToPrevious,
+    groupBy,
+  })
+
+  const data = timeSeriesData?.data
+
+  if (isLoading) {
+    const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
+    const mobileSkeletonItems = Array.from({ length: 3 }, (_, i) => i)
+
+    return (
+      <div>
+        <h3 className="text-3xl font-semibold py-4">Monthly Breakdown</h3>
+        <div className="space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <div className="overflow-x-auto hidden md:block bg-white px-4 rounded-2xl py-4 border-2 border-muted">
+            <div className="space-y-3">
+              {skeletonItems.map((item) => (
+                <div
+                  key={`breakdown-skeleton-${item}`}
+                  className="flex justify-between items-center"
+                >
+                  <Skeleton className="h-4 w-24" />
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="block md:hidden space-y-4">
+            {mobileSkeletonItems.map((item) => (
+              <Skeleton key={`mobile-breakdown-skeleton-${item}`} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div>
+        <h3 className="text-3xl font-semibold py-4">Monthly Breakdown</h3>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-500">
+              {error.message || 'Unable to load monthly breakdown. Please try again later.'}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (!data || data.length === 0) {
-    return null
+    return (
+      <div>
+        <h3 className="text-3xl font-semibold py-4">Monthly Breakdown</h3>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              No data available for the selected period
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // Trends & Anomalies logic

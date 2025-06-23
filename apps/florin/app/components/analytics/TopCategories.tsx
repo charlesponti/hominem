@@ -1,32 +1,57 @@
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
-import type { CategoryBreakdownItem } from './types'
+import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
 
 interface TopCategoriesProps {
-  categoryBreakdown: CategoryBreakdownItem[] | undefined
-  isLoadingCategories: boolean
-  errorCategories: unknown
+  dateFrom?: Date
+  dateTo?: Date
+  selectedAccount?: string
+  selectedCategory?: string
 }
 
 export function TopCategories({
-  categoryBreakdown,
-  isLoadingCategories,
-  errorCategories,
+  dateFrom,
+  dateTo,
+  selectedAccount,
+  selectedCategory,
 }: TopCategoriesProps) {
+  const {
+    data: categoryBreakdown,
+    isLoading,
+    error,
+  } = useFinanceCategoryBreakdown({
+    from: dateFrom?.toISOString().split('T')[0],
+    to: dateTo?.toISOString().split('T')[0],
+    account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    limit: 5,
+  })
+
+  const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">Top Categories</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoadingCategories ? (
-          <div>Loading...</div>
-        ) : errorCategories instanceof Error ? (
-          <div className="text-red-500">
-            {errorCategories.message ||
-              'Your categories are not available. Please try again later.'}
+        {isLoading ? (
+          <div className="space-y-3">
+            {skeletonItems.map((item) => (
+              <div key={`category-skeleton-${item}`} className="flex justify-between items-center">
+                <Skeleton className="h-4 w-24" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-8" />
+                </div>
+              </div>
+            ))}
           </div>
-        ) : errorCategories ? (
+        ) : error instanceof Error ? (
+          <div className="text-red-500">
+            {error.message || 'Your categories are not available. Please try again later.'}
+          </div>
+        ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching categories.</div>
         ) : categoryBreakdown && categoryBreakdown.length > 0 ? (
           <table className="w-full text-sm">
@@ -48,7 +73,9 @@ export function TopCategories({
             </tbody>
           </table>
         ) : (
-          <div>No data</div>
+          <div className="text-center text-muted-foreground py-4">
+            No category data available for the selected period
+          </div>
         )}
       </CardContent>
     </Card>

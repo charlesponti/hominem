@@ -6,11 +6,6 @@ import { AnalyticsMonthlyBreakdown } from '~/components/analytics/AnalyticsMonth
 import { AnalyticsStatisticsSummary } from '~/components/analytics/AnalyticsStatisticsSummary'
 import { TopCategories } from '~/components/analytics/TopCategories'
 import { TopMerchants } from '~/components/analytics/TopMerchants'
-import { useFinanceCategories } from '~/lib/hooks/use-finance-categories'
-import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
-import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
-import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants'
-import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
 export default function FinanceAnalyticsPage() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(subMonths(new Date(), 6))
@@ -21,49 +16,6 @@ export default function FinanceAnalyticsPage() {
   const [compareToPrevious, setCompareToPrevious] = useState<boolean>(true)
   const [groupBy, setGroupBy] = useState<'month' | 'week' | 'day'>('month')
   const [chartType, setChartType] = useState<'area' | 'bar'>('area')
-
-  const { accounts, isLoading: accountsLoading } = useFinanceAccounts()
-
-  const { categories, isLoading: categoriesLoading } = useFinanceCategories()
-
-  const {
-    data: timeSeriesData,
-    chartData,
-    isLoading,
-    error,
-    formatDateLabel,
-  } = useTimeSeriesData({
-    dateFrom,
-    dateTo,
-    account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    category: selectedCategory || undefined,
-    includeStats,
-    compareToPrevious,
-    groupBy,
-  })
-
-  const {
-    data: topMerchants,
-    isLoading: isLoadingMerchants,
-    error: errorMerchants,
-  } = useFinanceTopMerchants({
-    from: dateFrom?.toISOString().split('T')[0],
-    to: dateTo?.toISOString().split('T')[0],
-    account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    category: selectedCategory || undefined,
-    limit: 5,
-  })
-
-  const {
-    data: categoryBreakdown,
-    isLoading: isLoadingCategories,
-    error: errorCategories,
-  } = useFinanceCategoryBreakdown({
-    from: dateFrom?.toISOString().split('T')[0],
-    to: dateTo?.toISOString().split('T')[0],
-    account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    limit: 5,
-  })
 
   return (
     <div className="w-full">
@@ -79,12 +31,8 @@ export default function FinanceAnalyticsPage() {
           setDateTo={setDateTo}
           selectedAccount={selectedAccount}
           setSelectedAccount={setSelectedAccount}
-          accounts={accounts}
-          accountsLoading={accountsLoading}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
-          categories={categories}
-          categoriesLoading={categoriesLoading}
           groupBy={groupBy}
           setGroupBy={setGroupBy}
           includeStats={includeStats}
@@ -93,33 +41,46 @@ export default function FinanceAnalyticsPage() {
           setCompareToPrevious={setCompareToPrevious}
         />
 
-        <AnalyticsStatisticsSummary stats={timeSeriesData?.stats} />
+        <AnalyticsStatisticsSummary
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          selectedAccount={selectedAccount}
+          selectedCategory={selectedCategory}
+          includeStats={includeStats}
+        />
 
         <AnalyticsChartDisplay
           chartType={chartType}
           setChartType={setChartType}
-          isLoading={isLoading}
-          error={error}
-          chartData={chartData}
-          timeSeriesData={timeSeriesData?.data}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          selectedAccount={selectedAccount}
+          selectedCategory={selectedCategory}
+          groupBy={groupBy}
+          compareToPrevious={compareToPrevious}
         />
 
         <AnalyticsMonthlyBreakdown
-          data={timeSeriesData?.data}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          selectedAccount={selectedAccount}
+          selectedCategory={selectedCategory}
           compareToPrevious={compareToPrevious}
-          formatDateLabel={formatDateLabel}
+          groupBy={groupBy}
         />
 
         <TopCategories
-          categoryBreakdown={categoryBreakdown}
-          isLoadingCategories={isLoadingCategories}
-          errorCategories={errorCategories}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          selectedAccount={selectedAccount}
+          selectedCategory={selectedCategory}
         />
 
         <TopMerchants
-          topMerchants={topMerchants}
-          isLoadingMerchants={isLoadingMerchants}
-          errorMerchants={errorMerchants}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          selectedAccount={selectedAccount}
+          selectedCategory={selectedCategory}
         />
       </div>
     </div>
