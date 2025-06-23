@@ -18,7 +18,10 @@ interface Category {
  */
 export function useFinanceCategories() {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   // Use React Query to fetch and cache categories
   const query = useQuery<Category[], Error>({

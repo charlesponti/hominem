@@ -30,7 +30,10 @@ interface PlaidAccountByInstitution {
  */
 export function usePlaidAccountsByInstitution(institutionId: string | null, options = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const defaultOptions = {
     staleTime: 5 * 60 * 1000, // 5 minutes

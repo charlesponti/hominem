@@ -127,6 +127,7 @@ export interface QueryOptions {
   sortBy?: string | string[]
   sortDirection?: 'asc' | 'desc' | ('asc' | 'desc')[]
   search?: string
+  includeExcluded?: boolean
 
   // Legacy options (for backward compatibility)
   from?: string

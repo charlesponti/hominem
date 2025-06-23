@@ -24,12 +24,6 @@ const calculateTransactionsSchema = z.object({
   type: z.enum(['income', 'expense']).optional(),
 })
 
-const budgetCategorySuggestionsSchema = z.object({
-  description: z.string().min(1, 'Description is required'),
-  amount: z.number().optional(),
-})
-
-// Parse query parameters
 const timeSeriesQuerySchema = z.object({
   from: z.string().optional(),
   to: z.string().optional(),
@@ -195,7 +189,6 @@ financeAnalyzeRoutes.post(
   }
 )
 
-// Get monthly statistics
 financeAnalyzeRoutes.get(
   '/monthly-stats/:month',
   requireAuth,
@@ -221,9 +214,6 @@ financeAnalyzeRoutes.get(
         to: endDate.toISOString().split('T')[0],
       })
 
-      // --- Database Queries ---
-
-      // 1. Calculate Total Income, Total Expenses, and Transaction Count
       const totalsResult = await db
         .select({
           totalIncome:
@@ -242,7 +232,6 @@ financeAnalyzeRoutes.get(
       const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {}
 
       // 2. Calculate Spending by Category (only expenses)
-      // Use standardized condition building for category spending with expense type filter
       const categorySpendingFilter = buildWhereConditions({
         userId,
         from: startDate.toISOString().split('T')[0],
@@ -260,22 +249,18 @@ financeAnalyzeRoutes.get(
         .groupBy(transactions.category)
         .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`))
 
-      // --- Format Results ---
-      const netIncome = totalIncome - totalExpenses
-
       const stats = {
         month,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         totalIncome,
         totalExpenses,
-        netIncome,
+        netIncome: totalIncome - totalExpenses,
         transactionCount,
         categorySpending: categorySpendingResult.map((c) => ({
           name: c.category,
           amount: c.amount,
         })),
-        // Optionally fetch top transactions or other details here if needed
       }
 
       return c.json(stats)

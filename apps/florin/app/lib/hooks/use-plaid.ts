@@ -86,7 +86,10 @@ interface UnlinkAccountResponse {
  */
 export function useCreateLinkToken() {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const [error, setError] = useState<Error | null>(null)
 
   const createLinkToken = useMutation({
@@ -123,7 +126,10 @@ export function useCreateLinkToken() {
 export function useExchangeToken() {
   const queryClient = useQueryClient()
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const [error, setError] = useState<Error | null>(null)
 
   const exchangeToken = useMutation({
@@ -163,7 +169,10 @@ export function useExchangeToken() {
  */
 export function usePlaidConnections(options = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const defaultOptions = {
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -219,7 +228,10 @@ export function usePlaidConnections(options = {}) {
  */
 export function usePlaidAccounts(options = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const defaultOptions = {
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -289,7 +301,10 @@ export function usePlaidAccounts(options = {}) {
 export function useSyncPlaidItem() {
   const queryClient = useQueryClient()
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const [error, setError] = useState<Error | null>(null)
 
   const syncItem = useMutation({
@@ -330,7 +345,10 @@ export function useSyncPlaidItem() {
 export function useRemovePlaidConnection() {
   const queryClient = useQueryClient()
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const [error, setError] = useState<Error | null>(null)
 
   const removeConnection = useMutation({
@@ -369,7 +387,10 @@ export function useRemovePlaidConnection() {
 export function useLinkAccountToInstitution() {
   const queryClient = useQueryClient()
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const [error, setError] = useState<Error | null>(null)
 
   const linkAccount = useMutation({
@@ -420,7 +441,10 @@ export function useLinkAccountToInstitution() {
 export function useUnlinkAccountFromInstitution() {
   const queryClient = useQueryClient()
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const [error, setError] = useState<Error | null>(null)
 
   const unlinkAccount = useMutation({

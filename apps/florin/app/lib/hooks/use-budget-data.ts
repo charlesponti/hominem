@@ -31,7 +31,10 @@ interface BudgetVsActualItem extends BudgetCategory {
 
 export function useBudgetCategories() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const queryKey = ['budget_data', 'categories', 'user']
 
@@ -52,7 +55,10 @@ export function useBudgetCategories() {
 
 export function useCreateBudgetCategory() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
   const [error, setError] = useState<Error | null>(null)
 
@@ -86,7 +92,10 @@ export function useCreateBudgetCategory() {
 
 export function useUpdateBudgetCategory() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
   const [error, setError] = useState<Error | null>(null)
 
@@ -121,7 +130,10 @@ export function useUpdateBudgetCategory() {
 
 export function useDeleteBudgetCategory() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
 
   const mutation = useMutation<{ success: boolean; message: string }, Error, string>({
@@ -151,7 +163,10 @@ interface BudgetHistoryDataPoint {
 
 export function useBudgetHistory(months = 6) {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryKey = ['budget_data', 'history', months, 'user']
 
   const query = useQuery<BudgetHistoryDataPoint[], Error>({
@@ -203,7 +218,10 @@ export type PersonalBudgetResult = {
 // Hook for personal budget calculation
 export function usePersonalBudgetCalculation() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
 
   const calculateBudget = useMutation<PersonalBudgetResult, Error, PersonalBudgetInput | undefined>(

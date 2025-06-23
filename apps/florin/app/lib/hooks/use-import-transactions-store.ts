@@ -19,7 +19,10 @@ const PROGRESS_UPDATE_THROTTLE = 100
 
 export function useImportTransactionsStore() {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])

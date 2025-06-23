@@ -7,7 +7,10 @@ const FINANCIAL_INSTITUTIONS_KEY = [['financial-institutions']]
 
 export function useFinancialInstitutions() {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const query = useQuery<FinancialInstitution[]>({
     queryKey: FINANCIAL_INSTITUTIONS_KEY,

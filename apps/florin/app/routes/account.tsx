@@ -1,9 +1,8 @@
 import { useApiClient } from '@hominem/ui'
 import type { Transaction as FinanceTransaction } from '@hominem/utils/types'
-import type { User } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router'
+import { useState } from 'react'
+import { redirect } from 'react-router'
 import { RouteLink } from '~/components/route-link'
 import {
   AlertDialog,
@@ -19,43 +18,40 @@ import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import { getServerSession } from '~/lib/supabase/server'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import type { Route } from './+types/account'
 
-export default function AccountPage() {
-  const { getUser, supabase } = useSupabaseAuth()
-  const [user, setUser] = useState<User | null>(null)
-  const api = useApiClient({ supabaseClient: supabase })
+export async function loader(args: Route.LoaderArgs) {
+  const { user } = await getServerSession(args.request)
+
+  if (!user) {
+    return redirect('/auth')
+  }
+
+  return { user }
+}
+
+export default function AccountPage({ loaderData }: Route.ComponentProps) {
+  const { user } = loaderData
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
   const { accountsMap } = useFinanceAccounts()
   const { transactions } = useFinanceTransactions()
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await getUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      }
-    }
-
-    fetchUser()
-  }, [getUser])
-
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
-      setUser(null)
     } catch (error) {
       console.error('Logout error:', error)
     }
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />
   }
 
   const exportTransactions = () => {

@@ -1,12 +1,22 @@
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
-import { getActiveJobs, getQueuedJobs } from '@hominem/utils/imports'
+import type { ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
+import type { Job } from 'bullmq'
 import type { WebSocket } from 'ws'
 
 // Define message handler types
 export interface WebSocketMessage {
   type: string
   [key: string]: unknown
+}
+
+// Extend WebSocket to include queues
+interface WebSocketWithQueues extends WebSocket {
+  queues?: {
+    importTransactions: {
+      getJobs: (types: string[]) => Promise<Job<ImportTransactionsQueuePayload>[]>
+    }
+  }
 }
 
 export type MessageMiddleware = (
@@ -82,14 +92,58 @@ wsHandlers.register('ping', async (ws) => {
 })
 
 wsHandlers.register(REDIS_CHANNELS.SUBSCRIBE, async (ws) => {
-  const [activeJobs, queuedJobs] = await Promise.all([getActiveJobs(), getQueuedJobs()])
-  ws.send(
-    JSON.stringify({
-      type: REDIS_CHANNELS.SUBSCRIBED,
-      channel: REDIS_CHANNELS.IMPORT_PROGRESS,
-      data: [...activeJobs, ...queuedJobs],
-    })
-  )
+  try {
+    // Get queues from the WebSocket context
+    const wsWithQueues = ws as WebSocketWithQueues
+    const queues = wsWithQueues.queues
+
+    if (!queues?.importTransactions) {
+      logger.error('Import transactions queue not available in WebSocket context')
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          message: 'Queue service not available',
+        })
+      )
+      return
+    }
+
+    // Get active and waiting jobs from BullMQ
+    const [activeJobs, waitingJobs, delayedJobs] = await Promise.all([
+      queues.importTransactions.getJobs(['active']),
+      queues.importTransactions.getJobs(['waiting']),
+      queues.importTransactions.getJobs(['delayed']),
+    ])
+
+    // Combine all jobs and map to expected format
+    const allJobs = [...activeJobs, ...waitingJobs, ...delayedJobs].map(
+      (job: Job<ImportTransactionsQueuePayload>) => ({
+        jobId: job.id as string,
+        userId: job.data.userId,
+        fileName: job.data.fileName,
+        status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
+        progress: job.progress,
+        stats: job.returnvalue?.stats || {},
+        error: job.failedReason,
+      })
+    )
+
+    ws.send(
+      JSON.stringify({
+        type: REDIS_CHANNELS.SUBSCRIBED,
+        channel: REDIS_CHANNELS.IMPORT_PROGRESS,
+        data: allJobs,
+      })
+    )
+  } catch (error) {
+    logger.error('Error getting jobs from BullMQ:', error)
+    ws.send(
+      JSON.stringify({
+        type: 'error',
+        message: 'Failed to get active jobs',
+      })
+    )
+  }
 })
 
 wsHandlers.register('chat', async (ws, message) => {

@@ -13,7 +13,7 @@ export const globalMocks = {
     add: vi.fn(),
     close: vi.fn(() => Promise.resolve()),
     getJob: vi.fn(),
-    getJobs: vi.fn(),
+    getJobs: vi.fn(() => Promise.resolve([])),
     // Add other queue methods as needed
   } as Partial<Queue>,
 

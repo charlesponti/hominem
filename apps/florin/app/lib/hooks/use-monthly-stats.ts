@@ -23,7 +23,10 @@ const MONTHLY_STATS_KEY = ['finance', 'monthly-stats']
  */
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const queryKey = [...MONTHLY_STATS_KEY, month]
 

@@ -1,6 +1,5 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { getJobStatus, getUserJobs } from '@hominem/utils/imports'
-import type { ImportTransactionsJob, ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
+import type { ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
 import { csvStorageService } from '@hominem/utils/supabase'
 import { zValidator } from '@hono/zod-validator'
 import type { Job } from 'bullmq'
@@ -66,25 +65,26 @@ financeImportRoutes.post(
       fs.unlinkSync(uploadedFile.filepath)
 
       // Check if a job with the same filename already exists for this user
-      const userJobs = await getUserJobs<ImportTransactionsJob>(userId, 1, 100)
-      const existingJob = userJobs.jobs.find(
-        (job) =>
-          job.fileName === uploadedFile.filename &&
-          (job.status === 'queued' || job.status === 'uploading' || job.status === 'processing')
+      const queues = c.get('queues')
+      const activeJobs = await queues.importTransactions.getJobs(['active', 'waiting', 'delayed'])
+      const existingJob = activeJobs.find(
+        (job: Job<ImportTransactionsQueuePayload>) =>
+          job.data.fileName === uploadedFile.filename && job.data.userId === userId
       )
 
       if (existingJob) {
         return c.json({
           success: true,
-          jobId: existingJob.jobId,
-          fileName: existingJob.fileName,
-          status: existingJob.status,
+          jobId: existingJob.id,
+          fileName: existingJob.data.fileName,
+          status: existingJob.finishedOn
+            ? 'done'
+            : existingJob.failedReason
+              ? 'error'
+              : 'processing',
           message: 'File is already being processed',
         })
       }
-
-      // Get queues from context
-      const queues = c.get('queues')
 
       // Use BullMQ with file path instead of CSV content
       const job = await queues.importTransactions.add(
@@ -187,12 +187,7 @@ financeImportRoutes.get(
       const job = await queues.importTransactions.getJob(jobId)
 
       if (!job) {
-        // Try the legacy job status method as a fallback
-        const legacyJob = await getJobStatus(jobId)
-        if (!legacyJob) {
-          return c.json({ error: 'Import job not found' }, 404)
-        }
-        return c.json(legacyJob)
+        return c.json({ error: 'Import job not found' }, 404)
       }
 
       // Map BullMQ job to our expected format

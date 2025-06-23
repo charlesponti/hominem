@@ -1,4 +1,3 @@
-import type { ImportTransactionsJob } from '@hominem/utils/jobs'
 import fs from 'node:fs'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
@@ -90,7 +89,6 @@ describe('Finance Import Routes', () => {
     test('successfully imports CSV file', async () => {
       const { handleFileUpload } = await import('../../middleware/file-upload.js')
       const { csvStorageService } = await import('@hominem/utils/supabase')
-      const { getUserJobs } = await import('@hominem/utils/imports')
 
       // Mock file upload
       const mockFile = {
@@ -111,8 +109,8 @@ describe('Finance Import Routes', () => {
         'uploads/user123/transactions.csv'
       )
 
-      // Mock no existing jobs
-      vi.mocked(getUserJobs).mockResolvedValue({ jobs: [], total: 0, page: 1, pages: 10 })
+      // Mock no existing jobs in BullMQ
+      mockQueueGetJobs.mockResolvedValue([])
 
       // Mock queue
       mockQueueAdd.mockResolvedValue({ id: 'job-123' })
@@ -158,7 +156,6 @@ describe('Finance Import Routes', () => {
     test('returns existing job if file is already being processed', async () => {
       const { handleFileUpload } = await import('../../middleware/file-upload.js')
       const { csvStorageService } = await import('@hominem/utils/supabase')
-      const { getUserJobs } = await import('@hominem/utils/imports')
 
       // Mock file upload
       const mockFile = {
@@ -179,21 +176,17 @@ describe('Finance Import Routes', () => {
         'uploads/user123/transactions.csv'
       )
 
-      // Mock existing job
-      vi.mocked(getUserJobs).mockResolvedValue({
-        jobs: [
-          {
-            jobId: 'existing-job-123',
-            type: 'import-transactions',
-            status: 'processing',
-            userId: 'test-user-id',
-            fileName: 'transactions.csv', // This must match the uploaded file name
-          } as ImportTransactionsJob,
-        ],
-        total: 1,
-        page: 1,
-        pages: 1,
-      })
+      // Mock existing job in BullMQ
+      const existingJob = {
+        id: 'existing-job-123',
+        data: {
+          fileName: 'transactions.csv',
+          userId: 'test-user-id',
+        },
+        finishedOn: null,
+        failedReason: null,
+      }
+      mockQueueGetJobs.mockResolvedValue([existingJob])
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
@@ -354,35 +347,9 @@ describe('Finance Import Routes', () => {
       expect(body.error).toBe('Processing error')
     })
 
-    test('falls back to legacy job status', async () => {
-      const { getJobStatus } = await import('@hominem/utils/imports')
-
-      // Mock BullMQ job not found
-      mockQueueGetJob.mockResolvedValue(null)
-
-      // Mock legacy job found
-      const legacyJob = {
-        jobId: 'legacy-job-123',
-        status: 'completed',
-        fileName: 'old-transactions.csv',
-      }
-      vi.mocked(getJobStatus).mockResolvedValue(legacyJob)
-
-      const response = await makeAuthenticatedRequest(getServer(), {
-        method: 'GET',
-        url: '/api/finance/import/legacy-job-123',
-      })
-
-      const body = await assertSuccessResponse<ImportApiResponse>(response)
-      expect(body).toEqual(legacyJob)
-    })
-
     test('returns 404 for non-existent job', async () => {
-      const { getJobStatus } = await import('@hominem/utils/imports')
-
-      // Mock job not found in both BullMQ and legacy
+      // Mock job not found in BullMQ
       mockQueueGetJob.mockResolvedValue(null)
-      vi.mocked(getJobStatus).mockResolvedValue(null)
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'GET',

@@ -22,7 +22,10 @@ export function useFinanceCategoryBreakdown({
   limit?: number
 }) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   return useQuery<CategorySummary[]>({
     queryKey: ['finance', 'categoryBreakdown', { from, to, account, limit }],
     queryFn: async () => {

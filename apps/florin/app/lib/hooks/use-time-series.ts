@@ -37,7 +37,10 @@ export function useTimeSeriesData({
   enabled = true,
 }: TimeSeriesParams) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({ supabaseClient: supabase })
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   // Generate a query key based on all parameters - memoize to prevent infinite re-renders
   const queryKey = useMemo(

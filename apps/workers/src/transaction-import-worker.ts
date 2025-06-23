@@ -20,7 +20,6 @@ import { type Job, Worker } from 'bullmq'
 import { eq, sql } from 'drizzle-orm'
 import { JOB_PROCESSING } from './config'
 import { HealthService } from './health.service'
-import { JobStatusService } from './job-status.service'
 
 // Configuration
 const CONCURRENCY = 3
@@ -260,8 +259,6 @@ export class TransactionImportWorker {
         throw new Error(`CSV file path not found in job ${job.id}`)
       }
 
-      await JobStatusService.markJobProcessing(job.id as string)
-
       const decodedContent = await TransactionImportWorker.downloadAndValidateContent(
         job.id as string,
         job.data.csvFilePath
@@ -269,7 +266,6 @@ export class TransactionImportWorker {
 
       const updateBullJobProgress = async (progress: number) => {
         await job.updateProgress(progress)
-        logger.debug(`Updated BullMQ job ${job.id} progress to ${progress}%`)
       }
 
       await TransactionImportWorker.processCSVContent(
@@ -338,8 +334,6 @@ export class TransactionImportWorker {
 
       stats.processingTime = Date.now() - startTime
 
-      await JobStatusService.markJobError(job.id as string, errorMessage, stats)
-
       throw error
     }
   }
@@ -366,18 +360,7 @@ export class TransactionImportWorker {
           result?.stats || (job.returnvalue as JobProcessingOutput | undefined)?.stats || {}
 
         try {
-          // Mark job as done in our custom job status system
-          if (job.id) {
-            await JobStatusService.markJobDone(job.id as string, {
-              progress: 100,
-              processingTime: job.processedOn
-                ? Date.now() - job.processedOn
-                : result?.stats?.processingTime || 0,
-              ...finalStats,
-            })
-          }
-
-          // Publish completion status
+          // Publish completion status to Redis for WebSocket clients
           await redis.publish(
             REDIS_CHANNELS.IMPORT_PROGRESS,
             JSON.stringify([
@@ -486,38 +469,25 @@ export class TransactionImportWorker {
   }
 
   /**
-   * Handle graceful shutdown
-   */
-  private async handleGracefulShutdown(): Promise<void> {
-    if (this.isShuttingDown) return
-
-    this.isShuttingDown = true
-    logger.info('Starting graceful shutdown of transaction import worker...')
-
-    try {
-      await this.worker.close()
-      logger.info('Transaction import worker closed successfully')
-    } catch (error) {
-      logger.error({ error }, 'Error during transaction import worker shutdown')
-    }
-  }
-
-  /**
    * Set up signal handlers for graceful shutdown
    */
-  private setupSignalHandlers(): void {
-    process.on('SIGTERM', async () => {
-      logger.info('Transaction import worker received SIGTERM, cleaning up...')
-      await this.handleGracefulShutdown()
-    })
+  private setupSignalHandlers() {
+    const shutdown = async (signal: string) => {
+      logger.info(`Received ${signal}, shutting down gracefully...`)
+      this.isShuttingDown = true
 
-    process.on('SIGINT', async () => {
-      logger.info('Transaction import worker received SIGINT, cleaning up...')
-      await this.handleGracefulShutdown()
-    })
+      try {
+        await this.worker.close()
+        logger.info('Worker closed successfully')
+        process.exit(0)
+      } catch (error) {
+        logger.error('Error during shutdown:', error)
+        process.exit(1)
+      }
+    }
 
-    // Note: Removed uncaughtException and unhandledRejection handlers
-    // These are now handled by the main process in index.ts to avoid conflicts
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
+    process.on('SIGINT', () => shutdown('SIGINT'))
   }
 }
 

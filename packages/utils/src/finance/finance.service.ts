@@ -76,7 +76,9 @@ export function buildWhereConditions(options: QueryOptions) {
   }
 
   // Default filters to exclude test/invalid transactions
-  conditions.push(eq(transactions.excluded, false))
+  if (!options.includeExcluded) {
+    conditions.push(eq(transactions.excluded, false))
+  }
   conditions.push(eq(transactions.pending, false))
 
   // Date range filters - support both new and legacy format
@@ -316,15 +318,14 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
 }
 
 export async function summarizeByMonth(options: QueryOptions) {
-  // Use the standardized buildWhereConditions function
-  const whereConditions = buildWhereConditions(options)
+  const whereConditions = buildWhereConditions({ ...options, includeExcluded: true })
 
-  const result = await db
+  const query = db
     .select({
       month: sql<string>`SUBSTR(${transactions.date}::text, 1, 7)`,
       count: sql<number>`COUNT(*)`,
-      income: sql<number>`SUM(CASE WHEN ${transactions.type} = 'income' THEN ${transactions.amount}::numeric ELSE 0 END)`,
-      expenses: sql<number>`SUM(CASE WHEN ${transactions.type} = 'expense' THEN ${transactions.amount}::numeric ELSE 0 END)`,
+      income: sql<number>`SUM(CASE WHEN ${transactions.amount} > 0 THEN ${transactions.amount}::numeric ELSE 0 END)`,
+      expenses: sql<number>`SUM(CASE WHEN ${transactions.amount} < 0 THEN ABS(${transactions.amount}::numeric) ELSE 0 END)`,
       average: sql<number>`AVG(${transactions.amount}::numeric)`,
     })
     .from(transactions)
@@ -332,6 +333,8 @@ export async function summarizeByMonth(options: QueryOptions) {
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .groupBy(sql`SUBSTR(${transactions.date}::text, 1, 7)`)
     .orderBy(sql`SUBSTR(${transactions.date}::text, 1, 7) DESC`)
+
+  const result = await query
 
   // Format the numeric values
   return result

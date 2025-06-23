@@ -21,7 +21,10 @@ export interface FilterArgs {
 
 export function useFinanceAccounts() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const accountsQuery = useQuery<FinanceAccount[], Error>({
     queryKey: ['finance', 'accounts'],
@@ -46,7 +49,10 @@ export function useFinanceAccounts() {
 
 export function useFinanceAccountSummary() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const query = useQuery<Array<FinanceAccount & { transactions: FinanceTransaction[] }>, Error>({
     queryKey: ['finance', 'accounts', 'summary'],
@@ -69,7 +75,10 @@ export function useFinanceAccountSummary() {
 // New unified hook that combines finance and Plaid account data
 export function useAllAccounts() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const query = useQuery<
     {
@@ -154,7 +163,10 @@ export function useFinanceTransactions({
   filters = {},
 }: UseFinanceTransactionsOptions = {}) {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({ supabaseClient: supabase })
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   // Filtering state is now controlled by the `filters` prop
   // Remove internal filter states: selectedAccount, dateFrom, dateTo, searchQuery
