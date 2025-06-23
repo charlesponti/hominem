@@ -6,6 +6,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_URL: z.string().url().default('http://localhost:4040'),
   COOKIE_SECRET: z.string().default('supersecret'),
+  DATABASE_URL: z.string().url(),
 
   FLORIN_URL: z.string().url().default('http://localhost:4444'),
   ROCCO_URL: z.string().url().default('http://localhost:4454'),

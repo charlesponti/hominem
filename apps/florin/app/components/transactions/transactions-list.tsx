@@ -1,5 +1,3 @@
-'use client'
-
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { format } from 'date-fns'
 import { Calendar, CreditCard, DollarSign, Tag } from 'lucide-react'

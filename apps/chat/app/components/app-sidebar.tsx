@@ -20,7 +20,7 @@ export function AppSidebar({ userId, onNewChat }: AppSidebarProps) {
   const pathname = location.pathname
   const navigate = useNavigate()
   const { chatId: currentChatId } = useParams()
-  const { getUser, signInWithGoogle } = useSupabaseAuth()
+  const { getUser, supabase } = useSupabaseAuth()
 
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -94,7 +94,13 @@ export function AppSidebar({ userId, onNewChat }: AppSidebarProps) {
   const handleSignIn = async () => {
     try {
       setIsSigningIn(true)
-      await signInWithGoogle()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
     } catch (error) {
       console.error('Sign in failed:', error)
     } finally {

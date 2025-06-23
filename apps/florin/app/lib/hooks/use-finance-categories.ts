@@ -1,32 +1,32 @@
 import { useApiClient } from '@hominem/ui'
 import { useQuery } from '@tanstack/react-query'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 interface Category {
-  category: string
+  id: string
+  name: string
+  type: 'income' | 'expense'
+  color?: string
+  icon?: string
+  createdAt: string
+  updatedAt: string
 }
 
 /**
- * Custom hook to fetch finance categories using React Query
+ * Hook for fetching finance categories
+ * Provides a clean interface for managing budget categories
  */
 export function useFinanceCategories() {
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
 
   // Use React Query to fetch and cache categories
-  const query = useQuery<string[], Error>({
-    queryKey: ['financeCategories'],
+  const query = useQuery<Category[], Error>({
+    queryKey: ['finance', 'categories'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get<never, Category[]>('/api/finance/categories')
-        return response
-          .map((item) => item.category)
-          .filter(Boolean)
-          .sort((a, b) => a.localeCompare(b))
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-        throw error instanceof Error ? error : new Error('Failed to fetch categories')
-      }
+      return await apiClient.get<never, Category[]>('/api/finance/categories')
     },
-    staleTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 10 * 60 * 1000, // 10 minutes
   })
 
   return {

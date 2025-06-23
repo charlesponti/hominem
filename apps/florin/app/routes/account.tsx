@@ -22,9 +22,9 @@ import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-fina
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function AccountPage() {
-  const { getUser, signOut } = useSupabaseAuth()
+  const { getUser, supabase } = useSupabaseAuth()
   const [user, setUser] = useState<User | null>(null)
-  const api = useApiClient()
+  const api = useApiClient({ supabaseClient: supabase })
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
@@ -46,7 +46,8 @@ export default function AccountPage() {
 
   const handleLogout = async () => {
     try {
-      await signOut()
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
       setUser(null)
     } catch (error) {
       console.error('Logout error:', error)

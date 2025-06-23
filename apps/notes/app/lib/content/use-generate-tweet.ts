@@ -2,6 +2,7 @@ import { useApiClient } from '@hominem/ui'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useToast } from '../../components/ui/use-toast'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 interface GenerateTweetParams {
   content: string
@@ -16,7 +17,11 @@ interface TweetResponse {
 }
 
 export function useGenerateTweet() {
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const { toast } = useToast()
   const [generatedTweet, setGeneratedTweet] = useState<string>('')
   const [isEditing, setIsEditing] = useState(false)

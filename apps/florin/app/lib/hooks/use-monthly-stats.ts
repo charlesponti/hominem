@@ -1,5 +1,6 @@
 import { useApiClient } from '@hominem/ui'
 import { useQuery } from '@tanstack/react-query'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 export interface MonthlyStats {
   month: string
@@ -21,7 +22,8 @@ const MONTHLY_STATS_KEY = ['finance', 'monthly-stats']
  * @param options Additional options to pass to useQuery
  */
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
 
   const queryKey = [...MONTHLY_STATS_KEY, month]
 

@@ -5,7 +5,8 @@ import { ChatDatabaseService } from '~/lib/services/chat-db.server.js'
 import { model } from '~/lib/services/llm.server.js'
 import { PerformanceMonitor } from '~/lib/services/performance-monitor.server.js'
 import { withRateLimit } from '~/lib/services/rate-limit.server.js'
-import type { ChatStreamRequest, MessageRole, ProcessedFile } from '~/lib/types/chat.js'
+import type { ChatStreamRequest, MessageRole } from '~/lib/types/chat.js'
+import type { ProcessedFile } from '~/lib/types/upload.js'
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -164,6 +165,35 @@ export async function action({ request }: ActionFunctionArgs) {
               }
             },
           }),
+        },
+        onFinish: async (result) => {
+          // Save the AI response to database after streaming completes
+          if (currentChatId && userId !== 'anonymous' && result.text) {
+            try {
+              await PerformanceMonitor.timeFunction(
+                'db_save_ai_response',
+                () =>
+                  ChatDatabaseService.addMessage({
+                    chatId: currentChatId,
+                    userId,
+                    role: 'assistant',
+                    content: result.text,
+                    toolCalls: result.toolCalls?.length > 0 ? result.toolCalls : undefined,
+                    reasoning: result.reasoning ? String(result.reasoning) : undefined,
+                  }),
+                { userId, chatId: currentChatId }
+              )
+            } catch (error) {
+              PerformanceMonitor.recordError(
+                error instanceof Error ? error : new Error(String(error)),
+                '/api/chat-stream',
+                userId,
+                { operation: 'save_ai_response', chatId: currentChatId }
+              )
+              console.warn('Failed to save AI response to database:', error)
+              // Don't throw - the stream should continue even if DB save fails
+            }
+          }
         },
       })
 

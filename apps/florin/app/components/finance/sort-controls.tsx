@@ -1,5 +1,3 @@
-'use client'
-
 import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu'
 import { ListOrdered, PlusCircle } from 'lucide-react'
 import { Button } from '~/components/ui/button'

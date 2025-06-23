@@ -1,14 +1,17 @@
 import { useApiClient } from '@hominem/ui'
-import type { Content, TaskStatus } from '@hominem/utils/types'
+import type { Content } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { useToast } from '../../components/ui/use-toast'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
 
 export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient()
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
@@ -21,12 +24,7 @@ export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
     { previousContent: Content[] | undefined }
   >({
     mutationFn: async (itemData) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        throw new Error('User must be signed in to update content.')
-      }
+      // Let the API handle authentication - don't check user here
       if (!itemData.id) {
         throw new Error('Item ID is required for update.')
       }
@@ -71,22 +69,5 @@ export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
     },
   })
 
-  function updateTaskStatus({ taskId, status }: { taskId: string; status: TaskStatus }) {
-    updateItem.mutate({ id: taskId, taskMetadata: { status } })
-  }
-
-  function toggleTaskCompletion(taskId: string) {
-    const queryKey = options.queryKey || [CONTENT_QUERY_KEY_BASE]
-    const previousContent = queryClient.getQueryData<Content[]>(queryKey)
-    const currentItem = previousContent?.find((item) => item.id === taskId)
-
-    let newStatus: TaskStatus = 'done'
-    if (currentItem?.taskMetadata?.status === 'done') {
-      newStatus = 'todo'
-    }
-
-    updateItem.mutate({ id: taskId, taskMetadata: { status: newStatus } })
-  }
-
-  return { updateItem, updateTaskStatus, toggleTaskCompletion }
+  return { updateItem }
 }

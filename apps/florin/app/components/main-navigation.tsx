@@ -28,7 +28,7 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { getUser, signInWithGoogle } = useSupabaseAuth()
+  const { getUser, supabase } = useSupabaseAuth()
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const isLoggedIn = !isLoading && user
@@ -121,7 +121,13 @@ export function MainNavigation() {
   const handleSignIn = async () => {
     try {
       setIsSigningIn(true)
-      await signInWithGoogle()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
     } catch (error) {
       console.error('Sign in failed:', error)
     } finally {

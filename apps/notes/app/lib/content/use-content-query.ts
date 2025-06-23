@@ -15,7 +15,10 @@ export interface UseContentQueryOptions {
 
 export function useContentQuery(options: UseContentQueryOptions = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient()
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const { toast } = useToast()
 
   const getQueryKey = (): unknown[] => {
@@ -38,12 +41,6 @@ export function useContentQuery(options: UseContentQueryOptions = {}) {
   const contentQuery = useQuery<Content[], Error>({
     queryKey: getQueryKey(),
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        return []
-      }
       const queryParams = new URLSearchParams()
       if (options.type) {
         const types = Array.isArray(options.type) ? options.type : [options.type]
@@ -60,16 +57,30 @@ export function useContentQuery(options: UseContentQueryOptions = {}) {
         queryParams.append('query', options.searchText)
       }
       const url = `/api/content${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-      const serverContent = await apiClient.get<null, Content[]>(url)
-      return serverContent || []
+
+      try {
+        const serverContent = await apiClient.get<null, Content[]>(url)
+        return serverContent || []
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          'status' in error &&
+          (error as Error & { status: number }).status === 401
+        ) {
+          return []
+        }
+        throw error
+      }
     },
     staleTime: 1000 * 60 * 1,
     onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Error Fetching Content',
-        description: error.message || 'Could not load data from server.',
-      })
+      if (!('status' in error) || (error as Error & { status: number }).status !== 401) {
+        toast({
+          variant: 'destructive',
+          title: 'Error Fetching Content',
+          description: error.message || 'Could not load data from server.',
+        })
+      }
     },
   })
 

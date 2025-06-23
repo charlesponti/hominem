@@ -1,8 +1,5 @@
-import type { User } from '@supabase/supabase-js'
 import { ArrowRight, BarChart2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { Link } from 'react-router'
 import styles from './home.module.css'
 
 export function meta() {
@@ -17,37 +14,6 @@ export function meta() {
 }
 
 export default function Home() {
-  const { getUser } = useSupabaseAuth()
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await getUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchUser()
-  }, [getUser])
-
-  // Redirect authenticated users to their dashboard
-  useEffect(() => {
-    if (!isLoading && user) {
-      navigate('/finance', { replace: true })
-    }
-  }, [isLoading, user, navigate])
-
-  if (isLoading || (!isLoading && user)) {
-    return null
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
       {/* Background gradient */}

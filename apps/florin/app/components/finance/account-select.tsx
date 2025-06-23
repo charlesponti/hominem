@@ -1,5 +1,3 @@
-'use client'
-
 import type { FinanceAccount } from '@hominem/utils/types'
 import {
   Select,

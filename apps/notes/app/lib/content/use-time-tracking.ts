@@ -1,13 +1,13 @@
-import type { Content, ContentInsert, Priority, TaskMetadata } from '@hominem/utils/types'
-import type { UseMutationResult } from '@tanstack/react-query' // Explicit import
+import { useApiClient } from '@hominem/ui'
+import type { Note, NoteInsert, Priority, TaskMetadata } from '@hominem/utils/types'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useDeleteContent } from './use-delete-content'
-import { useUpdateContent } from './use-update-content'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 /**
- * TimerTask interface represents a Content item with time tracking metadata
+ * TimerTask interface represents a Note item with time tracking metadata
  */
-export interface TimerTask extends Content {
+export interface TimerTask extends Note {
   type: 'timer'
   taskMetadata: TaskMetadata
 }
@@ -19,31 +19,26 @@ export interface UseTimeTrackingOptions {
   /**
    * The task object
    */
-  task: Content
+  task: Note
 }
 
 const DEFAULT_PRIORITY: Priority = 'medium'
+const NOTES_QUERY_KEY_BASE = 'notes'
 
 /**
- * useTimeTracking is a specialized hook for managing time-trackable content
- * It provides time tracking functionality on top of the core content operations
+ * useTimeTracking is a specialized hook for managing time-trackable notes
+ * It provides time tracking functionality on top of the core notes operations
  */
 export function useTimeTracking(options: UseTimeTrackingOptions) {
   const { task } = options
   const taskId = task.id
   const [localError, setLocalError] = useState<Error | null>(null)
-
-  // Get the mutation function and states from useUpdateContent
-  const updateContentHookResult = useUpdateContent()
-  const updateContentItemMutation = updateContentHookResult.updateItem
-
-  // useDeleteContent directly returns the mutation object
-  const deleteContentItemMutation: UseMutationResult<
-    { id: string },
-    Error,
-    string,
-    { previousContent: Content[] | undefined }
-  > = useDeleteContent()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
+  const queryClient = useQueryClient()
 
   const handleMutationError = (err: unknown, defaultMessage: string) => {
     const error = err instanceof Error ? err : new Error(defaultMessage)
@@ -65,7 +60,7 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
 
   const createUpdatePayload = (
     metadataChanges: Partial<TaskMetadata>
-  ): Partial<ContentInsert> & { id: string } => {
+  ): Partial<NoteInsert> & { id: string } => {
     return {
       id: taskId,
       taskMetadata: {
@@ -101,9 +96,13 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
       updatePayload.firstStartTime = new Date().toISOString()
     }
 
-    updateContentItemMutation.mutate(createUpdatePayload(updatePayload), {
-      onError: (err: Error) => handleMutationError(err, 'Failed to start timer'),
-    })
+    // Use Notes API instead of Content API
+    apiClient
+      .put<Partial<NoteInsert> & { id: string }, Note>(
+        `/api/notes/${taskId}`,
+        createUpdatePayload(updatePayload)
+      )
+      .catch((err: Error) => handleMutationError(err, 'Failed to start timer'))
   }
 
   /**
@@ -124,16 +123,18 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     const now = new Date()
     const elapsedMs = now.getTime() - startTimeDate.getTime()
     const newDuration = (currentMeta.duration || 0) + elapsedMs
-    updateContentItemMutation.mutate(
-      createUpdatePayload({
-        status: 'todo', // Representing paused state
-        startTime: undefined,
-        duration: newDuration,
-      }),
-      {
-        onError: (err: Error) => handleMutationError(err, 'Failed to pause timer'),
-      }
-    )
+
+    // Use Notes API instead of Content API
+    apiClient
+      .put<Partial<NoteInsert> & { id: string }, Note>(
+        `/api/notes/${taskId}`,
+        createUpdatePayload({
+          status: 'todo', // Representing paused state
+          startTime: undefined,
+          duration: newDuration,
+        })
+      )
+      .catch((err: Error) => handleMutationError(err, 'Failed to pause timer'))
   }
 
   /**
@@ -153,17 +154,19 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
       const elapsedMs = now.getTime() - startTimeDate.getTime()
       finalDuration += elapsedMs
     }
-    updateContentItemMutation.mutate(
-      createUpdatePayload({
-        status: 'done',
-        startTime: undefined,
-        duration: finalDuration,
-        endTime: new Date().toISOString(),
-      }),
-      {
-        onError: (err: Error) => handleMutationError(err, 'Failed to stop timer'),
-      }
-    )
+
+    // Use Notes API instead of Content API
+    apiClient
+      .put<Partial<NoteInsert> & { id: string }, Note>(
+        `/api/notes/${taskId}`,
+        createUpdatePayload({
+          status: 'done',
+          startTime: undefined,
+          duration: finalDuration,
+          endTime: new Date().toISOString(),
+        })
+      )
+      .catch((err: Error) => handleMutationError(err, 'Failed to stop timer'))
   }
 
   /**
@@ -176,18 +179,20 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
       return
     }
     setLocalError(null)
-    updateContentItemMutation.mutate(
-      createUpdatePayload({
-        status: 'todo',
-        startTime: undefined,
-        duration: 0,
-        endTime: undefined,
-        firstStartTime: undefined, // Clear firstStartTime on a full reset
-      }),
-      {
-        onError: (err: Error) => handleMutationError(err, 'Failed to reset task to todo'),
-      }
-    )
+
+    // Use Notes API instead of Content API
+    apiClient
+      .put<Partial<NoteInsert> & { id: string }, Note>(
+        `/api/notes/${taskId}`,
+        createUpdatePayload({
+          status: 'todo',
+          startTime: undefined,
+          duration: 0,
+          endTime: undefined,
+          firstStartTime: undefined, // Clear firstStartTime on a full reset
+        })
+      )
+      .catch((err: Error) => handleMutationError(err, 'Failed to reset task to todo'))
   }
 
   /**
@@ -202,23 +207,22 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     }
     const currentMeta = getBaseMetadata()
     if (currentMeta.status !== 'in-progress') {
-      console.warn('resetTimerForInProgressTask should only be called for in-progress tasks.')
-      // Optionally, handle this more gracefully or call setTaskToTodoAndResetTime
-      // For now, we'll proceed but this indicates a potential logic error in the calling component.
+      console.warn('Task is not in-progress, cannot reset timer.')
+      return
     }
     setLocalError(null)
-    updateContentItemMutation.mutate(
-      createUpdatePayload({
-        // status: currentMeta.status, // Status remains 'in-progress' (preserved from getBaseMetadata)
-        startTime: new Date().toISOString(), // Restart timing from now
-        duration: 0, // Reset duration
-        endTime: undefined, // Clear endTime
-        // firstStartTime is preserved as it's not in this partial update
-      }),
-      {
-        onError: (err: Error) => handleMutationError(err, 'Failed to reset in-progress timer'),
-      }
-    )
+
+    // Use Notes API instead of Content API
+    apiClient
+      .put<Partial<NoteInsert> & { id: string }, Note>(
+        `/api/notes/${taskId}`,
+        createUpdatePayload({
+          duration: 0,
+          startTime: new Date().toISOString(),
+          // firstStartTime is preserved
+        })
+      )
+      .catch((err: Error) => handleMutationError(err, 'Failed to reset in-progress timer'))
   }
 
   /**
@@ -230,11 +234,11 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
       return
     }
     setLocalError(null)
-    const payload: Partial<ContentInsert> & { id: string } = { id: data.id }
+    const payload: Partial<NoteInsert> & { id: string } = { id: data.id }
     if (data.title !== undefined) payload.title = data.title
     if (data.content !== undefined) payload.content = data.content
     if (data.tags !== undefined) payload.tags = data.tags
-    // ... other direct ContentInsert fields can be added here
+    // ... other direct NoteInsert fields can be added here
 
     if (data.taskMetadata) {
       payload.taskMetadata = {
@@ -242,9 +246,11 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
         ...data.taskMetadata,
       } as TaskMetadata
     }
-    updateContentItemMutation.mutate(payload, {
-      onError: (err: Error) => handleMutationError(err, 'Failed to update timer task'),
-    })
+
+    // Use Notes API instead of Content API
+    apiClient
+      .put<Partial<NoteInsert> & { id: string }, Note>(`/api/notes/${data.id}`, payload)
+      .catch((err: Error) => handleMutationError(err, 'Failed to update timer task'))
   }
 
   /**
@@ -256,9 +262,15 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
       return
     }
     setLocalError(null)
-    deleteContentItemMutation.mutate(taskId, {
-      onError: (err: Error) => handleMutationError(err, 'Failed to delete timer task'),
-    })
+
+    // Use Notes API instead of Content API
+    apiClient
+      .delete<null, void>(`/api/notes/${taskId}`)
+      .then(() => {
+        // Invalidate notes queries after successful deletion
+        queryClient.invalidateQueries({ queryKey: [NOTES_QUERY_KEY_BASE] })
+      })
+      .catch((err: Error) => handleMutationError(err, 'Failed to delete timer task'))
   }
 
   return {
@@ -269,15 +281,8 @@ export function useTimeTracking(options: UseTimeTrackingOptions) {
     resetTimerForInProgressTask, // New function
     updateTimerTask,
     deleteTimerTask,
-    isLoading:
-      updateContentItemMutation.status === 'loading' ||
-      deleteContentItemMutation.status === 'loading',
-    error: localError || updateContentItemMutation.error || deleteContentItemMutation.error,
-    isError:
-      !!localError ||
-      updateContentItemMutation.status === 'error' ||
-      deleteContentItemMutation.status === 'error',
-    updateMutation: updateContentItemMutation,
-    deleteMutation: deleteContentItemMutation,
+    isLoading: false, // Since we're not using mutations, we don't have loading states
+    error: localError,
+    isError: !!localError,
   }
 }

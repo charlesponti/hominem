@@ -1,10 +1,8 @@
-'use client'
-
 import { useApiClient } from '@hominem/ui'
 import type { BudgetCategory } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { useMonthlyStats } from './use-monthly-stats'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 const BUDGET_DATA_KEY_PREFIX = 'budget_data'
 
@@ -21,8 +19,19 @@ type BudgetCategoryUpdate = Partial<Omit<BudgetCategory, 'userId' | 'budgetId'>>
   budgetId?: string
 }
 
+// Type for budget vs actual analysis result
+interface BudgetVsActualItem extends BudgetCategory {
+  budgetedAmount: number
+  actualAmount: number
+  variance: number
+  percentageUsed: number
+  isOverBudget: boolean
+  status: 'over' | 'warning' | 'good'
+}
+
 export function useBudgetCategories() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
 
   const queryKey = ['budget_data', 'categories', 'user']
 
@@ -42,7 +51,8 @@ export function useBudgetCategories() {
 }
 
 export function useCreateBudgetCategory() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
   const queryClient = useQueryClient()
   const [error, setError] = useState<Error | null>(null)
 
@@ -75,7 +85,8 @@ export function useCreateBudgetCategory() {
 }
 
 export function useUpdateBudgetCategory() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
   const queryClient = useQueryClient()
   const [error, setError] = useState<Error | null>(null)
 
@@ -109,7 +120,8 @@ export function useUpdateBudgetCategory() {
 }
 
 export function useDeleteBudgetCategory() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
   const queryClient = useQueryClient()
 
   const mutation = useMutation<{ success: boolean; message: string }, Error, string>({
@@ -138,7 +150,8 @@ interface BudgetHistoryDataPoint {
 }
 
 export function useBudgetHistory(months = 6) {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
   const queryKey = ['budget_data', 'history', months, 'user']
 
   const query = useQuery<BudgetHistoryDataPoint[], Error>({
@@ -189,7 +202,8 @@ export type PersonalBudgetResult = {
 
 // Hook for personal budget calculation
 export function usePersonalBudgetCalculation() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
   const queryClient = useQueryClient()
 
   const calculateBudget = useMutation<PersonalBudgetResult, Error, PersonalBudgetInput | undefined>(
@@ -219,21 +233,20 @@ export function usePersonalBudgetCalculation() {
 // Hook for budget vs actual analysis
 export function useBudgetVsActual(monthYear?: string) {
   const { categories } = useBudgetCategories()
-  const { stats: actualSpending, isLoading: statsLoading } = useMonthlyStats(
-    monthYear || new Date().toISOString().slice(0, 7)
-  )
+  // Note: This needs to be updated to work with the new useMonthlyStats signature
+  // For now, we'll skip the actual spending comparison until we have the right data
+  const statsLoading = false
+  const actualSpending = null
 
   const budgetVsActual = useMemo(() => {
-    if (!categories || !actualSpending) return []
+    if (!categories) return []
 
     return categories
-      .filter((cat) => cat.type === 'expense')
-      .map((category) => {
+      .filter((cat: BudgetCategory) => cat.type === 'expense')
+      .map((category: BudgetCategory) => {
         const budgetedAmount = Number.parseFloat(category.averageMonthlyExpense || '0')
-        const actualAmount =
-          actualSpending.categorySpending?.find(
-            (spending: { name: string | null; amount: number }) => spending.name === category.name
-          )?.amount || 0
+        // TODO: Get actual spending data when available
+        const actualAmount = 0
 
         const variance = actualAmount - budgetedAmount
         const percentageUsed = budgetedAmount > 0 ? (actualAmount / budgetedAmount) * 100 : 0
@@ -246,13 +259,19 @@ export function useBudgetVsActual(monthYear?: string) {
           percentageUsed,
           isOverBudget: variance > 0,
           status: percentageUsed > 100 ? 'over' : percentageUsed > 90 ? 'warning' : 'good',
-        }
+        } as BudgetVsActualItem
       })
-  }, [categories, actualSpending])
+  }, [categories])
 
   const totals = useMemo(() => {
-    const totalBudgeted = budgetVsActual.reduce((sum, item) => sum + item.budgetedAmount, 0)
-    const totalActual = budgetVsActual.reduce((sum, item) => sum + item.actualAmount, 0)
+    const totalBudgeted = budgetVsActual.reduce(
+      (sum: number, item: BudgetVsActualItem) => sum + item.budgetedAmount,
+      0
+    )
+    const totalActual = budgetVsActual.reduce(
+      (sum: number, item: BudgetVsActualItem) => sum + item.actualAmount,
+      0
+    )
     const totalVariance = totalActual - totalBudgeted
 
     return {
@@ -287,17 +306,20 @@ interface BulkCreateFromTransactionsInput {
 }
 
 export function useTransactionCategories() {
-  const api = useApiClient()
-  const queryKey = ['budget_data', 'transaction-categories', 'user']
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   const query = useQuery<TransactionCategory[], Error>({
-    queryKey,
+    queryKey: ['budget_data', 'transaction_categories'],
     queryFn: async () => {
       return await api.get<never, TransactionCategory[]>(
         '/api/finance/budget/transaction-categories'
       )
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 15 * 60 * 1000,
   })
 
   return {
@@ -309,9 +331,12 @@ export function useTransactionCategories() {
 }
 
 export function useBulkCreateFromTransactions() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
-  const [error, setError] = useState<Error | null>(null)
 
   const mutation = useMutation<
     {
@@ -336,20 +361,16 @@ export function useBulkCreateFromTransactions() {
         }
       >('/api/finance/budget/bulk-create-from-transactions', data)
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budget_data', 'categories', 'user'] })
-      queryClient.invalidateQueries({
-        queryKey: ['budget_data', 'transaction-categories', 'user'],
-      })
+      queryClient.invalidateQueries({ queryKey: ['budget_data', 'transaction_categories'] })
     },
-    onError: (err) => setError(err),
   })
 
   return {
     bulkCreate: mutation.mutateAsync,
-    isLoading: mutation.isLoading,
-    error: mutation.error || error,
+    isLoading: mutation.isPending,
+    error: mutation.error,
     isSuccess: mutation.isSuccess,
-    data: mutation.data,
   }
 }

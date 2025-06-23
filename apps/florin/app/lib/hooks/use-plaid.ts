@@ -3,7 +3,7 @@
 import { useApiClient } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 // Define query keys at the top of the file as constants
 const PLAID_CONNECTIONS_KEY = [['plaid', 'connections']]
@@ -85,7 +85,8 @@ interface UnlinkAccountResponse {
  * Hook for creating a Plaid link token
  */
 export function useCreateLinkToken() {
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
   const [error, setError] = useState<Error | null>(null)
 
   const createLinkToken = useMutation({
@@ -121,7 +122,8 @@ export function useCreateLinkToken() {
  */
 export function useExchangeToken() {
   const queryClient = useQueryClient()
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
   const [error, setError] = useState<Error | null>(null)
 
   const exchangeToken = useMutation({
@@ -161,7 +163,7 @@ export function useExchangeToken() {
  */
 export function usePlaidConnections(options = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient()
+  const apiClient = useApiClient({ supabaseClient: supabase })
 
   const defaultOptions = {
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -217,7 +219,7 @@ export function usePlaidConnections(options = {}) {
  */
 export function usePlaidAccounts(options = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient()
+  const apiClient = useApiClient({ supabaseClient: supabase })
 
   const defaultOptions = {
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -286,7 +288,8 @@ export function usePlaidAccounts(options = {}) {
  */
 export function useSyncPlaidItem() {
   const queryClient = useQueryClient()
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
   const [error, setError] = useState<Error | null>(null)
 
   const syncItem = useMutation({
@@ -326,7 +329,8 @@ export function useSyncPlaidItem() {
  */
 export function useRemovePlaidConnection() {
   const queryClient = useQueryClient()
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
   const [error, setError] = useState<Error | null>(null)
 
   const removeConnection = useMutation({
@@ -364,7 +368,8 @@ export function useRemovePlaidConnection() {
  */
 export function useLinkAccountToInstitution() {
   const queryClient = useQueryClient()
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
   const [error, setError] = useState<Error | null>(null)
 
   const linkAccount = useMutation({
@@ -414,7 +419,8 @@ export function useLinkAccountToInstitution() {
  */
 export function useUnlinkAccountFromInstitution() {
   const queryClient = useQueryClient()
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
   const [error, setError] = useState<Error | null>(null)
 
   const unlinkAccount = useMutation({

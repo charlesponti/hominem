@@ -1,14 +1,17 @@
 import { useApiClient } from '@hominem/ui'
 import type { Content } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { useToast } from '../../components/ui/use-toast'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
 
 export function useDeleteContent(options: { queryKey?: unknown[] } = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient()
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
@@ -19,12 +22,7 @@ export function useDeleteContent(options: { queryKey?: unknown[] } = {}) {
     { previousContent: Content[] | undefined }
   >({
     mutationFn: async (id: string) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        throw new Error('User must be signed in to delete content.')
-      }
+      // Let the API handle authentication - don't check user here
       const response = await apiClient.delete<null, { id: string }>(`/api/content/${id}`)
       if (!response || typeof response.id !== 'string') {
         throw new Error('API did not return expected confirmation for delete.')

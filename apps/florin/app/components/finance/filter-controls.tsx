@@ -1,5 +1,3 @@
-'use client'
-
 import type { FinanceAccount } from '@hominem/utils/types'
 import { ListFilter } from 'lucide-react'
 import { useEffect, useRef } from 'react'

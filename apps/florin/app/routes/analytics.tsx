@@ -1,8 +1,6 @@
-'use client'
-
 import { subMonths } from 'date-fns'
 import { useState } from 'react'
-import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay' // Fixed duplicate import
+import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay'
 import { AnalyticsFilters } from '~/components/analytics/AnalyticsFilters'
 import { AnalyticsMonthlyBreakdown } from '~/components/analytics/AnalyticsMonthlyBreakdown'
 import { AnalyticsStatisticsSummary } from '~/components/analytics/AnalyticsStatisticsSummary'

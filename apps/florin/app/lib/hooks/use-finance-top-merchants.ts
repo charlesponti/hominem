@@ -1,21 +1,27 @@
 import { useApiClient } from '@hominem/ui'
 import type { TopMerchant } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
-export function useFinanceTopMerchants({
-  from,
-  to,
-  account,
-  category,
-  limit = 5,
-}: {
+type UseFinanceTopMerchantsParams = {
   from?: string
   to?: string
   account?: string
   category?: string
   limit?: number
-}) {
-  const apiClient = useApiClient()
+}
+export function useFinanceTopMerchants({
+  from,
+  to,
+  account,
+  category,
+  limit,
+}: UseFinanceTopMerchantsParams) {
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   return useQuery<TopMerchant[]>({
     queryKey: ['finance', 'topMerchants', { from, to, account, category, limit }],
     queryFn: async () => {

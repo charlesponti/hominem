@@ -1,9 +1,8 @@
 import { useApiClient } from '@hominem/ui'
 import type { Content, ContentType } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
-import { createClient } from '~/lib/supabase'
 import { useToast } from '../../components/ui/use-toast'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 const CONTENT_QUERY_KEY_BASE = 'content'
 
@@ -24,23 +23,13 @@ const defaultContentFields = (
 })
 
 export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
-  const [user, setUser] = useState<{ id: string } | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const supabase = createClient()
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
   const { toast } = useToast()
-
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-      setIsAuthenticated(!!user)
-    }
-    getUser()
-  }, [supabase])
 
   const createItem = useMutation<
     Content,
@@ -61,9 +50,7 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
     { previousContent: Content[] | undefined }
   >({
     mutationFn: async (itemData) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('User must be signed in to create content.')
-      }
+      // Let the API handle authentication - don't check user here
       const payloadForApi = {
         ...defaultContentFields(itemData.type),
         ...itemData,
@@ -88,7 +75,7 @@ export function useCreateContent(options: { queryKey?: unknown[] } = {}) {
         ...defaultContentFields(newItemData.type),
         ...newItemData,
         id: tempId,
-        userId: user?.id || '',
+        userId: '', // Will be set by the server
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         publishedAt: null,

@@ -1,9 +1,11 @@
 import { db } from '@hominem/utils/db'
-import { health } from '@hominem/utils/schema'
+import { health, users } from '@hominem/utils/schema'
 import { zValidator } from '@hono/zod-validator'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { env } from '../lib/env.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const healthQuerySchema = z.object({
   userId: z.string().optional(),
@@ -16,6 +18,10 @@ const healthQuerySchema = z.object({
     .transform((str) => new Date(str))
     .optional(),
   activityType: z.string().optional(),
+  detailed: z
+    .string()
+    .optional()
+    .transform((val) => val === 'true'),
 })
 
 const healthDataSchema = z.object({
@@ -166,4 +172,64 @@ healthRoutes.delete('/:id', async (c) => {
     console.error('Error deleting health record:', error)
     return c.json({ error: 'Failed to delete health record' }, 500)
   }
+})
+
+// Basic health check
+healthRoutes.get('/', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Debug endpoint to check environment and database
+healthRoutes.get('/debug', async (c) => {
+  try {
+    // Check environment variables
+    const envStatus = {
+      SUPABASE_URL: !!env.SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: !!env.SUPABASE_SERVICE_ROLE_KEY,
+      DATABASE_URL: !!env.DATABASE_URL,
+      NODE_ENV: env.NODE_ENV,
+    }
+
+    // Test database connection
+    let dbStatus = 'unknown'
+    try {
+      await db.select().from(users).limit(1)
+      dbStatus = 'connected'
+    } catch (error) {
+      dbStatus = `error: ${error instanceof Error ? error.message : 'unknown'}`
+    }
+
+    return c.json({
+      status: 'debug',
+      timestamp: new Date().toISOString(),
+      environment: envStatus,
+      database: dbStatus,
+    })
+  } catch (error) {
+    return c.json(
+      {
+        status: 'debug_error',
+        error: error instanceof Error ? error.message : 'unknown error',
+        timestamp: new Date().toISOString(),
+      },
+      500
+    )
+  }
+})
+
+// Authenticated health check to test auth middleware
+healthRoutes.get('/auth', requireAuth, (c) => {
+  const user = c.get('user')
+  const userId = c.get('userId')
+  const supabaseId = c.get('supabaseId')
+
+  return c.json({
+    status: 'authenticated',
+    user: {
+      id: userId,
+      email: user?.email,
+      supabaseId,
+    },
+    timestamp: new Date().toISOString(),
+  })
 })

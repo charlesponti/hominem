@@ -1,7 +1,7 @@
 import { useChat } from '@ai-sdk/react'
 import { Eraser, Globe, Loader2, Mic, Paperclip, Send, StopCircle, Volume2, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useMatches, useNavigate, useParams, type LoaderFunctionArgs } from 'react-router'
+import { useMatches, useNavigate } from 'react-router'
 import { AttachmentsPreview } from '~/components/chat/AttachmentsPreview.js'
 import { AudioRecorder } from '~/components/chat/AudioRecorder.js'
 import { ChatMessage } from '~/components/chat/ChatMessage.js'
@@ -42,6 +42,8 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   const [currentChatId, setCurrentChatId] = useState<string | null>(chatId || null)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const previousMessageCountRef = useRef(0)
 
   // Update currentChatId when chatId prop changes
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   }, [chatId])
 
   // Load existing chat if chatId is provided
-  const { chat, isLoading: isLoadingChat } = useChatPersistence(currentChatId)
+  const { chat, isLoading: isLoadingChat, refetch: refetchChat } = useChatPersistence(currentChatId)
 
   // Hook for managing chats (creating new ones)
   const { createChat } = useChats(userId)
@@ -70,7 +72,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     setInput,
     handleInputChange: aiHandleInputChange,
     handleSubmit: aiHandleSubmit,
-    isLoading,
+    status,
     stop,
     setMessages,
     error: chatError,
@@ -81,6 +83,16 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     onError: (error: Error) => {
       console.error('Chat interface error:', error)
       console.error('Error occurred at:', new Date().toISOString())
+    },
+    onFinish: async (message) => {
+      // Refetch chat data after AI response is complete to get the saved message
+      if (currentChatId && message.role === 'assistant') {
+        try {
+          await refetchChat()
+        } catch (error) {
+          console.warn('Failed to refetch chat after AI response:', error)
+        }
+      }
     },
   })
 
@@ -97,11 +109,51 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     }
   }, [chat, isLoadingChat, setMessages])
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    const currentMessageCount = messages.length
+    const previousMessageCount = previousMessageCountRef.current
+
+    // Only scroll if we have new messages or if we're streaming
+    if (currentMessageCount > previousMessageCount || status === 'streaming') {
+      if (messagesContainerRef.current) {
+        const container = messagesContainerRef.current
+        const scrollToBottom = () => {
+          container.scrollTop = container.scrollHeight
+        }
+
+        // Scroll immediately
+        scrollToBottom()
+
+        // Also scroll after a small delay to handle any dynamic content rendering
+        const timeoutId = setTimeout(scrollToBottom, 100)
+
+        return () => clearTimeout(timeoutId)
+      }
+    }
+
+    // Update the ref with current count
+    previousMessageCountRef.current = currentMessageCount
+  }, [messages.length, status])
+
+  // Auto-scroll during streaming with a more frequent interval
+  useEffect(() => {
+    if (status === 'streaming' && messagesContainerRef.current) {
+      const container = messagesContainerRef.current
+      const intervalId = setInterval(() => {
+        container.scrollTop = container.scrollHeight
+      }, 100) // Scroll every 100ms during streaming
+
+      return () => clearInterval(intervalId)
+    }
+  }, [status])
+
   const { state: ttsState, speak, stop: stopTTS } = useTextToSpeech()
 
   const characterCount = inputValue.length
   const isOverLimit = characterCount > MAX_MESSAGE_LENGTH
   const trimmedValue = inputValue.trim()
+  const isLoading = status === 'streaming' || status === 'submitted'
   const canSubmit = (trimmedValue || attachedFiles.length > 0) && !isLoading && !isOverLimit
 
   // Auto-speak responses in voice mode
@@ -191,6 +243,15 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
       setInputValue('')
       setAttachedFiles([])
       setSearchContext('')
+
+      // Refetch chat data after a short delay to ensure the user message is saved
+      if (activeChatId) {
+        setTimeout(() => {
+          refetchChat().catch((error) => {
+            console.warn('Failed to refetch chat after user message:', error)
+          })
+        }, 100)
+      }
     } catch (error) {
       console.error('Submit error:', error)
     }
@@ -206,6 +267,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     userId,
     navigate,
     generateChatTitle,
+    refetchChat,
   ])
 
   // Handle key events
@@ -285,7 +347,10 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   return (
     <div className="flex flex-col h-full w-full max-w-3xl mx-auto bg-background text-foreground">
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 pb-32 md:pb-40 space-y-4"
+      >
         {/* Error Display */}
         {chatError && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
@@ -310,7 +375,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
       </div>
 
       {/* Input Area */}
-      <div className="fixed w-full max-w-3xl bottom-10 border rounded-4xl backdrop-blur-lg p-4 space-y-2">
+      <div className="fixed w-full max-w-3xl bottom-0 md:bottom-10 border rounded-t-lg md:rounded-lg backdrop-blur-lg p-2 space-y-2">
         {/* Attachments Preview */}
         {attachedFiles.length > 0 && (
           <AttachmentsPreview

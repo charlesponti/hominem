@@ -1,5 +1,3 @@
-'use client'
-
 import { useIsMobile } from '@hominem/ui'
 import type { BudgetCategory } from '@hominem/utils/types'
 import { useEffect, useState } from 'react'

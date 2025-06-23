@@ -5,8 +5,8 @@ import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 // Define constants for channel names and message types
 const IMPORT_PROGRESS_CHANNEL = REDIS_CHANNELS.IMPORT_PROGRESS
@@ -18,9 +18,9 @@ const IMPORT_TRANSACTIONS_KEY = [['finance', 'import-transactions']] as const
 const PROGRESS_UPDATE_THROTTLE = 100
 
 export function useImportTransactionsStore() {
-  const apiClient = useApiClient()
-  const queryClient = useQueryClient()
   const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
+  const queryClient = useQueryClient()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
   const [error, setError] = useState<Error | null>(null)

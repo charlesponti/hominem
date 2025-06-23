@@ -3,6 +3,7 @@ import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useMemo } from 'react'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 export interface TimeSeriesResponse {
   data: TimeSeriesDataPoint[]
@@ -35,7 +36,8 @@ export function useTimeSeriesData({
   groupBy = 'month',
   enabled = true,
 }: TimeSeriesParams) {
-  const apiClient = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const apiClient = useApiClient({ supabaseClient: supabase })
 
   // Generate a query key based on all parameters - memoize to prevent infinite re-renders
   const queryKey = useMemo(

@@ -1,5 +1,6 @@
 import { useApiClient } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 type TwitterAccount = {
   id: string
@@ -60,7 +61,11 @@ const TWITTER_QUERY_KEYS = {
 } as const
 
 export function useTwitterAccounts() {
-  const { get } = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const { get } = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   return useQuery({
     queryKey: TWITTER_QUERY_KEYS.accounts,
@@ -73,11 +78,16 @@ export function useTwitterAccounts() {
 }
 
 export function useTwitterConnect() {
-  const { get } = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const { post } = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async () => {
-      const response = await get<null, TwitterAuthResponse>('/api/oauth/twitter/authorize')
+      const response = await post<null, TwitterAuthResponse>('/api/oauth/twitter/authorize')
       return response.authUrl
     },
     onSuccess: (authUrl) => {
@@ -88,7 +98,11 @@ export function useTwitterConnect() {
 }
 
 export function useTwitterDisconnect() {
-  const { post } = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const { post } = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -106,7 +120,11 @@ export function useTwitterDisconnect() {
 }
 
 export function useTwitterPost() {
-  const { post } = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const { post } = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -161,7 +179,11 @@ export function useTwitterOAuth() {
 }
 
 export function useTwitterSync() {
-  const { post } = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const { post } = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -176,7 +198,11 @@ export function useTwitterSync() {
 }
 
 export function useTwitterTokenDebug() {
-  const { get } = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const { get } = useApiClient({
+    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
+    supabaseClient: supabase,
+  })
 
   return useQuery<{
     hasAccessToken: boolean

@@ -1,5 +1,3 @@
-'use client'
-
 import { AlertCircle, Building2, CreditCard, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { usePlaidLink, type PlaidLinkOnExit, type PlaidLinkOnSuccess } from 'react-plaid-link'

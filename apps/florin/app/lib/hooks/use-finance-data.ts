@@ -2,6 +2,7 @@ import { useApiClient } from '@hominem/ui'
 import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useMemo, useState } from 'react'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 export type SortField = 'date' | 'description' | 'amount' | 'category'
 export type SortDirection = 'asc' | 'desc'
@@ -19,7 +20,8 @@ export interface FilterArgs {
 }
 
 export function useFinanceAccounts() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
 
   const accountsQuery = useQuery<FinanceAccount[], Error>({
     queryKey: ['finance', 'accounts'],
@@ -43,7 +45,8 @@ export function useFinanceAccounts() {
 }
 
 export function useFinanceAccountSummary() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
 
   const query = useQuery<Array<FinanceAccount & { transactions: FinanceTransaction[] }>, Error>({
     queryKey: ['finance', 'accounts', 'summary'],
@@ -65,7 +68,8 @@ export function useFinanceAccountSummary() {
 
 // New unified hook that combines finance and Plaid account data
 export function useAllAccounts() {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
 
   const query = useQuery<
     {
@@ -149,7 +153,8 @@ export function useFinanceTransactions({
   initialSortOptions = [{ field: 'date', direction: 'desc' }],
   filters = {},
 }: UseFinanceTransactionsOptions = {}) {
-  const api = useApiClient()
+  const { supabase } = useSupabaseAuth()
+  const api = useApiClient({ supabaseClient: supabase })
 
   // Filtering state is now controlled by the `filters` prop
   // Remove internal filter states: selectedAccount, dateFrom, dateTo, searchQuery

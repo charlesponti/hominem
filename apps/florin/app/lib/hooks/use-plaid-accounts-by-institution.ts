@@ -2,11 +2,14 @@
 
 import { useApiClient } from '@hominem/ui'
 import { useQuery } from '@tanstack/react-query'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { useSupabaseAuth } from '../supabase/use-auth'
 
 // Define query keys
 const PLAID_ACCOUNTS_BY_INSTITUTION_KEY = (institutionId: string) => [
-  ['plaid', 'accounts', 'institution', institutionId],
+  'plaid',
+  'accounts',
+  'institution',
+  institutionId,
 ]
 
 interface PlaidAccountByInstitution {
@@ -27,7 +30,7 @@ interface PlaidAccountByInstitution {
  */
 export function usePlaidAccountsByInstitution(institutionId: string | null, options = {}) {
   const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient()
+  const apiClient = useApiClient({ supabaseClient: supabase })
 
   const defaultOptions = {
     staleTime: 5 * 60 * 1000, // 5 minutes
