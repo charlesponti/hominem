@@ -2,6 +2,7 @@ import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { redis } from '@hominem/utils/redis'
 import type { users } from '@hominem/utils/schema'
 import { serve } from '@hono/node-server'
+import { trpcServer } from '@hono/trpc-server'
 import { Queue } from 'bullmq'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
@@ -15,9 +16,11 @@ import { createWebSocketManager } from './lib/websocket.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { bookmarksRoutes } from './routes/bookmarks/index.js'
+import { componentsRoutes } from './routes/components/index.js'
 import { content } from './routes/content/index.js'
 import { financeRoutes } from './routes/finance/index.js'
 import { plaidRoutes } from './routes/finance/plaid/index.js'
+import { goalsRoutes } from './routes/goals.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
 import { listsRoutes } from './routes/lists.js'
@@ -27,6 +30,7 @@ import { oauthRoutes } from './routes/oauth/index.js'
 import { placesRoutes } from './routes/places/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
 import { statusRoutes } from './routes/status.js'
+import { appRouter } from './routes/trpc.js'
 import { userRoutes } from './routes/user/index.js'
 import { vectorRoutes } from './routes/vector.js'
 
@@ -122,6 +126,8 @@ export function createServer(): Hono<AppEnv> {
 
   app.route('/api/health', healthRoutes)
   app.route('/api/status', statusRoutes)
+  app.route('/api/components', componentsRoutes)
+  app.route('/components', componentsRoutes)
   app.route('/api/finance/plaid', plaidRoutes)
   app.route('/api/finance', financeRoutes)
   app.route('/api/lists', listsRoutes)
@@ -136,6 +142,25 @@ export function createServer(): Hono<AppEnv> {
   app.route('/api/notes', notesRoutes)
   app.route('/api/ai', aiRoutes)
   app.route('/api/oauth', oauthRoutes)
+  app.route('/api/goals', goalsRoutes)
+
+  app.use(
+    '/trpc/*',
+    trpcServer({
+      router: appRouter,
+      createContext: (opts, c) => {
+        return {
+          req: c.req,
+        }
+      },
+      onError: ({ error, path, input }) => {
+        console.error(`tRPC error on path ${path}:`, {
+          error,
+          input,
+        })
+      },
+    })
+  )
 
   return app
 }

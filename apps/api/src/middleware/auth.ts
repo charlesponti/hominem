@@ -13,7 +13,15 @@ if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
   )
 }
 
+// Service role client for admin operations
 export const supabaseClient = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+})
+
+export const supabaseAuthClient = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
@@ -35,7 +43,8 @@ export async function getHominemUser(
     }
 
     // Create a user for this supabase user if one does not exist
-    const { data: supabaseUser, error } = await supabaseClient.auth.admin.getUserById(supabaseId)
+    const { data: supabaseUser, error } =
+      await supabaseAuthClient.auth.admin.getUserById(supabaseId)
 
     if (error) {
       return null
@@ -54,7 +63,6 @@ export async function getHominemUser(
       })
       .returning()
 
-    console.log('Successfully created new Hominem user:', newUser.id)
     return newUser
   } catch (error) {
     console.error('Error in getHominemUser:', error)
@@ -64,7 +72,6 @@ export async function getHominemUser(
 
 export const authenticateUser = async (c: Context, next: Next) => {
   try {
-    // Test database connection
     try {
       await db.select().from(users).limit(1)
     } catch (dbError) {
@@ -102,7 +109,7 @@ export const authenticateUser = async (c: Context, next: Next) => {
     c.set('userId', hominemUser.id)
     c.set('supabaseId', user.id)
 
-    await next()
+    return await next()
   } catch (error) {
     console.error('Authentication middleware error:', error)
     return c.json(

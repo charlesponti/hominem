@@ -15,6 +15,7 @@ const envSchema = z.object({
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string(),
+  SUPABASE_ANON_KEY: z.string(),
 
   GOOGLE_API_KEY: z.string().default(''),
   OPENAI_API_KEY: z.string(),
