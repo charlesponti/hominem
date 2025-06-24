@@ -33,26 +33,26 @@ export async function getServerSession(request: Request) {
 
   try {
     const {
-      data: { session },
+      data: { user },
       error,
-    } = await supabase.auth.getSession()
+    } = await supabase.auth.getUser()
 
-    if (error || !session) {
-      return { user: null, session: null }
+    if (error || !user) {
+      return { user: null }
     }
 
-    return { user: session.user, session }
+    return { user }
   } catch (error) {
-    return { user: null, session: null }
+    return { user: null }
   }
 }
 
 export async function requireAuth(request: Request) {
-  const { user, session } = await getServerSession(request)
+  const { user } = await getServerSession(request)
 
-  if (!user || !session) {
+  if (!user) {
     throw new Response('Unauthorized', { status: 401 })
   }
 
-  return { user, session }
+  return { user }
 }

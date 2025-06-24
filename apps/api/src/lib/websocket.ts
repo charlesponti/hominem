@@ -6,7 +6,7 @@ import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { getHominemUser, supabaseClient } from '../middleware/supabase.js'
+import { getHominemUser } from '../middleware/supabase.js'
 import { wsHandlers } from '../websocket/handlers.js'
 import { redisHandlers } from '../websocket/redis-handlers.js'
 
@@ -96,20 +96,10 @@ export function createWebSocketManager(): WebSocketManager {
 
       try {
         // Authenticate with Supabase
-        const {
-          data: { user },
-          error,
-        } = await supabaseClient.auth.getUser(token)
+        const hominemUser = await getHominemUser(token)
 
-        if (error || !user) {
-          logger.error('WebSocket authentication failed: invalid token')
-          socket.destroy()
-          return
-        }
-
-        const hominemUser = await getHominemUser(user.id)
         if (!hominemUser) {
-          logger.error('WebSocket authentication failed: user not found')
+          logger.error('WebSocket authentication failed: invalid token or user not found')
           socket.destroy()
           return
         }

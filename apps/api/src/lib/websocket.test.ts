@@ -39,12 +39,6 @@ const mockLogger = {
 }
 
 // Mock auth
-const mockSupabaseClient = {
-  auth: {
-    getUser: vi.fn(),
-  },
-}
-
 const mockGetHominemUser = vi.fn()
 
 // Mock handlers
@@ -77,7 +71,6 @@ vi.mock('@hominem/utils/consts', () => ({
 }))
 
 vi.mock('../middleware/supabase.js', () => ({
-  supabaseClient: mockSupabaseClient,
   getHominemUser: mockGetHominemUser,
 }))
 
@@ -241,16 +234,11 @@ describe('WebSocket Manager', () => {
       const mockHead = Buffer.from('test')
 
       // Mock successful authentication
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123' } },
-        error: null,
-      })
       mockGetHominemUser.mockResolvedValue({ id: 'hominem-user-123' })
 
       await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
-      expect(mockSupabaseClient.auth.getUser).toHaveBeenCalledWith('valid-token')
-      expect(mockGetHominemUser).toHaveBeenCalledWith('user-123')
+      expect(mockGetHominemUser).toHaveBeenCalledWith('valid-token')
     })
 
     test('rejects upgrade with no token', async () => {
@@ -286,10 +274,7 @@ describe('WebSocket Manager', () => {
       const mockHead = Buffer.from('test')
 
       // Mock failed authentication
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: new Error('Invalid token'),
-      })
+      mockGetHominemUser.mockResolvedValue(null)
 
       // Use a promise to track when the upgrade callback is called
       const upgradePromise = new Promise<void>((resolve) => {
@@ -307,7 +292,7 @@ describe('WebSocket Manager', () => {
       await upgradePromise
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WebSocket authentication failed: invalid token'
+        'WebSocket authentication failed: invalid token or user not found'
       )
       expect(mockSocket.destroy).toHaveBeenCalled()
     })
@@ -324,17 +309,13 @@ describe('WebSocket Manager', () => {
       } as unknown as Duplex
       const mockHead = Buffer.from('test')
 
-      // Mock successful Supabase auth but no Hominem user
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123' } },
-        error: null,
-      })
+      // Mock successful authentication but no Hominem user
       mockGetHominemUser.mockResolvedValue(null)
 
       await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WebSocket authentication failed: user not found'
+        'WebSocket authentication failed: invalid token or user not found'
       )
       expect(mockSocket.destroy).toHaveBeenCalled()
     })
@@ -352,7 +333,7 @@ describe('WebSocket Manager', () => {
       const mockHead = Buffer.from('test')
 
       // Mock authentication error
-      mockSupabaseClient.auth.getUser.mockRejectedValue(new Error('Network error'))
+      mockGetHominemUser.mockRejectedValue(new Error('Network error'))
 
       await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
@@ -374,7 +355,7 @@ describe('WebSocket Manager', () => {
       await simulateUpgrade(manager, mockRequest, mockSocket, mockHead)
 
       // Should return early without processing
-      expect(mockSupabaseClient.auth.getUser).not.toHaveBeenCalled()
+      expect(mockGetHominemUser).not.toHaveBeenCalled()
     })
   })
 

@@ -142,15 +142,18 @@ function FilterChips({
     return <span className="text-xs text-muted-foreground">No filters</span>
   }
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5 max-w-full">
       {chips.map((chip) => (
-        <Badge key={chip.key} className="flex items-center gap-1 pr-1 bg-muted text-foreground">
-          <span>{chip.label}</span>
+        <Badge
+          key={chip.key}
+          className="flex items-center gap-1 pr-1 bg-muted text-foreground text-xs max-w-full"
+        >
+          <span className="truncate">{chip.label}</span>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="h-4 w-4 p-0 ml-1"
+            className="h-4 w-4 p-0 ml-1 flex-shrink-0"
             aria-label={`Remove ${chip.label}`}
             onClick={(e) => {
               e.stopPropagation()
@@ -190,46 +193,39 @@ export function AnalyticsFilters({
   const safeAccounts = accounts || []
   const safeCategories = categories || []
 
-  // Debug logging
-  console.log('AnalyticsFilters render:', {
-    accountsLoading,
-    categoriesLoading,
-    isLoading,
-    accountsCount: safeAccounts.length,
-    categoriesCount: safeCategories.length,
-  })
-
   return (
     <Accordion type="single" collapsible defaultValue={undefined}>
       <AccordionItem value="filters">
         <Card className="border-none shadow-none">
-          <AccordionTrigger className="px-4">
-            <span className="text-lg font-semibold">Filters</span>
-            <span className="ml-4">
-              <FilterChips
-                dateFrom={dateFrom}
-                setDateFrom={setDateFrom}
-                dateTo={dateTo}
-                setDateTo={setDateTo}
-                selectedAccount={selectedAccount}
-                setSelectedAccount={setSelectedAccount}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                groupBy={groupBy}
-                setGroupBy={setGroupBy}
-                includeStats={includeStats}
-                setIncludeStats={setIncludeStats}
-                compareToPrevious={compareToPrevious}
-                setCompareToPrevious={setCompareToPrevious}
-                accounts={safeAccounts}
-                categories={safeCategories}
-                isLoading={isLoading}
-              />
-            </span>
+          <AccordionTrigger className="px-4 py-3 hover:no-underline">
+            <div className="flex flex-col sm:flex-row items-center justify-start gap-2 sm:gap-4 w-full">
+              <span className="text-lg font-semibold self-start">Filters</span>
+              <div className="flex-1 min-w-0">
+                <FilterChips
+                  dateFrom={dateFrom}
+                  setDateFrom={setDateFrom}
+                  dateTo={dateTo}
+                  setDateTo={setDateTo}
+                  selectedAccount={selectedAccount}
+                  setSelectedAccount={setSelectedAccount}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  groupBy={groupBy}
+                  setGroupBy={setGroupBy}
+                  includeStats={includeStats}
+                  setIncludeStats={setIncludeStats}
+                  compareToPrevious={compareToPrevious}
+                  setCompareToPrevious={setCompareToPrevious}
+                  accounts={safeAccounts}
+                  categories={safeCategories}
+                  isLoading={isLoading}
+                />
+              </div>
+            </div>
           </AccordionTrigger>
           <AccordionContent>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CardContent className="pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="dateFrom">From Date</Label>
                   <DatePicker date={dateFrom} setDate={setDateFrom} placeholder="Start date" />
@@ -292,7 +288,7 @@ export function AnalyticsFilters({
                   </Select>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 sm:col-span-2 lg:col-span-1">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="includeStats"

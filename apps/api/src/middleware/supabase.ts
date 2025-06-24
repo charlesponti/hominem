@@ -1,7 +1,7 @@
 import { db } from '@hominem/utils/db'
 import { users } from '@hominem/utils/schema'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { Context, MiddlewareHandler } from 'hono'
@@ -43,36 +43,40 @@ export const supabaseClient = createClient(appEnv.SUPABASE_URL, appEnv.SUPABASE_
 })
 
 export async function getHominemUser(
-  supabaseId: string
+  tokenOrUser: string | SupabaseUser
 ): Promise<typeof users.$inferSelect | null> {
-  if (!supabaseId) {
-    return null
-  }
-
   try {
-    const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseId))
+    let supabaseUser: SupabaseUser
 
+    // If token is provided, validate it and get the user
+    if (typeof tokenOrUser === 'string') {
+      const {
+        data: { user },
+        error,
+      } = await supabaseClient.auth.getUser(tokenOrUser)
+
+      if (error || !user) {
+        return null
+      }
+
+      supabaseUser = user
+    } else {
+      // If SupabaseUser object is provided, use it directly
+      supabaseUser = tokenOrUser
+    }
+
+    // Find existing user or create new one
+    const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseUser.id))
     if (user) {
       return user
-    }
-
-    // Create a user for this supabase user if one does not exist
-    const { data: supabaseUser, error } = await supabaseClient.auth.admin.getUserById(supabaseId)
-
-    if (error) {
-      return null
-    }
-
-    if (!supabaseUser?.user) {
-      return null
     }
 
     const [newUser] = await db
       .insert(users)
       .values({
         id: randomUUID(),
-        email: supabaseUser.user.email || '',
-        supabaseId,
+        email: supabaseUser.email || '',
+        supabaseId: supabaseUser.id,
       })
       .returning()
 
@@ -138,7 +142,7 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
       } = await supabase.auth.getUser()
 
       if (!cookieError && cookieUser) {
-        const hominemUser = await getHominemUser(cookieUser.id)
+        const hominemUser = await getHominemUser(cookieUser)
         if (hominemUser) {
           c.set('user', hominemUser)
           c.set('userId', hominemUser.id)
@@ -156,18 +160,11 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
       if (authHeader?.startsWith('Bearer ')) {
         try {
           const token = authHeader.substring(7)
-          const {
-            data: { user },
-            error,
-          } = await supabaseClient.auth.getUser(token)
-
-          if (!error && user) {
-            const hominemUser = await getHominemUser(user.id)
-            if (hominemUser) {
-              c.set('user', hominemUser)
-              c.set('userId', hominemUser.id)
-              c.set('supabaseId', user.id)
-            }
+          const hominemUser = await getHominemUser(token)
+          if (hominemUser) {
+            c.set('user', hominemUser)
+            c.set('userId', hominemUser.id)
+            c.set('supabaseId', hominemUser.supabaseId)
           }
         } catch (error) {
           console.error('Error getting user from token:', error)
