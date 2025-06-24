@@ -50,15 +50,9 @@ financeAnalyzeRoutes.get(
   '/spending-time-series',
   zValidator('query', timeSeriesQuerySchema),
   async (c) => {
-  const user = c.get('user')
-  if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
-
     const userId = c.get('userId')
     if (!userId) {
-      return c.json({ error: 'Not authorized' }, 401)
+      return c.json({ error: 'Unauthorized' }, 401)
     }
 
     try {
@@ -96,12 +90,6 @@ financeAnalyzeRoutes.get(
   '/top-merchants',
   zValidator('query', topMerchantsQuerySchema),
   async (c) => {
-  const user = c.get('user')
-  if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
-
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -137,11 +125,10 @@ financeAnalyzeRoutes.get(
   '/category-breakdown',
   zValidator('query', categoryBreakdownSchema),
   async (c) => {
-  const user = c.get('user')
-  if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
 
     const userId = c.get('userId')
     if (!userId) {
@@ -174,11 +161,10 @@ financeAnalyzeRoutes.post(
   '/calculate',
   zValidator('json', calculateTransactionsSchema),
   async (c) => {
-  const user = c.get('user')
-  if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
 
     const userId = c.get('userId')
     if (!userId) {
@@ -211,11 +197,10 @@ financeAnalyzeRoutes.get(
   '/monthly-stats/:month',
   zValidator('param', monthlyStatsParamSchema),
   async (c) => {
-  const user = c.get('user')
-  if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
 
     const userId = c.get('userId')
     if (!userId) {

@@ -79,16 +79,16 @@ export function buildWhereConditions(options: QueryOptions) {
   if (!options.includeExcluded) {
     conditions.push(eq(transactions.excluded, false))
   }
+
   conditions.push(eq(transactions.pending, false))
 
   // Date range filters - support both new and legacy format
   const fromDate = options.from ? new Date(options.from) : options.dateFrom
-  const toDate = options.to ? new Date(options.to) : options.dateTo
-
   if (fromDate) {
     conditions.push(gte(transactions.date, fromDate))
   }
 
+  const toDate = options.to ? new Date(options.to) : options.dateTo
   if (toDate) {
     conditions.push(lte(transactions.date, toDate))
   }
@@ -113,19 +113,16 @@ export function buildWhereConditions(options: QueryOptions) {
 
   // Amount range filters - support both new and legacy format
   const minAmount = options.min ? options.min : options.amountMin?.toString()
-  const maxAmount = options.max ? options.max : options.amountMax?.toString()
-
   if (minAmount) {
     conditions.push(gte(transactions.amount, minAmount))
   }
 
+  const maxAmount = options.max ? options.max : options.amountMax?.toString()
   if (maxAmount) {
     conditions.push(lte(transactions.amount, maxAmount))
   }
 
-  // Account filter - supports both UUID and name-based filtering
   if (options.account) {
-    // Check if the account parameter looks like a UUID (account ID)
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
         options.account
@@ -137,12 +134,10 @@ export function buildWhereConditions(options: QueryOptions) {
     }
   }
 
-  // Description filter - fuzzy search
   if (options.description) {
     conditions.push(like(transactions.description, `%${options.description}%`))
   }
 
-  // Full-text search across multiple fields
   if (options.search && typeof options.search === 'string' && options.search.trim() !== '') {
     const searchTerm = options.search.trim()
     const tsVector = sql`to_tsvector('english', 
@@ -178,13 +173,11 @@ export async function queryTransactions(options: QueryOptions) {
   const { userId, limit = 100, offset = 0 } = options
 
   if (!userId) {
-    // Return empty if no userId is provided, or handle as per application's error strategy
     return { data: [], filteredCount: 0, totalUserCount: 0 }
   }
 
-  const whereConditions = buildWhereConditions(options) // options already includes userId for filtering
+  const whereConditions = buildWhereConditions(options)
 
-  // Build the base query for filtered transactions
   const baseFilteredQuery = db
     .select({
       id: transactions.id,
@@ -204,7 +197,6 @@ export async function queryTransactions(options: QueryOptions) {
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .where(whereConditions)
 
-  // Apply sorting
   const orderByClauses: SQL[] = []
 
   for (let i = 0; i < sortByArray.length; i++) {
@@ -324,33 +316,26 @@ export async function summarizeByMonth(options: QueryOptions) {
     .select({
       month: sql<string>`SUBSTR(${transactions.date}::text, 1, 7)`,
       count: sql<number>`COUNT(*)`,
-      income: sql<number>`SUM(CASE WHEN ${transactions.amount} > 0 THEN ${transactions.amount}::numeric ELSE 0 END)`,
-      expenses: sql<number>`SUM(CASE WHEN ${transactions.amount} < 0 THEN ABS(${transactions.amount}::numeric) ELSE 0 END)`,
+      income: sql<number>`SUM(CASE WHEN ${transactions.type} = 'income' THEN ${transactions.amount}::numeric ELSE 0 END)`,
+      expenses: sql<number>`SUM(CASE WHEN ${transactions.type} = 'expense' THEN ABS(${transactions.amount}::numeric) ELSE 0 END)`,
       average: sql<number>`AVG(${transactions.amount}::numeric)`,
     })
     .from(transactions)
     .where(whereConditions)
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .groupBy(sql`SUBSTR(${transactions.date}::text, 1, 7)`)
-    .orderBy(sql`SUBSTR(${transactions.date}::text, 1, 7) DESC`)
+    .orderBy(sql`SUBSTR(${transactions.date}::text, 1, 7) ASC`)
 
   const result = await query
 
   // Format the numeric values
-  return result
-    .map((row) => ({
-      month: row.month,
-      count: row.count,
-      income: Number.parseFloat(row.income?.toString() || '0').toFixed(2),
-      expenses: Number.parseFloat(row.expenses?.toString() || '0').toFixed(2),
-      average: Number.parseFloat(row.average?.toString() || '0').toFixed(2),
-    }))
-    .sort((a, b) => {
-      const dateA = new Date(a.month)
-      const dateB = new Date(b.month)
-
-      return dateB.getTime() - dateA.getTime() // Descending order
-    })
+  return result.map((row) => ({
+    month: row.month,
+    count: row.count,
+    income: Number.parseFloat(row.income?.toString() || '0').toFixed(2),
+    expenses: Number.parseFloat(row.expenses?.toString() || '0').toFixed(2),
+    average: Number.parseFloat(row.average?.toString() || '0').toFixed(2),
+  }))
 }
 
 export async function findTopMerchants(options: QueryOptions): Promise<TopMerchant[]> {

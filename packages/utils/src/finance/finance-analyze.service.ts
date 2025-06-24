@@ -104,8 +104,7 @@ export async function generateTimeSeriesData(
 
     const current: TimeSeriesDataPoint = {
       date: summary.month,
-      // Deprecated: amount is income + expenses, but should not be used for net calculations
-      amount: income + expenses,
+      amount: expenses - income,
       income: income,
       expenses: expenses,
       count: summary.count,
@@ -173,21 +172,6 @@ export async function generateTimeSeriesData(
     },
     timestamp: new Date().toISOString(),
   }
-}
-
-/**
- * Generate time series data for a specific category over time
- */
-export async function generateCategoryTimeSeriesData(
-  options: QueryOptions & {
-    category: string
-    compareToPrevious?: boolean
-    includeStats?: boolean
-    groupBy?: 'month' | 'week' | 'day'
-  }
-): Promise<TimeSeriesResponse> {
-  // Delegate to generic time series generator
-  return generateTimeSeriesData(options)
 }
 
 /**
