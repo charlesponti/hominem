@@ -7,7 +7,6 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { PhotoMedia } from '../lib/google/places.js'
 import { getPlaceDetails, getPlacePhotos } from '../lib/google/places.js'
-import { requireAuth } from '../middleware/auth.js'
 import { normalizePlaceForResponse, type NormalizedListInfo } from './places.utils.js'
 
 const PlaceIdParamSchema = z.object({
@@ -17,7 +16,13 @@ const PlaceIdParamSchema = z.object({
 export const placesDetailsRoutes = new Hono()
 
 // Get place details by ID (Google Maps ID or DB ID)
-placesDetailsRoutes.get('/:id', requireAuth, zValidator('param', PlaceIdParamSchema), async (c) => {
+placesDetailsRoutes.get('/:id', zValidator('param', PlaceIdParamSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const { id: googleMapsIdOrDbId } = c.req.valid('param')
   const userId = c.get('userId')
 

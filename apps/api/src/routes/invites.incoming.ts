@@ -2,12 +2,10 @@ import { db } from '@hominem/utils/db'
 import { list, listInvite, users } from '@hominem/utils/schema'
 import { and, asc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { requireAuth } from '../middleware/auth.js'
-
 export const invitesIncomingRoutes = new Hono()
 
 // Get incoming invites for the authenticated user
-invitesIncomingRoutes.get('/', requireAuth, async (c) => {
+invitesIncomingRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Unauthorized' }, 401)

@@ -1,9 +1,7 @@
-import type { User } from '@hominem/utils/schema'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { ForbiddenError } from '../lib/errors.js'
-import { requireAuth } from '../middleware/auth.js'
 import {
   acceptListInvite,
   createList,
@@ -49,7 +47,12 @@ const listsQuerySchema = z.object({
 })
 
 // Get all lists for user
-listsRoutes.get('/', requireAuth, zValidator('query', listsQuerySchema), async (c) => {
+listsRoutes.get('/', zValidator('query', listsQuerySchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -77,7 +80,12 @@ listsRoutes.get('/', requireAuth, zValidator('query', listsQuerySchema), async (
 })
 
 // Create a new list
-listsRoutes.post('/', requireAuth, zValidator('json', createListSchema), async (c) => {
+listsRoutes.post('/', zValidator('json', createListSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -108,10 +116,14 @@ listsRoutes.post('/', requireAuth, zValidator('json', createListSchema), async (
 // Update a list
 listsRoutes.put(
   '/:id',
-  requireAuth,
   zValidator('param', listIdParamSchema),
   zValidator('json', updateListSchema),
   async (c) => {
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+
     const userId = c.get('userId')
     if (!userId) {
       throw ForbiddenError('Unauthorized')
@@ -147,7 +159,12 @@ listsRoutes.put(
 )
 
 // Delete a list
-listsRoutes.delete('/:id', requireAuth, zValidator('param', listIdParamSchema), async (c) => {
+listsRoutes.delete('/:id', zValidator('param', listIdParamSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -250,22 +267,23 @@ listsRoutes.get('/:id/invites', zValidator('param', listIdParamSchema), async (c
 // Send list invite
 listsRoutes.post(
   '/:id/invites',
-  requireAuth,
   zValidator('param', listIdParamSchema),
   zValidator('json', sendInviteBodySchema),
   async (c) => {
-    const userId = c.get('userId')
-    const currentUser = c.get('user') as User
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
 
-    if (!userId || !currentUser) {
-      return c.json({ message: 'Unauthorized' }, 401)
+    const userId = c.get('userId')
+    if (!userId) {
+      throw ForbiddenError('Unauthorized')
     }
 
     try {
       const { id: listId } = c.req.valid('param')
       const { email: invitedUserEmail } = c.req.valid('json')
 
-      // Directly pass the individual parameters to match the function signature
       const serviceResponse = await sendListInvite(listId, invitedUserEmail, userId)
 
       if ('error' in serviceResponse) {
@@ -306,20 +324,22 @@ listsRoutes.post(
 // Accept list invite
 listsRoutes.post(
   '/invites/:listId/accept',
-  requireAuth,
   zValidator('param', z.object({ listId: z.string().uuid() })),
   async (c) => {
-    const userId = c.get('userId')
-    const currentUser = c.get('user') as User
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
 
-    if (!userId || !currentUser || !currentUser.email) {
+    const userId = c.get('userId')
+    if (!userId || !user.email) {
       return c.json({ error: 'Unauthorized or user email not available' }, 401)
     }
 
     try {
       const { listId } = c.req.valid('param')
 
-      const serviceResponse = await acceptListInvite(listId, currentUser.email, userId)
+      const serviceResponse = await acceptListInvite(listId, user.email, userId)
 
       if ('error' in serviceResponse) {
         const status =

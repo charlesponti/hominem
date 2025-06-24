@@ -1,11 +1,9 @@
 import { deleteAllFinanceData } from '@hominem/utils/finance'
 import { Hono } from 'hono'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeDataRoutes = new Hono()
 
 // Delete all finance data for the authenticated user
-financeDataRoutes.delete('/', requireAuth, async (c) => {
+financeDataRoutes.delete('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

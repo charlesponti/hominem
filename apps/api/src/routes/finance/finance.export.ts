@@ -2,8 +2,6 @@ import type { FinanceTransaction } from '@hominem/utils/schema'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeExportRoutes = new Hono()
 
 // Schema definitions
@@ -18,9 +16,14 @@ const exportTransactionsSchema = z.object({
 // Export transactions endpoint
 financeExportRoutes.post(
   '/transactions',
-  requireAuth,
   zValidator('json', exportTransactionsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -63,9 +66,14 @@ financeExportRoutes.post(
 // Export summary report
 financeExportRoutes.post(
   '/summary',
-  requireAuth,
   zValidator('json', exportTransactionsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)

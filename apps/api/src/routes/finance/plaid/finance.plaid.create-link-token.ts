@@ -1,12 +1,10 @@
 import { Hono } from 'hono'
 import { env } from '../../../lib/env.js'
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid.js'
-import { requireAuth } from '../../../middleware/auth.js'
-
 export const financePlaidCreateLinkTokenRoutes = new Hono()
 
 // Create a new Plaid link token
-financePlaidCreateLinkTokenRoutes.post('/', requireAuth, async (c) => {
+financePlaidCreateLinkTokenRoutes.post('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

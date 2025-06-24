@@ -3,12 +3,10 @@ import { db } from '@hominem/utils/db'
 import { plaidItems } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { requireAuth } from '../../../middleware/auth.js'
-
 export const financePlaidSyncRoutes = new Hono()
 
 // Manually trigger sync for a specific item
-financePlaidSyncRoutes.post('/:itemId', requireAuth, async (c) => {
+financePlaidSyncRoutes.post('/:itemId', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

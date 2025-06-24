@@ -59,8 +59,8 @@ export function useContentQuery(options: UseContentQueryOptions = {}) {
       const url = `/api/content${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
 
       try {
-        const serverContent = await apiClient.get<null, Content[]>(url)
-        return serverContent || []
+        const serverContent = await apiClient.get<null, { content: Content[] }>(url)
+        return Array.isArray(serverContent?.content) ? serverContent.content : []
       } catch (error) {
         if (
           error instanceof Error &&

@@ -1,8 +1,6 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../../middleware/auth.js'
-
 const musicStreamingCalculationSchema = z.object({
   streams: z.number().int().positive(),
   rate: z.number().positive().optional(),
@@ -14,9 +12,14 @@ export const financeMusicStreamingRoutes = new Hono()
 // Calculate music streaming earnings
 financeMusicStreamingRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', musicStreamingCalculationSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const userId = c.get('userId')
       if (!userId) {

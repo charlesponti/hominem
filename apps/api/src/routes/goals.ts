@@ -4,12 +4,10 @@ import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { ForbiddenError } from '../lib/errors.js'
-import { requireAuth } from '../middleware/auth.js'
-
 export const goalsRoutes = new Hono()
 
 // List all goals for the authenticated user
-goalsRoutes.get('/', requireAuth, async (c) => {
+goalsRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) throw ForbiddenError('Unauthorized')
   const userGoals = await db.select().from(goals).where(eq(goals.userId, userId))
@@ -19,7 +17,6 @@ goalsRoutes.get('/', requireAuth, async (c) => {
 // Create a new goal
 goalsRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', GoalSchema.omit({ id: true, userId: true, createdAt: true, updatedAt: true })),
   async (c) => {
     const userId = c.get('userId')
@@ -36,7 +33,6 @@ goalsRoutes.post(
 // Update a goal
 goalsRoutes.put(
   '/:id',
-  requireAuth,
   zValidator(
     'json',
     GoalSchema.partial().omit({ id: true, userId: true, createdAt: true, updatedAt: true })
@@ -57,7 +53,7 @@ goalsRoutes.put(
 )
 
 // Delete a goal
-goalsRoutes.delete('/:id', requireAuth, async (c) => {
+goalsRoutes.delete('/:id', async (c) => {
   const userId = c.get('userId')
   if (!userId) throw ForbiddenError('Unauthorized')
   const { id } = c.req.param()

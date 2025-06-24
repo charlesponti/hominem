@@ -1,11 +1,9 @@
 import { getSpendingCategories } from '@hominem/utils/finance'
 import { Hono } from 'hono'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeCategoriesRoutes = new Hono()
 
 // Get spending categories
-financeCategoriesRoutes.get('/', requireAuth, async (c) => {
+financeCategoriesRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

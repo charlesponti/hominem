@@ -1,16 +1,19 @@
 import { runwayCalculationSchema } from '@hominem/utils/finance'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { requireAuth } from '../../../middleware/auth.js'
-
 export const financeRunwayRoutes = new Hono()
 
 // Calculate runway endpoint
 financeRunwayRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', runwayCalculationSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const userId = c.get('userId')
       if (!userId) {

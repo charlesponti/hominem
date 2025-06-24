@@ -1,8 +1,6 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../../middleware/auth.js'
-
 const salesTaxCalculationSchema = z.object({
   amount: z.number().positive(),
   taxRate: z.number().positive(),
@@ -13,9 +11,14 @@ export const financeSalesTaxRoutes = new Hono()
 // Calculate sales tax
 financeSalesTaxRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', salesTaxCalculationSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const userId = c.get('userId')
       if (!userId) {

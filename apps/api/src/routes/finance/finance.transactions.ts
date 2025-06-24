@@ -9,8 +9,6 @@ import { insertTransactionSchema, updateTransactionSchema } from '@hominem/utils
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeTransactionsRoutes = new Hono()
 
 const queryOptionsSchema = z.object({
@@ -37,9 +35,14 @@ const queryOptionsSchema = z.object({
 // Get transactions with filtering and pagination
 financeTransactionsRoutes.get(
   '/',
-  requireAuth,
   zValidator('query', queryOptionsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -65,7 +68,6 @@ financeTransactionsRoutes.get(
 // Add new transaction
 financeTransactionsRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', insertTransactionSchema.omit({ userId: true })),
   async (c) => {
     const userId = c.get('userId')
@@ -105,7 +107,6 @@ financeTransactionsRoutes.post(
 // Update transaction
 financeTransactionsRoutes.put(
   '/:id',
-  requireAuth,
   zValidator('json', updateTransactionSchema.partial()),
   async (c) => {
     const userId = c.get('userId')
@@ -145,7 +146,7 @@ financeTransactionsRoutes.put(
 )
 
 // Delete transaction
-financeTransactionsRoutes.delete('/:id', requireAuth, async (c) => {
+financeTransactionsRoutes.delete('/:id', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

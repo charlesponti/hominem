@@ -3,12 +3,10 @@ import { plaidItems } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { plaidClient } from '../../../lib/plaid.js'
-import { requireAuth } from '../../../middleware/auth.js'
-
 export const financePlaidDisconnectRoutes = new Hono()
 
 // Disconnect a Plaid connection
-financePlaidDisconnectRoutes.delete('/:itemId', requireAuth, async (c) => {
+financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

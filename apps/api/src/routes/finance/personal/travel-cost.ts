@@ -1,8 +1,6 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../../middleware/auth.js'
-
 // Mock destination costs for demo
 // In production, this would use real travel cost APIs
 const destinationCosts = {
@@ -38,7 +36,13 @@ export const financeTravelCostRoutes = new Hono()
 
 // Calculate travel costs
 // TODO: use real travel cost APIs
-financeTravelCostRoutes.post('/', requireAuth, zValidator('json', travelCostSchema), async (c) => {
+financeTravelCostRoutes.post('/', zValidator('json', travelCostSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   try {
     const userId = c.get('userId')
     if (!userId) {

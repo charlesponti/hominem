@@ -2,7 +2,6 @@ import { Hono } from 'hono'
 import { randomUUID } from 'node:crypto'
 import { env } from '../lib/env.js'
 import { TWITTER_SCOPES } from '../lib/twitter-tokens.js'
-import { requireAuth } from '../middleware/auth.js'
 import { generateCodeChallenge, generateCodeVerifier, pkceStore } from './oauth.twitter.utils.js'
 
 // Twitter OAuth configuration
@@ -12,7 +11,7 @@ const TWITTER_REDIRECT_URI = `${env.API_URL}/api/oauth/twitter/callback`
 export const oauthTwitterAuthorizeRoutes = new Hono()
 
 // Get Twitter OAuth authorization URL
-oauthTwitterAuthorizeRoutes.get('/', requireAuth, async (c) => {
+oauthTwitterAuthorizeRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

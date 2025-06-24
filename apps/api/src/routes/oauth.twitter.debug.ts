@@ -3,14 +3,17 @@ import { account } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { isTokenExpired } from '../lib/twitter-tokens.js'
-import { requireAuth } from '../middleware/auth.js'
 
 export const oauthTwitterDebugRoutes = new Hono()
 
 // Debug endpoint to check token scopes
-oauthTwitterDebugRoutes.get('/', requireAuth, async (c) => {
-  const userId = c.get('userId')
+oauthTwitterDebugRoutes.get('/', async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
 
+  const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
   }

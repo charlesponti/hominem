@@ -2,12 +2,10 @@ import { db } from '@hominem/utils/db'
 import { bookmark } from '@hominem/utils/schema'
 import { desc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { requireAuth } from '../middleware/auth.js'
-
 export const bookmarksListRoutes = new Hono()
 
 // Get all bookmarks for the authenticated user
-bookmarksListRoutes.get('/', requireAuth, async (c) => {
+bookmarksListRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ message: 'Unauthorized' }, 401)

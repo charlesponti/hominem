@@ -12,8 +12,6 @@ import { zValidator } from '@hono/zod-validator'
 import { count, desc, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeAnalyzeRoutes = new Hono()
 
 const calculateTransactionsSchema = z.object({
@@ -50,9 +48,14 @@ const monthlyStatsParamSchema = z.object({
 // Get spending over time
 financeAnalyzeRoutes.get(
   '/spending-time-series',
-  requireAuth,
   zValidator('query', timeSeriesQuerySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -91,9 +94,14 @@ financeAnalyzeRoutes.get(
 // Top merchants endpoint
 financeAnalyzeRoutes.get(
   '/top-merchants',
-  requireAuth,
   zValidator('query', topMerchantsQuerySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -127,9 +135,14 @@ financeAnalyzeRoutes.get(
 // Category breakdown endpoint
 financeAnalyzeRoutes.get(
   '/category-breakdown',
-  requireAuth,
   zValidator('query', categoryBreakdownSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -159,9 +172,14 @@ financeAnalyzeRoutes.get(
 // Calculate Transactions
 financeAnalyzeRoutes.post(
   '/calculate',
-  requireAuth,
   zValidator('json', calculateTransactionsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -191,9 +209,14 @@ financeAnalyzeRoutes.post(
 
 financeAnalyzeRoutes.get(
   '/monthly-stats/:month',
-  requireAuth,
   zValidator('param', monthlyStatsParamSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)

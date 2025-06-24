@@ -21,6 +21,8 @@ export * from './travel.schema'
 export * from './users.schema'
 export * from './vector-documents.schema'
 
+export * from './goals.schema'
+
 export {
   NoteContentTypeSchema,
   notes,

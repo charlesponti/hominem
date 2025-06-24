@@ -6,8 +6,6 @@ import { Hono } from 'hono'
 import crypto from 'node:crypto'
 import { z } from 'zod'
 import { ForbiddenError } from '../lib/errors.js'
-import { requireAuth } from '../middleware/auth.js'
-
 export const possessionsRoutes = new Hono()
 
 const createPossessionSchema = z.object({
@@ -31,7 +29,7 @@ const possessionIdParamSchema = z.object({
 })
 
 // Get all possessions for user
-possessionsRoutes.get('/', requireAuth, async (c) => {
+possessionsRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) throw ForbiddenError('Unauthorized')
 
@@ -56,7 +54,13 @@ possessionsRoutes.get('/', requireAuth, async (c) => {
 })
 
 // Create a new possession
-possessionsRoutes.post('/', requireAuth, zValidator('json', createPossessionSchema), async (c) => {
+possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) throw ForbiddenError('Unauthorized')
 
@@ -90,7 +94,6 @@ possessionsRoutes.post('/', requireAuth, zValidator('json', createPossessionSche
 // Update a possession
 possessionsRoutes.put(
   '/:id',
-  requireAuth,
   zValidator('param', possessionIdParamSchema),
   zValidator('json', updatePossessionSchema),
   async (c) => {
@@ -127,9 +130,14 @@ possessionsRoutes.put(
 // Delete a possession
 possessionsRoutes.delete(
   '/:id',
-  requireAuth,
   zValidator('param', possessionIdParamSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) throw ForbiddenError('Unauthorized')
 

@@ -2,12 +2,16 @@ import { db } from '@hominem/utils/db'
 import { users } from '@hominem/utils/schema'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { requireAuth } from '../middleware/auth.js'
 
 export const userDeleteRoutes = new Hono()
 
 // Delete current user account
-userDeleteRoutes.delete('/', requireAuth, async (c) => {
+userDeleteRoutes.delete('/', async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Unauthorized' }, 401)

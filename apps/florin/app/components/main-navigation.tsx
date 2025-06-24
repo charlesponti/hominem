@@ -170,42 +170,37 @@ export function MainNavigation() {
             </RouteLink>
           </div>
 
-          {/* Center Navigation */}
-          {isLoggedIn && (
-            <div className="flex flex-1 items-center justify-center">
+          {!isLoading && (
+            <div className="flex flex-1 items-center justify-end">
               <nav className="flex items-center space-x-6">
-                {navItems.map((item) => (
-                  <RouteLink
-                    key={item.title}
-                    to={item.url}
-                    className={cn(
-                      'text-sm font-medium transition-colors hover:text-gray-900',
-                      pathname === item.url ? 'text-gray-900' : 'text-gray-600'
-                    )}
-                  >
-                    {item.title}
-                  </RouteLink>
-                ))}
+                {isLoggedIn ? (
+                  <>
+                    {navItems.map((item) => (
+                      <RouteLink
+                        key={item.title}
+                        to={item.url}
+                        className={cn(
+                          'text-sm font-medium transition-colors hover:text-gray-900',
+                          pathname === item.url ? 'text-gray-900' : 'text-gray-600'
+                        )}
+                      >
+                        {item.title}
+                      </RouteLink>
+                    ))}
+                    <Link to="/account">
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <User className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <Button onClick={handleSignIn} disabled={isSigningIn}>
+                    {isSigningIn ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                )}
               </nav>
             </div>
           )}
-
-          {/* Right Side Auth */}
-          <div className="flex flex-1 items-center justify-end">
-            {isLoading ? (
-              <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
-            ) : isLoggedIn ? (
-              <Link to="/account">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-            ) : (
-              <Button onClick={handleSignIn} disabled={isSigningIn}>
-                {isSigningIn ? 'Signing in...' : 'Sign In'}
-              </Button>
-            )}
-          </div>
         </div>
       </header>
     )

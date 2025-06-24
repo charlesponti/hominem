@@ -4,8 +4,6 @@ import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../middleware/auth.js'
-
 const DeleteBookmarkParamsSchema = z.object({
   id: z.string(),
 })
@@ -15,9 +13,14 @@ export const bookmarksDeleteRoutes = new Hono()
 // Delete a bookmark
 bookmarksDeleteRoutes.delete(
   '/:id',
-  requireAuth,
   zValidator('param', DeleteBookmarkParamsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ message: 'Unauthorized' }, 401)

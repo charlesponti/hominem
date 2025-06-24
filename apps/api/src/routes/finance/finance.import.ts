@@ -6,7 +6,6 @@ import type { Job } from 'bullmq'
 import { Hono } from 'hono'
 import fs from 'node:fs'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
 import { handleFileUpload } from '../../middleware/file-upload.js'
 
 export const financeImportRoutes = new Hono()
@@ -24,9 +23,14 @@ const JobIdParamsSchema = z.object({
 // Import transactions from CSV file
 financeImportRoutes.post(
   '/',
-  requireAuth,
   zValidator('query', ImportTransactionsParamsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -134,7 +138,7 @@ financeImportRoutes.post(
 )
 
 // Get active import jobs
-financeImportRoutes.get('/active', requireAuth, async (c) => {
+financeImportRoutes.get('/active', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -174,9 +178,14 @@ financeImportRoutes.get('/active', requireAuth, async (c) => {
 // Check import status
 financeImportRoutes.get(
   '/:jobId',
-  requireAuth,
   zValidator('param', JobIdParamsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const { jobId } = c.req.valid('param')
 
     try {

@@ -5,8 +5,6 @@ import { zValidator } from '@hono/zod-validator'
 import { and, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeAccountsRoutes = new Hono()
 
 const createAccountSchema = z.object({
@@ -33,7 +31,13 @@ const accountIdParamSchema = z.object({
 })
 
 // Create account
-financeAccountsRoutes.post('/', requireAuth, zValidator('json', createAccountSchema), async (c) => {
+financeAccountsRoutes.post('/', zValidator('json', createAccountSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -76,7 +80,7 @@ financeAccountsRoutes.post('/', requireAuth, zValidator('json', createAccountSch
 })
 
 // List accounts
-financeAccountsRoutes.get('/', requireAuth, async (c) => {
+financeAccountsRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -100,7 +104,7 @@ financeAccountsRoutes.get('/', requireAuth, async (c) => {
 })
 
 // Get all accounts with comprehensive data (unified endpoint)
-financeAccountsRoutes.get('/all', requireAuth, async (c) => {
+financeAccountsRoutes.get('/all', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -202,9 +206,14 @@ financeAccountsRoutes.get('/all', requireAuth, async (c) => {
 // Get account by ID
 financeAccountsRoutes.get(
   '/:id',
-  requireAuth,
   zValidator('param', accountIdParamSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -240,7 +249,6 @@ financeAccountsRoutes.get(
 // Update account
 financeAccountsRoutes.put(
   '/:id',
-  requireAuth,
   zValidator('param', accountIdParamSchema),
   zValidator('json', updateAccountSchema),
   async (c) => {
@@ -302,9 +310,14 @@ financeAccountsRoutes.put(
 // Delete account
 financeAccountsRoutes.delete(
   '/:id',
-  requireAuth,
   zValidator('param', accountIdParamSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -343,7 +356,6 @@ financeAccountsRoutes.delete(
 // Link an account to a Plaid institution
 financeAccountsRoutes.post(
   '/:id/link-institution',
-  requireAuth,
   zValidator('param', accountIdParamSchema),
   zValidator('json', linkInstitutionSchema),
   async (c) => {
@@ -420,9 +432,14 @@ financeAccountsRoutes.post(
 // Unlink an account from its institution
 financeAccountsRoutes.post(
   '/:id/unlink-institution',
-  requireAuth,
   zValidator('param', accountIdParamSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)

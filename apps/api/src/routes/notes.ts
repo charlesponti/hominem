@@ -3,8 +3,6 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { ForbiddenError } from '../lib/errors.js'
-import { requireAuth } from '../middleware/auth.js'
-
 export const notesRoutes = new Hono()
 
 const notesService = new NotesService()
@@ -77,7 +75,13 @@ const noteIdSchema = z.object({
 })
 
 // Get all notes for user
-notesRoutes.get('/', requireAuth, zValidator('query', listNotesSchema), async (c) => {
+notesRoutes.get('/', zValidator('query', listNotesSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -100,7 +104,13 @@ notesRoutes.get('/', requireAuth, zValidator('query', listNotesSchema), async (c
 })
 
 // Create new note
-notesRoutes.post('/', requireAuth, zValidator('json', createNoteSchema), async (c) => {
+notesRoutes.post('/', zValidator('json', createNoteSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -126,7 +136,13 @@ notesRoutes.post('/', requireAuth, zValidator('json', createNoteSchema), async (
 })
 
 // Get note by ID
-notesRoutes.get('/:id', requireAuth, zValidator('param', noteIdSchema), async (c) => {
+notesRoutes.get('/:id', zValidator('param', noteIdSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -154,7 +170,6 @@ notesRoutes.get('/:id', requireAuth, zValidator('param', noteIdSchema), async (c
 // Update note
 notesRoutes.put(
   '/:id',
-  requireAuth,
   zValidator('param', noteIdSchema),
   zValidator('json', updateNoteSchema),
   async (c) => {
@@ -189,7 +204,13 @@ notesRoutes.put(
 )
 
 // Delete note
-notesRoutes.delete('/:id', requireAuth, zValidator('param', noteIdSchema), async (c) => {
+notesRoutes.delete('/:id', zValidator('param', noteIdSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -215,7 +236,7 @@ notesRoutes.delete('/:id', requireAuth, zValidator('param', noteIdSchema), async
 })
 
 // Sync notes (for offline sync)
-notesRoutes.post('/sync', requireAuth, async (c) => {
+notesRoutes.post('/sync', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')

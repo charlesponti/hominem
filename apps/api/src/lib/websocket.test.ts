@@ -76,7 +76,7 @@ vi.mock('@hominem/utils/consts', () => ({
   },
 }))
 
-vi.mock('../middleware/auth.js', () => ({
+vi.mock('../middleware/supabase.js', () => ({
   supabaseClient: mockSupabaseClient,
   getHominemUser: mockGetHominemUser,
 }))

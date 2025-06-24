@@ -6,7 +6,7 @@ import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { getHominemUser, supabaseClient } from '../middleware/auth.js'
+import { getHominemUser, supabaseClient } from '../middleware/supabase.js'
 import { wsHandlers } from '../websocket/handlers.js'
 import { redisHandlers } from '../websocket/redis-handlers.js'
 

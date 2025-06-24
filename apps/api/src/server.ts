@@ -12,6 +12,7 @@ import { env } from './lib/env.js'
 import { cache } from './lib/redis.js'
 import { initSentry, sentryErrorHandler, sentryMiddleware } from './lib/sentry.js'
 import { createWebSocketManager } from './lib/websocket.js'
+import { supabaseMiddleware } from './middleware/supabase.js'
 
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { aiRoutes } from './routes/ai/index.js'
@@ -103,6 +104,7 @@ export function createServer(): Hono<AppEnv> {
   app.use('*', logger())
   app.use('*', secureHeaders())
   app.use('*', sentryMiddleware())
+  app.use('*', supabaseMiddleware())
 
   app.use(
     '*',

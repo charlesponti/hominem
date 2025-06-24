@@ -1,8 +1,6 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../../middleware/auth.js'
-
 // Mock cost of living indices for demo
 // In production, this would use real cost of living data APIs
 const costOfLivingIndices = {
@@ -35,9 +33,14 @@ export const financeLocationComparisonRoutes = new Hono()
 // Calculate cost of living comparison between locations
 financeLocationComparisonRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', locationComparisonSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const userId = c.get('userId')
       if (!userId) {

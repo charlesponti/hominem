@@ -162,7 +162,7 @@ export default function TransactionsPage() {
   }, [])
 
   return (
-    <div className="container mx-auto p-2" style={{ paddingInline: 0 }}>
+    <>
       <header className="mb-6">
         <h2 className="text-2xl font-bold mb-4">Transactions</h2>
 
@@ -272,6 +272,6 @@ export default function TransactionsPage() {
           />
         </>
       )}
-    </div>
+    </>
   )
 }

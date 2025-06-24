@@ -5,7 +5,7 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
 import type { Route } from './+types/root'
 import './globals.css'
-import { getQueryClient } from './lib/get-query-client'
+import { queryClient, trpc, trpcClient } from './lib/trpc'
 
 // No loader needed for Supabase auth
 
@@ -84,8 +84,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 // Supabase configuration is handled in the client
 
 function AppProviders({ children }: { children: React.ReactNode }) {
-  const queryClient = getQueryClient()
-
   // Get feature flags from environment variables
   const featureFlags = {
     twitterIntegration: import.meta.env.VITE_FEATURE_TWITTER_INTEGRATION === 'true',
@@ -93,7 +91,10 @@ function AppProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <FeatureFlagsProvider flags={featureFlags}>{children}</FeatureFlagsProvider>
+      {/* @ts-ignore - Type compatibility issue between React Query v5 and TRPC */}
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <FeatureFlagsProvider flags={featureFlags}>{children}</FeatureFlagsProvider>
+      </trpc.Provider>
     </QueryClientProvider>
   )
 }

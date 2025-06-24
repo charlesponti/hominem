@@ -19,9 +19,20 @@ vi.mock('@hominem/utils/supabase', () => ({
   },
 }))
 
-vi.mock('../../middleware/auth.js', () => ({
-  requireAuth: vi.fn(async (c, next) => {
-    c.set('userId', 'test-user-id')
+vi.mock('../../middleware/supabase.js', () => ({
+  getHominemUser: vi.fn(),
+  supabaseClient: {
+    auth: {
+      getUser: vi.fn(),
+    },
+  },
+  supabaseMiddleware: vi.fn(() => async (c: unknown, next: () => Promise<void>) => {
+    ;(c as { set: (key: string, value: unknown) => void }).set('user', {
+      id: 'test-user-id',
+      email: 'test@example.com',
+    })
+    ;(c as { set: (key: string, value: unknown) => void }).set('userId', 'test-user-id')
+    ;(c as { set: (key: string, value: unknown) => void }).set('supabaseId', 'test-supabase-id')
     await next()
   }),
 }))

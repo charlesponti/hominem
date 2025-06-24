@@ -3,8 +3,6 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { ForbiddenError } from '../../lib/errors.js'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const contentRoutes = new Hono()
 
 const contentService = new ContentService()
@@ -120,7 +118,13 @@ const contentIdSchema = z.object({
 })
 
 // Get all content for user
-contentRoutes.get('/', requireAuth, zValidator('query', listContentSchema), async (c) => {
+contentRoutes.get('/', zValidator('query', listContentSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -143,7 +147,13 @@ contentRoutes.get('/', requireAuth, zValidator('query', listContentSchema), asyn
 })
 
 // Create new content
-contentRoutes.post('/', requireAuth, zValidator('json', createContentSchema), async (c) => {
+contentRoutes.post('/', zValidator('json', createContentSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -169,7 +179,13 @@ contentRoutes.post('/', requireAuth, zValidator('json', createContentSchema), as
 })
 
 // Get content by ID
-contentRoutes.get('/:id', requireAuth, zValidator('param', contentIdSchema), async (c) => {
+contentRoutes.get('/:id', zValidator('param', contentIdSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')
@@ -197,7 +213,6 @@ contentRoutes.get('/:id', requireAuth, zValidator('param', contentIdSchema), asy
 // Update content
 contentRoutes.put(
   '/:id',
-  requireAuth,
   zValidator('param', contentIdSchema),
   zValidator('json', updateContentSchema),
   async (c) => {
@@ -236,7 +251,13 @@ contentRoutes.put(
 )
 
 // Delete content
-contentRoutes.delete('/:id', requireAuth, zValidator('param', contentIdSchema), async (c) => {
+contentRoutes.delete('/:id', zValidator('param', contentIdSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   const userId = c.get('userId')
   if (!userId) {
     throw ForbiddenError('Unauthorized')

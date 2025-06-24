@@ -6,7 +6,6 @@ import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { randomUUID } from 'node:crypto'
 import { makeTwitterApiRequest, type TwitterAccount } from '../../lib/twitter-tokens.js'
-import { requireAuth } from '../../middleware/auth.js'
 import {
   TwitterPostSchema,
   type TwitterTweetResponse,
@@ -18,9 +17,14 @@ export const contentTwitterRoutes = new Hono()
 // Post a tweet
 contentTwitterRoutes.post(
   '/post',
-  requireAuth,
   zValidator('json', TwitterPostSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     const { text, contentId, saveAsContent } = c.req.valid('json')
 
@@ -144,7 +148,7 @@ contentTwitterRoutes.post(
 )
 
 // Sync user's tweets from Twitter
-contentTwitterRoutes.post('/sync', requireAuth, async (c) => {
+contentTwitterRoutes.post('/sync', async (c) => {
   const userId = c.get('userId')
 
   if (!userId) {

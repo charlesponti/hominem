@@ -1,11 +1,9 @@
 import { getFinancialInstitutions } from '@hominem/utils/finance'
 import { Hono } from 'hono'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeInstitutionsRoutes = new Hono()
 
 // Get all financial institutions
-financeInstitutionsRoutes.get('/', requireAuth, async (c) => {
+financeInstitutionsRoutes.get('/', async (c) => {
   try {
     const institutions = await getFinancialInstitutions()
     return c.json(institutions)

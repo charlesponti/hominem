@@ -7,8 +7,6 @@ import { Hono } from 'hono'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { plaidClient } from '../../../lib/plaid.js'
-import { requireAuth } from '../../../middleware/auth.js'
-
 const exchangeTokenSchema = z.object({
   publicToken: z.string().min(1, 'Public token is required'),
   institutionId: z.string().min(1, 'Institution ID is required'),
@@ -20,9 +18,14 @@ export const financePlaidExchangeTokenRoutes = new Hono()
 // Exchange public token for access token and initiate account/transaction import
 financePlaidExchangeTokenRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', exchangeTokenSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)

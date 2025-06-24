@@ -5,8 +5,6 @@ import { Hono } from 'hono'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
-
 const TourCostBreakdown = z.object({
   transportation: z.object({
     vehicleRental: z.number(),
@@ -48,7 +46,13 @@ const inputSchema = z.object({
 export const aiTourRoutes = new Hono()
 
 // Generate tour cost breakdown
-aiTourRoutes.post('/', requireAuth, zValidator('json', inputSchema), async (c) => {
+aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
   try {
     const validatedInput = c.req.valid('json')
 

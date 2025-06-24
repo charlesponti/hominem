@@ -8,6 +8,7 @@ export type {
   Company,
   FinanceAccount,
   FinancialInstitution,
+  Goal,
   JobApplication,
   JobApplicationInsert,
   Place,
@@ -44,6 +45,11 @@ export type {
   TaskMetadata,
   TaskStatus,
 } from '../db/schema/notes.schema'
+
+export type {
+  GoalMilestone,
+  GoalStatus,
+} from '../db/schema/goals.schema'
 
 export type {
   Content,

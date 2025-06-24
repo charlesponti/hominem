@@ -1,70 +1,279 @@
-// Placeholder for GoalCard and GoalForm components
-// import GoalCard from '../../components/goals/GoalCard';
-// import GoalForm from '../../components/goals/GoalForm';
-
-// Placeholder for fetching goals data
-// For now, using a mock array
-const mockGoals = [
-  {
-    id: '1',
-    title: 'Learn TypeScript',
-    description: 'Complete a TS course by end of month.',
-    goalCategory: 'Learning',
-    status: 'In Progress',
-    priority: 1,
-    milestones: [{ description: 'Finish 5 modules', completed: false }],
-  },
-  {
-    id: '2',
-    title: 'Run a 5K',
-    description: 'Train and complete a 5K race.',
-    goalCategory: 'Fitness',
-    status: 'To Do',
-    priority: 2,
-    milestones: [],
-  },
-]
+import type { Goal } from '@hominem/utils/types'
+import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import { ArchiveModal } from '~/components/goals/archive-modal'
+import { GoalCard } from '~/components/goals/goal-card'
+import type { GoalFormData } from '~/components/goals/goal-modal'
+import { GoalModal } from '~/components/goals/goal-modal'
+import { Button } from '~/components/ui/button'
+import { Checkbox } from '~/components/ui/checkbox'
+import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select'
+import { useToast } from '~/components/ui/use-toast'
+import { trpc } from '~/lib/trpc'
 
 export default function GoalsPage() {
-  // Placeholder for state management (e.g., showing a form to add new goals)
-  // const [showAddForm, setShowAddForm] = React.useState(false);
+  const utils = trpc.useUtils()
+  const [showArchived, setShowArchived] = useState(false)
+  const [sortOrder, setSortOrder] = useState('priority')
+  const [categoryFilter, setCategoryFilter] = useState('')
+
+  const { data: goals = [], isLoading: isLoadingGoals } = trpc.goals.list.useQuery({
+    showArchived,
+    sortBy: sortOrder,
+    category: categoryFilter,
+  })
+
+  const typedGoals = goals as Goal[]
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false)
+  const [currentGoal, setCurrentGoal] = useState<Goal | null>(null)
+  const { toast } = useToast()
+
+  const createGoal = trpc.goals.create.useMutation({
+    onMutate: async (newGoal) => {
+      setIsCreateModalOpen(false)
+      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      const previousGoals = utils.goals.list.getData({
+        showArchived,
+        sortBy: sortOrder,
+        category: categoryFilter,
+      })
+      utils.goals.list.setData(
+        { showArchived, sortBy: sortOrder, category: categoryFilter },
+        (old) => [
+          ...(old || []),
+          {
+            ...newGoal,
+            id: 'temp-id',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            userId: 'temp-user-id',
+            description: newGoal.description ?? null,
+            goalCategory: newGoal.goalCategory ?? null,
+            priority: newGoal.priority ?? null,
+            milestones: newGoal.milestones ?? null,
+            startDate: newGoal.startDate ?? null,
+            dueDate: newGoal.dueDate ?? null,
+          } as Goal,
+        ]
+      )
+      return { previousGoals }
+    },
+    onSuccess: () => {
+      toast({ description: 'Goal created successfully' })
+    },
+    onError: (err, newGoal, context) => {
+      utils.goals.list.setData(
+        { showArchived, sortBy: sortOrder, category: categoryFilter },
+        context?.previousGoals
+      )
+      toast({
+        variant: 'destructive',
+        description: err.message || 'Failed to create goal',
+      })
+    },
+    onSettled: () => {
+      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter })
+    },
+  })
+
+  const updateGoal = trpc.goals.update.useMutation({
+    onMutate: async (updatedGoal) => {
+      setIsEditModalOpen(false)
+      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      const previousGoals = utils.goals.list.getData({
+        showArchived,
+        sortBy: sortOrder,
+        category: categoryFilter,
+      })
+      utils.goals.list.setData(
+        { showArchived, sortBy: sortOrder, category: categoryFilter },
+        (old) =>
+          (old || []).map((goal) =>
+            goal.id === updatedGoal.id ? ({ ...goal, ...updatedGoal } as Goal) : goal
+          )
+      )
+      return { previousGoals }
+    },
+    onSuccess: () => {
+      toast({ description: 'Goal updated successfully' })
+    },
+    onError: (err, newGoal, context) => {
+      utils.goals.list.setData(
+        { showArchived, sortBy: sortOrder, category: categoryFilter },
+        context?.previousGoals
+      )
+      toast({
+        variant: 'destructive',
+        description: err.message || 'Failed to update goal',
+      })
+    },
+    onSettled: () => {
+      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      setCurrentGoal(null)
+    },
+  })
+
+  const archiveGoal = trpc.goals.archive.useMutation({
+    onMutate: async (archivedGoal) => {
+      setIsArchiveModalOpen(false)
+      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      const previousGoals = utils.goals.list.getData({
+        showArchived,
+        sortBy: sortOrder,
+        category: categoryFilter,
+      })
+      utils.goals.list.setData(
+        { showArchived, sortBy: sortOrder, category: categoryFilter },
+        (old) => (old || []).filter((goal) => goal.id !== archivedGoal.id)
+      )
+      return { previousGoals }
+    },
+    onSuccess: () => {
+      toast({ description: 'Goal archived successfully' })
+    },
+    onError: (err, newGoal, context) => {
+      utils.goals.list.setData(
+        { showArchived, sortBy: sortOrder, category: categoryFilter },
+        context?.previousGoals
+      )
+      toast({
+        variant: 'destructive',
+        description: err.message || 'Failed to archive goal',
+      })
+    },
+    onSettled: () => {
+      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      setCurrentGoal(null)
+    },
+  })
+
+  const handleCreateSubmit = (data: GoalFormData) => {
+    createGoal.mutate({
+      ...data,
+      startDate: data.startDate?.toISOString(),
+      dueDate: data.dueDate?.toISOString(),
+    })
+  }
+
+  const handleEditSubmit = (data: GoalFormData) => {
+    if (!currentGoal?.id) return
+    updateGoal.mutate({
+      id: currentGoal.id,
+      ...data,
+      startDate: data.startDate?.toISOString(),
+      dueDate: data.dueDate?.toISOString(),
+    })
+  }
+
+  const handleEditClick = (goal: Goal) => {
+    setCurrentGoal(goal)
+    setIsEditModalOpen(true)
+  }
+
+  const handleArchiveClick = (goal: Goal) => {
+    setCurrentGoal(goal)
+    setIsArchiveModalOpen(true)
+  }
+
+  const handleArchive = () => {
+    if (!currentGoal?.id) return
+    archiveGoal.mutate({ id: currentGoal.id })
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">My Goals</h1>
-        {/* Placeholder for Add Goal Button */}
-        {/* <Button onClick={() => setShowAddForm(true)}>Add New Goal</Button> */}
-      </div>
-
-      {/* Placeholder for Goal Form */}
-      {/* {showAddForm && (
-        <div className="mb-6">
-          <GoalForm onSubmit={() => {}} onCancel={() => setShowAddForm(false)} />
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-12">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight mb-1">Goals</h1>
+          <p className="text-muted-foreground">Track and achieve your aspirations</p>
         </div>
-      )} */}
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mockGoals.map((goal) => (
-          // Replace with actual GoalCard component later
-          <div
-            key={goal.id}
-            className="p-4 border rounded-lg shadow-sm bg-card text-card-foreground"
-          >
-            <h2 className="text-xl font-semibold mb-2">{goal.title}</h2>
-            <p className="text-sm text-muted-foreground mb-1">Category: {goal.goalCategory}</p>
-            <p className="text-sm mb-3">{goal.description}</p>
-            <p className="text-xs font-medium">Status: {goal.status}</p>
-            {/* Add more goal details and actions here */}
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Filter by category..."
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-48"
+          />
+          <Select value={sortOrder} onValueChange={setSortOrder}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="priority">Priority</SelectItem>
+              <SelectItem value="dueDate">Due Date</SelectItem>
+              <SelectItem value="createdAt">Creation Date</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="showArchived"
+              checked={showArchived}
+              onCheckedChange={(checked) => setShowArchived(Boolean(checked))}
+            />
+            <Label htmlFor="showArchived">Show Archived</Label>
           </div>
-        ))}
+          <Button onClick={() => setIsCreateModalOpen(true)} size="lg" className="h-10">
+            <Plus className="w-5 h-5 mr-2" />
+            New Goal
+          </Button>
+        </div>
       </div>
 
-      {mockGoals.length === 0 && (
-        <p className="text-center text-muted-foreground mt-10">
-          You haven't set any goals yet. Click "Add New Goal" to get started!
-        </p>
+      {isLoadingGoals ? (
+        <p className="text-center text-muted-foreground mt-10">Loading goals...</p>
+      ) : (
+        <>
+          {typedGoals.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {typedGoals.map((goal) => (
+                <GoalCard
+                  key={goal.id}
+                  goal={goal}
+                  onEdit={handleEditClick}
+                  onDelete={handleArchiveClick}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground mt-10">
+              You haven't set any goals yet. Click "Add New Goal" to get started!
+            </p>
+          )}
+        </>
       )}
+
+      <GoalModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onSubmit={handleCreateSubmit}
+        isLoading={createGoal.isPending}
+      />
+
+      <GoalModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        goal={currentGoal || undefined}
+        onSubmit={handleEditSubmit}
+        isLoading={updateGoal.isPending}
+      />
+
+      <ArchiveModal
+        open={isArchiveModalOpen}
+        onOpenChange={setIsArchiveModalOpen}
+        goalTitle={currentGoal?.title || ''}
+        onConfirm={handleArchive}
+      />
     </div>
   )
 }

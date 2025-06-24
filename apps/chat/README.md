@@ -91,7 +91,6 @@ This application uses Supabase for authentication and file storage. You'll need 
 ```bash
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # Client-side variables (for Vite)
 VITE_SUPABASE_URL=your_supabase_project_url

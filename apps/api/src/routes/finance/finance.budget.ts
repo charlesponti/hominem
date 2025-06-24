@@ -6,8 +6,6 @@ import { and, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import crypto from 'node:crypto'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
-
 export const financeBudgetRoutes = new Hono()
 
 // Zod schema for creating a budget category
@@ -60,9 +58,14 @@ const bulkCreateFromTransactionsSchema = z.object({
 // Create a new budget category
 financeBudgetRoutes.post(
   '/categories',
-  requireAuth,
   zValidator('json', createBudgetCategorySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -112,7 +115,7 @@ financeBudgetRoutes.post(
 )
 
 // Get all budget categories for the user
-financeBudgetRoutes.get('/categories', requireAuth, async (c) => {
+financeBudgetRoutes.get('/categories', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -139,9 +142,14 @@ financeBudgetRoutes.get('/categories', requireAuth, async (c) => {
 // Get a single budget category by ID
 financeBudgetRoutes.get(
   '/categories/:id',
-  requireAuth,
   zValidator('param', uuidParamSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -174,7 +182,6 @@ financeBudgetRoutes.get(
 // Update an existing budget category
 financeBudgetRoutes.put(
   '/categories/:id',
-  requireAuth,
   zValidator('param', uuidParamSchema),
   zValidator('json', updateBudgetCategorySchema),
   async (c) => {
@@ -224,9 +231,14 @@ financeBudgetRoutes.put(
 // Delete a budget category
 financeBudgetRoutes.delete(
   '/categories/:id',
-  requireAuth,
   zValidator('param', uuidParamSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -261,9 +273,14 @@ financeBudgetRoutes.delete(
 // Get historical budget vs. actuals data
 financeBudgetRoutes.get(
   '/history',
-  requireAuth,
   zValidator('query', budgetHistoryQuerySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)
@@ -336,7 +353,6 @@ financeBudgetRoutes.get(
 // Calculate personal budget using user data or manual input
 financeBudgetRoutes.post(
   '/calculate',
-  requireAuth,
   zValidator('json', personalBudgetSchema.optional()),
   async (c) => {
     const userId = c.get('userId')
@@ -457,7 +473,7 @@ financeBudgetRoutes.post(
 )
 
 // Get transaction categories for the user
-financeBudgetRoutes.get('/transaction-categories', requireAuth, async (c) => {
+financeBudgetRoutes.get('/transaction-categories', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -506,9 +522,14 @@ financeBudgetRoutes.get('/transaction-categories', requireAuth, async (c) => {
 // Bulk create budget categories from transaction categories
 financeBudgetRoutes.post(
   '/bulk-create-from-transactions',
-  requireAuth,
   zValidator('json', bulkCreateFromTransactionsSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Not authorized' }, 401)

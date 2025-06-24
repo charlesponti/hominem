@@ -4,7 +4,6 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import crypto from 'node:crypto'
 import { z } from 'zod'
-import { requireAuth } from '../middleware/auth.js'
 import { convertOGContentToBookmark, getOpenGraphData } from './bookmarks/bookmarks.utils.js'
 
 const CreateBookmarkSchema = z.object({
@@ -16,9 +15,14 @@ export const bookmarksCreateRoutes = new Hono()
 // Create a new bookmark
 bookmarksCreateRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', CreateBookmarkSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ message: 'Unauthorized' }, 401)

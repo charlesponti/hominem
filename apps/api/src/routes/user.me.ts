@@ -1,10 +1,8 @@
 import { Hono } from 'hono'
-import { requireAuth } from '../middleware/auth.js'
 
-export const userMeRoutes = new Hono()
+export const userRoutes = new Hono()
 
-// Get current user profile
-userMeRoutes.get('/', requireAuth, async (c) => {
+userRoutes.get('/', async (c) => {
   const user = c.get('user')
   if (!user) {
     return c.json({ error: 'Unauthorized' }, 401)

@@ -3,7 +3,6 @@ import { zValidator } from '@hono/zod-validator'
 import { generateText } from 'ai'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
 import { ContentStrategiesService } from '../../services/content-strategies.service.js'
 
 export const contentTweetRoutes = new Hono()
@@ -60,9 +59,14 @@ function getDefaultStrategyPrompt(strategy: string): string {
 // Generate tweet from content using AI
 contentTweetRoutes.post(
   '/generate',
-  requireAuth,
   zValidator('json', generateTweetBodySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const { content, strategyType, strategy } = c.req.valid('json')
       const userId = c.get('userId')

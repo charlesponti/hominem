@@ -8,7 +8,6 @@ import crypto from 'node:crypto'
 import { z } from 'zod'
 import type { PhotoMedia } from '../lib/google/places.js'
 import { getPlacePhotos } from '../lib/google/places.js'
-import { requireAuth } from '../middleware/auth.js'
 import { normalizePlaceForResponse, type NormalizedListInfo } from './places.utils.js'
 
 const AddPlaceToListsBodySchema = z.object({
@@ -31,9 +30,14 @@ export const placesAddToListsRoutes = new Hono()
 // Add place to multiple lists
 placesAddToListsRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', AddPlaceToListsBodySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     if (!userId) {
       return c.json({ error: 'Unauthorized: User ID is missing' }, 401)

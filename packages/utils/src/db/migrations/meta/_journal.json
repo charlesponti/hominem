@@ -225,6 +225,20 @@
       "when": 1750315647088,
       "tag": "0031_last_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1750659808709,
+      "tag": "0032_concerned_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1750666219234,
+      "tag": "0033_premium_nextwave",
+      "breakpoints": true
     }
   ]
 }

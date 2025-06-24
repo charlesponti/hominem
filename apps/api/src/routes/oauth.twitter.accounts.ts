@@ -2,12 +2,10 @@ import { db } from '@hominem/utils/db'
 import { account } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { requireAuth } from '../middleware/auth.js'
-
 export const oauthTwitterAccountsRoutes = new Hono()
 
 // Get connected Twitter accounts
-oauthTwitterAccountsRoutes.get('/', requireAuth, async (c) => {
+oauthTwitterAccountsRoutes.get('/', async (c) => {
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)

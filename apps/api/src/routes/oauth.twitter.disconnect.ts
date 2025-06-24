@@ -3,7 +3,6 @@ import { account } from '@hominem/utils/schema'
 import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { requireAuth } from '../middleware/auth.js'
 import { TwitterDisconnectSchema } from './oauth.twitter.utils.js'
 
 export const oauthTwitterDisconnectRoutes = new Hono()
@@ -11,9 +10,14 @@ export const oauthTwitterDisconnectRoutes = new Hono()
 // Disconnect Twitter account
 oauthTwitterDisconnectRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', TwitterDisconnectSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     const userId = c.get('userId')
     const { accountId } = c.req.valid('json')
 

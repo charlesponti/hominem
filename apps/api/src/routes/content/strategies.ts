@@ -5,7 +5,6 @@ import { zValidator } from '@hono/zod-validator'
 import { generateText } from 'ai'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth } from '../../middleware/auth.js'
 import { ContentStrategiesService } from '../../services/content-strategies.service.js'
 
 export const contentStrategiesRoutes = new Hono()
@@ -31,9 +30,14 @@ const contentStrategiesService = new ContentStrategiesService()
 // Create new content strategy
 contentStrategiesRoutes.post(
   '/',
-  requireAuth,
   zValidator('json', createContentStrategySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const userId = c.get('userId')
       if (!userId) {
@@ -63,7 +67,7 @@ contentStrategiesRoutes.post(
 )
 
 // Get all content strategies for user
-contentStrategiesRoutes.get('/', requireAuth, async (c) => {
+contentStrategiesRoutes.get('/', async (c) => {
   try {
     const userId = c.get('userId')
     if (!userId) {
@@ -87,9 +91,14 @@ contentStrategiesRoutes.get('/', requireAuth, async (c) => {
 // Get specific content strategy by ID
 contentStrategiesRoutes.get(
   '/:id',
-  requireAuth,
   zValidator('param', contentStrategyIdSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const userId = c.get('userId')
       if (!userId) {
@@ -120,7 +129,6 @@ contentStrategiesRoutes.get(
 // Update content strategy
 contentStrategiesRoutes.put(
   '/:id',
-  requireAuth,
   zValidator('param', contentStrategyIdSchema),
   zValidator('json', updateContentStrategySchema),
   async (c) => {
@@ -156,9 +164,14 @@ contentStrategiesRoutes.put(
 // Delete content strategy
 contentStrategiesRoutes.delete(
   '/:id',
-  requireAuth,
   zValidator('param', contentStrategyIdSchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const userId = c.get('userId')
       if (!userId) {
@@ -196,9 +209,14 @@ const generateStrategySchema = z.object({
 // Generate content strategy using AI
 contentStrategiesRoutes.post(
   '/generate',
-  requireAuth,
   zValidator('json', generateStrategySchema),
   async (c) => {
+  const user = c.get('user')
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+
     try {
       const { topic, audience, platforms } = c.req.valid('json')
 
