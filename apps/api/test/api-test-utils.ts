@@ -19,7 +19,7 @@ export const globalMocks = {
 
   // Auth middleware mock
   verifyAuth: vi.fn((c, next) => {
-    c.set('userId', 'test-user-id')
+    c.set('userId', '00000000-0000-0000-0000-000000000001')
     return next()
   }),
 
@@ -106,7 +106,7 @@ export const makeAuthenticatedRequest = async (
   }
 ) => {
   const headers: Record<string, string> = {
-    'x-user-id': 'test-user-id',
+    'x-user-id': '00000000-0000-0000-0000-000000000001',
     ...options.headers,
   }
 
