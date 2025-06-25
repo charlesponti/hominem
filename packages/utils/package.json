@@ -117,8 +117,6 @@
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
     "@hominem/ai": "workspace:*",
-    "@supabase/storage-js": "^2.7.3",
-    "@supabase/supabase-js": "^2.49.4",
     "ai": "^4.1.54",
     "cheerio": "^1.0.0",
     "compromise": "^14.14.4",

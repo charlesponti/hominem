@@ -113,7 +113,7 @@ export function useCreateLinkToken() {
 
   return {
     createLinkToken,
-    isLoading: createLinkToken.isLoading,
+    isLoading: createLinkToken.isPending,
     isError: createLinkToken.isError,
     error: createLinkToken.error || error,
     data: createLinkToken.data,
@@ -156,7 +156,7 @@ export function useExchangeToken() {
 
   return {
     exchangeToken,
-    isLoading: exchangeToken.isLoading,
+    isLoading: exchangeToken.isPending,
     isError: exchangeToken.isError,
     error: exchangeToken.error || error,
     data: exchangeToken.data,
@@ -332,7 +332,7 @@ export function useSyncPlaidItem() {
 
   return {
     syncItem,
-    isLoading: syncItem.isLoading,
+    isLoading: syncItem.isPending,
     isError: syncItem.isError,
     error: syncItem.error || error,
     data: syncItem.data,
@@ -374,7 +374,7 @@ export function useRemovePlaidConnection() {
 
   return {
     removeConnection,
-    isLoading: removeConnection.isLoading,
+    isLoading: removeConnection.isPending,
     isError: removeConnection.isError,
     error: removeConnection.error || error,
     data: removeConnection.data,
@@ -428,7 +428,7 @@ export function useLinkAccountToInstitution() {
 
   return {
     linkAccount,
-    isLoading: linkAccount.isLoading,
+    isLoading: linkAccount.isPending,
     isError: linkAccount.isError,
     error: linkAccount.error || error,
     data: linkAccount.data,
@@ -471,7 +471,7 @@ export function useUnlinkAccountFromInstitution() {
 
   return {
     unlinkAccount,
-    isLoading: unlinkAccount.isLoading,
+    isLoading: unlinkAccount.isPending,
     isError: unlinkAccount.isError,
     error: unlinkAccount.error || error,
     data: unlinkAccount.data,

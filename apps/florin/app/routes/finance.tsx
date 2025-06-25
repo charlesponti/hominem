@@ -255,7 +255,6 @@ export default function TransactionsPage() {
         <div className="p-8 text-center text-[#917C6F]">No transactions found.</div>
       ) : (
         <>
-          {/* Modern Transactions List - Responsive across all screen sizes */}
           <TransactionsList
             loading={transactionsLoading}
             error={transactionsError}

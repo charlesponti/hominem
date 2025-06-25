@@ -91,7 +91,7 @@ describe('WebSocket Manager', () => {
     head: Buffer
   ): Promise<void> => {
     return new Promise((resolve) => {
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((req, sock, h, callback) => {
+      manager.wss.handleUpgrade = vi.fn().mockImplementation((_req, _sock, _h, callback) => {
         const mockWs = new MockWebSocket()
         // Immediately execute the callback
         callback(mockWs)
@@ -280,7 +280,7 @@ describe('WebSocket Manager', () => {
       const upgradePromise = new Promise<void>((resolve) => {
         manager.wss.handleUpgrade = vi
           .fn()
-          .mockImplementation((request, socket, head, callback) => {
+          .mockImplementation((_request, _socket, _head, callback) => {
             // Immediately call the callback and resolve
             const mockWs = new MockWebSocket()
             callback(mockWs)
@@ -402,9 +402,11 @@ describe('WebSocket Manager', () => {
       const mockHead = Buffer.from('test')
 
       let upgradeCallback: (ws: MockWebSocket) => void = () => {}
-      manager.wss.handleUpgrade = vi.fn().mockImplementation((request, socket, head, callback) => {
-        upgradeCallback = callback
-      })
+      manager.wss.handleUpgrade = vi
+        .fn()
+        .mockImplementation((_request, _socket, _head, callback) => {
+          upgradeCallback = callback
+        })
 
       manager.handleUpgrade(mockRequest, mockSocket, mockHead)
 

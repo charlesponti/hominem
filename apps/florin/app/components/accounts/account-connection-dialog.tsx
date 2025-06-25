@@ -33,15 +33,17 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
   const [selectedPlaidAccountId, setSelectedPlaidAccountId] = useState<string>('')
   const queryClient = useQueryClient()
 
-  const { data: institutions, isLoading: institutionsLoading } = useFinancialInstitutions()
+  const { institutions, isLoading: institutionsLoading } = useFinancialInstitutions()
   const { accounts: plaidAccounts, isLoading: plaidAccountsLoading } =
     usePlaidAccountsByInstitution(selectedInstitutionId)
   const linkMutation = useLinkAccountToInstitution()
   const unlinkMutation = useUnlinkAccountFromInstitution()
 
   const isLinked = !!account.institutionId
-  const linkedInstitution = institutions?.find((inst) => inst.id === account.institutionId)
-  const linkedPlaidAccount = plaidAccounts.find((plaidAcc) => plaidAcc.id === account.plaidItemId)
+  const linkedInstitution = institutions?.find((inst: any) => inst.id === account.institutionId)
+  const linkedPlaidAccount = plaidAccounts.find(
+    (plaidAcc: any) => plaidAcc.id === account.plaidItemId
+  )
 
   const handleInstitutionChange = (institutionId: string) => {
     setSelectedInstitutionId(institutionId)
@@ -162,7 +164,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                         Loading institutions...
                       </SelectItem>
                     ) : (
-                      institutions?.map((institution) => (
+                      institutions?.map((institution: any) => (
                         <SelectItem key={institution.id} value={institution.id}>
                           {institution.name}
                         </SelectItem>
@@ -190,7 +192,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                           No Plaid accounts found for this institution
                         </SelectItem>
                       ) : (
-                        plaidAccounts.map((plaidAccount) => (
+                        plaidAccounts.map((plaidAccount: any) => (
                           <SelectItem key={plaidAccount.id} value={plaidAccount.id}>
                             <div className="flex flex-col">
                               <span>

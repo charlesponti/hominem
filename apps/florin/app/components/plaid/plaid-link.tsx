@@ -1,3 +1,4 @@
+import type { User } from '@supabase/supabase-js'
 import { AlertCircle, Building2, CreditCard, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { usePlaidLink, type PlaidLinkOnExit, type PlaidLinkOnSuccess } from 'react-plaid-link'
@@ -25,7 +26,7 @@ export function PlaidLink({
   children,
 }: PlaidLinkProps) {
   const { getUser } = useSupabaseAuth()
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 

@@ -1,6 +1,4 @@
-import { useApiClient } from '@hominem/ui'
-import { useQuery } from '@tanstack/react-query'
-import { useSupabaseAuth } from '../supabase/use-auth'
+import { trpc } from '../trpc'
 
 export interface MonthlyStats {
   month: string
@@ -13,36 +11,20 @@ export interface MonthlyStats {
   categorySpending: Array<{ name: string | null; amount: number }>
 }
 
-// Define query keys as constants for consistent cache management
-const MONTHLY_STATS_KEY = ['finance', 'monthly-stats']
-
 /**
- * Custom hook to fetch monthly finance statistics using React Query
+ * Custom hook to fetch monthly finance statistics using tRPC
  * @param month The month to fetch statistics for, in the format 'YYYY-MM'
  * @param options Additional options to pass to useQuery
  */
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
-  const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-
-  const queryKey = [...MONTHLY_STATS_KEY, month]
-
-  const query = useQuery<MonthlyStats>({
-    queryKey,
-    queryFn: async () => {
-      if (!month) {
-        throw new Error('Month parameter is required')
-      }
-
-      return await apiClient.get<never, MonthlyStats>(`/api/finance/analyze/monthly-stats/${month}`)
-    },
-    enabled: !!month,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    ...options,
-  })
+  const query = trpc.finance.analyze.monthlyStats.useQuery(
+    { month: month! },
+    {
+      enabled: !!month,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      ...options,
+    }
+  )
 
   return {
     stats: query.data,

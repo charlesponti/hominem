@@ -1,26 +1,37 @@
-import { useApiClient } from '@hominem/ui'
-import type { BudgetCategory } from '@hominem/utils/types'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
-import { useSupabaseAuth } from '../supabase/use-auth'
+import { useQuery } from '@tanstack/react-query'
+import type { TRPCClientErrorLike } from '@trpc/client'
+import { useState } from 'react'
+import { trpc } from '~/lib/trpc'
 
 const BUDGET_DATA_KEY_PREFIX = 'budget_data'
 
 // Utility type for budget category creation
-type BudgetCategoryCreation = Omit<BudgetCategory, 'id' | 'userId' | 'budgetId'> & {
+type BudgetCategoryCreation = {
+  name: string
+  type: 'income' | 'expense'
   allocatedAmount: number
   budgetId?: string
 }
 
 // Utility type for budget category update
-type BudgetCategoryUpdate = Partial<Omit<BudgetCategory, 'userId' | 'budgetId'>> & {
+type BudgetCategoryUpdate = {
   id: string
+  name?: string
+  type?: 'income' | 'expense'
   allocatedAmount?: number
   budgetId?: string
 }
 
 // Type for budget vs actual analysis result
-interface BudgetVsActualItem extends BudgetCategory {
+interface BudgetVsActualItem {
+  id: string
+  name: string
+  type: string
+  averageMonthlyExpense: string | null
+  userId: string
+  budgetId: string | null
+  createdAt: string
+  updatedAt: string
   budgetedAmount: number
   actualAmount: number
   variance: number
@@ -30,126 +41,95 @@ interface BudgetVsActualItem extends BudgetCategory {
 }
 
 export function useBudgetCategories() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
+  const {
+    data: categories,
+    isLoading,
+    error,
+    refetch,
+  } = trpc.finance.budget.categories.list.useQuery()
 
-  const queryKey = ['budget_data', 'categories', 'user']
-
-  const query = useQuery<BudgetCategory[], Error>({
-    queryKey,
-    queryFn: async () => {
-      return await api.get<never, BudgetCategory[]>('/api/finance/budget/categories')
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
   return {
-    categories: query.data,
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    categories,
+    isLoading,
+    error,
+    refetch,
   }
 }
 
 export function useCreateBudgetCategory() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-  const queryClient = useQueryClient()
-  const [error, setError] = useState<Error | null>(null)
+  const utils = trpc.useUtils()
+  const [error, setError] = useState<TRPCClientErrorLike<any> | null>(null)
 
-  const mutation = useMutation<BudgetCategory, Error, BudgetCategoryCreation>({
-    mutationFn: async (newCategoryData) => {
-      const payload = {
-        name: newCategoryData.name,
-        type: newCategoryData.type,
-        allocatedAmount: Number(newCategoryData.allocatedAmount),
-        budgetId: newCategoryData.budgetId,
-        averageMonthlyExpense: String(newCategoryData.allocatedAmount),
-      }
-      return await api.post<BudgetCategoryCreation, BudgetCategory>(
-        '/api/finance/budget/categories',
-        payload
-      )
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['budget_data', 'categories', 'user'] })
+  const mutation = trpc.finance.budget.categories.create.useMutation({
+    onSuccess: () => {
+      utils.finance.budget.categories.list.invalidate()
     },
     onError: (err) => setError(err),
   })
 
+  const createCategory = async (newCategoryData: BudgetCategoryCreation) => {
+    const payload = {
+      name: newCategoryData.name,
+      type: newCategoryData.type as 'income' | 'expense',
+      allocatedAmount: newCategoryData.allocatedAmount,
+      budgetId: newCategoryData.budgetId,
+    }
+    return await mutation.mutateAsync(payload)
+  }
+
   return {
-    createCategory: mutation.mutateAsync,
-    isLoading: mutation.isLoading,
+    createCategory,
+    isLoading: mutation.isPending,
     error: mutation.error || error,
     isSuccess: mutation.isSuccess,
   }
 }
 
 export function useUpdateBudgetCategory() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-  const queryClient = useQueryClient()
-  const [error, setError] = useState<Error | null>(null)
+  const utils = trpc.useUtils()
+  const [error, setError] = useState<TRPCClientErrorLike<any> | null>(null)
 
-  const mutation = useMutation<BudgetCategory, Error, BudgetCategoryUpdate>({
-    mutationFn: async (categoryUpdateData) => {
-      const { id, ...updateData } = categoryUpdateData
-      const payload: Record<string, unknown> = { ...updateData }
-      if (updateData.allocatedAmount !== undefined) {
-        payload.allocatedAmount = Number(updateData.allocatedAmount)
-      }
-      return await api.put<typeof payload, BudgetCategory>(
-        `/api/finance/budget/categories/${id}`,
-        payload
-      )
-    },
-    onSuccess: async (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['budget_data', 'categories', 'user'] })
-      queryClient.invalidateQueries({
-        queryKey: ['budget_data', 'categories', variables.id, 'user'],
-      })
+  const mutation = trpc.finance.budget.categories.update.useMutation({
+    onSuccess: () => {
+      utils.finance.budget.categories.list.invalidate()
     },
     onError: (err) => setError(err),
   })
 
+  const updateCategory = async (categoryUpdateData: BudgetCategoryUpdate) => {
+    const { id, ...updateData } = categoryUpdateData
+    const payload: any = { id, ...updateData }
+    if (updateData.type) {
+      payload.type = updateData.type as 'income' | 'expense'
+    }
+    return await mutation.mutateAsync(payload)
+  }
+
   return {
-    updateCategory: mutation.mutateAsync,
-    isLoading: mutation.isLoading,
+    updateCategory,
+    isLoading: mutation.isPending,
     error: mutation.error || error,
     isSuccess: mutation.isSuccess,
   }
 }
 
 export function useDeleteBudgetCategory() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-  const queryClient = useQueryClient()
+  const utils = trpc.useUtils()
 
-  const mutation = useMutation<{ success: boolean; message: string }, Error, string>({
-    mutationFn: async (categoryId) => {
-      return await api.delete<never, { success: boolean; message: string }>(
-        `/api/finance/budget/categories/${categoryId}`
-      )
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['budget_data', 'categories', 'user'] })
+  const mutation = trpc.finance.budget.categories.delete.useMutation({
+    onSuccess: () => {
+      utils.finance.budget.categories.list.invalidate()
     },
   })
+
+  const deleteCategory = async (categoryId: string) => {
+    const result = await mutation.mutateAsync({ id: categoryId })
+    return { success: true, message: 'Category deleted successfully' }
+  }
 
   return {
-    deleteCategory: mutation.mutateAsync,
-    isLoading: mutation.isLoading,
+    deleteCategory,
+    isLoading: mutation.isPending,
     error: mutation.error,
     isSuccess: mutation.isSuccess,
   }
@@ -162,28 +142,18 @@ interface BudgetHistoryDataPoint {
 }
 
 export function useBudgetHistory(months = 6) {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-  const queryKey = ['budget_data', 'history', months, 'user']
-
-  const query = useQuery<BudgetHistoryDataPoint[], Error>({
-    queryKey,
-    queryFn: async () => {
-      return await api.get<never, BudgetHistoryDataPoint[]>(
-        `/api/finance/budget/history?months=${months}`
-      )
-    },
-    staleTime: 15 * 60 * 1000,
-  })
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    error: errorHistory,
+    refetch: refetchHistory,
+  } = trpc.finance.budget.history.useQuery({ months })
 
   return {
-    historyData: query.data,
-    isLoadingHistory: query.isLoading,
-    errorHistory: query.error,
-    refetchHistory: query.refetch,
+    historyData,
+    isLoadingHistory,
+    errorHistory,
+    refetchHistory,
   }
 }
 
@@ -217,93 +187,35 @@ export type PersonalBudgetResult = {
 
 // Hook for personal budget calculation
 export function usePersonalBudgetCalculation() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-  const queryClient = useQueryClient()
-
-  const calculateBudget = useMutation<PersonalBudgetResult, Error, PersonalBudgetInput | undefined>(
-    {
-      mutationFn: async (manualData) => {
-        return await api.post<PersonalBudgetInput | undefined, PersonalBudgetResult>(
-          '/api/finance/budget/calculate',
-          manualData
-        )
-      },
-      onSuccess: () => {
-        // Optionally invalidate related queries
-        queryClient.invalidateQueries({ queryKey: ['budget_data'] })
-      },
-    }
-  )
+  const mutation = trpc.finance.budget.calculate.useMutation()
 
   return {
-    calculateBudget,
-    isLoading: calculateBudget.isLoading,
-    isError: calculateBudget.isError,
-    error: calculateBudget.error,
-    data: calculateBudget.data,
+    calculateBudget: mutation.mutateAsync,
+    isLoading: mutation.isPending,
+    error: mutation.error,
+    isSuccess: mutation.isSuccess,
   }
 }
 
 // Hook for budget vs actual analysis
 export function useBudgetVsActual(monthYear?: string) {
-  const { categories } = useBudgetCategories()
-  // Note: This needs to be updated to work with the new useMonthlyStats signature
-  // For now, we'll skip the actual spending comparison until we have the right data
-  const statsLoading = false
-  const actualSpending = null
+  // TODO: Implement this with tRPC when the endpoint is available
+  const queryKey = ['budget_data', 'vs_actual', monthYear, 'user']
 
-  const budgetVsActual = useMemo(() => {
-    if (!categories) return []
-
-    return categories
-      .filter((cat: BudgetCategory) => cat.type === 'expense')
-      .map((category: BudgetCategory) => {
-        const budgetedAmount = Number.parseFloat(category.averageMonthlyExpense || '0')
-        // TODO: Get actual spending data when available
-        const actualAmount = 0
-
-        const variance = actualAmount - budgetedAmount
-        const percentageUsed = budgetedAmount > 0 ? (actualAmount / budgetedAmount) * 100 : 0
-
-        return {
-          ...category,
-          budgetedAmount,
-          actualAmount,
-          variance,
-          percentageUsed,
-          isOverBudget: variance > 0,
-          status: percentageUsed > 100 ? 'over' : percentageUsed > 90 ? 'warning' : 'good',
-        } as BudgetVsActualItem
-      })
-  }, [categories])
-
-  const totals = useMemo(() => {
-    const totalBudgeted = budgetVsActual.reduce(
-      (sum: number, item: BudgetVsActualItem) => sum + item.budgetedAmount,
-      0
-    )
-    const totalActual = budgetVsActual.reduce(
-      (sum: number, item: BudgetVsActualItem) => sum + item.actualAmount,
-      0
-    )
-    const totalVariance = totalActual - totalBudgeted
-
-    return {
-      totalBudgeted,
-      totalActual,
-      totalVariance,
-      overallPercentage: totalBudgeted > 0 ? (totalActual / totalBudgeted) * 100 : 0,
-    }
-  }, [budgetVsActual])
+  const query = useQuery<BudgetVsActualItem[], Error>({
+    queryKey,
+    queryFn: async () => {
+      // Placeholder - will be replaced with tRPC call
+      return []
+    },
+    staleTime: 5 * 60 * 1000,
+  })
 
   return {
-    budgetVsActual,
-    totals,
-    isLoading: !categories || statsLoading,
+    budgetVsActual: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
   }
 }
 
@@ -324,64 +236,28 @@ interface BulkCreateFromTransactionsInput {
 }
 
 export function useTransactionCategories() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-
-  const query = useQuery<TransactionCategory[], Error>({
-    queryKey: ['budget_data', 'transaction_categories'],
-    queryFn: async () => {
-      return await api.get<never, TransactionCategory[]>(
-        '/api/finance/budget/transaction-categories'
-      )
-    },
-    staleTime: 15 * 60 * 1000,
-  })
+  const {
+    data: categories,
+    isLoading,
+    error,
+    refetch,
+  } = trpc.finance.budget.transactionCategories.useQuery()
 
   return {
-    categories: query.data,
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    categories,
+    isLoading,
+    error,
+    refetch,
   }
 }
 
 export function useBulkCreateFromTransactions() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-  const queryClient = useQueryClient()
+  const utils = trpc.useUtils()
 
-  const mutation = useMutation<
-    {
-      success: boolean
-      message: string
-      categories: BudgetCategory[]
-      created: number
-      skipped: number
-    },
-    Error,
-    BulkCreateFromTransactionsInput
-  >({
-    mutationFn: async (data) => {
-      return await api.post<
-        BulkCreateFromTransactionsInput,
-        {
-          success: boolean
-          message: string
-          categories: BudgetCategory[]
-          created: number
-          skipped: number
-        }
-      >('/api/finance/budget/bulk-create-from-transactions', data)
-    },
+  const mutation = trpc.finance.budget.bulkCreateFromTransactions.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['budget_data', 'categories', 'user'] })
-      queryClient.invalidateQueries({ queryKey: ['budget_data', 'transaction_categories'] })
+      utils.finance.budget.categories.list.invalidate()
+      utils.finance.budget.transactionCategories.invalidate()
     },
   })
 

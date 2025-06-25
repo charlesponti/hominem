@@ -1,5 +1,8 @@
 import { getSpendingCategories } from '@hominem/utils/finance'
 import { Hono } from 'hono'
+import { protectedProcedure, router } from '../../trpc/index.js'
+
+// Keep existing Hono route for backward compatibility
 export const financeCategoriesRoutes = new Hono()
 
 // Get spending categories
@@ -22,4 +25,11 @@ financeCategoriesRoutes.get('/', async (c) => {
       500
     )
   }
+})
+
+// Export tRPC router
+export const categoriesRouter = router({
+  list: protectedProcedure.query(async ({ ctx }) => {
+    return await getSpendingCategories(ctx.userId)
+  }),
 })

@@ -8,207 +8,107 @@ import {
   summarizeByCategory,
 } from '@hominem/utils/finance'
 import { transactions } from '@hominem/utils/schema'
-import { zValidator } from '@hono/zod-validator'
 import { count, desc, sql } from 'drizzle-orm'
-import { Hono } from 'hono'
 import { z } from 'zod'
-export const financeAnalyzeRoutes = new Hono()
+import { protectedProcedure, router } from '../../trpc/index.js'
 
-const calculateTransactionsSchema = z.object({
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  category: z.string().optional(),
-  accounts: z.array(z.string()).optional(),
-  type: z.enum(['income', 'expense']).optional(),
-})
-
-const timeSeriesQuerySchema = z.object({
-  from: z.string().optional(),
-  to: z.string().optional(),
-  account: z.string().optional(),
-  category: z.string().optional(),
-  limit: z.coerce.number().optional(),
-  groupBy: z.enum(['month', 'week', 'day']).optional().default('month'),
-  includeStats: z.coerce.boolean().optional().default(false),
-  compareToPrevious: z.coerce.boolean().optional().default(false),
-})
-
-const topMerchantsQuerySchema = z.object({
-  from: z.string().optional(),
-  to: z.string().optional(),
-  account: z.string().optional(),
-  category: z.string().optional(),
-  limit: z.coerce.number().optional().default(5),
-})
-
-const monthlyStatsParamSchema = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
-})
-
-// Get spending over time
-financeAnalyzeRoutes.get(
-  '/spending-time-series',
-  zValidator('query', timeSeriesQuerySchema),
-  async (c) => {
-    const userId = c.get('userId')
-    if (!userId) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    try {
-      const query = c.req.valid('query')
-
+// Analytics tRPC router
+export const analyzeRouter = router({
+  // Spending time series
+  spendingTimeSeries: protectedProcedure
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+        account: z.string().optional(),
+        category: z.string().optional(),
+        limit: z.number().optional(),
+        groupBy: z.enum(['month', 'week', 'day']).optional().default('month'),
+        includeStats: z.boolean().optional().default(false),
+        compareToPrevious: z.boolean().optional().default(false),
+      })
+    )
+    .query(async ({ input, ctx }) => {
       // Use the service to generate time series data
       const result = await generateTimeSeriesData({
-        from: query.from,
-        to: query.to,
-        account: query.account,
-        category: query.category,
-        limit: query.limit,
-        groupBy: query.groupBy,
-        includeStats: query.includeStats,
-        compareToPrevious: query.compareToPrevious,
-        userId,
+        from: input.from,
+        to: input.to,
+        account: input.account,
+        category: input.category,
+        limit: input.limit,
+        groupBy: input.groupBy,
+        includeStats: input.includeStats,
+        compareToPrevious: input.compareToPrevious,
+        userId: ctx.userId,
       })
 
-      return c.json(result)
-    } catch (error) {
-      console.error('Error generating spending time series:', error)
-      return c.json(
-        {
-          error: 'Failed to generate spending time series',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500
-      )
-    }
-  }
-)
+      return result
+    }),
 
-// Top merchants endpoint
-financeAnalyzeRoutes.get(
-  '/top-merchants',
-  zValidator('query', topMerchantsQuerySchema),
-  async (c) => {
-    const userId = c.get('userId')
-    if (!userId) {
-      return c.json({ error: 'Not authorized' }, 401)
-    }
-
-    try {
-      const query = c.req.valid('query')
+  // Top merchants
+  topMerchants: protectedProcedure
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+        account: z.string().optional(),
+        category: z.string().optional(),
+        limit: z.number().optional().default(5),
+      })
+    )
+    .query(async ({ input, ctx }) => {
       const options = {
-        userId,
-        from: query.from,
-        to: query.to,
-        account: query.account,
-        category: query.category,
-        limit: query.limit,
+        userId: ctx.userId,
+        from: input.from,
+        to: input.to,
+        account: input.account,
+        category: input.category,
+        limit: input.limit,
       }
       const result = await findTopMerchants(options)
-      return c.json(result)
-    } catch (error) {
-      console.error('Error finding top merchants:', error)
-      return c.json(
-        {
-          error: 'Failed to find top merchants',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500
-      )
-    }
-  }
-)
+      return result
+    }),
 
-// Category breakdown endpoint
-financeAnalyzeRoutes.get(
-  '/category-breakdown',
-  zValidator('query', categoryBreakdownSchema),
-  async (c) => {
-    const user = c.get('user')
-    if (!user) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const userId = c.get('userId')
-    if (!userId) {
-      return c.json({ error: 'Not authorized' }, 401)
-    }
-
-    try {
-      const options = c.req.valid('query')
-
+  // Category breakdown
+  categoryBreakdown: protectedProcedure
+    .input(categoryBreakdownSchema)
+    .query(async ({ input, ctx }) => {
       const result = await summarizeByCategory({
-        ...options,
-        userId,
+        ...input,
+        userId: ctx.userId,
       })
-      return c.json(result)
-    } catch (error) {
-      console.error('Error generating category breakdown:', error)
-      return c.json(
-        {
-          error: 'Failed to generate category breakdown',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500
-      )
-    }
-  }
-)
+      return result
+    }),
 
-// Calculate Transactions
-financeAnalyzeRoutes.post(
-  '/calculate',
-  zValidator('json', calculateTransactionsSchema),
-  async (c) => {
-    const user = c.get('user')
-    if (!user) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const userId = c.get('userId')
-    if (!userId) {
-      return c.json({ error: 'Not authorized' }, 401)
-    }
-
-    try {
-      const validated = c.req.valid('json')
-
+  // Calculate transactions
+  calculate: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        category: z.string().optional(),
+        accounts: z.array(z.string()).optional(),
+        type: z.enum(['income', 'expense']).optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
       const result = await calculateTransactions({
-        ...validated,
-        userId,
+        ...input,
+        userId: ctx.userId,
       })
 
-      return c.json(result)
-    } catch (error) {
-      console.error('Error calculating transactions:', error)
-      return c.json(
-        {
-          error: 'Failed to calculate transactions',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500
-      )
-    }
-  }
-)
+      return result
+    }),
 
-financeAnalyzeRoutes.get(
-  '/monthly-stats/:month',
-  zValidator('param', monthlyStatsParamSchema),
-  async (c) => {
-    const user = c.get('user')
-    if (!user) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    const userId = c.get('userId')
-    if (!userId) {
-      return c.json({ error: 'Not authorized' }, 401)
-    }
-
-    try {
-      const { month } = c.req.valid('param') // Format: YYYY-MM
+  // Monthly stats
+  monthlyStats: protectedProcedure
+    .input(
+      z.object({
+        month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { month } = input // Format: YYYY-MM
 
       // Calculate start and end dates for the month (inclusive start, exclusive end)
       const startDate = new Date(`${month}-01T00:00:00.000Z`)
@@ -217,7 +117,7 @@ financeAnalyzeRoutes.get(
 
       // Use standardized condition building with month date range
       const monthFilter = buildWhereConditions({
-        userId,
+        userId: ctx.userId,
         from: startDate.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
         to: endDate.toISOString().split('T')[0],
       })
@@ -241,7 +141,7 @@ financeAnalyzeRoutes.get(
 
       // 2. Calculate Spending by Category (only expenses)
       const categorySpendingFilter = buildWhereConditions({
-        userId,
+        userId: ctx.userId,
         from: startDate.toISOString().split('T')[0],
         to: endDate.toISOString().split('T')[0],
         type: 'expense',
@@ -271,16 +171,6 @@ financeAnalyzeRoutes.get(
         })),
       }
 
-      return c.json(stats)
-    } catch (error) {
-      console.error('Error fetching monthly stats:', error)
-      return c.json(
-        {
-          error: 'Failed to retrieve monthly statistics',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500
-      )
-    }
-  }
-)
+      return stats
+    }),
+})

@@ -1,4 +1,3 @@
-import type { FinanceAccount } from '@hominem/utils/types'
 import { ListFilter } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { DatePicker } from '~/components/date-picker'
@@ -17,9 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import type { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 
 interface FilterControlsProps {
-  accounts: FinanceAccount[]
+  accounts: ReturnType<typeof useFinanceAccounts>['accounts']
   accountsLoading: boolean
   selectedAccount: string
   setSelectedAccount: (value: string) => void

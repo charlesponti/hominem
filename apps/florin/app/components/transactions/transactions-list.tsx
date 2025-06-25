@@ -1,17 +1,22 @@
-import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { format } from 'date-fns'
 import { Calendar, CreditCard, DollarSign, Tag } from 'lucide-react'
 import { Card } from '~/components/ui/card'
+import type { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
+
+// Use the actual tRPC return type
+type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number]
+type AccountsMap = ReturnType<typeof useFinanceAccounts>['accountsMap']
+type AccountFromMap = NonNullable<AccountsMap> extends Map<string, infer T> ? T : never
 
 type TransactionsListProps = {
   loading: boolean
   error: string | null
-  transactions: FinanceTransaction[]
-  accountsMap: Map<string, FinanceAccount>
+  transactions: TransactionFromAPI[]
+  accountsMap: AccountsMap
 }
 
-function TransactionAmount({ transaction }: { transaction: FinanceTransaction }) {
+function TransactionAmount({ transaction }: { transaction: TransactionFromAPI }) {
   const amount = Number.parseFloat(transaction.amount)
   const isNegative = amount < 0
   const displayAmount = Math.abs(amount).toFixed(2)
@@ -34,8 +39,8 @@ function TransactionMetadata({
   transaction,
   account,
 }: {
-  transaction: FinanceTransaction
-  account?: FinanceAccount
+  transaction: TransactionFromAPI
+  account?: AccountFromMap
 }) {
   const formattedDate = format(new Date(transaction.date), 'MMM d, yyyy', {})
 
@@ -65,8 +70,8 @@ function TransactionListItem({
   transaction,
   account,
 }: {
-  transaction: FinanceTransaction
-  account?: FinanceAccount
+  transaction: TransactionFromAPI
+  account?: AccountFromMap
 }) {
   return (
     <Card className="group p-4 relative overflow-hidden border-0 bg-white shadow-sm ring-1 ring-gray-950/5 transition-all duration-200 hover:shadow-md hover:ring-gray-950/10">

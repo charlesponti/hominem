@@ -182,30 +182,3 @@ export const searchPlaces = async ({
   }
   return data.places.map(googlePlaceToPlaceInsert)
 }
-
-type PlaceField =
-  | 'places.displayName'
-  | 'places.location'
-  | 'places.primaryType'
-  | 'places.shortFormattedAddress'
-  | 'places.id'
-  | 'places.googleMapsUri'
-  | 'places.name'
-  | 'places.formattedAddress'
-  | 'places.accessibilityOptions'
-  | 'places.addressComponents'
-  | 'places.adrFormatAddress'
-  | 'places.businessStatus'
-  | 'places.formattedAddress'
-  | 'places.iconBackgroundColor'
-  | 'places.iconMaskBaseUri'
-  | 'places.internationalPhoneNumber'
-  | 'places.plusCode'
-  | 'places.primaryTypeDisplayName'
-  | 'places.subDestinations'
-  | 'places.types'
-  | 'places.utcOffsetMinutes'
-  | 'places.viewport'
-  | 'places.websiteUri'
-
-type PlaceFields = PlaceField[]

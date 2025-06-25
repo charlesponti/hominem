@@ -26,7 +26,10 @@ export const transactionTypeEnum = pgEnum('transaction_type', [
 ])
 export type TransactionType = (typeof transactionTypeEnum.enumValues)[number]
 export const TransactionTypes = transactionTypeEnum.enumValues.reduce(
-  (acc, val) => Object.assign(acc, { [val]: val }),
+  (acc, val) => {
+    acc[val] = val
+    return acc
+  },
   {} as Record<TransactionType, TransactionType>
 )
 

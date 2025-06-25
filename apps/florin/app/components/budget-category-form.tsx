@@ -1,6 +1,6 @@
 import { useIsMobile } from '@hominem/ui'
 import type { BudgetCategory } from '@hominem/utils/types'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import {
   Card,
@@ -53,6 +53,10 @@ export function BudgetCategoryForm({
   const { createCategory, isLoading: isCreating, error: createError } = useCreateBudgetCategory()
   const { updateCategory, isLoading: isUpdating, error: updateError } = useUpdateBudgetCategory()
 
+  const nameId = useId()
+  const typeId = useId()
+  const allocatedAmountId = useId()
+
   useEffect(() => {
     if (category) {
       setName(category.name)
@@ -86,7 +90,6 @@ export function BudgetCategoryForm({
           name,
           type,
           allocatedAmount,
-          averageMonthlyExpense: allocatedAmount.toString(), // required by BudgetCategoryCreation as string
         })
       }
       await onSave(formData)
@@ -117,9 +120,9 @@ export function BudgetCategoryForm({
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="name">Category Name</Label>
+            <Label htmlFor={nameId}>Category Name</Label>
             <Input
-              id="name"
+              id={nameId}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Groceries, Utilities"
@@ -127,13 +130,13 @@ export function BudgetCategoryForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="type">Category Type</Label>
+            <Label htmlFor={typeId}>Category Type</Label>
             <Select
               value={type}
               onValueChange={(value: 'income' | 'expense') => setType(value)}
               required
             >
-              <SelectTrigger id="type">
+              <SelectTrigger id={typeId}>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -143,9 +146,9 @@ export function BudgetCategoryForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="allocatedAmount">Allocated Amount ($)</Label>
+            <Label htmlFor={allocatedAmountId}>Allocated Amount ($)</Label>
             <Input
-              id="allocatedAmount"
+              id={allocatedAmountId}
               type="number"
               value={allocatedAmount}
               onChange={(e) => setAllocatedAmount(Number.parseFloat(e.target.value) || 0)}

@@ -1,25 +1,11 @@
 import { deleteAllFinanceData } from '@hominem/utils/finance'
-import { Hono } from 'hono'
-export const financeDataRoutes = new Hono()
+import { protectedProcedure, router } from '../../trpc/index.js'
 
-// Delete all finance data for the authenticated user
-financeDataRoutes.delete('/', async (c) => {
-  const userId = c.get('userId')
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
-  }
-
-  try {
-    await deleteAllFinanceData(userId)
-    return c.json({ success: true, message: 'All finance data deleted' })
-  } catch (error) {
-    console.error(`Error deleting finance data: ${error}`)
-    return c.json(
-      {
-        error: 'Failed to delete finance data',
-        details: error instanceof Error ? error.message : String(error),
-      },
-      500
-    )
-  }
+// Data management tRPC router
+export const dataRouter = router({
+  // Delete all finance data for the authenticated user
+  deleteAll: protectedProcedure.mutation(async ({ ctx }) => {
+    await deleteAllFinanceData(ctx.userId)
+    return { success: true, message: 'All finance data deleted' }
+  }),
 })

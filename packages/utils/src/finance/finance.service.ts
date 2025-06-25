@@ -260,15 +260,16 @@ export async function queryTransactions(options: QueryOptions) {
   const filteredCount = Number(filteredCountResult[0]?.count || 0)
 
   // Get total count of transactions for the user (respecting base filters like excluded/pending)
-  const totalUserBaseConditions = and(
-    eq(transactions.userId, userId),
-    eq(transactions.excluded, false),
-    eq(transactions.pending, false)
-  )
   const totalUserCountResult = await db
     .select({ count: sql<number>`COUNT(*)::int` })
     .from(transactions)
-    .where(totalUserBaseConditions)
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        eq(transactions.excluded, false),
+        eq(transactions.pending, false)
+      )
+    )
   const totalUserCount = Number(totalUserCountResult[0]?.count || 0)
 
   return {

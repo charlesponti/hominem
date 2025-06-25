@@ -34,7 +34,7 @@ const envSchema = z.object({
 })
 
 export const env = new Proxy({} as z.infer<typeof envSchema>, {
-  get(target, prop) {
+  get(_target, prop) {
     const parsed = envSchema.parse(process.env)
     if (prop in parsed) {
       return parsed[prop as keyof z.infer<typeof envSchema>]

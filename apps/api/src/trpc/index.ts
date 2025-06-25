@@ -1,4 +1,7 @@
+import { db } from '@hominem/utils/db'
+import { users } from '@hominem/utils/schema'
 import { initTRPC, TRPCError } from '@trpc/server'
+import { eq } from 'drizzle-orm'
 import type { HonoRequest } from 'hono'
 import { getHominemUser } from '../middleware/supabase.js'
 
@@ -9,6 +12,30 @@ export interface Context {
 const t = initTRPC.context<Context>().create()
 
 const authMiddleware = t.middleware(async ({ ctx, next }) => {
+  // Test mode: use x-user-id header for authentication
+  if (process.env.NODE_ENV === 'test') {
+    const testUserId = ctx.req.header('x-user-id')
+    if (testUserId) {
+      // For test mode, get the user from the database
+      try {
+        const [user] = await db.select().from(users).where(eq(users.id, testUserId))
+        if (user) {
+          return next({
+            ctx: {
+              ...ctx,
+              user,
+              userId: user.id,
+              supabaseId: user.supabaseId,
+            },
+          })
+        }
+      } catch (error) {
+        console.error('Error getting user in test mode:', error)
+      }
+    }
+  }
+
+  // Production mode: use authorization header
   const authHeader = ctx.req.header('authorization')
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new TRPCError({

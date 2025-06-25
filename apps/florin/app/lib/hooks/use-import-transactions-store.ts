@@ -307,7 +307,7 @@ export function useImportTransactionsStore() {
     startSingleFile: (file: File) => importMutation.mutateAsync([file]),
     removeFileStatus,
     activeJobIds,
-    isImporting: importMutation.isLoading,
+    isImporting: importMutation.isPending,
     isError: importMutation.isError || !!error,
     error,
   }

@@ -15,14 +15,14 @@ export function AccountConnectionStatus({
   account,
   showDialog = true,
 }: AccountConnectionStatusProps) {
-  const { data: institutions } = useFinancialInstitutions()
+  const { institutions, isLoading } = useFinancialInstitutions()
   const { accounts: plaidAccounts } = usePlaidAccountsByInstitution(account.institutionId)
 
-  const isLinked = !!account.institutionId
-  const linkedInstitution = institutions?.find((inst) => inst.id === account.institutionId)
-  const linkedPlaidAccount = plaidAccounts.find((plaidAcc) => plaidAcc.id === account.plaidItemId)
+  if (isLoading) {
+    return <Badge variant="secondary">Loading...</Badge>
+  }
 
-  if (!isLinked) {
+  if (!account.institutionId) {
     return (
       <div className="flex items-center space-x-2">
         <Badge variant="outline" className="text-muted-foreground">
@@ -44,15 +44,21 @@ export function AccountConnectionStatus({
     )
   }
 
+  const institution = institutions?.find((inst: any) => inst.id === account.institutionId)
+
+  if (!institution) {
+    return <Badge variant="destructive">Unknown Institution</Badge>
+  }
+
+  const linkedPlaidAccount = plaidAccounts.find((plaidAcc) => plaidAcc.id === account.plaidItemId)
+
   return (
     <div className="flex items-center space-x-2">
       <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">
         <CheckCircleIcon className="h-3 w-3 mr-1" />
         Connected
       </Badge>
-      {linkedInstitution && (
-        <span className="text-sm text-muted-foreground">to {linkedInstitution.name}</span>
-      )}
+      {institution && <span className="text-sm text-muted-foreground">to {institution.name}</span>}
       {linkedPlaidAccount && (
         <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200">
           <Banknote className="h-3 w-3 mr-1" />

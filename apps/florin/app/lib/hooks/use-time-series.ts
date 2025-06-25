@@ -1,9 +1,7 @@
-import { useApiClient } from '@hominem/ui'
 import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types'
-import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useMemo } from 'react'
-import { useSupabaseAuth } from '../supabase/use-auth'
+import { trpc } from '../trpc'
 
 export interface TimeSeriesResponse {
   data: TimeSeriesDataPoint[]
@@ -24,7 +22,7 @@ interface TimeSeriesParams {
 }
 
 /**
- * Custom hook to fetch and manage time series data using React Query
+ * Custom hook to fetch and manage time series data using tRPC
  */
 export function useTimeSeriesData({
   dateFrom,
@@ -36,12 +34,6 @@ export function useTimeSeriesData({
   groupBy = 'month',
   enabled = true,
 }: TimeSeriesParams) {
-  const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-
   // Generate a query key based on all parameters - memoize to prevent infinite re-renders
   const queryKey = useMemo(
     () => [
@@ -59,38 +51,26 @@ export function useTimeSeriesData({
     [dateFrom, dateTo, account, category, includeStats, compareToPrevious, groupBy]
   )
 
-  // Define the fetch function - memoize to prevent recreation on every render
-  const fetchTimeSeriesData = useMemo(
-    () => async (): Promise<TimeSeriesResponse> => {
-      // Build query parameters
-      const params = new URLSearchParams()
-      if (dateFrom) params.append('from', format(dateFrom, 'yyyy-MM-dd'))
-      if (dateTo) params.append('to', format(dateTo, 'yyyy-MM-dd'))
-      if (account && account !== 'all') params.append('account', account)
-      if (category) params.append('category', category)
-      params.append('includeStats', includeStats.toString())
-      params.append('compareToPrevious', compareToPrevious.toString())
-      params.append('groupBy', groupBy)
-
-      const queryString = params.toString()
-      return await apiClient.get<never, TimeSeriesResponse>(
-        `/api/finance/analyze/spending-time-series?${queryString}`
-      )
+  // Use tRPC query
+  const query = trpc.finance.analyze.spendingTimeSeries.useQuery(
+    {
+      from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
+      to: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
+      account: account && account !== 'all' ? account : undefined,
+      category,
+      includeStats,
+      compareToPrevious,
+      groupBy,
     },
-    [apiClient, dateFrom, dateTo, account, category, includeStats, compareToPrevious, groupBy]
+    {
+      enabled,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2, // Only retry 2 times before giving up
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+      refetchOnWindowFocus: false, // Don't refetch when window gains focus
+      refetchOnReconnect: false, // Don't refetch when network reconnects
+    }
   )
-
-  // Use React Query to manage the data fetching
-  const query = useQuery<TimeSeriesResponse, Error>({
-    queryKey,
-    queryFn: fetchTimeSeriesData,
-    enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2, // Only retry 2 times before giving up
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    refetchOnWindowFocus: false, // Don't refetch when window gains focus
-    refetchOnReconnect: false, // Don't refetch when network reconnects
-  })
 
   // Helper to format date labels based on grouping
   const formatDateLabel = (dateStr: string): string => {

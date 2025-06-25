@@ -414,9 +414,6 @@ export function useLocalData<T extends SyncableEntity>({
             new Date(serverItem.updatedAt) < new Date(localItem.updatedAt) &&
             !localItem.synced
           ) {
-            // Local item is newer and not synced - keep it for later sync
-            // biome-ignore lint/correctness/noUnnecessaryContinue: <explanation>
-            continue
           }
         }
 

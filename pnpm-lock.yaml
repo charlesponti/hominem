@@ -22,7 +22,13 @@ importers:
         version: 0.4.0(@trpc/server@11.4.2(typescript@5.7.3))(hono@4.8.2)
       '@supabase/ssr':
         specifier: ^0.6.1
-        version: 0.6.1(@supabase/supabase-js@2.50.0)
+        version: 0.6.1(@supabase/supabase-js@2.50.1(ws@8.18.2))
+      '@supabase/storage-js':
+        specifier: ^2.7.3
+        version: 2.7.3
+      '@supabase/supabase-js':
+        specifier: ^2.50.1
+        version: 2.50.1(ws@8.18.2)
       '@trpc/client':
         specifier: ^11.4.2
         version: 11.4.2(@trpc/server@11.4.2(typescript@5.7.3))(typescript@5.7.3)
@@ -119,10 +125,7 @@ importers:
         version: 7.120.3
       '@supabase/ssr':
         specifier: ^0.6.1
-        version: 0.6.1(@supabase/supabase-js@2.50.0)
-      '@supabase/supabase-js':
-        specifier: ^2.49.4
-        version: 2.50.0
+        version: 0.6.1(@supabase/supabase-js@2.50.1(ws@8.18.2))
       '@total-typescript/ts-reset':
         specifier: ^0.6.1
         version: 0.6.1
@@ -273,10 +276,7 @@ importers:
         version: 7.6.2(react-router@7.6.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.7.3)
       '@supabase/ssr':
         specifier: ^0.6.1
-        version: 0.6.1(@supabase/supabase-js@2.50.0)
-      '@supabase/supabase-js':
-        specifier: ^2.49.4
-        version: 2.50.0
+        version: 0.6.1(@supabase/supabase-js@2.50.1(ws@8.18.2))
       '@tanstack/react-query':
         specifier: ^5.71.1
         version: 5.81.2(react@19.1.0)
@@ -536,7 +536,7 @@ importers:
         version: 5.1.1(react-hook-form@7.58.1(react@19.1.0))
       '@langchain/community':
         specifier: ^0.3.29
-        version: 0.3.47(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.832.0)(@aws-sdk/credential-provider-node@3.830.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.53.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(zod@3.25.67))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67)))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.50.0)(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.2)(zod@3.25.67))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(pdf-parse@1.1.1)(pg@8.16.2)(playwright@1.53.1)(weaviate-client@3.6.2)(ws@8.18.2)
+        version: 0.3.47(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.832.0)(@aws-sdk/credential-provider-node@3.830.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.53.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(zod@3.25.67))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67)))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.50.1(ws@8.18.2))(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.2)(zod@3.25.67))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(pdf-parse@1.1.1)(pg@8.16.2)(playwright@1.53.1)(weaviate-client@3.6.2)(ws@8.18.2)
       '@langchain/core':
         specifier: 0.3.37
         version: 0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67))
@@ -644,10 +644,7 @@ importers:
         version: 0.0.4
       '@supabase/ssr':
         specifier: ^0.5.2
-        version: 0.5.2(@supabase/supabase-js@2.50.0)
-      '@supabase/supabase-js':
-        specifier: ^2.50.0
-        version: 2.50.0
+        version: 0.5.2(@supabase/supabase-js@2.50.1(ws@8.18.2))
       '@tailwindcss/postcss':
         specifier: ^4.1.3
         version: 4.1.10
@@ -658,11 +655,20 @@ importers:
         specifier: ^1.0.5
         version: 1.12.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-query':
-        specifier: ^4.36.1
-        version: 4.40.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^5.81.2
+        version: 5.81.2(react@19.1.0)
       '@tanstack/react-query-devtools':
         specifier: '4'
-        version: 4.40.0(@tanstack/react-query@4.40.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 4.40.0(@tanstack/react-query@5.81.2(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@trpc/client':
+        specifier: ^11.4.2
+        version: 11.4.2(@trpc/server@11.4.2(typescript@5.7.3))(typescript@5.7.3)
+      '@trpc/react-query':
+        specifier: ^11.4.2
+        version: 11.4.2(@tanstack/react-query@5.81.2(react@19.1.0))(@trpc/client@11.4.2(@trpc/server@11.4.2(typescript@5.7.3))(typescript@5.7.3))(@trpc/server@11.4.2(typescript@5.7.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.7.3)
+      '@trpc/server':
+        specifier: ^11.4.2
+        version: 11.4.2(typescript@5.7.3)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.5.2(vite@5.4.19(@types/node@22.15.32)(lightningcss@1.30.1))
@@ -886,7 +892,7 @@ importers:
         version: 5.1.1(react-hook-form@7.58.1(react@19.1.0))
       '@langchain/community':
         specifier: ^0.3.29
-        version: 0.3.47(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.832.0)(@aws-sdk/credential-provider-node@3.830.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.53.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(zod@3.25.67))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67)))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.50.0)(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.2)(zod@3.25.67))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(pdf-parse@1.1.1)(pg@8.16.2)(playwright@1.53.1)(weaviate-client@3.6.2)(ws@8.18.2)
+        version: 0.3.47(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.832.0)(@aws-sdk/credential-provider-node@3.830.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.53.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(zod@3.25.67))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67)))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.50.1(ws@8.18.2))(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.2)(zod@3.25.67))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(pdf-parse@1.1.1)(pg@8.16.2)(playwright@1.53.1)(weaviate-client@3.6.2)(ws@8.18.2)
       '@langchain/core':
         specifier: 0.3.37
         version: 0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67))
@@ -994,10 +1000,7 @@ importers:
         version: 0.0.4
       '@supabase/ssr':
         specifier: ^0.5.2
-        version: 0.5.2(@supabase/supabase-js@2.50.0)
-      '@supabase/supabase-js':
-        specifier: ^2.49.4
-        version: 2.50.0
+        version: 0.5.2(@supabase/supabase-js@2.50.1(ws@8.18.2))
       '@tailwindcss/postcss':
         specifier: ^4.1.3
         version: 4.1.10
@@ -1182,9 +1185,6 @@ importers:
       '@hominem/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      '@supabase/supabase-js':
-        specifier: ^2.49.4
-        version: 2.50.0
       ai:
         specifier: ^4.3.16
         version: 4.3.16(react@19.1.0)(zod@3.25.67)
@@ -1267,9 +1267,6 @@ importers:
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@supabase/supabase-js':
-        specifier: ^2.49.8
-        version: 2.50.0
     devDependencies:
       '@hominem/tsconfigs':
         specifier: workspace:*
@@ -1301,12 +1298,6 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../ai
-      '@supabase/storage-js':
-        specifier: ^2.7.3
-        version: 2.7.3
-      '@supabase/supabase-js':
-        specifier: ^2.49.4
-        version: 2.50.0
       ai:
         specifier: ^4.1.54
         version: 4.3.16(react@19.1.0)(zod@3.25.67)
@@ -4788,8 +4779,8 @@ packages:
   '@supabase/postgrest-js@1.19.4':
     resolution: {integrity: sha512-O4soKqKtZIW3olqmbXXbKugUtByD2jPa8kL2m2c1oozAO11uCcGrRhkZL0kVxjBLrXHE0mdSkFsMj7jDSfyNpw==}
 
-  '@supabase/realtime-js@2.11.10':
-    resolution: {integrity: sha512-SJKVa7EejnuyfImrbzx+HaD9i6T784khuw1zP+MBD7BmJYChegGxYigPzkKX8CK8nGuDntmeSD3fvriaH0EGZA==}
+  '@supabase/realtime-js@2.11.13':
+    resolution: {integrity: sha512-X2Gs+f0qjLr/60UTCidxRj+FCI/ABNar93aeMQj+v/7sm4RYOWlKNw46xmwWXL8zAL30wsHG2jD7ZvCH6zDv1A==}
 
   '@supabase/ssr@0.5.2':
     resolution: {integrity: sha512-n3plRhr2Bs8Xun1o4S3k1CDv17iH5QY9YcoEvXX3bxV1/5XSasA0mNXYycFmADIdtdE6BG9MRjP5CGIs8qxC8A==}
@@ -4807,8 +4798,8 @@ packages:
   '@supabase/storage-js@2.7.3':
     resolution: {integrity: sha512-SAvZhTk764yqn37z9M6xeq3zc4Q3Wne5qIWhtqrvlIQksiZN6NMgC8YIYDhPo503dFzIlyy+bURytDGpOMEVVg==}
 
-  '@supabase/supabase-js@2.50.0':
-    resolution: {integrity: sha512-M1Gd5tPaaghYZ9OjeO1iORRqbTWFEz/cF3pPubRnMPzA+A8SiUsXXWDP+DWsASZcjEcVEcVQIAF38i5wrijYOg==}
+  '@supabase/supabase-js@2.50.1':
+    resolution: {integrity: sha512-X4vniGZ57wJ0QF20GIX6DgLYKynwYAtq/JHqF3GEXzABKpSziLggaKL1aTfMQ2cFkVrzoEuZha5VhilO9F87Lw==}
 
   '@tailwindcss/node@4.1.10':
     resolution: {integrity: sha512-2ACf1znY5fpRBwRhMgj9ZXvb2XZW8qs+oTfotJ2C5xR0/WNL7UHZ7zXl6s+rUqedL1mNi+0O+WQr5awGowS3PQ==}
@@ -4910,9 +4901,6 @@ packages:
     resolution: {integrity: sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==}
     engines: {node: '>=12'}
 
-  '@tanstack/query-core@4.40.0':
-    resolution: {integrity: sha512-7MJTtZkCSuehMC7IxMOCGsLvHS3jHx4WjveSrGsG1Nc1UQLjaFwwkpLA2LmPfvOAxnH4mszMOBFD6LlZE+aB+Q==}
-
   '@tanstack/query-core@5.81.2':
     resolution: {integrity: sha512-QLYkPdrudoMATDFa3MiLEwRhNnAlzHWDf0LKaXUqJd0/+QxN8uTPi7bahRlxoAyH0UbLMBdeDbYzWALj7THOtw==}
 
@@ -4943,18 +4931,6 @@ packages:
     peerDependencies:
       '@tanstack/react-query': ^5.81.2
       react: ^19.1.0
-
-  '@tanstack/react-query@4.40.0':
-    resolution: {integrity: sha512-kt1G/wETT/Ad79cac5zJ8tyaMOm4rgyeomW5yDxgOO9qEhOwufgw9kgPpp+T9U0M0lL7EMoc6YXgv4gYhXu9tg==}
-    peerDependencies:
-      react: ^19.1.0
-      react-dom: ^19.1.0
-      react-native: '*'
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-native:
-        optional: true
 
   '@tanstack/react-query@5.81.2':
     resolution: {integrity: sha512-pe8kFlTrL2zFLlcAj2kZk9UaYYHDk9/1hg9EBaoO3cxDhOZf1FRGJeziSXKrVZyxIfs7b3aoOj/bw7Lie0mDUg==}
@@ -7688,6 +7664,11 @@ packages:
   isomorphic-fetch@3.0.0:
     resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
 
+  isows@1.0.7:
+    resolution: {integrity: sha512-I1fSfDCZL5P0v33sVqeTDSpcstAg/N+wF5HS033mogOVIp4B+oHC7oOCsA3axAbBSGTJ8QubbNmnIRN/h8U7hg==}
+    peerDependencies:
+      ws: '*'
+
   isstream@0.1.2:
     resolution: {integrity: sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==}
 
@@ -8901,6 +8882,7 @@ packages:
     resolution: {integrity: sha512-Nkwo9qeCvqVH0ZgYRUfPyj6o4o7StvNIxMFECeiz4y0uMOVyqc5Y9hjsdFVxdYCeiUjjXLQXA8KIz0iJL3HM0w==}
     engines: {node: '>=20.18.0'}
     hasBin: true
+    bundledDependencies: []
 
   pdf2pic@3.2.0:
     resolution: {integrity: sha512-p0bp+Mp4iJy2hqSCLvJ521rDaZkzBvDFT9O9Y0BUID3I04/eDaebAFM5t8hoWeo2BCf42cDijLCGJWTOtkJVpA==}
@@ -12342,7 +12324,7 @@ snapshots:
 
   '@kurkle/color@0.3.4': {}
 
-  '@langchain/community@0.3.47(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.832.0)(@aws-sdk/credential-provider-node@3.830.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.53.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(zod@3.25.67))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67)))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.50.0)(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.2)(zod@3.25.67))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(pdf-parse@1.1.1)(pg@8.16.2)(playwright@1.53.1)(weaviate-client@3.6.2)(ws@8.18.2)':
+  '@langchain/community@0.3.47(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.832.0)(@aws-sdk/credential-provider-node@3.830.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.53.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(zod@3.25.67))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(openai@4.104.0(ws@8.18.2)(zod@3.25.67)))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.50.1(ws@8.18.2))(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.2)(zod@3.25.67))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(pdf-parse@1.1.1)(pg@8.16.2)(playwright@1.53.1)(weaviate-client@3.6.2)(ws@8.18.2)':
     dependencies:
       '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.53.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.104.0(ws@8.18.2)(zod@3.25.67))(zod@3.25.67)
       '@ibm-cloud/watsonx-ai': 1.6.8
@@ -12365,7 +12347,7 @@ snapshots:
       '@aws-sdk/credential-provider-node': 3.830.0
       '@browserbasehq/sdk': 2.6.0
       '@smithy/util-utf8': 2.3.0
-      '@supabase/supabase-js': 2.50.0
+      '@supabase/supabase-js': 2.50.1(ws@8.18.2)
       cheerio: 1.1.0
       chromadb: 2.4.6(ws@8.18.2)(zod@3.25.67)
       cohere-ai: 7.17.1
@@ -14570,25 +14552,23 @@ snapshots:
     dependencies:
       '@supabase/node-fetch': 2.6.15
 
-  '@supabase/realtime-js@2.11.10':
+  '@supabase/realtime-js@2.11.13(ws@8.18.2)':
     dependencies:
       '@supabase/node-fetch': 2.6.15
       '@types/phoenix': 1.6.6
-      '@types/ws': 8.18.1
-      ws: 8.18.2
+      isows: 1.0.7(ws@8.18.2)
     transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
+      - ws
 
-  '@supabase/ssr@0.5.2(@supabase/supabase-js@2.50.0)':
+  '@supabase/ssr@0.5.2(@supabase/supabase-js@2.50.1(ws@8.18.2))':
     dependencies:
-      '@supabase/supabase-js': 2.50.0
+      '@supabase/supabase-js': 2.50.1(ws@8.18.2)
       '@types/cookie': 0.6.0
       cookie: 0.7.2
 
-  '@supabase/ssr@0.6.1(@supabase/supabase-js@2.50.0)':
+  '@supabase/ssr@0.6.1(@supabase/supabase-js@2.50.1(ws@8.18.2))':
     dependencies:
-      '@supabase/supabase-js': 2.50.0
+      '@supabase/supabase-js': 2.50.1(ws@8.18.2)
       cookie: 1.0.2
 
   '@supabase/storage-js@2.7.1':
@@ -14599,17 +14579,16 @@ snapshots:
     dependencies:
       '@supabase/node-fetch': 2.6.15
 
-  '@supabase/supabase-js@2.50.0':
+  '@supabase/supabase-js@2.50.1(ws@8.18.2)':
     dependencies:
       '@supabase/auth-js': 2.70.0
       '@supabase/functions-js': 2.4.4
       '@supabase/node-fetch': 2.6.15
       '@supabase/postgrest-js': 1.19.4
-      '@supabase/realtime-js': 2.11.10
+      '@supabase/realtime-js': 2.11.13(ws@8.18.2)
       '@supabase/storage-js': 2.7.1
     transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
+      - ws
 
   '@tailwindcss/node@4.1.10':
     dependencies:
@@ -14698,8 +14677,6 @@ snapshots:
     dependencies:
       remove-accents: 0.5.0
 
-  '@tanstack/query-core@4.40.0': {}
-
   '@tanstack/query-core@5.81.2': {}
 
   '@tanstack/query-devtools@5.81.2': {}
@@ -14714,10 +14691,10 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@tanstack/react-query-devtools@4.40.0(@tanstack/react-query@4.40.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@tanstack/react-query-devtools@4.40.0(@tanstack/react-query@5.81.2(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/match-sorter-utils': 8.19.4
-      '@tanstack/react-query': 4.40.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@tanstack/react-query': 5.81.2(react@19.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       superjson: 1.13.3
@@ -14728,14 +14705,6 @@ snapshots:
       '@tanstack/query-devtools': 5.81.2
       '@tanstack/react-query': 5.81.2(react@19.1.0)
       react: 19.1.0
-
-  '@tanstack/react-query@4.40.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
-    dependencies:
-      '@tanstack/query-core': 4.40.0
-      react: 19.1.0
-      use-sync-external-store: 1.5.0(react@19.1.0)
-    optionalDependencies:
-      react-dom: 19.1.0(react@19.1.0)
 
   '@tanstack/react-query@5.81.2(react@19.1.0)':
     dependencies:
@@ -17894,6 +17863,10 @@ snapshots:
       whatwg-fetch: 3.6.20
     transitivePeerDependencies:
       - encoding
+
+  isows@1.0.7(ws@8.18.2):
+    dependencies:
+      ws: 8.18.2
 
   isstream@0.1.2: {}
 

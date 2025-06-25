@@ -67,7 +67,7 @@ export type TwitterAccount = {
 export function isTokenExpired(expiresAt: Date | null, bufferMinutes = 5): boolean {
   if (!expiresAt) return false
   const bufferTime = bufferMinutes * 60 * 1000 // Convert to milliseconds
-  return new Date().getTime() >= expiresAt.getTime() - bufferTime
+  return Date.now() >= expiresAt.getTime() - bufferTime
 }
 
 /**

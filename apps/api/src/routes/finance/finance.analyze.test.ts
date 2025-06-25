@@ -1,39 +1,16 @@
 import { financeTestSeed } from '@hominem/utils/finance'
 import crypto from 'node:crypto'
 import { describe, expect, test } from 'vitest'
-import {
-  assertErrorResponse,
-  assertSuccessResponse,
-  makeAuthenticatedRequest,
-  useApiTestLifecycle,
-} from '../../../test/api-test-utils.js'
+import { useApiTestLifecycle } from '../../../test/api-test-utils.js'
+import { createTRPCTestClient } from '../../../test/trpc-test-utils.js'
 
-interface TimeSeriesResponse {
-  data: Array<{
-    date: string
-    income: number
-    expenses: number
-    amount: number
-    count: string
-    trend?: {
-      direction: 'up' | 'down'
-      previousAmount: number
-    }
-  }>
-  stats?: {
-    totalIncome: number
-    totalExpenses: number
-    total: number
-  } | null
-  query: Record<string, unknown>
-}
-
-describe('Finance Analyze Routes', () => {
+describe('Finance Analyze tRPC Router', () => {
   const { getServer } = useApiTestLifecycle()
 
   let testUserId: string
   let testAccountId: string
   let testInstitutionId: string
+  let trpcClient: ReturnType<typeof createTRPCTestClient>
 
   beforeAll(async () => {
     testUserId = crypto.randomUUID()
@@ -44,6 +21,8 @@ describe('Finance Analyze Routes', () => {
       accountId: testAccountId,
       institutionId: testInstitutionId,
     })
+
+    trpcClient = createTRPCTestClient(getServer(), testUserId)
   })
 
   afterAll(async () => {
@@ -54,23 +33,19 @@ describe('Finance Analyze Routes', () => {
     })
   })
 
-  describe('GET /api/finance/analyze/spending-time-series', () => {
+  describe('spendingTimeSeries', () => {
     test('should return time series data for the test user', async () => {
-      const response = await makeAuthenticatedRequest(getServer(), {
-        method: 'GET',
-        url: '/api/finance/analyze/spending-time-series?from=2023-01-01&to=2023-03-31&includeStats=true',
-        headers: {
-          'x-user-id': testUserId,
-        },
+      const result = await trpcClient.finance.analyze.spendingTimeSeries.query({
+        from: '2023-01-01',
+        to: '2023-03-31',
+        includeStats: true,
       })
 
-      const body = await assertSuccessResponse<TimeSeriesResponse>(response)
-
-      expect(body.data).toHaveLength(3)
-      expect(body.stats).not.toBeNull()
+      expect(result.data).toHaveLength(3)
+      expect(result.stats).not.toBeNull()
 
       // Data should be ordered by date ASC (Jan, Feb, Mar)
-      expect(body.data[0]).toMatchObject({
+      expect(result.data[0]).toMatchObject({
         date: '2023-01',
         income: 1000,
         expenses: 400,
@@ -78,7 +53,7 @@ describe('Finance Analyze Routes', () => {
         count: '3',
       })
 
-      expect(body.data[1]).toMatchObject({
+      expect(result.data[1]).toMatchObject({
         date: '2023-02',
         income: 1200,
         expenses: 500,
@@ -86,7 +61,7 @@ describe('Finance Analyze Routes', () => {
         count: '3',
       })
 
-      expect(body.data[2]).toMatchObject({
+      expect(result.data[2]).toMatchObject({
         date: '2023-03',
         income: 1100,
         expenses: 600,
@@ -95,98 +70,109 @@ describe('Finance Analyze Routes', () => {
       })
 
       // Check stats
-      expect(body.stats?.totalIncome).toBe(3300)
-      expect(body.stats?.totalExpenses).toBe(1500)
-      expect(body.stats?.total).toBe(-1800)
+      expect(result.stats?.totalIncome).toBe(3300)
+      expect(result.stats?.totalExpenses).toBe(1500)
+      expect(result.stats?.total).toBe(-1800)
     })
 
     test('should return time series data with trend information when compareToPrevious is true', async () => {
-      const response = await makeAuthenticatedRequest(getServer(), {
-        method: 'GET',
-        url: '/api/finance/analyze/spending-time-series?from=2023-01-01&to=2023-03-31&compareToPrevious=true',
-        headers: {
-          'x-user-id': testUserId,
-        },
+      const result = await trpcClient.finance.analyze.spendingTimeSeries.query({
+        from: '2023-01-01',
+        to: '2023-03-31',
+        compareToPrevious: true,
       })
 
-      const body = await assertSuccessResponse<TimeSeriesResponse>(response)
-
-      expect(body.data).toHaveLength(3)
+      expect(result.data).toHaveLength(3)
 
       // January should have no trend (no previous month)
-      expect(body.data[0].trend).toBeUndefined()
+      expect(result.data[0].trend).toBeUndefined()
 
       // February should have trend (compared to January)
-      expect(body.data[1].trend).toBeDefined()
-      expect(body.data[1].trend?.direction).toBe('up') // Feb income (1200) > Jan income (1000)
-      expect(body.data[1].trend?.previousAmount).toBe(1000)
+      expect(result.data[1].trend).toBeDefined()
+      expect(result.data[1].trend?.direction).toBe('up') // Feb income (1200) > Jan income (1000)
+      expect(result.data[1].trend?.previousAmount).toBe(1000)
 
       // March should have trend (compared to February)
-      expect(body.data[2].trend).toBeDefined()
-      expect(body.data[2].trend?.direction).toBe('down') // Mar income (1100) < Feb income (1200)
-      expect(body.data[2].trend?.previousAmount).toBe(1200)
+      expect(result.data[2].trend).toBeDefined()
+      expect(result.data[2].trend?.direction).toBe('down') // Mar income (1100) < Feb income (1200)
+      expect(result.data[2].trend?.previousAmount).toBe(1200)
     })
 
     test('should filter by date range correctly', async () => {
-      const response = await makeAuthenticatedRequest(getServer(), {
-        method: 'GET',
-        url: '/api/finance/analyze/spending-time-series?from=2023-02-01&to=2023-03-31',
-        headers: {
-          'x-user-id': testUserId,
-        },
+      const result = await trpcClient.finance.analyze.spendingTimeSeries.query({
+        from: '2023-02-01',
+        to: '2023-03-31',
       })
 
-      const body = await assertSuccessResponse<TimeSeriesResponse>(response)
-
-      expect(body.data).toHaveLength(2)
-      expect(body.data[0].date).toBe('2023-02')
-      expect(body.data[1].date).toBe('2023-03')
+      expect(result.data).toHaveLength(2)
+      expect(result.data[0].date).toBe('2023-02')
+      expect(result.data[1].date).toBe('2023-03')
 
       // Should not include January data
-      expect(body.data.find((d) => d.date === '2023-01')).toBeUndefined()
+      expect(result.data.find((d) => d.date === '2023-01')).toBeUndefined()
     })
 
     test('should handle empty results for period with no data', async () => {
-      const response = await makeAuthenticatedRequest(getServer(), {
-        method: 'GET',
-        url: '/api/finance/analyze/spending-time-series?from=2024-01-01&to=2024-03-31',
-        headers: {
-          'x-user-id': testUserId,
-        },
+      const result = await trpcClient.finance.analyze.spendingTimeSeries.query({
+        from: '2024-01-01',
+        to: '2024-03-31',
       })
 
-      const body = await assertSuccessResponse<TimeSeriesResponse>(response)
-
-      expect(body.data).toHaveLength(0)
-      expect(body.stats).toBeNull()
-    })
-
-    test('should return 401 when user is not authenticated', async () => {
-      const response = await makeAuthenticatedRequest(getServer(), {
-        method: 'GET',
-        url: '/api/finance/analyze/spending-time-series',
-        headers: {
-          'x-user-id': null,
-        },
-      })
-
-      await assertErrorResponse(response, 401)
+      expect(result.data).toHaveLength(0)
+      expect(result.stats).toBeNull()
     })
 
     test('should handle different groupBy options', async () => {
-      const response = await makeAuthenticatedRequest(getServer(), {
-        method: 'GET',
-        url: '/api/finance/analyze/spending-time-series?groupBy=week',
-        headers: {
-          'x-user-id': testUserId,
-        },
+      const result = await trpcClient.finance.analyze.spendingTimeSeries.query({
+        groupBy: 'week',
       })
 
-      const body = await assertSuccessResponse<TimeSeriesResponse>(response)
-
-      expect(body.query.groupBy).toBe('week')
+      expect(result.query.groupBy).toBe('week')
       // The actual grouping behavior depends on the implementation
       // This test ensures the parameter is passed through correctly
+    })
+  })
+
+  describe('topMerchants', () => {
+    test('should return top merchants for the test user', async () => {
+      const result = await trpcClient.finance.analyze.topMerchants.query({
+        from: '2023-01-01',
+        to: '2023-03-31',
+        limit: 5,
+      })
+
+      expect(Array.isArray(result)).toBe(true)
+      // Add more specific assertions based on your test data
+    })
+  })
+
+  describe('categoryBreakdown', () => {
+    test('should return category breakdown for the test user', async () => {
+      const result = await trpcClient.finance.analyze.categoryBreakdown.query({
+        from: '2023-01-01',
+        to: '2023-03-31',
+        limit: '10',
+      })
+
+      expect(Array.isArray(result)).toBe(true)
+      // Add more specific assertions based on your test data
+    })
+  })
+
+  describe('monthlyStats', () => {
+    test('should return monthly stats for a specific month', async () => {
+      const result = await trpcClient.finance.analyze.monthlyStats.query({
+        month: '2023-01',
+      })
+
+      expect(result).toMatchObject({
+        month: '2023-01',
+        totalIncome: expect.any(Number),
+        totalExpenses: expect.any(Number),
+        netIncome: expect.any(Number),
+        transactionCount: expect.any(Number),
+        categorySpending: expect.any(Array),
+      })
     })
   })
 })

@@ -5,6 +5,7 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration }
 import type { Route } from './+types/root'
 import './globals.css'
 import { getQueryClient } from './lib/get-query-client'
+import { trpc, trpcClient } from './lib/trpc'
 
 // No loader needed for Supabase auth
 
@@ -83,7 +84,9 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <Outlet />
+      </trpc.Provider>
     </QueryClientProvider>
   )
 }

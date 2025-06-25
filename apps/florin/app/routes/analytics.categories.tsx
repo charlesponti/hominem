@@ -1,11 +1,11 @@
 'use client'
 
 import { subMonths } from 'date-fns'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { formatCurrency } from '~/lib/finance.utils'
-import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
+import { trpc } from '~/lib/trpc'
 
 export default function CategoriesAnalyticsPage() {
   const navigate = useNavigate()
@@ -13,16 +13,17 @@ export default function CategoriesAnalyticsPage() {
   const [dateTo] = useState<Date>(new Date())
   const { accounts, isLoading: accountsLoading } = useFinanceAccounts()
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
+  const id = useId()
 
   const {
     data: breakdown,
     isLoading,
     error,
-  } = useFinanceCategoryBreakdown({
+  } = trpc.finance.analyze.categoryBreakdown.useQuery({
     from: dateFrom.toISOString().split('T')[0],
     to: dateTo.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    limit: 100,
+    limit: '100',
   })
 
   if (isLoading) return <div className="p-4 text-center">Loading…</div>
@@ -36,7 +37,7 @@ export default function CategoriesAnalyticsPage() {
           Account:
         </label>
         <select
-          id="account-select"
+          id={id}
           value={selectedAccount}
           onChange={(e) => setSelectedAccount(e.target.value)}
           className="border rounded px-2 py-1"

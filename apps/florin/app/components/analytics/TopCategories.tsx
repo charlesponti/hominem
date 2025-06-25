@@ -1,30 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
-import { useFinanceCategoryBreakdown } from '~/lib/hooks/use-finance-category-breakdown'
+import { trpc } from '~/lib/trpc'
 
 interface TopCategoriesProps {
   dateFrom?: Date
   dateTo?: Date
   selectedAccount?: string
-  selectedCategory?: string
 }
 
-export function TopCategories({
-  dateFrom,
-  dateTo,
-  selectedAccount,
-  selectedCategory,
-}: TopCategoriesProps) {
+export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategoriesProps) {
   const {
     data: categoryBreakdown,
     isLoading,
     error,
-  } = useFinanceCategoryBreakdown({
+  } = trpc.finance.analyze.categoryBreakdown.useQuery({
     from: dateFrom?.toISOString().split('T')[0],
     to: dateTo?.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    limit: 5,
+    limit: '5',
   })
 
   const skeletonItems = Array.from({ length: 5 }, (_, i) => i)

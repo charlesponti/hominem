@@ -1,8 +1,5 @@
-import { useApiClient } from '@hominem/ui'
-import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
-import { useQuery } from '@tanstack/react-query'
 import { useCallback, useMemo, useState } from 'react'
-import { useSupabaseAuth } from '../supabase/use-auth'
+import { trpc } from '~/lib/trpc'
 
 export type SortField = 'date' | 'description' | 'amount' | 'category'
 export type SortDirection = 'asc' | 'desc'
@@ -20,132 +17,106 @@ export interface FilterArgs {
 }
 
 export function useFinanceAccounts() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
+  const {
+    data: accounts = [],
+    isLoading,
+    error,
+    refetch,
+  } = trpc.finance.accounts.list.useQuery({
+    includeInactive: false,
   })
 
-  const accountsQuery = useQuery<FinanceAccount[], Error>({
-    queryKey: ['finance', 'accounts'],
-    queryFn: async () => {
-      return await api.get<never, FinanceAccount[]>('/api/finance/accounts')
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  // Transform accounts to convert string dates to Date objects
+  const transformedAccounts = useMemo(() => {
+    return (accounts || []).map((account) => ({
+      ...account,
+      createdAt: new Date(account.createdAt),
+      updatedAt: new Date(account.updatedAt),
+      lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
+    }))
+  }, [accounts])
 
   const accountsMap = useMemo(() => {
-    return new Map((accountsQuery.data || []).map((account) => [account.id, account]))
-  }, [accountsQuery.data])
+    return new Map(transformedAccounts.map((account) => [account.id, account]))
+  }, [transformedAccounts])
 
   return {
-    accounts: accountsQuery.data || [],
+    accounts: transformedAccounts,
     accountsMap,
-    isLoading: accountsQuery.isLoading,
-    error: accountsQuery.error,
-    refetch: accountsQuery.refetch,
+    isLoading,
+    error,
+    refetch,
   }
 }
 
 export function useFinanceAccountSummary() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
+  // For now, we'll use the basic accounts list since the summary endpoint isn't implemented in tRPC yet
+  // This can be enhanced later when we add the summary endpoint to the tRPC router
+  const {
+    data: accounts = [],
+    isLoading,
+    error,
+    refetch,
+  } = trpc.finance.accounts.list.useQuery({
+    includeInactive: false,
   })
 
-  const query = useQuery<Array<FinanceAccount & { transactions: FinanceTransaction[] }>, Error>({
-    queryKey: ['finance', 'accounts', 'summary'],
-    queryFn: async () => {
-      return await api.get<never, Array<FinanceAccount & { transactions: FinanceTransaction[] }>>(
-        '/api/finance/accounts/summary'
-      )
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  // Transform the data to match the expected format
+  const accountSummary = useMemo(() => {
+    return accounts.map((account) => ({
+      ...account,
+      createdAt: new Date(account.createdAt),
+      updatedAt: new Date(account.updatedAt),
+      lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
+      transactions: [], // We'll need to fetch transactions separately or add a summary endpoint
+    }))
+  }, [accounts])
 
   return {
-    accountSummary: query.data || [],
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    accountSummary,
+    isLoading,
+    error,
+    refetch,
   }
 }
 
 // New unified hook that combines finance and Plaid account data
 export function useAllAccounts() {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
+  // For now, we'll use the basic accounts list
+  // This can be enhanced when we add Plaid integration to the tRPC router
+  const {
+    data: accounts = [],
+    isLoading,
+    error,
+    refetch,
+  } = trpc.finance.accounts.list.useQuery({
+    includeInactive: false,
   })
 
-  const query = useQuery<
-    {
-      accounts: Array<
-        FinanceAccount & {
-          transactions: FinanceTransaction[]
-          institutionName?: string
-          institutionLogo?: string
-          isPlaidConnected?: boolean
-          plaidItemStatus?: string
-          plaidItemError?: string | null
-          plaidLastSyncedAt?: Date | null
-          plaidItemInternalId?: string
-        }
-      >
-      connections: Array<{
-        id: string
-        itemId: string
-        institutionId: string
-        institutionName: string
-        status: string
-        lastSyncedAt: Date | null
-        error: string | null
-        createdAt: Date
-      }>
-    },
-    Error
-  >({
-    queryKey: ['finance', 'accounts', 'all'],
-    queryFn: async () => {
-      return await api.get<
-        never,
-        {
-          accounts: Array<
-            FinanceAccount & {
-              transactions: FinanceTransaction[]
-              institutionName?: string
-              institutionLogo?: string
-              isPlaidConnected?: boolean
-              plaidItemStatus?: string
-              plaidItemError?: string | null
-              plaidLastSyncedAt?: Date | null
-              plaidItemInternalId?: string
-            }
-          >
-          connections: Array<{
-            id: string
-            itemId: string
-            institutionId: string
-            institutionName: string
-            status: string
-            lastSyncedAt: Date | null
-            error: string | null
-            createdAt: Date
-          }>
-        }
-      >('/api/finance/accounts/all')
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  // Transform the data to match the expected format
+  const transformedAccounts = useMemo(() => {
+    return accounts.map((account) => ({
+      ...account,
+      createdAt: new Date(account.createdAt),
+      updatedAt: new Date(account.updatedAt),
+      lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
+      transactions: [],
+      institutionName: undefined,
+      institutionLogo: undefined,
+      isPlaidConnected: false,
+      plaidItemStatus: undefined,
+      plaidItemError: null,
+      plaidLastSyncedAt: null,
+      plaidItemInternalId: undefined,
+    }))
+  }, [accounts])
 
   return {
-    accounts: query.data?.accounts || [],
-    connections: query.data?.connections || [],
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    accounts: transformedAccounts,
+    connections: [], // We'll need to add this when we implement Plaid in tRPC
+    isLoading,
+    error,
+    refetch,
   }
 }
 
@@ -162,16 +133,6 @@ export function useFinanceTransactions({
   initialSortOptions = [{ field: 'date', direction: 'desc' }],
   filters = {},
 }: UseFinanceTransactionsOptions = {}) {
-  const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
-
-  // Filtering state is now controlled by the `filters` prop
-  // Remove internal filter states: selectedAccount, dateFrom, dateTo, searchQuery
-  // Remove internal filter setters: setSelectedAccount, setDateFrom, setDateTo, setSearchQuery
-
   const [limit, setLimit] = useState<number>(initialLimit)
   const [offset, setOffset] = useState<number>(initialOffset)
   const [sortOptions, setSortOptions] = useState<SortOption[]>(initialSortOptions)
@@ -188,48 +149,41 @@ export function useFinanceTransactions({
     setSortOptions((prevOptions) => prevOptions.map((item, i) => (i === index ? option : item)))
   }, [])
 
-  // Generate query string from filters and sortOptions
-  const queryString = useMemo(() => {
-    const params = new URLSearchParams()
-    // Use filters from the prop
-    if (filters.accountId && filters.accountId !== 'all')
-      params.append('account', filters.accountId)
-    if (filters.dateFrom) params.append('from', filters.dateFrom)
-    if (filters.dateTo) params.append('to', filters.dateTo)
-    if (filters.description) params.append('search', filters.description) // Assuming API uses 'search' for description
+  // Convert sort options to tRPC format
+  const sortBy = useMemo(() => {
+    return sortOptions[0]?.field || 'date'
+  }, [sortOptions])
 
-    params.append('limit', String(limit))
-    params.append('offset', String(offset))
-    // Append multiple sort parameters
-    for (const sortOption of sortOptions) {
-      params.append('sortBy', sortOption.field)
-      params.append('sortDirection', sortOption.direction)
-    }
-    return params.toString()
-  }, [filters, limit, offset, sortOptions])
+  const sortOrder = useMemo(() => {
+    return sortOptions[0]?.direction || 'desc'
+  }, [sortOptions])
 
-  const transactionsQuery = useQuery<
-    { data: FinanceTransaction[]; filteredCount: number; totalUserCount: number },
-    Error
-  >({
-    // Include filter values in the queryKey to ensure re-fetch on change
-    queryKey: ['finance', 'transactions', filters, sortOptions, limit, offset],
-    queryFn: async () => {
-      return await api.get<
-        never,
-        { data: FinanceTransaction[]; filteredCount: number; totalUserCount: number }
-      >(`/api/finance/transactions?${queryString}`)
+  const { data, isLoading, error, refetch } = trpc.finance.transactions.list.useQuery(
+    {
+      from: filters.dateFrom,
+      to: filters.dateTo,
+      account: filters.accountId && filters.accountId !== 'all' ? filters.accountId : undefined,
+      description: filters.description,
+      limit,
+      offset,
+      sortBy: sortBy as 'date' | 'amount' | 'description',
+      sortDirection: sortOrder as 'asc' | 'desc',
     },
-    staleTime: 1 * 60 * 1000,
-    keepPreviousData: true,
-  })
+    {
+      staleTime: 1 * 60 * 1000,
+    }
+  )
+
+  // Return the data directly from tRPC
+  const transactions = data?.data || []
+  const totalTransactions = data?.filteredCount || 0
 
   return {
-    transactions: transactionsQuery.data?.data || [],
-    totalTransactions: transactionsQuery.data?.filteredCount || 0,
-    isLoading: transactionsQuery.isLoading,
-    error: transactionsQuery.error,
-    refetch: transactionsQuery.refetch,
+    transactions,
+    totalTransactions,
+    isLoading,
+    error,
+    refetch,
     limit,
     setLimit,
     offset,
@@ -240,6 +194,5 @@ export function useFinanceTransactions({
     addSortOption,
     updateSortOption,
     removeSortOption,
-    // Removed individual filter setters
   }
 }

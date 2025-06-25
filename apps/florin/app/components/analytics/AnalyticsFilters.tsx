@@ -1,8 +1,6 @@
-import type { FinanceAccount } from '@hominem/utils/types'
 import { X } from 'lucide-react'
-import type { Dispatch, SetStateAction } from 'react'
+import { type Dispatch, type SetStateAction, useId } from 'react'
 import { DatePicker } from '~/components/date-picker'
-import { AccountSelect } from '~/components/finance/account-select'
 import {
   Accordion,
   AccordionContent,
@@ -22,8 +20,10 @@ import {
 } from '~/components/ui/select'
 import { Skeleton } from '~/components/ui/skeleton'
 import { Switch } from '~/components/ui/switch'
-import { useFinanceCategories } from '~/lib/hooks/use-finance-categories'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
+import { trpc } from '~/lib/trpc'
+
+type AccountsData = ReturnType<typeof useFinanceAccounts>['accounts']
 
 interface AnalyticsFiltersProps {
   dateFrom: Date | undefined
@@ -57,7 +57,7 @@ interface FilterChipsProps {
   setIncludeStats: Dispatch<SetStateAction<boolean>>
   compareToPrevious: boolean
   setCompareToPrevious: Dispatch<SetStateAction<boolean>>
-  accounts: FinanceAccount[]
+  accounts: AccountsData
   categories: { id: string; name: string }[]
   isLoading: boolean
 }
@@ -185,13 +185,27 @@ export function AnalyticsFilters({
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
   const { accounts, isLoading: accountsLoading } = useFinanceAccounts()
-  const { categories, isLoading: categoriesLoading } = useFinanceCategories()
+  const { data: categories = [], isLoading: categoriesLoading } =
+    trpc.finance.categories.list.useQuery()
 
   const isLoading = accountsLoading || categoriesLoading
+  const dateFromId = useId()
+  const dateToId = useId()
+  const accountId = useId()
+  const categoryId = useId()
+  const groupById = useId()
+  const includeStatsId = useId()
+  const compareToPreviousId = useId()
 
   // Ensure we have valid data even during loading
   const safeAccounts = accounts || []
-  const safeCategories = categories || []
+  const safeCategories =
+    categories
+      .map((category) => ({
+        id: category.category || '',
+        name: category.category || '',
+      }))
+      .filter((cat) => cat.id && cat.name) || []
 
   return (
     <Accordion type="single" collapsible defaultValue={undefined}>
@@ -224,88 +238,125 @@ export function AnalyticsFilters({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <CardContent className="pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CardContent className="space-y-6">
+              {/* Date Range Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="dateFrom">From Date</Label>
+                  <Label htmlFor={dateFromId}>From Date</Label>
                   <DatePicker date={dateFrom} setDate={setDateFrom} placeholder="Start date" />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="dateTo">To Date</Label>
+                  <Label htmlFor={dateToId}>To Date</Label>
                   <DatePicker date={dateTo} setDate={setDateTo} placeholder="End date" />
                 </div>
+              </div>
 
+              {/* Account and Category Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="account">Account</Label>
-                  {accountsLoading ? (
-                    <Skeleton className="h-10 w-full" />
-                  ) : (
-                    <AccountSelect
-                      accounts={safeAccounts}
-                      selectedAccount={selectedAccount}
-                      setSelectedAccount={setSelectedAccount}
-                      className="w-full"
-                    />
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  {categoriesLoading ? (
-                    <Skeleton className="h-10 w-full" />
-                  ) : (
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All categories" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-72 overflow-y-auto">
-                        <SelectItem value="all">All categories</SelectItem>
-                        {safeCategories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="groupBy">Group By</Label>
-                  <Select
-                    value={groupBy}
-                    onValueChange={(value) => setGroupBy(value as 'month' | 'week' | 'day')}
-                  >
+                  <Label htmlFor={accountId}>Account</Label>
+                  <Select name="account" value={selectedAccount} onValueChange={setSelectedAccount}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="All accounts" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="month">Monthly</SelectItem>
-                      <SelectItem value="week">Weekly</SelectItem>
-                      <SelectItem value="day">Daily</SelectItem>
+                      <SelectItem value="all">All accounts</SelectItem>
+                      {isLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Loading accounts...
+                        </SelectItem>
+                      ) : safeAccounts.length === 0 ? (
+                        <SelectItem value="no-accounts" disabled>
+                          No accounts available
+                        </SelectItem>
+                      ) : (
+                        safeAccounts.map((account) => (
+                          <SelectItem key={account.id} value={account.id}>
+                            {account.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor={categoryId}>Category</Label>
+                  <Select
+                    name="category"
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All categories</SelectItem>
+                      {isLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Loading categories...
+                        </SelectItem>
+                      ) : safeCategories.length === 0 ? (
+                        <SelectItem value="no-categories" disabled>
+                          No categories available
+                        </SelectItem>
+                      ) : (
+                        safeCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-                <div className="space-y-4 sm:col-span-2 lg:col-span-1">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="includeStats"
-                      checked={includeStats}
-                      onCheckedChange={setIncludeStats}
-                    />
-                    <Label htmlFor="includeStats">Include Statistics</Label>
-                  </div>
+              {/* Group By Filter */}
+              <div className="space-y-2">
+                <Label htmlFor={groupById}>Group By</Label>
+                <Select
+                  name="groupBy"
+                  value={groupBy}
+                  onValueChange={(value) => setGroupBy(value as 'month' | 'week' | 'day')}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="month">Month</SelectItem>
+                    <SelectItem value="week">Week</SelectItem>
+                    <SelectItem value="day">Day</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="compareToPrevious"
-                      checked={compareToPrevious}
-                      onCheckedChange={setCompareToPrevious}
-                    />
-                    <Label htmlFor="compareToPrevious">Show Trends</Label>
+              {/* Toggle Filters */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor={includeStatsId}>Include Statistics</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show summary statistics with the data
+                    </p>
                   </div>
+                  <Switch
+                    id={includeStatsId}
+                    checked={includeStats}
+                    onCheckedChange={setIncludeStats}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor={compareToPreviousId}>Compare to Previous Period</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show trend information compared to the previous period
+                    </p>
+                  </div>
+                  <Switch
+                    id={compareToPreviousId}
+                    checked={compareToPrevious}
+                    onCheckedChange={setCompareToPrevious}
+                  />
                 </div>
               </div>
             </CardContent>

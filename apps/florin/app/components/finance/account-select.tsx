@@ -1,4 +1,3 @@
-import type { FinanceAccount } from '@hominem/utils/types'
 import {
   Select,
   SelectContent,
@@ -6,9 +5,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import type { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
+
+type AccountsData = ReturnType<typeof useFinanceAccounts>['accounts']
 
 interface AccountSelectProps {
-  accounts: FinanceAccount[]
+  accounts: AccountsData
   selectedAccount: string
   setSelectedAccount: (value: string) => void
   className?: string
