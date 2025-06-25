@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { afterAll, beforeAll, vi } from 'vitest'
 
 // Redis is running in Docker for tests - no mocking needed
 
@@ -31,3 +31,13 @@ vi.mock('googleapis', () => ({
     })),
   },
 }))
+
+// Global test setup - no longer seeding finance test data globally
+beforeAll(async () => {
+  // Any global setup can go here
+})
+
+// Global test cleanup - no longer cleaning up finance test data globally
+afterAll(async () => {
+  // Any global cleanup can go here
+})

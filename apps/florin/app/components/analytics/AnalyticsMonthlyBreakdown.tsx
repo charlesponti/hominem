@@ -127,7 +127,7 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel }: MonthItemPr
   const navigate = useNavigate()
   return (
     <tr
-      className="border-b hover:bg-muted/50 cursor-pointer"
+      className="border-b hover:bg-muted/50 cursor-pointer text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary"
       onClick={() => navigate(`/analytics/monthly/${item.date}`)}
       tabIndex={0}
       onKeyDown={(e: React.KeyboardEvent) => {

@@ -1,15 +1,12 @@
 import { financeTestSeed } from '@hominem/utils/finance'
-import { Hono } from 'hono'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import crypto from 'node:crypto'
+import { describe, expect, test } from 'vitest'
 import {
   assertErrorResponse,
   assertSuccessResponse,
   makeAuthenticatedRequest,
+  useApiTestLifecycle,
 } from '../../../test/api-test-utils.js'
-import type { AppEnv } from '../../server.js'
-import { financeAnalyzeRoutes } from './finance.analyze.js'
-
-const { testUserId, seedFinanceTestData, cleanupFinanceTestData } = financeTestSeed
 
 interface TimeSeriesResponse {
   data: Array<{
@@ -32,27 +29,34 @@ interface TimeSeriesResponse {
 }
 
 describe('Finance Analyze Routes', () => {
-  let testServer: Hono<AppEnv>
+  const { getServer } = useApiTestLifecycle()
 
-  beforeEach(async () => {
-    await seedFinanceTestData()
-    testServer = new Hono()
-    // Set userId from header before routes
-    testServer.use('*', async (c, next) => {
-      const userId = c.req.header('x-user-id')
-      if (userId && userId !== 'null') c.set('userId', userId)
-      await next()
+  let testUserId: string
+  let testAccountId: string
+  let testInstitutionId: string
+
+  beforeAll(async () => {
+    testUserId = crypto.randomUUID()
+    testAccountId = crypto.randomUUID()
+    testInstitutionId = crypto.randomUUID()
+    await financeTestSeed.seedFinanceTestData({
+      userId: testUserId,
+      accountId: testAccountId,
+      institutionId: testInstitutionId,
     })
-    testServer.route('/api/finance/analyze', financeAnalyzeRoutes)
   })
 
-  afterEach(async () => {
-    await cleanupFinanceTestData()
+  afterAll(async () => {
+    await financeTestSeed.cleanupFinanceTestData({
+      userId: testUserId,
+      accountId: testAccountId,
+      institutionId: testInstitutionId,
+    })
   })
 
   describe('GET /api/finance/analyze/spending-time-series', () => {
     test('should return time series data for the test user', async () => {
-      const response = await makeAuthenticatedRequest(testServer, {
+      const response = await makeAuthenticatedRequest(getServer(), {
         method: 'GET',
         url: '/api/finance/analyze/spending-time-series?from=2023-01-01&to=2023-03-31&includeStats=true',
         headers: {
@@ -97,7 +101,7 @@ describe('Finance Analyze Routes', () => {
     })
 
     test('should return time series data with trend information when compareToPrevious is true', async () => {
-      const response = await makeAuthenticatedRequest(testServer, {
+      const response = await makeAuthenticatedRequest(getServer(), {
         method: 'GET',
         url: '/api/finance/analyze/spending-time-series?from=2023-01-01&to=2023-03-31&compareToPrevious=true',
         headers: {
@@ -109,22 +113,22 @@ describe('Finance Analyze Routes', () => {
 
       expect(body.data).toHaveLength(3)
 
-      // January should have trend (compared to February)
-      expect(body.data[0].trend).toBeDefined()
-      expect(body.data[0].trend?.direction).toBe('down') // Jan income (1000) < Feb income (1200)
-      expect(body.data[0].trend?.previousAmount).toBe(1200)
+      // January should have no trend (no previous month)
+      expect(body.data[0].trend).toBeUndefined()
 
-      // February should have trend (compared to March)
+      // February should have trend (compared to January)
       expect(body.data[1].trend).toBeDefined()
-      expect(body.data[1].trend?.direction).toBe('up') // Feb income (1200) > Mar income (1100)
-      expect(body.data[1].trend?.previousAmount).toBe(1100)
+      expect(body.data[1].trend?.direction).toBe('up') // Feb income (1200) > Jan income (1000)
+      expect(body.data[1].trend?.previousAmount).toBe(1000)
 
-      // March should not have trend (no next month)
-      expect(body.data[2].trend).toBeUndefined()
+      // March should have trend (compared to February)
+      expect(body.data[2].trend).toBeDefined()
+      expect(body.data[2].trend?.direction).toBe('down') // Mar income (1100) < Feb income (1200)
+      expect(body.data[2].trend?.previousAmount).toBe(1200)
     })
 
     test('should filter by date range correctly', async () => {
-      const response = await makeAuthenticatedRequest(testServer, {
+      const response = await makeAuthenticatedRequest(getServer(), {
         method: 'GET',
         url: '/api/finance/analyze/spending-time-series?from=2023-02-01&to=2023-03-31',
         headers: {
@@ -143,7 +147,7 @@ describe('Finance Analyze Routes', () => {
     })
 
     test('should handle empty results for period with no data', async () => {
-      const response = await makeAuthenticatedRequest(testServer, {
+      const response = await makeAuthenticatedRequest(getServer(), {
         method: 'GET',
         url: '/api/finance/analyze/spending-time-series?from=2024-01-01&to=2024-03-31',
         headers: {
@@ -158,7 +162,7 @@ describe('Finance Analyze Routes', () => {
     })
 
     test('should return 401 when user is not authenticated', async () => {
-      const response = await makeAuthenticatedRequest(testServer, {
+      const response = await makeAuthenticatedRequest(getServer(), {
         method: 'GET',
         url: '/api/finance/analyze/spending-time-series',
         headers: {
@@ -170,7 +174,7 @@ describe('Finance Analyze Routes', () => {
     })
 
     test('should handle different groupBy options', async () => {
-      const response = await makeAuthenticatedRequest(testServer, {
+      const response = await makeAuthenticatedRequest(getServer(), {
         method: 'GET',
         url: '/api/finance/analyze/spending-time-series?groupBy=week',
         headers: {

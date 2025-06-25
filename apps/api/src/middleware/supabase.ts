@@ -89,6 +89,25 @@ export async function getHominemUser(
 
 export const supabaseMiddleware = (): MiddlewareHandler => {
   return async (c, next) => {
+    // Test mode: use x-user-id header for authentication
+    if (process.env.NODE_ENV === 'test') {
+      const testUserId = c.req.header('x-user-id')
+      if (testUserId) {
+        c.set('userId', testUserId)
+        // For test mode, also set the user object by querying the database
+        try {
+          const [user] = await db.select().from(users).where(eq(users.id, testUserId))
+          if (user) {
+            c.set('user', user)
+          }
+        } catch (error) {
+          console.error('Error getting user in test mode:', error)
+        }
+        await next()
+        return
+      }
+    }
+
     const supabaseUrl = appEnv.SUPABASE_URL
     const supabaseAnonKey = appEnv.SUPABASE_ANON_KEY
 

@@ -1,4 +1,7 @@
+import { db } from '@hominem/utils/db'
+import { users } from '@hominem/utils/schema'
 import type { Queue } from 'bullmq'
+import { eq } from 'drizzle-orm'
 import type { Hono } from 'hono'
 import { afterAll, beforeAll, beforeEach, expect, vi } from 'vitest'
 import type { AppEnv } from '../src/server.js'
@@ -18,8 +21,20 @@ export const globalMocks = {
   } as Partial<Queue>,
 
   // Auth middleware mock
-  verifyAuth: vi.fn((c, next) => {
-    c.set('userId', '00000000-0000-0000-0000-000000000001')
+  verifyAuth: vi.fn(async (c, next) => {
+    const testUserId = '00000000-0000-0000-0000-000000000001'
+    c.set('userId', testUserId)
+
+    // For test mode, also set the user object by querying the database
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, testUserId))
+      if (user) {
+        c.set('user', user)
+      }
+    } catch (error) {
+      console.error('Error getting user in test mode:', error)
+    }
+
     return next()
   }),
 
@@ -102,17 +117,19 @@ export const makeAuthenticatedRequest = async (
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
     url: string
     payload?: Record<string, unknown>
-    headers?: Record<string, string>
+    headers?: Record<string, string | null>
   }
 ) => {
+  const userId = options.headers?.['x-user-id'] || '00000000-0000-0000-0000-000000000001'
+
   const headers: Record<string, string> = {
-    'x-user-id': '00000000-0000-0000-0000-000000000001',
+    'x-user-id': userId,
     ...options.headers,
   }
 
   const requestInit: RequestInit = {
     method: options.method,
-    headers,
+    headers: Object.fromEntries(Object.entries(headers).filter(([_, value]) => value !== null)),
   }
 
   if (options.payload) {

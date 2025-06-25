@@ -55,7 +55,6 @@ financeAnalyzeRoutes.get(
       return c.json({ error: 'Unauthorized' }, 401)
     }
 
-    console.log('userId', userId, typeof userId)
     try {
       const query = c.req.valid('query')
 

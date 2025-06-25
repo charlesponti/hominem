@@ -115,8 +115,8 @@ export async function generateTimeSeriesData(
     }
 
     // Add trend indicators if we have previous data
-    if (options.compareToPrevious && index < array.length - 1) {
-      const previousSummary = array[index + 1]
+    if (options.compareToPrevious && index > 0) {
+      const previousSummary = array[index - 1]
       const previousIncome = Number.parseFloat(previousSummary ? previousSummary.income : '0')
       const previousExpenses = Number.parseFloat(
         previousSummary ? previousSummary.expenses || '0' : '0'
