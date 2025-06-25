@@ -16,7 +16,6 @@ import { supabaseMiddleware } from './middleware/supabase.js'
 
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { aiRoutes } from './routes/ai/index.js'
-import { bookmarksRoutes } from './routes/bookmarks/index.js'
 import { componentsRoutes } from './routes/components/index.js'
 import { content } from './routes/content/index.js'
 import { financeRoutes } from './routes/finance/index.js'
@@ -139,7 +138,6 @@ export function createServer(): Hono<AppEnv> {
   app.route('/api/invites', invitesRoutes)
   app.route('/api/user', userRoutes)
   app.route('/api/places', placesRoutes)
-  app.route('/api/bookmarks', bookmarksRoutes)
   app.route('/api/content', content)
   app.route('/api/notes', notesRoutes)
   app.route('/api/ai', aiRoutes)

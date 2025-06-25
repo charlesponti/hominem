@@ -1,4 +1,11 @@
+import { db } from '@hominem/utils/db'
+import { bookmark, users } from '@hominem/utils/schema'
+import { eq } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { vi } from 'vitest'
+
+// Track created test users for cleanup
+const createdTestUsers: string[] = []
 
 /**
  * Database mock factory for different table operations
@@ -283,4 +290,37 @@ export const mockDbOperations = {
       where: vi.fn().mockResolvedValue({ rowCount: count }),
     } as never)
   },
+}
+
+/**
+ * Creates a test user in the database and returns the user ID
+ */
+export const createTestUser = async (overrides = {}): Promise<string> => {
+  const userId = crypto.randomUUID()
+  const testUser = {
+    id: userId,
+    email: `test-${Date.now()}@example.com`,
+    name: 'Test User',
+    supabaseId: `supabase-${userId}`,
+    isAdmin: false,
+    ...overrides,
+  }
+
+  await db.insert(users).values(testUser)
+  createdTestUsers.push(userId)
+  return userId
+}
+
+/**
+ * Cleans up test data from the database
+ */
+export const cleanupTestData = async (): Promise<void> => {
+  // Clean up test bookmarks for created test users
+  for (const userId of createdTestUsers) {
+    await db.delete(bookmark).where(eq(bookmark.userId, userId))
+    await db.delete(users).where(eq(users.id, userId))
+  }
+
+  // Clear the tracking array
+  createdTestUsers.length = 0
 }

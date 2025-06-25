@@ -7,7 +7,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { PhotoMedia } from '../lib/google/places.js'
 import { getPlaceDetails, getPlacePhotos } from '../lib/google/places.js'
-import { normalizePlaceForResponse, type NormalizedListInfo } from './places.utils.js'
+import { normalizePlaceForResponse, type NormalizedListInfo } from '../lib/places.utils.js'
 
 const PlaceIdParamSchema = z.object({
   id: z.string().min(1),
@@ -21,7 +21,6 @@ placesDetailsRoutes.get('/:id', zValidator('param', PlaceIdParamSchema), async (
   if (!user) {
     return c.json({ error: 'Unauthorized' }, 401)
   }
-
 
   const { id: googleMapsIdOrDbId } = c.req.valid('param')
   const userId = c.get('userId')
