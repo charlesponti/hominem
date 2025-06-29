@@ -1,25 +1,25 @@
 import { useApiClient } from '@hominem/ui'
-import type { Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { redirect } from 'react-router'
 import { RouteLink } from '~/components/route-link'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
-import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 import { getServerSession } from '~/lib/supabase/server'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { trpc } from '~/lib/trpc'
 import type { Route } from './+types/account'
 
 export async function loader(args: Route.LoaderArgs) {
@@ -42,7 +42,7 @@ export default function AccountPage({ loaderData }: Route.ComponentProps) {
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
-  const { accountsMap } = useFinanceAccounts()
+  const { accountsMap } = useFinanceAccountsWithMap()
   const { transactions } = useFinanceTransactions()
 
   const handleLogout = async () => {
@@ -67,7 +67,6 @@ export default function AccountPage({ loaderData }: Route.ComponentProps) {
     const csvRows = [
       headers.join(','),
       ...transactions.map((tx) => {
-        const typedTx: FinanceTransaction = tx as FinanceTransaction;
         const account = accountsMap.get(tx.accountId)
         return [
           tx.date,

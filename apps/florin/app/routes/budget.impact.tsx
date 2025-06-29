@@ -3,13 +3,13 @@
 import { AlertTriangle, Target, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+    Area,
+    AreaChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from 'recharts'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
@@ -17,18 +17,18 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '~/components/ui/select'
 import { formatCurrency } from '~/lib/finance.utils'
-import { useBudgetCategories, usePersonalBudgetCalculation } from '~/lib/hooks/use-budget-data'
+import { trpc } from '~/lib/trpc'
 
 const BudgetImpactCalculator = () => {
-  const { categories } = useBudgetCategories()
-  const { calculateBudget, data: budgetData } = usePersonalBudgetCalculation()
+  const budgetCategories = trpc.finance.budget.categories.list.useQuery()
+  const budgetCalculateMutation = trpc.finance.budget.calculate.useMutation()
 
   const [monthlyIncome, setMonthlyIncome] = useState(5000)
   const [currentSavings, setCurrentSavings] = useState(1000)
@@ -41,16 +41,16 @@ const BudgetImpactCalculator = () => {
 
   // Get actual budget data if available
   const actualIncome =
-    categories
+    budgetCategories.data
       ?.filter((cat) => cat.type === 'income')
       .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0
 
   const actualExpenses =
-    categories
+    budgetCategories.data
       ?.filter((cat) => cat.type === 'expense')
       .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0
 
-  const hasActualBudget = categories && categories.length > 0 && actualIncome > 0
+  const hasActualBudget = budgetCategories.data && budgetCategories.data.length > 0 && actualIncome > 0
 
   // Use actual budget data if enabled and available
   const effectiveIncome = useActualBudget && hasActualBudget ? actualIncome : monthlyIncome

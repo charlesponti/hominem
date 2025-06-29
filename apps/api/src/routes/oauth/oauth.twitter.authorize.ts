@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { randomUUID } from 'node:crypto'
-import { env } from '../lib/env.js'
-import { TWITTER_SCOPES } from '../lib/twitter-tokens.js'
-import { generateCodeChallenge, generateCodeVerifier, pkceStore } from './oauth.twitter.utils.js'
+import { env } from '../../lib/env.js'
+import { generateCodeChallenge, generateCodeVerifier, pkceStore } from '../../lib/oauth.twitter.utils.js'
+import { TWITTER_SCOPES } from '../../lib/twitter-tokens.js'
 
 // Twitter OAuth configuration
 const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID

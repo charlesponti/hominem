@@ -108,27 +108,34 @@ export const accountsRouter = router({
     // Get all finance accounts with institution and Plaid connection info
     const allAccounts = await db
       .select({
+        // Core FinanceAccount fields
         id: financeAccounts.id,
+        userId: financeAccounts.userId,
         name: financeAccounts.name,
         type: financeAccounts.type,
         balance: financeAccounts.balance,
-        mask: financeAccounts.mask,
-        subtype: financeAccounts.subtype,
+        interestRate: financeAccounts.interestRate,
+        minimumPayment: financeAccounts.minimumPayment,
         institutionId: financeAccounts.institutionId,
+        plaidAccountId: financeAccounts.plaidAccountId,
         plaidItemId: financeAccounts.plaidItemId,
+        mask: financeAccounts.mask,
+        isoCurrencyCode: financeAccounts.isoCurrencyCode,
+        subtype: financeAccounts.subtype,
+        officialName: financeAccounts.officialName,
+        limit: financeAccounts.limit,
+        meta: financeAccounts.meta,
+        lastUpdated: financeAccounts.lastUpdated,
         createdAt: financeAccounts.createdAt,
         updatedAt: financeAccounts.updatedAt,
-        // Institution info from joined table
+        // Additional Plaid connection info
         institutionName: financialInstitutions.name,
         institutionLogo: financialInstitutions.logo,
-        // Plaid connection info
         isPlaidConnected: sql<boolean>`${financeAccounts.plaidItemId} IS NOT NULL`,
-        // Plaid connection status info
         plaidItemStatus: plaidItems.status,
         plaidItemError: plaidItems.error,
         plaidLastSyncedAt: plaidItems.lastSyncedAt,
         plaidItemInternalId: plaidItems.id,
-        // Get institution ID and name from Plaid item for connections
         plaidInstitutionId: plaidItems.institutionId,
         plaidInstitutionName: financialInstitutions.name,
       })

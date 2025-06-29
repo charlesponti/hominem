@@ -2,7 +2,7 @@ import { db } from '@hominem/utils/db'
 import { account } from '@hominem/utils/schema'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { isTokenExpired } from '../lib/twitter-tokens.js'
+import { isTokenExpired } from '../../lib/twitter-tokens.js'
 
 export const oauthTwitterDebugRoutes = new Hono()
 

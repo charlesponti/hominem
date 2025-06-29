@@ -1,27 +1,26 @@
 import { useIsMobile } from '@hominem/ui'
-import type { BudgetCategory } from '@hominem/utils/types'
 import { useEffect, useId, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from '~/components/ui/card'
 import { Dialog, DialogContent } from '~/components/ui/dialog'
 import { Drawer, DrawerContent } from '~/components/ui/drawer'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '~/components/ui/select'
-import { useCreateBudgetCategory, useUpdateBudgetCategory } from '~/lib/hooks/use-budget-data'
+import { trpc, type RouterOutput } from '~/lib/trpc'
 
 // Define the structure for form data
 export interface BudgetCategoryFormData {
@@ -33,7 +32,7 @@ export interface BudgetCategoryFormData {
 
 // Define props for the component
 interface BudgetCategoryFormProps {
-  category?: BudgetCategory & { allocatedAmount?: number } // Optional: for editing an existing category, extend with allocatedAmount
+  category?: RouterOutput['finance']['budget']['categories']['list'][number] & { allocatedAmount?: number } // Optional: for editing an existing category, extend with allocatedAmount
   onSave: (data: BudgetCategoryFormData) => Promise<void>
   onCancel: () => void
   isLoading?: boolean
@@ -50,8 +49,8 @@ export function BudgetCategoryForm({
   const [allocatedAmount, setAllocatedAmount] = useState<number>(0)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const { createCategory, isLoading: isCreating, error: createError } = useCreateBudgetCategory()
-  const { updateCategory, isLoading: isUpdating, error: updateError } = useUpdateBudgetCategory()
+  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation()
+  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation()
 
   const nameId = useId()
   const typeId = useId()
@@ -79,14 +78,14 @@ export function BudgetCategoryForm({
     }
     try {
       if (category?.id) {
-        await updateCategory({
+        await updateCategoryMutation.mutateAsync({
           id: category.id,
           name,
           type,
           allocatedAmount,
         })
       } else {
-        await createCategory({
+        await createCategoryMutation.mutateAsync({
           name,
           type,
           allocatedAmount,
@@ -99,8 +98,8 @@ export function BudgetCategoryForm({
     }
   }
 
-  const isLoading = isLoadingProp || isCreating || isUpdating
-  const errorMsg = formError || createError?.message || updateError?.message
+  const isLoading = isLoadingProp || createCategoryMutation.isPending || updateCategoryMutation.isPending
+  const errorMsg = formError || createCategoryMutation.error?.message || updateCategoryMutation.error?.message
 
   return (
     <Card className="w-full max-w-md">

@@ -3,8 +3,8 @@ import fetch from 'node-fetch'
 import { writeFile } from 'node:fs'
 import * as path from 'node:path'
 
-import { env } from '@/lib/env'
 import type { PlaceInsert } from '@hominem/utils/types'
+import { env } from '../env.js'
 
 interface PlacePhotosResponse {
   photos?: places_v1.Schema$GoogleMapsPlacesV1Photo[]
@@ -153,7 +153,7 @@ export const searchPlaces = async ({
   radius: number
 }): Promise<PlaceInsert[]> => {
   // Use direct HTTP request for Places API v1 searchText
-  const url = `https://places.googleapis.com/v1/places:searchText?key=${process.env.GOOGLE_API_KEY}`
+  const url = `https://places.googleapis.com/v1/places:searchText?key=${env.GOOGLE_API_KEY}`
   const body = {
     textQuery: query,
     locationBias: {

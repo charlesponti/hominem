@@ -25,6 +25,7 @@
     "prepush": "pnpm run test",
     "prerelease": "pnpm run test",
     "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -f tsconfig.tsbuildinfo",
     "start:dev": "tsx apps/api/src/index.ts",
     "start:prod": "node apps/api/dist/index.js"

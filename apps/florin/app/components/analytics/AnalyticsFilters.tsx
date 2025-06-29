@@ -23,7 +23,7 @@ import { Switch } from '~/components/ui/switch'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 import { trpc } from '~/lib/trpc'
 
-type AccountsData = ReturnType<typeof useFinanceAccounts>['accounts']
+type AccountsData = ReturnType<typeof useFinanceAccounts>['data']
 
 interface AnalyticsFiltersProps {
   dateFrom: Date | undefined
@@ -101,7 +101,7 @@ function FilterChips({
     })
   }
   if (selectedAccount && selectedAccount !== 'all') {
-    const accountLabel = accounts.find((a) => a.id === selectedAccount)?.name || 'Account'
+    const accountLabel = accounts?.find((a) => a.id === selectedAccount)?.name || 'Account'
     chips.push({
       key: 'account',
       label: accountLabel,
@@ -184,11 +184,11 @@ export function AnalyticsFilters({
   compareToPrevious,
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
-  const { accounts, isLoading: accountsLoading } = useFinanceAccounts()
+  const accountsQuery = useFinanceAccounts()
   const { data: categories = [], isLoading: categoriesLoading } =
     trpc.finance.categories.list.useQuery()
 
-  const isLoading = accountsLoading || categoriesLoading
+  const isLoading = accountsQuery.isLoading || categoriesLoading
   const dateFromId = useId()
   const dateToId = useId()
   const accountId = useId()
@@ -198,7 +198,7 @@ export function AnalyticsFilters({
   const compareToPreviousId = useId()
 
   // Ensure we have valid data even during loading
-  const safeAccounts = accounts || []
+  const safeAccounts = accountsQuery.data || []
   const safeCategories =
     categories
       .map((category) => ({

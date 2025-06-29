@@ -35,6 +35,9 @@
         "^build"
       ]
     },
+    "typecheck": {
+      "outputs": []
+    },
     "lint": {
       "outputs": []
     },

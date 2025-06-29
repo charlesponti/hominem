@@ -8,7 +8,7 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "composite": true,
-    "declaration": true,
+    "declaration": false,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {

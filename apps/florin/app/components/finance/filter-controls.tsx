@@ -3,23 +3,23 @@ import { useEffect, useRef } from 'react'
 import { DatePicker } from '~/components/date-picker'
 import { Button } from '~/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '~/components/ui/select'
 import type { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 
 interface FilterControlsProps {
-  accounts: ReturnType<typeof useFinanceAccounts>['accounts']
+  accounts: ReturnType<typeof useFinanceAccounts>['data']
   accountsLoading: boolean
   selectedAccount: string
   setSelectedAccount: (value: string) => void
@@ -90,7 +90,7 @@ export function FilterControls({
                   Loading accounts...
                 </SelectItem>
               ) : (
-                accounts.map((account) => (
+                (accounts || []).map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.name}
                   </SelectItem>

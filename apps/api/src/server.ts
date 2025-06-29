@@ -16,43 +16,18 @@ import { rateLimit, rateLimitIp } from './middleware/rate-limit.js'
 import { supabaseMiddleware } from './middleware/supabase.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { componentsRoutes } from './routes/components/index.js'
-import { content } from './routes/content/index.js'
 import { financeRoutes } from './routes/finance/index.js'
 import { plaidRoutes } from './routes/finance/plaid/index.js'
 import { goalsRoutes } from './routes/goals.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
 import { listsRoutes } from './routes/lists.js'
-import { locationRoutes } from './routes/location.js'
 import { oauthRoutes } from './routes/oauth/index.js'
-import { placesRoutes } from './routes/places/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
 import { statusRoutes } from './routes/status.js'
 import { appRouter } from './routes/trpc.js'
 import { userRoutes } from './routes/user/index.js'
 import { vectorRoutes } from './routes/vector.js'
-
-// TODO: Import other routes as they get converted to Hono
-// import adminPlugin from './plugins/admin.js'
-// import emailPlugin from './plugins/email.js'
-// import { aiRoutes } from './routes/ai/index.js'
-// import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
-// import { careerRoutes } from './routes/career.js'
-// import { companyRoutes } from './routes/company.js'
-// import { contentStrategiesRoutes } from './routes/content-strategies.router.js'
-// import { financeRoutes } from './routes/finance/finance.router.js'
-// import { plaidRoutes } from './routes/finance/plaid.router.js'
-// import invitesPlugin from './routes/invites.router.js'
-// import listsPlugin from './routes/lists.router.js'
-// import { contentRoutes } from './routes/notes.js'
-// import oauthPlugin from './routes/oauth/index.js'
-// import { personalFinanceRoutes } from './routes/personal-finance.js'
-// import placesPlugin from './routes/places.router.js'
-// import possessionsPlugin from './routes/possessions.router.js'
-// import statusPlugin from './routes/status.js'
-// import usersPlugin from './routes/user.router.js'
-// import { vectorRoutes } from './routes/vector.router.js'
-// import webSocketPlugin from './websocket/index.js'
 
 export interface AppEnv {
   Bindings: Record<string, unknown>
@@ -122,13 +97,10 @@ export function createServer(): Hono<AppEnv> {
   app.route('/api/finance/plaid', plaidRoutes)
   app.route('/api/finance', financeRoutes)
   app.route('/api/lists', listsRoutes)
-  app.route('/api/location', locationRoutes)
   app.route('/api/possessions', possessionsRoutes)
   app.route('/api/vectors', vectorRoutes)
   app.route('/api/invites', invitesRoutes)
   app.route('/api/user', userRoutes)
-  app.route('/api/places', placesRoutes)
-  app.route('/api/content', content)
   app.route('/api/ai', aiRoutes)
   app.route('/api/oauth', oauthRoutes)
   app.route('/api/goals', goalsRoutes)

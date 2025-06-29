@@ -1,7 +1,13 @@
-import { QueryClient } from '@tanstack/react-query'
-import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
-import type { AppRouter } from '../../../../packages/types/trpc'
-import { createClient } from './supabase/client'
+import { QueryClient } from '@tanstack/react-query';
+import { createTRPCReact, httpBatchLink } from '@trpc/react-query';
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+import type { AppRouter } from '../../../../packages/types/trpc';
+import { createClient } from './supabase/client';
+
+export type RouterInput = inferRouterInputs<AppRouter>;
+export type RouterOutput = inferRouterOutputs<AppRouter>;
+
+export type SpendingTimeSeries = RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number];
 
 export const trpc = createTRPCReact<AppRouter>()
 

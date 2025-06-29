@@ -1,25 +1,18 @@
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import {
-  BudgetCategoriesGrid,
-  BudgetCategoriesHeader,
-  BudgetCategoryFormDialog,
-  BudgetSummaryCards,
-  DeleteCategoryDialog,
-  EmptyState,
-  SetupFromTransactionsDialog,
-  type DisplayBudgetCategory,
+    BudgetCategoriesGrid,
+    BudgetCategoriesHeader,
+    BudgetCategoryFormDialog,
+    BudgetSummaryCards,
+    DeleteCategoryDialog,
+    EmptyState,
+    SetupFromTransactionsDialog,
+    type DisplayBudgetCategory,
 } from '~/components/budget-categories'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
-import {
-  useBudgetCategories,
-  useBulkCreateFromTransactions,
-  useCreateBudgetCategory,
-  useDeleteBudgetCategory,
-  useTransactionCategories,
-  useUpdateBudgetCategory,
-} from '~/lib/hooks/use-budget-data'
+import { trpc } from '~/lib/trpc'
 
 const categoryColors = [
   'bg-blue-500',
@@ -34,13 +27,13 @@ const categoryColors = [
 
 export default function BudgetCategories() {
   // Database hooks
-  const { categories: dbCategories, isLoading, error, refetch } = useBudgetCategories()
-  const { createCategory, isLoading: isCreating } = useCreateBudgetCategory()
-  const { updateCategory, isLoading: isUpdating } = useUpdateBudgetCategory()
-  const { deleteCategory, isLoading: isDeleting } = useDeleteBudgetCategory()
-  const { categories: transactionCategories, isLoading: isLoadingTransactionCategories } =
-    useTransactionCategories()
-  const { bulkCreate, isLoading: isBulkCreating } = useBulkCreateFromTransactions()
+  const { data: dbCategories, isLoading, error, refetch } = trpc.finance.budget.categories.list.useQuery()
+  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation()
+  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation()
+  const deleteCategoryMutation = trpc.finance.budget.categories.delete.useMutation()
+  const { data: transactionCategories, isLoading: isLoadingTransactionCategories } =
+    trpc.finance.budget.transactionCategories.useQuery()
+  const bulkCreateMutation = trpc.finance.budget.bulkCreateFromTransactions.useMutation()
 
   // Component state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -82,11 +75,10 @@ export default function BudgetCategories() {
     if (!formData.name || !formData.budgetAmount) return
 
     try {
-      await createCategory({
+      await createCategoryMutation.mutateAsync({
         name: formData.name,
         type: formData.type,
         allocatedAmount: Number.parseFloat(formData.budgetAmount),
-        averageMonthlyExpense: formData.budgetAmount,
       })
       setIsCreateDialogOpen(false)
       resetForm()
@@ -101,7 +93,7 @@ export default function BudgetCategories() {
     if (!editingCategory || !formData.name || !formData.budgetAmount) return
 
     try {
-      await updateCategory({
+      await updateCategoryMutation.mutateAsync({
         id: editingCategory.id,
         name: formData.name,
         type: formData.type,
@@ -119,7 +111,7 @@ export default function BudgetCategories() {
     if (!deletingCategory) return
 
     try {
-      await deleteCategory(deletingCategory.id)
+      await deleteCategoryMutation.mutateAsync({ id: deletingCategory.id })
       setDeletingCategory(null)
       refetch() // Refresh the data
     } catch (error) {
@@ -151,7 +143,7 @@ export default function BudgetCategories() {
         }
       })
 
-      const result = await bulkCreate({ categories: categoriesToCreate })
+      const result = await bulkCreateMutation.mutateAsync({ categories: categoriesToCreate })
 
       setIsSetupDialogOpen(false)
       setSelectedTransactionCategories(new Set())
@@ -172,7 +164,7 @@ export default function BudgetCategories() {
   }
 
   const handleSelectAll = () => {
-    setSelectedTransactionCategories(new Set(transactionCategories?.map((tc) => tc.name) || []))
+    setSelectedTransactionCategories(new Set(transactionCategories?.map((tc: any) => tc.name) || []))
   }
 
   const handleDeselectAll = () => {
@@ -258,7 +250,7 @@ export default function BudgetCategories() {
         }}
         formData={formData}
         onFormDataChange={setFormData}
-        isLoading={isCreating || isUpdating}
+        isLoading={createCategoryMutation.isPending || updateCategoryMutation.isPending}
         categoryColors={categoryColors}
       />
 
@@ -267,7 +259,7 @@ export default function BudgetCategories() {
         deletingCategory={deletingCategory}
         onOpenChange={() => setDeletingCategory(null)}
         onDelete={handleDeleteCategory}
-        isLoading={isDeleting}
+        isLoading={deleteCategoryMutation.isPending}
       />
 
       {/* Setup from Transactions Dialog */}
@@ -285,7 +277,7 @@ export default function BudgetCategories() {
           setIsSetupDialogOpen(false)
           setSelectedTransactionCategories(new Set())
         }}
-        isSubmitting={isBulkCreating}
+        isSubmitting={bulkCreateMutation.isPending}
       />
     </div>
   )

@@ -27,7 +27,8 @@
         "./app/*"
       ]
     },
-    "composite": true,
+    "declaration": false,
+    "composite": false,
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,

@@ -1,5 +1,3 @@
-import type { FinanceAccount } from '@hominem/utils/types'
-import { useQueryClient } from '@tanstack/react-query'
 import { LinkIcon, UnlinkIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '~/components/ui/badge'
@@ -21,9 +19,10 @@ import {
 import { useFinancialInstitutions } from '~/lib/hooks/use-financial-institutions'
 import { useLinkAccountToInstitution, useUnlinkAccountFromInstitution } from '~/lib/hooks/use-plaid'
 import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution'
+import { trpc, type RouterOutput } from '~/lib/trpc'
 
 interface AccountConnectionDialogProps {
-  account: FinanceAccount
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
   trigger?: React.ReactNode
 }
 
@@ -31,17 +30,15 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
   const [open, setOpen] = useState(false)
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>('')
   const [selectedPlaidAccountId, setSelectedPlaidAccountId] = useState<string>('')
-  const queryClient = useQueryClient()
 
-  const { institutions, isLoading: institutionsLoading } = useFinancialInstitutions()
-  const { accounts: plaidAccounts, isLoading: plaidAccountsLoading } =
-    usePlaidAccountsByInstitution(selectedInstitutionId)
+  const institutionsQuery = useFinancialInstitutions()
+  const plaidAccountsQuery = usePlaidAccountsByInstitution(selectedInstitutionId)
   const linkMutation = useLinkAccountToInstitution()
   const unlinkMutation = useUnlinkAccountFromInstitution()
 
   const isLinked = !!account.institutionId
-  const linkedInstitution = institutions?.find((inst: any) => inst.id === account.institutionId)
-  const linkedPlaidAccount = plaidAccounts.find(
+  const linkedInstitution = institutionsQuery.data?.find((inst: any) => inst.id === account.institutionId)
+  const linkedPlaidAccount = plaidAccountsQuery.data?.find(
     (plaidAcc: any) => plaidAcc.id === account.plaidItemId
   )
 
@@ -54,7 +51,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
     if (!selectedInstitutionId) return
 
     try {
-      await linkMutation.linkAccount.mutateAsync({
+      await linkMutation.mutateAsync({
         accountId: account.id,
         institutionId: selectedInstitutionId,
         plaidItemId:
@@ -72,7 +69,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
 
   const handleUnlink = async () => {
     try {
-      await unlinkMutation.unlinkAccount.mutateAsync(account.id)
+      await unlinkMutation.mutateAsync({ accountId: account.id })
       setOpen(false)
     } catch (error) {
       console.error('Failed to unlink account:', error)
@@ -143,10 +140,10 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                   variant="destructive"
                   size="sm"
                   onClick={handleUnlink}
-                  disabled={unlinkMutation.isLoading}
+                  disabled={unlinkMutation.isPending}
                   className="w-full"
                 >
-                  {unlinkMutation.isLoading ? 'Disconnecting...' : 'Disconnect'}
+                  {unlinkMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
                 </Button>
               </div>
             </div>
@@ -159,12 +156,12 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                     <SelectValue placeholder="Choose a financial institution" />
                   </SelectTrigger>
                   <SelectContent>
-                    {institutionsLoading ? (
+                    {institutionsQuery.isLoading ? (
                       <SelectItem value="loading" disabled>
                         Loading institutions...
                       </SelectItem>
                     ) : (
-                      institutions?.map((institution: any) => (
+                      institutionsQuery.data?.map((institution: any) => (
                         <SelectItem key={institution.id} value={institution.id}>
                           {institution.name}
                         </SelectItem>
@@ -183,16 +180,16 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No specific Plaid account</SelectItem>
-                      {plaidAccountsLoading ? (
+                      {plaidAccountsQuery.isLoading ? (
                         <SelectItem value="loading" disabled>
                           Loading Plaid accounts...
                         </SelectItem>
-                      ) : plaidAccounts.length === 0 ? (
+                      ) : (plaidAccountsQuery.data || []).length === 0 ? (
                         <SelectItem value="no-accounts" disabled>
                           No Plaid accounts found for this institution
                         </SelectItem>
                       ) : (
-                        plaidAccounts.map((plaidAccount: any) => (
+                        (plaidAccountsQuery.data || []).map((plaidAccount: any) => (
                           <SelectItem key={plaidAccount.id} value={plaidAccount.id}>
                             <div className="flex flex-col">
                               <span>
@@ -219,9 +216,9 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
               <div className="flex justify-end">
                 <Button
                   onClick={handleLink}
-                  disabled={!selectedInstitutionId || linkMutation.isLoading}
+                  disabled={!selectedInstitutionId || linkMutation.isPending}
                 >
-                  {linkMutation.isLoading ? 'Connecting...' : 'Connect Account'}
+                  {linkMutation.isPending ? 'Connecting...' : 'Connect Account'}
                 </Button>
               </div>
             </div>

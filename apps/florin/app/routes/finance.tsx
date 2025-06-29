@@ -3,10 +3,10 @@
 import { RefreshCcw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  useFinanceAccounts,
-  useFinanceTransactions,
-  type FilterArgs,
-  type SortOption,
+    useFinanceAccountsWithMap,
+    useFinanceTransactions,
+    type FilterArgs,
+    type SortOption,
 } from '~/lib/hooks/use-finance-data'
 
 import { FilterChip } from '~/components/finance/filter-chip'
@@ -45,7 +45,7 @@ export default function TransactionsPage() {
     isLoading: accountsLoading,
     error: accountsError,
     refetch: refetchAccounts,
-  } = useFinanceAccounts()
+  } = useFinanceAccountsWithMap()
 
   const {
     transactions,

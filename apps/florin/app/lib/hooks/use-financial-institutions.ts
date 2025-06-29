@@ -1,17 +1,4 @@
 import { trpc } from '~/lib/trpc'
 
-export function useFinancialInstitutions() {
-  const {
-    data: institutions = [],
-    isLoading,
-    error,
-    refetch,
-  } = trpc.finance.institutions.list.useQuery()
-
-  return {
-    institutions: institutions || [],
-    isLoading,
-    error,
-    refetch,
-  }
-}
+// Export tRPC hook directly since this was just a wrapper
+export const useFinancialInstitutions = () => trpc.finance.institutions.list.useQuery()

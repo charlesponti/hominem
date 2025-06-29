@@ -16,108 +16,44 @@ export interface FilterArgs {
   description?: string
 }
 
-export function useFinanceAccounts() {
-  const {
-    data: accounts = [],
-    isLoading,
-    error,
-    refetch,
-  } = trpc.finance.accounts.list.useQuery({
-    includeInactive: false,
-  })
+// Export tRPC hooks directly for simple queries
+export const useFinanceAccounts = () => trpc.finance.accounts.list.useQuery({ includeInactive: false })
 
+// Hook that adds value by transforming dates and creating accounts map
+export function useFinanceAccountsWithMap() {
+  const accountsQuery = useFinanceAccounts()
+  
   // Transform accounts to convert string dates to Date objects
   const transformedAccounts = useMemo(() => {
-    return (accounts || []).map((account) => ({
+    return (accountsQuery.data || []).map((account) => ({
       ...account,
       createdAt: new Date(account.createdAt),
       updatedAt: new Date(account.updatedAt),
       lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
     }))
-  }, [accounts])
+  }, [accountsQuery.data])
 
   const accountsMap = useMemo(() => {
     return new Map(transformedAccounts.map((account) => [account.id, account]))
   }, [transformedAccounts])
 
   return {
+    ...accountsQuery,
     accounts: transformedAccounts,
     accountsMap,
-    isLoading,
-    error,
-    refetch,
   }
 }
 
-export function useFinanceAccountSummary() {
-  // For now, we'll use the basic accounts list since the summary endpoint isn't implemented in tRPC yet
-  // This can be enhanced later when we add the summary endpoint to the tRPC router
-  const {
-    data: accounts = [],
-    isLoading,
-    error,
-    refetch,
-  } = trpc.finance.accounts.list.useQuery({
-    includeInactive: false,
-  })
-
-  // Transform the data to match the expected format
-  const accountSummary = useMemo(() => {
-    return accounts.map((account) => ({
-      ...account,
-      createdAt: new Date(account.createdAt),
-      updatedAt: new Date(account.updatedAt),
-      lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
-      transactions: [], // We'll need to fetch transactions separately or add a summary endpoint
-    }))
-  }, [accounts])
-
-  return {
-    accountSummary,
-    isLoading,
-    error,
-    refetch,
-  }
-}
-
-// New unified hook that combines finance and Plaid account data
+// Hook that adds value by transforming data for unified view
 export function useAllAccounts() {
-  // For now, we'll use the basic accounts list
-  // This can be enhanced when we add Plaid integration to the tRPC router
-  const {
-    data: accounts = [],
-    isLoading,
-    error,
-    refetch,
-  } = trpc.finance.accounts.list.useQuery({
-    includeInactive: false,
-  })
-
-  // Transform the data to match the expected format
-  const transformedAccounts = useMemo(() => {
-    return accounts.map((account) => ({
-      ...account,
-      createdAt: new Date(account.createdAt),
-      updatedAt: new Date(account.updatedAt),
-      lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
-      transactions: [],
-      institutionName: undefined,
-      institutionLogo: undefined,
-      isPlaidConnected: false,
-      plaidItemStatus: undefined,
-      plaidItemError: null,
-      plaidLastSyncedAt: null,
-      plaidItemInternalId: undefined,
-      meta: account.meta || null, // Ensure meta is always present
-    }))
-  }, [accounts])
-
+  const allAccountsQuery = trpc.finance.accounts.all.useQuery()
+  
   return {
-    accounts: transformedAccounts,
-    connections: [], // We'll need to add this when we implement Plaid in tRPC
-    isLoading,
-    error,
-    refetch,
+    isLoading: allAccountsQuery.isLoading,
+    error: allAccountsQuery.error,
+    refetch: allAccountsQuery.refetch,
+    accounts: allAccountsQuery.data?.accounts || [],
+    connections: allAccountsQuery.data?.connections || [],
   }
 }
 
@@ -128,6 +64,7 @@ export interface UseFinanceTransactionsOptions {
   filters?: FilterArgs
 }
 
+// Hook that adds value through complex state management and data transformation
 export function useFinanceTransactions({
   initialLimit = 25,
   initialOffset = 0,

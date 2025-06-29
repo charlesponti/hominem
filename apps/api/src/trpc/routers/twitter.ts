@@ -1,11 +1,17 @@
 import { db } from '@hominem/utils/db'
+import { logger } from '@hominem/utils/logger'
 import { account, content } from '@hominem/utils/schema'
 import { TRPCError } from '@trpc/server'
 import { and, eq } from 'drizzle-orm'
+import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../../lib/env'
+import {
+  TwitterPostSchema,
+  type TwitterTweetResponse,
+  type TwitterTweetsResponse,
+} from '../../lib/oauth.twitter.utils'
 import { makeTwitterApiRequest, type TwitterAccount } from '../../lib/twitter-tokens'
-import type { TwitterTweetResponse } from '../../routes/oauth.twitter.utils'
 import { protectedProcedure, router } from '../index'
 
 // Input schemas
@@ -86,102 +92,225 @@ export const twitterRouter = router({
       return { success: true, message: 'Twitter account disconnected' }
     }),
 
-  // Post tweet
+  // Post a tweet
   post: protectedProcedure
-    .input(twitterPostSchema)
+    .input(TwitterPostSchema)
     .mutation(async ({ input, ctx }) => {
-      // Find user's Twitter account
-      const userAccount = await db
-        .select()
-        .from(account)
-        .where(and(eq(account.userId, ctx.userId), eq(account.provider, 'twitter')))
-
-      if (!userAccount.length) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'No Twitter account connected',
-        })
-      }
-
-      const twitterAccount = userAccount[0] as TwitterAccount
+      const userId = ctx.userId
+      const { text, contentId, saveAsContent } = input
 
       try {
-        // Post tweet to Twitter
+        // Find user's Twitter account
+        const userAccount = await db
+          .select()
+          .from(account)
+          .where(and(eq(account.userId, userId), eq(account.provider, 'twitter')))
+          .limit(1)
+
+        if (userAccount.length === 0) {
+          throw new Error('No Twitter account connected')
+        }
+
+        const twitterAccount = userAccount[0] as TwitterAccount
+
+        // Post the tweet using the utility function that handles token refresh automatically
         const tweetResponse = await makeTwitterApiRequest(
           twitterAccount,
           'https://api.twitter.com/2/tweets',
           {
             method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
-              text: input.text,
+              text,
             }),
           }
         )
 
         if (!tweetResponse.ok) {
-          const errorData = await tweetResponse.json() as { detail?: string }
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Twitter API error: ${errorData.detail || 'Unknown error'}`,
-          })
+          const errorData = await tweetResponse.json().catch(() => ({}))
+          console.error(tweetResponse)
+          logger.error(
+            {
+              status: tweetResponse.status,
+              statusText: tweetResponse.statusText,
+              error: errorData,
+              userId,
+              accountId: twitterAccount.id,
+              textLength: text.length,
+            },
+            'Failed to post tweet'
+          )
+          throw new Error(`Failed to post tweet: ${tweetResponse.status}`)
         }
 
         const tweetData = (await tweetResponse.json()) as TwitterTweetResponse
         const tweet = tweetData.data
 
-        // Save as content if requested
-        let savedContent = null
-        if (input.saveAsContent) {
-          const [savedContentRecord] = await db
-            .insert(content)
-            .values({
-              type: 'tweet',
-              title: `Tweet: ${input.text.substring(0, 50)}...`,
-              content: input.text,
-              userId: ctx.userId,
-              socialMediaMetadata: {
-                platform: 'twitter',
-                externalId: tweet.id,
-                url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
+        let contentRecord = null
+
+        // Save or update content record if requested
+        if (saveAsContent) {
+          const socialMediaMetadata = {
+            platform: 'twitter',
+            externalId: tweet.id,
+            url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
+            publishedAt: new Date().toISOString(),
+          }
+
+          if (contentId) {
+            // Update existing content
+            const updated = await db
+              .update(content)
+              .set({
+                socialMediaMetadata,
+                status: 'published',
                 publishedAt: new Date().toISOString(),
-              },
-            })
-            .returning()
-          savedContent = savedContentRecord
+                updatedAt: new Date().toISOString(),
+              })
+              .where(and(eq(content.id, contentId), eq(content.userId, userId)))
+              .returning()
+
+            contentRecord = updated[0] || null
+          } else {
+            // Create new content record
+            const newContent = await db
+              .insert(content)
+              .values({
+                id: randomUUID(),
+                type: 'tweet',
+                title: `Tweet - ${new Date().toLocaleDateString()}`,
+                content: text,
+                status: 'published',
+                socialMediaMetadata,
+                userId,
+                publishedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              })
+              .returning()
+
+            contentRecord = newContent[0]
+          }
         }
 
         return {
           success: true,
-          tweet: {
-            data: {
-              id: tweet.id,
-              text: tweet.text,
-              edit_history_tweet_ids: tweet.edit_history_tweet_ids,
-            },
-          },
-          content: savedContent,
+          tweet: tweetData,
+          content: contentRecord,
         }
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error
-        }
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to post tweet',
-        })
+        console.error('Failed to post tweet:', error)
+        throw new Error('Failed to post tweet')
       }
     }),
 
-  // Sync tweets (placeholder for future implementation)
-  sync: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      // This would sync tweets from Twitter to the local database
-      // For now, return a placeholder response
+  // Sync user's tweets from Twitter
+  sync: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.userId
+
+    try {
+      // Find user's Twitter account
+      const userAccount = await db
+        .select()
+        .from(account)
+        .where(and(eq(account.userId, userId), eq(account.provider, 'twitter')))
+        .limit(1)
+
+      if (userAccount.length === 0) {
+        throw new Error('No Twitter account connected')
+      }
+
+      const twitterAccount = userAccount[0] as TwitterAccount
+
+      // Fetch user's recent tweets (last 50)
+      const tweetsResponse = await makeTwitterApiRequest(
+        twitterAccount,
+        `https://api.twitter.com/2/users/${twitterAccount.providerAccountId}/tweets?max_results=50&tweet.fields=created_at,public_metrics,conversation_id,in_reply_to_user_id`,
+        {
+          method: 'GET',
+        }
+      )
+
+      if (!tweetsResponse.ok) {
+        const errorData = await tweetsResponse.json().catch(() => ({}))
+        console.error('Failed to fetch tweets from Twitter', {
+          status: tweetsResponse.status,
+          error: errorData,
+        })
+        throw new Error(`Failed to fetch tweets: ${tweetsResponse.status}`)
+      }
+
+      const tweetsData = (await tweetsResponse.json()) as TwitterTweetsResponse
+
+      if (!tweetsData.data || tweetsData.data.length === 0) {
+        return {
+          success: true,
+          message: 'No tweets found to sync',
+          synced: 0,
+        }
+      }
+
+      // Check which tweets already exist in our database
+      const existingTweets = await db
+        .select({ socialMetadata: content.socialMediaMetadata })
+        .from(content)
+        .where(and(eq(content.userId, userId), eq(content.type, 'tweet')))
+
+      const existingTweetIds = new Set(
+        existingTweets
+          .map((row) => {
+            const metadata = row.socialMetadata as { externalId?: string } | null
+            return metadata?.externalId
+          })
+          .filter(Boolean)
+      )
+
+      // Insert new tweets as content
+      const newTweets = tweetsData.data.filter((tweet) => !existingTweetIds.has(tweet.id))
+      const contentToInsert = newTweets.map((tweet) => ({
+        id: randomUUID(),
+        type: 'tweet' as const,
+        title: `Tweet - ${new Date(tweet.created_at).toLocaleDateString()}`,
+        content: tweet.text,
+        status: 'published' as const,
+        userId,
+        socialMediaMetadata: {
+          platform: 'twitter',
+          externalId: tweet.id,
+          url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
+          publishedAt: tweet.created_at,
+          metrics: tweet.public_metrics
+            ? {
+                reposts: tweet.public_metrics.retweet_count,
+                likes: tweet.public_metrics.like_count,
+                replies: tweet.public_metrics.reply_count,
+                views: tweet.public_metrics.impression_count,
+              }
+            : undefined,
+          inReplyTo: tweet.in_reply_to_user_id,
+        },
+        publishedAt: tweet.created_at,
+        createdAt: tweet.created_at,
+        updatedAt: new Date().toISOString(),
+      }))
+
+      let insertedCount = 0
+      if (contentToInsert.length > 0) {
+        await db.insert(content).values(contentToInsert)
+        insertedCount = contentToInsert.length
+      }
+
       return {
         success: true,
-        message: 'Tweet sync completed',
-        synced: 0,
-        total: 0,
+        message: `Successfully synced ${insertedCount} new tweets`,
+        synced: insertedCount,
+        total: tweetsData.data.length,
       }
-    }),
+    } catch (error) {
+      console.error('Failed to sync tweets:', error)
+      throw new Error('Failed to sync tweets')
+    }
+  }),
 }) 

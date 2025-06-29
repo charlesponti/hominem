@@ -3,18 +3,18 @@
 import { AlertTriangle, DollarSign, Target, TrendingDown, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from 'recharts'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -22,31 +22,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Progress } from '~/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { formatCurrency } from '~/lib/finance.utils'
-import {
-  useBudgetCategories,
-  useBudgetVsActual,
-  usePersonalBudgetCalculation,
-} from '~/lib/hooks/use-budget-data'
+import { trpc } from '~/lib/trpc'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
 export default function BudgetDashboard() {
-  const { categories, isLoading: categoriesLoading } = useBudgetCategories()
-  const {
-    data: budgetData,
-    isLoading: calculationLoading,
-  } = usePersonalBudgetCalculation()
-  const { budgetVsActual, isLoading: comparisonLoading } = useBudgetVsActual()
+  const budgetCategories = trpc.finance.budget.categories.list.useQuery()
+  const budgetCalculateMutation = trpc.finance.budget.calculate.useMutation()
   const [selectedTab, setSelectedTab] = useState('overview')
 
   // Calculate totals from categories
   const totalIncome =
-    categories
+    budgetCategories.data
       ?.filter((cat) => cat.type === 'income')
       .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0
 
   const totalExpenses =
-    categories
+    budgetCategories.data
       ?.filter((cat) => cat.type === 'expense')
       .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0
 
@@ -55,16 +47,16 @@ export default function BudgetDashboard() {
 
   // Auto-calculate budget on component mount if categories exist
   useState(() => {
-    if (categories && categories.length > 0 && !budgetData) {
-      calculateBudget()
+    if (budgetCategories.data && budgetCategories.data.length > 0 && !budgetCalculateMutation.data) {
+      budgetCalculateMutation.mutateAsync()
     }
   })
 
   const handleRecalculate = () => {
-    calculateBudget(undefined)
+    budgetCalculateMutation.mutateAsync(undefined)
   }
 
-  if (categoriesLoading) {
+  if (budgetCategories.isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -75,7 +67,7 @@ export default function BudgetDashboard() {
     )
   }
 
-  if (!categories || categories.length === 0) {
+  if (!budgetCategories.data || budgetCategories.data.length === 0) {
     return (
       <div className="text-center py-12">
         <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -90,8 +82,8 @@ export default function BudgetDashboard() {
     )
   }
 
-  const incomeCategories = categories.filter((cat) => cat.type === 'income')
-  const expenseCategories = categories.filter((cat) => cat.type === 'expense')
+  const incomeCategories = budgetCategories.data.filter((cat) => cat.type === 'income')
+  const expenseCategories = budgetCategories.data.filter((cat) => cat.type === 'expense')
 
   // Prepare chart data
   const categoryData = expenseCategories.map((cat, index) => ({
@@ -101,7 +93,7 @@ export default function BudgetDashboard() {
   }))
 
   const projectionData =
-    budgetData?.projections.slice(0, 6).map((proj: { month: number; totalSaved: number }) => ({
+    budgetCalculateMutation.data?.projections.slice(0, 6).map((proj: { month: number; totalSaved: number }) => ({
       month: `Month ${proj.month}`,
       projected: proj.totalSaved,
       baseline: projectedSurplus * proj.month,
@@ -111,8 +103,8 @@ export default function BudgetDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Budget Dashboard</h1>
-        <Button onClick={handleRecalculate} disabled={calculationLoading}>
-          {calculationLoading ? 'Calculating...' : 'Recalculate'}
+        <Button onClick={handleRecalculate} disabled={budgetCalculateMutation.isPending}>
+          {budgetCalculateMutation.isPending ? 'Calculating...' : 'Recalculate'}
         </Button>
       </div>
 
@@ -300,7 +292,7 @@ export default function BudgetDashboard() {
         </TabsContent>
 
         <TabsContent value="projections" className="space-y-6">
-          {budgetData && (
+          {budgetCalculateMutation.data && (
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -337,33 +329,33 @@ export default function BudgetDashboard() {
                       <div className="flex justify-between">
                         <span>Monthly Income:</span>
                         <span className="font-semibold text-green-600">
-                          {formatCurrency(budgetData.income)}
+                          {formatCurrency(budgetCalculateMutation.data.income)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Total Expenses:</span>
                         <span className="font-semibold text-blue-600">
-                          {formatCurrency(budgetData.totalExpenses)}
+                          {formatCurrency(budgetCalculateMutation.data.totalExpenses)}
                         </span>
                       </div>
                       <div className="flex justify-between border-t pt-2">
                         <span>Monthly Surplus:</span>
                         <span
-                          className={`font-bold ${budgetData.surplus >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                          className={`font-bold ${budgetCalculateMutation.data.surplus >= 0 ? 'text-green-600' : 'text-red-600'}`}
                         >
-                          {formatCurrency(budgetData.surplus)}
+                          {formatCurrency(budgetCalculateMutation.data.surplus)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Savings Rate:</span>
-                        <span className="font-semibold">{budgetData.savingsRate.toFixed(1)}%</span>
+                        <span className="font-semibold">{budgetCalculateMutation.data.savingsRate.toFixed(1)}%</span>
                       </div>
                     </div>
 
                     <div className="mt-6">
                       <h4 className="font-semibold mb-2">12-Month Outlook</h4>
                       <p className="text-sm text-muted-foreground">
-                        At current rate: {formatCurrency(budgetData.surplus * 12)} saved annually
+                        At current rate: {formatCurrency(budgetCalculateMutation.data.surplus * 12)} saved annually
                       </p>
                     </div>
                   </div>
@@ -374,74 +366,13 @@ export default function BudgetDashboard() {
         </TabsContent>
 
         <TabsContent value="tracking" className="space-y-6">
-          {!comparisonLoading && budgetVsActual && budgetVsActual.length > 0 ? (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Budget vs Actual Spending</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {budgetVsActual.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">{item.name}</span>
-                          <Badge
-                            variant={
-                              item.status === 'over'
-                                ? 'destructive'
-                                : item.status === 'warning'
-                                  ? 'default'
-                                  : 'secondary'
-                            }
-                          >
-                            {item.status === 'over'
-                              ? 'Over Budget'
-                              : item.status === 'warning'
-                                ? 'Warning'
-                                : 'On Track'}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-muted-foreground">Budgeted</p>
-                            <p className="font-semibold">{formatCurrency(item.budgetedAmount)}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Actual</p>
-                            <p className="font-semibold">{formatCurrency(item.actualAmount)}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Variance</p>
-                            <p
-                              className={`font-semibold ${item.variance >= 0 ? 'text-red-600' : 'text-green-600'}`}
-                            >
-                              {formatCurrency(Math.abs(item.variance))}{' '}
-                              {item.variance >= 0 ? 'over' : 'under'}
-                            </p>
-                          </div>
-                        </div>
-                        <Progress value={Math.min(100, item.percentageUsed)} className="mt-2" />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {item.percentageUsed.toFixed(1)}% of budget used
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-8">
-                <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Spending Data</h3>
-                <p className="text-gray-600">
-                  Import transactions to see budget vs actual comparisons.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          <div className="text-center py-12">
+            <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Budget vs Actual Tracking</h3>
+            <p className="text-gray-600 mb-4">
+              This feature is coming soon. You'll be able to compare your budgeted amounts with actual spending.
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

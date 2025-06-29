@@ -30,13 +30,8 @@ export function PlaidLink({
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 
-  const {
-    createLinkToken,
-    isLoading: isCreatingToken,
-    error: createTokenError,
-  } = useCreateLinkToken()
-
-  const { exchangeToken, isLoading: isExchanging, error: exchangeError } = useExchangeToken()
+  const createLinkTokenMutation = useCreateLinkToken()
+  const exchangeTokenMutation = useExchangeToken()
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -56,9 +51,9 @@ export function PlaidLink({
   // Initialize link token only when user clicks the button
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const initializeLinkToken = useCallback(() => {
-    if (!userId || linkToken || isCreatingToken) return
+    if (!userId || linkToken || createLinkTokenMutation.isPending) return
 
-    createLinkToken.mutate(undefined, {
+    createLinkTokenMutation.mutate(undefined, {
       onSuccess: (result) => {
         if (result.success) {
           setLinkToken(result.linkToken)
@@ -69,7 +64,7 @@ export function PlaidLink({
         onError?.(error instanceof Error ? error : new Error('Failed to initialize Plaid Link'))
       },
     })
-  }, [userId, linkToken, isCreatingToken, onError])
+  }, [userId, linkToken, createLinkTokenMutation.isPending, onError])
 
   // Handle successful connection
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -81,7 +76,7 @@ export function PlaidLink({
       }
 
       // Use the current exchangeToken mutation directly
-      exchangeToken.mutate(
+      exchangeTokenMutation.mutate(
         {
           publicToken,
           institutionId: metadata.institution.institution_id,
@@ -140,8 +135,8 @@ export function PlaidLink({
 
   const { open, ready } = usePlaidLink(config)
 
-  const isLoading = isCreatingToken || isExchanging
-  const hasError = createTokenError || exchangeError
+  const isLoading = createLinkTokenMutation.isPending || exchangeTokenMutation.isPending
+  const hasError = createLinkTokenMutation.error || exchangeTokenMutation.error
   const isReady = ready && linkToken && !isLoading
 
   // Auto-open Plaid Link when token is ready
@@ -180,7 +175,7 @@ export function PlaidLink({
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Connection Error</AlertTitle>
               <AlertDescription>
-                {createTokenError || exchangeError
+                {createLinkTokenMutation.error || exchangeTokenMutation.error
                   ? 'Failed to connect bank account'
                   : 'An unknown error occurred'}
               </AlertDescription>
@@ -196,9 +191,9 @@ export function PlaidLink({
             {isLoading ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
-                {isCreatingToken
+                {createLinkTokenMutation.isPending
                   ? 'Initializing...'
-                  : isExchanging
+                  : exchangeTokenMutation.isPending
                     ? 'Connecting...'
                     : 'Loading...'}
               </>
@@ -219,39 +214,28 @@ export function PlaidLink({
     )
   }
 
-  // Default button variant
   return (
-    <div className={className}>
-      {hasError && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Connection Error</AlertTitle>
-          <AlertDescription>
-            {createTokenError || exchangeError
-              ? 'Failed to connect bank account'
-              : 'An unknown error occurred'}
-          </AlertDescription>
-        </Alert>
-      )}
-
       <Button
         onClick={handleClick}
         disabled={!isReady && !(!linkToken && !isLoading)}
-        className="w-full"
+      className={cn('flex items-center gap-2', className)}
       >
         {isLoading ? (
           <>
-            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
-            {isCreatingToken ? 'Initializing...' : isExchanging ? 'Connecting...' : 'Loading...'}
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
+          {createLinkTokenMutation.isPending
+            ? 'Initializing...'
+            : exchangeTokenMutation.isPending
+            ? 'Connecting...'
+            : 'Loading...'}
           </>
         ) : (
           <>
-            <CreditCard className="mr-2 h-4 w-4" />
+          <Building2 className="h-4 w-4" />
             {children || 'Connect Bank Account'}
           </>
         )}
       </Button>
-    </div>
   )
 }
 

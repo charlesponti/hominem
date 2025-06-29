@@ -1,12 +1,12 @@
 import { format } from 'date-fns'
 import { Calendar, CreditCard, DollarSign, Tag } from 'lucide-react'
 import { Card } from '~/components/ui/card'
-import type { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import type { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
 
 // Use the actual tRPC return type
 type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number]
-type AccountsMap = ReturnType<typeof useFinanceAccounts>['accountsMap']
+type AccountsMap = ReturnType<typeof useFinanceAccountsWithMap>['accountsMap']
 type AccountFromMap = NonNullable<AccountsMap> extends Map<string, infer T> ? T : never
 
 type TransactionsListProps = {

@@ -6,8 +6,9 @@
     "baseUrl": ".",
     "rootDir": ".",
     "outDir": "build",
-    "composite": true,
-    "declaration": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {

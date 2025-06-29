@@ -1,201 +1,189 @@
-import { db } from '@hominem/utils/db'
-import { contentStrategies } from '@hominem/utils/schema'
-import { TRPCError } from '@trpc/server'
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { google } from '@ai-sdk/google'
+import { ContentStrategySchema } from '@hominem/utils/schemas'
+import { contentTools } from '@hominem/utils/tools'
+import { generateText } from 'ai'
 import { z } from 'zod'
+import { ContentStrategiesService } from '../../services/content-strategies.service.js'
 import { protectedProcedure, router } from '../index'
 
-// Input schemas
-const createContentStrategySchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  strategy: z.object({
-    topic: z.string(),
-    targetAudience: z.string(),
-    platforms: z.array(z.string()).optional(),
-    keyInsights: z.array(z.string()).optional(),
-    contentPlan: z
-      .object({
-        blog: z
-          .object({
-            title: z.string(),
-            outline: z.array(
-              z.object({
-                heading: z.string(),
-                content: z.string(),
-              })
-            ),
-            wordCount: z.number(),
-            seoKeywords: z.array(z.string()),
-            callToAction: z.string(),
-          })
-          .optional(),
-        socialMedia: z
-          .array(
-            z.object({
-              platform: z.string(),
-              contentIdeas: z.array(z.string()),
-              hashtagSuggestions: z.array(z.string()),
-              bestTimeToPost: z.string(),
-            })
-          )
-          .optional(),
-        visualContent: z
-          .object({
-            infographicIdeas: z.array(z.string()),
-            imageSearchTerms: z.array(z.string()),
-          })
-          .optional(),
-      })
-      .optional(),
-    monetization: z.array(z.string()).optional(),
-    competitiveAnalysis: z
-      .object({
-        gaps: z.string(),
-        opportunities: z.array(z.string()),
-      })
-      .optional(),
-  }),
-})
-
-const updateContentStrategySchema = z.object({
-  title: z.string().min(1, 'Title is required').optional(),
-  description: z.string().optional(),
-  strategy: z.object({
-    topic: z.string(),
-    targetAudience: z.string(),
-    platforms: z.array(z.string()).optional(),
-    keyInsights: z.array(z.string()).optional(),
-    contentPlan: z
-      .object({
-        blog: z
-          .object({
-            title: z.string(),
-            outline: z.array(
-              z.object({
-                heading: z.string(),
-                content: z.string(),
-              })
-            ),
-            wordCount: z.number(),
-            seoKeywords: z.array(z.string()),
-            callToAction: z.string(),
-          })
-          .optional(),
-        socialMedia: z
-          .array(
-            z.object({
-              platform: z.string(),
-              contentIdeas: z.array(z.string()),
-              hashtagSuggestions: z.array(z.string()),
-              bestTimeToPost: z.string(),
-            })
-          )
-          .optional(),
-        visualContent: z
-          .object({
-            infographicIdeas: z.array(z.string()),
-            imageSearchTerms: z.array(z.string()),
-          })
-          .optional(),
-      })
-      .optional(),
-    monetization: z.array(z.string()).optional(),
-    competitiveAnalysis: z
-      .object({
-        gaps: z.string(),
-        opportunities: z.array(z.string()),
-      })
-      .optional(),
-  }).optional(),
-})
-
 export const contentStrategiesRouter = router({
-  list: protectedProcedure
-    .query(async ({ ctx }) => {
-      const strategies = await db
-        .select()
-        .from(contentStrategies)
-        .where(eq(contentStrategies.userId, ctx.userId))
-        .orderBy(desc(contentStrategies.createdAt))
-
-      return strategies
-    }),
-
-  get: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input, ctx }) => {
-      const [strategy] = await db
-        .select()
-        .from(contentStrategies)
-        .where(and(eq(contentStrategies.id, input.id), eq(contentStrategies.userId, ctx.userId)))
-      
-      if (!strategy) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Content strategy not found',
-        })
-      }
-      
-      return strategy
-    }),
-
+  // Create new content strategy
   create: protectedProcedure
-    .input(createContentStrategySchema)
+    .input(
+      z.object({
+        title: z.string().min(1, 'Title is required'),
+        description: z.string().optional(),
+        strategy: ContentStrategySchema,
+      })
+    )
     .mutation(async ({ input, ctx }) => {
-      const [strategy] = await db
-        .insert(contentStrategies)
-        .values({
+      const userId = ctx.userId
+      const contentStrategiesService = new ContentStrategiesService()
+
+      try {
+        const result = await contentStrategiesService.create({
           ...input,
-          userId: ctx.userId,
+          userId,
         })
-        .returning()
-      
-      return strategy
+        return result
+      } catch (error) {
+        console.error('Create content strategy error:', error)
+        throw new Error(
+          `Failed to create content strategy: ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
     }),
 
+  // Get all content strategies for user
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.userId
+    const contentStrategiesService = new ContentStrategiesService()
+
+    try {
+      const strategies = await contentStrategiesService.getByUserId(userId)
+      return strategies
+    } catch (error) {
+      console.error('Get content strategies error:', error)
+      throw new Error(
+        `Failed to get content strategies: ${error instanceof Error ? error.message : String(error)}`
+      )
+    }
+  }),
+
+  // Get specific content strategy by ID
+  getById: protectedProcedure
+    .input(z.object({ id: z.string().uuid('Invalid content strategy ID format') }))
+    .query(async ({ input, ctx }) => {
+      const userId = ctx.userId
+      const contentStrategiesService = new ContentStrategiesService()
+
+      try {
+        const strategy = await contentStrategiesService.getById(input.id, userId)
+
+        if (!strategy) {
+          throw new Error('Content strategy not found')
+        }
+
+        return strategy
+      } catch (error) {
+        console.error('Get content strategy error:', error)
+        throw new Error(
+          `Failed to get content strategy: ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
+    }),
+
+  // Update content strategy
   update: protectedProcedure
-    .input(z.object({
-      id: z.string().uuid(),
-      data: updateContentStrategySchema,
-    }))
+    .input(
+      z.object({
+        id: z.string().uuid('Invalid content strategy ID format'),
+        title: z.string().min(1).optional(),
+        description: z.string().optional(),
+        strategy: ContentStrategySchema.optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
-      const { id, data } = input
-      
-      const [strategy] = await db
-        .update(contentStrategies)
-        .set({
-          ...data,
-          updatedAt: new Date().toISOString(),
-        })
-        .where(and(eq(contentStrategies.id, id), eq(contentStrategies.userId, ctx.userId)))
-        .returning()
-      
-      if (!strategy) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Content strategy not found',
-        })
+      const userId = ctx.userId
+      const contentStrategiesService = new ContentStrategiesService()
+
+      try {
+        const { id, ...validatedData } = input
+        const result = await contentStrategiesService.update(id, userId, validatedData)
+
+        if (!result) {
+          throw new Error('Content strategy not found')
+        }
+
+        return result
+      } catch (error) {
+        console.error('Update content strategy error:', error)
+        throw new Error(
+          `Failed to update content strategy: ${error instanceof Error ? error.message : String(error)}`
+        )
       }
-      
-      return strategy
     }),
 
+  // Delete content strategy
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.string().uuid('Invalid content strategy ID format') }))
     .mutation(async ({ input, ctx }) => {
-      const [strategy] = await db
-        .delete(contentStrategies)
-        .where(and(eq(contentStrategies.id, input.id), eq(contentStrategies.userId, ctx.userId)))
-        .returning()
-      
-      if (!strategy) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Content strategy not found',
-        })
+      const userId = ctx.userId
+      const contentStrategiesService = new ContentStrategiesService()
+
+      try {
+        const deleted = await contentStrategiesService.delete(input.id, userId)
+
+        if (!deleted) {
+          throw new Error('Content strategy not found')
+        }
+
+        return { success: true }
+      } catch (error) {
+        console.error('Delete content strategy error:', error)
+        throw new Error(
+          `Failed to delete content strategy: ${error instanceof Error ? error.message : String(error)}`
+        )
       }
-      
-      return { success: true, message: 'Content strategy deleted successfully' }
+    }),
+
+  // Generate content strategy using AI
+  generate: protectedProcedure
+    .input(
+      z.object({
+        topic: z.string().min(1, 'Topic is required'),
+        audience: z.string().min(1, 'Audience is required'),
+        platforms: z.array(z.string()).min(1, 'At least one platform is required'),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { topic, audience, platforms } = input
+
+        const result = await generateText({
+          model: google('gemini-1.5-pro-latest'),
+          tools: {
+            content_generator: contentTools.content_generator,
+          },
+          system:
+            'You are a professional content strategist who helps create comprehensive content plans tailored to specific topics and audiences.',
+          messages: [
+            {
+              role: 'user',
+              content: `Create a comprehensive content strategy for the topic "${topic}" targeting the audience "${audience}". Include the following elements:
+        
+1. Key insights about the topic and audience.
+2. A detailed content plan including:
+    - Blog post ideas with titles, outlines, word counts, SEO keywords, and CTAs.
+    - Social media content ideas for platforms like ${platforms.join(', ')}.
+    - Visual content ideas such as infographics and image search terms.
+3. Monetization ideas and competitive analysis.
+        
+Ensure all content ideas are tailored to both the topic and audience.`,
+            },
+          ],
+          maxSteps: 5,
+        })
+
+        // Extract tool call result
+        const toolCall = result.response.messages.find((message) => message.role === 'tool')
+
+        if (toolCall && Array.isArray(toolCall.content) && toolCall.content.length > 0) {
+          const toolResult = toolCall.content[0] as { result: unknown }
+          return toolResult.result ?? {}
+        }
+
+        console.error(
+          'Content strategy generation did not produce the expected tool call output.',
+          result
+        )
+        throw new Error('Failed to extract content strategy from AI response')
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new Error(`Invalid input: ${error.issues.map((i) => i.message).join(', ')}`)
+        }
+        console.error('Content Strategy API error:', error)
+        throw new Error('Failed to generate content strategy')
+      }
     }),
 }) 

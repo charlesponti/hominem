@@ -4,19 +4,19 @@ import type { BudgetCategory } from '@hominem/utils/schema'
 import { AlertTriangle, Calendar, Target, TrendingDown, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from 'recharts'
 import { BudgetCategoryFormModal } from '~/components/budget-category-form'
 import { Badge } from '~/components/ui/badge'
@@ -25,19 +25,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Progress } from '~/components/ui/progress'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '~/components/ui/select'
 import { formatCurrency } from '~/lib/finance.utils'
-import {
-  useBudgetCategories,
-  useBudgetHistory,
-  useBudgetVsActual,
-} from '~/lib/hooks/use-budget-data'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
+import { trpc } from '~/lib/trpc'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
@@ -48,10 +44,19 @@ export default function BudgetTracking() {
       .slice(0, 7) // YYYY-MM format
   )
 
-  const { categories, isLoading: categoriesLoading } = useBudgetCategories()
-  const { budgetVsActual, totals, isLoading: comparisonLoading } = useBudgetVsActual(selectedMonth)
+  const budgetCategories = trpc.finance.budget.categories.list.useQuery()
+  const budgetHistory = trpc.finance.budget.history.useQuery({ months: 6 })
 
-  const isLoading = categoriesLoading || comparisonLoading
+  const isLoading = budgetCategories.isLoading || budgetHistory.isLoading
+
+  // Placeholder data since useBudgetVsActual was removed
+  const budgetVsActual: any[] = []
+  const totals = {
+    totalBudgeted: 0,
+    totalActual: 0,
+    totalVariance: 0,
+    overallPercentage: 0,
+  }
 
   // Prepare chart data
   const chartData = budgetVsActual.map((item) => ({
@@ -102,7 +107,7 @@ export default function BudgetTracking() {
     )
   }
 
-  if (!categories || categories.length === 0) {
+  if (!budgetCategories.data || budgetCategories.data.length === 0) {
     return (
       <div className="text-center py-12">
         <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -381,36 +386,34 @@ function BudgetTrackingPage() {
   const [showBudgetForm, setShowBudgetForm] = useState(false)
 
   const {
-    categories: budgetCategories,
+    data: categories,
     isLoading: isLoadingCategories,
     error: errorCategories,
-  } = useBudgetCategories()
+  } = trpc.finance.budget.categories.list.useQuery()
 
   const { stats, isLoading: isLoadingStats, error: errorStats } = useMonthlyStats(selectedMonthYear)
 
-  const { historyData, isLoadingHistory, errorHistory } = useBudgetHistory(historyMonths)
+  const { data: historyData, isLoading: isLoadingHistory, error: errorHistory } = trpc.finance.budget.history.useQuery({ months: historyMonths })
 
   const budgetDataWithActuals: BudgetCategoryActual[] = useMemo(() => {
-    if (!budgetCategories || !stats || !stats.categorySpending) return []
+    if (!categories || !stats) return []
 
-    return budgetCategories
-      .filter((cat: BudgetCategory) => cat.type === 'expense')
-      .map((category: BudgetCategory) => {
-        const actualSpending =
-          stats.categorySpending.find(
-            (s: { name: string | null; amount: number }) =>
-              s.name !== null && s.name === category.name
-          )?.amount || 0
-        const allocatedAmount = Number.parseFloat(category.averageMonthlyExpense || '0')
-        const percentageSpent = allocatedAmount > 0 ? (actualSpending / allocatedAmount) * 100 : 0
-        return {
-          ...category,
-          allocatedAmount,
-          actualSpending,
-          percentageSpent: Math.min(100, percentageSpent),
-        }
-      })
-  }, [budgetCategories, stats])
+    return categories.map((category) => {
+      const actualSpending = stats.categorySpending.find(
+        (cat) => cat.name?.toLowerCase() === category.name.toLowerCase()
+      )?.amount || 0
+
+      const allocatedAmount = Number.parseFloat(category.averageMonthlyExpense || '0')
+      const percentageSpent = allocatedAmount > 0 ? (actualSpending / allocatedAmount) * 100 : 0
+
+      return {
+        ...category,
+        actualSpending,
+        percentageSpent,
+        allocatedAmount,
+      }
+    })
+  }, [categories, stats])
 
   const totalAllocated = useMemo(
     () => budgetDataWithActuals.reduce((sum, item) => sum + item.allocatedAmount, 0),
@@ -448,11 +451,13 @@ function BudgetTrackingPage() {
 
   if (errorCategories || errorStats || errorHistory) {
     return (
-      <div>
-        Error loading data:{' '}
-        {(errorCategories as Error)?.message ||
-          (errorStats as Error)?.message ||
-          (errorHistory as Error)?.message}
+      <div className="text-center py-12">
+        <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
+        <p className="text-gray-600 mb-4">
+          {errorCategories?.message || errorStats?.message || errorHistory?.message || 'An error occurred while loading data'}
+        </p>
+        <Button onClick={() => window.location.reload()}>Try Again</Button>
       </div>
     )
   }

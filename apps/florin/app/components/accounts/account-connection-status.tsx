@@ -1,13 +1,14 @@
-import type { FinanceAccount } from '@hominem/utils/types'
 import { AlertCircleIcon, Banknote, CheckCircleIcon, LinkIcon } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import { useAllAccounts } from '~/lib/hooks/use-finance-data'
 import { useFinancialInstitutions } from '~/lib/hooks/use-financial-institutions'
 import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution'
+import { trpc, type RouterOutput } from '~/lib/trpc'
 import { AccountConnectionDialog } from './account-connection-dialog'
 
 interface AccountConnectionStatusProps {
-  account: FinanceAccount
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
   showDialog?: boolean
 }
 
@@ -15,10 +16,10 @@ export function AccountConnectionStatus({
   account,
   showDialog = true,
 }: AccountConnectionStatusProps) {
-  const { institutions, isLoading } = useFinancialInstitutions()
-  const { accounts: plaidAccounts } = usePlaidAccountsByInstitution(account.institutionId)
+  const institutionsQuery = useFinancialInstitutions()
+  const plaidAccountsQuery = usePlaidAccountsByInstitution(account.institutionId)
 
-  if (isLoading) {
+  if (institutionsQuery.isLoading) {
     return <Badge variant="secondary">Loading...</Badge>
   }
 
@@ -44,13 +45,13 @@ export function AccountConnectionStatus({
     )
   }
 
-  const institution = institutions?.find((inst: any) => inst.id === account.institutionId)
+  const institution = institutionsQuery.data?.find((inst: any) => inst.id === account.institutionId)
 
   if (!institution) {
     return <Badge variant="destructive">Unknown Institution</Badge>
   }
 
-  const linkedPlaidAccount = plaidAccounts.find((plaidAcc) => plaidAcc.id === account.plaidItemId)
+  const linkedPlaidAccount = plaidAccountsQuery.data?.find((plaidAcc) => plaidAcc.id === account.plaidItemId)
 
   return (
     <div className="flex items-center space-x-2">
@@ -81,7 +82,7 @@ export function AccountConnectionStatus({
 }
 
 interface AccountConnectionSummaryProps {
-  accounts: FinanceAccount[]
+  accounts: RouterOutput['finance']['accounts']['all']['accounts']
 }
 
 export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryProps) {

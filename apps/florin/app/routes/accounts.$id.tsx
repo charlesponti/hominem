@@ -3,7 +3,12 @@
 import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router'
-import { AccountSpendingChart } from '~/components/accounts/AccountSpendingChart'
+import {
+  AccountConnectionDialog,
+  AccountSpendingChart,
+  ManualAccountStatus,
+  PlaidConnectionStatus
+} from '~/components/accounts'
 import { RouteLink } from '~/components/route-link'
 import { TransactionsList } from '~/components/transactions/transactions-list'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
@@ -26,7 +31,17 @@ export default function AccountDetailsPage() {
 
   // Create accounts map for TransactionsList component
   const accountsMap = useMemo(() => {
-    return new Map(accounts.map((account) => [account.id, account]))
+    return new Map(
+      accounts.map((account) => [
+        account.id,
+        {
+          ...account,
+          createdAt: new Date(account.createdAt),
+          updatedAt: new Date(account.updatedAt),
+          lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
+        }
+      ])
+    )
   }, [accounts])
 
   // Get transactions for this specific account
@@ -186,54 +201,27 @@ export default function AccountDetailsPage() {
             </div>
           )}
 
-          {/* Account Stats */}
-          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-muted/25 rounded-lg">
-              <div className="text-sm text-muted-foreground">Total Transactions</div>
-              <div className="text-2xl font-bold">{totalTransactions.toLocaleString()}</div>
+          {/* Connection Management Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Connection Management</h3>
+              <AccountConnectionDialog
+                account={account}
+                trigger={
+                  <Button variant="outline" size="sm">
+                    Manage Connection
+                  </Button>
+                }
+              />
             </div>
 
-            {account.institutionName && (
-              <div className="p-4 bg-muted/25 rounded-lg">
-                <div className="text-sm text-muted-foreground">Institution</div>
-                <div className="text-lg font-semibold">{account.institutionName}</div>
-              </div>
+            {/* Connection Status */}
+            {isPlaidAccount ? (
+              <PlaidConnectionStatus account={account} onRefresh={refreshData} />
+            ) : (
+              <ManualAccountStatus account={account} />
             )}
-
-            {account.subtype && (
-              <div className="p-4 bg-muted/25 rounded-lg">
-                <div className="text-sm text-muted-foreground">Account Subtype</div>
-                <div className="text-lg font-semibold capitalize">{account.subtype}</div>
-              </div>
-            )}
-          </div> */}
-
-          {/* Plaid Connection Status */}
-          {isPlaidAccount && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-blue-900">Plaid Connection Status</div>
-                  <div className="text-sm text-blue-700">
-                    Status: {account.plaidItemStatus || 'Unknown'}
-                    {account.plaidLastSyncedAt && (
-                      <span className="ml-2">
-                        • Last synced: {new Date(account.plaidLastSyncedAt).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {account.plaidItemStatus === 'active' && (
-                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-                    Active
-                  </Badge>
-                )}
-              </div>
-              {account.plaidItemError && (
-                <div className="mt-2 text-sm text-red-600">Error: {account.plaidItemError}</div>
-              )}
-            </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 

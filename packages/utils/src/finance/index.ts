@@ -7,6 +7,7 @@ export { generateTimeSeriesData } from './finance-analyze.service'
 export * from './finance.service'
 export { tools } from './finance.tools'
 export { default as FinancialAccountService } from './financial-account.service'
+export * from './institution.service'
 export * from './transactions-processor'
 
 export const categoryBreakdownSchema = z.object({
