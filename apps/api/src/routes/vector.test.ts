@@ -30,10 +30,10 @@ describe('Vector System', () => {
     // Create a test user
     testUserId = crypto.randomUUID()
 
-    // Insert test user into database
+    // Insert test user into database with unique email
     await db.insert(users).values({
       id: testUserId,
-      email: 'vector-test@example.com',
+      email: `vector-test-${testUserId}@example.com`,
       supabaseId: `supabase-${testUserId}`,
     })
 

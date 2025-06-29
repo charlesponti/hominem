@@ -12,6 +12,11 @@ export const ContentTypeSchema = z.enum([
   'essay', // Long-form essays
   'blog_post', // Blog posts
   'social_post', // Generic social media post
+  'note', // Personal notes
+  'task', // Tasks or to-do items
+  'timer', // Time tracking entries
+  'journal', // Journal entries
+  'document', // General documents
 ])
 
 export type ContentType = z.infer<typeof ContentTypeSchema>

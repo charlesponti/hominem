@@ -1,24 +1,24 @@
-import type { Content } from '@hominem/utils/types'
+import type { Note } from '@hominem/utils/types'
 import { format } from 'date-fns'
 import {
-  CalendarDays,
-  CheckCircle2,
-  Edit,
-  PauseCircle,
-  PlayCircle,
-  Target,
-  Trash2,
+    CalendarDays,
+    CheckCircle2,
+    Edit,
+    PauseCircle,
+    PlayCircle,
+    Target,
+    Trash2,
 } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { useTimeTracking } from '~/lib/content/use-time-tracking'
+import { useTimeTracking } from '~/hooks/use-time-tracking'
 import { cn } from '~/lib/utils'
 import { ElapsedTime } from './elapsed-time'
 
 type TaskFeedItemProps = {
-  task: Content
+  task: Note
   onDelete: (taskId: string) => void
-  onEdit: (task: Content) => void
+  onEdit: (task: Note) => void
   className?: string
 }
 

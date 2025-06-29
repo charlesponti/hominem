@@ -14,7 +14,6 @@ export class CompanyService {
       .set({
         ...data,
         updatedAt: new Date(),
-        version: (Number(data.version || 1) + 1).toString(),
       })
       .where(eq(companies.id, id))
       .returning()

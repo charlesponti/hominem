@@ -1,18 +1,8 @@
-import { QueryClient } from '@tanstack/react-query'
 import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
 import type { AppRouter } from '../../../../packages/types/trpc'
 import { createClient } from './supabase/client'
 
 export const trpc = createTRPCReact<AppRouter>()
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 3,
-    },
-  },
-})
 
 export const trpcClient = trpc.createClient({
   links: [

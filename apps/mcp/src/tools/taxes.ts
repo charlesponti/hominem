@@ -36,8 +36,24 @@ export function registerTaxTool(server: McpServer) {
     },
     async ({ input }): Promise<{ content: Array<{ type: 'text'; text: string }> }> => {
       const stagehand = new Stagehand({
-        env: process.env.STAGEHAND_ENV || 'LOCAL',
-        modelName: process.env.STAGEHAND_MODEL_NAME || 'gpt-4o-mini',
+        env: (process.env.STAGEHAND_ENV || 'LOCAL') as 'LOCAL' | 'BROWSERBASE',
+        modelName: (process.env.STAGEHAND_MODEL_NAME || 'gpt-4o-mini') as
+          | 'gpt-4o-mini'
+          | 'o1-mini'
+          | 'o1-preview'
+          | 'o3-mini'
+          | 'gpt-4o'
+          | 'gpt-4o-2024-08-06'
+          | 'gpt-4.5-preview'
+          | 'claude-3-5-sonnet-latest'
+          | 'claude-3-5-sonnet-20241022'
+          | 'claude-3-5-sonnet-20240620'
+          | 'claude-3-opus-20240229'
+          | 'claude-3-sonnet-20240229'
+          | 'claude-3-haiku-20240307'
+          | 'gemini-1.5-pro-latest'
+          | 'gemini-1.5-flash-latest'
+          | undefined,
         modelClientOptions: { apiKey: process.env.OPENAI_API_KEY },
       })
       await stagehand.init()

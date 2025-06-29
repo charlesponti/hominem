@@ -1,139 +1,38 @@
-import type { User } from '@supabase/supabase-js'
-import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { useToast } from '~/components/ui/use-toast'
-import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { useTwitterOAuth } from '~/hooks/use-twitter'
+import { useUser } from '~/lib/hooks/use-user'
 
 export default function AccountPage() {
-  const { getUser, signOut } = useSupabaseAuth()
-  const [user, setUser] = useState<User | null>(null)
-  const { toast } = useToast()
-  const { refetch } = useTwitterOAuth()
-
-  const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null)
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await getUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      }
-    }
-
-    fetchUser()
-  }, [getUser])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setUrlParams(new URLSearchParams(window.location.search))
-    }
-  }, [])
-
-  useEffect(() => {
-    if (urlParams) {
-      const twitterStatus = urlParams.get('twitter')
-      if (twitterStatus === 'connected') {
-        toast({
-          title: 'Success',
-          description: 'Twitter account connected successfully!',
-        })
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname)
-        // Refresh accounts
-        refetch()
-      } else if (twitterStatus === 'error') {
-        toast({
-          title: 'Error',
-          description: 'Failed to connect Twitter account. Please try again.',
-          variant: 'destructive',
-        })
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname)
-      }
-    }
-  }, [urlParams, toast, refetch])
-
-  const handleSyncSuccess = (data: { synced: number }) => {
-    toast({
-      title: 'Tweets synced successfully!',
-      description: `Imported ${data.synced} new tweets from your Twitter account.`,
-    })
-  }
-
-  const handleSyncError = (error: unknown) => {
-    console.error('Failed to sync tweets:', error)
-    toast({
-      title: 'Failed to sync tweets',
-      description: 'There was an error syncing your tweets. Please try again.',
-      variant: 'destructive',
-    })
-  }
+  const { signOut } = useUser()
+  const { accounts } = useTwitterOAuth()
 
   const handleSignOut = async () => {
-    try {
-      await signOut()
-      setUser(null)
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to sign out. Please try again.',
-        variant: 'destructive',
-      })
-    }
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />
+    await signOut()
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-3xl">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-          Profile
-        </h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage your account</p>
-      </header>
+    <div className="container mx-auto p-4 max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Account Settings</h1>
+        <button
+          onClick={handleSignOut}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          Sign Out
+        </button>
+      </div>
 
-      <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Connected Accounts</CardTitle>
-            <CardDescription>
-              Connect your social media accounts to enhance your experience.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ConnectTwitterAccount
-              onSyncSuccess={handleSyncSuccess}
-              onSyncError={handleSyncError}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Authentication</CardTitle>
-            <CardDescription>Manage your session.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 border rounded-md">
-              <div>
-                <h3 className="font-medium">Sign Out</h3>
-                <p className="text-sm text-muted-foreground">End your current session.</p>
-              </div>
-              <Button variant="outline" onClick={handleSignOut}>
-                Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6">
+        <ConnectTwitterAccount />
+        
+        {accounts.length > 0 && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h3 className="font-medium text-green-800 mb-2">Connected Accounts</h3>
+            <p className="text-green-700 text-sm">
+              You have {accounts.length} Twitter account{accounts.length === 1 ? '' : 's'} connected.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

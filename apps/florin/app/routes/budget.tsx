@@ -33,11 +33,10 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 export default function BudgetDashboard() {
   const { categories, isLoading: categoriesLoading } = useBudgetCategories()
   const {
-    calculateBudget,
     data: budgetData,
     isLoading: calculationLoading,
   } = usePersonalBudgetCalculation()
-  const { budgetVsActual, totals, isLoading: comparisonLoading } = useBudgetVsActual()
+  const { budgetVsActual, isLoading: comparisonLoading } = useBudgetVsActual()
   const [selectedTab, setSelectedTab] = useState('overview')
 
   // Calculate totals from categories
@@ -57,12 +56,12 @@ export default function BudgetDashboard() {
   // Auto-calculate budget on component mount if categories exist
   useState(() => {
     if (categories && categories.length > 0 && !budgetData) {
-      calculateBudget.mutate(undefined)
+      calculateBudget()
     }
   })
 
   const handleRecalculate = () => {
-    calculateBudget.mutate(undefined)
+    calculateBudget(undefined)
   }
 
   if (categoriesLoading) {
@@ -102,7 +101,7 @@ export default function BudgetDashboard() {
   }))
 
   const projectionData =
-    budgetData?.projections.slice(0, 6).map((proj) => ({
+    budgetData?.projections.slice(0, 6).map((proj: { month: number; totalSaved: number }) => ({
       month: `Month ${proj.month}`,
       projected: proj.totalSaved,
       baseline: projectedSurplus * proj.month,
@@ -375,7 +374,7 @@ export default function BudgetDashboard() {
         </TabsContent>
 
         <TabsContent value="tracking" className="space-y-6">
-          {!comparisonLoading && budgetVsActual.length > 0 ? (
+          {!comparisonLoading && budgetVsActual && budgetVsActual.length > 0 ? (
             <div className="space-y-4">
               <Card>
                 <CardHeader>

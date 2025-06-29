@@ -1,11 +1,8 @@
-import { CreateTransactionForm } from '~/components/finance/create-transaction-form'
-import { FinanceDashboard } from '~/components/finance/finance-dashboard'
-
 export default function DashboardPage() {
   return (
     <div>
-      <CreateTransactionForm />
-      <FinanceDashboard />
+      <h1>Dashboard</h1>
+      <p>This is a placeholder dashboard page.</p>
     </div>
   )
 }

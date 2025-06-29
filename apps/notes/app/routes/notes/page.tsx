@@ -1,25 +1,25 @@
-import type { Content, ContentType } from '@hominem/utils/types'
+import type { Note } from '@hominem/utils/types'
 import { useDebounce } from '@uidotdev/usehooks'
 import { Plus, Search, Sparkles, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
-import { useContentQuery } from '~/lib/content/use-content-query'
-import { useDeleteContent } from '~/lib/content/use-delete-content'
-import { useUpdateContent } from '~/lib/content/use-update-content'
+import { useDeleteNote, useNotesList, useUpdateNote } from '~/hooks/use-notes'
 import { cn } from '~/lib/utils'
 import { InlineCreateForm } from './components/inline-create-form'
 import { NoteFeedItem } from './components/note-feed-item'
 import { TaskFeedItem } from './components/task-feed-item'
 
-const CONTENT_TYPE_OPTIONS: { value: ContentType; label: string }[] = [
+const CONTENT_TYPE_OPTIONS: { value: Note['type']; label: string }[] = [
   { value: 'note', label: 'Notes' },
   { value: 'task', label: 'Tasks' },
-  { value: 'tweet', label: 'Tweets' },
+  { value: 'timer', label: 'Timers' },
+  { value: 'journal', label: 'Journal' },
+  { value: 'document', label: 'Documents' },
 ]
 
 export default function NotesPage() {
-  const [selectedTypes, setSelectedTypes] = useState<ContentType[]>([])
+  const [selectedTypes, setSelectedTypes] = useState<Note['type'][]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
   const feedContainerRef = useRef<HTMLDivElement>(null)
@@ -27,28 +27,33 @@ export default function NotesPage() {
   const prevFeedLengthRef = useRef<number>(0)
 
   // State for edit mode
-  const [itemToEdit, setItemToEdit] = useState<Content | null>(null)
+  const [itemToEdit, setItemToEdit] = useState<Note | null>(null)
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
 
   const {
-    data: allContentItems = [] as Content[],
+    data: notesData,
     isLoading,
     refetch,
-  } = useContentQuery({
-    searchText: debouncedSearchQuery,
-    type: selectedTypes.length > 0 ? selectedTypes : undefined,
+  } = useNotesList({
+    types: selectedTypes.length > 0 ? selectedTypes : undefined,
+    query: debouncedSearchQuery || undefined,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    limit: 100,
   })
-  const { updateItem } = useUpdateContent()
-  const deleteItem = useDeleteContent()
+
+  const allContentItems = (notesData?.notes || []) as Note[]
+  const updateItem = useUpdateNote()
+  const deleteItem = useDeleteNote()
 
   // Helper functions for multiselect type filters
-  const toggleContentType = (type: ContentType) => {
+  const toggleContentType = (type: Note['type']) => {
     setSelectedTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     )
   }
 
-  const removeContentType = (type: ContentType) => {
+  const removeContentType = (type: Note['type']) => {
     setSelectedTypes((prev) => prev.filter((t) => t !== type))
   }
 
@@ -65,17 +70,21 @@ export default function NotesPage() {
 
   // Stats calculations
   const stats = useMemo(() => {
-    const notes = allContentItems.filter((item: Content) => item.type === 'note')
-    const tasks = allContentItems.filter((item: Content) => item.type === 'task')
-    const tweets = allContentItems.filter((item: Content) => item.type === 'tweet')
-    const completedTasks = tasks.filter((task: Content) => task.taskMetadata?.status === 'done')
-    const allTags = allContentItems.flatMap((item: Content) => item.tags || [])
+    const notes = allContentItems.filter((item) => item.type === 'note')
+    const tasks = allContentItems.filter((item) => item.type === 'task')
+    const timers = allContentItems.filter((item) => item.type === 'timer')
+    const journals = allContentItems.filter((item) => item.type === 'journal')
+    const documents = allContentItems.filter((item) => item.type === 'document')
+    const completedTasks = tasks.filter((task) => task.taskMetadata?.status === 'done')
+    const allTags = allContentItems.flatMap((item) => item.tags || [])
     const uniqueTags = [...new Set(allTags.map((tag: { value: string }) => tag.value))]
 
     return {
       totalNotes: notes.length,
       totalTasks: tasks.length,
-      totalTweets: tweets.length,
+      totalTimers: timers.length,
+      totalJournals: journals.length,
+      totalDocuments: documents.length,
       completedTasks: completedTasks.length,
       uniqueTags: uniqueTags.length,
       completionRate:
@@ -97,21 +106,24 @@ export default function NotesPage() {
   }, [allContentItems.length])
 
   // Combined handler for editing notes and tasks
-  function handleEditItem(item: Content) {
+  function handleEditItem(item: Note) {
     setItemToEdit(item)
     setFormMode('edit')
     setIsFormVisible(true)
   }
 
   function removeTagFromNote(noteId: string, tagValue: string) {
-    const item = allContentItems.find((n: Content) => n.id === noteId)
+    const item = allContentItems.find((n) => n.id === noteId)
     if (!item) return
     const newTags = (item.tags || []).filter((tag: { value: string }) => tag.value !== tagValue)
-    updateItem.mutate({ id: noteId, tags: newTags })
+    updateItem.mutate({ 
+      id: noteId, 
+      data: { tags: newTags }
+    })
   }
 
   function handleDeleteItem(id: string) {
-    deleteItem.mutate(id)
+    deleteItem.mutate({ id })
   }
 
   function handleFormSuccess() {
@@ -290,7 +302,7 @@ export default function NotesPage() {
                   </div>
                 ) : (
                   <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    {allContentItems.map((item: Content, index: number) => (
+                    {allContentItems.map((item: Note, index: number) => (
                       <div key={item.id}>
                         {item.type === 'task' ? (
                           <TaskFeedItem

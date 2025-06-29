@@ -108,6 +108,7 @@ export function useAllAccounts() {
       plaidItemError: null,
       plaidLastSyncedAt: null,
       plaidItemInternalId: undefined,
+      meta: account.meta || null, // Ensure meta is always present
     }))
   }, [accounts])
 

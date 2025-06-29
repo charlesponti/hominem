@@ -188,8 +188,8 @@ function UnifiedAccountCard({
 }
 
 function ConnectionCard({ connection }: { connection: PlaidConnection }) {
-  const { syncItem, isLoading: isSyncing } = useSyncPlaidItem()
-  const { removeConnection, isLoading: isRemoving } = useRemovePlaidConnection()
+  const { syncItem, isLoading: isSyncing, isError: syncError } = useSyncPlaidItem()
+  const { removeConnection, isLoading: isRemoving, isError: removeError } = useRemovePlaidConnection()
 
   const getStatusBadge = (status: PlaidConnection['status']) => {
     switch (status) {
@@ -416,16 +416,14 @@ export default function AccountsPage() {
       </div>
 
       {hasError ? (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Error Loading Data</AlertTitle>
-          <AlertDescription>
-            {accountsError instanceof Error
-              ? accountsError.message
-              : accountsError || 'Failed to load banking data'}
-          </AlertDescription>
-        </Alert>
-      ) : null}
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error Loading Data</AlertTitle>
+                <AlertDescription>
+                  {accountsError ? accountsError.message : 'Failed to load banking data'}
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
       {/* Loading State */}
       {isLoading && (

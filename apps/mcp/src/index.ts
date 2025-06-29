@@ -14,6 +14,9 @@ import { registerNutritionTool } from './tools/nutrition'
 import { registerSleepTool } from './tools/sleep'
 import { registerTaxTool } from './tools/taxes'
 import { registerWorkoutTool } from './tools/workout'
+import { registerNotesTool } from './tools/notes'
+import { registerNotesResource } from './resources/notes'
+import { registerAuthTool } from './tools/auth'
 
 // Create an MCP server
 const server = new Server({
@@ -29,6 +32,9 @@ registerMentalWellnessTool(server)
 registerFlightsTool(server)
 registerTaxTool(server)
 registerFinanceTools(server)
+registerNotesTool(server)
+registerNotesResource(server)
+registerAuthTool(server)
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport()

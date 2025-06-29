@@ -32,5 +32,11 @@ export default [
     route('/account', 'routes/account.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
+    route('/api/auth/validate-token', 'routes/api.auth.validate-token.ts', {
+      action: 'routes/api.auth.validate-token.server.ts',
+    }),
+    route('/api/auth/refresh-token', 'routes/api.auth.refresh-token.ts', {
+      action: 'routes/api.auth.refresh-token.server.ts',
+    }),
   ]),
 ] as RouteConfig

@@ -1,4 +1,4 @@
-import type { Content, ContentType, Priority, TaskMetadata } from '@hominem/utils/types'
+import type { Note, Priority, TaskMetadata } from '@hominem/utils/types'
 import { FileText, ListChecks, RefreshCw, Send, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '~/components/ui/button'
@@ -6,8 +6,7 @@ import { DatePicker } from '~/components/ui/date-picker'
 import { Input } from '~/components/ui/input'
 import { PrioritySelect } from '~/components/ui/priority-select'
 import { Textarea } from '~/components/ui/textarea'
-import { useCreateContent } from '~/lib/content/use-create-content'
-import { useUpdateContent } from '~/lib/content/use-update-content'
+import { useCreateNote, useUpdateNote } from '~/hooks/use-notes'
 import { cn } from '~/lib/utils'
 
 type InputMode = 'note' | 'task'
@@ -16,7 +15,7 @@ interface InlineCreateFormProps {
   onSuccess?: () => void
   onCancel?: () => void
   defaultInputMode?: InputMode
-  itemToEdit?: Content | null
+  itemToEdit?: Note | null
   mode?: 'create' | 'edit'
   isVisible?: boolean
 }
@@ -37,8 +36,8 @@ export function InlineCreateForm({
   mode = 'create',
   isVisible = false,
 }: InlineCreateFormProps) {
-  const createItem = useCreateContent()
-  const { updateItem } = useUpdateContent()
+  const createItem = useCreateNote()
+  const updateItem = useUpdateNote()
   const [inputMode, setInputMode] = useState<InputMode>(
     itemToEdit ? (itemToEdit.type as InputMode) : defaultInputMode
   )
@@ -97,8 +96,8 @@ export function InlineCreateForm({
     if (inputMode === 'task' && !titleToSave && !contentToSave) return
     if (!titleToSave && !contentToSave) return
 
-    let itemType: ContentType = 'note'
-    const additionalData: Partial<Pick<Content, 'taskMetadata' | 'tags'>> = {}
+    let itemType: Note['type'] = 'note'
+    const additionalData: any = {}
 
     if (inputMode === 'task') {
       itemType = 'task'
@@ -130,7 +129,7 @@ export function InlineCreateForm({
       updateItem.mutate(
         {
           id: itemToEdit.id,
-          ...payload,
+          data: payload,
         },
         {
           onSuccess: () => {
@@ -268,14 +267,14 @@ export function InlineCreateForm({
             <Button
               onClick={handleSave}
               disabled={
-                (isEditMode ? updateItem.isLoading : createItem.isLoading) ||
+                (isEditMode ? updateItem.isPending : createItem.isPending) ||
                 (!inputValue.trim() && !inputTitle.trim()) ||
                 (inputMode === 'note' && !inputValue.trim())
               }
               className="h-8 px-3 bg-indigo-500/90 hover:bg-indigo-600/90 text-white backdrop-blur-sm transition-all hover:shadow-md disabled:bg-slate-300/70 disabled:text-slate-500/90 dark:disabled:bg-slate-700/70 dark:disabled:text-slate-500/90"
               title={isEditMode ? 'Save changes' : `Add ${inputMode}`}
             >
-              {(isEditMode ? updateItem.isLoading : createItem.isLoading) ? (
+              {(isEditMode ? updateItem.isPending : createItem.isPending) ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />

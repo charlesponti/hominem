@@ -7,9 +7,10 @@ interface TopCategoriesProps {
   dateFrom?: Date
   dateTo?: Date
   selectedAccount?: string
+  selectedCategory?: string
 }
 
-export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategoriesProps) {
+export function TopCategories({ dateFrom, dateTo, selectedAccount, selectedCategory }: TopCategoriesProps) {
   const {
     data: categoryBreakdown,
     isLoading,
@@ -18,6 +19,7 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
     from: dateFrom?.toISOString().split('T')[0],
     to: dateTo?.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
+    category: selectedCategory || undefined,
     limit: '5',
   })
 

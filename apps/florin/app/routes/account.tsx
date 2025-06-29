@@ -66,7 +66,8 @@ export default function AccountPage({ loaderData }: Route.ComponentProps) {
     const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account']
     const csvRows = [
       headers.join(','),
-      ...transactions.map((tx: FinanceTransaction) => {
+      ...transactions.map((tx) => {
+        const typedTx: FinanceTransaction = tx as FinanceTransaction;
         const account = accountsMap.get(tx.accountId)
         return [
           tx.date,
@@ -181,10 +182,10 @@ export default function AccountPage({ loaderData }: Route.ComponentProps) {
               <Button
                 variant="destructive"
                 onClick={() => setShowConfirmDelete(true)}
-                disabled={deleteAllFinanceData.isLoading}
+                disabled={deleteAllFinanceData.isPending}
                 className="mt-2 sm:mt-0"
               >
-                {deleteAllFinanceData.isLoading ? 'Deleting...' : 'Delete All Data'}
+                {deleteAllFinanceData.isPending ? 'Deleting...' : 'Delete All Data'}
               </Button>
             </div>
           </CardContent>
@@ -219,13 +220,13 @@ export default function AccountPage({ loaderData }: Route.ComponentProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteAllFinanceData.isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteAllFinanceData.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteAllFinanceData.mutate()}
-              disabled={deleteAllFinanceData.isLoading}
+              disabled={deleteAllFinanceData.isPending}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {deleteAllFinanceData.isLoading ? 'Deleting...' : 'Yes, delete all data'}
+              {deleteAllFinanceData.isPending ? 'Deleting...' : 'Yes, delete all data'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

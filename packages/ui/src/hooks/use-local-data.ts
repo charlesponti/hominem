@@ -243,7 +243,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries(queryKey)
       setError(null)
     },
   })
@@ -288,7 +288,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries(queryKey)
       setError(null)
     },
   })
@@ -312,7 +312,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries(queryKey)
       setError(null)
     },
   })
@@ -369,7 +369,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries(queryKey)
       setError(null)
     },
   })
@@ -437,7 +437,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries(queryKey)
       setError(null)
     },
   })
@@ -489,7 +489,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries(queryKey)
       setError(null)
     },
   })

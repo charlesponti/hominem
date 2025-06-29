@@ -24,7 +24,6 @@ import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
 import { listsRoutes } from './routes/lists.js'
 import { locationRoutes } from './routes/location.js'
-import { notesRoutes } from './routes/notes.js'
 import { oauthRoutes } from './routes/oauth/index.js'
 import { placesRoutes } from './routes/places/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
@@ -130,7 +129,6 @@ export function createServer(): Hono<AppEnv> {
   app.route('/api/user', userRoutes)
   app.route('/api/places', placesRoutes)
   app.route('/api/content', content)
-  app.route('/api/notes', notesRoutes)
   app.route('/api/ai', aiRoutes)
   app.route('/api/oauth', oauthRoutes)
   app.route('/api/goals', goalsRoutes)

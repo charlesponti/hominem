@@ -1,8 +1,7 @@
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { useUser } from '~/lib/hooks/use-user'
 import { cn } from '~/lib/utils'
 import { Button } from './ui/button'
 
@@ -29,10 +28,7 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { getUser, supabase } = useSupabaseAuth()
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const isLoggedIn = !isLoading && user
+  const { user, isLoading, isAuthenticated, signIn } = useUser()
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
@@ -122,35 +118,13 @@ export function MainNavigation() {
   const handleSignIn = async () => {
     try {
       setIsSigningIn(true)
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      if (error) throw error
+      await signIn()
     } catch (error) {
       console.error('Sign in failed:', error)
     } finally {
       setIsSigningIn(false)
     }
   }
-
-  // Get user data on mount
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await getUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchUser()
-  }, [getUser])
 
   // Desktop navbar
   if (!isMobile) {
@@ -170,7 +144,7 @@ export function MainNavigation() {
           {!isLoading && (
             <div className="flex flex-1 items-center justify-end">
               <nav className="flex items-center space-x-6">
-                {isLoggedIn ? (
+                {isAuthenticated ? (
                   <>
                     {navItems.map((item) => (
                       <Link
@@ -220,7 +194,7 @@ export function MainNavigation() {
           <div className="flex flex-1 items-center justify-end space-x-2">
             {isLoading ? (
               <div className="h-8 w-8 rounded-full animate-pulse bg-muted" />
-            ) : isLoggedIn ? (
+            ) : isAuthenticated ? (
               <Link to="/account">
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <User className="h-5 w-5" />
@@ -240,29 +214,62 @@ export function MainNavigation() {
       </header>
 
       {/* Mobile Menu */}
-      {menuOpen && isLoggedIn && (
+      {menuOpen && (
         <div
-          className={cn(
-            'fixed inset-0 z-50 bg-background flex flex-col pt-16',
-            animateExit ? 'menu-container-exit' : 'menu-container-enter'
-          )}
+          className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-400 ${
+            animateExit ? 'opacity-0' : 'opacity-100'
+          }`}
+          onClick={closeMenu}
         >
-          <div className="p-6">
-            <nav className="flex flex-col space-y-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.title}
-                  to={item.url}
-                  onClick={closeMenu}
-                  className={cn(
-                    'flex items-center py-3 text-lg font-medium transition-colors',
-                    pathname === item.url ? 'text-primary' : 'text-foreground hover:text-primary'
-                  )}
-                >
-                  {item.icon && <item.icon className="h-5 w-5 mr-3" />}
-                  {item.title}
-                </Link>
-              ))}
+          <div
+            className={`fixed right-0 top-0 h-full w-80 bg-background shadow-xl transition-transform duration-400 ${
+              animateExit ? 'translate-x-full' : 'translate-x-0'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex h-16 items-center justify-between px-4 border-b">
+              <span className="font-semibold">Menu</span>
+              <Button variant="ghost" size="icon" onClick={closeMenu}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <nav className="p-4 space-y-2">
+              {isAuthenticated ? (
+                <>
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      className={cn(
+                        'flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                        pathname === item.url
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-muted'
+                      )}
+                      onClick={closeMenu}
+                    >
+                      {item.icon && <item.icon className="h-4 w-4" />}
+                      {item.title}
+                    </Link>
+                  ))}
+                  <div className="pt-4 border-t">
+                    <Link
+                      to="/account"
+                      className="flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium hover:bg-muted"
+                      onClick={closeMenu}
+                    >
+                      <User className="h-4 w-4" />
+                      Account
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="pt-4">
+                  <Button onClick={handleSignIn} disabled={isSigningIn} className="w-full">
+                    {isSigningIn ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                </div>
+              )}
             </nav>
           </div>
         </div>
