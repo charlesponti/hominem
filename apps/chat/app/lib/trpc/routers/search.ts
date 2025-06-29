@@ -1,6 +1,5 @@
-import type { ActionFunctionArgs } from 'react-router'
-import { withRateLimit } from '~/lib/services/rate-limit.server.js'
-import { jsonResponse } from '~/lib/utils/json-response'
+import { z } from 'zod'
+import { protectedProcedure, router } from '../../trpc'
 
 export interface SearchResult {
   title: string
@@ -18,46 +17,37 @@ export interface SearchResponse {
   error?: string
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-  if (request.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed' }, { status: 405 })
-  }
-
-  return withRateLimit('search')(request, async () => {
-    try {
-      const { query, maxResults = 10 } = await request.json()
+export const searchRouter = router({
+  // Web search functionality
+  search: protectedProcedure
+    .input(
+      z.object({
+        query: z.string(),
+        maxResults: z.number().optional().default(10),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { query, maxResults } = input
 
       if (!query || typeof query !== 'string') {
-        return jsonResponse(
-          {
-            success: false,
-            error: 'Search query is required',
-          },
-          { status: 400 }
-        )
+        throw new Error('Search query is required')
       }
 
-      const searchResults = await performWebSearch(query, maxResults)
+      try {
+        const searchResults = await performWebSearch(query, maxResults)
 
-      return jsonResponse({
-        success: true,
-        query,
-        results: searchResults,
-        summary: generateSearchSummary(searchResults),
-      })
-    } catch (error) {
-      console.error('Search error:', error)
-
-      return jsonResponse(
-        {
-          success: false,
-          error: error instanceof Error ? error.message : 'Search failed',
-        },
-        { status: 500 }
-      )
-    }
-  })
-}
+        return {
+          success: true,
+          query,
+          results: searchResults,
+          summary: generateSearchSummary(searchResults),
+        } as SearchResponse
+      } catch (error) {
+        console.error('Search error:', error)
+        throw new Error(error instanceof Error ? error.message : 'Search failed')
+      }
+    }),
+})
 
 async function performWebSearch(query: string, maxResults: number): Promise<SearchResult[]> {
   try {

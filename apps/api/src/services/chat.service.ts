@@ -70,7 +70,20 @@ export class ChatService {
   }
 
   getLastAssistantMessage(messages: GenerateTextResponse['messages']) {
-    const lastMessage = messages.filter((msg) => msg.role === 'assistant').slice(-1)[0]
+    if (!messages || !Array.isArray(messages)) {
+      return ''
+    }
+
+    const assistantMessages = messages.filter((msg) => msg.role === 'assistant')
+    if (assistantMessages.length === 0) {
+      return ''
+    }
+
+    const lastMessage = assistantMessages.slice(-1)[0]
+    if (!lastMessage) {
+      return ''
+    }
+
     if (Array.isArray(lastMessage.content)) {
       return lastMessage.content.map((part) => ('text' in part ? part.text : '')).join('')
     }
@@ -82,10 +95,10 @@ export class ChatService {
   ) {
     return {
       toolCalls: response.toolCalls,
-      messages: response.response.messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      })),
+      messages: [{
+        role: 'assistant',
+        content: response.text,
+      }],
     }
   }
 
@@ -100,12 +113,15 @@ export class ChatService {
     const timestamp = new Date().toISOString()
 
     // Get the final assistant message content
-    const assistantContent = this.getLastAssistantMessage(response.response.messages)
+    const assistantContent = response.text
 
     const toolCalls = []
-    for (const step of response.steps) {
-      if (step.toolCalls) toolCalls.push(...step.toolCalls)
-      if (step.toolResults) toolCalls.push(...step.toolResults)
+    // Check if steps exist before iterating
+    if (response.steps && Array.isArray(response.steps)) {
+      for (const step of response.steps) {
+        if (step.toolCalls) toolCalls.push(...step.toolCalls)
+        if (step.toolResults) toolCalls.push(...step.toolResults)
+      }
     }
 
     // Get merged tool calls using the improved method
@@ -225,56 +241,97 @@ export class ChatService {
     const userMessageId = crypto.randomUUID()
     const assistantMessageId = crypto.randomUUID()
 
-    return db.transaction(async (t) => {
-      const currentDate = new Date()
-      const userDate = currentDate.toISOString()
-      // Add 1 second to the assistant date to ensure correct ordering
-      // This is a workaround for the issue where the assistant message appears before the user message
-      const assistantDate = new Date(currentDate.getTime() + 1000).toISOString()
+    try {
+      return await db.transaction(async (t) => {
+        const currentDate = new Date()
+        const userDate = currentDate.toISOString()
+        // Add 1 second to the assistant date to ensure correct ordering
+        // This is a workaround for the issue where the assistant message appears before the user message
+        const assistantDate = new Date(currentDate.getTime() + 1000).toISOString()
 
-      // Insert user message
-      await t
-        .insert(chatMessage)
-        .values({
-          id: userMessageId,
-          userId,
-          chatId,
-          role: 'user',
-          content: userMessage,
-          messageIndex: '0',
-          createdAt: userDate,
-          updatedAt: userDate,
+        console.log('Saving user message:', { userMessageId, userId, chatId })
+
+        // Insert user message
+        const userMessageResult = await t
+          .insert(chatMessage)
+          .values({
+            id: userMessageId,
+            userId,
+            chatId,
+            role: 'user',
+            content: userMessage,
+            messageIndex: '0',
+            createdAt: userDate,
+            updatedAt: userDate,
+          })
+          .returning()
+          .then(takeUniqueOrThrow)
+          .catch((error) => {
+            console.error('Error inserting user message:', error)
+            throw error
+          })
+
+        console.log('User message saved, now saving assistant message')
+
+        // Insert assistant response with tool calls
+        const aiContent = response.text || ''
+
+        if (!aiContent) {
+          console.warn('No AI content to save')
+        }
+
+        const toolCalls = []
+        // Check if steps exist before iterating
+        if (response.steps && Array.isArray(response.steps)) {
+          for (const step of response.steps) {
+            if (step.toolCalls) toolCalls.push(...step.toolCalls)
+            if (step.toolResults) toolCalls.push(...step.toolResults)
+          }
+        }
+
+        console.log('Saving assistant message:', {
+          assistantMessageId,
+          contentLength: aiContent.length,
+          toolCallsCount: toolCalls.length
         })
-        .returning()
-        .then(takeUniqueOrThrow)
 
-      // Insert assistant response with tool calls
-      const aiContent = this.getLastAssistantMessage(response.response.messages)
+        const assistantMessageResult = await t
+          .insert(chatMessage)
+          .values({
+            id: assistantMessageId,
+            userId,
+            chatId,
+            role: 'assistant',
+            content: aiContent,
+            toolCalls: toolCalls,
+            reasoning: response.reasoning || null,
+            parentMessageId: userMessageId,
+            messageIndex: '1',
+            createdAt: assistantDate,
+            updatedAt: assistantDate,
+          })
+          .returning()
+          .then(takeUniqueOrThrow)
+          .catch((error) => {
+            console.error('Error inserting assistant message:', error)
+            throw error
+          })
 
-      const toolCalls = []
-      for (const step of response.steps) {
-        if (step.toolCalls) toolCalls.push(...step.toolCalls)
-        if (step.toolResults) toolCalls.push(...step.toolResults)
-      }
-
-      return await t
-        .insert(chatMessage)
-        .values({
-          id: assistantMessageId,
-          userId,
-          chatId,
-          role: 'assistant',
-          content: aiContent,
-          toolCalls: toolCalls,
-          reasoning: response.reasoning,
-          parentMessageId: userMessageId,
-          messageIndex: '1',
-          createdAt: assistantDate,
-          updatedAt: assistantDate,
-        })
-        .returning()
-        .then(takeUniqueOrThrow)
-    })
+        console.log('Both messages saved successfully')
+        return assistantMessageResult
+      })
+    } catch (error) {
+      console.error('Error in saveCompleteConversation transaction:', error)
+      logger.error('Failed to save conversation', {
+        error,
+        userId,
+        chatId,
+        userMessageLength: userMessage.length,
+        hasResponse: !!response,
+        responseTextLength: response?.text?.length || 0
+      })
+      throw error
+    }
   }
 
   /**
@@ -383,7 +440,7 @@ export class ChatService {
       ],
     })
 
-    return response.response.messages[response.response.messages.length - 1].content as string
+    return response.text
   }
 
   /**

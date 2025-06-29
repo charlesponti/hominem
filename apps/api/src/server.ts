@@ -12,9 +12,8 @@ import { env } from './lib/env.js'
 import { cache } from './lib/redis.js'
 import { initSentry, sentryErrorHandler, sentryMiddleware } from './lib/sentry.js'
 import { createWebSocketManager } from './lib/websocket.js'
+import { rateLimit, rateLimitIp } from './middleware/rate-limit.js'
 import { supabaseMiddleware } from './middleware/supabase.js'
-
-import rateLimitPlugin from './plugins/rate-limit.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { componentsRoutes } from './routes/components/index.js'
 import { content } from './routes/content/index.js'
@@ -104,6 +103,8 @@ export function createServer(): Hono<AppEnv> {
   app.use('*', secureHeaders())
   app.use('*', sentryMiddleware())
   app.use('*', supabaseMiddleware())
+  app.use('*', rateLimit)
+  app.use('*', rateLimitIp)
 
   app.use(
     '*',
@@ -112,16 +113,6 @@ export function createServer(): Hono<AppEnv> {
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Content-Type', 'Authorization'],
-    })
-  )
-
-  // Apply rate limiting
-  app.use(
-    '*',
-    rateLimitPlugin({
-      maxHits: 100,
-      segment: 'api',
-      windowLength: 60000, // 1 minute
     })
   )
 

@@ -6,7 +6,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '~/components/ui/sheet'
-import { useChats } from '~/lib/hooks/use-chat-persistence'
+import { useChats, useDeleteChat } from '~/lib/hooks/use-chat-persistence'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 
@@ -33,7 +33,8 @@ export function AppSidebar({ userId, onNewChat }: AppSidebarProps) {
   const effectiveUserId = userId || user?.id
 
   // Get chats if user is logged in
-  const { chats, isLoading: isChatsLoading, deleteChat } = useChats(effectiveUserId || '')
+  const { chats, isLoading: isChatsLoading } = useChats(effectiveUserId || '')
+  const { deleteChat } = useDeleteChat(effectiveUserId || '')
 
   // Get user on mount if not provided via props
   useEffect(() => {
@@ -75,7 +76,7 @@ export function AppSidebar({ userId, onNewChat }: AppSidebarProps) {
     e.stopPropagation()
 
     if (window.confirm('Are you sure you want to delete this chat?')) {
-      deleteChat(chatId)
+      deleteChat({ chatId })
       if (currentChatId === chatId) {
         navigate('/chat')
       }

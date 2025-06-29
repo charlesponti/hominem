@@ -16,14 +16,10 @@ export default [
     // API Routes
     route('api/upload', 'routes/api.upload.ts'),
     route('api/vector-search', 'routes/api.vector-search.ts'),
-    route('api/search', 'routes/api.search.ts'),
-    route('api/metrics', 'routes/api.metrics.ts'),
-    route('api/chats', 'routes/api.chats.ts'),
-    route('api/chats/:chatId', 'routes/api.chats.$chatId.ts'),
+    route('api/trpc/:path*', 'routes/api.trpc.ts'),
     route('api/transcribe', 'routes/api.transcribe.ts'),
     route('api/speech', 'routes/api.speech.ts'),
     route('api/chat-stream', 'routes/api.chat-stream.ts'),
-    route('api/files/:fileId', 'routes/api.files.$fileId.ts'),
 
     // Auth routes
     route('/auth/callback', 'routes/auth.callback.tsx'),

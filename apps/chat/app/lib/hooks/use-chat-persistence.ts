@@ -1,5 +1,6 @@
 import type { Chat, ChatMessageSelect } from '@hominem/utils/schema'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { trpc } from '../trpc-client'
 
 export interface ChatWithMessages extends Chat {
   messages: ChatMessageSelect[]
@@ -28,96 +29,73 @@ const QUERY_KEYS = {
  * Hook for managing user chats
  */
 export function useChats(userId: string) {
+  const { data, isLoading, error } = trpc.chatOperations.getUserChats.useQuery(
+    { userId, limit: 50 },
+    {
+      enabled: userId !== 'anonymous',
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    }
+  )
+
+  return {
+    chats: data?.chats || [],
+    isLoading,
+    error,
+  }
+}
+
+/**
+ * Hook for creating a new chat
+ */
+export function useCreateChat(userId: string) {
   const queryClient = useQueryClient()
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: QUERY_KEYS.chats(userId),
-    queryFn: async () => {
-      if (!userId || userId === 'anonymous') {
-        return { chats: [] }
-      }
-
-      const response = await fetch(`/api/chats?userId=${encodeURIComponent(userId)}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch chats')
-      }
-      return response.json()
-    },
-    enabled: userId !== 'anonymous',
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-  })
-
-  const createChatMutation = useMutation({
-    mutationFn: async (params: CreateChatParams) => {
-      const response = await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', ...params }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create chat')
-      }
-
-      return response.json()
-    },
+  const createChatMutation = trpc.chatOperations.createChat.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chats(userId) })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatStats(userId) })
     },
   })
 
-  const deleteChatMutation = useMutation({
-    mutationFn: async (chatId: string) => {
-      const response = await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', chatId }),
-      })
+  return {
+    createChat: createChatMutation.mutateAsync,
+    isCreating: createChatMutation.isPending,
+  }
+}
 
-      if (!response.ok) {
-        throw new Error('Failed to delete chat')
-      }
-
-      return response.json()
-    },
-    onSuccess: (_, chatId) => {
+/**
+ * Hook for deleting a chat
+ */
+export function useDeleteChat(userId: string) {
+  const queryClient = useQueryClient()
+  const deleteChatMutation = trpc.chatOperations.deleteChat.useMutation({
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chats(userId) })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatStats(userId) })
-      queryClient.removeQueries({ queryKey: QUERY_KEYS.chat(chatId) })
-    },
-  })
-
-  const updateTitleMutation = useMutation({
-    mutationFn: async ({ chatId, title }: { chatId: string; title: string }) => {
-      const response = await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'updateTitle', chatId, title }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update chat title')
-      }
-
-      return response.json()
-    },
-    onSuccess: (_, { chatId }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chats(userId) })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat(chatId) })
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.chat(variables.chatId) })
     },
   })
 
   return {
-    chats: data?.chats || [],
-    isLoading,
-    error,
-    createChat: createChatMutation.mutate,
-    deleteChat: deleteChatMutation.mutate,
-    updateTitle: updateTitleMutation.mutate,
-    isCreating: createChatMutation.isPending,
+    deleteChat: deleteChatMutation.mutateAsync,
     isDeleting: deleteChatMutation.isPending,
+  }
+}
+
+/**
+ * Hook for updating chat title
+ */
+export function useUpdateChatTitle(userId: string) {
+  const queryClient = useQueryClient()
+  const updateTitleMutation = trpc.chatOperations.updateChatTitle.useMutation({
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chats(userId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat(variables.chatId) })
+    },
+  })
+
+  return {
+    updateTitle: updateTitleMutation.mutateAsync,
     isUpdatingTitle: updateTitleMutation.isPending,
   }
 }
@@ -126,24 +104,14 @@ export function useChats(userId: string) {
  * Hook for getting a specific chat with messages
  */
 export function useChat(chatId: string | null) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: QUERY_KEYS.chat(chatId || ''),
-    queryFn: async () => {
-      if (!chatId) return null
-
-      const response = await fetch(`/api/chats/${chatId}`)
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error('Failed to fetch chat')
-      }
-      return response.json()
-    },
-    enabled: !!chatId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchOnWindowFocus: false,
-  })
+  const { data, isLoading, error, refetch } = trpc.chatOperations.getChatById.useQuery(
+    { chatId: chatId || '' },
+    {
+      enabled: !!chatId,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+      refetchOnWindowFocus: false,
+    }
+  )
 
   return {
     chat: data?.chat as ChatWithMessages | null,
@@ -157,29 +125,14 @@ export function useChat(chatId: string | null) {
  * Hook for getting user chat statistics
  */
 export function useChatStats(userId: string) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: QUERY_KEYS.chatStats(userId),
-    queryFn: async () => {
-      if (!userId || userId === 'anonymous') {
-        return { stats: { totalChats: 0, totalMessages: 0, recentActivity: null } }
-      }
-
-      const response = await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getStats', userId }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch chat stats')
-      }
-
-      return response.json()
-    },
-    enabled: userId !== 'anonymous',
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-  })
+  const { data, isLoading, error } = trpc.chatOperations.getChatStats.useQuery(
+    { userId },
+    {
+      enabled: userId !== 'anonymous',
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+    }
+  )
 
   return {
     stats: data?.stats as ChatStatsResponse | null,
@@ -192,29 +145,14 @@ export function useChatStats(userId: string) {
  * Hook for searching chats
  */
 export function useSearchChats(userId: string, query: string, enabled = true) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: QUERY_KEYS.searchChats(userId, query),
-    queryFn: async () => {
-      if (!userId || userId === 'anonymous' || !query.trim()) {
-        return { chats: [] }
-      }
-
-      const response = await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'search', userId, query: query.trim() }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to search chats')
-      }
-
-      return response.json()
-    },
-    enabled: enabled && userId !== 'anonymous' && query.trim().length > 0,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnWindowFocus: false,
-  })
+  const { data, isLoading, error } = trpc.chatOperations.searchChats.useQuery(
+    { userId, query, limit: 20 },
+    {
+      enabled: enabled && userId !== 'anonymous' && query.trim().length > 0,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+      refetchOnWindowFocus: false,
+    }
+  )
 
   return {
     chats: data?.chats || [],
@@ -224,68 +162,29 @@ export function useSearchChats(userId: string, query: string, enabled = true) {
 }
 
 /**
- * Hook for optimistic chat updates
+ * Hook for chat mutations with optimistic updates
  */
 export function useChatMutations(userId: string) {
   const queryClient = useQueryClient()
 
   const optimisticCreateChat = (params: CreateChatParams & { id: string }) => {
-    const queryKey = QUERY_KEYS.chats(userId)
-
-    // Optimistically add the new chat
-    queryClient.setQueryData(queryKey, (old: any) => {
-      if (!old)
-        return {
-          chats: [
-            { ...params, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          ],
-        }
-      return {
-        ...old,
-        chats: [
-          { ...params, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          ...old.chats,
-        ],
-      }
-    })
+    queryClient.setQueryData(QUERY_KEYS.chats(userId), (old: any) => ({
+      chats: [params, ...(old?.chats || [])],
+    }))
   }
 
   const optimisticDeleteChat = (chatId: string) => {
-    const queryKey = QUERY_KEYS.chats(userId)
-
-    // Optimistically remove the chat
-    queryClient.setQueryData(queryKey, (old: any) => {
-      if (!old) return { chats: [] }
-      return {
-        ...old,
-        chats: old.chats.filter((chat: Chat) => chat.id !== chatId),
-      }
-    })
+    queryClient.setQueryData(QUERY_KEYS.chats(userId), (old: any) => ({
+      chats: (old?.chats || []).filter((chat: any) => chat.id !== chatId),
+    }))
   }
 
   const optimisticUpdateTitle = (chatId: string, title: string) => {
-    const chatKey = QUERY_KEYS.chat(chatId)
-    const chatsKey = QUERY_KEYS.chats(userId)
-
-    // Update individual chat
-    queryClient.setQueryData(chatKey, (old: any) => {
-      if (!old) return old
-      return {
-        ...old,
-        chat: { ...old.chat, title, updatedAt: new Date().toISOString() },
-      }
-    })
-
-    // Update chat in the list
-    queryClient.setQueryData(chatsKey, (old: any) => {
-      if (!old) return old
-      return {
-        ...old,
-        chats: old.chats.map((chat: Chat) =>
-          chat.id === chatId ? { ...chat, title, updatedAt: new Date().toISOString() } : chat
-        ),
-      }
-    })
+    queryClient.setQueryData(QUERY_KEYS.chats(userId), (old: any) => ({
+      chats: (old?.chats || []).map((chat: any) =>
+        chat.id === chatId ? { ...chat, title } : chat
+      ),
+    }))
   }
 
   return {

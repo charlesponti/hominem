@@ -14,6 +14,7 @@ import type { Route } from './+types/root'
 import './app.css'
 import { getQueryClient } from './lib/get-query-client'
 import { getServerSession } from './lib/supabase'
+import { createTRPCClient, trpc } from './lib/trpc-client'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -62,7 +63,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 const queryClient = getQueryClient()
 
 function AppProviders({ children }: { children: React.ReactNode }) {
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  const trpcClient = createTRPCClient()
+
+  return (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </trpc.Provider>
+  )
 }
 
 export default function App() {

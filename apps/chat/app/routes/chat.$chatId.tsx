@@ -9,7 +9,11 @@ import { FileUploader } from '~/components/chat/FileUploader.js'
 import { SearchContextPreview } from '~/components/chat/SearchContextPreview.js'
 import { performWebSearch } from '~/components/chat/utils.js'
 import { Button } from '~/components/ui/button.js'
-import { useChat as useChatPersistence, useChats } from '~/lib/hooks/use-chat-persistence.js'
+import {
+  useChat as useChatPersistence,
+  useChats,
+  useCreateChat,
+} from '~/lib/hooks/use-chat-persistence.js'
 import { useTextToSpeech } from '~/lib/hooks/use-text-to-speech.js'
 import type { ChatFileAttachment } from '~/lib/types/chat.js'
 import type { UploadedFile } from '~/lib/types/upload.js'
@@ -32,7 +36,6 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     // This shouldn't happen since root loader handles auth, but just in case
     throw new Error('User not authenticated')
   }
-  const [inputValue, setInputValue] = useState('')
   const [isVoiceMode, setIsVoiceMode] = useState(false)
   const [showFileUploader, setShowFileUploader] = useState(false)
   const [showAudioRecorder, setShowAudioRecorder] = useState(false)
@@ -54,7 +57,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   const { chat, isLoading: isLoadingChat, refetch: refetchChat } = useChatPersistence(currentChatId)
 
   // Hook for managing chats (creating new ones)
-  const { createChat } = useChats(userId)
+  const { createChat } = useCreateChat(userId)
 
   // Convert chat messages to AI SDK format
   const initialMessages =
@@ -150,9 +153,9 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
 
   const { state: ttsState, speak, stop: stopTTS } = useTextToSpeech()
 
-  const characterCount = inputValue.length
+  const characterCount = input.length
   const isOverLimit = characterCount > MAX_MESSAGE_LENGTH
-  const trimmedValue = inputValue.trim()
+  const trimmedValue = input.trim()
   const isLoading = status === 'streaming' || status === 'submitted'
   const canSubmit = (trimmedValue || attachedFiles.length > 0) && !isLoading && !isOverLimit
 
@@ -176,18 +179,6 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     }
   }, [messages, isVoiceMode, isLoading, speak])
 
-  // Handle input changes
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value
-      if (value.length <= MAX_MESSAGE_LENGTH) {
-        setInputValue(value)
-        setInput(value)
-      }
-    },
-    [setInput]
-  )
-
   // Helper function to generate chat title from message
   const generateChatTitle = useCallback((message: string): string => {
     // Take first 50 characters and clean it up
@@ -198,33 +189,20 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     return title || 'New Chat'
   }, [])
 
-  // Handle form submission
+  // Handle submit
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return
-
-    const messageContent = trimmedValue
-    if (!messageContent && attachedFiles.length === 0) return
 
     try {
       let activeChatId = currentChatId
 
       // If no chat exists, create a new one
-      if (!activeChatId && messageContent) {
-        const title = generateChatTitle(messageContent)
+      if (!activeChatId && trimmedValue) {
+        const title = generateChatTitle(trimmedValue)
 
-        // Create new chat
-        const response = await fetch('/api/chats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'create',
-            title,
-            userId,
-          }),
-        })
-
-        if (response.ok) {
-          const result = await response.json()
+        // Create new chat using the hook
+        try {
+          const result = await createChat({ title, userId })
           activeChatId = result.chat?.id
           setCurrentChatId(activeChatId)
 
@@ -232,11 +210,14 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
           if (activeChatId) {
             navigate(`/chat/${activeChatId}`, { replace: true })
           }
+        } catch (error) {
+          console.error('Failed to create chat:', error)
+          // Continue with the message even if chat creation fails
         }
       }
 
       // Set the input content first
-      setInput(messageContent)
+      setInput(trimmedValue)
 
       // Submit using the AI SDK format
       aiHandleSubmit(undefined, {
@@ -250,7 +231,6 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
       })
 
       // Clear form
-      setInputValue('')
       setAttachedFiles([])
       setSearchContext('')
 
@@ -278,6 +258,7 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
     navigate,
     generateChatTitle,
     refetchChat,
+    createChat,
   ])
 
   // Handle key events
@@ -296,10 +277,10 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   // Clear chat
   const clearChat = useCallback(() => {
     setMessages([])
-    setInputValue('')
+    setInput('')
     setAttachedFiles([])
     setSearchContext('')
-  }, [setMessages])
+  }, [setMessages, setInput])
 
   // Handle file uploads - convert from API response to chat attachment format
   const handleFilesUploaded = useCallback((uploadedFiles: UploadedFile[]) => {
@@ -311,13 +292,15 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
       isUploading: false,
       uploadProgress: 100,
     }))
-    setAttachedFiles((prev) => [...prev, ...convertedFiles])
+    setAttachedFiles((prev: ChatFileAttachment[]) => [...prev, ...convertedFiles])
     setShowFileUploader(false)
   }, [])
 
   // Handle file removal
   const handleRemoveFile = useCallback((fileId: string) => {
-    setAttachedFiles((prev) => prev.filter((file) => file.id !== fileId))
+    setAttachedFiles((prev: ChatFileAttachment[]) =>
+      prev.filter((file: ChatFileAttachment) => file.id !== fileId)
+    )
   }, [])
 
   // Handle remove all files
@@ -329,7 +312,6 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
   const handleAudioRecorded = useCallback(
     (audioBlob: Blob, transcript?: string) => {
       if (transcript) {
-        setInputValue(transcript)
         setInput(transcript)
       }
       setShowAudioRecorder(false)
@@ -420,8 +402,8 @@ export default function UnifiedChatInterface({ params }: Route.ComponentProps) {
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              value={inputValue}
-              onChange={handleInputChange}
+              value={input}
+              onChange={aiHandleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
               className="w-full resize-none rounded-lg border border-border px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation"

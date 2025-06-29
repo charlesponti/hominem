@@ -1,5 +1,6 @@
 import { router } from '../trpc'
 import { bookmarksRouter } from '../trpc/routers/bookmarks.js'
+import { chatRouter } from '../trpc/routers/chat'
 import { goalsRouter } from '../trpc/routers/goals'
 import { vectorRouter } from '../trpc/routers/vector.js'
 import { financeRouter } from './finance/finance.trpc.js'
@@ -9,6 +10,7 @@ export const appRouter = router({
   finance: financeRouter,
   vector: vectorRouter,
   bookmarks: bookmarksRouter,
+  chat: chatRouter,
 })
 
 export type AppRouter = typeof appRouter

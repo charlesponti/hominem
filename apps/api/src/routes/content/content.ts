@@ -9,7 +9,7 @@ const contentService = new ContentService()
 
 // Content creation schema (publishable content only)
 const createContentSchema = z.object({
-  type: z.enum(['tweet', 'essay', 'blog_post', 'social_post']).default('tweet'),
+  type: z.enum(['note', 'task', 'timer', 'journal', 'document', 'tweet', 'essay', 'blog_post', 'social_post']).default('note'),
   title: z.string().optional(),
   content: z.string(),
   tags: z
@@ -101,7 +101,7 @@ const listContentSchema = z.object({
     .transform(
       (val) =>
         val?.split(',') as
-          | ('note' | 'task' | 'timer' | 'journal' | 'document' | 'tweet')[]
+          | ('note' | 'task' | 'timer' | 'journal' | 'document' | 'tweet' | 'essay' | 'blog_post' | 'social_post')[]
           | undefined
     ),
   query: z.string().optional(),

@@ -163,6 +163,10 @@ export class ChatDatabaseService {
    */
   static async deleteChat(chatId: string): Promise<boolean> {
     try {
+      // First, delete all messages associated with the chat
+      await db.delete(chatMessage).where(eq(chatMessage.chatId, chatId))
+
+      // Then, delete the chat itself
       await db.delete(chat).where(eq(chat.id, chatId))
       return true
     } catch (error) {

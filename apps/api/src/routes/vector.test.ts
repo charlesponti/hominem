@@ -1,10 +1,10 @@
 import { db } from '@hominem/utils/db'
 import { users } from '@hominem/utils/schema'
-import { useApiTestLifecycle } from 'apps/api/test/api-test-utils.js'
 import { eq } from 'drizzle-orm'
 import type { Hono } from 'hono'
 import crypto from 'node:crypto'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useApiTestLifecycle } from '../../test/api-test-utils.js'
 import { createTRPCTestClient } from '../../test/trpc-test-utils.js'
 import type { AppEnv } from '../server.js'
 
