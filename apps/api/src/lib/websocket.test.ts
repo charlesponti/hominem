@@ -420,7 +420,7 @@ describe('WebSocket Manager', () => {
       const { createWebSocketManager } = await import('./websocket.js')
 
       const manager = createWebSocketManager()
-      const connections = []
+      const connections: MockWebSocket[] = []
 
       // Simulate multiple connections
       for (let i = 0; i < 5; i++) {
