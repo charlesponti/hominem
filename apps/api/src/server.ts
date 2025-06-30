@@ -16,8 +16,6 @@ import { rateLimit, rateLimitIp } from './middleware/rate-limit.js'
 import { supabaseMiddleware } from './middleware/supabase.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { componentsRoutes } from './routes/components/index.js'
-import { financeRoutes } from './routes/finance/index.js'
-import { plaidRoutes } from './routes/finance/plaid/index.js'
 import { goalsRoutes } from './routes/goals.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
@@ -28,6 +26,8 @@ import { statusRoutes } from './routes/status.js'
 import { appRouter } from './routes/trpc.js'
 import { userRoutes } from './routes/user/index.js'
 import { vectorRoutes } from './routes/vector.js'
+import { financeRoutes } from './trpc/routers/finance/index.js'
+import { plaidRoutes } from './trpc/routers/finance/plaid/index.js'
 
 export interface AppEnv {
   Bindings: Record<string, unknown>
@@ -112,6 +112,7 @@ export function createServer(): Hono<AppEnv> {
       createContext: (opts, c) => {
         return {
           req: c.req,
+          queues: c.get('queues'),
         }
       },
       onError: ({ error, path, input }) => {

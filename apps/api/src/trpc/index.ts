@@ -1,12 +1,17 @@
 import { db } from '@hominem/utils/db'
 import { users } from '@hominem/utils/schema'
 import { initTRPC, TRPCError } from '@trpc/server'
+import type { Queue } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import type { HonoRequest } from 'hono'
 import { getHominemUser } from '../middleware/supabase.js'
 
 export interface Context {
   req: HonoRequest
+  queues: {
+    plaidSync: Queue
+    importTransactions: Queue
+  }
 }
 
 const t = initTRPC.context<Context>().create()

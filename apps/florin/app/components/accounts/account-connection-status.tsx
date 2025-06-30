@@ -1,10 +1,9 @@
 import { AlertCircleIcon, Banknote, CheckCircleIcon, LinkIcon } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { useAllAccounts } from '~/lib/hooks/use-finance-data'
-import { useFinancialInstitutions } from '~/lib/hooks/use-financial-institutions'
+import { useAllInstitutions } from '~/lib/hooks/use-institutions'
 import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution'
-import { trpc, type RouterOutput } from '~/lib/trpc'
+import type { RouterOutput } from '~/lib/trpc'
 import { AccountConnectionDialog } from './account-connection-dialog'
 
 interface AccountConnectionStatusProps {
@@ -16,7 +15,7 @@ export function AccountConnectionStatus({
   account,
   showDialog = true,
 }: AccountConnectionStatusProps) {
-  const institutionsQuery = useFinancialInstitutions()
+  const institutionsQuery = useAllInstitutions()
   const plaidAccountsQuery = usePlaidAccountsByInstitution(account.institutionId)
 
   if (institutionsQuery.isLoading) {
@@ -45,13 +44,15 @@ export function AccountConnectionStatus({
     )
   }
 
-  const institution = institutionsQuery.data?.find((inst: any) => inst.id === account.institutionId)
+  const institution = institutionsQuery.data?.find((inst) => inst.id === account.institutionId)
 
   if (!institution) {
     return <Badge variant="destructive">Unknown Institution</Badge>
   }
 
-  const linkedPlaidAccount = plaidAccountsQuery.data?.find((plaidAcc) => plaidAcc.id === account.plaidItemId)
+  const linkedPlaidAccount = plaidAccountsQuery.data?.find(
+    (plaidAcc) => plaidAcc.id === account.plaidItemId
+  )
 
   return (
     <div className="flex items-center space-x-2">

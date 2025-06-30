@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { z } from 'zod'
+import { cache } from './redis'
 
 // PKCE utilities
 export function generateCodeVerifier(): string {
@@ -10,14 +11,23 @@ export function generateCodeChallenge(verifier: string): string {
   return createHash('sha256').update(verifier).digest('base64url')
 }
 
-// In-memory store for PKCE verifiers (use Redis in production)
-export const pkceStore = new Map<string, string>()
+// Redis-based PKCE store functions
+export async function storePkceVerifier(state: string, codeVerifier: string): Promise<void> {
+  // Store with 10 minute expiration (OAuth flows typically complete within 5-10 minutes)
+  await cache.setex(`pkce:${state}`, 600, codeVerifier)
+}
+
+export async function getPkceVerifier(state: string): Promise<string | null> {
+  const verifier = await cache.get(`pkce:${state}`)
+  if (verifier) {
+    // Delete after retrieval to prevent replay attacks
+    await cache.del(`pkce:${state}`)
+    return verifier
+  }
+  return null
+}
 
 // Request schemas
-export const TwitterCallbackSchema = z.object({
-  code: z.string(),
-  state: z.string(),
-})
 
 export const TwitterDisconnectSchema = z.object({
   accountId: z.string().uuid(),

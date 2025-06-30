@@ -23,7 +23,7 @@ interface ProcessingStats {
  */
 function detectDuplicates(transactions: TransactionRow[], verbose = false) {
   const uniqueTransactions: TransactionRow[] = []
-  const seen = new Map<string, number>() // Map to index in uniqueTransactions
+  const seen = new Map<string, number>()
 
   if (verbose) {
     consola.info(`Processing ${transactions.length} transactions for duplicates...`)

@@ -1,6 +1,5 @@
 import { tool } from 'ai'
 import { and, eq, like } from 'drizzle-orm'
-import crypto from 'node:crypto'
 import { z } from 'zod'
 import { db } from '../db/index'
 import {
@@ -8,15 +7,15 @@ import {
   type FinanceAccountInsert,
   type FinanceTransactionInsert,
 } from '../db/schema/finance.schema'
+import { calculateTransactions } from './analytics/transaction-analytics.service'
+import { createAccount, deleteAccount, listAccounts, updateAccount } from './core/account.service'
 import {
-  calculateTransactions,
-  createNewTransaction,
+  createTransaction,
   deleteTransaction,
   queryTransactions,
   updateTransaction,
-} from './finance.service'
+} from './finance.transactions.service'
 import type { QueryOptions } from './finance.types'
-import FinancialAccountService from './financial-account.service'
 
 export const budgetCalculatorSchema = z.object({
   monthlyIncome: z.number().positive().describe('Monthly income amount'),
@@ -147,7 +146,7 @@ export const create_finance_account = tool({
   description: 'Create a new finance account',
   parameters: financeAccountSchema,
   async execute(args) {
-    const created = await FinancialAccountService.createAccount({
+    const created = await createAccount({
       name: args.name,
       type: args.type,
       balance: args.balance,
@@ -163,7 +162,7 @@ export const get_finance_accounts = tool({
   description: 'Get all finance accounts',
   parameters: getFinanceAccountsSchema,
   async execute(args) {
-    let accounts = await FinancialAccountService.listAccounts(args.userId)
+    let accounts = await listAccounts(args.userId)
     if (args.type) {
       accounts = accounts.filter((acc) => acc.type === args.type)
     }
@@ -178,17 +177,18 @@ export const update_finance_account = tool({
   description: 'Update a finance account',
   parameters: updateFinanceAccountSchema,
   async execute(args) {
-    const updates: Partial<FinanceAccountInsert> = {}
+    const updates: Partial<{
+      name: string
+      balance: string
+      interestRate: string | null
+      minimumPayment: string | null
+    }> = {}
     if (args.name) updates.name = args.name
     if (args.balance) updates.balance = args.balance.toString()
     if (args.interestRate) updates.interestRate = args.interestRate.toString()
     if (args.minimumPayment) updates.minimumPayment = args.minimumPayment.toString()
 
-    const updated = await FinancialAccountService.updateAccount(
-      args.accountId,
-      args.userId,
-      updates
-    )
+    const updated = await updateAccount(args.accountId, args.userId, updates)
     return { message: `Updated finance account ${updated.id}`, account: updated }
   },
 })
@@ -197,7 +197,7 @@ export const delete_finance_account = tool({
   description: 'Delete a finance account',
   parameters: deleteFinanceAccountSchema,
   async execute(args) {
-    await FinancialAccountService.deleteAccount(args.accountId, args.userId)
+    await deleteAccount(args.accountId, args.userId)
     return { message: `Deleted finance account ${args.accountId}` }
   },
 })
@@ -222,7 +222,7 @@ export const create_transaction = tool({
       userId: args.userId,
     }
 
-    const result = await createNewTransaction(transaction)
+    const result = await createTransaction(transaction)
     return {
       message: `Created ${args.type} transaction for ${args.amount} on ${args.date}`,
       transaction: result,

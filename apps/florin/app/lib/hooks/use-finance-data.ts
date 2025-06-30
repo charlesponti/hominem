@@ -17,12 +17,14 @@ export interface FilterArgs {
 }
 
 // Export tRPC hooks directly for simple queries
-export const useFinanceAccounts = () => trpc.finance.accounts.list.useQuery({ includeInactive: false })
+export const useFinanceAccounts = () =>
+  trpc.finance.accounts.list.useQuery({ includeInactive: false })
 
-// Hook that adds value by transforming dates and creating accounts map
+export const useFinancialInstitutions = () => trpc.finance.institutions.list.useQuery()
+
 export function useFinanceAccountsWithMap() {
   const accountsQuery = useFinanceAccounts()
-  
+
   // Transform accounts to convert string dates to Date objects
   const transformedAccounts = useMemo(() => {
     return (accountsQuery.data || []).map((account) => ({
@@ -47,7 +49,7 @@ export function useFinanceAccountsWithMap() {
 // Hook that adds value by transforming data for unified view
 export function useAllAccounts() {
   const allAccountsQuery = trpc.finance.accounts.all.useQuery()
-  
+
   return {
     isLoading: allAccountsQuery.isLoading,
     error: allAccountsQuery.error,

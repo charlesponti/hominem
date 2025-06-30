@@ -4,13 +4,11 @@ import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { randomUUID } from 'node:crypto'
+import z from 'zod'
 import { env } from '../../lib/env.js'
-import { TwitterCallbackSchema, pkceStore } from '../../lib/oauth.twitter.utils.js'
+import { getPkceVerifier } from '../../lib/oauth.twitter.utils.js'
 import {
   TWITTER_SCOPES,
-  makeTwitterApiRequest,
-  refreshTwitterToken,
-  type TwitterAccount,
   type TwitterTokenResponse,
   type TwitterUserResponse,
 } from '../../lib/twitter-tokens.js'
@@ -23,24 +21,24 @@ const TWITTER_REDIRECT_URI = `${env.API_URL}/api/oauth/twitter/callback`
 export const oauthTwitterCallbackRoutes = new Hono()
 
 // Handle Twitter OAuth callback
-oauthTwitterCallbackRoutes.get('/', zValidator('query', TwitterCallbackSchema), async (c) => {
+oauthTwitterCallbackRoutes.get('/', zValidator('query', z.object({
+  code: z.string(),
+  state: z.string(),
+})), async (c) => {
   try {
     const { code, state } = c.req.valid('query')
 
     // Extract userId from state
-    const [stateValue, userId] = state.split('.')
+    const [_stateValue, userId] = state.split('.')
     if (!userId) {
       return c.redirect(`${env.NOTES_URL}/account?twitter=error&reason=invalid_state`)
     }
 
-    // Retrieve PKCE verifier from store
-    const codeVerifier = pkceStore.get(state)
+    // Retrieve PKCE verifier from Redis
+    const codeVerifier = await getPkceVerifier(state)
     if (!codeVerifier) {
       return c.redirect(`${env.NOTES_URL}/account?twitter=error&reason=invalid_verifier`)
     }
-
-    // Clean up the stored verifier
-    pkceStore.delete(state)
 
     // Exchange authorization code for access token
     const tokenResponse = await fetch('https://api.x.com/2/oauth2/token', {

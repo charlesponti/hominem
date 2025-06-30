@@ -7,19 +7,16 @@ import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../../lib/env'
 import {
+  generateCodeChallenge,
+  generateCodeVerifier,
+  storePkceVerifier,
   TwitterPostSchema,
   type TwitterTweetResponse,
   type TwitterTweetsResponse,
 } from '../../lib/oauth.twitter.utils'
-import { makeTwitterApiRequest, type TwitterAccount } from '../../lib/twitter-tokens'
+import { makeTwitterApiRequest, TWITTER_SCOPES, type TwitterAccount } from '../../lib/twitter-tokens'
 import { protectedProcedure, router } from '../index'
 
-// Input schemas
-const twitterPostSchema = z.object({
-  text: z.string().min(1, 'Tweet text is required').max(280, 'Tweet must be 280 characters or less'),
-  contentId: z.string().uuid().optional(),
-  saveAsContent: z.boolean().default(true),
-})
 
 export const twitterRouter = router({
   // Get connected Twitter accounts
@@ -40,7 +37,7 @@ export const twitterRouter = router({
 
   // Get Twitter authorization URL
   authorize: protectedProcedure
-    .mutation(async () => {
+    .mutation(async ({ ctx }) => {
       const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID
       const TWITTER_REDIRECT_URI = `${env.API_URL}/api/oauth/twitter/callback`
       
@@ -51,18 +48,25 @@ export const twitterRouter = router({
         })
       }
 
-      // Generate PKCE challenge
-      const codeVerifier = crypto.randomUUID()
-      const codeChallenge = codeVerifier // In a real implementation, you'd hash this
+      // Generate PKCE parameters
+      const codeVerifier = generateCodeVerifier()
+      const codeChallenge = generateCodeChallenge(codeVerifier)
 
-      const authUrl = new URL('https://twitter.com/i/oauth2/authorize')
+
+      // Generate state parameter for CSRF protection
+      const state = `${randomUUID()}.${ctx.userId}`
+      
+      // Store PKCE verifier in Redis for later use in callback
+      await storePkceVerifier(state, codeVerifier)
+
+      const authUrl = new URL('https://x.com/i/oauth2/authorize')
       authUrl.searchParams.set('response_type', 'code')
       authUrl.searchParams.set('client_id', TWITTER_CLIENT_ID)
       authUrl.searchParams.set('redirect_uri', TWITTER_REDIRECT_URI)
-      authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read offline.access')
-      authUrl.searchParams.set('state', crypto.randomUUID())
+      authUrl.searchParams.set('scope', TWITTER_SCOPES)
+      authUrl.searchParams.set('state', state)
       authUrl.searchParams.set('code_challenge', codeChallenge)
-      authUrl.searchParams.set('code_challenge_method', 'plain')
+      authUrl.searchParams.set('code_challenge_method', 'S256')
 
       return { authUrl: authUrl.toString() }
     }),

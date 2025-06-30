@@ -4,7 +4,7 @@ import {
   calculateTimeSeriesStats,
   generateTimeSeriesData,
   type TimeSeriesDataPoint,
-} from '../finance-analyze.service.js'
+} from '../analytics/time-series.service.js'
 import { cleanupFinanceTestData, seedFinanceTestData } from './finance-test-seed.js'
 
 describe.skip('Finance Analyze Service Integration Tests', () => {
