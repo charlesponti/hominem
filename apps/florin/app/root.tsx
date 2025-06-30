@@ -54,7 +54,7 @@ export const links: Route.LinksFunction = () => [
   { rel: 'icon', type: 'image/png', sizes: '192x192', href: 'icons/android-icon-192x192.png' },
 
   // Web Manifest
-  { rel: 'manifest', href: 'icons/manifest.json' },
+  { rel: 'manifest', href: '/manifest.json' },
 
   // Safari Pinned Tab Icon
   { rel: 'mask-icon', href: 'icons/safari-pinned-tab.svg', color: '#ffffff' },

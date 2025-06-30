@@ -1,8 +1,15 @@
-import { db } from '@hominem/utils/db'
-import { summarizeByMonth } from '@hominem/utils/finance'
-import { budgetCategories, transactions } from '@hominem/utils/schema'
-import { and, eq, sql } from 'drizzle-orm'
-import crypto from 'node:crypto'
+import {
+  bulkCreateBudgetCategoriesFromTransactions,
+  checkBudgetCategoryNameExists,
+  createBudgetCategory,
+  deleteBudgetCategory,
+  getAllBudgetCategories,
+  getBudgetCategoryById,
+  getTransactionCategoriesAnalysis,
+  getUserExpenseCategories,
+  summarizeByMonth,
+  updateBudgetCategory,
+} from '@hominem/utils/finance'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../index.js'
 
@@ -11,23 +18,14 @@ export const budgetRouter = router({
   // Budget Categories CRUD
   categories: {
     list: protectedProcedure.query(async ({ ctx }) => {
-      const categories = await db.query.budgetCategories.findMany({
-        where: eq(budgetCategories.userId, ctx.userId),
-        orderBy: (table, { asc }) => [asc(table.name)],
-      })
+      const categories = await getAllBudgetCategories(ctx.userId)
       return categories
     }),
 
     get: protectedProcedure
       .input(z.object({ id: z.string().uuid('Invalid ID format') }))
       .query(async ({ input, ctx }) => {
-        const category = await db.query.budgetCategories.findFirst({
-          where: and(eq(budgetCategories.id, input.id), eq(budgetCategories.userId, ctx.userId)),
-        })
-
-        if (!category) {
-          throw new Error('Budget category not found')
-        }
+        const category = await getBudgetCategoryById(input.id, ctx.userId)
         return category
       }),
 
@@ -36,36 +34,20 @@ export const budgetRouter = router({
         z.object({
           name: z.string().min(1, 'Name is required'),
           type: z.enum(['income', 'expense'], { message: "Type must be 'income' or 'expense'" }),
-          allocatedAmount: z.number().min(0).optional(),
+          averageMonthlyExpense: z.string().optional(),
           budgetId: z.string().uuid('Invalid budget ID format').optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
-        const { allocatedAmount, ...restOfData } = input
-
-        // Check if category with this name already exists for this user
-        const existingCategory = await db.query.budgetCategories.findFirst({
-          where: and(
-            eq(budgetCategories.name, restOfData.name),
-            eq(budgetCategories.userId, ctx.userId)
-          ),
-        })
-
+        const existingCategory = await checkBudgetCategoryNameExists(input.name, ctx.userId)
         if (existingCategory) {
-          throw new Error(
-            `A budget category named "${restOfData.name}" already exists for this user`
-          )
+          throw new Error(`A budget category named "${input.name}" already exists for this user`)
         }
 
-        const [newCategory] = await db
-          .insert(budgetCategories)
-          .values({
-            ...restOfData,
-            id: crypto.randomUUID(),
-            averageMonthlyExpense: allocatedAmount?.toString(), // Convert number to string for numeric type
-            userId: ctx.userId,
-          })
-          .returning()
+        const newCategory = await createBudgetCategory({
+          ...input,
+          userId: ctx.userId,
+        })
 
         return newCategory
       }),
@@ -76,45 +58,26 @@ export const budgetRouter = router({
           id: z.string().uuid('Invalid ID format'),
           name: z.string().min(1).optional(),
           type: z.enum(['income', 'expense']).optional(),
-          allocatedAmount: z.number().min(0).optional(),
+          averageMonthlyExpense: z.string().optional(),
           budgetId: z.string().uuid().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
-        const { id, allocatedAmount, ...restOfData } = input
+        const { id, ...updateData } = input
 
-        if (Object.keys(restOfData).length === 0 && allocatedAmount === undefined) {
+        if (Object.keys(updateData).length === 0) {
           throw new Error('No update data provided')
         }
 
-        const [updatedCategory] = await db
-          .update(budgetCategories)
-          .set({
-            ...restOfData,
-            ...(allocatedAmount !== undefined && {
-              averageMonthlyExpense: allocatedAmount.toString(),
-            }),
-          })
-          .where(and(eq(budgetCategories.id, id), eq(budgetCategories.userId, ctx.userId)))
-          .returning()
+        const updatedCategory = await updateBudgetCategory(id, ctx.userId, updateData)
 
-        if (!updatedCategory) {
-          throw new Error('Budget category not found or not authorized to update')
-        }
         return updatedCategory
       }),
 
     delete: protectedProcedure
       .input(z.object({ id: z.string().uuid('Invalid ID format') }))
       .mutation(async ({ input, ctx }) => {
-        const result = await db
-          .delete(budgetCategories)
-          .where(and(eq(budgetCategories.id, input.id), eq(budgetCategories.userId, ctx.userId)))
-
-        // Note: Drizzle's delete behavior may vary by driver, but this should work for most cases
-        if (result.length === 0) {
-          throw new Error('Budget category not found or not authorized to delete')
-        }
+        await deleteBudgetCategory(input.id, ctx.userId)
 
         return { success: true, message: 'Budget category deleted successfully' }
       }),
@@ -130,12 +93,10 @@ export const budgetRouter = router({
     .query(async ({ input, ctx }) => {
       const { months: monthsToFetch } = input
 
-      const userExpenseCategories = await db.query.budgetCategories.findMany({
-        where: and(eq(budgetCategories.userId, ctx.userId), eq(budgetCategories.type, 'expense')),
-      })
+      const userExpenseCategories = await getUserExpenseCategories(ctx.userId)
 
       const totalMonthlyBudget = userExpenseCategories.reduce(
-        (sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'),
+        (sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'),
         0
       )
 
@@ -199,7 +160,7 @@ export const budgetRouter = router({
       // If manual data is provided, use it directly
       if (input) {
         const { income, expenses } = input
-        const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+        const totalExpenses = expenses.reduce((sum: number, expense) => sum + expense.amount, 0)
         const surplus = income - totalExpenses
         const savingsRate = ((income - totalExpenses) / income) * 100
 
@@ -229,10 +190,7 @@ export const budgetRouter = router({
       }
 
       // Otherwise, use user's budget categories
-      const userCategories = await db.query.budgetCategories.findMany({
-        where: eq(budgetCategories.userId, ctx.userId),
-        orderBy: (table, { asc }) => [asc(table.name)],
-      })
+      const userCategories = await getAllBudgetCategories(ctx.userId)
 
       if (userCategories.length === 0) {
         throw new Error(
@@ -243,7 +201,7 @@ export const budgetRouter = router({
       // Calculate from user's categories
       const income = userCategories
         .filter((cat) => cat.type === 'income')
-        .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0)
+        .reduce((sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0)
 
       const expenses = userCategories
         .filter((cat) => cat.type === 'expense')
@@ -256,7 +214,7 @@ export const budgetRouter = router({
         throw new Error('No income categories found. Please add income categories first.')
       }
 
-      const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+      const totalExpenses = expenses.reduce((sum: number, expense) => sum + expense.amount, 0)
       const surplus = income - totalExpenses
       const savingsRate = ((income - totalExpenses) / income) * 100
 
@@ -287,32 +245,7 @@ export const budgetRouter = router({
 
   // Transaction Categories Analysis
   transactionCategories: protectedProcedure.query(async ({ ctx }) => {
-    // Get distinct categories from transactions
-    const transactionCategories = await db
-      .select({
-        category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`,
-        count: sql<number>`COUNT(*)`,
-        totalAmount: sql<number>`SUM(${transactions.amount})`,
-        avgAmount: sql<number>`AVG(${transactions.amount})`,
-      })
-      .from(transactions)
-      .where(eq(transactions.userId, ctx.userId))
-      .groupBy(sql`COALESCE(${transactions.category}, 'Uncategorized')`)
-      .orderBy(sql`COUNT(*) DESC`)
-
-    // Filter out empty/null categories and format the response
-    const categories = transactionCategories
-      .filter(
-        (row) => row.category && row.category !== 'Uncategorized' && row.category.trim() !== ''
-      )
-      .map((row) => ({
-        name: row.category,
-        transactionCount: row.count,
-        totalAmount: Number.parseFloat(row.totalAmount.toString()),
-        averageAmount: Number.parseFloat(row.avgAmount.toString()),
-        suggestedBudget: Math.abs(Number.parseFloat(row.avgAmount.toString()) * 12), // Monthly average * 12
-      }))
-
+    const categories = await getTransactionCategoriesAnalysis(ctx.userId)
     return categories
   }),
 
@@ -324,61 +257,13 @@ export const budgetRouter = router({
           z.object({
             name: z.string().min(1, 'Name is required'),
             type: z.enum(['income', 'expense'], { message: "Type must be 'income' or 'expense'" }),
-            allocatedAmount: z.number().min(0).optional(),
+            averageMonthlyExpense: z.string().optional(),
           })
         ),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { categories } = input
-
-      if (categories.length === 0) {
-        throw new Error('No categories provided')
-      }
-
-      // Get existing budget category names for this user
-      const existingCategories = await db.query.budgetCategories.findMany({
-        where: eq(budgetCategories.userId, ctx.userId),
-        columns: { name: true },
-      })
-      const existingNames = new Set(existingCategories.map((cat) => cat.name.toLowerCase()))
-
-      // Filter out categories that already exist (case-insensitive comparison)
-      const newCategories = categories.filter((cat) => !existingNames.has(cat.name.toLowerCase()))
-
-      if (newCategories.length === 0) {
-        return {
-          success: true,
-          message: 'All categories already exist',
-          categories: [],
-          skipped: categories.length,
-        }
-      }
-
-      // Create only the new categories
-      const createdCategories = await db
-        .insert(budgetCategories)
-        .values(
-          newCategories.map((cat) => ({
-            id: crypto.randomUUID(),
-            name: cat.name,
-            type: cat.type,
-            averageMonthlyExpense: cat.allocatedAmount?.toString() || '0',
-            userId: ctx.userId,
-          }))
-        )
-        .returning()
-
-      return {
-        success: true,
-        message: `Created ${createdCategories.length} new budget categories${
-          categories.length - newCategories.length > 0
-            ? `, skipped ${categories.length - newCategories.length} existing categories`
-            : ''
-        }`,
-        categories: createdCategories,
-        created: createdCategories.length,
-        skipped: categories.length - newCategories.length,
-      }
+      const result = await bulkCreateBudgetCategoriesFromTransactions(ctx.userId, input.categories)
+      return result
     }),
 })

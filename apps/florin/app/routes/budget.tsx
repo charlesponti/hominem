@@ -1,20 +1,20 @@
 'use client'
 
-import { AlertTriangle, DollarSign, Target, TrendingDown, TrendingUp } from 'lucide-react'
+import { DollarSign, Target, TrendingDown, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 import {
-    Area,
-    AreaChart,
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -47,7 +47,11 @@ export default function BudgetDashboard() {
 
   // Auto-calculate budget on component mount if categories exist
   useState(() => {
-    if (budgetCategories.data && budgetCategories.data.length > 0 && !budgetCalculateMutation.data) {
+    if (
+      budgetCategories.data &&
+      budgetCategories.data.length > 0 &&
+      !budgetCalculateMutation.data
+    ) {
       budgetCalculateMutation.mutateAsync()
     }
   })
@@ -93,11 +97,13 @@ export default function BudgetDashboard() {
   }))
 
   const projectionData =
-    budgetCalculateMutation.data?.projections.slice(0, 6).map((proj: { month: number; totalSaved: number }) => ({
-      month: `Month ${proj.month}`,
-      projected: proj.totalSaved,
-      baseline: projectedSurplus * proj.month,
-    })) || []
+    budgetCalculateMutation.data?.projections
+      .slice(0, 6)
+      .map((proj: { month: number; totalSaved: number }) => ({
+        month: `Month ${proj.month}`,
+        projected: proj.totalSaved,
+        baseline: projectedSurplus * proj.month,
+      })) || []
 
   return (
     <div className="space-y-6">
@@ -348,14 +354,17 @@ export default function BudgetDashboard() {
                       </div>
                       <div className="flex justify-between">
                         <span>Savings Rate:</span>
-                        <span className="font-semibold">{budgetCalculateMutation.data.savingsRate.toFixed(1)}%</span>
+                        <span className="font-semibold">
+                          {budgetCalculateMutation.data.savingsRate.toFixed(1)}%
+                        </span>
                       </div>
                     </div>
 
                     <div className="mt-6">
                       <h4 className="font-semibold mb-2">12-Month Outlook</h4>
                       <p className="text-sm text-muted-foreground">
-                        At current rate: {formatCurrency(budgetCalculateMutation.data.surplus * 12)} saved annually
+                        At current rate: {formatCurrency(budgetCalculateMutation.data.surplus * 12)}{' '}
+                        saved annually
                       </p>
                     </div>
                   </div>
@@ -370,7 +379,8 @@ export default function BudgetDashboard() {
             <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Budget vs Actual Tracking</h3>
             <p className="text-gray-600 mb-4">
-              This feature is coming soon. You'll be able to compare your budgeted amounts with actual spending.
+              This feature is coming soon. You'll be able to compare your budgeted amounts with
+              actual spending.
             </p>
           </div>
         </TabsContent>

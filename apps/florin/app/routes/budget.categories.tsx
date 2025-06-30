@@ -1,14 +1,14 @@
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import {
-    BudgetCategoriesGrid,
-    BudgetCategoriesHeader,
-    BudgetCategoryFormDialog,
-    BudgetSummaryCards,
-    DeleteCategoryDialog,
-    EmptyState,
-    SetupFromTransactionsDialog,
-    type DisplayBudgetCategory,
+  BudgetCategoriesGrid,
+  BudgetCategoriesHeader,
+  BudgetCategoryFormDialog,
+  BudgetSummaryCards,
+  DeleteCategoryDialog,
+  EmptyState,
+  SetupFromTransactionsDialog,
+  type DisplayBudgetCategory,
 } from '~/components/budget-categories'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
@@ -27,7 +27,12 @@ const categoryColors = [
 
 export default function BudgetCategories() {
   // Database hooks
-  const { data: dbCategories, isLoading, error, refetch } = trpc.finance.budget.categories.list.useQuery()
+  const {
+    data: dbCategories,
+    isLoading,
+    error,
+    refetch,
+  } = trpc.finance.budget.categories.list.useQuery()
   const createCategoryMutation = trpc.finance.budget.categories.create.useMutation()
   const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation()
   const deleteCategoryMutation = trpc.finance.budget.categories.delete.useMutation()
@@ -78,7 +83,7 @@ export default function BudgetCategories() {
       await createCategoryMutation.mutateAsync({
         name: formData.name,
         type: formData.type,
-        allocatedAmount: Number.parseFloat(formData.budgetAmount),
+        averageMonthlyExpense: formData.budgetAmount,
       })
       setIsCreateDialogOpen(false)
       resetForm()
@@ -97,7 +102,7 @@ export default function BudgetCategories() {
         id: editingCategory.id,
         name: formData.name,
         type: formData.type,
-        allocatedAmount: Number.parseFloat(formData.budgetAmount),
+        averageMonthlyExpense: formData.budgetAmount,
       })
       setEditingCategory(null)
       resetForm()
@@ -139,7 +144,7 @@ export default function BudgetCategories() {
         return {
           name: categoryName,
           type: 'expense' as const, // Default to expense, user can change later
-          allocatedAmount: transactionCategory?.suggestedBudget || 0,
+          averageMonthlyExpense: (transactionCategory?.suggestedBudget || 0).toString(),
         }
       })
 
@@ -164,7 +169,9 @@ export default function BudgetCategories() {
   }
 
   const handleSelectAll = () => {
-    setSelectedTransactionCategories(new Set(transactionCategories?.map((tc: any) => tc.name) || []))
+    setSelectedTransactionCategories(
+      new Set(transactionCategories?.map((tc: any) => tc.name) || [])
+    )
   }
 
   const handleDeselectAll = () => {
@@ -173,6 +180,14 @@ export default function BudgetCategories() {
 
   const totalBudget = categories.reduce((sum, cat) => sum + cat.budgetAmount, 0)
   const totalSpent = categories.reduce((sum, cat) => sum + cat.spent, 0)
+
+  // Debug logging
+  console.log('Current state:', {
+    isCreateDialogOpen,
+    isSetupDialogOpen,
+    editingCategory: !!editingCategory,
+    categoriesLength: categories.length,
+  })
 
   // Loading state
   if (isLoading) {
@@ -201,40 +216,55 @@ export default function BudgetCategories() {
     )
   }
 
-  // Empty state
-  if (categories.length === 0) {
-    return (
-      <EmptyState
-        transactionCategoriesCount={transactionCategories?.length}
-        onAddCategory={() => setIsCreateDialogOpen(true)}
-        onSetupFromTransactions={() => setIsSetupDialogOpen(true)}
-      />
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <>
+      {/* Header - Always shown */}
       <BudgetCategoriesHeader
         transactionCategoriesCount={transactionCategories?.length}
-        onAddCategory={() => setIsCreateDialogOpen(true)}
-        onSetupFromTransactions={() => setIsSetupDialogOpen(true)}
+        onAddCategory={() => {
+          console.log('Add category clicked, setting isCreateDialogOpen to true')
+          setIsCreateDialogOpen(true)
+        }}
+        onSetupFromTransactions={() => {
+          console.log('Setup from transactions clicked, setting isSetupDialogOpen to true')
+          setIsSetupDialogOpen(true)
+        }}
       />
 
-      {/* Summary Cards */}
-      <BudgetSummaryCards totalBudget={totalBudget} totalSpent={totalSpent} />
+      {/* Main Content */}
+      {categories.length === 0 ? (
+        <EmptyState
+          transactionCategoriesCount={transactionCategories?.length}
+          onAddCategory={() => {
+            console.log('EmptyState: Add category clicked, setting isCreateDialogOpen to true')
+            setIsCreateDialogOpen(true)
+          }}
+          onSetupFromTransactions={() => {
+            console.log(
+              'EmptyState: Setup from transactions clicked, setting isSetupDialogOpen to true'
+            )
+            setIsSetupDialogOpen(true)
+          }}
+        />
+      ) : (
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <BudgetSummaryCards totalBudget={totalBudget} totalSpent={totalSpent} />
 
-      {/* Categories Grid */}
-      <BudgetCategoriesGrid
-        categories={categories}
-        onEditCategory={openEditDialog}
-        onDeleteCategory={setDeletingCategory}
-      />
+          {/* Categories Grid */}
+          <BudgetCategoriesGrid
+            categories={categories}
+            onEditCategory={openEditDialog}
+            onDeleteCategory={setDeletingCategory}
+          />
+        </div>
+      )}
 
       {/* Form Dialog */}
       <BudgetCategoryFormDialog
         open={isCreateDialogOpen || !!editingCategory}
         onOpenChange={(open) => {
+          console.log('Form dialog onOpenChange called with:', open)
           if (!open) {
             setIsCreateDialogOpen(false)
             setEditingCategory(null)
@@ -265,7 +295,10 @@ export default function BudgetCategories() {
       {/* Setup from Transactions Dialog */}
       <SetupFromTransactionsDialog
         open={isSetupDialogOpen}
-        onOpenChange={setIsSetupDialogOpen}
+        onOpenChange={(open) => {
+          console.log('Setup dialog onOpenChange called with:', open)
+          setIsSetupDialogOpen(open)
+        }}
         transactionCategories={transactionCategories}
         isLoading={isLoadingTransactionCategories}
         selectedCategories={selectedTransactionCategories}
@@ -279,6 +312,6 @@ export default function BudgetCategories() {
         }}
         isSubmitting={bulkCreateMutation.isPending}
       />
-    </div>
+    </>
   )
 }

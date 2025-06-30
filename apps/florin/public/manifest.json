@@ -1,7 +1,7 @@
 {
-  "name": "My Website",
-  "short_name": "My Website",
-  "description": "My Website - Web Application",
+  "name": "Florin",
+  "short_name": "Florin",
+  "description": "Florin - Personal Finance Agent",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
@@ -9,19 +9,19 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "./icon-192x192.png",
+      "src": "./icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icon-384x384.png",
+      "src": "./icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icon-512x512.png",
+      "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
