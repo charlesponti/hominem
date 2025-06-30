@@ -9,67 +9,65 @@ import { env } from '../../lib/env'
 import {
   generateCodeChallenge,
   generateCodeVerifier,
+  makeTwitterApiRequest,
   storePkceVerifier,
+  TWITTER_SCOPES,
   TwitterPostSchema,
+  type TwitterAccount,
   type TwitterTweetResponse,
   type TwitterTweetsResponse,
 } from '../../lib/oauth.twitter.utils'
-import { makeTwitterApiRequest, TWITTER_SCOPES, type TwitterAccount } from '../../lib/twitter-tokens'
 import { protectedProcedure, router } from '../index'
-
 
 export const twitterRouter = router({
   // Get connected Twitter accounts
-  accounts: protectedProcedure
-    .query(async ({ ctx }) => {
-      const accounts = await db
-        .select({
-          id: account.id,
-          provider: account.provider,
-          providerAccountId: account.providerAccountId,
-          expiresAt: account.expiresAt,
-        })
-        .from(account)
-        .where(and(eq(account.userId, ctx.userId), eq(account.provider, 'twitter')))
+  accounts: protectedProcedure.query(async ({ ctx }) => {
+    const accounts = await db
+      .select({
+        id: account.id,
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+        expiresAt: account.expiresAt,
+      })
+      .from(account)
+      .where(and(eq(account.userId, ctx.userId), eq(account.provider, 'twitter')))
 
-      return accounts
-    }),
+    return accounts
+  }),
 
   // Get Twitter authorization URL
-  authorize: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID
-      const TWITTER_REDIRECT_URI = `${env.API_URL}/api/oauth/twitter/callback`
-      
-      if (!TWITTER_CLIENT_ID) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Twitter client ID not configured',
-        })
-      }
+  authorize: protectedProcedure.mutation(async ({ ctx }) => {
+    const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID
+    const TWITTER_REDIRECT_URI = `${env.API_URL}/api/oauth/twitter/callback`
 
-      // Generate PKCE parameters
-      const codeVerifier = generateCodeVerifier()
-      const codeChallenge = generateCodeChallenge(codeVerifier)
+    if (!TWITTER_CLIENT_ID) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Twitter client ID not configured',
+      })
+    }
 
+    // Generate PKCE parameters
+    const codeVerifier = generateCodeVerifier()
+    const codeChallenge = generateCodeChallenge(codeVerifier)
 
-      // Generate state parameter for CSRF protection
-      const state = `${randomUUID()}.${ctx.userId}`
-      
-      // Store PKCE verifier in Redis for later use in callback
-      await storePkceVerifier(state, codeVerifier)
+    // Generate state parameter for CSRF protection
+    const state = `${randomUUID()}.${ctx.userId}`
 
-      const authUrl = new URL('https://x.com/i/oauth2/authorize')
-      authUrl.searchParams.set('response_type', 'code')
-      authUrl.searchParams.set('client_id', TWITTER_CLIENT_ID)
-      authUrl.searchParams.set('redirect_uri', TWITTER_REDIRECT_URI)
-      authUrl.searchParams.set('scope', TWITTER_SCOPES)
-      authUrl.searchParams.set('state', state)
-      authUrl.searchParams.set('code_challenge', codeChallenge)
-      authUrl.searchParams.set('code_challenge_method', 'S256')
+    // Store PKCE verifier in Redis for later use in callback
+    await storePkceVerifier(state, codeVerifier)
 
-      return { authUrl: authUrl.toString() }
-    }),
+    const authUrl = new URL('https://x.com/i/oauth2/authorize')
+    authUrl.searchParams.set('response_type', 'code')
+    authUrl.searchParams.set('client_id', TWITTER_CLIENT_ID)
+    authUrl.searchParams.set('redirect_uri', TWITTER_REDIRECT_URI)
+    authUrl.searchParams.set('scope', TWITTER_SCOPES)
+    authUrl.searchParams.set('state', state)
+    authUrl.searchParams.set('code_challenge', codeChallenge)
+    authUrl.searchParams.set('code_challenge_method', 'S256')
+
+    return { authUrl: authUrl.toString() }
+  }),
 
   // Disconnect Twitter account
   disconnect: protectedProcedure
@@ -97,118 +95,116 @@ export const twitterRouter = router({
     }),
 
   // Post a tweet
-  post: protectedProcedure
-    .input(TwitterPostSchema)
-    .mutation(async ({ input, ctx }) => {
-      const userId = ctx.userId
-      const { text, contentId, saveAsContent } = input
+  post: protectedProcedure.input(TwitterPostSchema).mutation(async ({ input, ctx }) => {
+    const userId = ctx.userId
+    const { text, contentId, saveAsContent } = input
 
-      try {
-        // Find user's Twitter account
-        const userAccount = await db
-          .select()
-          .from(account)
-          .where(and(eq(account.userId, userId), eq(account.provider, 'twitter')))
-          .limit(1)
+    try {
+      // Find user's Twitter account
+      const userAccount = await db
+        .select()
+        .from(account)
+        .where(and(eq(account.userId, userId), eq(account.provider, 'twitter')))
+        .limit(1)
 
-        if (userAccount.length === 0) {
-          throw new Error('No Twitter account connected')
-        }
-
-        const twitterAccount = userAccount[0] as TwitterAccount
-
-        // Post the tweet using the utility function that handles token refresh automatically
-        const tweetResponse = await makeTwitterApiRequest(
-          twitterAccount,
-          'https://api.twitter.com/2/tweets',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              text,
-            }),
-          }
-        )
-
-        if (!tweetResponse.ok) {
-          const errorData = await tweetResponse.json().catch(() => ({}))
-          console.error(tweetResponse)
-          logger.error(
-            {
-              status: tweetResponse.status,
-              statusText: tweetResponse.statusText,
-              error: errorData,
-              userId,
-              accountId: twitterAccount.id,
-              textLength: text.length,
-            },
-            'Failed to post tweet'
-          )
-          throw new Error(`Failed to post tweet: ${tweetResponse.status}`)
-        }
-
-        const tweetData = (await tweetResponse.json()) as TwitterTweetResponse
-        const tweet = tweetData.data
-
-        let contentRecord = null
-
-        // Save or update content record if requested
-        if (saveAsContent) {
-          const socialMediaMetadata = {
-            platform: 'twitter',
-            externalId: tweet.id,
-            url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
-            publishedAt: new Date().toISOString(),
-          }
-
-          if (contentId) {
-            // Update existing content
-            const updated = await db
-              .update(content)
-              .set({
-                socialMediaMetadata,
-                status: 'published',
-                publishedAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              })
-              .where(and(eq(content.id, contentId), eq(content.userId, userId)))
-              .returning()
-
-            contentRecord = updated[0] || null
-          } else {
-            // Create new content record
-            const newContent = await db
-              .insert(content)
-              .values({
-                id: randomUUID(),
-                type: 'tweet',
-                title: `Tweet - ${new Date().toLocaleDateString()}`,
-                content: text,
-                status: 'published',
-                socialMediaMetadata,
-                userId,
-                publishedAt: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              })
-              .returning()
-
-            contentRecord = newContent[0]
-          }
-        }
-
-        return {
-          success: true,
-          tweet: tweetData,
-          content: contentRecord,
-        }
-      } catch (error) {
-        console.error('Failed to post tweet:', error)
-        throw new Error('Failed to post tweet')
+      if (userAccount.length === 0) {
+        throw new Error('No Twitter account connected')
       }
-    }),
+
+      const twitterAccount = userAccount[0] as TwitterAccount
+
+      // Post the tweet using the utility function that handles token refresh automatically
+      const tweetResponse = await makeTwitterApiRequest(
+        twitterAccount,
+        'https://api.twitter.com/2/tweets',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text,
+          }),
+        }
+      )
+
+      if (!tweetResponse.ok) {
+        const errorData = await tweetResponse.json().catch(() => ({}))
+        console.error(tweetResponse)
+        logger.error(
+          {
+            status: tweetResponse.status,
+            statusText: tweetResponse.statusText,
+            error: errorData,
+            userId,
+            accountId: twitterAccount.id,
+            textLength: text.length,
+          },
+          'Failed to post tweet'
+        )
+        throw new Error(`Failed to post tweet: ${tweetResponse.status}`)
+      }
+
+      const tweetData = (await tweetResponse.json()) as TwitterTweetResponse
+      const tweet = tweetData.data
+
+      let contentRecord = null
+
+      // Save or update content record if requested
+      if (saveAsContent) {
+        const socialMediaMetadata = {
+          platform: 'twitter',
+          externalId: tweet.id,
+          url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
+          publishedAt: new Date().toISOString(),
+        }
+
+        if (contentId) {
+          // Update existing content
+          const updated = await db
+            .update(content)
+            .set({
+              socialMediaMetadata,
+              status: 'published',
+              publishedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+            .where(and(eq(content.id, contentId), eq(content.userId, userId)))
+            .returning()
+
+          contentRecord = updated[0] || null
+        } else {
+          // Create new content record
+          const newContent = await db
+            .insert(content)
+            .values({
+              id: randomUUID(),
+              type: 'tweet',
+              title: `Tweet - ${new Date().toLocaleDateString()}`,
+              content: text,
+              status: 'published',
+              socialMediaMetadata,
+              userId,
+              publishedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+            .returning()
+
+          contentRecord = newContent[0]
+        }
+      }
+
+      return {
+        success: true,
+        tweet: tweetData,
+        content: contentRecord,
+      }
+    } catch (error) {
+      console.error('Failed to post tweet:', error)
+      throw new Error('Failed to post tweet')
+    }
+  }),
 
   // Sync user's tweets from Twitter
   sync: protectedProcedure.mutation(async ({ ctx }) => {
@@ -229,9 +225,19 @@ export const twitterRouter = router({
       const twitterAccount = userAccount[0] as TwitterAccount
 
       // Fetch user's recent tweets (last 50)
+      const params = new URLSearchParams({
+        max_results: '50',
+        'tweet.fields': [
+          'created_at',
+          'public_metrics',
+          'conversation_id',
+          'in_reply_to_user_id',
+        ].join(','),
+      })
+
       const tweetsResponse = await makeTwitterApiRequest(
         twitterAccount,
-        `https://api.twitter.com/2/users/${twitterAccount.providerAccountId}/tweets?max_results=50&tweet.fields=created_at,public_metrics,conversation_id,in_reply_to_user_id`,
+        `https://api.twitter.com/2/users/${twitterAccount.providerAccountId}/tweets?${params.toString()}`,
         {
           method: 'GET',
         }
@@ -317,4 +323,4 @@ export const twitterRouter = router({
       throw new Error('Failed to sync tweets')
     }
   }),
-}) 
+})
