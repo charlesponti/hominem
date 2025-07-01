@@ -6,9 +6,10 @@ export default [
     layout('routes/budget._layout.tsx', [
       ...prefix('/budget', [
         index('routes/budget.tsx'),
-        route('categories', 'routes/budget.categories.tsx'),
+        route('categories/:id', 'routes/budget.categories.$id.tsx'),
+        route('categories/new', 'routes/budget.categories.new.tsx'),
+        route('categories/setup', 'routes/budget.categories.setup.tsx'),
         route('impact', 'routes/budget.impact.tsx'),
-        route('tracking', 'routes/budget.tracking.tsx'),
       ]),
     ]),
 
@@ -32,11 +33,7 @@ export default [
     route('/account', 'routes/account.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
-    route('/api/auth/validate-token', 'routes/api.auth.validate-token.ts', {
-      action: 'routes/api.auth.validate-token.server.ts',
-    }),
-    route('/api/auth/refresh-token', 'routes/api.auth.refresh-token.ts', {
-      action: 'routes/api.auth.refresh-token.server.ts',
-    }),
+    route('/api/auth/validate-token', 'routes/api.auth.validate-token.ts'),
+    route('/api/auth/refresh-token', 'routes/api.auth.refresh-token.ts'),
   ]),
 ] as RouteConfig

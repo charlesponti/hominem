@@ -3,8 +3,9 @@ import { Card, CardContent } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
-import { trpc, type RouterOutput } from '~/lib/trpc'
+import type { RouterOutput } from '~/lib/trpc'
 import { cn } from '~/lib/utils'
+import { adjustDateRange } from '~/lib/utils/date.utils'
 
 interface CategoryMonthlyBreakdownProps {
   dateFrom?: Date
@@ -17,18 +18,8 @@ interface CategoryMonthlyBreakdownProps {
 }
 
 const DeltaIcon = ({ delta }: { delta: number }) => {
-  if (delta > 0)
-    return (
-      <span className="text-red-500 mr-1" aria-label="Increase">
-        ▲
-      </span>
-    )
-  if (delta < 0)
-    return (
-      <span className="text-green-500 mr-1" aria-label="Decrease">
-        ▼
-      </span>
-    )
+  if (delta > 0) return <span className="text-red-500 mr-1">▲</span>
+  if (delta < 0) return <span className="text-green-500 mr-1">▼</span>
   return <span className="text-muted-foreground mr-1">–</span>
 }
 
@@ -218,7 +209,8 @@ export function CategoryMonthlyBreakdown({
   groupBy = 'month',
   category,
 }: CategoryMonthlyBreakdownProps) {
-  const navigate = useNavigate()
+  // Adjust date range to ensure full month is included
+  const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo)
 
   const {
     data: timeSeriesData,
@@ -226,8 +218,8 @@ export function CategoryMonthlyBreakdown({
     error,
     formatDateLabel,
   } = useTimeSeriesData({
-    dateFrom,
-    dateTo,
+    dateFrom: adjustedDateFrom,
+    dateTo: adjustedDateTo,
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
     category: selectedCategory || undefined,
     includeStats: false,

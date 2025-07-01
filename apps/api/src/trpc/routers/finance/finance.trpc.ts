@@ -7,6 +7,7 @@ import { dataRouter } from './finance.data.js'
 import { exportRouter } from './finance.export.js'
 import { institutionsRouter } from './finance.institutions.js'
 import { plaidRouter } from './finance.plaid.js'
+import { runwayRouter } from './finance.runway.js'
 import { transactionsRouter } from './finance.transactions.js'
 
 // Main finance tRPC router that combines all finance-related routers
@@ -37,4 +38,7 @@ export const financeRouter = router({
 
   // Plaid integration
   plaid: plaidRouter,
+
+  // Runway calculations
+  runway: runwayRouter,
 })

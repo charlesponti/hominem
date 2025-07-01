@@ -8,18 +8,17 @@ interface BudgetCategoriesHeaderProps {
 }
 
 export function BudgetCategoriesHeader({
-  transactionCategoriesCount,
+  // transactionCategoriesCount,
   onAddCategory,
-  onSetupFromTransactions,
+  // onSetupFromTransactions,
 }: BudgetCategoriesHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Budget Categories</h1>
-        <p className="mt-2 text-gray-600">Manage your spending categories and budget allocations</p>
+        <h1 className="text-3xl font-serif tracking-tighter text-gray-900">Budget Categories</h1>
       </div>
       <div className="flex gap-2">
-        {transactionCategoriesCount && transactionCategoriesCount > 0 && (
+        {/* {transactionCategoriesCount && transactionCategoriesCount > 0 && (
           <Button
             onClick={onSetupFromTransactions}
             variant="outline"
@@ -28,7 +27,7 @@ export function BudgetCategoriesHeader({
             <Plus className="h-4 w-4" />
             Add from Transactions
           </Button>
-        )}
+        )} */}
         <Button onClick={onAddCategory} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Category

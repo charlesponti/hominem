@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { trpc } from '~/lib/trpc'
 
+// Derive types from tRPC where possible
 export type SortField = 'date' | 'description' | 'amount' | 'category'
 export type SortDirection = 'asc' | 'desc'
 
@@ -9,6 +10,7 @@ export interface SortOption {
   direction: SortDirection
 }
 
+// Derive filter args from tRPC input schema where possible
 export interface FilterArgs {
   accountId?: string
   dateFrom?: string // ISO string format YYYY-MM-DD

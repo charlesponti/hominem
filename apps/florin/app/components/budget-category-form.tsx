@@ -22,13 +22,11 @@ import {
 } from '~/components/ui/select'
 import { trpc, type RouterOutput } from '~/lib/trpc'
 
-// Define the structure for form data
-export interface BudgetCategoryFormData {
-  name: string
-  type: 'income' | 'expense' // Or string if more flexible types are needed
-  averageMonthlyExpense: string
-  id?: string // For updates
-}
+// Derive form data type from tRPC input schema
+export type BudgetCategoryFormData =
+  RouterOutput['finance']['budget']['categories']['create']['input'] & {
+    id?: string // For updates
+  }
 
 // Define props for the component
 interface BudgetCategoryFormProps {

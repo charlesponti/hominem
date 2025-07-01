@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { type Dispatch, type SetStateAction, useId } from 'react'
+import { AccountSelect } from '~/components/account-select'
 import { DatePicker } from '~/components/date-picker'
 import {
   Accordion,
@@ -10,14 +11,9 @@ import {
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
+import { CategorySelect } from '~/components/ui/category-select'
+import { GroupBySelect } from '~/components/ui/group-by-select'
 import { Label } from '~/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select'
 import { Skeleton } from '~/components/ui/skeleton'
 import { Switch } from '~/components/ui/switch'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
@@ -191,9 +187,6 @@ export function AnalyticsFilters({
   const isLoading = accountsQuery.isLoading || categoriesLoading
   const dateFromId = useId()
   const dateToId = useId()
-  const accountId = useId()
-  const categoryId = useId()
-  const groupById = useId()
   const includeStatsId = useId()
   const compareToPreviousId = useId()
 
@@ -253,82 +246,23 @@ export function AnalyticsFilters({
 
               {/* Account and Category Filters */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor={accountId}>Account</Label>
-                  <Select name="account" value={selectedAccount} onValueChange={setSelectedAccount}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All accounts" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All accounts</SelectItem>
-                      {isLoading ? (
-                        <SelectItem value="loading" disabled>
-                          Loading accounts...
-                        </SelectItem>
-                      ) : safeAccounts.length === 0 ? (
-                        <SelectItem value="no-accounts" disabled>
-                          No accounts available
-                        </SelectItem>
-                      ) : (
-                        safeAccounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            {account.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={categoryId}>Category</Label>
-                  <Select
-                    name="category"
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All categories</SelectItem>
-                      {isLoading ? (
-                        <SelectItem value="loading" disabled>
-                          Loading categories...
-                        </SelectItem>
-                      ) : safeCategories.length === 0 ? (
-                        <SelectItem value="no-categories" disabled>
-                          No categories available
-                        </SelectItem>
-                      ) : (
-                        safeCategories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <AccountSelect
+                  selectedAccount={selectedAccount}
+                  onAccountChange={setSelectedAccount}
+                  accounts={safeAccounts}
+                  isLoading={isLoading}
+                  showLabel={true}
+                />
+                <CategorySelect
+                  selectedCategory={selectedCategory}
+                  onCategoryChange={setSelectedCategory}
+                  categories={safeCategories}
+                  isLoading={isLoading}
+                />
               </div>
 
               {/* Group By Filter */}
-              <div className="space-y-2">
-                <Label htmlFor={groupById}>Group By</Label>
-                <Select
-                  name="groupBy"
-                  value={groupBy}
-                  onValueChange={(value) => setGroupBy(value as 'month' | 'week' | 'day')}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="month">Month</SelectItem>
-                    <SelectItem value="week">Week</SelectItem>
-                    <SelectItem value="day">Day</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <GroupBySelect groupBy={groupBy} onGroupByChange={setGroupBy} />
 
               {/* Toggle Filters */}
               <div className="space-y-4">

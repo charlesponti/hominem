@@ -1,17 +1,16 @@
-import { useApiClient } from '@hominem/ui'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { redirect } from 'react-router'
 import { RouteLink } from '~/components/route-link'
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
@@ -32,13 +31,8 @@ export async function loader(args: Route.LoaderArgs) {
   return { user }
 }
 
-export default function AccountPage({ loaderData }: Route.ComponentProps) {
-  const { user } = loaderData
+export default function AccountPage() {
   const { supabase } = useSupabaseAuth()
-  const api = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
@@ -95,8 +89,7 @@ export default function AccountPage({ loaderData }: Route.ComponentProps) {
     })
   }
 
-  const deleteAllFinanceData = useMutation<void, Error, void>({
-    mutationFn: async () => api.delete('/api/finance'),
+  const deleteAllFinanceData = trpc.finance.data.deleteAll.useMutation({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['finance'] }) // Invalidate all finance related queries
       toast({
@@ -105,7 +98,7 @@ export default function AccountPage({ loaderData }: Route.ComponentProps) {
       })
       setShowConfirmDelete(false)
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       console.error('Error deleting finance data:', error)
       toast({
         title: 'Error',

@@ -1,17 +1,14 @@
 import { Plus } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { Button } from '~/components/ui/button'
 
 interface EmptyStateProps {
   transactionCategoriesCount?: number
   onAddCategory: () => void
-  onSetupFromTransactions: () => void
 }
 
-export function EmptyState({
-  transactionCategoriesCount,
-  onAddCategory,
-  onSetupFromTransactions,
-}: EmptyStateProps) {
+export function EmptyState({ transactionCategoriesCount, onAddCategory }: EmptyStateProps) {
+  const navigate = useNavigate()
   return (
     <div className="text-center py-12">
       <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-gray-100">
@@ -25,7 +22,7 @@ export function EmptyState({
       </p>
       <div className="mt-6 flex gap-2 justify-center">
         {transactionCategoriesCount && transactionCategoriesCount > 0 && (
-          <Button onClick={onSetupFromTransactions} variant="outline">
+          <Button onClick={() => navigate('/budget/categories/setup')} variant="outline">
             <Plus className="h-4 w-4 mr-2" />
             Set up from Transactions ({transactionCategoriesCount})
           </Button>

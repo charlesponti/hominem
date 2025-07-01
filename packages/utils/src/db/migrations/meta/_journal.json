@@ -239,6 +239,20 @@
       "when": 1750666219234,
       "tag": "0033_premium_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1751319497426,
+      "tag": "0034_daffy_romulus",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1751327965245,
+      "tag": "0035_silky_machine_man",
+      "breakpoints": true
     }
   ]
 }

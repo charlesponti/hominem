@@ -1,61 +1,122 @@
 'use client'
 
-import { AlertTriangle, Target, TrendingUp } from 'lucide-react'
-import { useState } from 'react'
+import { AlertTriangle, BarChart3, Calendar, TrendingUp } from 'lucide-react'
+import { useId, useMemo, useState } from 'react'
 import {
-    Area,
-    AreaChart,
-    CartesianGrid,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts'
-import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '~/components/ui/select'
 import { formatCurrency } from '~/lib/finance.utils'
-import { trpc } from '~/lib/trpc'
+import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
 const BudgetImpactCalculator = () => {
-  const budgetCategories = trpc.finance.budget.categories.list.useQuery()
-  const budgetCalculateMutation = trpc.finance.budget.calculate.useMutation()
+  const oneTimeId = useId()
+  const recurringId = useId()
 
-  const [monthlyIncome, setMonthlyIncome] = useState(5000)
-  const [currentSavings, setCurrentSavings] = useState(1000)
+  // Get current month for data
+  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+
+  // Get historical spending data (last 6 months)
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+  const {
+    chartData: historicalData,
+    isLoading: isLoadingHistorical,
+    error: historicalError,
+  } = useTimeSeriesData({
+    dateFrom: sixMonthsAgo,
+    dateTo: new Date(),
+    groupBy: 'month',
+    enabled: true,
+  })
+
+  // Get current month stats
+  const {
+    stats: currentMonthStats,
+    isLoading: isLoadingCurrent,
+    error: currentError,
+  } = useMonthlyStats(currentMonth)
+
+  // State for purchase inputs
   const [purchaseType, setPurchaseType] = useState('one-time')
   const [amount, setAmount] = useState(500)
   const [frequency, setFrequency] = useState('monthly')
   const [customValue, setCustomValue] = useState(1)
   const [customUnit, setCustomUnit] = useState('days')
-  const [useActualBudget, setUseActualBudget] = useState(false)
 
-  // Get actual budget data if available
-  const actualIncome =
-    budgetCategories.data
-      ?.filter((cat) => cat.type === 'income')
-      .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0
+  // Calculate real financial metrics from historical data
+  const financialMetrics = useMemo(() => {
+    if (!historicalData || historicalData.length === 0) {
+      return {
+        averageMonthlyIncome: 0,
+        averageMonthlyExpenses: 0,
+        averageMonthlySavings: 0,
+        averageSavingsRate: 0,
+        spendingVolatility: 0,
+        hasEnoughData: false,
+      }
+    }
 
-  const actualExpenses =
-    budgetCategories.data
-      ?.filter((cat) => cat.type === 'expense')
-      .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0
+    const validMonths = historicalData.filter(
+      (month) => (month.Spending || 0) > 0 || (month.Income || 0) > 0
+    )
 
-  const hasActualBudget = budgetCategories.data && budgetCategories.data.length > 0 && actualIncome > 0
+    if (validMonths.length === 0) {
+      return {
+        averageMonthlyIncome: 0,
+        averageMonthlyExpenses: 0,
+        averageMonthlySavings: 0,
+        averageSavingsRate: 0,
+        spendingVolatility: 0,
+        hasEnoughData: false,
+      }
+    }
 
-  // Use actual budget data if enabled and available
-  const effectiveIncome = useActualBudget && hasActualBudget ? actualIncome : monthlyIncome
-  const baselineSavingsRate =
-    useActualBudget && hasActualBudget ? ((actualIncome - actualExpenses) / actualIncome) * 100 : 20 // Default 20% savings rate
+    const totalIncome = validMonths.reduce((sum, month) => sum + (month.Income || 0), 0)
+    const totalExpenses = validMonths.reduce((sum, month) => sum + (month.Spending || 0), 0)
+    const totalSavings = totalIncome - totalExpenses
+
+    const averageMonthlyIncome = totalIncome / validMonths.length
+    const averageMonthlyExpenses = totalExpenses / validMonths.length
+    const averageMonthlySavings = totalSavings / validMonths.length
+    const averageSavingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0
+
+    // Calculate spending volatility (standard deviation)
+    const spendingValues = validMonths.map((month) => month.Spending || 0)
+    const meanSpending = averageMonthlyExpenses
+    const variance =
+      spendingValues.reduce((sum, value) => sum + Math.pow(value - meanSpending, 2), 0) /
+      spendingValues.length
+    const spendingVolatility = Math.sqrt(variance)
+
+    return {
+      averageMonthlyIncome,
+      averageMonthlyExpenses,
+      averageMonthlySavings,
+      averageSavingsRate,
+      spendingVolatility,
+      hasEnoughData: validMonths.length >= 2,
+      dataMonths: validMonths.length,
+    }
+  }, [historicalData])
 
   // Calculate monthly cost based on frequency
   const calculateMonthlyRate = () => {
@@ -71,7 +132,6 @@ const BudgetImpactCalculator = () => {
       case 'annually':
         return amount / 12
       case 'custom':
-        // Convert custom frequency to monthly rate
         switch (customUnit) {
           case 'days':
             return (amount * (365 / customValue)) / 12
@@ -89,14 +149,21 @@ const BudgetImpactCalculator = () => {
     }
   }
 
-  // Calculate impact over next 12 months
+  // Calculate impact over next 12 months using real data
   const calculateImpact = () => {
     const months = Array.from({ length: 12 }, (_, i) => i + 1)
     const monthlyImpact = calculateMonthlyRate()
-    const baselineMonthlySavings = effectiveIncome * (baselineSavingsRate / 100)
+
+    // Use real average savings rate, but be conservative
+    const conservativeSavingsRate = Math.max(0, financialMetrics.averageSavingsRate - 5) // 5% buffer
+    const baselineMonthlySavings =
+      financialMetrics.averageMonthlyIncome * (conservativeSavingsRate / 100)
+
+    // Start with current savings if available
+    const startingSavings = currentMonthStats?.netIncome || 0
 
     return months.map((month) => {
-      const baselineSavings = currentSavings + baselineMonthlySavings * month
+      const baselineSavings = startingSavings + baselineMonthlySavings * month
       const impactedSavings = baselineSavings - monthlyImpact * month
 
       return {
@@ -110,44 +177,148 @@ const BudgetImpactCalculator = () => {
   const impactData = calculateImpact()
   const monthlyImpact = calculateMonthlyRate()
   const newSavingsRate =
-    ((effectiveIncome * (baselineSavingsRate / 100) - monthlyImpact) / effectiveIncome) * 100
+    financialMetrics.averageMonthlyIncome > 0
+      ? ((financialMetrics.averageMonthlySavings - monthlyImpact) /
+          financialMetrics.averageMonthlyIncome) *
+        100
+      : 0
 
   const formatFrequencyDisplay = () => {
     if (frequency !== 'custom') return frequency
     return `Every ${customValue} ${customUnit}`
   }
 
-  const handleLoadActualBudget = () => {
-    if (hasActualBudget) {
-      setMonthlyIncome(actualIncome)
-      setUseActualBudget(true)
+  // Calculate actionable insights
+  const insights = useMemo(() => {
+    if (!financialMetrics.hasEnoughData) return []
+
+    const insights = []
+
+    // Check if this would significantly impact savings
+    if (monthlyImpact > financialMetrics.averageMonthlySavings * 0.5) {
+      insights.push({
+        type: 'warning',
+        message: `This purchase would use ${((monthlyImpact / financialMetrics.averageMonthlySavings) * 100).toFixed(0)}% of your average monthly savings`,
+      })
     }
+
+    // Check if this would put savings rate below 10%
+    if (newSavingsRate < 10 && newSavingsRate > 0) {
+      insights.push({
+        type: 'warning',
+        message: 'This would reduce your savings rate below the recommended 10%',
+      })
+    }
+
+    // Check if this would create negative savings
+    if (newSavingsRate < 0) {
+      insights.push({
+        type: 'danger',
+        message: 'This purchase would exceed your income and create debt',
+      })
+    }
+
+    // Suggest alternatives based on spending patterns
+    if (monthlyImpact > 0) {
+      const equivalentReduction = (monthlyImpact / financialMetrics.averageMonthlyExpenses) * 100
+      insights.push({
+        type: 'info',
+        message: `To afford this, you'd need to reduce other spending by ${equivalentReduction.toFixed(1)}%`,
+      })
+    }
+
+    return insights
+  }, [financialMetrics, monthlyImpact, newSavingsRate])
+
+  if (isLoadingHistorical || isLoadingCurrent) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+          <p className="mt-2 text-sm text-gray-600">Loading your financial data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (historicalError || currentError) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
+        <p className="text-gray-600 mb-4">
+          {historicalError?.message ||
+            currentError?.message ||
+            'Unable to load your financial data'}
+        </p>
+        <p className="text-sm text-gray-500">
+          Please ensure you have imported transactions to use this calculator.
+        </p>
+      </div>
+    )
+  }
+
+  if (!financialMetrics.hasEnoughData) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Not Enough Data</h3>
+        <p className="text-gray-600 mb-4">
+          We need at least 2 months of transaction data to provide accurate impact analysis.
+        </p>
+        <p className="text-sm text-gray-500">
+          You currently have {financialMetrics.dataMonths} month
+          {financialMetrics.dataMonths !== 1 ? 's' : ''} of data.
+        </p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Budget Impact Calculator</h1>
-        {hasActualBudget && (
-          <Button variant="outline" onClick={handleLoadActualBudget} disabled={useActualBudget}>
-            {useActualBudget ? 'Using Actual Budget' : 'Load My Budget'}
-          </Button>
-        )}
+        <h1 className="text-3xl font-bold">Purchase Impact Calculator</h1>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          Based on {financialMetrics.dataMonths} months of data
+        </div>
       </div>
 
-      {useActualBudget && hasActualBudget && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-blue-600" />
-            <span className="font-semibold text-blue-900">Using Your Actual Budget</span>
+      {/* Real Financial Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Your Financial Reality
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Average Monthly Income</p>
+              <p className="text-lg font-semibold text-green-600">
+                {formatCurrency(financialMetrics.averageMonthlyIncome)}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Average Monthly Expenses</p>
+              <p className="text-lg font-semibold text-red-600">
+                {formatCurrency(financialMetrics.averageMonthlyExpenses)}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Average Monthly Savings</p>
+              <p className="text-lg font-semibold text-blue-600">
+                {formatCurrency(financialMetrics.averageMonthlySavings)}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Average Savings Rate</p>
+              <p className="text-lg font-semibold">
+                {financialMetrics.averageSavingsRate.toFixed(1)}%
+              </p>
+            </div>
           </div>
-          <p className="text-blue-700 text-sm mt-1">
-            Income: {formatCurrency(actualIncome)} | Expenses: {formatCurrency(actualExpenses)} |
-            Current Savings Rate:{' '}
-            {(((actualIncome - actualExpenses) / actualIncome) * 100).toFixed(1)}%
-          </p>
-        </div>
-      )}
+        </CardContent>
+      </Card>
 
       <Card className="w-full">
         <CardHeader>
@@ -157,36 +328,15 @@ const BudgetImpactCalculator = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <Label>Monthly Income</Label>
-                <Input
-                  type="number"
-                  value={monthlyIncome}
-                  onChange={(e) => setMonthlyIncome(Number(e.target.value))}
-                  className="mt-1"
-                  disabled={useActualBudget}
-                />
-              </div>
-
-              <div>
-                <Label>Current Savings</Label>
-                <Input
-                  type="number"
-                  value={currentSavings}
-                  onChange={(e) => setCurrentSavings(Number(e.target.value))}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
                 <Label>Purchase Type</Label>
                 <RadioGroup value={purchaseType} onValueChange={setPurchaseType} className="mt-1">
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="one-time" id="one-time" />
-                    <Label htmlFor="one-time">One-time Purchase</Label>
+                    <RadioGroupItem value="one-time" id={oneTimeId} />
+                    <Label htmlFor={oneTimeId}>One-time Purchase</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="recurring" id="recurring" />
-                    <Label htmlFor="recurring">Recurring Subscription</Label>
+                    <RadioGroupItem value="recurring" id={recurringId} />
+                    <Label htmlFor={recurringId}>Recurring Subscription</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -264,7 +414,9 @@ const BudgetImpactCalculator = () => {
                   </p>
                   <p>
                     Current Savings Rate:{' '}
-                    <span className="font-semibold">{baselineSavingsRate.toFixed(1)}%</span>
+                    <span className="font-semibold">
+                      {financialMetrics.averageSavingsRate.toFixed(1)}%
+                    </span>
                   </p>
                   <p>
                     New Savings Rate:{' '}
@@ -287,16 +439,26 @@ const BudgetImpactCalculator = () => {
                 </div>
               </div>
 
-              {newSavingsRate < 0 && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-800">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span className="font-semibold">Budget Warning</span>
-                  </div>
-                  <p className="text-red-700 text-sm mt-1">
-                    This purchase would put you over budget. Consider reducing other expenses or
-                    finding a more affordable option.
-                  </p>
+              {/* Actionable Insights */}
+              {insights.length > 0 && (
+                <div className="space-y-2">
+                  {insights.map((insight) => (
+                    <div
+                      key={`${insight.type}-${insight.message}`}
+                      className={`p-3 rounded-lg border ${
+                        insight.type === 'danger'
+                          ? 'bg-red-50 border-red-200 text-red-800'
+                          : insight.type === 'warning'
+                            ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                            : 'bg-blue-50 border-blue-200 text-blue-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="text-sm font-medium">{insight.message}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

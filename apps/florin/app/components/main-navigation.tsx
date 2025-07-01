@@ -1,5 +1,13 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js'
-import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
+import {
+  ChartLine,
+  CircleDollarSignIcon,
+  Landmark,
+  Menu,
+  PieChartIcon,
+  User,
+  X,
+} from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
@@ -9,9 +17,14 @@ import { Button } from './ui/button'
 
 const navItems = [
   {
-    title: 'Finance',
+    title: 'Transactions',
     icon: CircleDollarSignIcon,
     url: '/finance',
+  },
+  {
+    title: 'Budget',
+    icon: PieChartIcon,
+    url: '/budget',
   },
   {
     title: 'Analytics',

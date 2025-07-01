@@ -4,7 +4,10 @@ import {
   createBudgetCategory,
   deleteBudgetCategory,
   getAllBudgetCategories,
+  getBudgetCategoriesWithSpending,
   getBudgetCategoryById,
+  getBudgetHistory,
+  getBudgetTrackingData,
   getTransactionCategoriesAnalysis,
   getUserExpenseCategories,
   summarizeByMonth,
@@ -13,14 +16,26 @@ import {
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../index.js'
 
-// Budget tRPC router
 export const budgetRouter = router({
-  // Budget Categories CRUD
   categories: {
     list: protectedProcedure.query(async ({ ctx }) => {
       const categories = await getAllBudgetCategories(ctx.userId)
       return categories
     }),
+
+    // New endpoint that returns categories with spending data for current month
+    listWithSpending: protectedProcedure
+      .input(
+        z.object({
+          monthYear: z.string().regex(/^\d{4}-\d{2}$/, 'Month year must be in YYYY-MM format'),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        return await getBudgetCategoriesWithSpending({
+          userId: ctx.userId,
+          monthYear: input.monthYear,
+        })
+      }),
 
     get: protectedProcedure
       .input(z.object({ id: z.string().uuid('Invalid ID format') }))
@@ -36,6 +51,7 @@ export const budgetRouter = router({
           type: z.enum(['income', 'expense'], { message: "Type must be 'income' or 'expense'" }),
           averageMonthlyExpense: z.string().optional(),
           budgetId: z.string().uuid('Invalid budget ID format').optional(),
+          color: z.string().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -60,6 +76,7 @@ export const budgetRouter = router({
           type: z.enum(['income', 'expense']).optional(),
           averageMonthlyExpense: z.string().optional(),
           budgetId: z.string().uuid().optional(),
+          color: z.string().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -83,16 +100,40 @@ export const budgetRouter = router({
       }),
   },
 
-  // Budget History and Analytics
+  // New service-based endpoints
+  tracking: protectedProcedure
+    .input(
+      z.object({
+        monthYear: z.string().regex(/^\d{4}-\d{2}$/, 'Month year must be in YYYY-MM format'),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return await getBudgetTrackingData({
+        userId: ctx.userId,
+        monthYear: input.monthYear,
+      })
+    }),
+
+  // Budget History - using new service layer with fallback to original implementation
   history: protectedProcedure
     .input(
       z.object({
         months: z.number().int().min(1).max(60).optional().default(12),
+        useLegacy: z.boolean().optional().default(false),
       })
     )
     .query(async ({ input, ctx }) => {
-      const { months: monthsToFetch } = input
+      const { months, useLegacy } = input
 
+      // Use new service layer by default
+      if (!useLegacy) {
+        return await getBudgetHistory({
+          userId: ctx.userId,
+          months: months,
+        })
+      }
+
+      // Fallback to original implementation
       const userExpenseCategories = await getUserExpenseCategories(ctx.userId)
 
       const totalMonthlyBudget = userExpenseCategories.reduce(
@@ -102,7 +143,7 @@ export const budgetRouter = router({
 
       const today = new Date()
       const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0) // Last day of current month
-      const startDate = new Date(today.getFullYear(), today.getMonth() - (monthsToFetch - 1), 1) // First day of the Nth month ago
+      const startDate = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1) // First day of the Nth month ago
 
       const allMonthlySummaries = await summarizeByMonth({
         userId: ctx.userId,
@@ -119,7 +160,7 @@ export const budgetRouter = router({
       }
 
       const results = []
-      for (let i = 0; i < monthsToFetch; i++) {
+      for (let i = 0; i < months; i++) {
         const targetIterationDate = new Date(today.getFullYear(), today.getMonth() - i, 1)
         const year = targetIterationDate.getFullYear()
         const monthNum = targetIterationDate.getMonth()
@@ -134,7 +175,7 @@ export const budgetRouter = router({
         results.push({
           date: displayMonth,
           budgeted: totalMonthlyBudget,
-          actual: -actualSpending,
+          actual: actualSpending,
         })
       }
 
@@ -243,10 +284,8 @@ export const budgetRouter = router({
       }
     }),
 
-  // Transaction Categories Analysis
   transactionCategories: protectedProcedure.query(async ({ ctx }) => {
-    const categories = await getTransactionCategoriesAnalysis(ctx.userId)
-    return categories
+    return await getTransactionCategoriesAnalysis(ctx.userId)
   }),
 
   // Bulk Create from Transaction Categories
@@ -258,6 +297,7 @@ export const budgetRouter = router({
             name: z.string().min(1, 'Name is required'),
             type: z.enum(['income', 'expense'], { message: "Type must be 'income' or 'expense'" }),
             averageMonthlyExpense: z.string().optional(),
+            color: z.string().optional(),
           })
         ),
       })

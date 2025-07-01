@@ -1,21 +1,14 @@
 import { ListFilter } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { AccountSelect } from '~/components/account-select'
 import { DatePicker } from '~/components/date-picker'
 import { Button } from '~/components/ui/button'
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '~/components/ui/select'
 import type { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 
 interface FilterControlsProps {
@@ -48,18 +41,6 @@ export function FilterControls({
   onOpenChange,
   focusedFilterKey,
 }: FilterControlsProps) {
-  const accountSelectRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (open && focusedFilterKey) {
-      if (focusedFilterKey === 'accountId' && accountSelectRef.current) {
-        accountSelectRef.current.focus()
-      }
-      // Focusing for DatePicker would require modification to DatePicker or a wrapper
-      // For now, date pickers won't be auto-focused by this mechanism
-    }
-  }, [open, focusedFilterKey])
-
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
@@ -73,32 +54,14 @@ export function FilterControls({
         <DropdownMenuSeparator />
 
         {/* Account Filter */}
-        <div className="space-y-1">
-          <label htmlFor="account-filter" className="text-sm font-medium">
-            Account
-          </label>
-          <Select name="account-filter" value={selectedAccount} onValueChange={setSelectedAccount}>
-            <SelectTrigger ref={accountSelectRef}>
-              {' '}
-              {/* Added ref */}
-              <SelectValue placeholder="All accounts" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All accounts</SelectItem>
-              {accountsLoading ? (
-                <SelectItem value="loading" disabled>
-                  Loading accounts...
-                </SelectItem>
-              ) : (
-                (accounts || []).map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+        <AccountSelect
+          selectedAccount={selectedAccount}
+          onAccountChange={setSelectedAccount}
+          accounts={accounts}
+          isLoading={accountsLoading}
+          showLabel={true}
+          label="Account"
+        />
 
         {/* Date From Filter */}
         <div className="space-y-1">

@@ -1,7 +1,7 @@
-import { and, eq, like, sql } from 'drizzle-orm'
+import { and, eq, like } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { db } from '../../db/index'
-import { budgetCategories, budgetGoals, transactions } from '../../db/schema/finance.schema'
+import { budgetCategories, transactions } from '../../db/schema/finance.schema'
 import { logger } from '../../logger'
 
 /**
@@ -86,9 +86,10 @@ export async function getSpendingCategories(userId: string) {
 export async function createBudgetCategory(data: {
   userId: string
   name: string
-  type?: string
+  type?: 'income' | 'expense'
   budgetId?: string
   averageMonthlyExpense?: string
+  color?: string
 }) {
   try {
     const [category] = await db
@@ -100,6 +101,7 @@ export async function createBudgetCategory(data: {
         type: data.type || 'expense',
         budgetId: data.budgetId || null,
         averageMonthlyExpense: data.averageMonthlyExpense || null,
+        color: data.color || null,
       })
       .returning()
 
@@ -118,9 +120,10 @@ export async function updateBudgetCategory(
   userId: string,
   updates: Partial<{
     name: string
-    type: string
+    type: 'income' | 'expense'
     budgetId: string | null
     averageMonthlyExpense: string | null
+    color: string | null
   }>
 ) {
   try {
@@ -151,103 +154,6 @@ export async function deleteBudgetCategory(categoryId: string, userId: string): 
       .where(and(eq(budgetCategories.id, categoryId), eq(budgetCategories.userId, userId)))
   } catch (error) {
     logger.error(`Error deleting budget category ${categoryId}:`, error)
-    throw error
-  }
-}
-
-/**
- * Get budget goals for a user
- */
-export async function getBudgetGoals(userId: string) {
-  try {
-    return await db
-      .select()
-      .from(budgetGoals)
-      .where(eq(budgetGoals.userId, userId))
-      .orderBy(budgetGoals.startDate)
-  } catch (error) {
-    logger.error(`Error fetching budget goals for user ${userId}:`, error)
-    throw error
-  }
-}
-
-/**
- * Create a new budget goal
- */
-export async function createBudgetGoal(data: {
-  userId: string
-  name: string
-  targetAmount: string
-  currentAmount?: string
-  startDate: Date
-  endDate?: Date | null
-  categoryId?: string | null
-}) {
-  try {
-    const [goal] = await db
-      .insert(budgetGoals)
-      .values({
-        id: crypto.randomUUID(),
-        userId: data.userId,
-        name: data.name,
-        targetAmount: data.targetAmount,
-        currentAmount: data.currentAmount || '0',
-        startDate: data.startDate,
-        endDate: data.endDate || null,
-        categoryId: data.categoryId || null,
-      })
-      .returning()
-
-    return goal
-  } catch (error) {
-    logger.error('Error creating budget goal:', error)
-    throw error
-  }
-}
-
-/**
- * Update a budget goal
- */
-export async function updateBudgetGoal(
-  goalId: string,
-  userId: string,
-  updates: Partial<{
-    name: string
-    targetAmount: string
-    currentAmount: string
-    startDate: Date
-    endDate: Date | null
-    categoryId: string | null
-  }>
-) {
-  try {
-    const [updated] = await db
-      .update(budgetGoals)
-      .set(updates)
-      .where(and(eq(budgetGoals.id, goalId), eq(budgetGoals.userId, userId)))
-      .returning()
-
-    if (!updated) {
-      throw new Error(`Budget goal not found or not updated: ${goalId}`)
-    }
-
-    return updated
-  } catch (error) {
-    logger.error(`Error updating budget goal ${goalId}:`, error)
-    throw error
-  }
-}
-
-/**
- * Delete a budget goal
- */
-export async function deleteBudgetGoal(goalId: string, userId: string): Promise<void> {
-  try {
-    await db
-      .delete(budgetGoals)
-      .where(and(eq(budgetGoals.id, goalId), eq(budgetGoals.userId, userId)))
-  } catch (error) {
-    logger.error(`Error deleting budget goal ${goalId}:`, error)
     throw error
   }
 }
@@ -323,110 +229,6 @@ export async function getAllBudgetCategories(userId: string) {
       .orderBy(budgetCategories.name)
   } catch (error) {
     logger.error(`Error fetching all budget categories for user ${userId}:`, error)
-    throw error
-  }
-}
-
-/**
- * Get transaction categories analysis
- */
-export async function getTransactionCategoriesAnalysis(userId: string) {
-  try {
-    const transactionCategories = await db
-      .select({
-        category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`,
-        count: sql<number>`COUNT(*)`,
-        totalAmount: sql<number>`SUM(${transactions.amount})`,
-        avgAmount: sql<number>`AVG(${transactions.amount})`,
-      })
-      .from(transactions)
-      .where(eq(transactions.userId, userId))
-      .groupBy(sql`COALESCE(${transactions.category}, 'Uncategorized')`)
-      .orderBy(sql`COUNT(*) DESC`)
-
-    // Filter out empty/null categories and format the response
-    const categories = transactionCategories
-      .filter(
-        (row) => row.category && row.category !== 'Uncategorized' && row.category.trim() !== ''
-      )
-      .map((row) => ({
-        name: row.category,
-        transactionCount: row.count,
-        totalAmount: Number.parseFloat(row.totalAmount.toString()),
-        averageAmount: Number.parseFloat(row.avgAmount.toString()),
-        suggestedBudget: Math.abs(Number.parseFloat(row.avgAmount.toString()) * 12), // Monthly average * 12
-      }))
-
-    return categories
-  } catch (error) {
-    logger.error(`Error fetching transaction categories analysis for user ${userId}:`, error)
-    throw error
-  }
-}
-
-/**
- * Bulk create budget categories from transaction data
- */
-export async function bulkCreateBudgetCategoriesFromTransactions(
-  userId: string,
-  categories: Array<{
-    name: string
-    type: 'income' | 'expense'
-    averageMonthlyExpense?: string
-  }>
-) {
-  try {
-    if (categories.length === 0) {
-      throw new Error('No categories provided')
-    }
-
-    // Get existing budget category names for this user
-    const existingCategories = await db
-      .select({ name: budgetCategories.name })
-      .from(budgetCategories)
-      .where(eq(budgetCategories.userId, userId))
-
-    const existingNames = new Set(existingCategories.map((cat) => cat.name.toLowerCase()))
-
-    // Filter out categories that already exist (case-insensitive comparison)
-    const newCategories = categories.filter((cat) => !existingNames.has(cat.name.toLowerCase()))
-
-    if (newCategories.length === 0) {
-      return {
-        success: true,
-        message: 'All categories already exist',
-        categories: [],
-        skipped: categories.length,
-      }
-    }
-
-    // Create only the new categories
-    const createdCategories = await db
-      .insert(budgetCategories)
-      .values(
-        newCategories.map((cat) => ({
-          id: crypto.randomUUID(),
-          name: cat.name,
-          type: cat.type,
-          averageMonthlyExpense: cat.averageMonthlyExpense || '0',
-          userId,
-        }))
-      )
-      .returning()
-
-    return {
-      success: true,
-      message: `Created ${createdCategories.length} new budget categories${
-        categories.length - newCategories.length > 0
-          ? `, skipped ${categories.length - newCategories.length} existing categories`
-          : ''
-      }`,
-      categories: createdCategories,
-      created: createdCategories.length,
-      skipped: categories.length - newCategories.length,
-    }
-  } catch (error) {
-    logger.error(`Error bulk creating budget categories for user ${userId}:`, error)
     throw error
   }
 }

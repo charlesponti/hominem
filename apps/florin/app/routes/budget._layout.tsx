@@ -1,4 +1,4 @@
-import { BarChart3, Calculator, FolderOpen, PieChart, Target, TrendingUp } from 'lucide-react'
+import { Calculator, PieChart, Target, TrendingUp } from 'lucide-react'
 import { Link, Outlet, useLocation } from 'react-router'
 import { cn } from '~/lib/utils'
 
@@ -15,25 +15,13 @@ const navigationItems = [
     icon: Calculator,
     description: 'Analyze purchase impacts',
   },
-  {
-    title: 'Budget Tracking',
-    href: '/budget/tracking',
-    icon: BarChart3,
-    description: 'Budget vs actual spending',
-  },
-  {
-    title: 'Categories',
-    href: '/budget/categories',
-    icon: FolderOpen,
-    description: 'Manage budget categories',
-  },
 ]
 
 export default function BudgetLayout() {
   const location = useLocation()
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex">
       {/* Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col">
         <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r">
@@ -87,32 +75,6 @@ export default function BudgetLayout() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile navigation */}
-      <div className="md:hidden">
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
-          <div className="flex justify-around">
-            {navigationItems.map((item) => {
-              const isActive = location.pathname === item.href
-              const Icon = item.icon
-
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    'flex flex-col items-center px-2 py-1 rounded-md transition-colors',
-                    isActive ? 'text-blue-600' : 'text-gray-600'
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs mt-1 font-medium">{item.title.split(' ')[0]}</span>
-                </Link>
-              )
-            })}
           </div>
         </div>
       </div>

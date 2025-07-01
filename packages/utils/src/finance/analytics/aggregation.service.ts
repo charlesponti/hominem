@@ -201,7 +201,11 @@ export function groupTransactionsByDateRange(
     if (!acc[key]) {
       acc[key] = []
     }
-    acc[key]!.push(tx)
+
+    if (acc[key]) {
+      acc[key].push(tx)
+    }
+
     return acc
   }, {})
 

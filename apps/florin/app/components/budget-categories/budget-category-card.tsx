@@ -1,17 +1,16 @@
 import { Edit3, Trash2 } from 'lucide-react'
-import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import type { RouterOutput } from '~/lib/trpc'
 
-export interface DisplayBudgetCategory {
-  id: string
-  name: string
-  type: 'income' | 'expense'
-  budgetAmount: number
-  spent: number
-  color: string
-  description?: string
-}
+// Derive from tRPC type and add UI-specific properties
+export type DisplayBudgetCategory =
+  RouterOutput['finance']['budget']['categories']['list'][number] & {
+    budgetAmount: number
+    spent: number
+    color: string
+    description?: string
+  }
 
 interface BudgetCategoryCardProps {
   category: DisplayBudgetCategory
@@ -20,84 +19,70 @@ interface BudgetCategoryCardProps {
 }
 
 export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategoryCardProps) {
-  const spentPercentage = (category.spent / category.budgetAmount) * 100
+  const spentPercentage =
+    category.budgetAmount > 0 ? (category.spent / category.budgetAmount) * 100 : 0
   const remaining = category.budgetAmount - category.spent
+
+  // Determine the color based on spending percentage
+  const getProgressColor = () => {
+    if (spentPercentage > 100) return '#ef4444' // red-500
+    if (spentPercentage > 80) return '#f59e0b' // amber-500
+    return '#10b981' // emerald-500
+  }
 
   return (
     <Card className="relative">
-      <CardHeader className="pb-4">
+      <CardHeader className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-4 h-4 rounded-full ${category.color}`} />
-            <CardTitle className="text-lg">{category.name}</CardTitle>
+          <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${category.color}`} />
+            <CardTitle className="text-base">{category.name}</CardTitle>
           </div>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onEdit(category)}
-              className="h-8 w-8 p-0"
+              className="h-6 w-6 p-0"
             >
-              <Edit3 className="h-4 w-4" />
+              <Edit3 className="h-3 w-3" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onDelete(category)}
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3" />
             </Button>
           </div>
         </div>
-        {category.description && <CardDescription>{category.description}</CardDescription>}
+        {category.description && (
+          <CardDescription className="text-xs">{category.description}</CardDescription>
+        )}
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Budget</span>
-            <span className="font-medium">${category.budgetAmount.toLocaleString()}</span>
+      <CardContent className="px-4 pt-0 pb-4">
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-base font-bold text-gray-900">
+            ${category.spent.toLocaleString()}
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Spent</span>
-            <span className="font-medium">${category.spent.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Remaining</span>
-            <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${remaining.toLocaleString()}
-            </span>
-          </div>
+          <span
+            className={`text-xs font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}
+          >
+            {remaining >= 0 ? '+' : ''}${remaining.toLocaleString()} remaining
+          </span>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Progress</span>
-            <Badge
-              variant={
-                spentPercentage > 100
-                  ? 'destructive'
-                  : spentPercentage > 80
-                    ? 'secondary'
-                    : 'default'
-              }
-            >
-              {spentPercentage.toFixed(0)}%
-            </Badge>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all ${
-                spentPercentage > 100
-                  ? 'bg-red-500'
-                  : spentPercentage > 80
-                    ? 'bg-yellow-500'
-                    : 'bg-green-500'
-              }`}
-              style={{ width: `${Math.min(spentPercentage, 100)}%` }}
-            />
-          </div>
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-1.5">
+          <div
+            className="h-1.5 rounded-full transition-all duration-300 ease-in-out"
+            style={{
+              width: `${Math.min(spentPercentage, 100)}%`,
+              backgroundColor: getProgressColor(),
+            }}
+          />
         </div>
       </CardContent>
     </Card>

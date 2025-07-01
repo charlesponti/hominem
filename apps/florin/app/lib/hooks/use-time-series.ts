@@ -1,6 +1,5 @@
 import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types'
 import { format } from 'date-fns'
-import { useMemo } from 'react'
 import { trpc } from '../trpc'
 
 export interface TimeSeriesResponse {
@@ -34,24 +33,6 @@ export function useTimeSeriesData({
   groupBy = 'month',
   enabled = true,
 }: TimeSeriesParams) {
-  // Generate a query key based on all parameters - memoize to prevent infinite re-renders
-  const queryKey = useMemo(
-    () => [
-      'timeSeries',
-      {
-        from: dateFrom?.toISOString(),
-        to: dateTo?.toISOString(),
-        account,
-        category,
-        includeStats,
-        compareToPrevious,
-        groupBy,
-      },
-    ],
-    [dateFrom, dateTo, account, category, includeStats, compareToPrevious, groupBy]
-  )
-
-  // Use tRPC query
   const query = trpc.finance.analyze.spendingTimeSeries.useQuery(
     {
       from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
@@ -91,10 +72,10 @@ export function useTimeSeriesData({
   // Format data for charts
   const chartData = query.data?.data.map((item) => ({
     name: formatDateLabel(item.date),
-    Spending: Math.abs(item.expenses),
-    Income: Math.abs(item.income),
+    Spending: Math.abs(item.expenses || 0),
+    Income: Math.abs(item.income || 0),
     Count: item.count,
-    Average: Math.abs(item.average),
+    Average: Math.abs(item.average || 0),
     ...(item.trend ? { TrendChange: Number.parseFloat(item.trend.raw) } : {}),
   }))
 

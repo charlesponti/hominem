@@ -1,19 +1,17 @@
 'use client'
 
 import { subMonths } from 'date-fns'
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { AccountSelect } from '~/components/account-select'
 import { formatCurrency } from '~/lib/finance.utils'
-import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 import { trpc } from '~/lib/trpc'
 
 export default function CategoriesAnalyticsPage() {
   const navigate = useNavigate()
   const [dateFrom] = useState<Date>(subMonths(new Date(), 6))
   const [dateTo] = useState<Date>(new Date())
-  const { accounts, isLoading: accountsLoading } = useFinanceAccounts()
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
-  const id = useId()
 
   const {
     data: breakdown,
@@ -32,24 +30,8 @@ export default function CategoriesAnalyticsPage() {
   return (
     <div className="container">
       <h1 className="text-2xl font-bold mb-4">Categories Breakdown</h1>
-      <div className="mb-4 flex items-center gap-2">
-        <label htmlFor="account-select" className="font-medium">
-          Account:
-        </label>
-        <select
-          id={id}
-          value={selectedAccount}
-          onChange={(e) => setSelectedAccount(e.target.value)}
-          className="border rounded px-2 py-1"
-          disabled={accountsLoading}
-        >
-          <option value="all">All</option>
-          {accounts.map((acc) => (
-            <option key={acc.id} value={acc.id}>
-              {acc.name}
-            </option>
-          ))}
-        </select>
+      <div className="mb-4">
+        <AccountSelect selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} />
       </div>
       <table className="w-full text-sm">
         <thead>

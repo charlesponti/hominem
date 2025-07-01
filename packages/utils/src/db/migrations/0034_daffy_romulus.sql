@@ -1,0 +1,2 @@
+CREATE TYPE "public"."budget_category_type" AS ENUM('income', 'expense');--> statement-breakpoint
+ALTER TABLE "budget_categories" ALTER COLUMN "type" SET DATA TYPE "public"."budget_category_type" USING "type"::"public"."budget_category_type";

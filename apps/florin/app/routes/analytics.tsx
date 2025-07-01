@@ -6,6 +6,7 @@ import { AnalyticsMonthlyBreakdown } from '~/components/analytics/AnalyticsMonth
 import { AnalyticsStatisticsSummary } from '~/components/analytics/AnalyticsStatisticsSummary'
 import { TopCategories } from '~/components/analytics/TopCategories'
 import { TopMerchants } from '~/components/analytics/TopMerchants'
+import { BudgetHistoryChart } from '~/components/budget-categories'
 
 export default function FinanceAnalyticsPage() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(subMonths(new Date(), 6))
@@ -82,6 +83,8 @@ export default function FinanceAnalyticsPage() {
           selectedAccount={selectedAccount}
           selectedCategory={selectedCategory}
         />
+
+        <BudgetHistoryChart />
       </div>
     </div>
   )

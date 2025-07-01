@@ -2,11 +2,7 @@ import { tool } from 'ai'
 import { and, eq, like } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../db/index'
-import {
-  budgetCategories,
-  type FinanceAccountInsert,
-  type FinanceTransactionInsert,
-} from '../db/schema/finance.schema'
+import { budgetCategories, type FinanceTransactionInsert } from '../db/schema/finance.schema'
 import { calculateTransactions } from './analytics/transaction-analytics.service'
 import { createAccount, deleteAccount, listAccounts, updateAccount } from './core/account.service'
 import {

@@ -52,6 +52,9 @@ export const institutionStatusEnum = pgEnum('institution_status', [
   'revoked',
 ])
 
+export const budgetCategoryTypeEnum = pgEnum('budget_category_type', ['income', 'expense'])
+export type BudgetCategoryType = (typeof budgetCategoryTypeEnum.enumValues)[number]
+
 // Financial institutions table
 export const financialInstitutions = pgTable(
   'financial_institutions',
@@ -185,9 +188,10 @@ export const budgetCategories = pgTable(
   {
     id: uuid('id').primaryKey(),
     name: text('name').notNull(),
-    type: text('type').notNull(),
+    type: budgetCategoryTypeEnum('type').notNull(),
     budgetId: uuid('budget_id'),
     averageMonthlyExpense: numeric('average_monthly_expense'),
+    color: text('color'),
     userId: uuid('user_id')
       .references(() => users.id)
       .notNull(),

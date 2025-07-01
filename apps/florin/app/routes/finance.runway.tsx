@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Calendar, DollarSign, TrendingDown } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import {
   CartesianGrid,
   Line,
@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { formatCurrency } from '~/lib/finance.utils'
+import { trpc } from '~/lib/trpc'
 
 interface PlannedPurchase {
   description: string
@@ -26,6 +27,12 @@ interface PlannedPurchase {
 }
 
 export default function RunwayPage() {
+  const initialBalanceId = useId()
+  const monthlyExpensesId = useId()
+  const descriptionId = useId()
+  const amountId = useId()
+  const dateId = useId()
+
   const [initialBalance, setInitialBalance] = useState(0)
   const [monthlyExpenses, setMonthlyExpenses] = useState(0)
   const [plannedPurchases, setPlannedPurchases] = useState<PlannedPurchase[]>([])
@@ -35,76 +42,103 @@ export default function RunwayPage() {
     date: '',
   })
 
+  // TRPC mutation for runway calculation
+  const runwayMutation = trpc.finance.runway.useMutation()
+
   const chartData = useMemo(() => {
-    const today = new Date()
-    const months = Array.from({ length: 12 }, (_, i) => {
-      const date = new Date(today)
-      date.setMonth(today.getMonth() + i)
-      return {
-        month: date.toLocaleDateString('en-US', {
-          month: 'short',
-          year: 'numeric',
-        }),
-        date: new Date(date),
-      }
-    })
+    const response = runwayMutation.data
+    if (!response?.success || !('data' in response) || !response.data?.projectionData) {
+      return []
+    }
+    return response.data.projectionData
+  }, [runwayMutation.data])
 
-    let balance = initialBalance
-    return months.map(({ month, date }) => {
-      balance -= monthlyExpenses
-
-      // Apply planned purchases for this month
-      for (const purchase of plannedPurchases) {
-        const purchaseDate = new Date(purchase.date)
-        if (
-          purchaseDate.getMonth() === date.getMonth() &&
-          purchaseDate.getFullYear() === date.getFullYear()
-        ) {
-          balance -= purchase.amount
-        }
-      }
-
-      return {
-        month,
-        balance: Math.round(balance),
-      }
-    })
-  }, [initialBalance, monthlyExpenses, plannedPurchases])
-
-  // Calculate runway metrics
+  // Calculate runway metrics from TRPC response
   const runwayMetrics = useMemo(() => {
-    const totalPlannedExpenses = plannedPurchases.reduce(
-      (sum, purchase) => sum + purchase.amount,
-      0
-    )
-    const monthsUntilZero =
-      monthlyExpenses > 0
-        ? Math.floor((initialBalance - totalPlannedExpenses) / monthlyExpenses)
-        : Number.POSITIVE_INFINITY
-    const zeroDate = new Date()
-    zeroDate.setMonth(zeroDate.getMonth() + monthsUntilZero)
+    const response = runwayMutation.data
+    if (!response?.success || !('data' in response)) {
+      return {
+        monthsUntilZero: 0,
+        zeroDate: new Date(),
+        minimumBalance: 0,
+        isRunwayDangerous: false,
+        totalPlannedExpenses: 0,
+      }
+    }
 
-    const minimumBalance = Math.min(...chartData.map((d) => d.balance))
-    const isRunwayDangerous = monthsUntilZero <= 6
+    const data = response.data
+    const zeroDate = new Date(data.runwayEndDate)
+    const minimumBalance = Math.min(...chartData.map((d: { balance: number }) => d.balance))
 
     return {
-      monthsUntilZero,
+      monthsUntilZero: data.runwayMonths,
       zeroDate,
       minimumBalance,
-      isRunwayDangerous,
-      totalPlannedExpenses,
+      isRunwayDangerous: data.isRunwayDangerous,
+      totalPlannedExpenses: data.totalPlannedExpenses,
     }
-  }, [initialBalance, monthlyExpenses, plannedPurchases, chartData])
+  }, [runwayMutation.data, chartData])
 
   const handleAddPurchase = () => {
     if (newPurchase.description && newPurchase.amount > 0 && newPurchase.date) {
-      setPlannedPurchases([...plannedPurchases, newPurchase])
+      const updatedPurchases = [...plannedPurchases, newPurchase]
+      setPlannedPurchases(updatedPurchases)
       setNewPurchase({ description: '', amount: 0, date: '' })
+
+      // Recalculate if we have the required values
+      if (initialBalance > 0 && monthlyExpenses > 0) {
+        runwayMutation.mutate({
+          balance: initialBalance,
+          monthlyExpenses,
+          plannedPurchases: updatedPurchases,
+        })
+      }
     }
   }
 
   const handleRemovePurchase = (index: number) => {
-    setPlannedPurchases(plannedPurchases.filter((_, i) => i !== index))
+    const updatedPurchases = plannedPurchases.filter((_, i) => i !== index)
+    setPlannedPurchases(updatedPurchases)
+
+    // Recalculate if we have the required values
+    if (initialBalance > 0 && monthlyExpenses > 0) {
+      runwayMutation.mutate({
+        balance: initialBalance,
+        monthlyExpenses,
+        plannedPurchases: updatedPurchases,
+      })
+    }
+  }
+
+  const handleCalculateRunway = () => {
+    if (initialBalance > 0 && monthlyExpenses > 0) {
+      runwayMutation.mutate({
+        balance: initialBalance,
+        monthlyExpenses,
+        plannedPurchases,
+      })
+    }
+  }
+
+  // Auto-calculate when values change
+  const handleInputChange = (field: 'initialBalance' | 'monthlyExpenses', value: number) => {
+    if (field === 'initialBalance') {
+      setInitialBalance(value)
+    } else {
+      setMonthlyExpenses(value)
+    }
+
+    // Auto-calculate if both values are set
+    const newBalance = field === 'initialBalance' ? value : initialBalance
+    const newMonthlyExpenses = field === 'monthlyExpenses' ? value : monthlyExpenses
+
+    if (newBalance > 0 && newMonthlyExpenses > 0) {
+      runwayMutation.mutate({
+        balance: newBalance,
+        monthlyExpenses: newMonthlyExpenses,
+        plannedPurchases,
+      })
+    }
   }
 
   return (
@@ -119,63 +153,82 @@ export default function RunwayPage() {
         )}
       </div>
 
+      {/* Error Message */}
+      {runwayMutation.data && !runwayMutation.data.success && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Calculation Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                {'error' in runwayMutation.data
+                  ? runwayMutation.data.error
+                  : 'Failed to calculate runway. Please try again.'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(initialBalance)}</div>
-          </CardContent>
-        </Card>
+      {chartData.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(initialBalance)}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Burn Rate</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(monthlyExpenses)}</div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monthly Burn Rate</CardTitle>
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(monthlyExpenses)}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Runway (Months)</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${runwayMetrics.isRunwayDangerous ? 'text-red-600' : 'text-green-600'}`}
-            >
-              {runwayMetrics.monthsUntilZero === Number.POSITIVE_INFINITY
-                ? '∞'
-                : runwayMetrics.monthsUntilZero}
-            </div>
-            {runwayMetrics.monthsUntilZero !== Number.POSITIVE_INFINITY && (
-              <p className="text-xs text-muted-foreground">
-                Until {runwayMetrics.zeroDate.toLocaleDateString()}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Runway (Months)</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-2xl font-bold ${runwayMetrics.isRunwayDangerous ? 'text-red-600' : 'text-green-600'}`}
+              >
+                {runwayMetrics.monthsUntilZero === Number.POSITIVE_INFINITY
+                  ? '∞'
+                  : runwayMetrics.monthsUntilZero}
+              </div>
+              {runwayMetrics.monthsUntilZero !== Number.POSITIVE_INFINITY && (
+                <p className="text-xs text-muted-foreground">
+                  Until {runwayMetrics.zeroDate.toLocaleDateString()}
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Minimum Balance</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${runwayMetrics.minimumBalance < 0 ? 'text-red-600' : 'text-blue-600'}`}
-            >
-              {formatCurrency(runwayMetrics.minimumBalance)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Minimum Balance</CardTitle>
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-2xl font-bold ${runwayMetrics.minimumBalance < 0 ? 'text-red-600' : 'text-blue-600'}`}
+              >
+                {formatCurrency(runwayMetrics.minimumBalance)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Input Form */}
       <div className="grid gap-6 md:grid-cols-2">
@@ -185,23 +238,30 @@ export default function RunwayPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="initialBalance">Initial Balance ($)</Label>
+              <Label htmlFor={initialBalanceId}>Initial Balance ($)</Label>
               <Input
                 type="number"
-                id="initialBalance"
+                id={initialBalanceId}
                 value={initialBalance}
-                onChange={(e) => setInitialBalance(Number(e.target.value))}
+                onChange={(e) => handleInputChange('initialBalance', Number(e.target.value))}
               />
             </div>
             <div>
-              <Label htmlFor="monthlyExpenses">Monthly Expenses ($)</Label>
+              <Label htmlFor={monthlyExpensesId}>Monthly Expenses ($)</Label>
               <Input
                 type="number"
-                id="monthlyExpenses"
+                id={monthlyExpensesId}
                 value={monthlyExpenses}
-                onChange={(e) => setMonthlyExpenses(Number(e.target.value))}
+                onChange={(e) => handleInputChange('monthlyExpenses', Number(e.target.value))}
               />
             </div>
+            <Button
+              onClick={handleCalculateRunway}
+              disabled={initialBalance <= 0 || monthlyExpenses <= 0 || runwayMutation.isPending}
+              className="w-full"
+            >
+              {runwayMutation.isPending ? 'Calculating...' : 'Calculate Runway'}
+            </Button>
           </CardContent>
         </Card>
 
@@ -212,9 +272,9 @@ export default function RunwayPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor={descriptionId}>Description</Label>
                 <Input
-                  id="description"
+                  id={descriptionId}
                   placeholder="e.g., New laptop"
                   value={newPurchase.description}
                   onChange={(e) => setNewPurchase({ ...newPurchase, description: e.target.value })}
@@ -222,10 +282,10 @@ export default function RunwayPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="amount">Amount ($)</Label>
+                  <Label htmlFor={amountId}>Amount ($)</Label>
                   <Input
                     type="number"
-                    id="amount"
+                    id={amountId}
                     placeholder="0"
                     value={newPurchase.amount}
                     onChange={(e) =>
@@ -234,10 +294,10 @@ export default function RunwayPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor={dateId}>Date</Label>
                   <Input
                     type="date"
-                    id="date"
+                    id={dateId}
                     value={newPurchase.date}
                     onChange={(e) => setNewPurchase({ ...newPurchase, date: e.target.value })}
                   />
@@ -294,53 +354,55 @@ export default function RunwayPage() {
       )}
 
       {/* Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>12-Month Runway Projection</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip
-                  formatter={(value) => [formatCurrency(Number(value)), 'Projected Balance']}
-                  labelStyle={{ color: '#374151' }}
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                  }}
-                />
-                <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="2 2" />
-                <Line
-                  type="monotone"
-                  dataKey="balance"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={(props) => {
-                    const { cx, cy, payload } = props
-                    const isNegative = payload?.balance < 0
-                    return (
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={4}
-                        fill={isNegative ? '#ef4444' : '#10b981'}
-                        stroke={isNegative ? '#ef4444' : '#10b981'}
-                        strokeWidth={2}
-                      />
-                    )
-                  }}
-                  activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>12-Month Runway Projection</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                  <Tooltip
+                    formatter={(value) => [formatCurrency(Number(value)), 'Projected Balance']}
+                    labelStyle={{ color: '#374151' }}
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                    }}
+                  />
+                  <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="2 2" />
+                  <Line
+                    type="monotone"
+                    dataKey="balance"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={(props) => {
+                      const { cx, cy, payload } = props
+                      const isNegative = payload?.balance < 0
+                      return (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={4}
+                          fill={isNegative ? '#ef4444' : '#10b981'}
+                          stroke={isNegative ? '#ef4444' : '#10b981'}
+                          strokeWidth={2}
+                        />
+                      )
+                    }}
+                    activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

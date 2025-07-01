@@ -109,7 +109,7 @@ export function createServer(): Hono<AppEnv> {
     '/trpc/*',
     trpcServer({
       router: appRouter,
-      createContext: (opts, c) => {
+      createContext: (_opts, c) => {
         return {
           req: c.req,
           queues: c.get('queues'),

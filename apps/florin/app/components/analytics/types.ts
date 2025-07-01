@@ -1,11 +1,5 @@
-export interface CategoryBreakdownItem {
-  category: string
-  total: string
-  count: number
-}
+import type { RouterOutput } from '~/lib/trpc'
 
-export interface TopMerchantItem {
-  merchant: string
-  totalSpent: string
-  frequency: number
-}
+// Derive types from tRPC instead of defining them locally
+export type CategoryBreakdownItem = RouterOutput['finance']['analyze']['categoryBreakdown'][0]
+export type TopMerchantItem = RouterOutput['finance']['analyze']['topMerchants'][0]

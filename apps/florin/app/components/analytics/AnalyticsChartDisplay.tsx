@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 import {
   Area,
   AreaChart,
@@ -17,20 +17,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/finance.utils'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
+import { adjustDateRange, formatChartDate } from '~/lib/utils/date.utils'
 
 const INCOME_COLOR = '#ABF4B6'
 const EXPENSES_COLOR = '#ef4444'
-
-interface ChartDataPoint {
-  name: string
-  Spending: number
-}
-
-interface TimeSeriesDataPoint {
-  date: string
-  income: number
-  expenses: number
-}
 
 interface AnalyticsChartDisplayProps {
   chartType: 'area' | 'bar'
@@ -41,51 +31,6 @@ interface AnalyticsChartDisplayProps {
   selectedCategory?: string
   groupBy?: 'month' | 'week' | 'day'
   compareToPrevious?: boolean
-}
-
-// Helper function to format date based on whether it's this year
-function formatChartDate(dateString: string): string {
-  // Parse YYYY-MM format explicitly to avoid timezone issues
-  const [yearStr, monthStr] = dateString.split('-')
-  const year = Number.parseInt(yearStr, 10)
-  const month = Number.parseInt(monthStr, 10) - 1 // JavaScript months are 0-indexed
-
-  const currentYear = new Date().getFullYear()
-
-  if (year === currentYear) {
-    // This year - show month name only
-    const date = new Date(year, month, 1)
-    return date.toLocaleDateString('en-US', { month: 'short' })
-  }
-
-  // Other years - show month and year like "Dec '24"
-  const date = new Date(year, month, 1)
-  const monthName = date.toLocaleDateString('en-US', { month: 'short' })
-  const yearShort = year.toString().slice(-2) // Get last 2 digits
-  return `${monthName} '${yearShort}`
-}
-
-// Helper function to adjust date range to ensure full month is included
-function adjustDateRange(
-  dateFrom?: Date,
-  dateTo?: Date
-): { adjustedDateFrom?: Date; adjustedDateTo?: Date } {
-  if (!dateFrom || !dateTo) {
-    return { adjustedDateFrom: dateFrom, adjustedDateTo: dateTo }
-  }
-
-  const now = new Date()
-  const isCurrentMonth =
-    dateTo.getMonth() === now.getMonth() && dateTo.getFullYear() === now.getFullYear()
-
-  let adjustedDateTo = dateTo
-
-  // If dateTo is in the current month, extend it to the end of the month
-  if (isCurrentMonth) {
-    adjustedDateTo = new Date(dateTo.getFullYear(), dateTo.getMonth() + 1, 0) // Last day of the month
-  }
-
-  return { adjustedDateFrom: dateFrom, adjustedDateTo }
 }
 
 export function AnalyticsChartDisplay({
@@ -100,6 +45,10 @@ export function AnalyticsChartDisplay({
 }: AnalyticsChartDisplayProps) {
   // Adjust date range to ensure full month is included
   const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo)
+
+  // Generate unique IDs for gradient elements
+  const incomeGradientId = useId()
+  const expensesGradientId = useId()
 
   const {
     data: timeSeriesData,
@@ -217,11 +166,11 @@ export function AnalyticsChartDisplay({
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <defs>
-                      <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id={incomeGradientId} x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={INCOME_COLOR} stopOpacity={0.8} />
                         <stop offset="95%" stopColor={INCOME_COLOR} stopOpacity={0.2} />
                       </linearGradient>
-                      <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id={expensesGradientId} x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={EXPENSES_COLOR} stopOpacity={0.8} />
                         <stop offset="95%" stopColor={EXPENSES_COLOR} stopOpacity={0.2} />
                       </linearGradient>
@@ -240,14 +189,14 @@ export function AnalyticsChartDisplay({
                       dataKey="Income"
                       stroke={INCOME_COLOR}
                       fillOpacity={1}
-                      fill="url(#colorIncome)"
+                      fill={`url(#${incomeGradientId})`}
                     />
                     <Area
                       type="monotone"
                       dataKey="Expenses"
                       stroke={EXPENSES_COLOR}
                       fillOpacity={1}
-                      fill="url(#colorExpenses)"
+                      fill={`url(#${expensesGradientId})`}
                     />
                   </AreaChart>
                 ) : (
