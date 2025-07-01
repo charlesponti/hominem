@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants'
 
 interface TopMerchantsProps {

@@ -17,7 +17,7 @@ import { BudgetOverview } from '~/components/budget-overview'
 import { getCurrentMonthYear } from '~/components/date-month-select'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'
 
 export default function BudgetDashboard() {

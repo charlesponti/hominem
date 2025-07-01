@@ -1,7 +1,7 @@
 import { useParams } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 
 // Helper function to format month string (e.g., "2024-05" to "May 2024")

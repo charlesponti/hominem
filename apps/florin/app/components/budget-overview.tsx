@@ -4,7 +4,7 @@ import { Target, TrendingDown, TrendingUp } from 'lucide-react'
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Progress } from '~/components/ui/progress'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { trpc } from '~/lib/trpc'
 

@@ -1,6 +1,6 @@
 import { Building, Plane, Utensils } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 
 const DESTINATION = 'Tokyo, Japan'
 const COSTS = {

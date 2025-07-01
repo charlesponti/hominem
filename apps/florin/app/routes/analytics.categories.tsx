@@ -4,7 +4,7 @@ import { subMonths } from 'date-fns'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { AccountSelect } from '~/components/account-select'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'
 
 export default function CategoriesAnalyticsPage() {

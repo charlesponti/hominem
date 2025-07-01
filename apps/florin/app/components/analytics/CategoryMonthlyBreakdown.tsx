@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router'
 import { Card, CardContent } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import type { RouterOutput } from '~/lib/trpc'
 import { cn } from '~/lib/utils'

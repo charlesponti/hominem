@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
 const SPENDING_COLOR = '#ef4444'

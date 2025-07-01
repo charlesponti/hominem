@@ -15,7 +15,7 @@ import {
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { adjustDateRange, formatChartDate } from '~/lib/utils/date.utils'
 

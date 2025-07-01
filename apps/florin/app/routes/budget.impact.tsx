@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import { formatCurrency } from '~/lib/finance.utils'
+import { formatCurrency } from '~/lib/number.utils'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 
