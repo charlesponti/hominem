@@ -243,54 +243,100 @@ export async function queryTransactions(options: QueryOptions) {
   }
 }
 
-export async function findExistingTransaction(tx: {
+export function findExistingTransaction(tx: {
   date: Date
   accountMask?: string | null
   amount: string
   type: string
-}) {
-  return await db.query.transactions.findFirst({
+}): Promise<FinanceTransaction | undefined>
+export function findExistingTransaction(
+  txs: Array<{
+    date: Date
+    accountMask?: string | null
+    amount: string
+    type: string
+  }>
+): Promise<FinanceTransaction[]>
+export async function findExistingTransaction(
+  txOrTxs:
+    | {
+        date: Date
+        accountMask?: string | null
+        amount: string
+        type: string
+      }
+    | Array<{
+        date: Date
+        accountMask?: string | null
+        amount: string
+        type: string
+      }>
+): Promise<FinanceTransaction | FinanceTransaction[] | undefined> {
+  if (Array.isArray(txOrTxs)) {
+    if (txOrTxs.length === 0) {
+      return []
+    }
+    const conditions = txOrTxs.map((tx) =>
+      and(
+        eq(transactions.date, tx.date),
+        eq(transactions.amount, tx.amount),
+        eq(transactions.type, tx.type as FinanceTransaction['type']),
+        tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined
+      )
+    )
+    // @ts-expect-error - drizzle-orm `or` supports array of conditions
+    return db.query.transactions.findMany({ where: or(...conditions) })
+  }
+  return db.query.transactions.findFirst({
     where: and(
-      eq(transactions.date, tx.date),
-      eq(transactions.amount, tx.amount),
-      eq(transactions.type, tx.type as FinanceTransaction['type']),
-      tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined
+      eq(transactions.date, txOrTxs.date),
+      eq(transactions.amount, txOrTxs.amount),
+      eq(transactions.type, txOrTxs.type as FinanceTransaction['type']),
+      txOrTxs.accountMask ? eq(transactions.accountMask, txOrTxs.accountMask) : undefined
     ),
   })
 }
 
-export async function createTransaction(tx: FinanceTransactionInsert): Promise<FinanceTransaction> {
+export function createTransaction(tx: FinanceTransactionInsert): Promise<FinanceTransaction>
+export function createTransaction(txs: FinanceTransactionInsert[]): Promise<FinanceTransaction[]>
+export async function createTransaction(
+  txOrTxs: FinanceTransactionInsert | FinanceTransactionInsert[]
+): Promise<FinanceTransaction | FinanceTransaction[]> {
   try {
-    const result = await db
-      .insert(transactions)
-      .values({
-        id: crypto.randomUUID(),
-        accountId: tx.accountId,
-        accountMask: tx.accountMask,
-        amount: tx.amount,
-        category: tx.category || '',
-        date: tx.date,
-        description: tx.description,
-        excluded: tx.excluded,
-        note: tx.note,
-        parentCategory: tx.parentCategory || '',
-        recurring: tx.recurring || false,
-        status: tx.status,
-        tags: tx.tags,
-        type: tx.type,
-        userId: tx.userId,
-      })
-      .returning()
-
-    if (!result || result.length === 0 || !result[0]) {
-      throw new Error('Failed to insert transaction')
+    const transactionsToInsert = Array.isArray(txOrTxs) ? txOrTxs : [txOrTxs]
+    if (transactionsToInsert.length === 0) {
+      return []
     }
 
-    return result[0]
+    const values = transactionsToInsert.map((tx) => ({
+      id: crypto.randomUUID(),
+      accountId: tx.accountId,
+      accountMask: tx.accountMask,
+      amount: tx.amount,
+      category: tx.category || '',
+      date: tx.date,
+      description: tx.description,
+      excluded: tx.excluded,
+      note: tx.note,
+      parentCategory: tx.parentCategory || '',
+      recurring: tx.recurring || false,
+      status: tx.status,
+      tags: tx.tags,
+      type: tx.type,
+      userId: tx.userId,
+    }))
+
+    const result = await db.insert(transactions).values(values).returning()
+
+    if (!result || result.length === 0) {
+      throw new Error('Failed to insert transaction(s)')
+    }
+
+    return Array.isArray(txOrTxs) ? result : result[0]!
   } catch (error) {
-    logger.error(`Error inserting transaction: ${JSON.stringify(tx)}`, error)
+    logger.error(`Error inserting transaction(s): ${JSON.stringify(txOrTxs)}`, error)
     throw new Error(
-      `Failed to insert transaction: ${error instanceof Error ? error.message : error}`
+      `Failed to insert transaction(s): ${error instanceof Error ? error.message : error}`
     )
   }
 }

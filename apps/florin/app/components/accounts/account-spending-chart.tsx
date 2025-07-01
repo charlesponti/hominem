@@ -26,22 +26,6 @@ interface AccountSpendingChartProps {
 export function AccountSpendingChart({ accountId, accountName }: AccountSpendingChartProps) {
   const [chartType, setChartType] = useState<'area' | 'bar'>('area')
 
-  // Early return if no accountId provided
-  if (!accountId) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Spending</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80 w-full flex items-center justify-center">
-            <div className="text-muted-foreground">No account selected</div>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   // Get last 6 months of data for this specific account - memoize to prevent infinite re-renders
   const { dateFrom, dateTo } = useMemo(() => {
     const now = new Date()

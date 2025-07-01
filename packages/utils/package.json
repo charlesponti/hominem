@@ -131,6 +131,7 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.42.0",
     "drizzle-zod": "^0.7.0",
+    "effect": "^3.16.10",
     "esbuild": "^0.21.5",
     "googleapis": "144.0.0",
     "ioredis": "^5.5.0",

@@ -1,8 +1,8 @@
 import { useParams } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { formatCurrency } from '~/lib/number.utils'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
+import { formatCurrency } from '~/lib/number.utils'
 
 // Helper function to format month string (e.g., "2024-05" to "May 2024")
 function formatMonthDisplay(monthStr: string | undefined): string {
@@ -26,7 +26,7 @@ export default function MonthlyAnalyticsPage() {
       </h1>
 
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-4">
           {/* Loading skeleton cards */}
           {[0, 1, 2, 3].map((index) => (
             <Card key={index}>
@@ -63,7 +63,7 @@ export default function MonthlyAnalyticsPage() {
       ) : null}
 
       {stats && !isLoading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-4">
           {/* Combined Summary Card */}
           <Card className="lg:col-span-1 md:col-span-2">
             <CardHeader>
@@ -71,25 +71,21 @@ export default function MonthlyAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Net Income</span>
                   <span
-                    className={`text-2xl font-bold ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                    className={`font-bold ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}
                   >
                     {formatCurrency(stats.netIncome)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Total Income</span>
-                  <span className="text-xl text-green-600">
-                    {formatCurrency(stats.totalIncome)}
-                  </span>
+                  <span className="text-green-600">{formatCurrency(stats.totalIncome)}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-sm ">
                   <span className="font-medium">Total Expenses</span>
-                  <span className="text-xl text-red-600">
-                    {formatCurrency(stats.totalExpenses)}
-                  </span>
+                  <span className="text-red-600">{formatCurrency(stats.totalExpenses)}</span>
                 </div>
               </div>
             </CardContent>

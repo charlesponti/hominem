@@ -81,6 +81,39 @@ export async function createAccount(
 }
 
 /**
+ * Create multiple financial accounts in a single batch operation.
+ */
+export async function createManyAccounts(
+  accounts: Array<Omit<FinanceAccountInsert, 'id'>>
+): Promise<FinanceAccount[]> {
+  if (accounts.length === 0) {
+    return []
+  }
+
+  try {
+    const accountsWithIds = accounts.map((acc) => ({
+      id: crypto.randomUUID(),
+      ...acc,
+    }))
+
+    const createdAccounts = await db.insert(financeAccounts).values(accountsWithIds).returning()
+
+    logger.info(`Successfully created ${createdAccounts.length} accounts in a batch.`)
+    return createdAccounts
+  } catch (error) {
+    logger.error('Error creating multiple accounts in a batch:', {
+      error: {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      accountCount: accounts.length,
+    })
+    throw error
+  }
+}
+
+/**
  * List all accounts for a user
  */
 export async function listAccounts(userId: string): Promise<FinanceAccount[]> {
@@ -276,4 +309,32 @@ export async function updateAccountBalance(
     logger.error(`Error updating account balance for ${accountId}:`, error)
     throw error
   }
+}
+
+export async function getAndCreateAccountsInBulk(
+  accountNames: string[],
+  userId: string
+): Promise<Map<string, FinanceAccount>> {
+  const existingAccounts = await listAccounts(userId)
+  const existingAccountsMap = new Map(existingAccounts.map((acc) => [acc.name, acc]))
+
+  const newAccountNames = accountNames.filter((name) => !existingAccountsMap.has(name))
+
+  if (newAccountNames.length > 0) {
+    const newAccounts = await createManyAccounts(
+      newAccountNames.map((name) => ({
+        type: 'checking',
+        balance: '0',
+        name,
+        institutionId: null,
+        meta: null,
+        userId,
+      }))
+    )
+    for (const newAccount of newAccounts) {
+      existingAccountsMap.set(newAccount.name, newAccount)
+    }
+  }
+
+  return existingAccountsMap
 }

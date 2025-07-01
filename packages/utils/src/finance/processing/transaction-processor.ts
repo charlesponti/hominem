@@ -1,8 +1,6 @@
+import crypto from 'node:crypto'
 import { EventEmitter } from 'node:events'
-import type { FinanceAccount, FinanceTransactionInsert } from '../../db/schema'
-import { logger } from '../../logger'
-import { withRetry } from '../../utils/retry.utils'
-import { createAccount, listAccounts } from '../core/account.service'
+import type { FinanceTransaction, FinanceTransactionInsert } from '../../db/schema'
 import {
   createTransaction,
   findExistingTransaction,
@@ -27,225 +25,83 @@ const DEFAULT_PROCESSING_CONFIG: ProcessingConfig = {
   retryDelay: 500,
 }
 
-// Transaction processing stats
-interface ProcessingStats {
-  success: number
-  failed: number
-  retried: number
-  startTime: number
-  endTime?: number
-  transactionsPerSecond?: number
-}
-
 // Progress event emitter for monitoring long-running imports
 export const progressEmitter = new EventEmitter()
 
-// Custom error class for more structured error handling
-class TransactionProcessingError extends Error {
-  public context: Record<string, unknown>
-
-  constructor(message: string, context: Record<string, unknown>) {
-    super(message)
-    this.name = 'TransactionProcessingError'
-    this.context = context
-  }
-}
-
 /**
- * Process a single transaction row, creating accounts as needed
+ * Process a large batch of transactions in a more optimized way.
+ *
+ * This function is designed to handle a large number of transactions at once,
+ * for example, from a CSV import. It minimizes database queries by performing
+ * bulk operations.
  */
-async function processTransactionRow({
-  account,
-  accountsMap,
-  userId,
-}: {
-  account: string
-  accountsMap: Map<string, FinanceAccount>
-  userId: string
-}): Promise<FinanceAccount> {
-  let accountEntity = accountsMap.get(account)
-
-  if (!accountEntity) {
-    try {
-      // First, try to find existing account in database to handle race conditions
-      const existingAccounts = await listAccounts(userId)
-      const existingAccount = existingAccounts.find((acc) => acc.name === account)
-
-      if (existingAccount) {
-        // Account exists in database but not in our map, add it to map
-        accountsMap.set(account, existingAccount)
-        logger.info(`Found existing account: ${account} for user ${userId}`)
-        return existingAccount
-      }
-
-      // Account doesn't exist, create it
-      accountEntity = await createAccount({
-        type: 'checking',
-        balance: '0',
-        name: account,
-        institutionId: null,
-        meta: null,
-        userId,
-      })
-      accountsMap.set(account, accountEntity)
-      logger.info(`Created new account: ${account} for user ${userId}`)
-    } catch (error) {
-      logger.error(`Failed to create account ${account}:`, error)
-      throw new TransactionProcessingError(
-        `Failed to create account ${account}: ${error instanceof Error ? error.message : String(error)}`,
-        { account, error }
-      )
-    }
+export async function processTransactionsInBulk(
+  transactions: FinanceTransactionInsert[]
+): Promise<
+  Array<{ action: 'created' | 'updated' | 'skipped'; transaction: FinanceTransactionInsert }>
+> {
+  if (transactions.length === 0) {
+    return []
   }
 
-  return accountEntity
-}
-
-type ProcessedTransaction = {
-  action: 'created' | 'skipped' | 'merged' | 'updated'
-  transaction: FinanceTransactionInsert
-}
-
-/**
- * Process a single transaction with retry logic
- */
-export async function processTransaction(
-  tx: FinanceTransactionInsert,
-  config: Pick<ProcessingConfig, 'maxRetries' | 'retryDelay'> = DEFAULT_PROCESSING_CONFIG
-): Promise<ProcessedTransaction> {
-  const context = {
-    date: tx.date,
-    accountId: tx.accountId,
-    description: tx.description?.substring(0, 30), // Truncate for logging
-    amount: tx.amount,
-  }
-
-  try {
-    // Add retry logic for database operations
-    return await withRetry({
-      operation: async () => {
-        // Check if transaction already exists
-        const existingTransaction = await findExistingTransaction({
-          date: tx.date,
-          amount: tx.amount,
-          type: tx.type,
-          accountMask: tx.accountMask,
-        })
-
-        if (existingTransaction) {
-          // Handle duplicate transaction
-          const result = await updateTransactionIfNeeded(tx, existingTransaction)
-
-          if (result) {
-            return { action: 'updated', transaction: tx }
-          }
-          return { action: 'skipped', transaction: tx }
-        }
-
-        // Insert as new transaction
-        await createTransaction(tx)
-        return { action: 'created', transaction: tx }
-      },
-      context,
-      maxRetries: config.maxRetries,
-      retryDelay: config.retryDelay,
-    })
-  } catch (error) {
-    const errorMsg = `Error processing transaction: ${tx.date} ${tx.accountId} ${tx.description} ${tx.amount}`
-    logger.error(errorMsg, { error, ...context })
-    throw new TransactionProcessingError(errorMsg, context)
-  }
-}
-
-/**
- * Process transactions in batches with progress tracking
- */
-async function* processTransactions(
-  transactions: FinanceTransactionInsert[],
-  fileName: string,
-  config: Partial<ProcessingConfig> = {}
-): AsyncGenerator<ProcessedTransaction> {
-  // Merge default config with provided options
-  const processingConfig = { ...DEFAULT_PROCESSING_CONFIG, ...config }
-  const { batchSize, batchDelay, maxRetries, retryDelay } = processingConfig
-
-  // Stats tracking
-  const stats: ProcessingStats = {
-    success: 0,
-    failed: 0,
-    retried: 0,
-    startTime: Date.now(),
-  }
-
-  logger.info(
-    `Processing ${transactions.length} transactions from ${fileName} in batches of ${batchSize}`
+  // 1. Find all existing transactions that could be duplicates.
+  const existingTransactions = await findExistingTransaction(
+    transactions.map((t) => ({
+      date: t.date,
+      amount: t.amount,
+      type: t.type,
+      accountMask: t.accountMask,
+    }))
   )
 
-  // Process in batches for better performance while avoiding DB overload
-  for (let i = 0; i < transactions.length; i += batchSize) {
-    const batchNumber = Math.floor(i / batchSize) + 1
-    const currentIndex = i
-
-    // Emit progress event for monitoring
-    const progressPercentage = Math.round((currentIndex / transactions.length) * 100)
-    progressEmitter.emit('progress', {
-      file: fileName,
-      current: currentIndex,
-      total: transactions.length,
-      percentage: progressPercentage,
-      stats: { ...stats },
+  const existingTxMap = new Map(
+    existingTransactions.map((t) => {
+      const key = `${t.date.toISOString()}|${t.amount}|${t.type}|${t.accountMask}`
+      return [key, t]
     })
+  )
 
-    const batch = transactions.slice(i, i + batchSize)
+  const transactionsToCreate: FinanceTransactionInsert[] = []
+  const transactionsToUpdate: Array<{
+    newTx: FinanceTransactionInsert
+    existingTx: FinanceTransaction
+  }> = []
 
-    // Process batch concurrently
-    const results = await Promise.allSettled(
-      batch.map((tx) => processTransaction(tx, { maxRetries, retryDelay }))
-    )
-
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        stats.success++
-        yield result.value
-      } else {
-        stats.failed++
-        logger.error('Transaction processing failed:', result.reason)
-        // You might want to yield an error result here
-      }
-    }
-
-    // Add delay between batches to avoid overwhelming the database
-    if (i + batchSize < transactions.length) {
-      await new Promise((resolve) => setTimeout(resolve, batchDelay))
+  for (const tx of transactions) {
+    const key = `${tx.date.toISOString()}|${tx.amount}|${tx.type}|${tx.accountMask}`
+    const existingTx = existingTxMap.get(key)
+    if (existingTx) {
+      transactionsToUpdate.push({ newTx: tx, existingTx })
+    } else {
+      transactionsToCreate.push(tx)
     }
   }
 
-  // Final stats update
-  stats.endTime = Date.now()
-  const duration = (stats.endTime - stats.startTime) / 1000
-  stats.transactionsPerSecond = duration > 0 ? stats.success / duration : 0
+  const results: Array<{
+    action: 'created' | 'updated' | 'skipped'
+    transaction: FinanceTransactionInsert
+  }> = []
 
-  logger.info(`Processing completed for ${fileName}:`, {
-    success: stats.success,
-    failed: stats.failed,
-    retried: stats.retried,
-    duration: `${duration.toFixed(2)}s`,
-    transactionsPerSecond: stats.transactionsPerSecond?.toFixed(2),
-  })
-}
+  // 2. Bulk insert new transactions
+  if (transactionsToCreate.length > 0) {
+    const newTransactionsWithIds = transactionsToCreate.map((t) => ({
+      ...t,
+      id: crypto.randomUUID(),
+    }))
+    await createTransaction(newTransactionsWithIds)
+    for (const tx of newTransactionsWithIds) {
+      results.push({ action: 'created', transaction: tx })
+    }
+  }
 
-/**
- * Process transactions with full configuration
- */
-export async function processTransactionBatch(
-  transactions: FinanceTransactionInsert[],
-  fileName: string,
-  config: Partial<ProcessingConfig> = {}
-): Promise<ProcessedTransaction[]> {
-  const results: ProcessedTransaction[] = []
-
-  for await (const result of processTransactions(transactions, fileName, config)) {
-    results.push(result)
+  // 3. Bulk update existing transactions
+  for (const { newTx, existingTx } of transactionsToUpdate) {
+    const result = await updateTransactionIfNeeded(newTx, existingTx)
+    if (result) {
+      results.push({ action: 'updated', transaction: newTx })
+    } else {
+      results.push({ action: 'skipped', transaction: newTx })
+    }
   }
 
   return results
@@ -256,44 +112,4 @@ export async function processTransactionBatch(
  */
 export function getProcessingConfig(config: Partial<ProcessingConfig> = {}): ProcessingConfig {
   return { ...DEFAULT_PROCESSING_CONFIG, ...config }
-}
-
-/**
- * Validate transaction before processing
- */
-export function validateTransaction(tx: FinanceTransactionInsert): string[] {
-  const errors: string[] = []
-
-  if (!tx.userId) {
-    errors.push('Transaction must have a userId')
-  }
-
-  if (!tx.accountId) {
-    errors.push('Transaction must have an accountId')
-  }
-
-  if (!tx.amount) {
-    errors.push('Transaction must have an amount')
-  }
-
-  if (!tx.date) {
-    errors.push('Transaction must have a date')
-  }
-
-  if (!tx.type) {
-    errors.push('Transaction must have a type')
-  }
-
-  // Validate amount is a valid number
-  const amount = Number.parseFloat(tx.amount)
-  if (Number.isNaN(amount)) {
-    errors.push('Transaction amount must be a valid number')
-  }
-
-  // Validate date is a valid date
-  if (tx.date instanceof Date && Number.isNaN(tx.date.getTime())) {
-    errors.push('Transaction date must be a valid date')
-  }
-
-  return errors
 }

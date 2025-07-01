@@ -1,20 +1,13 @@
-import { useCallback, useMemo, useState } from 'react'
+import { format } from 'date-fns'
+import { useMemo, useState } from 'react'
 import { trpc } from '~/lib/trpc'
-
-// Derive types from tRPC where possible
-export type SortField = 'date' | 'description' | 'amount' | 'category'
-export type SortDirection = 'asc' | 'desc'
-
-export interface SortOption {
-  field: SortField
-  direction: SortDirection
-}
+import { useSort, type SortOption } from './use-sort'
 
 // Derive filter args from tRPC input schema where possible
 export interface FilterArgs {
   accountId?: string
-  dateFrom?: string // ISO string format YYYY-MM-DD
-  dateTo?: string // ISO string format YYYY-MM-DD
+  dateFrom?: Date
+  dateTo?: Date
   description?: string
 }
 
@@ -61,6 +54,15 @@ export function useAllAccounts() {
   }
 }
 
+export function useAccountById(id: string) {
+  const accountQuery = trpc.finance.accounts.get.useQuery({ id }, { enabled: !!id })
+
+  return {
+    ...accountQuery,
+    account: accountQuery.data,
+  }
+}
+
 export interface UseFinanceTransactionsOptions {
   initialLimit?: number
   initialOffset?: number
@@ -77,19 +79,8 @@ export function useFinanceTransactions({
 }: UseFinanceTransactionsOptions = {}) {
   const [limit, setLimit] = useState<number>(initialLimit)
   const [offset, setOffset] = useState<number>(initialOffset)
-  const [sortOptions, setSortOptions] = useState<SortOption[]>(initialSortOptions)
-
-  const addSortOption = useCallback((option: SortOption) => {
-    setSortOptions((prevOptions) => [...prevOptions, option])
-  }, [])
-
-  const removeSortOption = useCallback((index: number) => {
-    setSortOptions((prevOptions) => prevOptions.filter((_, i) => i !== index))
-  }, [])
-
-  const updateSortOption = useCallback((index: number, option: SortOption) => {
-    setSortOptions((prevOptions) => prevOptions.map((item, i) => (i === index ? option : item)))
-  }, [])
+  const { sortOptions, addSortOption, removeSortOption, updateSortOption } =
+    useSort(initialSortOptions)
 
   // Convert sort options to tRPC format
   const sortBy = useMemo(() => {
@@ -102,8 +93,8 @@ export function useFinanceTransactions({
 
   const { data, isLoading, error, refetch } = trpc.finance.transactions.list.useQuery(
     {
-      from: filters.dateFrom,
-      to: filters.dateTo,
+      from: filters.dateFrom ? format(filters.dateFrom, 'yyyy-MM-dd') : undefined,
+      to: filters.dateTo ? format(filters.dateTo, 'yyyy-MM-dd') : undefined,
       account: filters.accountId && filters.accountId !== 'all' ? filters.accountId : undefined,
       description: filters.description,
       limit,

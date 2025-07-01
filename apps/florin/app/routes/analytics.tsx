@@ -2,8 +2,8 @@ import { subMonths } from 'date-fns'
 import { useState } from 'react'
 import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay'
 import { AnalyticsFilters } from '~/components/analytics/AnalyticsFilters'
-import { AnalyticsMonthlyBreakdown } from '~/components/analytics/AnalyticsMonthlyBreakdown'
 import { AnalyticsStatisticsSummary } from '~/components/analytics/AnalyticsStatisticsSummary'
+import { MonthlyBreakdown } from '~/components/analytics/MonthlyBreakdown'
 import { TopCategories } from '~/components/analytics/TopCategories'
 import { TopMerchants } from '~/components/analytics/TopMerchants'
 import { BudgetHistoryChart } from '~/components/budget-categories'
@@ -61,7 +61,8 @@ export default function FinanceAnalyticsPage() {
           compareToPrevious={compareToPrevious}
         />
 
-        <AnalyticsMonthlyBreakdown
+        <MonthlyBreakdown
+          title="Monthly Breakdown"
           dateFrom={dateFrom}
           dateTo={dateTo}
           selectedAccount={selectedAccount}

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router'
 import { AccountSelect } from '~/components/account-select'
 import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay'
-import { CategoryMonthlyBreakdown } from '~/components/analytics/CategoryMonthlyBreakdown'
+import { MonthlyBreakdown } from '~/components/analytics/MonthlyBreakdown'
 
 export default function CategoryAnalyticsPage() {
   const { category } = useParams<{ category: string }>()
@@ -39,7 +39,8 @@ export default function CategoryAnalyticsPage() {
           compareToPrevious={true}
         />
 
-        <CategoryMonthlyBreakdown
+        <MonthlyBreakdown
+          title="Monthly Breakdown"
           dateFrom={dateFrom}
           dateTo={dateTo}
           selectedAccount={selectedAccount}

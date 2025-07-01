@@ -1,7 +1,9 @@
 import { X } from 'lucide-react'
 import { type Dispatch, type SetStateAction, useId } from 'react'
 import { AccountSelect } from '~/components/account-select'
+import { CategorySelect } from '~/components/category-select'
 import { DatePicker } from '~/components/date-picker'
+import { GroupBySelect } from '~/components/group-by-select'
 import {
   Accordion,
   AccordionContent,
@@ -11,8 +13,6 @@ import {
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
-import { CategorySelect } from '~/components/ui/category-select'
-import { GroupBySelect } from '~/components/ui/group-by-select'
 import { Label } from '~/components/ui/label'
 import { Skeleton } from '~/components/ui/skeleton'
 import { Switch } from '~/components/ui/switch'

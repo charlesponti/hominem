@@ -38,6 +38,9 @@ importers:
       axios:
         specifier: 1.8.4
         version: 1.8.4(debug@4.4.1)
+      effect:
+        specifier: ^3.16.10
+        version: 3.16.10
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -1224,12 +1227,21 @@ importers:
       drizzle-orm:
         specifier: ^0.42.0
         version: 0.42.0(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(pg@8.16.2)(postgres@3.4.7)
+      effect:
+        specifier: ^3.16.10
+        version: 3.16.10
+      ioredis:
+        specifier: ^5.6.1
+        version: 5.6.1
       mailparser:
         specifier: ^3.7.2
         version: 3.7.3
       pdf-parse:
         specifier: ^1.1.1
         version: 1.1.1
+      pino:
+        specifier: ^9.7.0
+        version: 9.7.0
       pino-pretty:
         specifier: ^13.0.0
         version: 13.0.0
@@ -1349,6 +1361,9 @@ importers:
       drizzle-zod:
         specifier: ^0.7.0
         version: 0.7.1(drizzle-orm@0.42.0(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(pg@8.16.2)(postgres@3.4.7))(zod@3.25.67)
+      effect:
+        specifier: ^3.16.10
+        version: 3.16.10
       esbuild:
         specifier: ^0.21.3
         version: 0.21.5

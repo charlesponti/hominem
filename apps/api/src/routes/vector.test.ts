@@ -8,7 +8,6 @@ import { useApiTestLifecycle } from '../../test/api-test-utils.js'
 import { createTRPCTestClient } from '../../test/trpc-test-utils.js'
 import type { AppEnv } from '../server.js'
 
-// Mock the vector service
 vi.mock('../services/vector.service.js', () => ({
   SupabaseVectorService: {
     query: vi.fn(),
@@ -27,10 +26,8 @@ describe('Vector System', () => {
   let testUserId: string
 
   beforeAll(async () => {
-    // Create a test user
     testUserId = crypto.randomUUID()
 
-    // Insert test user into database with unique email
     await db.insert(users).values({
       id: testUserId,
       email: `vector-test-${testUserId}@example.com`,

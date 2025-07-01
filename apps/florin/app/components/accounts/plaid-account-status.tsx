@@ -1,4 +1,7 @@
-import { AlertTriangle, CheckCircle, Clock, RefreshCcw, Trash2 } from 'lucide-react'
+import { RefreshCcw, Trash2 } from 'lucide-react'
+import { Button } from '~/components/ui/button'
+import { toast } from '~/components/ui/use-toast'
+import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,76 +13,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '~/components/ui/alert-dialog'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import { toast } from '~/components/ui/use-toast'
-import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
+import type { RouterOutput } from '~/lib/trpc'
+import { PlaidStatusBadge } from './plaid-status-badge'
 
-interface PlaidConnectionStatusProps {
-  account: {
-    id: string
-    name: string
-    plaidItemId: string | null
-    plaidItemStatus: string | null
-    plaidItemError: string | null
-    plaidLastSyncedAt: string | null
-    institutionName: string | null
-  }
+export function PlaidAccountStatus({
+  account,
+  onRefresh,
+}: {
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
   onRefresh?: () => void
-}
-
-export function PlaidConnectionStatus({ account, onRefresh }: PlaidConnectionStatusProps) {
+}) {
   const syncItemMutation = useSyncPlaidItem()
   const removeConnectionMutation = useRemovePlaidConnection()
 
-  const getPlaidStatusBadge = (status: string | null) => {
-    switch (status) {
-      case 'active':
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Active
-          </Badge>
-        )
-      case 'error':
-        return (
-          <Badge variant="destructive">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Error
-          </Badge>
-        )
-      case 'pending_expiration':
-        return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-            <Clock className="w-3 h-3 mr-1" />
-            Expiring Soon
-          </Badge>
-        )
-      case 'revoked':
-        return (
-          <Badge variant="outline" className="text-gray-600">
-            Revoked
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
-
   const handleSync = async () => {
     if (!account.plaidItemId) return
-
     try {
       await syncItemMutation.mutateAsync({ itemId: account.plaidItemId })
       toast({
         title: 'Sync Started',
         description: `Started syncing data for ${account.name}`,
       })
-      // Refresh data after sync
       setTimeout(() => {
         onRefresh?.()
       }, 2000)
-    } catch (error) {
+    } catch {
       toast({
         title: 'Sync Failed',
         description: 'Failed to start sync. Please try again.',
@@ -90,18 +48,16 @@ export function PlaidConnectionStatus({ account, onRefresh }: PlaidConnectionSta
 
   const handleRemoveConnection = async () => {
     if (!account.plaidItemId) return
-
     try {
       await removeConnectionMutation.mutateAsync({ itemId: account.plaidItemId })
       toast({
         title: 'Connection Removed',
         description: `${account.name} has been disconnected from Plaid.`,
       })
-      // Refresh data after removal
       setTimeout(() => {
         onRefresh?.()
       }, 1000)
-    } catch (error) {
+    } catch {
       toast({
         title: 'Removal Failed',
         description: 'Failed to remove connection. Please try again.',
@@ -110,24 +66,18 @@ export function PlaidConnectionStatus({ account, onRefresh }: PlaidConnectionSta
     }
   }
 
-  if (!account.plaidItemId) {
-    return null
-  }
-
   return (
     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <div className="flex items-center justify-between mb-3">
         <div className="font-medium text-blue-900">Plaid Connection</div>
-        {getPlaidStatusBadge(account.plaidItemStatus)}
+        <PlaidStatusBadge status={account.plaidItemStatus} />
       </div>
-      
       <div className="space-y-2 text-sm text-blue-700">
-        {account.institutionName && (
-          <div>Institution: {account.institutionName}</div>
-        )}
+        {account.institutionName && <div>Institution: {account.institutionName}</div>}
         {account.plaidLastSyncedAt && (
           <div>
-            Last synced: {new Date(account.plaidLastSyncedAt).toLocaleDateString('en-US', {
+            Last synced:{' '}
+            {new Date(account.plaidLastSyncedAt).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
               day: 'numeric',
@@ -140,8 +90,6 @@ export function PlaidConnectionStatus({ account, onRefresh }: PlaidConnectionSta
           <div className="text-red-600">Error: {account.plaidItemError}</div>
         )}
       </div>
-
-      {/* Plaid Actions */}
       <div className="flex gap-2 mt-4">
         <Button
           variant="outline"
@@ -156,7 +104,6 @@ export function PlaidConnectionStatus({ account, onRefresh }: PlaidConnectionSta
           )}
           Sync Now
         </Button>
-
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="sm" disabled={removeConnectionMutation.isPending}>
@@ -168,9 +115,9 @@ export function PlaidConnectionStatus({ account, onRefresh }: PlaidConnectionSta
             <AlertDialogHeader>
               <AlertDialogTitle>Remove Plaid Connection</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently remove the Plaid connection for {account.name}. 
-                The account will remain but will no longer sync data from your bank. 
-                This action cannot be undone.
+                This will permanently remove the Plaid connection for {account.name}. The account
+                will remain but will no longer sync data from your bank. This action cannot be
+                undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -187,4 +134,4 @@ export function PlaidConnectionStatus({ account, onRefresh }: PlaidConnectionSta
       </div>
     </div>
   )
-} 
+}

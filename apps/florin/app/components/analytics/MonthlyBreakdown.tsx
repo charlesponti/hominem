@@ -5,9 +5,8 @@ import { formatCurrency } from '~/lib/number.utils'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import type { RouterOutput } from '~/lib/trpc'
 import { cn } from '~/lib/utils'
-import { adjustDateRange } from '~/lib/utils/date.utils'
 
-interface CategoryMonthlyBreakdownProps {
+interface MonthlyBreakdownProps {
   dateFrom?: Date
   dateTo?: Date
   selectedAccount?: string
@@ -15,11 +14,22 @@ interface CategoryMonthlyBreakdownProps {
   compareToPrevious?: boolean
   groupBy?: 'month' | 'week' | 'day'
   category?: string
+  title: string
 }
 
 const DeltaIcon = ({ delta }: { delta: number }) => {
-  if (delta > 0) return <span className="text-red-500 mr-1">▲</span>
-  if (delta < 0) return <span className="text-green-500 mr-1">▼</span>
+  if (delta > 0)
+    return (
+      <span className="text-red-500 mr-1" title="Increase">
+        ▲
+      </span>
+    )
+  if (delta < 0)
+    return (
+      <span className="text-green-500 mr-1" title="Decrease">
+        ▼
+      </span>
+    )
   return <span className="text-muted-foreground mr-1">–</span>
 }
 
@@ -200,7 +210,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
   )
 }
 
-export function CategoryMonthlyBreakdown({
+export function MonthlyBreakdown({
   dateFrom,
   dateTo,
   selectedAccount,
@@ -208,170 +218,115 @@ export function CategoryMonthlyBreakdown({
   compareToPrevious = false,
   groupBy = 'month',
   category,
-}: CategoryMonthlyBreakdownProps) {
-  // Adjust date range to ensure full month is included
-  const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo)
-
-  const {
-    data: timeSeriesData,
-    isLoading,
-    error,
-    formatDateLabel,
-  } = useTimeSeriesData({
-    dateFrom: adjustedDateFrom,
-    dateTo: adjustedDateTo,
-    account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    category: selectedCategory || undefined,
-    includeStats: false,
+  title,
+}: MonthlyBreakdownProps) {
+  const { data, isLoading, error, formatDateLabel } = useTimeSeriesData({
+    dateFrom,
+    dateTo,
+    account: selectedAccount,
+    category: selectedCategory,
     compareToPrevious,
     groupBy,
   })
 
-  const data = timeSeriesData?.data
-
   if (isLoading) {
-    const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
-    const mobileSkeletonItems = Array.from({ length: 3 }, (_, i) => i)
-
     return (
-      <div>
-        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
-        <div className="space-y-4">
-          <Skeleton className="h-20 w-full" />
-          <div className="overflow-x-auto hidden md:block bg-white px-4 rounded-2xl py-4 border-2 border-muted">
-            <div className="space-y-3">
-              {skeletonItems.map((item) => (
-                <div
-                  key={`category-breakdown-skeleton-${item}`}
-                  className="flex justify-between items-center"
-                >
-                  <Skeleton className="h-4 w-24" />
-                  <div className="flex gap-4">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-4 w-16" />
-                  </div>
-                </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-48" />
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
           </div>
-          <div className="block md:hidden space-y-4">
-            {mobileSkeletonItems.map((item) => (
-              <Skeleton
-                key={`mobile-category-breakdown-skeleton-${item}`}
-                className="h-32 w-full"
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error || !data || data.data.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">
+            {error ? 'Error loading data' : 'No data available for the selected period'}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const sortedData = [...data.data].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
+
+  // Show trends comparison if enabled and we have at least 2 data points
+  const showTrends = compareToPrevious && sortedData.length >= 2
+  const prevMonth = showTrends ? sortedData[1] : null
+  const currMonth = showTrends ? sortedData[0] : null
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">{title}</h3>
+            {category && (
+              <span className="text-sm text-muted-foreground">Filtered by: {category}</span>
+            )}
+          </div>
+
+          {showTrends && prevMonth && currMonth && (
+            <TrendsContent
+              prevMonth={prevMonth}
+              currMonth={currMonth}
+              formatDateLabel={formatDateLabel}
+              formatCurrency={formatCurrency}
+            />
+          )}
+
+          {/* Desktop Table */}
+          <div className="hidden md:block">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 font-medium">Period</th>
+                  <th className="text-right py-2 font-medium">Transactions</th>
+                  <th className="text-right py-2 font-medium">Total Spent</th>
+                  <th className="text-right py-2 font-medium">Average</th>
+                  {compareToPrevious && <th className="text-right py-2 font-medium">Trend</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedData.map((item) => (
+                  <MonthTableRow
+                    key={item.date}
+                    item={item}
+                    compareToPrevious={compareToPrevious}
+                    formatDateLabel={formatDateLabel}
+                    category={category}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {sortedData.map((item) => (
+              <MonthMobileItem
+                key={item.date}
+                item={item}
+                compareToPrevious={compareToPrevious}
+                formatDateLabel={formatDateLabel}
+                category={category}
               />
             ))}
           </div>
         </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div>
-        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-red-500">
-              {error.message || 'Unable to load category breakdown. Please try again later.'}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <div>
-        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-muted-foreground">
-              No data available for the selected period
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  // Trends & Anomalies logic
-  let trendsContent = null
-  if (data.length > 1) {
-    let maxExpensesChange = 0
-    let maxExpensesIdx = 1
-    for (let i = 1; i < data.length; i++) {
-      const prev = data[i - 1]
-      const curr = data[i]
-      const expensesChange = Math.abs((curr.expenses ?? 0) - (prev.expenses ?? 0))
-      if (expensesChange > maxExpensesChange) {
-        maxExpensesChange = expensesChange
-        maxExpensesIdx = i
-      }
-    }
-    const prevMonth = data[maxExpensesIdx - 1]
-    const currMonth = data[maxExpensesIdx]
-    trendsContent = (
-      <TrendsContent
-        prevMonth={prevMonth}
-        currMonth={currMonth}
-        formatDateLabel={formatDateLabel}
-        formatCurrency={formatCurrency}
-      />
-    )
-  }
-
-  return (
-    <div>
-      <div>
-        <h3 className="text-3xl font-semibold py-4">Category Breakdown</h3>
-        {/* Trends & Anomalies section */}
-        {trendsContent || (
-          <div className="text-sm text-muted-foreground mb-2">No significant changes</div>
-        )}
-      </div>
-      <div>
-        {/* Table for md+ screens */}
-        <div className="overflow-x-auto hidden md:block bg-white px-4 rounded-2xl py-4 border-2 border-muted">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Period</th>
-                <th className="text-right py-2">Transactions</th>
-                <th className="text-right py-2">Total Spent</th>
-                <th className="text-right py-2">Average</th>
-                {compareToPrevious && <th className="text-right py-2">Spending Trend</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((item) => (
-                <MonthTableRow
-                  key={item.date}
-                  item={item}
-                  compareToPrevious={compareToPrevious}
-                  formatDateLabel={formatDateLabel}
-                  category={category}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Card list for mobile screens */}
-        <div className="block md:hidden space-y-4">
-          {data.map((item) => (
-            <MonthMobileItem
-              key={item.date}
-              item={item}
-              compareToPrevious={compareToPrevious}
-              formatDateLabel={formatDateLabel}
-              category={category}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

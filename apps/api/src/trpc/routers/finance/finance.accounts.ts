@@ -26,7 +26,56 @@ export const accountsRouter = router({
   get: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      return await getAccountById(input.id, ctx.userId)
+      const account = await db
+        .select({
+          // Core FinanceAccount fields
+          id: financeAccounts.id,
+          userId: financeAccounts.userId,
+          name: financeAccounts.name,
+          type: financeAccounts.type,
+          balance: financeAccounts.balance,
+          interestRate: financeAccounts.interestRate,
+          minimumPayment: financeAccounts.minimumPayment,
+          institutionId: financeAccounts.institutionId,
+          plaidAccountId: financeAccounts.plaidAccountId,
+          plaidItemId: financeAccounts.plaidItemId,
+          mask: financeAccounts.mask,
+          isoCurrencyCode: financeAccounts.isoCurrencyCode,
+          subtype: financeAccounts.subtype,
+          officialName: financeAccounts.officialName,
+          limit: financeAccounts.limit,
+          meta: financeAccounts.meta,
+          lastUpdated: financeAccounts.lastUpdated,
+          createdAt: financeAccounts.createdAt,
+          updatedAt: financeAccounts.updatedAt,
+          // Additional Plaid connection info
+          institutionName: financialInstitutions.name,
+          institutionLogo: financialInstitutions.logo,
+          isPlaidConnected: sql<boolean>`${financeAccounts.plaidItemId} IS NOT NULL`,
+          plaidItemStatus: plaidItems.status,
+          plaidItemError: plaidItems.error,
+          plaidLastSyncedAt: plaidItems.lastSyncedAt,
+          plaidItemInternalId: plaidItems.id,
+          plaidInstitutionId: plaidItems.institutionId,
+          plaidInstitutionName: financialInstitutions.name,
+        })
+        .from(financeAccounts)
+        .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
+        .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+        .where(and(eq(financeAccounts.id, input.id), eq(financeAccounts.userId, ctx.userId)))
+        .then((results) => results[0])
+
+      if (!account) {
+        return null
+      }
+
+      const accountWithTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5)
+      const accountData = accountWithTransactions.find((acc) => acc.id === account.id)
+
+      return {
+        ...account,
+        transactions: accountData?.transactions || [],
+      }
     }),
 
   create: protectedProcedure
