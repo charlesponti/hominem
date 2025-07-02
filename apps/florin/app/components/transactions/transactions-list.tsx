@@ -1,7 +1,10 @@
 import { format } from 'date-fns'
 import { Calendar, CreditCard, DollarSign, Tag } from 'lucide-react'
 import { Card } from '~/components/ui/card'
-import type { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import type {
+  useFinanceAccountsWithMap,
+  useFinanceTransactions,
+} from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
 
 // Use the actual tRPC return type
@@ -42,14 +45,8 @@ function TransactionMetadata({
   transaction: TransactionFromAPI
   account?: AccountFromMap
 }) {
-  const formattedDate = format(new Date(transaction.date), 'MMM d, yyyy', {})
-
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      <div className="flex items-center gap-1">
-        <Calendar className="h-3 w-3" />
-        <span className="font-medium">{formattedDate}</span>
-      </div>
       {account && (
         <div className="flex items-center gap-1">
           <CreditCard className="h-3 w-3" />
@@ -74,23 +71,26 @@ function TransactionListItem({
   account?: AccountFromMap
 }) {
   return (
-    <Card className="group p-4 relative overflow-hidden border-0 bg-white shadow-sm ring-1 ring-gray-950/5 transition-all duration-200 hover:shadow-md hover:ring-gray-950/10">
-      <div className="w-full flex items-center gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div className="min-w-0 flex-1 flex flex-col gap-2">
-              <h3 className="text-base font-semibold text-gray-900 leading-6 truncate pr-2 flex justify-between items-center gap-2">
-                <div className="overflow-ellipsis overflow-hidden whitespace-nowrap">
-                  {transaction.description || 'Transaction'}
-                </div>
-                <TransactionAmount transaction={transaction} />
-              </h3>
-              <TransactionMetadata transaction={transaction} account={account} />
-            </div>
-          </div>
-        </div>
+    <Card className="group px-2 py-2">
+      <div className="w-full flex items-center justify-between gap-4">
+        <h3 className="font-serif text-black tracking-tight">
+          {transaction.description || 'Transaction'}
+        </h3>
+        <TransactionAmount transaction={transaction} />
       </div>
+      <TransactionMetadata transaction={transaction} account={account} />
     </Card>
+  )
+}
+
+function DateGroupHeader({ date }: { date: string }) {
+  const formattedDate = format(new Date(date), 'EEEE, MMMM d, yyyy')
+
+  return (
+    <div className="flex items-center gap-2">
+      <Calendar className="h-4 w-4 text-muted-foreground" />
+      <h2 className="text-sm font-medium text-muted-foreground">{formattedDate}</h2>
+    </div>
   )
 }
 
@@ -146,17 +146,43 @@ export function TransactionsList({
     )
   }
 
+  // Group transactions by date
+  const groupedTransactions = transactions.reduce(
+    (groups, transaction) => {
+      const date = transaction.date
+      if (!groups[date]) {
+        groups[date] = []
+      }
+      groups[date].push(transaction)
+      return groups
+    },
+    {} as Record<string, TransactionFromAPI[]>
+  )
+
+  // Sort dates in descending order (most recent first)
+  const sortedDates = Object.keys(groupedTransactions).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  )
+
   return (
-    <div className="space-y-4 mx-auto">
-      {/* Transactions List */}
-      <div className="space-y-3">
-        {transactions.map((transaction) => {
-          const account = accountsMap.get(transaction.accountId)
-          return (
-            <TransactionListItem key={transaction.id} transaction={transaction} account={account} />
-          )
-        })}
-      </div>
+    <div className="space-y-6 mx-auto">
+      {sortedDates.map((date) => (
+        <div key={date} className="space-y-1">
+          <DateGroupHeader date={date} />
+          <div className="space-y-3">
+            {groupedTransactions[date].map((transaction) => {
+              const account = accountsMap.get(transaction.accountId)
+              return (
+                <TransactionListItem
+                  key={transaction.id}
+                  transaction={transaction}
+                  account={account}
+                />
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
