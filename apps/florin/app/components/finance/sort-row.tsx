@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import type { SortDirection, SortField, SortOption } from '~/lib/hooks/use-finance-data'
+import type { SortDirection, SortField, SortOption } from '~/lib/hooks/use-sort'
 
 interface SortRowProps {
   sortOption: SortOption

@@ -11,7 +11,6 @@ export interface FilterArgs {
   description?: string
 }
 
-// Export tRPC hooks directly for simple queries
 export const useFinanceAccounts = () =>
   trpc.finance.accounts.list.useQuery({ includeInactive: false })
 

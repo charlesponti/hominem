@@ -64,7 +64,7 @@ function TransactionListItem({
   account?: AccountFromMap
 }) {
   return (
-    <div className="group border-b border-gray-100 py-4 px-2 space-y-2">
+    <div className="group border-b border-gray-200 py-4 px-2 space-y-2">
       <div className="w-full flex items-center justify-between gap-4">
         <h3 className="font-serif text-black tracking-tight">
           {transaction.description || 'Transaction'}
@@ -132,7 +132,7 @@ export function TransactionsList({
   }
 
   return (
-    <div className="mx-auto border border-gray-200 rounded-lg overflow-hidden bg-white">
+    <div className="mx-auto border border-gray-200 rounded-lg overflow-hidden">
       {transactions.map((transaction) => (
         <TransactionListItem
           key={transaction.id}

@@ -179,7 +179,6 @@ export default function TransactionImportPage() {
           'w-full max-w-2xl mx-auto p-8 space-y-6',
           'transition-all duration-500 ease-in-out'
         )}
-        aria-label="File import interface"
       >
         {/* Title */}
         <motion.div
@@ -392,8 +391,7 @@ const FileImport = memo(function FileImport({
   const itemClassName = useMemo(
     () =>
       cn(
-        'p-4 rounded-lg',
-        'bg-white/50 backdrop-blur-sm',
+        'p-4 rounded-lg backdrop-blur-sm',
         'border border-gray-200/50',
         'shadow-sm hover:shadow-md',
         'transition-all duration-200 ease-in-out',

@@ -9,13 +9,10 @@ import {
 } from '~/components/ui/select'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 
-type AccountsData = ReturnType<typeof useFinanceAccounts>['data']
-
 interface AccountSelectProps {
   selectedAccount: string
   setSelectedAccount?: (value: string) => void
   onAccountChange?: (value: string) => void
-  accounts?: AccountsData
   isLoading?: boolean
   placeholder?: string
   label?: string
@@ -27,7 +24,6 @@ export function AccountSelect({
   selectedAccount,
   setSelectedAccount,
   onAccountChange,
-  accounts: externalAccounts,
   isLoading: externalLoading,
   placeholder = 'All accounts',
   label = 'Account',
@@ -38,7 +34,7 @@ export function AccountSelect({
 
   // Use external data if provided, otherwise fetch internally
   const { data: internalAccounts, isLoading: internalLoading } = useFinanceAccounts()
-  const accounts = externalAccounts || internalAccounts || []
+  const accounts = internalAccounts || []
   const isLoading = externalLoading !== undefined ? externalLoading : internalLoading
 
   // Support both prop naming conventions for backward compatibility

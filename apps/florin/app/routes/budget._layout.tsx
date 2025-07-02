@@ -24,7 +24,7 @@ export default function BudgetLayout() {
     <div className="flex">
       {/* Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col">
-        <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r">
+        <div className="flex flex-col flex-grow pt-5 overflow-y-auto border-r">
           <div className="flex items-center flex-shrink-0 px-4">
             <Target className="h-8 w-8 text-blue-600" />
             <h1 className="ml-2 text-xl font-bold text-gray-900">Budget Manager</h1>
