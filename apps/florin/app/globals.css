@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @import "./animations.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -6,12 +6,11 @@
 html,
 body {
   @apply bg-white dark:bg-gray-950;
-  
+
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
 }
-
 
 @theme {
   --font-mono: "Geist Mono", ui-monospace, monospace;
@@ -124,7 +123,7 @@ body {
 
 @layer base {
   :root {
-    --background: 30 20% 97%;
+    --background: oklch(1 0 0);
     --foreground: 220 14% 8%;
     --card: 0 0% 100%;
     --card-foreground: 220 14% 8%;
@@ -249,9 +248,9 @@ body {
   }
 
   .foobar {
-    color: brown
+    color: brown;
   }
-  
+
   .text-popover-foreground {
     color: hsl(var(--popover-foreground));
   }

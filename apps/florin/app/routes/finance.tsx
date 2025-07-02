@@ -2,13 +2,6 @@
 
 import { RefreshCcw } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-    useFinanceAccountsWithMap,
-    useFinanceTransactions,
-    type FilterArgs,
-    type SortOption,
-} from '~/lib/hooks/use-finance-data'
-
 import { FilterChip } from '~/components/finance/filter-chip'
 import { FilterControls } from '~/components/finance/filter-controls'
 import { PaginationControls } from '~/components/finance/pagination-controls'
@@ -16,6 +9,12 @@ import { SortControls } from '~/components/finance/sort-controls'
 import { TransactionsList } from '~/components/transactions/transactions-list'
 import { Button } from '~/components/ui/button'
 import { SearchInput } from '~/components/ui/search-input'
+import {
+  useFinanceAccountsWithMap,
+  useFinanceTransactions,
+  type FilterArgs,
+} from '~/lib/hooks/use-finance-data'
+import type { SortOption } from '~/lib/hooks/use-sort'
 
 // Define a type for the augmented sort options
 interface ActiveSortOption extends SortOption {
@@ -65,9 +64,6 @@ export default function TransactionsPage() {
   const [isSortControlsOpen, setIsSortControlsOpen] = useState(false)
   const [focusedSortIndex, setFocusedSortIndex] = useState<number | null>(null)
 
-  const [isFilterControlsOpen, setIsFilterControlsOpen] = useState(false)
-  const [focusedFilterKey, setFocusedFilterKey] = useState<string | null>(null)
-
   // Create a ref for the search input
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -82,18 +78,11 @@ export default function TransactionsPage() {
           // Also clear the search input value when removing description filter
           setSearchValue('')
         }
-        if (key === focusedFilterKey && isFilterControlsOpen) {
-          setIsFilterControlsOpen(false)
-          setFocusedFilterKey(null)
-        }
       },
       onClick: () => {
         if (key === 'description') {
           // Focus the search input for description filter
           searchInputRef.current?.focus()
-        } else {
-          setFocusedFilterKey(key)
-          setIsFilterControlsOpen(true)
         }
       },
     }))
@@ -132,26 +121,19 @@ export default function TransactionsPage() {
   const handleDateFromChange = useCallback((date: Date | undefined) => {
     setCurrentFilters((prev: FilterArgs) => ({
       ...prev,
-      dateFrom: date?.toISOString().split('T')[0],
+      dateFrom: date,
     }))
   }, [])
 
   const handleDateToChange = useCallback((date: Date | undefined) => {
     setCurrentFilters((prev: FilterArgs) => ({
       ...prev,
-      dateTo: date?.toISOString().split('T')[0],
+      dateTo: date,
     }))
   }, [])
 
   const handleSearchQueryChange = useCallback((description: string) => {
     setSearchValue(description)
-  }, [])
-
-  const handleFilterControlsOpenChange = useCallback((open: boolean) => {
-    setIsFilterControlsOpen(open)
-    if (!open) {
-      setFocusedFilterKey(null)
-    }
   }, [])
 
   const handleSortControlsOpenChange = useCallback((open: boolean) => {
@@ -186,9 +168,6 @@ export default function TransactionsPage() {
               setDateFrom={handleDateFromChange}
               dateTo={currentFilters.dateTo ? new Date(currentFilters.dateTo) : undefined}
               setDateTo={handleDateToChange}
-              open={isFilterControlsOpen}
-              onOpenChange={handleFilterControlsOpenChange}
-              focusedFilterKey={focusedFilterKey}
             />
             <SortControls
               sortOptions={sortOptions || []}
@@ -262,13 +241,7 @@ export default function TransactionsPage() {
             accountsMap={accountsMap}
           />
 
-          <PaginationControls
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            totalItems={totalTransactions}
-            itemsPerPage={limit}
-          />
+          <PaginationControls currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
     </>

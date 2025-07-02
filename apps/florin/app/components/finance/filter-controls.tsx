@@ -1,4 +1,5 @@
 import { ListFilter } from 'lucide-react'
+import { useState } from 'react'
 import { AccountSelect } from '~/components/account-select'
 import { DatePicker } from '~/components/date-picker'
 import { Button } from '~/components/ui/button'
@@ -20,12 +21,6 @@ interface FilterControlsProps {
   setDateFrom: (date: Date | undefined) => void
   dateTo: Date | undefined
   setDateTo: (date: Date | undefined) => void
-
-  // Props for controlling the dropdown
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  focusedFilterKey?: string | null
-  setFocusedFilterKey?: (key: string | null) => void // Simplified type
 }
 
 export function FilterControls({
@@ -37,12 +32,11 @@ export function FilterControls({
   setDateFrom,
   dateTo,
   setDateTo,
-  open,
-  onOpenChange,
-  focusedFilterKey,
 }: FilterControlsProps) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">
           <ListFilter className="h-4 w-4 mr-2" />
