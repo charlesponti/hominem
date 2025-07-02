@@ -18,7 +18,7 @@ export interface BudgetCategoryWithSpending extends BudgetCategory {
 
 // Budget history data type
 export type BudgetHistoryData = RouterOutput['finance']['budget']['history'][0]
-
+export type TransactionsList = RouterOutput['finance']['transactions']['list']
 // Transaction categories analysis type
 export type TransactionCategoryAnalysis =
   RouterOutput['finance']['budget']['transactionCategories'][0]

@@ -71,7 +71,7 @@ function TransactionListItem({
   account?: AccountFromMap
 }) {
   return (
-    <Card className="group px-2 py-2">
+    <Card className="group px-2 py-2 rounded-sm">
       <div className="w-full flex items-center justify-between gap-4">
         <h3 className="font-serif text-black tracking-tight">
           {transaction.description || 'Transaction'}
@@ -146,42 +146,14 @@ export function TransactionsList({
     )
   }
 
-  // Group transactions by date
-  const groupedTransactions = transactions.reduce(
-    (groups, transaction) => {
-      const date = transaction.date
-      if (!groups[date]) {
-        groups[date] = []
-      }
-      groups[date].push(transaction)
-      return groups
-    },
-    {} as Record<string, TransactionFromAPI[]>
-  )
-
-  // Sort dates in descending order (most recent first)
-  const sortedDates = Object.keys(groupedTransactions).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime()
-  )
-
   return (
-    <div className="space-y-6 mx-auto">
-      {sortedDates.map((date) => (
-        <div key={date} className="space-y-1">
-          <DateGroupHeader date={date} />
-          <div className="space-y-3">
-            {groupedTransactions[date].map((transaction) => {
-              const account = accountsMap.get(transaction.accountId)
-              return (
-                <TransactionListItem
-                  key={transaction.id}
-                  transaction={transaction}
-                  account={account}
-                />
-              )
-            })}
-          </div>
-        </div>
+    <div className="space-y-2 mx-auto">
+      {transactions.map((transaction) => (
+        <TransactionListItem
+          key={transaction.id}
+          transaction={transaction}
+          account={accountsMap.get(transaction.accountId)}
+        />
       ))}
     </div>
   )
