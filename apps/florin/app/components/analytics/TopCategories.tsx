@@ -1,3 +1,4 @@
+import { Badge } from '~/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { formatCurrency } from '~/lib/number.utils'
@@ -10,7 +11,7 @@ interface TopCategoriesProps {
   selectedCategory?: string
 }
 
-export function TopCategories({ dateFrom, dateTo, selectedAccount, selectedCategory }: TopCategoriesProps) {
+export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategoriesProps) {
   const {
     data: categoryBreakdown,
     isLoading,
@@ -19,7 +20,6 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount, selectedCateg
     from: dateFrom?.toISOString().split('T')[0],
     to: dateTo?.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    category: selectedCategory || undefined,
     limit: '5',
   })
 
@@ -50,24 +50,17 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount, selectedCateg
         ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching categories.</div>
         ) : categoryBreakdown && categoryBreakdown.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th className="text-left">Category</th>
-                <th className="text-right">Total</th>
-                <th className="text-right">Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categoryBreakdown.map((cat) => (
-                <tr key={cat.category}>
-                  <td>{cat.category}</td>
-                  <td className="text-right font-mono">{formatCurrency(cat.total)}</td>
-                  <td className="text-right">{cat.count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="space-y-3">
+            {categoryBreakdown.map((cat) => (
+              <div key={cat.category} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
+                <Badge variant="secondary" className="w-12 justify-center">
+                  {cat.count}x
+                </Badge>
+                <span className="text-sm">{cat.category}</span>
+                <span className="text-sm font-mono text-right">{formatCurrency(cat.total)}</span>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center text-muted-foreground py-4">
             No category data available for the selected period

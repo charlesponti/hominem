@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { formatCurrency } from '~/lib/number.utils'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
+import { formatCurrency } from '~/lib/number.utils'
 
 interface AnalyticsStatisticsSummaryProps {
   dateFrom?: Date
@@ -47,21 +47,25 @@ export function AnalyticsStatisticsSummary({
   }
 
   if (isLoading) {
-    const skeletonItems = Array.from({ length: 4 }, (_, i) => i)
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {skeletonItems.map((item) => (
-          <Card key={`stats-skeleton-${item}`}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-20 mb-2" />
-              <Skeleton className="h-3 w-32" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Financial Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-4">
+            {['total-income', 'total-expenses', 'average-income', 'average-expenses'].map((key) => (
+              <div key={`stats-skeleton-${key}`} className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-6 w-20" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -80,68 +84,64 @@ export function AnalyticsStatisticsSummary({
   return (
     <>
       {stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-neutral-900">
-                Total Income
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black font-mono">
-                {formatCurrency(stats.totalIncome)}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-neutral-900">
+              Financial Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col space-y-4">
+              {/* Total Income Row */}
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-neutral-900">Total Income</div>
+                  <div className="text-xs text-muted-foreground">
+                    For period {stats.periodCovered}
+                  </div>
+                </div>
+                <div className="text-xl font-bold text-black font-mono">
+                  {formatCurrency(stats.totalIncome)}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 font-normal">
-                For period {stats.periodCovered}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-neutral-900">
-                Total Expenses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600 font-mono">
-                {formatCurrency(stats.totalExpenses)}
+
+              {/* Total Expenses Row */}
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-neutral-900">Total Expenses</div>
+                  <div className="text-xs text-muted-foreground">
+                    For period {stats.periodCovered}
+                  </div>
+                </div>
+                <div className="text-xl font-bold text-red-600 font-mono">
+                  {formatCurrency(stats.totalExpenses)}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 font-normal">
-                For period {stats.periodCovered}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-neutral-900">
-                Average Income
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black font-mono">
-                {formatCurrency(stats.averageIncome)}
+
+              {/* Average Income Row */}
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-neutral-900">Average Income</div>
+                  <div className="text-xs text-muted-foreground">Over {stats.count} months</div>
+                </div>
+                <div className="text-xl font-bold text-black font-mono">
+                  {formatCurrency(stats.averageIncome)}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 font-normal">
-                Over {stats.count} months
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-neutral-900">
-                Average Expenses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600 font-mono">
-                {formatCurrency(stats.averageExpenses)}
+
+              {/* Average Expenses Row */}
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-neutral-900">Average Expenses</div>
+                  <div className="text-xs text-muted-foreground">Over {stats.count} months</div>
+                </div>
+                <div className="text-xl font-bold text-red-600 font-mono">
+                  {formatCurrency(stats.averageExpenses)}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1 font-normal">
-                Over {stats.count} months
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardContent className="pt-6">

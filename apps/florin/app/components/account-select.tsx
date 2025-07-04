@@ -49,7 +49,7 @@ export function AccountSelect({
       <SelectTrigger id={id} className={className}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="max-h-[250px] overflow-y-auto">
         <SelectItem value="all">All accounts</SelectItem>
         {isLoading ? (
           <SelectItem value="loading" disabled>

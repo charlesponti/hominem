@@ -7,6 +7,8 @@ import { MonthlyBreakdown } from '~/components/analytics/MonthlyBreakdown'
 import { TopCategories } from '~/components/analytics/TopCategories'
 import { TopMerchants } from '~/components/analytics/TopMerchants'
 import { BudgetHistoryChart } from '~/components/budget-categories'
+import { BudgetOverview } from '~/components/budget-overview'
+import { getLastMonthFromRange } from '~/lib/utils/date.utils'
 
 export default function FinanceAnalyticsPage() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(subMonths(new Date(), 6))
@@ -17,6 +19,9 @@ export default function FinanceAnalyticsPage() {
   const [compareToPrevious, setCompareToPrevious] = useState<boolean>(true)
   const [groupBy, setGroupBy] = useState<'month' | 'week' | 'day'>('month')
   const [chartType, setChartType] = useState<'area' | 'bar'>('area')
+
+  // Get the last month from the date range for budget overview
+  const lastMonthYear = getLastMonthFromRange(dateFrom, dateTo)
 
   return (
     <div className="w-full">
@@ -42,13 +47,17 @@ export default function FinanceAnalyticsPage() {
           setCompareToPrevious={setCompareToPrevious}
         />
 
-        <AnalyticsStatisticsSummary
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          selectedAccount={selectedAccount}
-          selectedCategory={selectedCategory}
-          includeStats={includeStats}
-        />
+        {/* Financial Summary and Budget Overview side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <AnalyticsStatisticsSummary
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            selectedAccount={selectedAccount}
+            selectedCategory={selectedCategory}
+            includeStats={includeStats}
+          />
+          <BudgetOverview selectedMonthYear={lastMonthYear} />
+        </div>
 
         <AnalyticsChartDisplay
           chartType={chartType}

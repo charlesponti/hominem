@@ -1,7 +1,8 @@
+import { Badge } from '~/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
-import { formatCurrency } from '~/lib/number.utils'
 import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants'
+import { formatCurrency } from '~/lib/number.utils'
 
 interface TopMerchantsProps {
   dateFrom?: Date
@@ -55,24 +56,17 @@ export function TopMerchants({
         ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching merchants.</div>
         ) : topMerchants && topMerchants.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th className="text-left">Merchant</th>
-                <th className="text-right">Total</th>
-                <th className="text-right">Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topMerchants.map((m) => (
-                <tr key={m.merchant}>
-                  <td>{m.merchant}</td>
-                  <td className="text-right font-mono">{formatCurrency(m.totalSpent)}</td>
-                  <td className="text-right">{m.frequency}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="space-y-3">
+            {topMerchants.map((m) => (
+              <div key={m.merchant} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
+                <Badge variant="secondary" className="w-12 text-center">
+                  {m.frequency}x
+                </Badge>
+                <span className="text-sm">{m.merchant}</span>
+                <span className="text-sm font-mono text-right">{formatCurrency(m.totalSpent)}</span>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center text-muted-foreground py-4">
             No merchant data available for the selected period

@@ -1,4 +1,3 @@
-// Helper function to adjust date range to ensure full month is included
 export function adjustDateRange(
   dateFrom?: Date,
   dateTo?: Date
@@ -19,6 +18,17 @@ export function adjustDateRange(
   }
 
   return { adjustedDateFrom: dateFrom, adjustedDateTo }
+}
+
+export function getLastMonthFromRange(_dateFrom?: Date, dateTo?: Date): string {
+  if (!dateTo) {
+    // If no dateTo, use current month
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  }
+
+  // Return the month of dateTo in YYYY-MM format
+  return `${dateTo.getFullYear()}-${String(dateTo.getMonth() + 1).padStart(2, '0')}`
 }
 
 // Helper function to format date based on whether it's this year

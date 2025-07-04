@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 
-interface BudgetSummaryCardsProps {
+interface BudgetSummaryProps {
   totalBudget: number
   totalSpent: number
 }
 
-export function BudgetSummaryCards({ totalBudget, totalSpent }: BudgetSummaryCardsProps) {
+export function BudgetSummary({ totalBudget, totalSpent }: BudgetSummaryProps) {
   const remaining = totalBudget - totalSpent
   const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 

@@ -18,6 +18,7 @@ export interface MonthlyStats {
  */
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
   const query = trpc.finance.analyze.monthlyStats.useQuery(
+    // biome-ignore lint/style/noNonNullAssertion: This value will be provided by the parent component.
     { month: month! },
     {
       enabled: !!month,

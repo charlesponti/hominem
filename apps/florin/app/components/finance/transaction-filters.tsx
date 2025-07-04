@@ -196,9 +196,6 @@ export function TransactionFilters({
   return (
     <>
       <header className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Transactions</h2>
-
-        {/* Search Input */}
         <SearchInput
           ref={searchInputRef}
           value={searchValue}
