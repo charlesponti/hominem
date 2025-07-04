@@ -38,7 +38,7 @@ export default function AccountDetailsPage() {
     totalTransactions,
   } = useFinanceTransactions({
     filters: { accountId: id },
-    initialLimit: 50,
+    limit: 50,
   })
 
   const isLoading = accountLoading || transactionsLoading

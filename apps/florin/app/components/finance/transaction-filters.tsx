@@ -36,7 +36,9 @@ interface TransactionFiltersProps {
 
   // Sort state
   sortOptions: SortOption[]
-  onSortOptionsChange: (sortOptions: SortOption[]) => void
+  addSortOption: (option: SortOption) => void
+  updateSortOption: (index: number, option: SortOption) => void
+  removeSortOption: (index: number) => void
 
   // Actions
   onRefresh: () => void
@@ -51,7 +53,9 @@ export function TransactionFilters({
   searchValue,
   onSearchChange,
   sortOptions,
-  onSortOptionsChange,
+  addSortOption,
+  updateSortOption,
+  removeSortOption,
   onRefresh,
   loading = false,
 }: TransactionFiltersProps) {
@@ -186,12 +190,11 @@ export function TransactionFilters({
     return sortOptions.map((sortOption: SortOption, index: number) => ({
       ...sortOption,
       onRemove: () => {
-        const newSortOptions = sortOptions.filter((_, i) => i !== index)
-        onSortOptionsChange(newSortOptions)
+        removeSortOption(index)
       },
       onClick: () => handleSortChipClick(index),
     }))
-  }, [sortOptions, onSortOptionsChange, handleSortChipClick])
+  }, [sortOptions, removeSortOption, handleSortChipClick])
 
   return (
     <>
@@ -252,8 +255,10 @@ export function TransactionFilters({
               </DropdownMenuContent>
             </DropdownMenu>
             <SortControls
-              value={sortOptions || []}
-              onChange={onSortOptionsChange}
+              sortOptions={sortOptions || []}
+              addSortOption={addSortOption}
+              updateSortOption={updateSortOption}
+              removeSortOption={removeSortOption}
               open={isSortControlsOpen}
               onOpenChange={handleSortControlsOpenChange}
               focusedSortIndex={focusedSortIndex}

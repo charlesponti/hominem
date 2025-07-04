@@ -12,6 +12,9 @@ export const trpc = createTRPCProxyClient<AppRouter>({
       url: 'http://localhost:4040/trpc',
       async headers() {
         const token = await getValidAccessToken()
+        if (!token) {
+          throw new Error('No token found. Please run `hominem auth` to authenticate.')
+        }
         return {
           authorization: token ? `Bearer ${token}` : '',
         }

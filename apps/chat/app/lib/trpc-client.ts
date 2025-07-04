@@ -4,7 +4,6 @@ import type { AppRouter } from './trpc/routers/index'
 
 export const trpc = createTRPCReact<AppRouter>()
 
-// Create tRPC client
 export const createTRPCClient = () => {
   return trpc.createClient({
     links: [

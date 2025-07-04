@@ -1,7 +1,7 @@
+import axios from 'axios'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import axios from 'axios'
 
 const CONFIG_FILE = path.join(os.homedir(), '.hominem', 'config.json')
 
@@ -59,7 +59,6 @@ export async function getValidAccessToken(): Promise<string | null> {
         return null // Refresh failed
       }
     } catch (error) {
-      console.error('Failed to refresh token:', error)
       return null
     }
   }

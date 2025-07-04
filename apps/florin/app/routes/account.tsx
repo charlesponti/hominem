@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { redirect } from 'react-router'
 import { RouteLink } from '~/components/route-link'
 import {
   AlertDialog,
@@ -16,20 +15,8 @@ import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
-import { getServerSession } from '~/lib/supabase/server'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { trpc } from '~/lib/trpc'
-import type { Route } from './+types/account'
-
-export async function loader(args: Route.LoaderArgs) {
-  const { user } = await getServerSession(args.request)
-
-  if (!user) {
-    return redirect('/auth')
-  }
-
-  return { user }
-}
 
 export default function AccountPage() {
   const { supabase } = useSupabaseAuth()
@@ -37,7 +24,9 @@ export default function AccountPage() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
   const { accountsMap } = useFinanceAccountsWithMap()
-  const { transactions } = useFinanceTransactions()
+  const { transactions } = useFinanceTransactions({
+    limit: 25,
+  })
 
   const handleLogout = async () => {
     try {

@@ -62,21 +62,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 const queryClient = getQueryClient()
 
-function AppProviders({ children }: { children: React.ReactNode }) {
+export default function App() {
   const trpcClient = createTRPCClient()
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
     </trpc.Provider>
-  )
-}
-
-export default function App() {
-  return (
-    <AppProviders>
-      <Outlet />
-    </AppProviders>
   )
 }
 

@@ -22,23 +22,11 @@
   },
   "biome.enabled": true,
   "biome.lsp.bin": "node_modules/.bin/biome",
-  "editor.codeActionsOnSave": {
-    "source.sortImports": "always"
-  },
   "editor.defaultFormatter": "biomejs.biome",
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
   "editor.cursorBlinking": "smooth",
   "editor.minimap.enabled": true,
-  "github.copilot.chat.codeGeneration.instructions": [
-    {
-      "file": ".cursor/rules/javascript.md"
-    },
-    {
-      "file": ".cursor/rules/react-hooks.md"
-    },
-  ],
-  "github.copilot.nextEditSuggestions.enabled": true,
   "javascript.preferences.importModuleSpecifier": "shortest",
   "rust-analyzer.completion.autoimport.enable": true,
   "typescript.enablePromptUseWorkspaceTsdk": true,

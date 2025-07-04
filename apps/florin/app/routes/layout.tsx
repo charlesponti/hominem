@@ -3,24 +3,22 @@ import { getServerSession } from '~/lib/supabase'
 import { MainNavigation } from '../components/main-navigation'
 import type { Route } from './+types/layout'
 
-export async function loader(loaderArgs: Route.LoaderArgs) {
-  const { user } = await getServerSession(loaderArgs.request)
+export async function loader(args: Route.LoaderArgs) {
+  const { user } = await getServerSession(args.request)
+  const pathname = new URL(args.request.url).pathname
 
-  if (new URL(loaderArgs.request.url).pathname === '/' && user?.id) {
-    // If the user is authenticated, redirect to the `/finance` page
+  if (pathname === '/' && user?.id) {
     return redirect('/finance')
   }
 
-  if (new URL(loaderArgs.request.url).pathname !== '/' && !user?.id) {
-    // If the user is not authenticated, redirect to the `/auth` page
-    return redirect('/auth')
+  if (pathname !== '/' && !user?.id) {
+    return redirect('/')
   }
 
   return { userId: user?.id }
 }
 
-export default function Layout({ loaderData }: Route.ComponentProps) {
-  const { userId } = loaderData
+export default function Layout() {
   const navigation = useNavigation()
   const isNavigating = navigation.state !== 'idle'
 

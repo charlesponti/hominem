@@ -1,6 +1,5 @@
 import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu'
 import { ListOrdered, PlusCircle } from 'lucide-react'
-import { useCallback } from 'react'
 import { Button } from '~/components/ui/button'
 import {
   DropdownMenu,
@@ -14,8 +13,10 @@ import type { SortField, SortOption } from '~/lib/hooks/use-sort'
 import { SortRow } from './sort-row'
 
 interface SortControlsProps {
-  value: SortOption[]
-  onChange: (sortOptions: SortOption[]) => void
+  sortOptions: SortOption[]
+  addSortOption: (option: SortOption) => void
+  updateSortOption: (index: number, option: SortOption) => void
+  removeSortOption: (index: number) => void
   open?: boolean
   onOpenChange?: (open: boolean) => void
   focusedSortIndex?: number | null
@@ -24,39 +25,16 @@ interface SortControlsProps {
 const sortableFields: SortField[] = ['amount', 'date', 'description', 'category']
 
 export function SortControls({
-  value: sortOptions,
-  onChange,
+  sortOptions,
+  addSortOption,
+  updateSortOption,
+  removeSortOption,
   open,
   onOpenChange,
   focusedSortIndex,
 }: SortControlsProps) {
   const availableFieldsToAdd = sortableFields.filter(
     (field) => !sortOptions.some((option) => option.field === field)
-  )
-
-  // Internal handlers that update the sort options and call onChange
-  const addSortOption = useCallback(
-    (option: SortOption) => {
-      onChange([...sortOptions, option])
-    },
-    [sortOptions, onChange]
-  )
-
-  const updateSortOption = useCallback(
-    (index: number, option: SortOption) => {
-      const newSortOptions = [...sortOptions]
-      newSortOptions[index] = option
-      onChange(newSortOptions)
-    },
-    [sortOptions, onChange]
-  )
-
-  const removeSortOption = useCallback(
-    (index: number) => {
-      const newSortOptions = sortOptions.filter((_, i) => i !== index)
-      onChange(newSortOptions)
-    },
-    [sortOptions, onChange]
   )
 
   return (

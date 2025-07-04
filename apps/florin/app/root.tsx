@@ -1,13 +1,9 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-
 import type { Route } from './+types/root'
 import './globals.css'
-import { getQueryClient } from './lib/get-query-client'
-import { trpc, trpcClient } from './lib/trpc'
-
-// No loader needed for Supabase auth
+import { createTRPCClient, queryClient, trpc } from './lib/trpc'
 
 export const meta: Route.MetaFunction = () => {
   return [
@@ -78,16 +74,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Supabase configuration is handled in the client
 export default function App() {
-  const queryClient = getQueryClient()
-
+  const trpcClient = createTRPCClient()
   return (
-    <QueryClientProvider client={queryClient}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
         <Outlet />
-      </trpc.Provider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
   )
 }
 

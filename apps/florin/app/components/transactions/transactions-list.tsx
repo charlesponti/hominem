@@ -5,7 +5,6 @@ import type {
 } from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
 
-// Use the actual tRPC return type
 type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number]
 type AccountsMap = ReturnType<typeof useFinanceAccountsWithMap>['accountsMap']
 type AccountFromMap = NonNullable<AccountsMap> extends Map<string, infer T> ? T : never

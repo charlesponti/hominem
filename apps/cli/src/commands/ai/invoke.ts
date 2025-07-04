@@ -13,6 +13,7 @@ export const invokeCommand = new Command()
   .option('--showToolResults', 'Show tool results', false)
   .action(async (message, options) => {
     const spinner = ora('Generating response').start()
+    
     try {
       const response = await trpc.chat.generate.mutate({ message })
 
@@ -39,8 +40,7 @@ export const invokeCommand = new Command()
         writeFileSync('debug.json', JSON.stringify(response, null, 2))
       }
     } catch (err) {
-      consola.error('Error invoking AI model:', err)
-      spinner.fail('Failed to generate response')
+      spinner.fail(`Error invoking AI model: ${err instanceof Error ? err.message : 'Unknown error'}`)
       process.exit(1)
     }
   })

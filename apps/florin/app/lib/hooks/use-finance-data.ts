@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { trpc } from '~/lib/trpc'
-import { useSort, type SortOption } from './use-sort'
+import type { SortOption } from './use-sort'
 
 // Derive filter args from tRPC input schema where possible
 export interface FilterArgs {
@@ -63,24 +63,19 @@ export function useAccountById(id: string) {
 }
 
 export interface UseFinanceTransactionsOptions {
-  initialLimit?: number
-  initialOffset?: number
-  initialSortOptions?: SortOption[]
   filters?: FilterArgs
+  sortOptions?: SortOption[]
+  page?: number
+  limit?: number
 }
 
 // Hook that adds value through complex state management and data transformation
 export function useFinanceTransactions({
-  initialLimit = 25,
-  initialOffset = 0,
-  initialSortOptions = [{ field: 'date', direction: 'desc' }],
   filters = {},
+  sortOptions = [{ field: 'date', direction: 'desc' }],
+  page = 0,
+  limit = 25,
 }: UseFinanceTransactionsOptions = {}) {
-  const [limit, setLimit] = useState<number>(initialLimit)
-  const [offset, setOffset] = useState<number>(initialOffset)
-  const { sortOptions, addSortOption, removeSortOption, updateSortOption } =
-    useSort(initialSortOptions)
-
   // Convert sort options to tRPC format
   const sortBy = useMemo(() => {
     return sortOptions[0]?.field || 'date'
@@ -89,6 +84,8 @@ export function useFinanceTransactions({
   const sortOrder = useMemo(() => {
     return sortOptions[0]?.direction || 'desc'
   }, [sortOptions])
+
+  const offset = page * limit
 
   const { data, isLoading, error, refetch } = trpc.finance.transactions.list.useQuery(
     {
@@ -116,15 +113,5 @@ export function useFinanceTransactions({
     isLoading,
     error,
     refetch,
-    limit,
-    setLimit,
-    offset,
-    setOffset,
-    page: Math.floor(offset / limit),
-    setPage: (newPage: number) => setOffset(newPage * limit),
-    sortOptions,
-    addSortOption,
-    updateSortOption,
-    removeSortOption,
   }
 }
