@@ -1,5 +1,5 @@
-import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useCallback } from 'react'
 import { trpc } from '../trpc-client'
 
 interface UseSendMessageOptions {
@@ -20,11 +20,10 @@ export function useSendMessage({ chatId, userId }: UseSendMessageOptions) {
   const queryClient = useQueryClient()
 
   // Send message mutation
-  const sendMessageMutation = trpc.messageOperations.addMessage.useMutation({
+  const sendMessageMutation = trpc.messages.addMessage.useMutation({
     onSuccess: () => {
-      // Invalidate the messages query to refetch with the new message
       queryClient.invalidateQueries({
-        queryKey: ['messageOperations', 'getChatMessages', { chatId, limit: 50 }],
+        queryKey: ['chats', 'getChatById', { chatId }],
       })
     },
   })
