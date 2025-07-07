@@ -1,9 +1,7 @@
-import { db } from '@hominem/data'
-import { users } from '@hominem/data/schema'
-import crypto from 'node:crypto'
-import { describe, expect, it, vi } from 'vitest'
-import { useApiTestLifecycle } from '../../test/api-test-utils.js'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createTestUser } from '../../test/db-test-utils.js'
 import { createTRPCTestClient } from '../../test/trpc-test-utils.js'
+import { createServer } from '../server.js'
 
 vi.mock('../services/vector.service.js', () => ({
   VectorService: {
@@ -22,18 +20,15 @@ vi.mock('@hominem/utils/supabase', () => ({
 }))
 
 describe('Vector System', () => {
-  const { getServer } = useApiTestLifecycle()
-  const testUserId = crypto.randomUUID()
+  let testUserId: string
   let trpc: ReturnType<typeof createTRPCTestClient>
+  let server: ReturnType<typeof createServer>
 
-  // Set up tRPC client
-  trpc = createTRPCTestClient(getServer(), testUserId)
-
-  // Create test user
-  db.insert(users).values({
-    id: testUserId,
-    email: 'test@example.com',
-    name: 'Test User',
+  beforeEach(async () => {
+    server = createServer()
+    testUserId = await createTestUser()
+    // Set up tRPC client
+    trpc = createTRPCTestClient(server, testUserId)
   })
 
   describe('tRPC Vector Router', () => {
@@ -129,11 +124,22 @@ describe('Vector System', () => {
           created_at: new Date().toISOString(),
           last_accessed_at: new Date().toISOString(),
           metadata: {},
+          bucket_id: 'test-bucket-id',
+          owner: testUserId,
+          buckets: {
+            id: 'test-bucket-id',
+            name: 'test-bucket',
+            owner: testUserId,
+            public: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            last_accessed_at: new Date().toISOString(),
+          },
         },
       ]
 
       const { fileStorageService } = await import('@hominem/utils/supabase')
-      vi.mocked(fileStorageService.listUserFiles).mockResolvedValue(mockFiles as any)
+      vi.mocked(fileStorageService.listUserFiles).mockResolvedValue(mockFiles)
 
       const result = await trpc.vector.getUserFiles.query()
 

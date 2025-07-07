@@ -39,6 +39,7 @@ vi.mock('../../../middleware/supabase.js', () => ({
 
 vi.mock('../../../middleware/file-upload.js', () => ({
   handleFileUpload: vi.fn(),
+  handleFileUploadBuffer: vi.fn(),
 }))
 
 // Mock BullMQ Queue
@@ -58,7 +59,6 @@ vi.mock('bullmq', () => ({
 vi.mock('node:fs', () => ({
   default: {
     readFileSync: vi.fn(),
-    unlinkSync: vi.fn(),
     writeFileSync: vi.fn(),
   },
   readFileSync: vi.fn(),
@@ -137,9 +137,6 @@ describe('Finance Import Routes', () => {
       expect(body.fileName).toBe('transactions.csv')
       expect(body.status).toBe('queued')
 
-      // Verify file cleanup
-      expect(fs.unlinkSync).toHaveBeenCalledWith('/tmp/test-file.csv')
-
       // Verify queue job creation
       expect(mockQueueAdd).toHaveBeenCalledWith(
         'import-transaction',
@@ -209,9 +206,6 @@ describe('Finance Import Routes', () => {
       expect(body.jobId).toBe('existing-job-123')
       expect(body.status).toBe('processing')
       expect(body.message).toBe('File is already being processed')
-
-      // Verify file cleanup still happened
-      expect(fs.unlinkSync).toHaveBeenCalledWith('/tmp/test-file.csv')
 
       // Verify queue was not called
       expect(mockQueueAdd).not.toHaveBeenCalled()
