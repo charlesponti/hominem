@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { activity, flight, hotel, transport } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { activity, flight, hotel, transport } from '@hominem/data/schema'
 import { tool } from 'ai'
 import { and, eq } from 'drizzle-orm'
 import crypto from 'node:crypto'

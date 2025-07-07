@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { bookmark, users } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { bookmark, users } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { vi } from 'vitest'

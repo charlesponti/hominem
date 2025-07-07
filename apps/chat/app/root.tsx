@@ -30,15 +30,21 @@ export const links: Route.LinksFunction = () => [
 ]
 
 export async function loader(loaderArgs: Route.LoaderArgs) {
-  const { user, hominemUser } = await getServerSession(loaderArgs.request)
+  const { user } = await getServerSession(loaderArgs.request)
+  const url = new URL(loaderArgs.request.url)
+  const pathname = url.pathname
 
-  if (!user && new URL(loaderArgs.request.url).pathname !== '/') {
+  // Define routes that require authentication
+  const protectedRoutes = ['/chat', '/profile']
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
+
+  // Only redirect if accessing a protected route without authentication
+  if (!user && isProtectedRoute) {
     return redirect('/')
   }
 
   return {
     supabaseUserId: user?.id || null,
-    hominemUserId: hominemUser?.id || null,
   }
 }
 

@@ -1,7 +1,7 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
 import type { Hono } from 'hono'
-import type { AppRouter } from '../src/routes/trpc.js'
 import type { AppEnv } from '../src/server.js'
+import type { AppRouter } from '../src/trpc/routers/index.js'
 
 /**
  * Creates a tRPC test client that works with the existing test infrastructure
@@ -35,7 +35,7 @@ export const createTRPCTestClient = (server: Hono<AppEnv>, userId: string) => {
  */
 export const createTRPCTestClientWithContext = (
   server: Hono<AppEnv>,
-  context: { userId: string; user?: any }
+  context: { userId: string; user?: typeof users.$inferSelect }
 ) => {
   return createTRPCProxyClient<AppRouter>({
     links: [

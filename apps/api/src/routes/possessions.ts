@@ -1,5 +1,5 @@
-import { db, takeUniqueOrThrow } from '@hominem/utils/db'
-import { possessions } from '@hominem/utils/schema'
+import { db, takeUniqueOrThrow } from '@hominem/data'
+import { possessions } from '@hominem/data/schema'
 import { zValidator } from '@hono/zod-validator'
 import { desc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
@@ -59,7 +59,6 @@ possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c
   if (!user) {
     return c.json({ error: 'Unauthorized' }, 401)
   }
-
 
   const userId = c.get('userId')
   if (!userId) throw ForbiddenError('Unauthorized')
@@ -128,34 +127,29 @@ possessionsRoutes.put(
 )
 
 // Delete a possession
-possessionsRoutes.delete(
-  '/:id',
-  zValidator('param', possessionIdParamSchema),
-  async (c) => {
+possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), async (c) => {
   const user = c.get('user')
   if (!user) {
     return c.json({ error: 'Unauthorized' }, 401)
   }
 
+  const userId = c.get('userId')
+  if (!userId) throw ForbiddenError('Unauthorized')
 
-    const userId = c.get('userId')
-    if (!userId) throw ForbiddenError('Unauthorized')
+  try {
+    const { id } = c.req.valid('param')
 
-    try {
-      const { id } = c.req.valid('param')
+    await db.delete(possessions).where(eq(possessions.id, id))
 
-      await db.delete(possessions).where(eq(possessions.id, id))
-
-      return c.body(null, 204)
-    } catch (error) {
-      console.error('Error deleting possession:', error)
-      return c.json(
-        {
-          error: 'Failed to delete possession',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500
-      )
-    }
+    return c.body(null, 204)
+  } catch (error) {
+    console.error('Error deleting possession:', error)
+    return c.json(
+      {
+        error: 'Failed to delete possession',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      500
+    )
   }
-)
+})

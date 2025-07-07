@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { users } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { users } from '@hominem/data/schema'
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { Queue } from 'bullmq'
 import { eq } from 'drizzle-orm'
@@ -12,6 +12,9 @@ export interface Context {
     plaidSync: Queue
     importTransactions: Queue
   }
+  user?: typeof users.$inferSelect
+  userId?: string
+  supabaseId?: string
 }
 
 const t = initTRPC.context<Context>().create()

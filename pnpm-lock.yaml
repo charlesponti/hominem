@@ -102,6 +102,12 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@hominem/chat-service':
+        specifier: workspace:*
+        version: link:../../packages/chat
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@hominem/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -114,6 +120,9 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.4.1
         version: 0.4.3(hono@4.8.3)(zod@3.25.72)
+      '@node-rs/jieba':
+        specifier: ^2.0.1
+        version: 2.0.1
       '@segment/analytics-node':
         specifier: ^2.2.1
         version: 2.2.1
@@ -132,6 +141,9 @@ importers:
       '@total-typescript/ts-reset':
         specifier: ^0.6.1
         version: 0.6.1
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
       ai:
         specifier: ^4.1.54
         version: 4.3.16(react@19.1.0)(zod@3.25.72)
@@ -139,11 +151,20 @@ importers:
         specifier: ^4.18.2
         version: 4.18.2
       chromadb:
-        specifier: ^2.0.0
+        specifier: ^2.4.6
         version: 2.4.6(ws@8.18.3)(zod@3.25.72)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       csv-parser:
         specifier: ^3.2.0
         version: 3.2.0
+      daisyui:
+        specifier: ^5.0.43
+        version: 5.0.43
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -162,6 +183,9 @@ importers:
       effect:
         specifier: ^3.16.10
         version: 3.16.12
+      framer-motion:
+        specifier: ^12.23.0
+        version: 12.23.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       google-auth-library:
         specifier: ^9.15.1
         version: 9.15.1
@@ -177,9 +201,24 @@ importers:
       ioredis:
         specifier: ^5.5.0
         version: 5.6.1
+      isbot:
+        specifier: ^5.1.28
+        version: 5.1.28
       langchain:
         specifier: ^0.3.15
         version: 0.3.29(@langchain/core@0.3.37(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(openai@4.83.0(ws@8.18.3)(zod@3.25.72)))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(axios@1.8.4)(cheerio@1.1.0)(handlebars@4.7.8)(openai@4.83.0(ws@8.18.3)(zod@3.25.72))(ws@8.18.3)
+      lru-cache:
+        specifier: ^11.1.0
+        version: 11.1.0
+      lucide-react:
+        specifier: ^0.525.0
+        version: 0.525.0(react@19.1.0)
+      mammoth:
+        specifier: ^1.9.1
+        version: 1.9.1
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
@@ -189,6 +228,18 @@ importers:
       openai:
         specifier: 4.83.0
         version: 4.83.0(ws@8.18.3)(zod@3.25.72)
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+      pdf-parse:
+        specifier: ^1.1.1
+        version: 1.1.1
+      pdf2json:
+        specifier: ^3.1.6
+        version: 3.1.6
+      pdf2pic:
+        specifier: ^3.2.0
+        version: 3.2.0
       pg:
         specifier: ^8.13.1
         version: 8.16.3
@@ -207,9 +258,39 @@ importers:
       postgres:
         specifier: ^3.4.5
         version: 3.4.7
+      react-markdown:
+        specifier: ^10.1.0
+        version: 10.1.0(@types/react@19.1.8)(react@19.1.0)
+      react-syntax-highlighter:
+        specifier: ^15.6.1
+        version: 15.6.1(react@19.1.0)
+      recharts:
+        specifier: ^3.0.2
+        version: 3.0.2(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react-is@18.3.1)(react@19.1.0)(redux@5.0.1)
+      sharp:
+        specifier: ^0.34.2
+        version: 0.34.2
+      sonner:
+        specifier: ^2.0.6
+        version: 2.0.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      tailwind-merge:
+        specifier: ^3.3.1
+        version: 3.3.1
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.11)
       tsx:
         specifier: ^4.19.3
         version: 4.20.3
+      tw-animate-css:
+        specifier: ^1.3.5
+        version: 1.3.5
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       ws:
         specifier: ^8.18.1
         version: 8.18.3
@@ -219,6 +300,9 @@ importers:
       zod-to-json-schema:
         specifier: ^3.24.1
         version: 3.24.6(zod@3.25.72)
+      zustand:
+        specifier: ^5.0.6
+        version: 5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     devDependencies:
       '@hominem/tsconfigs':
         specifier: workspace:*
@@ -259,6 +343,12 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@hominem/chat-service':
+        specifier: workspace:*
+        version: link:../../packages/chat
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@hominem/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -405,7 +495,7 @@ importers:
         version: 3.25.72
       zustand:
         specifier: ^5.0.3
-        version: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
+        version: 5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     devDependencies:
       '@react-router/dev':
         specifier: ^7.4.1
@@ -549,6 +639,9 @@ importers:
       '@ai-sdk/openai':
         specifier: ^1.1.9
         version: 1.3.22(zod@3.25.72)
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@hominem/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -788,7 +881,7 @@ importers:
         version: 3.25.72
       zustand:
         specifier: ^5.0.3
-        version: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
+        version: 5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     devDependencies:
       '@playwright/test':
         specifier: ^1.52.0
@@ -862,6 +955,9 @@ importers:
       '@clerk/backend':
         specifier: ^1.30.2
         version: 1.34.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@hominem/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -905,6 +1001,9 @@ importers:
 
   apps/notes:
     dependencies:
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@hominem/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -1129,7 +1228,7 @@ importers:
         version: 3.25.72
       zustand:
         specifier: ^5.0.3
-        version: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
+        version: 5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     devDependencies:
       '@playwright/test':
         specifier: ^1.52.0
@@ -1206,6 +1305,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.782.0
         version: 3.842.0
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@hominem/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -1293,6 +1395,74 @@ importers:
         specifier: 5.7.3
         version: 5.7.3
 
+  packages/chat:
+    dependencies:
+      '@ai-sdk/openai':
+        specifier: ^1.3.22
+        version: 1.3.22(zod@3.25.72)
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../data
+      '@hominem/utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@trpc/server':
+        specifier: ^11.4.2
+        version: 11.4.3(typescript@5.7.3)
+      ai:
+        specifier: ^4.3.16
+        version: 4.3.16(react@19.1.0)(zod@3.25.72)
+      drizzle-orm:
+        specifier: ^0.42.0
+        version: 0.42.0(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(pg@8.16.3)(postgres@3.4.7)
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.72
+    devDependencies:
+      '@hominem/tsconfigs':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
+      typescript:
+        specifier: 5.7.3
+        version: 5.7.3
+
+  packages/data:
+    dependencies:
+      drizzle-orm:
+        specifier: ^0.42.0
+        version: 0.42.0(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(pg@8.16.3)(postgres@3.4.7)
+      drizzle-zod:
+        specifier: ^0.7.0
+        version: 0.7.1(drizzle-orm@0.42.0(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.72)
+      postgres:
+        specifier: ^3.4.5
+        version: 3.4.7
+      zod:
+        specifier: ^3.24.3
+        version: 3.25.72
+    devDependencies:
+      '@hominem/tsconfigs':
+        specifier: workspace:*
+        version: link:../tsconfig
+      esbuild:
+        specifier: ^0.21.3
+        version: 0.21.5
+      esbuild-node-externals:
+        specifier: ^1.18.0
+        version: 1.18.0(esbuild@0.21.5)
+      typescript:
+        specifier: 5.7.3
+        version: 5.7.3
+      vitest:
+        specifier: ^3.0.6
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.0)(jsdom@26.1.0)(lightningcss@1.30.1)(msw@2.10.2(@types/node@22.16.0)(typescript@5.7.3))
+
   packages/tsconfig: {}
 
   packages/ui:
@@ -1331,6 +1501,9 @@ importers:
       '@hominem/ai':
         specifier: workspace:*
         version: link:../ai
+      '@hominem/data':
+        specifier: workspace:*
+        version: link:../data
       ai:
         specifier: ^4.1.54
         version: 4.3.16(react@19.1.0)(zod@3.25.72)
@@ -4381,6 +4554,17 @@ packages:
     peerDependencies:
       react-router: 7.6.3
 
+  '@reduxjs/toolkit@2.8.2':
+    resolution: {integrity: sha512-MYlOhQ0sLdw4ud48FoC5w0dH9VfWQjtCjreKwYTT3l+r427qYC5Y8PihNutepr8XrNaBUDQo9khWUwQxZaqt5A==}
+    peerDependencies:
+      react: ^19.1.0
+      react-redux: ^7.2.1 || ^8.1.3 || ^9.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-redux:
+        optional: true
+
   '@rolldown/binding-darwin-arm64@1.0.0-beta.8-commit.852c603':
     resolution: {integrity: sha512-V0zbNPcyRVZFUUtCiJxXMuOYriszcgzc5wW5DUA5mHDlM0gDc1snsLzM245q5fGlSLmq+Rgerkclv0ZEjgHwDw==}
     cpu: [arm64]
@@ -5325,6 +5509,9 @@ packages:
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
+
+  '@types/use-sync-external-store@0.0.6':
+    resolution: {integrity: sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==}
 
   '@types/uuid@10.0.0':
     resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
@@ -6826,6 +7013,9 @@ packages:
     resolution: {integrity: sha512-w+5mJ3GuFL+NjVtJlvydShqE1eN3h3PbI7/5LAsYJP/2qtuMXjfL2LpHSRqo4b4eSF5K/DH1JXKUAHSB2UW50g==}
     engines: {node: '>= 0.4'}
 
+  es-toolkit@1.39.6:
+    resolution: {integrity: sha512-uiVjnLem6kkfXumlwUEWEKnwUN5QbSEB0DHy2rNJt0nkYcob5K0TXJ7oJRzhAcvx+SRmz4TahKyN5V9cly/IPA==}
+
   esbuild-node-externals@1.18.0:
     resolution: {integrity: sha512-suFVX3SzZlXrGIS9Yqx+ZaHL4w1p0e/j7dQbOM9zk8SfFpnAGnDplHUKXIf9kcPEAfZRL66JuYeVSVlsSEQ5Eg==}
     engines: {node: '>=12'}
@@ -6940,6 +7130,9 @@ packages:
 
   eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
+
+  eventemitter3@5.0.1:
+    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
 
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
@@ -7574,6 +7767,9 @@ packages:
 
   immediate@3.0.6:
     resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
+
+  immer@10.1.1:
+    resolution: {integrity: sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw==}
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -8339,6 +8535,11 @@ packages:
     peerDependencies:
       react: ^19.1.0
 
+  lucide-react@0.525.0:
+    resolution: {integrity: sha512-Tm1txJ2OkymCGkvwoHt33Y2JpN5xucVq1slHcgE6Lk0WjDfjgKWor5CdVER8U6DvcfMwh4M8XxmpTiyzfmfDYQ==}
+    peerDependencies:
+      react: ^19.1.0
+
   luxon@3.6.1:
     resolution: {integrity: sha512-tJLxrKJhO2ukZ5z0gyjY1zPh3Rh88Ej9P7jNrZiHMUXHae1yvI2imgOZtL1TO8TW6biMMKfTtAOoEJANgtWBMQ==}
     engines: {node: '>=12'}
@@ -9096,6 +9297,7 @@ packages:
     resolution: {integrity: sha512-Nkwo9qeCvqVH0ZgYRUfPyj6o4o7StvNIxMFECeiz4y0uMOVyqc5Y9hjsdFVxdYCeiUjjXLQXA8KIz0iJL3HM0w==}
     engines: {node: '>=20.18.0'}
     hasBin: true
+    bundledDependencies: []
 
   pdf2pic@3.2.0:
     resolution: {integrity: sha512-p0bp+Mp4iJy2hqSCLvJ521rDaZkzBvDFT9O9Y0BUID3I04/eDaebAFM5t8hoWeo2BCf42cDijLCGJWTOtkJVpA==}
@@ -9483,6 +9685,18 @@ packages:
       react: ^19.1.0
       react-dom: ^19.1.0
 
+  react-redux@9.2.0:
+    resolution: {integrity: sha512-ROY9fvHhwOD9ySfrF0wmvu//bKCQ6AeZZq1nJNtbDC+kk5DuSuNX/n6YWYF/SYy7bSba4D4FSz8DJeKY/S/r+g==}
+    peerDependencies:
+      '@types/react': ^19.1.0
+      react: ^19.1.0
+      redux: ^5.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      redux:
+        optional: true
+
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
     engines: {node: '>=0.10.0'}
@@ -9609,6 +9823,14 @@ packages:
       react: ^19.1.0
       react-dom: ^19.1.0
 
+  recharts@3.0.2:
+    resolution: {integrity: sha512-eDc3ile9qJU9Dp/EekSthQPhAVPG48/uM47jk+PF7VBQngxeW3cwQpPHb/GHC1uqwyCRWXcIrDzuHRVrnRryoQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: ^19.1.0
+      react-dom: ^19.1.0
+      react-is: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   redent@3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
@@ -9620,6 +9842,14 @@ packages:
   redis-parser@3.0.0:
     resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
+
+  redux-thunk@3.1.0:
+    resolution: {integrity: sha512-NW2r5T6ksUKXCabzhL9z+h206HQw/NJkcLm1GPImRQ8IzfXwRGqjVhKJGauHirT0DAuyy6hjdnMZaRoAcy0Klw==}
+    peerDependencies:
+      redux: ^5.0.0
+
+  redux@5.0.1:
+    resolution: {integrity: sha512-M9/ELqF6fy8FwmkpnF0S3YKOqMyoWJ4+CS5Efg2ct3oY9daQvd/Pc71FpGZsVsbl3Cpb+IIcjBDUnnyBdQbq4w==}
 
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
@@ -9676,6 +9906,9 @@ packages:
 
   requires-port@1.0.0:
     resolution: {integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==}
+
+  reselect@5.1.1:
+    resolution: {integrity: sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==}
 
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -10699,6 +10932,9 @@ packages:
 
   victory-vendor@36.9.2:
     resolution: {integrity: sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ==}
+
+  victory-vendor@37.3.6:
+    resolution: {integrity: sha512-SbPDPdDBYp+5MJHhBCAyI7wKM3d5ivekigc2Dk2s7pgbZ9wIgIBYGVw4zGHBml/qTFbexrofXW6Gu4noGxrOwQ==}
 
   vite-node@3.2.4:
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
@@ -14262,6 +14498,18 @@ snapshots:
       - supports-color
       - typescript
 
+  '@reduxjs/toolkit@2.8.2(react-redux@9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1))(react@19.1.0)':
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      '@standard-schema/utils': 0.3.0
+      immer: 10.1.1
+      redux: 5.0.1
+      redux-thunk: 3.1.0(redux@5.0.1)
+      reselect: 5.1.1
+    optionalDependencies:
+      react: 19.1.0
+      react-redux: 9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1)
+
   '@rolldown/binding-darwin-arm64@1.0.0-beta.8-commit.852c603':
     optional: true
 
@@ -15396,6 +15644,8 @@ snapshots:
   '@types/unist@2.0.11': {}
 
   '@types/unist@3.0.3': {}
+
+  '@types/use-sync-external-store@0.0.6': {}
 
   '@types/uuid@10.0.0': {}
 
@@ -16913,6 +17163,8 @@ snapshots:
       is-date-object: 1.1.0
       is-symbol: 1.1.1
 
+  es-toolkit@1.39.6: {}
+
   esbuild-node-externals@1.18.0(esbuild@0.21.5):
     dependencies:
       esbuild: 0.21.5
@@ -17081,6 +17333,8 @@ snapshots:
   event-target-shim@5.0.1: {}
 
   eventemitter3@4.0.7: {}
+
+  eventemitter3@5.0.1: {}
 
   events@3.3.0: {}
 
@@ -17923,7 +18177,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.8.4(debug@4.4.1))
+      retry-axios: 2.6.0(axios@1.8.4)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -17941,6 +18195,8 @@ snapshots:
   ignore@5.3.2: {}
 
   immediate@3.0.6: {}
+
+  immer@10.1.1: {}
 
   import-fresh@3.3.1:
     dependencies:
@@ -18730,6 +18986,10 @@ snapshots:
       react: 19.1.0
 
   lucide-react@0.487.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+
+  lucide-react@0.525.0(react@19.1.0):
     dependencies:
       react: 19.1.0
 
@@ -20207,6 +20467,15 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-script-hook: 1.7.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
+  react-redux@9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1):
+    dependencies:
+      '@types/use-sync-external-store': 0.0.6
+      react: 19.1.0
+      use-sync-external-store: 1.5.0(react@19.1.0)
+    optionalDependencies:
+      '@types/react': 19.1.8
+      redux: 5.0.1
+
   react-refresh@0.14.2: {}
 
   react-refresh@0.17.0: {}
@@ -20373,6 +20642,26 @@ snapshots:
       tiny-invariant: 1.3.3
       victory-vendor: 36.9.2
 
+  recharts@3.0.2(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react-is@18.3.1)(react@19.1.0)(redux@5.0.1):
+    dependencies:
+      '@reduxjs/toolkit': 2.8.2(react-redux@9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1))(react@19.1.0)
+      clsx: 2.1.1
+      decimal.js-light: 2.5.1
+      es-toolkit: 1.39.6
+      eventemitter3: 5.0.1
+      immer: 10.1.1
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-is: 18.3.1
+      react-redux: 9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1)
+      reselect: 5.1.1
+      tiny-invariant: 1.3.3
+      use-sync-external-store: 1.5.0(react@19.1.0)
+      victory-vendor: 37.3.6
+    transitivePeerDependencies:
+      - '@types/react'
+      - redux
+
   redent@3.0.0:
     dependencies:
       indent-string: 4.0.0
@@ -20383,6 +20672,12 @@ snapshots:
   redis-parser@3.0.0:
     dependencies:
       redis-errors: 1.2.0
+
+  redux-thunk@3.1.0(redux@5.0.1):
+    dependencies:
+      redux: 5.0.1
+
+  redux@5.0.1: {}
 
   reflect.getprototypeof@1.0.10:
     dependencies:
@@ -20483,6 +20778,8 @@ snapshots:
 
   requires-port@1.0.0: {}
 
+  reselect@5.1.1: {}
+
   resolve-from@4.0.0: {}
 
   resolve-from@5.0.0: {}
@@ -20516,7 +20813,7 @@ snapshots:
       onetime: 7.0.0
       signal-exit: 4.1.0
 
-  retry-axios@2.6.0(axios@1.8.4(debug@4.4.1)):
+  retry-axios@2.6.0(axios@1.8.4):
     dependencies:
       axios: 1.8.4(debug@4.4.1)
 
@@ -21677,6 +21974,23 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
+  victory-vendor@37.3.6:
+    dependencies:
+      '@types/d3-array': 3.2.1
+      '@types/d3-ease': 3.0.2
+      '@types/d3-interpolate': 3.0.4
+      '@types/d3-scale': 4.0.9
+      '@types/d3-shape': 3.1.7
+      '@types/d3-time': 3.0.4
+      '@types/d3-timer': 3.0.2
+      d3-array: 3.2.4
+      d3-ease: 3.0.1
+      d3-interpolate: 3.0.1
+      d3-scale: 4.0.2
+      d3-shape: 3.2.0
+      d3-time: 3.1.0
+      d3-timer: 3.0.1
+
   vite-node@3.2.4(@types/node@22.16.0)(lightningcss@1.30.1):
     dependencies:
       cac: 6.7.14
@@ -21984,9 +22298,10 @@ snapshots:
 
   zod@3.25.72: {}
 
-  zustand@5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0)):
+  zustand@5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0)):
     optionalDependencies:
       '@types/react': 19.1.8
+      immer: 10.1.1
       react: 19.1.0
       use-sync-external-store: 1.5.0(react@19.1.0)
 

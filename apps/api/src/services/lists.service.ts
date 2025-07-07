@@ -1,4 +1,4 @@
-import { db, takeUniqueOrThrow } from '@hominem/utils/db'
+import { db, takeUniqueOrThrow } from '@hominem/data'
 import {
   item,
   list,
@@ -8,7 +8,7 @@ import {
   users,
   type ListInviteSelect,
   type ListSelect,
-} from '@hominem/utils/schema'
+} from '@hominem/data/schema'
 import { and, count, desc, eq } from 'drizzle-orm'
 
 export interface User {

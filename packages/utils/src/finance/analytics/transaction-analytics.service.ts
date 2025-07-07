@@ -1,6 +1,6 @@
 import { eq, sql, type SQL } from 'drizzle-orm'
-import { db } from '../../db/index'
-import { financeAccounts, transactions } from '../../db/schema/finance.schema'
+import { db } from '@hominem/data/db'
+import { financeAccounts, transactions } from '@hominem/data/schema'
 import { logger } from '../../logger'
 import { buildWhereConditions } from '../finance.transactions.service'
 import type { CategorySummary, QueryOptions, TopMerchant } from '../finance.types'

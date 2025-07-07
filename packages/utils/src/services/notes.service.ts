@@ -1,13 +1,13 @@
 import { and, desc, eq, or, sql, type SQLWrapper } from 'drizzle-orm'
 import { z } from 'zod'
-import { db } from '../db'
+import { db } from '@hominem/data/db'
 import {
   NoteContentTypeSchema,
   notes,
-  TaskMetadataSchema,
   type Note,
   type NoteInsert,
-} from '../db/schema/notes.schema'
+  TaskMetadataSchema,
+} from '@hominem/data/schema'
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -45,8 +45,6 @@ type SyncClientItem = Omit<Note, 'id' | 'synced' | 'createdAt' | 'updatedAt' | '
   createdAt?: string
   updatedAt?: string
 }
-
-export { TaskMetadataSchema, TweetMetadataSchema } from './../db/schema/notes.schema'
 
 export class NotesService {
   async create(input: NoteInsert): Promise<Note> {

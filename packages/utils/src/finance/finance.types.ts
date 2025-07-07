@@ -1,16 +1,10 @@
-/**
- * Finance account types
- */
-import type { FinanceAccount, FinanceAccountInsert } from '../db/schema/finance.schema.js'
-
-/**
- * Transaction types used across the monorepo
- */
 import type {
+  FinanceAccount,
+  FinanceAccountInsert,
   FinanceTransaction,
   FinanceTransactionInsert,
   TransactionType,
-} from '../db/schema/finance.schema.js'
+} from '@hominem/data/schema'
 
 export type {
   FinanceAccount,

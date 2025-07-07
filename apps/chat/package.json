@@ -13,6 +13,8 @@
     "@ai-sdk/openai": "^1.3.10",
     "@ai-sdk/react": "^1.2.12",
     "@hominem/ai": "workspace:*",
+    "@hominem/data": "workspace:*",
+    "@hominem/chat-service": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@node-rs/jieba": "^2.0.1",

@@ -1,8 +1,8 @@
 import { tool } from 'ai'
 import { and, eq, like } from 'drizzle-orm'
 import { z } from 'zod'
-import { db } from '../db/index'
-import { budgetCategories, type FinanceTransactionInsert } from '../db/schema/finance.schema'
+import { db } from '@hominem/data/db'
+import { budgetCategories, type FinanceTransactionInsert } from '@hominem/data/schema'
 import { calculateTransactions } from './analytics/transaction-analytics.service'
 import { createAccount, deleteAccount, listAccounts, updateAccount } from './core/account.service'
 import {
@@ -110,13 +110,6 @@ export const updateTransactionSchema = z.object({
 export const deleteTransactionSchema = z.object({
   transactionId: z.string().describe('ID of the transaction to delete'),
   userId: z.string().describe('User ID who owns this transaction'),
-})
-
-export const getBudgetCategoriesSchema = z.object({
-  userId: z.string().describe('User ID who owns the categories'),
-  categoryName: z.string().optional(),
-  categoryId: z.string().optional(),
-  categoryType: z.string().optional(),
 })
 
 export const calculateTransactionsSchema = z.object({
@@ -340,23 +333,37 @@ export const loanCalculatorTool = tool({
   },
 })
 
+export const getBudgetCategoriesSchema = z.object({
+  userId: z.string().describe('User ID who owns the categories'),
+  name: z.string().optional(),
+  type: z.string().optional(),
+})
 export const get_budget_categories = tool({
   description: 'A tool to get budget categories by id, name, or type.',
   parameters: getBudgetCategoriesSchema,
   execute: async (query) => {
-    const dbQuery = db
+    const dbQuery = await db
       .select()
       .from(budgetCategories)
       .where(
         and(
           eq(budgetCategories.userId, query.userId),
-          query.categoryId ? eq(budgetCategories.id, query.categoryId) : undefined,
-          query.categoryName ? like(budgetCategories.name, `%${query.categoryName}%`) : undefined,
-          query.categoryType ? eq(budgetCategories.type, query.categoryType) : undefined
+          query.name ? like(budgetCategories.name, `%${query.name}%`) : undefined,
+          query.type
+            ? eq(
+                budgetCategories.type,
+                query.type as (typeof budgetCategories.type.enumValues)[number]
+              )
+            : undefined
         )
       )
 
-    return dbQuery
+    return dbQuery.map((category) => ({
+      id: category.id,
+      name: category.name,
+      type: category.type,
+      averageMonthlyExpense: category.averageMonthlyExpense,
+    }))
   },
 })
 

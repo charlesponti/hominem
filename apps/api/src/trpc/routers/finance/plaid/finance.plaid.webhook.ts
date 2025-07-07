@@ -1,6 +1,6 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { db } from '@hominem/utils/db'
-import { plaidItems } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { plaidItems } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
@@ -35,7 +35,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
   let parsedBody: Record<string, unknown>
   try {
     parsedBody = JSON.parse(rawBody) as Record<string, unknown>
-  } catch (error) {
+  } catch {
     return c.json({ error: 'Invalid JSON' }, 400)
   }
 

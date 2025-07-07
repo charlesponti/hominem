@@ -1,4 +1,4 @@
-import type { FinanceTransaction } from '../../db/schema/finance.schema'
+import type { FinanceTransaction } from '@hominem/data/schema'
 import type { CategoryAggregate } from '../finance.types'
 
 /**

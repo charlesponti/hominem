@@ -5,7 +5,6 @@ import { ContentStrategiesService } from '../../services/content-strategies.serv
 import { protectedProcedure, router } from '../index'
 
 export const tweetRouter = router({
-  // Generate tweet from content using AI
   generate: protectedProcedure
     .input(
       z.object({

@@ -1,13 +1,13 @@
 import { and, desc, eq, or, sql, type SQLWrapper } from 'drizzle-orm'
 import { z } from 'zod'
-import { db } from '../db'
+import { db } from '@hominem/data/db'
 import {
   content,
   ContentStatusSchema,
   ContentTypeSchema,
   type Content,
   type ContentInsert,
-} from '../db/schema/content.schema'
+} from '@hominem/data/schema'
 
 // Import shared error classes from notes service
 import { ForbiddenError, NotFoundError } from './notes.service'

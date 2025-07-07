@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { db } from '../db'
-import { budgetCategories, users } from '../db/schema'
+import { db } from '@hominem/data/db'
+import { budgetCategories, users } from '@hominem/data/schema'
 
 describe('Budget Categories Unique Constraint', () => {
   const testUserId = crypto.randomUUID()

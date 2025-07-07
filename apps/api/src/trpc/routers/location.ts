@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { protectedProcedure, router } from '../index'
 
 export const locationRouter = router({
-  // Geocode endpoint
   geocode: protectedProcedure
     .input(z.object({ query: z.string().min(1, 'Query parameter is required') }))
     .query(async ({ input }) => {
@@ -43,4 +42,4 @@ export const locationRouter = router({
         )
       }
     }),
-}) 
+})

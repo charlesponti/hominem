@@ -1,6 +1,6 @@
 import { openai } from '@ai-sdk/openai'
 import { logger } from '@hominem/utils/logger'
-import { UserSchema } from '@hominem/utils/schema'
+import { UserSchema } from '@hominem/data/schema'
 import { generateObject } from 'ai'
 import csv from 'csv-parser'
 import { Readable } from 'node:stream'

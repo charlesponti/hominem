@@ -1,118 +1,41 @@
-import fs from 'node:fs'
 import { z } from 'zod'
-import { handleFileUpload } from '../../middleware/file-upload.js'
-import { SupabaseVectorService } from '../../services/vector.service.js'
+import { VectorService } from '../../services/vector.service.js'
+import { fileStorageService } from '@hominem/utils/supabase'
 import { protectedProcedure, router } from '../index.js'
+import { handleFileUploadBuffer } from '../../middleware/file-upload.js'
 
 export const vectorRouter = router({
-  // Upload CSV file to vector store
-  uploadCsv: protectedProcedure
-    .input(
-      z.object({
-        indexName: z.string().min(1, 'Index name is required'),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        // Handle file upload
-        const uploadedFile = await handleFileUpload(ctx.req.raw)
+  // ========================================
+  // VECTOR SEARCH OPERATIONS
+  // ========================================
 
-        if (!uploadedFile) {
-          throw new Error('No file uploaded')
-        }
-
-        if (!uploadedFile.mimetype.includes('csv')) {
-          // Clean up the temp file
-          fs.unlinkSync(uploadedFile.filepath)
-          throw new Error('Only CSV files are supported')
-        }
-
-        // Read file buffer
-        const fileBuffer = fs.readFileSync(uploadedFile.filepath)
-
-        // Process the CSV
-        const { recordsProcessed, filePath } = await SupabaseVectorService.uploadCSVToVectorStore(
-          fileBuffer,
-          uploadedFile.filename || 'upload.csv',
-          ctx.userId,
-          input.indexName
-        )
-
-        // Clean up the temp file
-        fs.unlinkSync(uploadedFile.filepath)
-
-        return {
-          success: true,
-          recordsProcessed,
-          filePath,
-          message: `${recordsProcessed} records processed and embedded`,
-        }
-      } catch (error) {
-        throw new Error(
-          `Failed to process CSV file: ${error instanceof Error ? error.message : String(error)}`
-        )
-      }
-    }),
-
-  // Query vector store
-  query: protectedProcedure
+  // Search vector store by similarity
+  searchVectors: protectedProcedure
     .input(
       z.object({
         query: z.string().min(1, 'Query string is required'),
-        indexName: z.string().min(1, 'Index name is required'),
+        source: z.string().min(1, 'Source is required'),
         limit: z.number().optional().default(10),
       })
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       try {
-        const { results } = await SupabaseVectorService.query({
+        const { results } = await VectorService.query({
           q: input.query,
-          indexName: input.indexName,
+          source: input.source,
           limit: input.limit,
-          userId: ctx.userId,
         })
 
-        return {
-          results,
-          count: results.length || 0,
-        }
+        return { results, count: results.length || 0 }
       } catch (error) {
         throw new Error(
-          `Failed to process query: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to search vector store: ${error instanceof Error ? error.message : String(error)}`
         )
       }
     }),
 
-  // Ingest markdown text into vector store
-  ingestMarkdown: protectedProcedure
-    .input(
-      z.object({
-        text: z.string().min(1, 'Text content is required'),
-        metadata: z.record(z.unknown()).optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const result = await SupabaseVectorService.ingestMarkdown(
-          input.text,
-          ctx.userId,
-          input.metadata
-        )
-
-        return {
-          success: result.success,
-          chunksProcessed: result.chunksProcessed,
-          message: `${result.chunksProcessed} chunks processed and embedded`,
-        }
-      } catch (error) {
-        throw new Error(
-          `Failed to ingest markdown: ${error instanceof Error ? error.message : String(error)}`
-        )
-      }
-    }),
-
-  // Search documents by user
-  searchUserDocuments: protectedProcedure
+  // Search user's vector documents by similarity
+  searchUserVectors: protectedProcedure
     .input(
       z.object({
         query: z.string().min(1, 'Query string is required'),
@@ -122,26 +45,23 @@ export const vectorRouter = router({
     )
     .query(async ({ ctx, input }) => {
       try {
-        const { results } = await SupabaseVectorService.searchDocumentsByUser(
+        const { results } = await VectorService.searchDocumentsByUser(
           input.query,
           ctx.userId,
           input.limit,
           input.threshold
         )
 
-        return {
-          results,
-          count: results.length || 0,
-        }
+        return { results, count: results.length || 0 }
       } catch (error) {
         throw new Error(
-          `Failed to search documents: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to search user vectors: ${error instanceof Error ? error.message : String(error)}`
         )
       }
     }),
 
-  // Get user documents
-  getUserDocuments: protectedProcedure
+  // Get user's vector documents
+  getUserVectors: protectedProcedure
     .input(
       z.object({
         limit: z.number().optional().default(50),
@@ -150,25 +70,18 @@ export const vectorRouter = router({
     )
     .query(async ({ ctx, input }) => {
       try {
-        const documents = await SupabaseVectorService.getUserDocuments(
-          ctx.userId,
-          input.limit,
-          input.offset
-        )
+        const vectors = await VectorService.getUserDocuments(ctx.userId, input.limit, input.offset)
 
-        return {
-          documents,
-          count: documents.length,
-        }
+        return { vectors, count: vectors.length }
       } catch (error) {
         throw new Error(
-          `Failed to get user documents: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to get user vectors: ${error instanceof Error ? error.message : String(error)}`
         )
       }
     }),
 
-  // Delete user documents
-  deleteUserDocuments: protectedProcedure
+  // Delete user's vector documents
+  deleteUserVectors: protectedProcedure
     .input(
       z.object({
         source: z.string().optional(),
@@ -176,56 +89,126 @@ export const vectorRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const result = await SupabaseVectorService.deleteUserDocuments(ctx.userId, input.source)
+        const result = await VectorService.deleteUserDocuments(ctx.userId, input.source)
 
-        return {
-          success: result.success,
-          message: 'Documents deleted successfully',
-        }
+        return { success: result.success, message: 'Vector documents deleted successfully' }
       } catch (error) {
         throw new Error(
-          `Failed to delete documents: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to delete user vectors: ${error instanceof Error ? error.message : String(error)}`
         )
       }
     }),
 
-  // Get user files from storage
-  getUserFiles: protectedProcedure
+  // ========================================
+  // TEXT INGESTION OPERATIONS
+  // ========================================
+
+  // Ingest markdown text into vector store
+  ingestText: protectedProcedure
     .input(
       z.object({
-        indexName: z.string().optional(),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      try {
-        const files = await SupabaseVectorService.getUserFiles(ctx.userId, input.indexName)
-
-        return {
-          files,
-          count: files.length,
-        }
-      } catch (error) {
-        throw new Error(
-          `Failed to get user files: ${error instanceof Error ? error.message : String(error)}`
-        )
-      }
-    }),
-
-  // Delete user file from storage
-  deleteUserFile: protectedProcedure
-    .input(
-      z.object({
-        filePath: z.string().min(1, 'File path is required'),
+        text: z.string().min(1, 'Text content is required'),
+        metadata: z.record(z.unknown()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const result = await SupabaseVectorService.deleteUserFile(input.filePath)
+        const result = await VectorService.ingestMarkdown(input.text, ctx.userId, input.metadata)
 
         return {
           success: result.success,
-          message: 'File deleted successfully',
+          chunksProcessed: result.chunksProcessed,
+          message: `${result.chunksProcessed} text chunks processed and embedded`,
         }
+      } catch (error) {
+        throw new Error(
+          `Failed to ingest text: ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
+    }),
+
+  // ========================================
+  // FILE UPLOAD & PROCESSING OPERATIONS
+  // ========================================
+
+  // Upload and process CSV file into vectors
+  uploadCsvToVectors: protectedProcedure
+    .input(
+      z.object({
+        source: z.string().min(1, 'Source is required'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // Handle file upload - get buffer directly
+        const uploadedFile = await handleFileUploadBuffer(ctx.req.raw)
+
+        if (!uploadedFile) {
+          throw new Error('No file uploaded')
+        }
+
+        if (!uploadedFile.mimetype.includes('csv')) {
+          throw new Error('Only CSV files are supported')
+        }
+
+        // Store file using fileStorageService (no disk I/O needed)
+        const storedFile = await fileStorageService.storeFile(
+          uploadedFile.buffer.buffer,
+          uploadedFile.filename || 'upload.csv',
+          uploadedFile.mimetype,
+          ctx.userId
+        )
+
+        // Process the CSV for vector embeddings
+        const { recordsProcessed } = await VectorService.processCSVToVectorStore(
+          uploadedFile.buffer,
+          ctx.userId,
+          input.source
+        )
+
+        return {
+          success: true,
+          recordsProcessed,
+          fileId: storedFile.id,
+          fileUrl: storedFile.url,
+          message: `${recordsProcessed} CSV records processed into vector embeddings`,
+        }
+      } catch (error) {
+        throw new Error(
+          `Failed to process CSV file: ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
+    }),
+
+  // ========================================
+  // FILE STORAGE OPERATIONS
+  // ========================================
+
+  // Get user's uploaded files
+  getUserFiles: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const files = await fileStorageService.listUserFiles(ctx.userId)
+
+      return { files, count: files.length }
+    } catch (error) {
+      throw new Error(
+        `Failed to get user files: ${error instanceof Error ? error.message : String(error)}`
+      )
+    }
+  }),
+
+  // Delete user's uploaded file
+  deleteUserFile: protectedProcedure
+    .input(
+      z.object({
+        fileId: z.string().min(1, 'File ID is required'),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const success = await fileStorageService.deleteFile(input.fileId, ctx.userId)
+
+        return { success, message: success ? 'File deleted successfully' : 'File not found' }
       } catch (error) {
         throw new Error(
           `Failed to delete file: ${error instanceof Error ? error.message : String(error)}`

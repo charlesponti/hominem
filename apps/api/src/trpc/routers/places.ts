@@ -1,6 +1,6 @@
-import { db } from '@hominem/utils/db'
-import { item as itemTable, list as listTable, place as placesTable } from '@hominem/utils/schema'
-import type { Place as DbPlaceSchema, ItemInsert, PlaceInsert } from '@hominem/utils/types'
+import { db } from '@hominem/data'
+import { item as itemTable, list as listTable, place as placesTable } from '@hominem/data/schema'
+import type { Place as DbPlaceSchema, ItemInsert, PlaceInsert } from '@hominem/data/schema'
 import { and, eq, or } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
@@ -60,9 +60,8 @@ export const placesRouter = router({
   // Get place details by ID (Google Maps ID or DB ID)
   getDetails: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       const { id: googleMapsIdOrDbId } = input
-      const userId = ctx.userId
 
       let dbPlace: DbPlaceSchema | null | undefined = null
       let associatedLists: NormalizedListInfo[] = []
@@ -194,7 +193,11 @@ export const placesRouter = router({
           .filter((list) => list !== null && list !== undefined)
           .map((list) => ({ id: list.id, name: list.name }))
 
-        const normalizedFinalPlace = normalizePlaceForResponse(finalPlace, affectedLists, fetchedPhotos)
+        const normalizedFinalPlace = normalizePlaceForResponse(
+          finalPlace,
+          affectedLists,
+          fetchedPhotos
+        )
 
         return { place: normalizedFinalPlace, lists: affectedLists }
       } catch (error) {
@@ -251,7 +254,9 @@ export const placesRouter = router({
           .returning({ id: itemTable.id })
 
         if (deletedItems.length === 0) {
-          throw new Error('Place not found in this list, or you do not have permission to remove it.')
+          throw new Error(
+            'Place not found in this list, or you do not have permission to remove it.'
+          )
         }
 
         return { message: 'Place removed from list successfully' }
@@ -264,4 +269,4 @@ export const placesRouter = router({
         throw new Error('Failed to delete place from list')
       }
     }),
-}) 
+})

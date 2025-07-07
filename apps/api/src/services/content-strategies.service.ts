@@ -1,6 +1,6 @@
-import { db } from '@hominem/utils/db'
-import type { ContentStrategiesInsert, ContentStrategiesSelect } from '@hominem/utils/schema'
-import { contentStrategies } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import type { ContentStrategiesInsert, ContentStrategiesSelect } from '@hominem/data/schema'
+import { contentStrategies } from '@hominem/data/schema'
 import type { ContentStrategy } from '@hominem/utils/types'
 import { and, eq } from 'drizzle-orm'
 

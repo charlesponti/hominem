@@ -1,6 +1,6 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { redis } from '@hominem/utils/redis'
-import type { users } from '@hominem/utils/schema'
+import type { users } from '@hominem/data/schema'
 import { serve } from '@hono/node-server'
 import { trpcServer } from '@hono/trpc-server'
 import { Queue } from 'bullmq'
@@ -113,6 +113,8 @@ export function createServer(): Hono<AppEnv> {
         return {
           req: c.req,
           queues: c.get('queues'),
+          user: c.get('user'),
+          userId: c.get('userId'),
         }
       },
       onError: ({ error, path, input }) => {

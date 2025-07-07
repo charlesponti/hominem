@@ -20,6 +20,10 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit",
+    "source.fixAll.biome": "explicit"
+  },
   "biome.enabled": true,
   "biome.lsp.bin": "node_modules/.bin/biome",
   "editor.defaultFormatter": "biomejs.biome",

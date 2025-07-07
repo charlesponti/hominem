@@ -1,4 +1,4 @@
-import type { User } from '@hominem/utils/schema'
+import type { User } from '@hominem/data/schema'
 import type { Queue } from 'bullmq'
 
 declare module 'hono' {

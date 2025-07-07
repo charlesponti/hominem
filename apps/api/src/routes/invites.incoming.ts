@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { list, listInvite, users } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { list, listInvite, users } from '@hominem/data/schema'
 import { and, asc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 export const invitesIncomingRoutes = new Hono()

@@ -73,9 +73,6 @@ export function convertCopilotTransaction(
 
   let finalAmount = parsedAmount
 
-  // Copilot: income is negative, expenses/transfers are positive
-  // Our app: income is positive, expenses/transfers are negative
-
   if (type === 'income') {
     // If Copilot income is negative (as expected), make it positive
     if (finalAmount < 0) {

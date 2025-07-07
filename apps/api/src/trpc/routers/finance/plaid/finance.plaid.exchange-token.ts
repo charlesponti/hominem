@@ -1,6 +1,6 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { db } from '@hominem/utils/db'
-import { financialInstitutions, plaidItems } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { financialInstitutions, plaidItems } from '@hominem/data/schema'
 import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'

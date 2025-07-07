@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { goals, GoalSchema } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { goals, GoalSchema } from '@hominem/data/schema'
 import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'

@@ -1,7 +1,7 @@
+import { db } from '@hominem/data/db'
+import { budgetGoals } from '@hominem/data/schema'
 import { and, eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
-import { db } from '../../db/index'
-import { budgetGoals } from '../../db/schema/finance.schema'
 import { logger } from '../../logger'
 
 /**

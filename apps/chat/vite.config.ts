@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
       // Make process.env available in server-side code
       'process.env.DATABASE_URL': JSON.stringify(process.env.DATABASE_URL),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      'process.env.API_URL': JSON.stringify(process.env.API_URL || 'http://localhost:4040'),
     },
   }
 })

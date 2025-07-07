@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { bookmark } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { bookmark } from '@hominem/data/schema'
 import { and, desc, eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'

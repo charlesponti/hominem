@@ -27,13 +27,18 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
   const handleFileSelect = useCallback(
     async (files: FileList | File[]) => {
       try {
+        const fileArray = Array.from(files)
+        if (fileArray.length > maxFiles) {
+          console.warn(`Only ${maxFiles} files allowed. Selected: ${fileArray.length}`)
+          return
+        }
         const newFiles = await uploadFiles(files)
         onFilesUploaded?.(newFiles)
       } catch (error) {
         console.error('Upload failed:', error)
       }
     },
-    [uploadFiles, onFilesUploaded]
+    [uploadFiles, onFilesUploaded, maxFiles]
   )
 
   const handleDrop = useCallback(
@@ -85,9 +90,10 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
   return (
     <div className={`space-y-4 ${className}`}>
       {/* File Upload Area */}
-      <div
+      <button
+        type="button"
         className={`
-          border-2 border-dashed rounded-lg p-6 text-center transition-colors
+          border-2 border-dashed rounded-lg p-6 text-center transition-colors w-full
           ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
           ${uploadState.isUploading ? 'pointer-events-none opacity-50' : 'hover:border-primary/50'}
         `}
@@ -122,7 +128,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
         <p className="text-xs text-muted-foreground mt-2">
           Supports images, documents, audio, and video files (max 10MB each)
         </p>
-      </div>
+      </button>
 
       {/* Upload Progress */}
       {uploadState.isUploading && (

@@ -1,16 +1,17 @@
-import { randomUUID } from 'node:crypto'
-import fs from 'node:fs'
-import os from 'node:os'
-import path from 'node:path'
-
 export interface UploadedFile {
   filename: string
   mimetype: string
   filepath: string
   size: number
+  buffer?: Buffer
 }
 
-export async function handleFileUpload(request: Request): Promise<UploadedFile | null> {
+/**
+ * Handle file upload and return buffer
+ */
+export async function handleFileUploadBuffer(
+  request: Request
+): Promise<{ filename: string; mimetype: string; buffer: Buffer; size: number } | null> {
   try {
     // Check if the request has multipart form data
     const contentType = request.headers.get('content-type')
@@ -29,18 +30,10 @@ export async function handleFileUpload(request: Request): Promise<UploadedFile |
     // Get file buffer
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    // Create a temporary file
-    const tempDir = os.tmpdir()
-    const filename = file.name || `${randomUUID()}-upload`
-    const filepath = path.join(tempDir, filename)
-
-    // Write buffer to file
-    fs.writeFileSync(filepath, buffer)
-
     return {
       filename: file.name,
       mimetype: file.type,
-      filepath,
+      buffer,
       size: buffer.length,
     }
   } catch (error) {

@@ -1,11 +1,18 @@
-import type { Message } from 'ai'
+import type { inferRouterOutputs } from '@trpc/server'
+import type { AppRouter } from '../../../../../packages/types/trpc'
+
+type Message = inferRouterOutputs<AppRouter>['chats']['getUserChats'][number]
 
 // Component for text parts
 function TextPart({
   text,
   index,
   isStreaming,
-}: { text: string; index: number; isStreaming?: boolean }) {
+}: {
+  text: string
+  index: number
+  isStreaming?: boolean
+}) {
   return (
     <div key={`text-${text.slice(0, 20)}-${index}`} className="whitespace-pre-wrap">
       {text}
@@ -94,50 +101,8 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
         {message.role === 'user' ? 'You' : 'AI Assistant'}
       </div>
 
-      {/* Message parts */}
-      {message.parts && message.parts.length > 0 && (
-        <div className="space-y-2">
-          {message.parts.map((part, index) => {
-            if (part.type === 'text') {
-              return (
-                <TextPart
-                  key={`text-${part.text.slice(0, 20)}-${index}`}
-                  text={part.text}
-                  index={index}
-                  isStreaming={isStreaming}
-                />
-              )
-            }
-
-            if (part.type === 'tool-invocation') {
-              return (
-                <ToolInvocationPart
-                  key={`tool-${part.toolInvocation.toolCallId}-${index}`}
-                  toolInvocation={part.toolInvocation}
-                  index={index}
-                />
-              )
-            }
-
-            if (part.type === 'reasoning') {
-              return (
-                <ReasoningPart
-                  key={`reasoning-${part.reasoning.slice(0, 20)}-${index}`}
-                  reasoning={part.reasoning}
-                  index={index}
-                />
-              )
-            }
-
-            return null
-          })}
-        </div>
-      )}
-
-      {/* Fallback for simple content */}
-      {message.content && (!message.parts || message.parts.length === 0) && (
-        <FallbackContent content={message.content} isStreaming={isStreaming} />
-      )}
+      {/* Simple content display - our tRPC type has a simpler structure */}
+      <FallbackContent content={message.content} isStreaming={isStreaming} />
     </div>
   )
 }

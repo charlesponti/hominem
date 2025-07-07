@@ -1,6 +1,6 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@hominem/data'
 import { redis, waitForRateLimit } from '@hominem/utils/redis'
-import { artists } from '@hominem/utils/schema'
+import { artists } from '@hominem/data/schema'
 import type { Artist } from '@hominem/utils/types'
 import axios from 'axios'
 import { sql } from 'drizzle-orm'

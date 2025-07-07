@@ -1,6 +1,32 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 
+/**
+ * Binds userId to tools that require it, removing userId from the parameters schema if present.
+ * Shallow clones the tool and only overrides the execute method for performance and memory safety.
+ */
+export function bindUserIdToTools(tools: Record<string, any>, userId: string) {
+  const boundTools: Record<string, any> = {}
+
+  for (const [key, originalTool] of Object.entries(tools)) {
+    const hasUserId = originalTool.parameters?.shape?.userId
+
+    if (hasUserId) {
+      // Shallow clone, remove userId from parameters, override execute
+      const { parameters, ...rest } = originalTool
+      boundTools[key] = {
+        ...rest,
+        parameters: parameters?.omit ? parameters.omit({ userId: true }) : parameters,
+        execute: async (args: any) => originalTool.execute({ ...args, userId }),
+      }
+    } else {
+      boundTools[key] = originalTool
+    }
+  }
+
+  return boundTools
+}
+
 const CalculatorToolSchema = z.object({
   calculations: z.array(
     z.object({

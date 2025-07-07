@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { health } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { health } from '@hominem/data/schema'
 import { Hono } from 'hono'
 
 export const statusRoutes = new Hono()

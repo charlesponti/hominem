@@ -1,4 +1,4 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@hominem/data'
 import { logger } from '@hominem/utils/logger'
 import {
   type FinanceAccountInsert,
@@ -6,7 +6,7 @@ import {
   type FinanceTransaction,
   plaidItems,
   transactions,
-} from '@hominem/utils/schema'
+} from '@hominem/data/schema'
 import type { Job } from 'bullmq'
 import { and, eq } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'

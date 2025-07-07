@@ -1,5 +1,4 @@
 export * from './action-item.schema'
-export * from './content-strategy.schema'
 export * from './decision.schema'
 export * from './emotion.schema'
 export * from './event.schema'

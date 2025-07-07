@@ -3,7 +3,7 @@ import type { SearchResponse, SearchResult } from './types'
 export async function performWebSearch(query: string): Promise<SearchResponse> {
   try {
     // Using tRPC HTTP format for utility functions
-    const response = await fetch('/api/trpc/searchOperations.search', {
+    const response = await fetch('/trpc/searchOperations.search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

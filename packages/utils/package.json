@@ -17,10 +17,6 @@
       "import": "./src/consts.ts",
       "require": "./dist/consts.cjs"
     },
-    "./db": {
-      "import": "./src/db/index.ts",
-      "require": "./dist/db/index.cjs"
-    },
     "./finance": {
       "import": "./src/finance/index.ts",
       "require": "./dist/finance/index.cjs"
@@ -68,10 +64,6 @@
     "./utils": {
       "import": "./src/utils/index.ts",
       "require": "./dist/utils/index.cjs"
-    },
-    "./schema": {
-      "import": "./src/db/schema/index.ts",
-      "require": "./dist/db/schema/index.cjs"
     },
     "./schemas": {
       "import": "./src/schemas/index.ts",
@@ -121,6 +113,7 @@
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
     "@hominem/ai": "workspace:*",
+    "@hominem/data": "workspace:*",
     "ai": "^4.1.54",
     "cheerio": "^1.0.0",
     "compromise": "^14.14.4",

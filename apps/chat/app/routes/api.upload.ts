@@ -1,10 +1,12 @@
 import type { ActionFunctionArgs } from 'react-router'
-import { processFile } from '~/lib/services/file-processor.server.js'
-import { isValidFileType, storeFile } from '~/lib/services/file-storage.server.js'
-import { indexProcessedFile } from '~/lib/services/vector-file-integration.server.js'
-import { requireAuth } from '~/lib/supabase/server.js'
+import { createSupabaseServerClient } from '~/lib/supabase/server.js'
 import type { FailedUpload, UploadResponse, UploadedFile } from '~/lib/types/upload.js'
 import { jsonResponse } from '~/lib/utils/json-response'
+
+// Import the services from the API app
+import { fileStorageService } from '@hominem/utils/supabase'
+import { FileProcessorService } from '../../../../apps/api/src/services/file-processor.service.js'
+import { indexProcessedFile } from '../../../../apps/api/src/services/vector-file-integration.service.js'
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -12,9 +14,16 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    // Require authentication and get user
-    const { user } = await requireAuth(request)
-    const userId = user.id
+    // Get authentication
+    const { supabase } = createSupabaseServerClient(request)
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return jsonResponse({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
@@ -27,7 +36,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const results = await Promise.allSettled(
       files.map(async (file) => {
         // Validate file type
-        if (!isValidFileType(file.type)) {
+        if (!fileStorageService.isValidFileType(file.type)) {
           throw new Error(`Unsupported file type: ${file.type}`)
         }
 
@@ -35,15 +44,20 @@ export async function action({ request }: ActionFunctionArgs) {
         const buffer = await file.arrayBuffer()
 
         // Store the file with user authentication
-        const storedFile = await storeFile(buffer, file.name, file.type, userId, request)
+        const storedFile = await fileStorageService.storeFile(buffer, file.name, file.type, user.id)
 
         // Process the file based on its type
-        const processedFile = await processFile(buffer, file.name, file.type, storedFile.id)
+        const processedFile = await FileProcessorService.processFile(
+          buffer,
+          file.name,
+          file.type,
+          storedFile.id
+        )
 
         // Index the file in the vector store if file has text content
         let vectorIds: string[] = []
         if (processedFile.textContent || processedFile.content) {
-          const indexResult = await indexProcessedFile(processedFile, userId, storedFile.url)
+          const indexResult = await indexProcessedFile(processedFile, user.id, storedFile.url)
           vectorIds = indexResult.vectorIds
         }
 

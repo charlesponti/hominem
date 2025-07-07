@@ -1,4 +1,4 @@
-import type { ContentStrategy } from '@hominem/utils/schemas'
+import type { ContentStrategy } from '@hominem/data/schema'
 import { Copy, FileText, Save } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Link } from 'react-router'
@@ -10,7 +10,6 @@ import { Label } from '~/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { useToast } from '~/components/ui/use-toast'
 import { useCreateContentStrategy } from '~/hooks/use-content-strategies'
-import { trpc } from '~/lib/trpc'
 
 function ResultSkeleton() {
   return (

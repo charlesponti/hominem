@@ -98,17 +98,17 @@ describe('Finance Import Routes', () => {
 
   describe('POST /api/finance/import', () => {
     test('successfully imports CSV file', async () => {
-      const { handleFileUpload } = await import('../../../middleware/file-upload.js')
+      const { handleFileUploadBuffer } = await import('../../../middleware/file-upload.js')
       const { csvStorageService } = await import('@hominem/utils/supabase')
 
       // Mock file upload
       const mockFile = {
         filename: 'transactions.csv',
         mimetype: 'text/csv',
-        filepath: '/tmp/test-file.csv',
+        buffer: Buffer.from('date,amount,description\n2023-01-01,100.50,Test transaction'),
         size: 1024,
       }
-      vi.mocked(handleFileUpload).mockResolvedValue(mockFile)
+      vi.mocked(handleFileUploadBuffer).mockResolvedValue(mockFile)
 
       // Mock file system
       vi.mocked(fs.readFileSync).mockReturnValue(
@@ -165,17 +165,17 @@ describe('Finance Import Routes', () => {
     })
 
     test('returns existing job if file is already being processed', async () => {
-      const { handleFileUpload } = await import('../../../middleware/file-upload.js')
+      const { handleFileUploadBuffer } = await import('../../../middleware/file-upload.js')
       const { csvStorageService } = await import('@hominem/utils/supabase')
 
       // Mock file upload
       const mockFile = {
         filename: 'transactions.csv',
         mimetype: 'text/csv',
-        filepath: '/tmp/test-file.csv',
+        buffer: Buffer.from('date,amount,description\n2023-01-01,100.50,Test transaction'),
         size: 1024,
       }
-      vi.mocked(handleFileUpload).mockResolvedValue(mockFile)
+      vi.mocked(handleFileUploadBuffer).mockResolvedValue(mockFile)
 
       // Mock file system
       vi.mocked(fs.readFileSync).mockReturnValue(
@@ -218,16 +218,16 @@ describe('Finance Import Routes', () => {
     })
 
     test('rejects non-CSV files', async () => {
-      const { handleFileUpload } = await import('../../../middleware/file-upload.js')
+      const { handleFileUploadBuffer } = await import('../../../middleware/file-upload.js')
 
       // Mock non-CSV file upload
       const mockFile = {
         filename: 'document.pdf',
         mimetype: 'application/pdf',
-        filepath: '/tmp/test-file.pdf',
+        buffer: Buffer.from(''),
         size: 1024,
       }
-      vi.mocked(handleFileUpload).mockResolvedValue(mockFile)
+      vi.mocked(handleFileUploadBuffer).mockResolvedValue(mockFile)
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
@@ -235,16 +235,13 @@ describe('Finance Import Routes', () => {
       })
 
       await assertErrorResponse(response, 400)
-
-      // Verify file was cleaned up
-      expect(fs.unlinkSync).toHaveBeenCalledWith('/tmp/test-file.pdf')
     })
 
     test('handles missing file upload', async () => {
-      const { handleFileUpload } = await import('../../../middleware/file-upload.js')
+      const { handleFileUploadBuffer } = await import('../../../middleware/file-upload.js')
 
       // Mock no file uploaded
-      vi.mocked(handleFileUpload).mockResolvedValue(null)
+      vi.mocked(handleFileUploadBuffer).mockResolvedValue(null)
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
@@ -256,10 +253,10 @@ describe('Finance Import Routes', () => {
     })
 
     test('handles file upload errors', async () => {
-      const { handleFileUpload } = await import('../../../middleware/file-upload.js')
+      const { handleFileUploadBuffer } = await import('../../../middleware/file-upload.js')
 
       // Mock file upload error
-      vi.mocked(handleFileUpload).mockRejectedValue(new Error('Upload failed'))
+      vi.mocked(handleFileUploadBuffer).mockRejectedValue(new Error('Upload failed'))
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
@@ -272,16 +269,16 @@ describe('Finance Import Routes', () => {
     })
 
     test('validates query parameters', async () => {
-      const { handleFileUpload } = await import('../../../middleware/file-upload.js')
+      const { handleFileUploadBuffer } = await import('../../../middleware/file-upload.js')
 
       // Mock valid file upload
       const mockFile = {
         filename: 'transactions.csv',
         mimetype: 'text/csv',
-        filepath: '/tmp/test-file.csv',
+        buffer: Buffer.from('date,amount,description\n2023-01-01,100.50,Test transaction'),
         size: 1024,
       }
-      vi.mocked(handleFileUpload).mockResolvedValue(mockFile)
+      vi.mocked(handleFileUploadBuffer).mockResolvedValue(mockFile)
 
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',

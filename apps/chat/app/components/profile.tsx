@@ -1,39 +1,17 @@
 import type { User } from '@supabase/supabase-js'
-import { useEffect, useState } from 'react'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
-export function Profile() {
-  const { getUser, supabase } = useSupabaseAuth()
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+interface ProfileProps {
+  user: User
+}
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const currentUser = await getUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error loading user:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadUser()
-  }, [getUser])
-
-  if (isLoading) {
-    return <div className="loading">Loading user data...</div>
-  }
-
-  if (!user) {
-    return <div className="error">User not found</div>
-  }
+export function Profile({ user }: ProfileProps) {
+  const { supabase } = useSupabaseAuth()
 
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
-      setUser(null)
     } catch (error) {
       console.error('Logout error:', error)
     }

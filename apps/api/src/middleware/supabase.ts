@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { users } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { users } from '@hominem/data/schema'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
 import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'

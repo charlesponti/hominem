@@ -12,7 +12,7 @@ import {
   type People,
   type TextAnalysis,
   type TextAnalysisEmotion,
-} from '@hominem/utils/schemas'
+} from '../schemas'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 

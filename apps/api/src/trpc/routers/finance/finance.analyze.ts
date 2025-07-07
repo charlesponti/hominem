@@ -1,4 +1,4 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@hominem/data'
 import {
   buildWhereConditions,
   calculateTransactions,
@@ -7,7 +7,7 @@ import {
   generateTimeSeriesData,
   summarizeByCategory,
 } from '@hominem/utils/finance'
-import { transactions } from '@hominem/utils/schema'
+import { transactions } from '@hominem/data/schema'
 import { count, desc, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../index.js'

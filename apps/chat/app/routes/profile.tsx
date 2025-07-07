@@ -1,4 +1,5 @@
-import { redirect } from 'react-router'
+import type { User } from '@supabase/supabase-js'
+import { redirect, useRouteLoaderData } from 'react-router'
 import { Profile } from '~/components/profile'
 import { getServerSession } from '~/lib/supabase/server'
 import type { Route } from './+types/profile'
@@ -10,17 +11,15 @@ export async function loader(loaderArgs: Route.LoaderArgs) {
     return redirect('/')
   }
 
-  return { userId: session.user.id }
+  return { user: session.user }
 }
 
 // Using the proper parameter name without destructuring
 export function meta(args: Route.MetaArgs) {
-  return [
-    { title: 'Profile', foo: 'bar' },
-    { name: 'description', content: 'User profile page' },
-  ]
+  return [{ title: 'Profile' }, { name: 'description', content: 'User profile page' }]
 }
 
 export default function ProfilePage() {
-  return <Profile />
+  const { user } = useRouteLoaderData<{ user: User }>('profile')
+  return <Profile user={user} />
 }

@@ -1,6 +1,6 @@
 import { and, eq, gte, lte, sql } from 'drizzle-orm'
-import { db } from '../../db/index'
-import { budgetCategories, transactions } from '../../db/schema/finance.schema'
+import { db } from '@hominem/data/db'
+import { budgetCategories, transactions } from '@hominem/data/schema'
 import type {
   BudgetCategoryWithSpending,
   BudgetChartData,

@@ -17,6 +17,6 @@ export async function loader({ request }: { request: Request }) {
     }
   }
 
-  // If there's an error or no code, redirect to login with error
-  return redirect('/login?error=Authentication failed')
+  // If there's an error or no code, redirect to home with error
+  return redirect('/?error=Authentication failed')
 }

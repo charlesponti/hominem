@@ -42,7 +42,7 @@ export async function getServerSession(request: Request) {
     }
 
     return { user }
-  } catch (error) {
+  } catch {
     return { user: null }
   }
 }

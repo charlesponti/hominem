@@ -8,6 +8,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().default('4446'),
+  API_URL: z.string().url().default('http://localhost:4040'),
 })
 
 function validateEnv() {
@@ -28,4 +29,4 @@ function validateEnv() {
 export const env = validateEnv()
 
 // Re-export for convenience
-export const { DATABASE_URL, NODE_ENV, PORT } = env
+export const { DATABASE_URL, NODE_ENV, PORT, API_URL } = env

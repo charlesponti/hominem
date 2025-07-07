@@ -1,12 +1,11 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@hominem/data'
 import { logger } from '@hominem/utils/logger'
-import { vectorDocuments, type NewVectorDocument } from '@hominem/utils/schema'
+import { vectorDocuments, type NewVectorDocument } from '@hominem/data/schema'
 import csv from 'csv-parser'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { randomUUID } from 'node:crypto'
 import { openaiClient } from '../lib/openai.js'
-import { supabaseClient } from '../middleware/supabase.js'
 
 // OpenAI embeddings function using the existing client
 async function generateEmbedding(text: string): Promise<number[]> {
@@ -23,63 +22,37 @@ async function generateEmbedding(text: string): Promise<number[]> {
   }
 }
 
-// Supabase vector service using Drizzle ORM and Supabase Storage
-export namespace SupabaseVectorService {
+// Vector service focused only on vector operations
+export namespace VectorService {
   // Create a custom tool for search
   export const searchDocumentsTool = {
     parameters: { query: 'string' },
     description: 'Search the database for information using vector similarity',
     execute: async ({ query }: { query: string }) => {
-      return await SupabaseVectorService.searchDocuments(query)
+      return await VectorService.query({
+        q: query,
+        source: 'documents',
+        limit: 5,
+      })
     },
   }
 
   /**
-   * Search documents using embeddings
+   * Process CSV records into vectors (assumes file has already been uploaded elsewhere)
    */
-  export const searchDocuments = async (query: string) => {
-    const response = await SupabaseVectorService.query({
-      q: query,
-      indexName: 'documents',
-      limit: 5,
-    })
-
-    return response
-  }
-
-  /**
-   * Upload CSV file to Supabase storage and process into vectors
-   */
-  export async function uploadCSVToVectorStore(
+  export async function processCSVToVectorStore(
     fileBuffer: Buffer,
-    fileName: string,
     userId: string,
-    indexName: string
-  ): Promise<{ recordsProcessed: number; filePath: string }> {
+    source: string
+  ): Promise<{ recordsProcessed: number }> {
     try {
-      // Upload file to Supabase storage
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-      const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
-      const filePath = `${userId}/${indexName}/${timestamp}_${sanitizedFileName}`
-
-      const { data: uploadData, error: uploadError } = await supabaseClient.storage
-        .from('vector-files')
-        .upload(filePath, fileBuffer, {
-          contentType: 'text/csv',
-          upsert: false,
-        })
-
-      if (uploadError) {
-        throw new Error(`Failed to upload file: ${uploadError.message}`)
-      }
-
       // Process CSV content
       const records = await parseCSVBuffer(fileBuffer)
-      const recordsProcessed = await processRecordsToVectors(records, userId, indexName)
+      const recordsProcessed = await processRecordsToVectors(records, userId, source)
 
-      return { recordsProcessed, filePath: uploadData.path }
+      return { recordsProcessed }
     } catch (error) {
-      logger.error('CSV upload error:', error)
+      logger.error('CSV processing error:', error)
       throw error
     }
   }
@@ -109,7 +82,7 @@ export namespace SupabaseVectorService {
   async function processRecordsToVectors(
     records: Record<string, unknown>[],
     userId: string,
-    indexName: string
+    source: string
   ): Promise<number> {
     const batchSize = 50
     let totalProcessed = 0
@@ -137,7 +110,7 @@ export namespace SupabaseVectorService {
         metadata: doc.metadata,
         embedding: embeddings[index],
         userId: userId,
-        source: indexName,
+        source: source,
         sourceType: 'csv',
       }))
 
@@ -156,7 +129,7 @@ export namespace SupabaseVectorService {
         })
 
       totalProcessed += batch.length
-      logger.info(`Processed ${totalProcessed}/${records.length} records for ${indexName}`)
+      logger.info(`Processed ${totalProcessed}/${records.length} records for ${source}`)
     }
 
     return totalProcessed
@@ -167,12 +140,12 @@ export namespace SupabaseVectorService {
    */
   export async function query({
     q,
-    indexName,
+    source,
     limit = 10,
     userId,
   }: {
     q: string
-    indexName: string
+    source: string
     limit?: number
     userId?: string
   }) {
@@ -181,7 +154,7 @@ export namespace SupabaseVectorService {
       const embedding = await generateEmbedding(q)
 
       // Build query conditions
-      const conditions = [eq(vectorDocuments.source, indexName)]
+      const conditions = [eq(vectorDocuments.source, source)]
 
       // Add user filter if provided
       if (userId) {
@@ -352,47 +325,6 @@ export namespace SupabaseVectorService {
       return { success: true }
     } catch (error) {
       logger.error('Delete user documents error:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Get file list from Supabase storage
-   */
-  export async function getUserFiles(userId: string, indexName?: string): Promise<unknown[]> {
-    try {
-      let path = userId
-      if (indexName) {
-        path = `${userId}/${indexName}`
-      }
-
-      const { data: files, error } = await supabaseClient.storage.from('vector-files').list(path)
-
-      if (error) {
-        throw new Error(`Failed to list user files: ${error.message}`)
-      }
-
-      return files || []
-    } catch (error) {
-      logger.error('Get user files error:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Delete file from Supabase storage
-   */
-  export async function deleteUserFile(filePath: string) {
-    try {
-      const { error } = await supabaseClient.storage.from('vector-files').remove([filePath])
-
-      if (error) {
-        throw new Error(`Failed to delete file: ${error.message}`)
-      }
-
-      return { success: true }
-    } catch (error) {
-      logger.error('Delete user file error:', error)
       throw error
     }
   }

@@ -1,11 +1,11 @@
 import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm'
-import { db } from '../db'
+import { db } from '@hominem/data/db'
 import {
   financeAccounts,
   type FinanceTransaction,
   type FinanceTransactionInsert,
   transactions,
-} from '../db/schema'
+} from '@hominem/data/schema'
 import { logger } from '../logger'
 import type { QueryOptions } from './finance.types'
 

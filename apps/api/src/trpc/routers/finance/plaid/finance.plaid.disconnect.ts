@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { plaidItems } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { plaidItems } from '@hominem/data/schema'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { plaidClient } from '../../../../lib/plaid.js'

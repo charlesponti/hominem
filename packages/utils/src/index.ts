@@ -1,6 +1,4 @@
 export * from './career/index'
-export * from './db/index'
-export * from './db/schema/index'
 export * from './finance/index'
 export * from './google/maps'
 export * from './imports.helpers'

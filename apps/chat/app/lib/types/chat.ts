@@ -1,5 +1,5 @@
 // Shared chat types for both client and server
-import type { ChatMessageSelect } from '@hominem/utils/schema'
+import type { ChatMessageSelect } from '@hominem/chat-service'
 import type { ProcessedFile } from './upload'
 
 // Re-export ProcessedFile for convenience
@@ -71,7 +71,6 @@ export interface ChatMessage {
   reasoning?: string
   files?: ChatMessageFile[]
   parentMessageId?: string
-  messageIndex?: string
   createdAt: string
   updatedAt: string
   // Client-side properties
@@ -90,7 +89,7 @@ export interface ChatWithMessages extends Chat {
 /**
  * Database types re-exported for convenience
  */
-export type { ChatMessageSelect } from '@hominem/utils/schema'
+export type { ChatMessageSelect } from '@hominem/chat-service'
 
 /**
  * File attachment in chat UI (simplified for display)
@@ -107,35 +106,6 @@ export interface ChatFileAttachment {
 // ============================================================================
 // API Request/Response Types
 // ============================================================================
-
-/**
- * Chat stream request body
- */
-export interface ChatStreamRequest {
-  // Custom format
-  message?: string
-  chatId?: string
-  userId?: string
-  files?: ProcessedFile[]
-  searchContext?: string
-  voiceMode?: boolean
-  conversationHistory?: Array<{
-    role: MessageRole
-    content: string
-  }>
-  createNewChat?: boolean
-  chatTitle?: string
-
-  // AI SDK format
-  messages?: Array<{
-    id?: string
-    role: MessageRole
-    content: string
-  }>
-
-  // Additional options
-  data?: Record<string, unknown>
-}
 
 /**
  * Search result for web search integration
@@ -273,14 +243,6 @@ export interface ChatInputProps {
 // ============================================================================
 
 /**
- * Parameters for creating a chat
- */
-export interface CreateChatParams {
-  title: string
-  userId: string
-}
-
-/**
  * Parameters for creating a message
  */
 export interface CreateMessageParams {
@@ -292,7 +254,6 @@ export interface CreateMessageParams {
   toolCalls?: ChatMessageToolCall[]
   reasoning?: string
   parentMessageId?: string
-  messageIndex?: string
 }
 
 /**

@@ -1,13 +1,13 @@
 import { and, eq, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
-import { db } from '../../db/index'
+import { db } from '@hominem/data/db'
 import {
   financeAccounts,
   transactions,
   type FinanceAccount,
   type FinanceAccountInsert,
   type FinanceTransaction,
-} from '../../db/schema'
+} from '@hominem/data/schema'
 import { logger } from '../../logger'
 
 /**

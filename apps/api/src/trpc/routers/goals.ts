@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { goals } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { goals } from '@hominem/data/schema'
 import { and, asc, desc, eq, ilike, ne } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../index'

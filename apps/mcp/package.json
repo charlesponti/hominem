@@ -21,6 +21,7 @@
     "@ai-sdk/openai-compatible": "^0.1.17",
     "@browserbasehq/stagehand": "^1.14.0",
     "@clerk/backend": "^1.30.2",
+    "@hominem/data": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "ai": "^4.1.54",

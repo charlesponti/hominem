@@ -1,6 +1,6 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@hominem/data'
 import { logger } from '@hominem/utils/logger'
-import { account } from '@hominem/utils/schema'
+import { account } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
 import { createHash, randomBytes } from 'node:crypto'
 import { z } from 'zod'

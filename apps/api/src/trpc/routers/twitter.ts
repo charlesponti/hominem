@@ -1,6 +1,6 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@hominem/data'
 import { logger } from '@hominem/utils/logger'
-import { account, content } from '@hominem/utils/schema'
+import { account, content } from '@hominem/data/schema'
 import { TRPCError } from '@trpc/server'
 import { and, eq } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
@@ -255,11 +255,7 @@ export const twitterRouter = router({
       const tweetsData = (await tweetsResponse.json()) as TwitterTweetsResponse
 
       if (!tweetsData.data || tweetsData.data.length === 0) {
-        return {
-          success: true,
-          message: 'No tweets found to sync',
-          synced: 0,
-        }
+        return { success: true, message: 'No tweets found to sync', synced: 0 }
       }
 
       // Check which tweets already exist in our database
@@ -302,7 +298,7 @@ export const twitterRouter = router({
           inReplyTo: tweet.in_reply_to_user_id,
         },
         publishedAt: tweet.created_at,
-        createdAt: tweet.created_at,
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }))
 

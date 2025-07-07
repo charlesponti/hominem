@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { EventEmitter } from 'node:events'
-import type { FinanceTransaction, FinanceTransactionInsert } from '../../db/schema'
+import type { FinanceTransaction, FinanceTransactionInsert } from '@hominem/data/schema'
 import {
   createTransaction,
   findExistingTransaction,

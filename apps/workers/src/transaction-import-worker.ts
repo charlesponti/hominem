@@ -1,7 +1,7 @@
 import './env.ts'
 
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts'
-import { processTransactionsFromCSV } from '@hominem/utils/finance'
+import { processTransactionsFromCSVBuffer } from '@hominem/utils/finance'
 import type {
   ImportTransactionsJob,
   ImportTransactionsQueuePayload,
@@ -48,22 +48,28 @@ const program = Effect.gen(function* ($) {
         return yield* $(Effect.fail(new Error(`CSV file path not found in job ${job.id}`)))
       }
 
-      const decodedContent = (yield* $(
-        Effect.tryPromise(() => csvStorage.downloadCsvFile(job.data.csvFilePath as string))
-      )) as string
+      const fileBuffer = yield* $(
+        Effect.tryPromise(() => csvStorage.downloadCsvFileAsBuffer(job.data.csvFilePath as string))
+      )
 
-      if (!decodedContent || decodedContent.trim().length === 0) {
-        return yield* $(Effect.fail(new Error('Downloaded CSV content is empty')))
+      if (!fileBuffer || fileBuffer.length === 0) {
+        return yield* $(Effect.fail(new Error('Downloaded CSV file is empty')))
       }
 
       const updateBullJobProgress = (progress: number) =>
         Effect.tryPromise(() => job.updateProgress(progress))
 
+      const csvContent = fileBuffer.toString('utf-8')
+      const totalLinesToProcess = Math.max(
+        1,
+        csvContent.split('\n').length - (csvContent.includes('\n') ? 1 : 0)
+      )
+
       const jobData: ImportTransactionsJob = {
         jobId: job.id as string,
         userId: job.data.userId,
         fileName: job.data.fileName,
-        csvContent: decodedContent,
+        csvContent,
         type: 'import-transactions',
         status: 'processing',
         options: {
@@ -76,10 +82,6 @@ const program = Effect.gen(function* ($) {
       }
 
       let processedCount = 0
-      const totalLinesToProcess = Math.max(
-        1,
-        decodedContent.split('\n').length - (decodedContent.includes('\n') ? 1 : 0)
-      )
       let lastReportedProgress = -1
       const progressUpdateInterval = 1000 // 1 second
       let lastProgressUpdateTime = Date.now()
@@ -94,7 +96,9 @@ const program = Effect.gen(function* ($) {
 
       jobData.stats.total = 0
 
-      const results = yield* $(processTransactionsFromCSV(jobData))
+      const results = yield* $(
+        processTransactionsFromCSVBuffer({ csvBuffer: fileBuffer, userId: job.data.userId })
+      )
 
       for (const result of results) {
         processedCount++

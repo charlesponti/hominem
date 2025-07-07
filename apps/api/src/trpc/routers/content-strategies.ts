@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google'
-import { ContentStrategySchema } from '@hominem/utils/schemas'
+import { ContentStrategySchema } from '@hominem/data/schema'
 import { contentTools } from '@hominem/utils/tools'
 import { generateText } from 'ai'
 import { z } from 'zod'
@@ -7,7 +7,6 @@ import { ContentStrategiesService } from '../../services/content-strategies.serv
 import { protectedProcedure, router } from '../index'
 
 export const contentStrategiesRouter = router({
-  // Create new content strategy
   create: protectedProcedure
     .input(
       z.object({
@@ -34,7 +33,6 @@ export const contentStrategiesRouter = router({
       }
     }),
 
-  // Get all content strategies for user
   list: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.userId
     const contentStrategiesService = new ContentStrategiesService()
@@ -50,7 +48,6 @@ export const contentStrategiesRouter = router({
     }
   }),
 
-  // Get specific content strategy by ID
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid('Invalid content strategy ID format') }))
     .query(async ({ input, ctx }) => {
@@ -73,7 +70,6 @@ export const contentStrategiesRouter = router({
       }
     }),
 
-  // Update content strategy
   update: protectedProcedure
     .input(
       z.object({
@@ -104,7 +100,6 @@ export const contentStrategiesRouter = router({
       }
     }),
 
-  // Delete content strategy
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid('Invalid content strategy ID format') }))
     .mutation(async ({ input, ctx }) => {
@@ -127,7 +122,6 @@ export const contentStrategiesRouter = router({
       }
     }),
 
-  // Generate content strategy using AI
   generate: protectedProcedure
     .input(
       z.object({
@@ -165,7 +159,6 @@ Ensure all content ideas are tailored to both the topic and audience.`,
           maxSteps: 5,
         })
 
-        // Extract tool call result
         const toolCall = result.response.messages.find((message) => message.role === 'tool')
 
         if (toolCall && Array.isArray(toolCall.content) && toolCall.content.length > 0) {
@@ -186,4 +179,4 @@ Ensure all content ideas are tailored to both the topic and audience.`,
         throw new Error('Failed to generate content strategy')
       }
     }),
-}) 
+})

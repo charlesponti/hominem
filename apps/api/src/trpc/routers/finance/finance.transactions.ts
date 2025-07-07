@@ -5,7 +5,7 @@ import {
   queryTransactions,
   updateTransaction,
 } from '@hominem/utils/finance'
-import { insertTransactionSchema, updateTransactionSchema } from '@hominem/utils/schema'
+import { insertTransactionSchema, updateTransactionSchema } from '@hominem/data/schema'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../index.js'
 

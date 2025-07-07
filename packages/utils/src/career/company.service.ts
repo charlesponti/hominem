@@ -1,6 +1,6 @@
 import { eq, type SQL } from 'drizzle-orm'
-import { db } from '../db/index'
-import { companies, type Company, type NewCompany } from '../db/schema/company.schema'
+import { db } from '@hominem/data/db'
+import { companies, type Company, type NewCompany } from '@hominem/data/schema'
 
 export class CompanyService {
   async create(data: Omit<NewCompany, 'id' | 'version' | 'createdAt' | 'updatedAt'>) {

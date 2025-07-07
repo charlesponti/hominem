@@ -1,73 +1,62 @@
-import { db } from '@hominem/utils/db'
-import { users } from '@hominem/utils/schema'
-import { eq } from 'drizzle-orm'
-import type { Hono } from 'hono'
+import { db } from '@hominem/data'
+import { users } from '@hominem/data/schema'
 import crypto from 'node:crypto'
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { useApiTestLifecycle } from '../../test/api-test-utils.js'
 import { createTRPCTestClient } from '../../test/trpc-test-utils.js'
-import type { AppEnv } from '../server.js'
 
 vi.mock('../services/vector.service.js', () => ({
-  SupabaseVectorService: {
+  VectorService: {
     query: vi.fn(),
     searchDocumentsByUser: vi.fn(),
     getUserDocuments: vi.fn(),
-    getUserFiles: vi.fn(),
     deleteUserDocuments: vi.fn(),
-    deleteUserFile: vi.fn(),
+  },
+}))
+
+vi.mock('@hominem/utils/supabase', () => ({
+  fileStorageService: {
+    listUserFiles: vi.fn(),
+    deleteFile: vi.fn(),
   },
 }))
 
 describe('Vector System', () => {
   const { getServer } = useApiTestLifecycle()
-  let server: Hono<AppEnv>
+  const testUserId = crypto.randomUUID()
   let trpc: ReturnType<typeof createTRPCTestClient>
-  let testUserId: string
 
-  beforeAll(async () => {
-    testUserId = crypto.randomUUID()
+  // Set up tRPC client
+  trpc = createTRPCTestClient(getServer(), testUserId)
 
-    await db.insert(users).values({
-      id: testUserId,
-      email: `vector-test-${testUserId}@example.com`,
-      supabaseId: `supabase-${testUserId}`,
-    })
-
-    server = getServer()
-    trpc = createTRPCTestClient(server, testUserId)
-  })
-
-  afterAll(async () => {
-    // Clean up test user
-    await db.delete(users).where(eq(users.id, testUserId))
-  })
-
-  beforeEach(() => {
-    vi.clearAllMocks()
+  // Create test user
+  db.insert(users).values({
+    id: testUserId,
+    email: 'test@example.com',
+    name: 'Test User',
   })
 
   describe('tRPC Vector Router', () => {
-    it('should query vector store', async () => {
+    it('should search vectors', async () => {
       const mockResponse = {
         results: [
           {
             id: 'doc-1',
             document: 'Test document content',
             metadata: { source: 'test' },
-            source: 'test-index',
-            sourceType: 'csv',
+            source: 'test-source',
+            sourceType: 'markdown',
           },
         ],
       }
 
-      const { SupabaseVectorService } = await import('../services/vector.service.js')
-      vi.mocked(SupabaseVectorService.query).mockResolvedValue(mockResponse)
+      const { VectorService } = await import('../services/vector.service.js')
+      vi.mocked(VectorService.query).mockResolvedValue(mockResponse)
 
-      const result = await trpc.vector.query.query({
-        query: 'test query',
-        indexName: 'test-index',
-        limit: 5,
+      const result = await trpc.vector.searchVectors.query({
+        query: 'test search',
+        source: 'test-source',
+        limit: 10,
       })
 
       expect(result).toBeDefined()
@@ -88,10 +77,10 @@ describe('Vector System', () => {
         ],
       }
 
-      const { SupabaseVectorService } = await import('../services/vector.service.js')
-      vi.mocked(SupabaseVectorService.searchDocumentsByUser).mockResolvedValue(mockResponse)
+      const { VectorService } = await import('../services/vector.service.js')
+      vi.mocked(VectorService.searchDocumentsByUser).mockResolvedValue(mockResponse)
 
-      const result = await trpc.vector.searchUserDocuments.query({
+      const result = await trpc.vector.searchUserVectors.query({
         query: 'test search',
         limit: 10,
         threshold: 0.7,
@@ -118,17 +107,17 @@ describe('Vector System', () => {
         },
       ]
 
-      const { SupabaseVectorService } = await import('../services/vector.service.js')
-      vi.mocked(SupabaseVectorService.getUserDocuments).mockResolvedValue(mockDocuments)
+      const { VectorService } = await import('../services/vector.service.js')
+      vi.mocked(VectorService.getUserDocuments).mockResolvedValue(mockDocuments)
 
-      const result = await trpc.vector.getUserDocuments.query({
+      const result = await trpc.vector.getUserVectors.query({
         limit: 20,
         offset: 0,
       })
 
       expect(result).toBeDefined()
-      expect(result.documents).toBeInstanceOf(Array)
-      expect(result.documents).toHaveLength(1)
+      expect(result.vectors).toBeInstanceOf(Array)
+      expect(result.vectors).toHaveLength(1)
     })
 
     it('should get user files', async () => {
@@ -143,12 +132,10 @@ describe('Vector System', () => {
         },
       ]
 
-      const { SupabaseVectorService } = await import('../services/vector.service.js')
-      vi.mocked(SupabaseVectorService.getUserFiles).mockResolvedValue(mockFiles)
+      const { fileStorageService } = await import('@hominem/utils/supabase')
+      vi.mocked(fileStorageService.listUserFiles).mockResolvedValue(mockFiles as any)
 
-      const result = await trpc.vector.getUserFiles.query({
-        indexName: 'test-dataset',
-      })
+      const result = await trpc.vector.getUserFiles.query()
 
       expect(result).toBeDefined()
       expect(result.files).toBeInstanceOf(Array)
@@ -156,49 +143,29 @@ describe('Vector System', () => {
     })
 
     it('should delete user documents', async () => {
-      const { SupabaseVectorService } = await import('../services/vector.service.js')
-      vi.mocked(SupabaseVectorService.deleteUserDocuments).mockResolvedValue({ success: true })
+      const { VectorService } = await import('../services/vector.service.js')
+      vi.mocked(VectorService.deleteUserDocuments).mockResolvedValue({ success: true })
 
-      const result = await trpc.vector.deleteUserDocuments.mutate({
+      const result = await trpc.vector.deleteUserVectors.mutate({
         source: 'test-source',
       })
 
       expect(result).toBeDefined()
       expect(result.success).toBe(true)
-      expect(result.message).toBe('Documents deleted successfully')
+      expect(result.message).toBe('Vector documents deleted successfully')
     })
 
     it('should delete user file', async () => {
-      const { SupabaseVectorService } = await import('../services/vector.service.js')
-      vi.mocked(SupabaseVectorService.deleteUserFile).mockResolvedValue({ success: true })
+      const { fileStorageService } = await import('@hominem/utils/supabase')
+      vi.mocked(fileStorageService.deleteFile).mockResolvedValue(true)
 
       const result = await trpc.vector.deleteUserFile.mutate({
-        filePath: `${testUserId}/test-dataset/test-file.csv`,
+        fileId: 'test-file-id',
       })
 
       expect(result).toBeDefined()
       expect(result.success).toBe(true)
       expect(result.message).toBe('File deleted successfully')
-    })
-  })
-
-  describe('Error Handling', () => {
-    it('should handle invalid query input', async () => {
-      await expect(
-        trpc.vector.query.query({
-          query: '',
-          indexName: 'test-index',
-        })
-      ).rejects.toThrow()
-    })
-
-    it('should handle invalid index name', async () => {
-      await expect(
-        trpc.vector.query.query({
-          query: 'test query',
-          indexName: '',
-        })
-      ).rejects.toThrow()
     })
   })
 })

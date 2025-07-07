@@ -1,4 +1,4 @@
-import { db } from '@hominem/utils/db'
+import { db } from '@hominem/data'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import { csvStorageService } from '@hominem/utils/supabase'

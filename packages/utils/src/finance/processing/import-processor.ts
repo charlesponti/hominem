@@ -1,6 +1,6 @@
 import { parse } from 'csv-parse'
 import { Effect, Stream } from 'effect'
-import type { FinanceTransactionInsert } from '../../db/schema'
+import type { FinanceTransactionInsert } from '@hominem/data/schema'
 import { logger } from '../../logger'
 import { getAndCreateAccountsInBulk } from '../core/account.service'
 import {
@@ -31,7 +31,11 @@ export function parseTransactionStream(
     })
 
     parser.on('readable', () => {
-      let record: any
+      let record:
+        | (CopilotTransaction & { bankFormat: 'copilot' })
+        | (CapitalOneTransaction & { bankFormat: 'capital-one' })
+        | { bankFormat: 'unknown' }
+
       while (true) {
         record = parser.read()
         if (record === null) {
@@ -93,16 +97,19 @@ function detectBankFormat(headers: string[]): 'copilot' | 'capital-one' | 'unkno
   return 'unknown'
 }
 
-export function processTransactionsFromCSV({
-  csvContent,
+/**
+ * Process transactions from CSV buffer
+ */
+export function processTransactionsFromCSVBuffer({
+  csvBuffer,
   userId,
 }: {
-  csvContent: string
+  csvBuffer: Buffer
   userId: string
 }) {
   return Effect.gen(function* ($) {
     const { Readable } = yield* $(Effect.tryPromise(() => import('stream')))
-    const csvStream = Readable.from(csvContent)
+    const csvStream = Readable.from(csvBuffer)
     const parsedTransactions = yield* $(
       Stream.runCollect(parseTransactionStream(csvStream, userId))
     ).pipe(Effect.map((chunk) => Array.from(chunk)))

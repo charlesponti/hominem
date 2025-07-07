@@ -4,9 +4,8 @@ import { csvStorageService } from '@hominem/utils/supabase'
 import { zValidator } from '@hono/zod-validator'
 import type { Job } from 'bullmq'
 import { Hono } from 'hono'
-import fs from 'node:fs'
 import { z } from 'zod'
-import { handleFileUpload } from '../../../middleware/file-upload.js'
+import { handleFileUploadBuffer } from '../../../middleware/file-upload.js'
 
 export const financeImportRoutes = new Hono()
 
@@ -22,11 +21,6 @@ const JobIdParamsSchema = z.object({
 
 // Import transactions from CSV file
 financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema), async (c) => {
-  const user = c.get('user')
-  if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
   const userId = c.get('userId')
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -36,33 +30,22 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
     // Parse query parameters for options
     const options = c.req.valid('query')
 
-    // Handle multipart file upload
-    // Note: This needs to be adapted for Hono's file upload handling
-    // For now, we'll need to create a Hono-compatible file upload middleware
-    const uploadedFile = await handleFileUpload(c.req.raw)
-
+    // Get buffer from multipart file upload
+    const uploadedFile = await handleFileUploadBuffer(c.req.raw)
     if (!uploadedFile) {
       return c.json({ error: 'No file uploaded' }, 400)
     }
 
     if (!uploadedFile.mimetype.includes('csv')) {
-      // Clean up the temp file
-      fs.unlinkSync(uploadedFile.filepath)
       return c.json({ error: 'Only CSV files are supported' }, 400)
     }
 
-    // Read the CSV file content
-    const csvContent = fs.readFileSync(uploadedFile.filepath, 'utf-8')
-
-    // Upload CSV file to Supabase storage
+    // Upload file buffer directly to Supabase storage (no disk I/O needed)
     const csvFilePath = await csvStorageService.uploadCsvFile(
       uploadedFile.filename,
-      csvContent,
+      uploadedFile.buffer,
       userId
     )
-
-    // Clean up the temp file
-    fs.unlinkSync(uploadedFile.filepath)
 
     // Check if a job with the same filename already exists for this user
     const queues = c.get('queues')
@@ -82,7 +65,7 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
       })
     }
 
-    // Use BullMQ with file path instead of CSV content
+    // Add import job to BullMQ
     const job = await queues.importTransactions.add(
       QUEUE_NAMES.IMPORT_TRANSACTIONS,
       {
@@ -136,13 +119,10 @@ financeImportRoutes.get('/active', async (c) => {
   }
 
   try {
-    // Get queues from context
     const queues = c.get('queues')
 
-    // With BullMQ, we can get active jobs directly
     const activeJobs = await queues.importTransactions.getJobs(['active', 'waiting', 'delayed'])
 
-    // Filter to only get this user's jobs and map to our expected format
     const userJobs = activeJobs
       .filter((job: Job<ImportTransactionsQueuePayload>) => job.data.userId === userId)
       .map((job: Job<ImportTransactionsQueuePayload>) => ({
@@ -176,17 +156,13 @@ financeImportRoutes.get('/:jobId', zValidator('param', JobIdParamsSchema), async
   const { jobId } = c.req.valid('param')
 
   try {
-    // Get queues from context
     const queues = c.get('queues')
 
-    // With BullMQ, we can get the job status directly
     const job = await queues.importTransactions.getJob(jobId)
-
     if (!job) {
       return c.json({ error: 'Import job not found' }, 404)
     }
 
-    // Map BullMQ job to our expected format
     return c.json({
       jobId: job.id,
       status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
