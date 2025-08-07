@@ -1,12 +1,10 @@
 import { openai } from '@ai-sdk/openai'
-import { allTools } from '@hominem/utils/tools'
+import { ChatService, MessageService } from '@hominem/chat-service'
+import type { ChatMessageSelect } from '@hominem/data/schema'
+import { allTools, bindUserIdToTools } from '@hominem/utils/tools'
 import { TRPCError } from '@trpc/server'
-import { generateText } from 'ai'
-import { writeFileSync } from 'node:fs'
+import { generateText, streamText } from 'ai'
 import { z } from 'zod'
-import { ChatService } from '@hominem/chat-service'
-import { MessageService } from '@hominem/chat-service'
-import { bindUserIdToTools } from '@hominem/utils/tools'
 import { protectedProcedure, router } from '../index'
 
 const chatService = new ChatService()
@@ -40,13 +38,16 @@ export const chatsRouter = router({
       }
 
       try {
-        const chat = await chatService.getChatById(chatId, userId, true)
+        const [chat, messages] = await Promise.all([
+          chatService.getChatById(chatId, userId),
+          messageService.getChatMessages(chatId, { limit: 10 }),
+        ])
 
         if (!chat) {
           throw new Error('Chat not found')
         }
 
-        return { chat }
+        return { ...chat, messages }
       } catch (error) {
         console.error('Failed to get chat:', error)
         throw new Error('Failed to load chat')
@@ -168,6 +169,8 @@ export const chatsRouter = router({
       }
 
       try {
+        const startTime = Date.now()
+
         // Bind userId to tools that need it
         const userBoundTools = bindUserIdToTools(allTools, userId)
 
@@ -183,28 +186,18 @@ export const chatsRouter = router({
           ],
         })
 
-        writeFileSync(
-          'debug.json',
-          JSON.stringify(
-            {
-              userId,
-              chatId: currentChat.id,
-              response,
-            },
-            null,
-            2
-          )
-        )
+        let userMessage: ChatMessageSelect | null = null
+        let assistantMessage: ChatMessageSelect | null = null
 
         try {
           // Save the conversation using MessageService
-          await messageService.addMessage({
+          userMessage = await messageService.addMessage({
             chatId: currentChat.id,
             userId,
             role: 'user',
             content: message,
           })
-          await messageService.addMessage({
+          assistantMessage = await messageService.addMessage({
             chatId: currentChat.id,
             userId,
             role: 'assistant',
@@ -221,13 +214,33 @@ export const chatsRouter = router({
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'No response text or tool calls generated',
+            cause: 'AI model returned empty response',
           })
         }
 
         return {
+          // Core response data
           response: response.text,
           toolCalls: response.toolCalls || [],
+
+          // Chat context
           chatId: currentChat.id,
+          chatTitle: currentChat.title,
+
+          // Saved messages with proper typing
+          messages: {
+            user: userMessage,
+            assistant: assistantMessage,
+          },
+
+          // Metadata for UI state management
+          metadata: {
+            hasToolCalls: response.toolCalls.length > 0,
+            responseLength: response.text?.length || 0,
+            timestamp: new Date().toISOString(),
+            model: 'gpt-4.1',
+            processingTime: Date.now() - startTime,
+          },
         }
       } catch (error) {
         console.error('Error generating chat response:', error)
@@ -237,6 +250,140 @@ export const chatsRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to generate response',
+          cause: error,
+        })
+      }
+    }),
+
+  generateStreaming: protectedProcedure
+    .input(
+      z.object({
+        message: z.string(),
+        chatId: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx
+      const { message, chatId } = input
+
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
+
+      // Get or create chat
+      const currentChat = await chatService.getOrCreateActiveChat(userId, chatId)
+
+      if (!currentChat) {
+        throw new Error('Failed to get or create chat')
+      }
+
+      try {
+        const startTime = Date.now()
+
+        // Bind userId to tools that need it
+        const userBoundTools = bindUserIdToTools(allTools, userId)
+
+        // Save the user message first
+        const userMessage = await messageService.addMessage({
+          chatId: currentChat.id,
+          userId,
+          role: 'user',
+          content: message,
+        })
+
+        // Create a streaming response
+        const stream = await streamText({
+          model: openai('gpt-4.1'),
+          tools: userBoundTools,
+          messages: [
+            {
+              role: 'user',
+              content: message,
+            },
+          ],
+        })
+
+        // Create a placeholder for the assistant message
+        const assistantMessage = await messageService.addMessage({
+          chatId: currentChat.id,
+          userId: '', // Assistant messages don't have a userId
+          role: 'assistant',
+          content: '', // Will be updated as we stream
+        })
+
+        // Return the initial response with streaming info
+        return {
+          // Streaming context
+          streamId: assistantMessage.id,
+          chatId: currentChat.id,
+          chatTitle: currentChat.title,
+
+          // Saved messages
+          messages: {
+            user: userMessage,
+            assistant: assistantMessage,
+          },
+
+          // Metadata
+          metadata: {
+            model: 'gpt-4.1',
+            startTime: startTime,
+            timestamp: new Date().toISOString(),
+          },
+
+          // Stream object for client to consume
+          stream,
+        }
+      } catch (error) {
+        console.error('Error generating streaming chat response:', error)
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to generate streaming response',
+          cause: error,
+        })
+      }
+    }),
+
+  updateStreamingMessage: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.string(),
+        content: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx
+      const { messageId, content } = input
+
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
+
+      try {
+        const updatedMessage = await messageService.updateMessage(messageId, content)
+
+        if (!updatedMessage) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Message not found or could not be updated',
+          })
+        }
+
+        return {
+          message: updatedMessage,
+          success: true,
+        }
+      } catch (error) {
+        console.error('Error updating streaming message:', error)
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update streaming message',
           cause: error,
         })
       }

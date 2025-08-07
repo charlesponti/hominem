@@ -1,6 +1,6 @@
 import { google } from '@ai-sdk/google'
 import { ContentStrategySchema } from '@hominem/data/schema'
-import { contentTools } from '@hominem/utils/tools'
+import { content_generator } from '@hominem/utils/tools'
 import { generateText } from 'ai'
 import { z } from 'zod'
 import { ContentStrategiesService } from '../../services/content-strategies.service.js'
@@ -137,7 +137,7 @@ export const contentStrategiesRouter = router({
         const result = await generateText({
           model: google('gemini-1.5-pro-latest'),
           tools: {
-            content_generator: contentTools.content_generator,
+            content_generator,
           },
           system:
             'You are a professional content strategist who helps create comprehensive content plans tailored to specific topics and audiences.',

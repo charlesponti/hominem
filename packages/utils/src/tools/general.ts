@@ -9,7 +9,26 @@ export function bindUserIdToTools(tools: Record<string, any>, userId: string) {
   const boundTools: Record<string, any> = {}
 
   for (const [key, originalTool] of Object.entries(tools)) {
-    const hasUserId = originalTool.parameters?.shape?.userId
+    // Skip tools that don't have the expected structure
+    if (!originalTool || typeof originalTool !== 'object') {
+      console.warn(`Skipping malformed tool: ${key}`)
+      continue
+    }
+
+    // Check if the tool has parameters and if it has a userId field
+    let hasUserId = false
+    try {
+      hasUserId =
+        originalTool.parameters?.shape?.userId ||
+        (originalTool.parameters &&
+          typeof originalTool.parameters.shape === 'function' &&
+          originalTool.parameters.shape().userId)
+    } catch (error) {
+      console.warn(`Error checking userId for tool ${key}:`, error)
+      // If we can't check for userId, just copy the tool as-is
+      boundTools[key] = originalTool
+      continue
+    }
 
     if (hasUserId) {
       // Shallow clone, remove userId from parameters, override execute

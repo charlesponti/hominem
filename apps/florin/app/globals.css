@@ -75,14 +75,6 @@ body {
   height: 100dvh;
 }
 
-@utility pb-safe-area-inset-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-@utility mb-safe-area-inset-bottom {
-  margin-bottom: env(safe-area-inset-bottom);
-}
-
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

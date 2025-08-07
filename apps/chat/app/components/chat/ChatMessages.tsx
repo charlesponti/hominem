@@ -1,7 +1,14 @@
-import { useEffect, useRef } from 'react'
 import { Bot } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { type RouterOutput, trpc } from '~/lib/trpc-client.js'
 import { ChatMessage } from './ChatMessage.js'
-import { trpc } from '~/lib/trpc-client.js'
+
+type MessageFromQuery = RouterOutput['chats']['getMessages'][0]
+
+// Extend the inferred message type with client-side properties
+type ExtendedMessage = MessageFromQuery & {
+  isStreaming?: boolean
+}
 
 interface ChatMessagesProps {
   chatId: string
@@ -9,7 +16,6 @@ interface ChatMessagesProps {
   error?: Error | null
 }
 
-// Skeleton message component for loading state
 function SkeletonMessage() {
   return (
     <div className="flex gap-3 animate-pulse">
@@ -57,15 +63,20 @@ export function ChatMessages({ chatId, status = 'idle', error }: ChatMessagesPro
     isLoading,
     error: messagesError,
   } = trpc.chats.getMessages.useQuery(
-    { chatId, limit: 10 },
+    { chatId, limit: 50 },
     {
       enabled: !!chatId,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     }
   )
 
+  // Cast messages to extended type to handle optimistic updates
+  const extendedMessages = messages as ExtendedMessage[]
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    const currentMessageCount = messages.length
+    const currentMessageCount = extendedMessages.length
     const previousMessageCount = previousMessageCountRef.current
 
     // Only scroll if we have new messages or if we're streaming
@@ -88,7 +99,7 @@ export function ChatMessages({ chatId, status = 'idle', error }: ChatMessagesPro
 
     // Update the ref with current count
     previousMessageCountRef.current = currentMessageCount
-  }, [messages.length, status])
+  }, [extendedMessages.length, status])
 
   // Auto-scroll during streaming with a more frequent interval
   useEffect(() => {
@@ -104,9 +115,9 @@ export function ChatMessages({ chatId, status = 'idle', error }: ChatMessagesPro
 
   // Check if there's a streaming message (last message is assistant and streaming)
   const hasStreamingMessage =
-    messages.length > 0 &&
-    messages[messages.length - 1].role === 'assistant' &&
-    status === 'streaming'
+    extendedMessages.length > 0 &&
+    extendedMessages[extendedMessages.length - 1].role === 'assistant' &&
+    (status === 'streaming' || extendedMessages[extendedMessages.length - 1].isStreaming)
 
   // Show thinking component only when submitted but no streaming message yet
   const showThinkingComponent =
@@ -126,7 +137,7 @@ export function ChatMessages({ chatId, status = 'idle', error }: ChatMessagesPro
       )}
 
       {/* Loading state when fetching messages */}
-      {isLoading && messages.length === 0 && (
+      {isLoading && extendedMessages.length === 0 && (
         <div className="space-y-4">
           <SkeletonMessage />
           <SkeletonMessage />
@@ -135,12 +146,15 @@ export function ChatMessages({ chatId, status = 'idle', error }: ChatMessagesPro
       )}
 
       {/* Messages */}
-      {messages.map((message, index) => (
+      {extendedMessages.map((message, index) => (
         <ChatMessage
           key={message.id}
           message={message}
           isStreaming={
-            status === 'streaming' && index === messages.length - 1 && message.role === 'assistant'
+            (status === 'streaming' &&
+              index === extendedMessages.length - 1 &&
+              message.role === 'assistant') ||
+            message.isStreaming
           }
         />
       ))}

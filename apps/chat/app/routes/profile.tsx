@@ -20,6 +20,12 @@ export function meta(args: Route.MetaArgs) {
 }
 
 export default function ProfilePage() {
-  const { user } = useRouteLoaderData<{ user: User }>('profile')
+  const data = useRouteLoaderData<{ user: User }>('profile')
+  const user = data?.user
+
+  if (!user) {
+    return redirect('/')
+  }
+
   return <Profile user={user} />
 }

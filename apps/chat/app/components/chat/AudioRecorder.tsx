@@ -1,18 +1,19 @@
-import { useState, useCallback } from 'react'
-import { Button } from '~/components/ui/button.js'
-import { 
-  Mic, 
-  Square, 
-  Play, 
-  Pause, 
-  Trash2, 
-  Download, 
-  Send,
+import {
+  AlertCircle,
+  Download,
   Loader2,
-  AlertCircle
+  Mic,
+  Pause,
+  Play,
+  Send,
+  Square,
+  Trash2,
 } from 'lucide-react'
-import { useAudioRecorder, formatDuration } from '~/lib/hooks/use-audio-recorder.js'
+import { useCallback, useState } from 'react'
+import { Button } from '~/components/ui/button.js'
+import { formatDuration, useAudioRecorder } from '~/lib/hooks/use-audio-recorder.js'
 import { AudioPlayer } from './AudioPlayer.js'
+import { AudioWaveform } from './AudioWaveform.js'
 
 interface AudioRecorderProps {
   onRecordingComplete?: (audioBlob: Blob, transcription?: string) => void
@@ -22,12 +23,12 @@ interface AudioRecorderProps {
   className?: string
 }
 
-export function AudioRecorder({ 
+export function AudioRecorder({
   onRecordingComplete,
   onTranscription,
   autoTranscribe = true,
   showPlayer = true,
-  className = ''
+  className = '',
 }: AudioRecorderProps) {
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [transcription, setTranscription] = useState<string>('')
@@ -40,7 +41,7 @@ export function AudioRecorder({
     pauseRecording,
     resumeRecording,
     clearRecording,
-    downloadRecording
+    downloadRecording,
   } = useAudioRecorder()
 
   const handleStartRecording = useCallback(async () => {
@@ -51,43 +52,46 @@ export function AudioRecorder({
 
   const handleStopRecording = useCallback(async () => {
     stopRecording()
-    
+
     // Auto-transcribe if enabled
     if (autoTranscribe && state.audioBlob) {
       await transcribeAudio(state.audioBlob)
     }
   }, [stopRecording, autoTranscribe, state.audioBlob])
 
-  const transcribeAudio = useCallback(async (audioBlob: Blob) => {
-    if (!audioBlob) return
+  const transcribeAudio = useCallback(
+    async (audioBlob: Blob) => {
+      if (!audioBlob) return
 
-    setIsTranscribing(true)
-    setTranscriptionError('')
+      setIsTranscribing(true)
+      setTranscriptionError('')
 
-    try {
-      const formData = new FormData()
-      formData.append('audio', audioBlob, 'recording.webm')
+      try {
+        const formData = new FormData()
+        formData.append('audio', audioBlob, 'recording.webm')
 
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData
-      })
+        const response = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData,
+        })
 
-      const result = await response.json()
+        const result = await response.json()
 
-      if (result.success) {
-        setTranscription(result.transcription.text)
-        onTranscription?.(result.transcription.text)
-      } else {
-        setTranscriptionError(result.error || 'Transcription failed')
+        if (result.success) {
+          setTranscription(result.transcription.text)
+          onTranscription?.(result.transcription.text)
+        } else {
+          setTranscriptionError(result.error || 'Transcription failed')
+        }
+      } catch (error) {
+        console.error('Transcription error:', error)
+        setTranscriptionError('Failed to transcribe audio')
+      } finally {
+        setIsTranscribing(false)
       }
-    } catch (error) {
-      console.error('Transcription error:', error)
-      setTranscriptionError('Failed to transcribe audio')
-    } finally {
-      setIsTranscribing(false)
-    }
-  }, [onTranscription])
+    },
+    [onTranscription]
+  )
 
   const handleSendRecording = useCallback(() => {
     if (state.audioBlob) {
@@ -123,18 +127,25 @@ export function AudioRecorder({
         </div>
       )}
 
-      {/* Recording Status */}
+      {/* Recording Status and Waveform */}
       {state.isRecording && (
-        <div className="flex items-center justify-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium">
-              {state.isPaused ? 'Recording Paused' : 'Recording'}
-            </span>
+        <div className="space-y-3">
+          <div className="flex items-center justify-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-sm font-medium">
+                {state.isPaused ? 'Recording Paused' : 'Recording'}
+              </span>
+            </div>
+            <span className="text-sm text-muted-foreground">{formatDuration(state.duration)}</span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            {formatDuration(state.duration)}
-          </span>
+
+          {/* Audio Waveform Visualization */}
+          <AudioWaveform
+            isRecording={state.isRecording && !state.isPaused}
+            stream={state.stream || null}
+            className="w-full"
+          />
         </div>
       )}
 
@@ -156,13 +167,9 @@ export function AudioRecorder({
               onClick={state.isPaused ? resumeRecording : pauseRecording}
               className="h-10 w-10"
             >
-              {state.isPaused ? (
-                <Play className="h-4 w-4" />
-              ) : (
-                <Pause className="h-4 w-4" />
-              )}
+              {state.isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
             </Button>
-            
+
             <Button
               variant="destructive"
               onClick={handleStopRecording}
@@ -202,7 +209,7 @@ export function AudioRecorder({
                   </Button>
                 )}
               </div>
-              
+
               {isTranscribing ? (
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -228,29 +235,18 @@ export function AudioRecorder({
           {/* Action Buttons */}
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={downloadRecording}
-              >
+              <Button variant="ghost" size="sm" onClick={downloadRecording}>
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearRecording}
-              >
+
+              <Button variant="ghost" size="sm" onClick={clearRecording}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </Button>
             </div>
-            
-            <Button
-              onClick={handleSendRecording}
-              disabled={!state.audioBlob}
-            >
+
+            <Button onClick={handleSendRecording} disabled={!state.audioBlob}>
               <Send className="h-4 w-4 mr-2" />
               Send Recording
             </Button>

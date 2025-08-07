@@ -1,14 +1,15 @@
-import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react'
+import { LoaderCircle, Mic, Paperclip, Send, Zap } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { useMatches } from 'react-router'
 import { Button } from '~/components/ui/button.js'
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
 import { useSendMessage } from '~/lib/hooks/use-send-message.js'
+import { useSendMessageStreaming } from '~/lib/hooks/use-send-message-streaming.js'
 import { ChatModals } from './ChatModals.js'
 
 const MAX_MESSAGE_LENGTH = 10000
 
-interface ChatInputProps {
+interface ChatInputStreamingProps {
   chatId: string
   onStatusChange?: (
     status: 'idle' | 'submitted' | 'streaming' | 'error',
@@ -16,10 +17,11 @@ interface ChatInputProps {
   ) => void
 }
 
-export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
+export function ChatInputStreaming({ chatId, onStatusChange }: ChatInputStreamingProps) {
   const [inputValue, setInputValue] = useState('')
   const [showFileUploader, setShowFileUploader] = useState(false)
   const [showAudioRecorder, setShowAudioRecorder] = useState(false)
+  const [useStreaming, setUseStreaming] = useState(true) // Default to streaming
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Get userId from root loader data
@@ -30,7 +32,12 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
   const userId = rootData?.supabaseUserId || undefined
 
   const sendMessage = useSendMessage({ chatId, userId })
+  const sendMessageStreaming = useSendMessageStreaming({ chatId, userId })
   const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload()
+
+  // Use the appropriate mutation based on streaming preference
+  const activeMutation = useStreaming ? sendMessageStreaming : sendMessage
+  const isSubmitting = activeMutation.isPending
 
   const characterCount = inputValue.length
   const hasInput = inputValue.trim().length > 0
@@ -46,11 +53,11 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
 
     const trimmedValue = inputValue.trim()
     try {
-      onStatusChange?.('submitted')
+      onStatusChange?.(useStreaming ? 'streaming' : 'submitted')
       setInputValue('') // Clear input immediately for better UX
       clearAll()
 
-      await sendMessage.mutateAsync({
+      await activeMutation.mutateAsync({
         message: trimmedValue,
         chatId,
       })
@@ -64,11 +71,12 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
   }, [
     canSubmit,
     inputValue,
-    sendMessage,
+    activeMutation,
     uploadState.uploadedFiles,
     clearAll,
     chatId,
     onStatusChange,
+    useStreaming,
   ])
 
   const handleKeyDown = useCallback(
@@ -102,8 +110,8 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
 
       if (transcript?.trim()) {
         try {
-          onStatusChange?.('submitted')
-          await sendMessage.mutateAsync({
+          onStatusChange?.(useStreaming ? 'streaming' : 'submitted')
+          await activeMutation.mutateAsync({
             message: transcript.trim(),
             chatId,
           })
@@ -114,10 +122,12 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
         }
       }
     },
-    [sendMessage, chatId, onStatusChange]
+    [activeMutation, chatId, onStatusChange, useStreaming]
   )
 
-  const isSubmitting = sendMessage.isPending
+  const toggleStreaming = useCallback(() => {
+    setUseStreaming(!useStreaming)
+  }, [useStreaming])
 
   return (
     <>
@@ -161,7 +171,20 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
           </Button>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          {/* Streaming Toggle */}
+          <Button
+            variant={useStreaming ? 'default' : 'outline'}
+            size="sm"
+            onClick={toggleStreaming}
+            disabled={isSubmitting}
+            title={useStreaming ? 'Disable streaming' : 'Enable streaming'}
+            className="flex items-center gap-2"
+          >
+            <Zap className="size-4" />
+            <span className="text-xs">{useStreaming ? 'Streaming' : 'Regular'}</span>
+          </Button>
+
           <Button
             variant="outline"
             size="sm"

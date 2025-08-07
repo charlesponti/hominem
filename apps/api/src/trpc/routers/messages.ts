@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import { MessageService } from '@hominem/chat-service'
+import { z } from 'zod'
 import { protectedProcedure, router } from '../index'
 
 export const messagesRouter = router({
@@ -21,64 +21,6 @@ export const messagesRouter = router({
       } catch (error) {
         console.error('Failed to get message:', error)
         throw new Error('Failed to load message')
-      }
-    }),
-
-  // Add a new message
-  addMessage: protectedProcedure
-    .input(
-      z.object({
-        chatId: z.string(),
-        userId: z.string(),
-        role: z.enum(['user', 'assistant', 'system']),
-        content: z.string(),
-        files: z
-          .array(
-            z.object({
-              type: z.enum(['image', 'file']),
-              filename: z.string().optional(),
-              mimeType: z.string().optional(),
-              size: z.number().optional(),
-            })
-          )
-          .optional(),
-        toolCalls: z.array(z.any()).optional(),
-        reasoning: z.string().optional(),
-        parentMessageId: z.string().optional(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const { chatId, userId, role, content, files, toolCalls, reasoning, parentMessageId } = input
-
-      if (!chatId || !userId || !role || !content) {
-        throw new Error('Chat ID, user ID, role, and content are required')
-      }
-
-      const messageService = new MessageService()
-
-      try {
-        const message = await messageService.addMessage({
-          chatId,
-          userId,
-          role,
-          content,
-          files,
-          toolCalls,
-          reasoning,
-          parentMessageId,
-        })
-
-        const transformedMessage = {
-          id: message.id,
-          role: message.role as 'user' | 'assistant' | 'system',
-          content: message.content,
-          createdAt: new Date(message.createdAt),
-        }
-
-        return { message: transformedMessage }
-      } catch (error) {
-        console.error('Failed to add message:', error)
-        throw new Error('Failed to add message')
       }
     }),
 

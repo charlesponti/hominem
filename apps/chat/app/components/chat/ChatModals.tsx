@@ -1,8 +1,8 @@
 import { X } from 'lucide-react'
 import { Button } from '~/components/ui/button.js'
-import { FileUploader } from './FileUploader.js'
-import { AudioRecorder } from './AudioRecorder.js'
 import type { UploadedFile } from '~/lib/types/upload.js'
+import { AudioRecorder } from './AudioRecorder.js'
+import { FileUploader } from './FileUploader.js'
 
 interface ChatModalsProps {
   showFileUploader: boolean

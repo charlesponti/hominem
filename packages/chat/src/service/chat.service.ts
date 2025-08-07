@@ -1,9 +1,8 @@
-import { chat, type Chat, chatMessage, type ChatMessageSelect } from '@hominem/data/schema'
 import { db, takeUniqueOrThrow } from '@hominem/data'
+import { type Chat, type ChatMessageSelect, chat, chatMessage } from '@hominem/data/schema'
 import { logger } from '@hominem/utils/logger'
 import { and, desc, eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-import { MessageService } from './message.service'
 
 export interface CreateChatParams {
   title: string
@@ -38,23 +37,7 @@ export class ChatError extends Error {
   }
 }
 
-// ============================================================================
-// Chat Service
-// ============================================================================
-
-/**
- * Unified Chat Service that consolidates functionality from both applications
- */
 export class ChatService {
-  private messageService: MessageService
-
-  constructor() {
-    this.messageService = new MessageService()
-  }
-
-  /**
-   * Create a new chat conversation
-   */
   async createChat(params: CreateChatParams): Promise<Chat> {
     try {
       const chatId = uuidv4()
@@ -78,25 +61,15 @@ export class ChatService {
     }
   }
 
-  async getChatById(chatId: string, userId: string, includeMessages = false) {
+  async getChatById(chatId: string, userId: string) {
     try {
       const [chatData] = await db
         .select()
         .from(chat)
         .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
-        .leftJoin(chatMessage, eq(chat.id, chatMessage.chatId))
         .limit(1)
 
-      if (!chatData) {
-        return null
-      }
-
-      const messages = includeMessages ? await this.messageService.getChatMessages(chatId) : []
-
-      return {
-        ...chatData,
-        messages,
-      }
+      return chatData
     } catch (error) {
       logger.error('Failed to get chat:', error)
       if (error instanceof Error && error.message.includes('Access denied')) {
@@ -178,7 +151,7 @@ export class ChatService {
     try {
       // Get chat to validate ownership if userId is provided
       if (userId) {
-        const existingChat = await this.getChatById(chatId, userId, false)
+        const existingChat = await this.getChatById(chatId, userId)
         if (!existingChat) {
           throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
         }
@@ -258,7 +231,7 @@ export class ChatService {
     try {
       // Get chat to validate ownership if userId is provided
       if (userId) {
-        const existingChat = await this.getChatById(chatId, userId, false)
+        const existingChat = await this.getChatById(chatId, userId)
         if (!existingChat) {
           throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
         }
@@ -307,7 +280,7 @@ export class ChatService {
     try {
       // Get chat to validate ownership if userId is provided
       if (userId) {
-        const existingChat = await this.getChatById(chatId, userId, false)
+        const existingChat = await this.getChatById(chatId, userId)
         if (!existingChat) {
           throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
         }

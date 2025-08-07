@@ -1,7 +1,13 @@
-import type { inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '../../../../../packages/types/trpc'
+import type { RouterOutput } from '~/lib/trpc-client.js'
+import { cn } from '~/lib/utils'
 
-type Message = inferRouterOutputs<AppRouter>['chats']['getUserChats'][number]
+// Get the inferred type from the tRPC query using RouterOutput
+type MessageFromQuery = RouterOutput['chats']['getMessages'][0]
+
+// Extend the inferred message type with client-side properties
+type ExtendedMessage = MessageFromQuery & {
+  isStreaming?: boolean
+}
 
 // Component for text parts
 function TextPart({
@@ -86,23 +92,28 @@ function FallbackContent({ content, isStreaming }: { content: string; isStreamin
 }
 
 interface ChatMessageProps {
-  message: Message
+  message: ExtendedMessage
   isStreaming?: boolean
 }
 
 export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) {
+  const isUser = message.role === 'user'
   return (
     <div
-      className={`p-4 rounded-lg ${
-        message.role === 'user' ? 'bg-primary text-primary-foreground ml-12' : 'bg-muted mr-12'
-      }`}
+      className={cn('p-4 rounded-lg flex flex-col gap-2', {
+        'bg-primary text-primary-foreground ml-12': isUser,
+        'bg-muted mr-12': !isUser,
+      })}
     >
-      <div className="text-sm opacity-70 mb-2">
-        {message.role === 'user' ? 'You' : 'AI Assistant'}
-      </div>
-
-      {/* Simple content display - our tRPC type has a simpler structure */}
       <FallbackContent content={message.content} isStreaming={isStreaming} />
+      <div
+        className={cn('flex text-xs opacity-70', {
+          'justify-end': isUser,
+          'justify-start': !isUser,
+        })}
+      >
+        {isUser ? 'You' : 'AI Assistant'}
+      </div>
     </div>
   )
 }

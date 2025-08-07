@@ -1,13 +1,9 @@
-import { chatMessage, chat, type ChatMessageSelect } from '@hominem/data/schema'
 import { db } from '@hominem/data'
+import { type ChatMessageSelect, chat, chatMessage } from '@hominem/data/schema'
 import { logger } from '@hominem/utils/logger'
-import { eq, desc, and } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { ChatError } from './chat.service'
-
-// ============================================================================
-// Types (moved from chat.types.ts)
-// ============================================================================
 
 export interface CreateMessageParams {
   chatId: string
@@ -54,7 +50,6 @@ export class MessageService {
   async addMessage(params: CreateMessageParams): Promise<ChatMessageSelect> {
     try {
       const messageId = uuidv4()
-      const now = new Date().toISOString()
 
       const [newMessage] = await db
         .insert(chatMessage)
@@ -68,13 +63,13 @@ export class MessageService {
           toolCalls: params.toolCalls,
           reasoning: params.reasoning,
           parentMessageId: params.parentMessageId,
-          createdAt: now,
-          updatedAt: now,
         })
         .returning()
 
-      // Update chat's updatedAt timestamp
-      await db.update(chat).set({ updatedAt: now }).where(eq(chat.id, params.chatId))
+      await db
+        .update(chat)
+        .set({ updatedAt: new Date().toISOString() })
+        .where(eq(chat.id, params.chatId))
 
       logger.info('Message added', { messageId, chatId: params.chatId })
       return newMessage
@@ -119,6 +114,28 @@ export class MessageService {
       return message || null
     } catch (error) {
       logger.error('Failed to get message by ID:', error)
+      return null
+    }
+  }
+
+  /**
+   * Update a message content
+   */
+  async updateMessage(messageId: string, content: string): Promise<ChatMessageSelect | null> {
+    try {
+      const [updatedMessage] = await db
+        .update(chatMessage)
+        .set({
+          content,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(chatMessage.id, messageId))
+        .returning()
+
+      logger.info('Message updated', { messageId, contentLength: content.length })
+      return updatedMessage || null
+    } catch (error) {
+      logger.error('Failed to update message:', error)
       return null
     }
   }

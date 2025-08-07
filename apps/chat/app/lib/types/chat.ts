@@ -1,5 +1,5 @@
 // Shared chat types for both client and server
-import type { ChatMessageSelect } from '@hominem/chat-service'
+import type { ChatMessageSelect } from '@hominem/data/schema'
 import type { ProcessedFile } from './upload'
 
 // Re-export ProcessedFile for convenience
@@ -59,27 +59,6 @@ export interface ChatMessageReasoning {
 }
 
 /**
- * Complete chat message from database
- */
-export interface ChatMessage {
-  id: string
-  chatId: string
-  userId: string
-  role: MessageRole
-  content: string
-  toolCalls?: ChatMessageToolCall[]
-  reasoning?: string
-  files?: ChatMessageFile[]
-  parentMessageId?: string
-  createdAt: string
-  updatedAt: string
-  // Client-side properties
-  timestamp?: Date
-  isStreaming?: boolean
-  audioUrl?: string
-}
-
-/**
  * Chat with its messages (database format)
  */
 export interface ChatWithMessages extends Chat {
@@ -89,7 +68,7 @@ export interface ChatWithMessages extends Chat {
 /**
  * Database types re-exported for convenience
  */
-export type { ChatMessageSelect } from '@hominem/chat-service'
+export type { ChatMessageSelect } from '@hominem/data/schema'
 
 /**
  * File attachment in chat UI (simplified for display)
