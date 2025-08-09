@@ -11,9 +11,9 @@
     "start": "pnpm node --import tsx src/index.ts | pnpm pino-pretty",
     "build": "pnpm exec node esbuild.config.js",
     "start:prod": "pnpm node dist/index.js",
-    "test": "NODE_ENV=test pnpm vitest --run --coverage --passWithNoTests",
-    "test:coverage": "NODE_ENV=test pnpm vitest --run --coverage",
-    "test:watch": "NODE_ENV=test pnpm vitest",
+    "test": "NODE_ENV=test vitest run --coverage --passWithNoTests",
+    "test:coverage": "NODE_ENV=test vitest run --coverage",
+    "test:watch": "NODE_ENV=test vitest",
     "clean": "rm -rf dist",
     "prebuild": "pnpm clean"
   },
