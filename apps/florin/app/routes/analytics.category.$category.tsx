@@ -4,8 +4,8 @@ import { subMonths } from 'date-fns'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { AccountSelect } from '~/components/account-select'
-import { AnalyticsChartDisplay } from '~/components/analytics/AnalyticsChartDisplay'
-import { MonthlyBreakdown } from '~/components/analytics/MonthlyBreakdown'
+import { AnalyticsChartDisplay } from '~/components/analytics/analytics-chart-display'
+import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown'
 
 export default function CategoryAnalyticsPage() {
   const { category } = useParams<{ category: string }>()
