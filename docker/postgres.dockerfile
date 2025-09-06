@@ -18,6 +18,8 @@ RUN cd /tmp && \
     rm -rf /tmp/pgvector
 
 # Install other PostgreSQL extensions
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg curl lsb-release &&     curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg &&     echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list &&     apt-get update
+
 # postgis	Spatial database extension for geographic objects.
 # pgrouting	Routing and network analysis on PostGIS.
 # postgis_tiger_geocoder	Geocoding extension for address standardization.
@@ -35,6 +37,7 @@ RUN apt-get update && apt-get install -y \
     postgresql-${PG_MAJOR}-pgrouting \
     postgresql-${PG_MAJOR}-postgis-3 \
     postgresql-${PG_MAJOR}-postgis-3-scripts \
+    postgresql-${PG_MAJOR}-cron \
     postgis \
     gdal-bin \
     osm2pgsql \

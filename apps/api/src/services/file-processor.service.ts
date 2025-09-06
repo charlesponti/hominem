@@ -1,8 +1,8 @@
-import mammoth from 'mammoth'
 import { Buffer } from 'node:buffer'
+import mammoth from 'mammoth'
+import OpenAI from 'openai'
 import PDFParser from 'pdf2json'
 import sharp from 'sharp'
-import OpenAI from 'openai'
 
 export interface ProcessedFile {
   id: string
@@ -34,7 +34,7 @@ export class FileProcessorService {
     const baseFile: ProcessedFile = {
       id: fileId,
       originalName,
-      type: this.getFileType(mimetype),
+      type: FileProcessorService.getFileType(mimetype),
       mimetype,
       size: buffer.byteLength,
     }
@@ -42,13 +42,13 @@ export class FileProcessorService {
     try {
       switch (baseFile.type) {
         case 'image':
-          return await this.processImage(buffer, baseFile)
+          return await FileProcessorService.processImage(buffer, baseFile)
         case 'document':
-          return await this.processDocument(buffer, baseFile, mimetype)
+          return await FileProcessorService.processDocument(buffer, baseFile, mimetype)
         case 'audio':
-          return await this.processAudio(buffer, baseFile)
+          return await FileProcessorService.processAudio(buffer, baseFile)
         case 'video':
-          return await this.processVideo(buffer, baseFile)
+          return await FileProcessorService.processVideo(buffer, baseFile)
         default:
           return baseFile
       }
@@ -279,7 +279,8 @@ export class FileProcessorService {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
     if (bytes === 0) return '0 Bytes'
     const i = Math.floor(Math.log(bytes) / Math.log(1024))
-    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i]
+    const size = Math.round((bytes / 1024 ** i) * 100) / 100
+    return `${size} ${sizes[i]}`
   }
 
   /**

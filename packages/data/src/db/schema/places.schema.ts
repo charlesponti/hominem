@@ -34,6 +34,8 @@ export const place = pgTable(
     phoneNumber: text('phoneNumber'),
     rating: doublePrecision('rating'),
     websiteUri: text('websiteUri'),
+    photos: text('photos').array(),
+    priceLevel: integer('priceLevel'),
 
     /**
      * The latitude and longitude of this place.

@@ -34,7 +34,7 @@
     "clean": "rm -rf build tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "drizzle-orm": "^0.42.0",
+    "drizzle-orm": "^0.44.2",
     "drizzle-zod": "^0.7.0",
     "postgres": "^3.4.5",
     "zod": "^3.24.3"

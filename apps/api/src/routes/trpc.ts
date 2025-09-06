@@ -10,7 +10,6 @@ import { locationRouter } from '../trpc/routers/location.js'
 import { messagesRouter } from '../trpc/routers/messages.js'
 import { notesRouter } from '../trpc/routers/notes.js'
 import { performanceRouter } from '../trpc/routers/performance.js'
-import { placesRouter } from '../trpc/routers/places.js'
 import { searchRouter } from '../trpc/routers/search.js'
 import { tweetRouter } from '../trpc/routers/tweet.js'
 import { twitterRouter } from '../trpc/routers/twitter.js'
@@ -29,8 +28,6 @@ export const appRouter = router({
   messages: messagesRouter,
   notes: notesRouter,
   performance: performanceRouter,
-  places: placesRouter,
-
   search: searchRouter,
   tweet: tweetRouter,
   twitter: twitterRouter,

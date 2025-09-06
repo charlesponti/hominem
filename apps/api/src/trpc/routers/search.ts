@@ -65,7 +65,15 @@ async function performWebSearch(query: string, maxResults: number): Promise<Sear
       throw new Error(`Search API error: ${response.status}`)
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as {
+      Abstract: string
+      AbstractURL: string
+      Heading: string
+      RelatedTopics: {
+        Text: string
+        FirstURL: string
+      }[]
+    }
 
     const results: SearchResult[] = []
 

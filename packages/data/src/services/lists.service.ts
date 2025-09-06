@@ -1,15 +1,15 @@
-import { db, takeUniqueOrThrow } from '@hominem/data'
+import { and, count, desc, eq } from 'drizzle-orm'
+import { db, takeUniqueOrThrow } from '../db'
 import {
   item,
+  type ListInviteSelect,
+  type ListSelect,
   list,
   listInvite,
   place,
   userLists,
   users,
-  type ListInviteSelect,
-  type ListSelect,
-} from '@hominem/data/schema'
-import { and, count, desc, eq } from 'drizzle-orm'
+} from '../db/schema'
 
 export interface User {
   id?: string
@@ -101,6 +101,7 @@ export async function getUserLists(
         owner_id: users.id,
         owner_email: users.email,
         owner_name: users.name,
+        itemCount: count(item.id),
       })
       .from(userLists)
       .where(eq(userLists.userId, userId))
@@ -110,6 +111,18 @@ export async function getUserLists(
         and(eq(userLists.listId, item.listId), itemType ? eq(item.type, itemType) : undefined)
       )
       .leftJoin(users, eq(list.userId, users.id))
+      .groupBy(
+        list.id,
+        list.name,
+        list.description,
+        list.userId,
+        list.isPublic,
+        list.createdAt,
+        list.updatedAt,
+        users.id,
+        users.email,
+        users.name
+      )
       .orderBy(desc(list.createdAt))
 
     return results
@@ -133,10 +146,16 @@ export async function getUserLists(
             }
           : null
 
-        return {
+        const listItem: ListWithSpreadOwner = {
           ...(listPart as ListSelect),
           owner: ownerPart,
         }
+
+        if (item.itemCount !== null) {
+          listItem.itemCount = Number(item.itemCount)
+        }
+
+        return listItem
       })
   } catch (error) {
     console.error(`Error fetching shared lists for user ${userId}:`, error)
@@ -387,7 +406,20 @@ export async function createList(name: string, userId: string): Promise<List | n
     // Fetch the newly created list with all necessary details for formatting
     return getListById(rawCreatedList.id, userId)
   } catch (error) {
-    console.error(`Error creating list for user ${userId}:`, error)
+    console.error(
+      JSON.stringify(
+        {
+          message: 'Failed to create list',
+          service: 'lists.service',
+          function: 'createList',
+          userId,
+          input: { name },
+          error: error instanceof Error ? error.message : String(error),
+        },
+        null,
+        2
+      )
+    )
     return null
   }
 }
@@ -585,3 +617,4 @@ export async function acceptListInvite(
     return { error: 'Failed to accept invite.', status: 500 }
   }
 }
+

@@ -1,6 +1,6 @@
+import type { users } from '@hominem/data/schema'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { redis } from '@hominem/utils/redis'
-import type { users } from '@hominem/data/schema'
 import { serve } from '@hono/node-server'
 import { trpcServer } from '@hono/trpc-server'
 import { Queue } from 'bullmq'
@@ -19,7 +19,7 @@ import { componentsRoutes } from './routes/components/index.js'
 import { goalsRoutes } from './routes/goals.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
-import { listsRoutes } from './routes/lists.js'
+
 import { oauthRoutes } from './routes/oauth/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
 import { statusRoutes } from './routes/status.js'
@@ -96,7 +96,7 @@ export function createServer(): Hono<AppEnv> {
   app.route('/components', componentsRoutes)
   app.route('/api/finance/plaid', plaidRoutes)
   app.route('/api/finance', financeRoutes)
-  app.route('/api/lists', listsRoutes)
+
   app.route('/api/possessions', possessionsRoutes)
   app.route('/api/vectors', vectorRoutes)
   app.route('/api/invites', invitesRoutes)

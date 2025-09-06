@@ -35,34 +35,6 @@ export function googlePlaceToPlaceInsert(
   }
 }
 
-// Google Places API v1 does NOT support API key auth via googleapis library.
-// Use direct HTTP requests for all Places API v1 endpoints.
-export async function getPlaceDetails({
-  placeId,
-  fields = [
-    'adrFormatAddress',
-    'displayName',
-    'location',
-    'id',
-    'internationalPhoneNumber',
-    'types',
-    'websiteUri',
-    'photos',
-  ],
-}: {
-  placeId: string
-  fields?: string[]
-}): Promise<PlaceInsert> {
-  const url = `https://places.googleapis.com/v1/places/${placeId}?fields=${fields.join(',')}&key=${env.GOOGLE_API_KEY}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Google Places API error: ${res.status}`)
-  const data = (await res.json()) as places_v1.Schema$GoogleMapsPlacesV1Place
-  if (!data || !data.id) {
-    throw new Error('Place not found')
-  }
-  return googlePlaceToPlaceInsert(data)
-}
-
 export const getPlacePhotos = async ({
   googleMapsId,
   limit,

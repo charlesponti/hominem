@@ -1,5 +1,5 @@
 import type { z } from 'zod'
-import { runwayCalculationSchema } from '../index.js'
+import type { runwayCalculationSchema } from '../index.js'
 
 type RunwayCalculationInput = z.infer<typeof runwayCalculationSchema>
 
