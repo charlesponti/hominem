@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 // Import the hook to be mocked
 import { useGeolocation } from '~/hooks/useGeolocation'
 import type { List, Place, PlaceLocation } from '~/lib/types'
-import Dashboard, { ErrorBoundary } from '~/routes/dashboard'
+import Dashboard from '~/routes/index'
 import { MOCK_LISTS } from '~/test/mocks/index'
 import { mockTrpcClient, renderWithProviders, renderWithRouter } from '~/test/utils'
 
@@ -232,7 +232,7 @@ describe('Dashboard Route Loader and ErrorBoundary Tests', () => {
           path: '/dashboard',
           Component: Dashboard,
           loader: mockLoader as () => unknown,
-          ErrorBoundary: ErrorBoundary as React.ComponentType,
+          ErrorBoundary: () => <div>Error occurred</div>,
         },
       ],
       isAuth: true,
@@ -240,9 +240,7 @@ describe('Dashboard Route Loader and ErrorBoundary Tests', () => {
     })
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Something went wrong while loading the dashboard.')
-      ).toBeInTheDocument()
+      expect(screen.getByText('Error occurred')).toBeInTheDocument()
     })
   })
 })

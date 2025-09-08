@@ -62,7 +62,9 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
     <div data-testid="place-page" className="h-full overflow-y-auto p-6 max-w-4xl mx-auto">
       <div className="space-y-6">
         <div className="flex flex-col">
-          <h1 className="text-2xl font-light font-serif drop-shadow-lg">{place.name}</h1>
+          <h1 className="uppercase tracking-tight font-semibold text-xl sm:text-2xl md:text-3xl lg:text-4xl text-black">
+            {place.name}
+          </h1>
           <div className="mt-2">
             <PlaceTypes types={place.types || []} />
           </div>

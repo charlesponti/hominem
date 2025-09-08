@@ -11,7 +11,7 @@ import {
   users,
 } from '../db/schema'
 
-export interface User {
+export interface ListUser {
   id?: string
   email?: string
   name?: string
@@ -31,7 +31,7 @@ export interface List {
   isOwnList?: boolean
   places: ListPlace[]
   isPublic: boolean
-  users?: User[]
+  users?: ListUser[]
   createdAt: string
   updatedAt: string
 }
@@ -617,4 +617,3 @@ export async function acceptListInvite(
     return { error: 'Failed to accept invite.', status: 500 }
   }
 }
-
