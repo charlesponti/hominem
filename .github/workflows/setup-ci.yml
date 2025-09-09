@@ -6,7 +6,7 @@ on:
       node-version:
         description: 'Node.js version to use'
         required: false
-        default: '18'
+        default: '23.11.0'
         type: string
       pnpm-version:
         description: 'PNPM version to use'

@@ -9,36 +9,22 @@ on:
   
 jobs:
   deploy:
+    name: Deploy Rocco to Railway
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ROCCO }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@v4
       
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.9.0
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      - name: 🏗 Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build web app
-        run: pnpm exec turbo run build --filter=@hominem/rocco
+      - name: Deploy to Railway
+        run: railway up --service ${{ env.SERVICE_ID }} --detach
         env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
-
-      - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: rocco
-          directory: apps/rocco/build
-          wranglerVersion: '3'
