@@ -14,6 +14,16 @@ export default [
     // Explore route with map
     route('explore', './routes/explore.tsx'),
 
+    // About page
+    route('about', './routes/about.tsx'),
+
+    // Trips section
+    route('trips', './routes/trips._index.tsx'),
+    route('trips/:tripId', './routes/trips.$tripId.tsx'),
+
+    // Lists section
+    route('lists', './routes/lists._index.tsx'),
+
     // Account management
     route('account', './routes/account.tsx'),
 

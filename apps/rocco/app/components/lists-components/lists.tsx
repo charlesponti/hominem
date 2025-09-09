@@ -13,7 +13,7 @@ export default function Lists() {
   } = trpc.lists.getAll.useQuery(undefined, { enabled: isAuthenticated })
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Your Lists</h2>
         <Link

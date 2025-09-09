@@ -1,10 +1,10 @@
-import { json, Link, useLoaderData } from 'react-router'
-import { trpc } from '~/lib/trpc/client'
-import type { Route } from '../+types/lists._index'
+import { Link, useLoaderData } from 'react-router'
+import { trpc as trpcServer } from '~/lib/trpc/server'
+import type { Route } from './+types/'
 
 export async function loader({ request: _request }: Route.LoaderArgs) {
-  const lists = await trpc.lists.getAll.query()
-  return json({ lists })
+  const lists = await trpcServer.lists.getAll()
+  return { lists }
 }
 
 export default function ListsPage() {

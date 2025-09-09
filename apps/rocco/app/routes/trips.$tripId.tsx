@@ -1,14 +1,14 @@
-import { json, useLoaderData } from 'react-router'
+import { useLoaderData } from 'react-router'
 import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal'
-import { trpc } from '~/lib/trpc/client'
-import type { Route } from '../+types/trips.$tripId'
+import { trpc as trpcServer } from '~/lib/trpc/server'
+import type { Route } from './+types/'
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const trip = await trpc.trips.getById.query({ id: params.tripId })
+  const trip = await trpcServer.trips.getById({ id: params.tripId as string })
   if (!trip) {
     throw new Response('Not Found', { status: 404 })
   }
-  return json({ trip })
+  return { trip }
 }
 
 export default function TripPage() {

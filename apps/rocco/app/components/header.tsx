@@ -1,4 +1,14 @@
-import { Globe2Icon, LogOut, MailIcon, MenuIcon, Settings, User as UserIcon } from 'lucide-react'
+import {
+  Globe2Icon,
+  Info,
+  List,
+  LogOut,
+  MapPin,
+  MenuIcon,
+  Settings,
+  User as UserIcon,
+  UserPlus,
+} from 'lucide-react'
 import { useCallback, useEffect } from 'react'
 import { Link, useNavigate, useRevalidator, useRouteLoaderData } from 'react-router'
 import { Button } from '~/components/ui/button'
@@ -70,25 +80,25 @@ function Header() {
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link to="/about" className="flex items-center space-x-2">
-            <MailIcon className="size-4" />
+            <Info className="size-4" />
             <span>About</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link to="/trips" className="flex items-center space-x-2">
-            <MailIcon className="size-4" />
+            <MapPin className="size-4" />
             <span>Trips</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link to="/lists" className="flex items-center space-x-2">
-            <MailIcon className="size-4" />
+            <List className="size-4" />
             <span>Lists</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link to={INVITES} className="flex items-center space-x-2">
-            <MailIcon className="size-4" />
+            <UserPlus className="size-4" />
             <span>Invites</span>
           </Link>
         </DropdownMenuItem>
