@@ -52,7 +52,7 @@
     "google-auth-library": "^9.15.1",
     "googleapis": "^144.0.0",
     "gpt-tokenizer": "^2.9.0",
-    "hono": "^4.6.15",
+    "hono": "^4.9.6",
     "ioredis": "^5.5.0",
     "isbot": "^5.1.28",
     "langchain": "^0.3.15",
