@@ -36,7 +36,7 @@ export default function CreateListPage() {
       provider: 'google',
       options: {
         // Return the user to this page to preserve context and restore draft
-        redirectTo: `${window.location.origin}/lists/create`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/lists/create`,
       },
     })
   }, [supabase.auth])

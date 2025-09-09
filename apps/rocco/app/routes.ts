@@ -3,6 +3,9 @@ import { index, layout, type RouteConfig, route } from '@react-router/dev/routes
 export default [
   route('api/trpc/*', './routes/api/trpc.ts'),
 
+  // Auth callback route (outside layout to avoid auth checks)
+  route('auth/callback', './routes/auth.callback.tsx'),
+
   // Main layout with global UI elements
   layout('routes/layout.tsx', [
     // Public routes
