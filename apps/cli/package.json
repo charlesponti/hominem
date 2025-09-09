@@ -47,7 +47,8 @@
     "unified": "^11.0.5",
     "zod": "^3.22.4",
     "drizzle-orm": "^0.44.2",
-    "@browserbasehq/stagehand": "^2.4.0"
+    "@browserbasehq/stagehand": "^2.4.0",
+    "@notionhq/client": "^2.2.15"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",

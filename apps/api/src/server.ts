@@ -38,7 +38,7 @@ export interface AppEnv {
     }
     userId?: string
     user?: typeof users.$inferSelect
-    supabaseId?: string
+    supabaseId: string
     cache?: typeof cache
   }
 }

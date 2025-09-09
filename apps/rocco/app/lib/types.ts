@@ -34,6 +34,19 @@ export type PlaceLocation = {
   longitude: number
 }
 
+// Type for Google Places API response
+export type GooglePlacesApiResponse = {
+  id: string
+  displayName?: {
+    text: string
+  }
+  formattedAddress?: string
+  location?: {
+    latitude: number
+    longitude: number
+  }
+}
+
 // Type for temporary place data from Google Places API
 export type GooglePlaceData = {
   id: string

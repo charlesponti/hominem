@@ -1,6 +1,6 @@
+import { randomUUID } from 'node:crypto'
 import type { FileObject } from '@supabase/storage-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { randomUUID } from 'node:crypto'
 import { supabaseAdmin } from './client'
 
 export interface StoredFile {
@@ -124,7 +124,7 @@ export class SupabaseStorageService {
     const filename = `${userId}/${id}${extension}` // Organize files by user ID
 
     // Upload to Supabase Storage
-    const { data, error } = await this.client.storage
+    const { data: _data, error } = await this.client.storage
       .from(this.bucketName)
       .upload(filename, buffer, {
         contentType: mimetype,

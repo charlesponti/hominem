@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { item, list, place } from '@hominem/data/db/schema/index'
 import { and, desc, eq, inArray, or } from 'drizzle-orm'
 import { z } from 'zod'
+import type { ExtendedList, GooglePlacesApiResponse, Place } from '~/lib/types'
 import { protectedProcedure, publicProcedure, router } from '../context'
 
 export const placesRouter = router({
@@ -377,7 +378,7 @@ export const placesRouter = router({
         const data = await response.json()
         const places = data.places || []
 
-        const searchResults = places.map((p: any) => ({
+        const searchResults = places.map((p: GooglePlacesApiResponse) => ({
           googleMapsId: p.id,
           name: p.displayName?.text || 'Unknown Place',
           address: p.formattedAddress || '',
@@ -417,9 +418,9 @@ export const placesRouter = router({
     .query(async ({ ctx, input }) => {
       const { id: googleMapsIdOrDbId } = input
 
-      let dbPlace: any = null
-      let associatedLists: any[] = []
-      let photos: any[] = []
+      let dbPlace: Place | null = null
+      let associatedLists: ExtendedList[] = []
+      let photos: string[] = []
 
       try {
         dbPlace = await ctx.db.query.place.findFirst({
@@ -553,8 +554,8 @@ export const placesRouter = router({
 
       const { listIds, place: placeInput } = input
 
-      let finalPlace: any
-      let affectedLists: any[] = []
+      let finalPlace: Place
+      let affectedLists: ExtendedList[] = []
 
       try {
         const existingPlace = await ctx.db.query.place.findFirst({

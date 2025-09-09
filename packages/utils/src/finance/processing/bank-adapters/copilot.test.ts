@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  type CopilotTransaction,
   convertCopilotTransaction,
   translateTransactionType,
-  type CopilotTransaction,
 } from './copilot'
 
 describe('translateTransactionType', () => {
@@ -113,9 +113,9 @@ describe('convertCopilotTransaction', () => {
 
   it('should handle missing optional fields', () => {
     const {
-      parent_category,
+      parent_category: _parent_category,
       'parent category': _unusedParentCategory,
-      account_mask,
+      account_mask: _account_mask,
       'account mask': _unusedAccountMask,
       ...data
     } = baseCopilotData

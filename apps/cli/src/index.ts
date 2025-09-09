@@ -9,6 +9,7 @@ import convertCommand from './commands/convert'
 import { command as financeCommand } from './commands/finance'
 import { command as initCommand } from './commands/init'
 import { command as notesNotesCommand } from './commands/notes'
+import { command as notionCommand } from './commands/notion'
 import { command as notesCommand } from './commands/possessions.js'
 import { command as toolsCommand } from './commands/tools'
 
@@ -25,6 +26,7 @@ async function init() {
   program.addCommand(toolsCommand)
   program.addCommand(convertCommand)
   program.addCommand(financeCommand)
+  program.addCommand(notionCommand)
 
   program.parse(process.argv)
 }

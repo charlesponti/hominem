@@ -13,7 +13,7 @@ export interface ProcessedFile {
   textContent?: string
   content?: string
   thumbnail?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // Initialize OpenAI client
@@ -217,7 +217,7 @@ export class FileProcessorService {
    * TODO: Process audio files
    */
   private static async processAudio(
-    buffer: ArrayBuffer,
+    _buffer: ArrayBuffer,
     file: ProcessedFile
   ): Promise<ProcessedFile> {
     // For audio files, we'll need to transcribe them using Whisper
@@ -234,7 +234,7 @@ export class FileProcessorService {
    * TODO: Process video files
    */
   private static async processVideo(
-    buffer: ArrayBuffer,
+    _buffer: ArrayBuffer,
     file: ProcessedFile
   ): Promise<ProcessedFile> {
     // For video files, we could extract audio and transcribe, or extract frames

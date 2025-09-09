@@ -34,10 +34,10 @@ export default function ExplorePage() {
   const { data: currentList } = useListData(listId)
 
   // Map center management
-  const center = useMapCenter(place || null, currentList, currentLocation)
+  const center = useMapCenter(place || null, currentList || null, currentLocation)
 
   // Markers
-  const markers = useMapMarkers(place || null, currentList, center)
+  const markers = useMapMarkers(place || null, currentList || null, center)
 
   // Event handlers
   const handleMapClick = useCallback(
@@ -100,7 +100,7 @@ export default function ExplorePage() {
             <div className="p-4">
               <h2 className="text-xl font-semibold mb-4">{currentList.name}</h2>
               <div className="space-y-2">
-                {currentList.places?.map((place: { id: string; name: string; address: string }) => (
+                {currentList.places?.map((place) => (
                   <button
                     key={place.id}
                     type="button"
@@ -108,7 +108,7 @@ export default function ExplorePage() {
                     onClick={() => navigate(`/places/${place.id}`)}
                   >
                     <h3 className="font-medium">{place.name}</h3>
-                    <p className="text-sm text-gray-600">{place.address}</p>
+                    <p className="text-sm text-gray-600">{place.description || 'No description'}</p>
                   </button>
                 ))}
               </div>

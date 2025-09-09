@@ -73,7 +73,7 @@ export class AuthUtils {
     headers: Record<string, string>,
     requireAuth = true
   ): { userId: string | null; isAuthenticated: boolean } {
-    const userId = this.extractUserIdFromHeaders(headers)
+    const userId = AuthUtils.extractUserIdFromHeaders(headers)
     const isAuthenticated = !!userId
 
     if (requireAuth && !isAuthenticated) {

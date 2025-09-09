@@ -1,13 +1,13 @@
-import { and, desc, eq, or, sql, type SQLWrapper } from 'drizzle-orm'
-import { z } from 'zod'
 import { db } from '@hominem/data/db'
 import {
-  content,
-  ContentStatusSchema,
-  ContentTypeSchema,
   type Content,
   type ContentInsert,
+  ContentStatusSchema,
+  ContentTypeSchema,
+  content,
 } from '@hominem/data/schema'
+import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm'
+import { z } from 'zod'
 
 // Import shared error classes from notes service
 import { ForbiddenError, NotFoundError } from './notes.service'
@@ -112,7 +112,7 @@ export class ContentService {
       try {
         const sinceDate = new Date(filters.since).toISOString()
         conditions.push(sql`${content.updatedAt} > ${sinceDate}`)
-      } catch (e) {
+      } catch (_e) {
         console.warn(`Invalid 'since' date format: ${filters.since}`)
       }
     }
@@ -122,7 +122,7 @@ export class ContentService {
       .from(content)
       .where(and(...conditions.filter((c) => !!c)))
 
-    // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+    // biome-ignore lint/suspicious/noImplicitAnyLet: Query type is complex and inferred correctly
     let orderedQuery
     if (ftsQuery) {
       orderedQuery = baseQuery.orderBy(

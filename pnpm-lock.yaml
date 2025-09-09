@@ -551,6 +551,9 @@ importers:
       '@hominem/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@notionhq/client':
+        specifier: ^2.2.15
+        version: 2.3.0
       '@playwright/test':
         specifier: ^1.51.1
         version: 1.53.2
@@ -653,7 +656,7 @@ importers:
         version: 5.1.1(react-hook-form@7.59.0(react@19.1.0))
       '@langchain/community':
         specifier: ^0.3.29
-        version: 0.3.48(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.842.0)(@aws-sdk/credential-provider-node@3.840.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@2.4.1(deepmerge@4.3.1)(dotenv@16.6.1)(react@19.1.0)(zod@3.25.72))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(openai@4.104.0(ws@8.18.3)(zod@3.25.72)))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.54.0)(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.3)(zod@3.25.72))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.3)(zod@3.25.72))(pdf-parse@1.1.1)(pg@8.16.3)(playwright@1.53.2)(redis@5.8.0)(weaviate-client@3.6.2)(ws@8.18.3)
+        version: 0.3.48(0a14e30da817b26a57f51bc390bae3b6)
       '@langchain/core':
         specifier: 0.3.37
         version: 0.3.37(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(openai@4.104.0(ws@8.18.3)(zod@3.25.72))
@@ -1015,7 +1018,7 @@ importers:
         version: 5.1.1(react-hook-form@7.59.0(react@19.1.0))
       '@langchain/community':
         specifier: ^0.3.29
-        version: 0.3.48(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.842.0)(@aws-sdk/credential-provider-node@3.840.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@2.4.1(deepmerge@4.3.1)(dotenv@16.6.1)(react@19.1.0)(zod@3.25.72))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(openai@4.104.0(ws@8.18.3)(zod@3.25.72)))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.54.0)(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.3)(zod@3.25.72))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.3)(zod@3.25.72))(pdf-parse@1.1.1)(pg@8.16.3)(playwright@1.53.2)(redis@5.8.0)(weaviate-client@3.6.2)(ws@8.18.3)
+        version: 0.3.48(0a14e30da817b26a57f51bc390bae3b6)
       '@langchain/core':
         specifier: 0.3.37
         version: 0.3.37(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(openai@4.104.0(ws@8.18.3)(zod@3.25.72))
@@ -3712,6 +3715,10 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@notionhq/client@2.3.0':
+    resolution: {integrity: sha512-l7WqTCpQqC+HibkB9chghONQTYcxNQT0/rOJemBfmuKQRTu2vuV8B3yA395iKaUdDo7HI+0KvQaz9687Xskzkw==}
+    engines: {node: '>=12'}
 
   '@npmcli/git@4.1.0':
     resolution: {integrity: sha512-9hwoB3gStVfa0N31ymBmrX+GuDGdVA/QWShZVqE0HK2Af+7QGGrCTbZia/SW0ImUTjTne7SP91qxDmtXvDHRPQ==}
@@ -9839,6 +9846,7 @@ packages:
     resolution: {integrity: sha512-Nkwo9qeCvqVH0ZgYRUfPyj6o4o7StvNIxMFECeiz4y0uMOVyqc5Y9hjsdFVxdYCeiUjjXLQXA8KIz0iJL3HM0w==}
     engines: {node: '>=20.18.0'}
     hasBin: true
+    bundledDependencies: []
 
   pdf2pic@3.2.0:
     resolution: {integrity: sha512-p0bp+Mp4iJy2hqSCLvJ521rDaZkzBvDFT9O9Y0BUID3I04/eDaebAFM5t8hoWeo2BCf42cDijLCGJWTOtkJVpA==}
@@ -13688,7 +13696,7 @@ snapshots:
 
   '@kurkle/color@0.3.4': {}
 
-  '@langchain/community@0.3.48(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-s3@3.842.0)(@aws-sdk/credential-provider-node@3.840.0)(@browserbasehq/sdk@2.6.0)(@browserbasehq/stagehand@2.4.1(deepmerge@4.3.1)(dotenv@16.6.1)(react@19.1.0)(zod@3.25.72))(@ibm-cloud/watsonx-ai@1.6.8)(@langchain/core@0.3.37(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(openai@4.104.0(ws@8.18.3)(zod@3.25.72)))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@smithy/util-utf8@2.3.0)(@supabase/supabase-js@2.54.0)(axios@1.8.4)(cheerio@1.1.0)(chromadb@2.4.6(ws@8.18.3)(zod@3.25.72))(cohere-ai@7.17.1)(fast-xml-parser@4.4.1)(google-auth-library@9.15.1)(googleapis@144.0.0)(handlebars@4.7.8)(html-to-text@9.0.5)(ibm-cloud-sdk-core@5.4.0)(ignore@5.3.2)(ioredis@5.6.1)(jsdom@26.1.0)(jsonwebtoken@9.0.2)(lodash@4.17.21)(mammoth@1.9.1)(openai@4.104.0(ws@8.18.3)(zod@3.25.72))(pdf-parse@1.1.1)(pg@8.16.3)(playwright@1.53.2)(redis@5.8.0)(weaviate-client@3.6.2)(ws@8.18.3)':
+  '@langchain/community@0.3.48(0a14e30da817b26a57f51bc390bae3b6)':
     dependencies:
       '@browserbasehq/stagehand': 2.4.1(deepmerge@4.3.1)(dotenv@16.6.1)(react@19.1.0)(zod@3.25.72)
       '@ibm-cloud/watsonx-ai': 1.6.8
@@ -13710,6 +13718,7 @@ snapshots:
       '@aws-sdk/client-s3': 3.842.0
       '@aws-sdk/credential-provider-node': 3.840.0
       '@browserbasehq/sdk': 2.6.0
+      '@notionhq/client': 2.3.0
       '@smithy/util-utf8': 2.3.0
       '@supabase/supabase-js': 2.54.0
       cheerio: 1.1.0
@@ -14014,6 +14023,13 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
+
+  '@notionhq/client@2.3.0':
+    dependencies:
+      '@types/node-fetch': 2.6.12
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
 
   '@npmcli/git@4.1.0':
     dependencies:
@@ -19293,7 +19309,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.8.4(debug@4.4.1))
+      retry-axios: 2.6.0(axios@1.8.4)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -22047,7 +22063,7 @@ snapshots:
       onetime: 7.0.0
       signal-exit: 4.1.0
 
-  retry-axios@2.6.0(axios@1.8.4(debug@4.4.1)):
+  retry-axios@2.6.0(axios@1.8.4):
     dependencies:
       axios: 1.8.4(debug@4.4.1)
 

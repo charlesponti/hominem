@@ -73,7 +73,7 @@ export class GenerationStatistics {
   /**
    * Get statistics as a structured object
    */
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // biome-ignore lint/suspicious/noExplicitAny: Performance stats can have various types
   getStats(): Record<string, any> {
     return {
       model_name: this.modelName,

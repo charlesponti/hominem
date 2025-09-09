@@ -29,7 +29,7 @@ export default function AboutPage() {
         animate="visible"
         variants={fadeIn}
       >
-        <div className="absolute inset-0 bg-black opacity-10"></div>
+        <div className="absolute inset-0 bg-black opacity-10" />
         <div className="relative max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 tracking-tight">
             We're building the future of personal discovery.
@@ -77,10 +77,7 @@ export default function AboutPage() {
         variants={staggerContainer}
       >
         <div className="max-w-5xl mx-auto">
-          <motion.h2
-            variants={fadeIn}
-            className="text-3xl md:text-4xl font-bold text-center mb-12"
-          >
+          <motion.h2 variants={fadeIn} className="text-3xl md:text-4xl font-bold text-center mb-12">
             Our Core Values
           </motion.h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">

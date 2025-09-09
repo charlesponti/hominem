@@ -29,7 +29,7 @@ export async function indexProcessedFile(
       ...(processedFile.metadata || {}),
     }
 
-    const options = {
+    const _options = {
       title: processedFile.originalName,
       source: fileUrl || processedFile.id,
       sourceType: 'file',
@@ -37,7 +37,7 @@ export async function indexProcessedFile(
 
     // For large documents, use chunking
     if (content.length > 1000) {
-      const result = await VectorService.ingestMarkdown(content, userId, metadata)
+      const _result = await VectorService.ingestMarkdown(content, userId, metadata)
       // Note: ingestMarkdown returns chunksProcessed, but we need to get the actual IDs
       // This is a limitation of the current API - we'd need to modify the vector service
       // to return the actual document IDs

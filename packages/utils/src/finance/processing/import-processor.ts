@@ -1,13 +1,13 @@
+import type { FinanceTransactionInsert } from '@hominem/data/schema'
 import { parse } from 'csv-parse'
 import { Effect, Stream } from 'effect'
-import type { FinanceTransactionInsert } from '@hominem/data/schema'
 import { logger } from '../../logger'
 import { getAndCreateAccountsInBulk } from '../core/account.service'
 import {
-  convertCapitalOneTransaction,
-  convertCopilotTransaction,
   type CapitalOneTransaction,
   type CopilotTransaction,
+  convertCapitalOneTransaction,
+  convertCopilotTransaction,
 } from './bank-adapters'
 import { processTransactionsInBulk } from './transaction-processor'
 
@@ -108,7 +108,7 @@ export function processTransactionsFromCSVBuffer({
   userId: string
 }) {
   return Effect.gen(function* ($) {
-    const { Readable } = yield* $(Effect.tryPromise(() => import('stream')))
+    const { Readable } = yield* $(Effect.tryPromise(() => import('node:stream')))
     const csvStream = Readable.from(csvBuffer)
     const parsedTransactions = yield* $(
       Stream.runCollect(parseTransactionStream(csvStream, userId))
@@ -121,7 +121,7 @@ export function processTransactionsFromCSVBuffer({
     )
 
     const transactionsToProcess: FinanceTransactionInsert[] = parsedTransactions
-      .flatMap((tx) => tx)
+      .flat()
       .map(([accountName, transactionData]) => {
         const account = accountsMap.get(accountName)
         return {

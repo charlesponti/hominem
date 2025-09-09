@@ -5,7 +5,7 @@ interface PerformanceMetric {
   name: string
   duration: number
   timestamp: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   tags?: string[]
 }
 
@@ -27,7 +27,7 @@ interface ErrorMetric {
   endpoint?: string
   timestamp: number
   userId?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 interface SystemMetrics {
@@ -65,7 +65,7 @@ export class PerformanceMonitorService {
   static recordMetric(
     name: string,
     duration: number,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
     tags?: string[]
   ) {
     const id = `${name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -87,7 +87,7 @@ export class PerformanceMonitorService {
   static async timeFunction<T>(
     name: string,
     fn: () => Promise<T>,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
     tags?: string[]
   ): Promise<T> {
     const startTime = performance.now()
@@ -107,7 +107,7 @@ export class PerformanceMonitorService {
   /**
    * Create a timer for manual timing
    */
-  static createTimer(name: string, metadata?: Record<string, any>, tags?: string[]) {
+  static createTimer(name: string, metadata?: Record<string, unknown>, tags?: string[]) {
     const startTime = performance.now()
 
     return {
@@ -146,7 +146,7 @@ export class PerformanceMonitorService {
     error: Error,
     endpoint?: string,
     userId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) {
     const id = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const errorMetric: ErrorMetric = {
@@ -350,7 +350,7 @@ export class PerformanceMonitorService {
       }
     }
 
-    console.log('Performance monitor cleanup completed')
+    // Performance monitor cleanup completed
   }
 }
 
@@ -364,7 +364,7 @@ export function withPerformanceMonitoring(
 ) {
   return async (request: Request): Promise<Response> => {
     const startTime = performance.now()
-    const timer = PerformanceMonitorService.createTimer(operation, {
+    const _timer = PerformanceMonitorService.createTimer(operation, {
       method: request.method,
       url: request.url,
     })

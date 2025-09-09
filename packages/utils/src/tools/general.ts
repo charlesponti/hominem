@@ -1,12 +1,24 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 
+// Generic tool interface
+interface Tool {
+  description?: string
+  parameters?: {
+    type: string
+    properties?: Record<string, unknown>
+    required?: string[]
+    omit?: (params: Record<string, unknown>) => Record<string, unknown>
+  }
+  execute: (args: Record<string, unknown>) => Promise<unknown>
+}
+
 /**
  * Binds userId to tools that require it, removing userId from the parameters schema if present.
  * Shallow clones the tool and only overrides the execute method for performance and memory safety.
  */
-export function bindUserIdToTools(tools: Record<string, any>, userId: string) {
-  const boundTools: Record<string, any> = {}
+export function bindUserIdToTools(tools: Record<string, Tool>, userId: string) {
+  const boundTools: Record<string, Tool> = {}
 
   for (const [key, originalTool] of Object.entries(tools)) {
     // Skip tools that don't have the expected structure
@@ -36,7 +48,7 @@ export function bindUserIdToTools(tools: Record<string, any>, userId: string) {
       boundTools[key] = {
         ...rest,
         parameters: parameters?.omit ? parameters.omit({ userId: true }) : parameters,
-        execute: async (args: any) => originalTool.execute({ ...args, userId }),
+        execute: async (args: Record<string, unknown>) => originalTool.execute({ ...args, userId }),
       }
     } else {
       boundTools[key] = originalTool

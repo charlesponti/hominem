@@ -1,13 +1,13 @@
-import { and, desc, eq, or, sql, type SQLWrapper } from 'drizzle-orm'
-import { z } from 'zod'
 import { db } from '@hominem/data/db'
 import {
-  NoteContentTypeSchema,
-  notes,
   type Note,
+  NoteContentTypeSchema,
   type NoteInsert,
+  notes,
   TaskMetadataSchema,
 } from '@hominem/data/schema'
+import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm'
+import { z } from 'zod'
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -120,7 +120,7 @@ export class NotesService {
       try {
         const sinceDate = new Date(filters.since).toISOString()
         conditions.push(sql`${notes.updatedAt} > ${sinceDate}`)
-      } catch (e) {
+      } catch (_e) {
         console.warn(`Invalid 'since' date format: ${filters.since}`)
       }
     }
@@ -130,7 +130,7 @@ export class NotesService {
       .from(notes)
       .where(and(...conditions.filter((c) => !!c)))
 
-    // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+    // biome-ignore lint/suspicious/noImplicitAnyLet: Query type is complex and inferred correctly
     let orderedQuery
     if (ftsQuery) {
       orderedQuery = baseQuery.orderBy(

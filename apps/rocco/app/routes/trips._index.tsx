@@ -5,7 +5,7 @@ import { Input } from '~/components/ui/input'
 import { trpc } from '~/lib/trpc/client'
 import type { Route } from '../+types/trips._index'
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request: _request }: Route.LoaderArgs) {
   const trips = await trpc.trips.getAll.query()
   return json({ trips })
 }
@@ -17,7 +17,7 @@ export async function action({ request }: Route.ActionArgs) {
   try {
     await trpc.trips.create.mutate({ name })
     return { success: true }
-  } catch (error) {
+  } catch (_error) {
     return { success: false, error: 'Failed to create trip' }
   }
 }
@@ -40,14 +40,16 @@ export default function TripsPage() {
             {isSubmitting ? 'Creating...' : 'Create Trip'}
           </Button>
         </div>
-        {actionData?.success === false && (
-          <p className="text-red-500 mt-2">{actionData.error}</p>
-        )}
+        {actionData?.success === false && <p className="text-red-500 mt-2">{actionData.error}</p>}
       </Form>
 
       <div className="space-y-4">
         {trips.map((trip) => (
-          <Link to={`/trips/${trip.id}`} key={trip.id} className="p-4 border rounded-lg block hover:bg-gray-50">
+          <Link
+            to={`/trips/${trip.id}`}
+            key={trip.id}
+            className="p-4 border rounded-lg block hover:bg-gray-50"
+          >
             <h2 className="text-xl font-semibold">{trip.name}</h2>
             {/* TODO: Display start and end dates */}
           </Link>

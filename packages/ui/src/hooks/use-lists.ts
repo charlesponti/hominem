@@ -36,7 +36,7 @@ function useSupabaseUser() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUserId(session?.user?.id ?? null)
       setIsLoading(false)
     })
@@ -68,7 +68,6 @@ type NewList = Omit<ListInsert, 'userId' | 'id'>
  * Hook for creating a new list
  */
 export function useCreateList() {
-  const { userId } = useSupabaseUser()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
   const [data, setData] = useState<NewList>({

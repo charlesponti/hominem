@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { db } from '@hominem/data/db'
 import {
   financeAccounts,
@@ -7,7 +8,6 @@ import {
   users,
 } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
-import crypto from 'node:crypto'
 
 export async function seedFinanceTestData({
   userId,
@@ -24,9 +24,8 @@ export async function seedFinanceTestData({
   // First, try to clean up any existing data to avoid conflicts
   try {
     await cleanupFinanceTestData({ userId, accountId, institutionId })
-  } catch (error) {
+  } catch (_error) {
     // Ignore cleanup errors - data might not exist
-    console.log('Cleanup skipped (data may not exist):', error)
   }
 
   // Create test user - ensure this succeeds before proceeding
@@ -39,6 +38,7 @@ export async function seedFinanceTestData({
         name: 'Test User',
         photoUrl: null,
         isAdmin: false,
+        supabaseId: `supabase-${userId}`, // Required for authentication
       })
       .onConflictDoNothing()
 
@@ -287,7 +287,7 @@ export async function seedFinanceTestData({
 
 export async function cleanupFinanceTestData({
   userId,
-  accountId,
+  accountId: _accountId,
   institutionId,
 }: {
   userId: string
@@ -306,37 +306,35 @@ export async function cleanupFinanceTestData({
   try {
     // 1. Delete transactions first (depends on finance_accounts)
     await db.delete(transactions).where(eq(transactions.userId, userId))
-  } catch (error) {
-    console.log('No transactions to delete for user:', userId)
+  } catch (_error) {
+    // No transactions to delete
   }
 
   try {
     // 2. Delete finance accounts (depends on users, plaid_items, and institutions)
     await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId))
-  } catch (error) {
-    console.log('No finance accounts to delete for user:', userId)
+  } catch (_error) {
+    // No finance accounts to delete
   }
 
   try {
     // 3. Delete plaid items (depends on users and institutions)
     await db.delete(plaidItems).where(eq(plaidItems.userId, userId))
-  } catch (error) {
-    console.log('No plaid items to delete for user:', userId)
+  } catch (_error) {
+    // No plaid items to delete
   }
 
   try {
     // 4. Delete financial institutions (parent table)
     await db.delete(financialInstitutions).where(eq(financialInstitutions.id, institutionId))
-  } catch (error) {
-    console.log('No financial institution to delete:', institutionId)
+  } catch (_error) {
+    // No financial institution to delete
   }
 
   try {
     // 5. Delete users (parent table) - must be last since other tables reference it
     await db.delete(users).where(eq(users.id, userId))
-  } catch (error) {
-    console.log('No user to delete:', userId)
+  } catch (_error) {
+    // No user to delete
   }
-
-  console.log('Test data cleaned up successfully for user', userId)
 }

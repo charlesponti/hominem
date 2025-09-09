@@ -14,7 +14,7 @@ export interface Context {
   }
   user?: typeof users.$inferSelect
   userId?: string
-  supabaseId?: string
+  supabaseId: string
 }
 
 const t = initTRPC.context<Context>().create()
@@ -28,6 +28,9 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
       try {
         const [user] = await db.select().from(users).where(eq(users.id, testUserId))
         if (user) {
+          if (!user.supabaseId) {
+            throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User missing supabaseId' })
+          }
           return next({
             ctx: {
               ...ctx,
@@ -57,6 +60,10 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
 
   if (!hominemUser) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid token or user not found' })
+  }
+
+  if (!hominemUser.supabaseId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User missing supabaseId' })
   }
 
   return next({

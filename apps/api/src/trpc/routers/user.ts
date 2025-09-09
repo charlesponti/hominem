@@ -1,9 +1,9 @@
-import { z } from 'zod'
-import { protectedProcedure, router } from '../index.js'
-import { users, type User, type UserInsert } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
+import { type User, type UserInsert, users } from '@hominem/data/schema'
+import { eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { protectedProcedure, router } from '../index.js'
 
 export interface CreateUserParams {
   email: string
@@ -122,7 +122,7 @@ export const userRouter = router({
   // Get current user profile
   getProfile: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const user = await UserDatabaseService.findBySupabaseId(ctx.supabaseId!)
+      const user = await UserDatabaseService.findBySupabaseId(ctx.supabaseId)
       if (!user) {
         throw new Error('User not found')
       }
@@ -151,7 +151,7 @@ export const userRouter = router({
             image: input.image || null,
             photoUrl: input.image || null,
           })
-          .where(eq(users.supabaseId, ctx.supabaseId!))
+          .where(eq(users.supabaseId, ctx.supabaseId))
           .returning()
 
         if (!updatedUser) {
@@ -178,7 +178,7 @@ export const userRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         const supabaseUser = {
-          id: ctx.supabaseId!,
+          id: ctx.supabaseId,
           email: input.email,
           user_metadata: {
             name: input.name,

@@ -5,7 +5,7 @@ declare module 'hono' {
   interface ContextVariableMap {
     user?: User
     userId?: string | null
-    supabaseId?: string | null
+    supabaseId: string
     queues: {
       plaidSync: Queue
       importTransactions: Queue

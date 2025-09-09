@@ -19,7 +19,7 @@ export const users = pgTable(
     id: uuid('id').primaryKey().notNull(),
     name: text('name'),
     image: text('image'),
-    supabaseId: text('supabase_id').unique(),
+    supabaseId: text('supabase_id').unique().notNull(),
     isAdmin: boolean('isAdmin').default(false).notNull(),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),

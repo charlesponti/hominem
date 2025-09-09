@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
 import { users } from '@hominem/data/schema'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
@@ -6,15 +7,11 @@ import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie } from 'hono/cookie'
-import { randomUUID } from 'node:crypto'
 import { env as appEnv } from '../lib/env.js'
 
 declare module 'hono' {
   interface ContextVariableMap {
     supabase: SupabaseClient
-    user?: typeof users.$inferSelect
-    userId?: string | null
-    supabaseId?: string | null
   }
 }
 
@@ -99,6 +96,9 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
           const [user] = await db.select().from(users).where(eq(users.id, testUserId))
           if (user) {
             c.set('user', user)
+            if (user.supabaseId) {
+              c.set('supabaseId', user.supabaseId)
+            }
           }
         } catch (error) {
           console.error('Error getting user in test mode:', error)

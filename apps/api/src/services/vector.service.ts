@@ -1,10 +1,10 @@
+import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
+import { type NewVectorDocument, vectorDocuments } from '@hominem/data/schema'
 import { logger } from '@hominem/utils/logger'
-import { vectorDocuments, type NewVectorDocument } from '@hominem/data/schema'
 import csv from 'csv-parser'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-import { randomUUID } from 'node:crypto'
 import { openaiClient } from '../lib/openai.js'
 
 // OpenAI embeddings function using the existing client
@@ -63,7 +63,7 @@ export namespace VectorService {
   async function parseCSVBuffer(buffer: Buffer): Promise<Record<string, unknown>[]> {
     return new Promise((resolve, reject) => {
       const records: Record<string, unknown>[] = []
-      const stream = require('stream')
+      const stream = require('node:stream')
       const readable = new stream.Readable()
       readable.push(buffer)
       readable.push(null)

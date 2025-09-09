@@ -1,11 +1,11 @@
-import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm'
 import { db } from '@hominem/data/db'
 import {
-  financeAccounts,
   type FinanceTransaction,
   type FinanceTransactionInsert,
+  financeAccounts,
   transactions,
 } from '@hominem/data/schema'
+import { and, asc, desc, eq, gte, like, lte, type SQL, sql } from 'drizzle-orm'
 import { logger } from '../logger'
 import type { QueryOptions } from './finance.types'
 
@@ -332,7 +332,7 @@ export async function createTransaction(
       throw new Error('Failed to insert transaction(s)')
     }
 
-    return Array.isArray(txOrTxs) ? result : result[0]!
+    return Array.isArray(txOrTxs) ? result : result[0]
   } catch (error) {
     logger.error(`Error inserting transaction(s): ${JSON.stringify(txOrTxs)}`, error)
     throw new Error(
