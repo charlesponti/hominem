@@ -12,22 +12,6 @@ export default function Lists() {
     error,
   } = trpc.lists.getAll.useQuery(undefined, { enabled: isAuthenticated })
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <div className="loading loading-spinner loading-lg" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-600">Error loading lists: {error.message}</p>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -41,7 +25,15 @@ export default function Lists() {
         </Link>
       </div>
 
-      {lists.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center h-32">
+          <div className="loading loading-spinner loading-lg" />
+        </div>
+      ) : error ? (
+        <div className="text-center py-8">
+          <p className="text-red-600">Error loading lists: {error.message}</p>
+        </div>
+      ) : lists.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
           <h3 className="text-lg font-semibold text-gray-900">No lists yet</h3>
           <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
