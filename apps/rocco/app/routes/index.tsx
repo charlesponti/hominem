@@ -1,4 +1,4 @@
-import Lists from '~/components/lists-components/lists'
+import Lists from '~/components/lists/lists'
 
 export default function Index() {
   return (

@@ -5,7 +5,7 @@ import type { ClientLoaderFunctionArgs } from 'react-router'
 import { Link, redirect, useParams, useRouteLoaderData } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
-import ListMenu from '~/components/lists-components/list-menu'
+import ListMenu from '~/components/lists/list-menu'
 import Loading from '~/components/loading'
 import PlaceItem from '~/components/places/place-item'
 

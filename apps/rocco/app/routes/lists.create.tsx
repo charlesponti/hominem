@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useNavigate, useRouteLoaderData } from 'react-router'
-import ListForm from '~/components/lists-components/list-form'
+import ListForm from '~/components/lists/list-form'
 import Modal from '~/components/modal'
 import { Button } from '~/components/ui/button'
 import { createClient } from '~/lib/supabase/client'
