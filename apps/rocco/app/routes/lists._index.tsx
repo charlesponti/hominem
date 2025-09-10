@@ -1,8 +1,9 @@
 import { Link, useLoaderData } from 'react-router'
-import { trpc as trpcServer } from '~/lib/trpc/server'
+import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types/'
 
-export async function loader({ request: _request }: Route.LoaderArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
+  const trpcServer = createCaller(request)
   const lists = await trpcServer.lists.getAll()
   return { lists }
 }

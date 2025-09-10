@@ -19,6 +19,7 @@ export default [
 
     // Trips section
     route('trips', './routes/trips._index.tsx'),
+    route('trips/create', './routes/trips.create.tsx'),
     route('trips/:tripId', './routes/trips.$tripId.tsx'),
 
     // Lists section

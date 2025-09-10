@@ -25,40 +25,58 @@ const TOKEN_CACHE_TTL = 1 * 60 // 1 minute
 
 // Optimized token validation with Redis caching
 async function validateTokenWithCache(request: Request) {
+  // First try to get token from Authorization header (client-side tRPC)
   const authHeader = request.headers.get('authorization')
-  if (!authHeader) {
-    return null
+  if (authHeader) {
+    const token = authHeader.replace('Bearer ', '')
+
+    // Try to get from cache first
+    const cacheKey = cacheKeys.token(token)
+    const cachedToken = await cacheUtils.get<User>(cacheKey)
+
+    if (cachedToken) {
+      return cachedToken
+    }
+
+    // Create Supabase client for server-side auth verification
+    const { supabase } = createClient(request)
+
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token)
+
+      if (error || !user) {
+        return null
+      }
+
+      // Cache the token validation result
+      await cacheUtils.set(cacheKey, user, TOKEN_CACHE_TTL)
+
+      return user
+    } catch (error) {
+      logger.error('Error validating token', { error: error as Error })
+      return null
+    }
   }
 
-  const token = authHeader.replace('Bearer ', '')
-
-  // Try to get from cache first
-  const cacheKey = cacheKeys.token(token)
-  const cachedToken = await cacheUtils.get<User>(cacheKey)
-
-  if (cachedToken) {
-    return cachedToken
-  }
-
-  // Create Supabase client for server-side auth verification
+  // If no Authorization header, try to get user from Supabase session cookies (server-side)
   const { supabase } = createClient(request)
 
   try {
     const {
       data: { user },
       error,
-    } = await supabase.auth.getUser(token)
+    } = await supabase.auth.getUser()
 
     if (error || !user) {
       return null
     }
 
-    // Cache the token validation result
-    await cacheUtils.set(cacheKey, user, TOKEN_CACHE_TTL)
-
     return user
   } catch (error) {
-    logger.error('Error validating token', { error: error as Error })
+    logger.error('Error getting user from session', { error: error as Error })
     return null
   }
 }
