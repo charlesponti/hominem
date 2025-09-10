@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { Link, useRouteLoaderData } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
+import Loading from '../loading'
 
 export default function Lists() {
   const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
@@ -27,7 +28,7 @@ export default function Lists() {
 
       {isLoading ? (
         <div className="flex items-center justify-center h-32">
-          <div className="loading loading-spinner loading-lg" />
+          <Loading size="lg" />
         </div>
       ) : error ? (
         <div className="text-center py-8">

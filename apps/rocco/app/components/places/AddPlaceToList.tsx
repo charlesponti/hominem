@@ -1,5 +1,6 @@
 import { Heart } from 'lucide-react'
 
+import Loading from '~/components/loading'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { useAddPlaceToList, useGetPlaceLists, useRemoveListItem } from '~/lib/places'
 import { useGetLists } from '~/lib/trpc/api'
@@ -44,7 +45,7 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
         </div>
         {isLoading || isPlaceListLoading ? (
           <div className="flex items-center justify-center h-16">
-            <div className="loading loading-infinity w-14" />
+            <Loading size="xl" />
           </div>
         ) : (
           <ul className="list-none">

@@ -6,6 +6,7 @@ import { Link, redirect, useParams, useRouteLoaderData } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists-components/list-menu'
+import Loading from '~/components/loading'
 import PlaceItem from '~/components/places/place-item'
 
 import { trpc } from '~/lib/trpc/client'
@@ -22,7 +23,7 @@ export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
 export function HydrateFallback() {
   return (
     <div className="flex items-center justify-center h-32">
-      <div className="loading loading-spinner loading-lg" />
+      <Loading size="lg" />
     </div>
   )
 }
@@ -47,7 +48,7 @@ export default function ListPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
-        <div className="loading loading-spinner loading-lg" />
+        <Loading size="lg" />
       </div>
     )
   }

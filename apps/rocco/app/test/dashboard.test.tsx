@@ -180,11 +180,7 @@ describe('Dashboard Component Tests', () => {
     await waitFor(() => {
       expect(screen.getByTestId('dashboard-scene')).toBeInTheDocument()
       // Should show loading spinner for lists
-      expect(
-        screen.getByText(
-          (_content, element) => element?.classList.contains('loading-spinner') || false
-        )
-      ).toBeInTheDocument()
+      expect(screen.getByTestId('loading-spinner')).toBeInTheDocument()
     })
   })
 
