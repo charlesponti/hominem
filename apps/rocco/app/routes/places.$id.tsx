@@ -11,24 +11,25 @@ import { Button } from '~/components/ui/button'
 import { useToast } from '~/components/ui/use-toast'
 import { useSaveSheet } from '~/hooks/useSaveSheet'
 import { trpc } from '~/lib/trpc/client'
-import { caller } from '~/lib/trpc/server'
+import { createCaller } from '~/lib/trpc/server'
 import type { Place } from '~/lib/types'
 import type { Route } from './+types/places.$id'
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const { id } = params
   if (!id) {
     throw new Error('Place ID is required')
   }
 
+  const trpcServer = createCaller(request)
   const isUuid = z.uuid().safeParse(id).success
 
   let data: Place
   if (isUuid) {
-    data = await caller.places.getById({ id })
+    data = await trpcServer.places.getById({ id })
   } else {
     // Use getOrCreate to handle both existing and new places
-    data = await caller.places.getOrCreateByGoogleMapsIdPublic({ googleMapsId: id })
+    data = await trpcServer.places.getOrCreateByGoogleMapsIdPublic({ googleMapsId: id })
   }
 
   if (!data) {
