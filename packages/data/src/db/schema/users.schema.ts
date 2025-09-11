@@ -13,22 +13,38 @@ import { createInsertSchema } from 'drizzle-zod'
 export const users = pgTable(
   'users',
   {
-    email: text('email').notNull(),
-    photoUrl: text('photo_url'),
-    birthday: text('birthday'),
+    // Primary key for foreign key relationships
     id: uuid('id').primaryKey().notNull(),
+
+    // Supabase auth integration
+    supabaseId: text('supabase_id').unique().notNull(),
+
+    // User profile data (synced from Supabase)
+    email: text('email').notNull(),
     name: text('name'),
     image: text('image'),
-    supabaseId: text('supabase_id').unique().notNull(),
+    photoUrl: text('photo_url'), // Keep for backward compatibility
+
+    // Admin status (can be overridden locally)
     isAdmin: boolean('isAdmin').default(false).notNull(),
+
+    // Timestamps
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+
+    // Optional fields (keep for backward compatibility)
+    birthday: text('birthday'),
     emailVerified: timestamp('emailVerified', { precision: 3, mode: 'string' }),
   },
   (table) => [
-    uniqueIndex('User_email_key').using('btree', table.email.asc().nullsLast()),
-    index('email_idx').on(table.email),
+    // Primary index for Supabase ID lookups
     index('supabase_id_idx').on(table.supabaseId),
+
+    // Email index for lookups
+    index('email_idx').on(table.email),
+
+    // Unique constraint on email (for migration scenarios)
+    uniqueIndex('User_email_key').using('btree', table.email.asc().nullsLast()),
   ]
 )
 export type UserInsert = typeof users.$inferInsert

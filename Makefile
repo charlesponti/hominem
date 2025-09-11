@@ -1,8 +1,6 @@
 # Makefile for Node.js, Docker, Fastify, and Drizzle project
 
 # Variables
-APP_DB_URL=postgresql://admin:password@localhost:5432/hominem
-TEST_DB_URL=postgresql://postgres:postgres@localhost:5433/hominem_test
 DOCKER_COMPOSE = docker compose
 NODE_ENV ?= development
 

@@ -1,13 +1,12 @@
-import type { User } from '@supabase/supabase-js'
-import { AlertCircle, Building2, CreditCard, Link } from 'lucide-react'
+import { useAuth } from '@hominem/auth'
+import { AlertCircle, Building2, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { usePlaidLink, type PlaidLinkOnExit, type PlaidLinkOnSuccess } from 'react-plaid-link'
+import { type PlaidLinkOnExit, type PlaidLinkOnSuccess, usePlaidLink } from 'react-plaid-link'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useCreateLinkToken, useExchangeToken } from '~/lib/hooks/use-plaid'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 
 interface PlaidLinkProps {
@@ -25,26 +24,12 @@ export function PlaidLink({
   variant = 'default',
   children,
 }: PlaidLinkProps) {
-  const { getUser } = useSupabaseAuth()
-  const [user, setUser] = useState<User | null>(null)
+  const { user } = useAuth()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 
   const createLinkTokenMutation = useCreateLinkToken()
   const exchangeTokenMutation = useExchangeToken()
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await getUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      }
-    }
-
-    fetchUser()
-  }, [getUser])
 
   const userId = user?.id
 
@@ -215,27 +200,27 @@ export function PlaidLink({
   }
 
   return (
-      <Button
-        onClick={handleClick}
-        disabled={!isReady && !(!linkToken && !isLoading)}
+    <Button
+      onClick={handleClick}
+      disabled={!isReady && !(!linkToken && !isLoading)}
       className={cn('flex items-center gap-2', className)}
-      >
-        {isLoading ? (
-          <>
+    >
+      {isLoading ? (
+        <>
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
           {createLinkTokenMutation.isPending
             ? 'Initializing...'
             : exchangeTokenMutation.isPending
-            ? 'Connecting...'
-            : 'Loading...'}
-          </>
-        ) : (
-          <>
+              ? 'Connecting...'
+              : 'Loading...'}
+        </>
+      ) : (
+        <>
           <Building2 className="h-4 w-4" />
-            {children || 'Connect Bank Account'}
-          </>
-        )}
-      </Button>
+          {children || 'Connect Bank Account'}
+        </>
+      )}
+    </Button>
   )
 }
 
