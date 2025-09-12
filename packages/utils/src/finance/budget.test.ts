@@ -1,8 +1,8 @@
-import { eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { db } from '@hominem/data/db'
 import { budgetCategories, users } from '@hominem/data/schema'
+import { eq } from 'drizzle-orm'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 describe('Budget Categories Unique Constraint', () => {
   const testUserId = crypto.randomUUID()
@@ -15,11 +15,13 @@ describe('Budget Categories Unique Constraint', () => {
       .values([
         {
           id: testUserId,
+          supabaseId: `supabase_${testUserId}`,
           email: 'test1@example.com',
           name: 'Test User 1',
         },
         {
           id: testUserId2,
+          supabaseId: `supabase_${testUserId2}`,
           email: 'test2@example.com',
           name: 'Test User 2',
         },

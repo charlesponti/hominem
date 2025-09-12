@@ -5,7 +5,7 @@ DOCKER_COMPOSE = docker compose
 NODE_ENV ?= development
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-down check reset all
+.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status
 
 # Install dependencies
 install:
@@ -55,6 +55,24 @@ docker-down:
 
 # Run all tests and linting
 check: test lint
+
+# Test database management
+test-db-start:
+	./scripts/test-db.sh start
+
+test-db-stop:
+	./scripts/test-db.sh stop
+
+test-db-restart:
+	./scripts/test-db.sh restart
+
+test-db-status:
+	./scripts/test-db.sh status
+
+# Run tests with test database
+test-with-db: test-db-start
+	pnpm test
+	$(MAKE) test-db-stop
 
 # Full cleanup and reinstall
 reset: clean install

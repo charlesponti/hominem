@@ -11,6 +11,8 @@ export interface UserAuthData {
   image?: string
   supabaseId: string
   isAdmin?: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -195,6 +197,8 @@ export class UserAuthService {
       image: user.image || undefined,
       supabaseId: user.supabaseId,
       isAdmin: user.isAdmin,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     }
   }
 }

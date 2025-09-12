@@ -55,8 +55,8 @@ export async function getServerAuth(
       image: userAuthData.image || undefined,
       supabaseId: userAuthData.supabaseId,
       isAdmin: userAuthData.isAdmin || false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: userAuthData.createdAt,
+      updatedAt: userAuthData.updatedAt,
     }
 
     return {
