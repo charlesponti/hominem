@@ -107,6 +107,10 @@ export class UserAuthService {
       })
       .returning()
 
+    if (!newUser) {
+      throw new Error('User not created')
+    }
+
     return UserAuthService.mapToUserAuthData(newUser)
   }
 
@@ -146,6 +150,10 @@ export class UserAuthService {
       .set({ supabaseId })
       .where(eq(users.id, userId))
       .returning()
+
+    if (!updatedUser) {
+      throw new Error('User not found')
+    }
 
     return UserAuthService.mapToUserAuthData(updatedUser)
   }
