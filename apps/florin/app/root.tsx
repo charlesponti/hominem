@@ -1,3 +1,4 @@
+import { AuthProvider } from '@hominem/auth'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
@@ -79,7 +80,9 @@ export default function App() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <Outlet />
+        <AuthProvider>
+          <Outlet />
+        </AuthProvider>
       </QueryClientProvider>
     </trpc.Provider>
   )

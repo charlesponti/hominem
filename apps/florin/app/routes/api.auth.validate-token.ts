@@ -1,9 +1,10 @@
+import { createSupabaseServerClient, getServerAuthConfig } from '@hominem/auth/server-index'
 import type { ActionFunctionArgs } from 'react-router'
-import { createSupabaseServerClient } from '~/lib/supabase/server'
 
 export async function action({ request }: ActionFunctionArgs) {
   const { token } = await request.json()
-  const { supabase } = createSupabaseServerClient(request)
+  const config = getServerAuthConfig()
+  const { supabase } = createSupabaseServerClient(request, config)
 
   if (!token || typeof token !== 'string') {
     throw new Response(JSON.stringify({ isValid: false }), { status: 400 })

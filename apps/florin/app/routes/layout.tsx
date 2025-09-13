@@ -1,10 +1,11 @@
+import { getServerAuth, getServerAuthConfig } from '@hominem/auth/server-index'
 import { Outlet, redirect, useNavigation } from 'react-router'
-import { getServerSession } from '~/lib/supabase'
 import { MainNavigation } from '../components/main-navigation'
 import type { Route } from './+types/layout'
 
 export async function loader(args: Route.LoaderArgs) {
-  const { user } = await getServerSession(args.request)
+  const config = getServerAuthConfig()
+  const { user } = await getServerAuth(args.request, config)
   const pathname = new URL(args.request.url).pathname
 
   if (pathname === '/' && user?.id) {

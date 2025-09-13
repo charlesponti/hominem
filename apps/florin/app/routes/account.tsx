@@ -1,3 +1,4 @@
+import { useAuth } from '@hominem/auth'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { RouteLink } from '~/components/route-link'
@@ -15,11 +16,10 @@ import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { trpc } from '~/lib/trpc'
 
 export default function AccountPage() {
-  const { supabase } = useSupabaseAuth()
+  const { signOut } = useAuth()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
@@ -30,8 +30,7 @@ export default function AccountPage() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      await signOut()
     } catch (error) {
       console.error('Logout error:', error)
     }

@@ -1,5 +1,4 @@
-import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/data'
+import { db, UserAuthService } from '@hominem/data'
 import { users } from '@hominem/data/schema'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
 import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js'
@@ -62,22 +61,12 @@ export async function getHominemUser(
       supabaseUser = tokenOrUser
     }
 
-    // Find existing user or create new one
-    const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseUser.id))
-    if (user) {
-      return user
-    }
+    // Use standardized service to find or create user
+    const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
 
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        id: randomUUID(),
-        email: supabaseUser.email || '',
-        supabaseId: supabaseUser.id,
-      })
-      .returning()
-
-    return newUser
+    // Get the full user record from database
+    const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
+    return user || null
   } catch (error) {
     console.error('Error in getHominemUser:', error)
     return null

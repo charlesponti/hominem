@@ -1,4 +1,4 @@
-import type { User as SupabaseUser } from '@supabase/supabase-js'
+import { useAuth } from '@hominem/auth'
 import {
   ChartLine,
   CircleDollarSignIcon,
@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
@@ -41,9 +40,7 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { getUser, supabase } = useSupabaseAuth()
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { user, isLoading, signInWithOAuth } = useAuth()
   const isLoggedIn = !isLoading && user
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -134,35 +131,13 @@ export function MainNavigation() {
   const handleSignIn = async () => {
     try {
       setIsSigningIn(true)
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      if (error) throw error
+      await signInWithOAuth('google')
     } catch (error) {
       console.error('Sign in failed:', error)
     } finally {
       setIsSigningIn(false)
     }
   }
-
-  // Get user data on mount
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await getUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error fetching user:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchUser()
-  }, [getUser])
 
   // Desktop navbar
   if (!isMobile) {

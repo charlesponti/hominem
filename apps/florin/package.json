@@ -14,6 +14,7 @@
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
+    "@hominem/auth": "workspace:*",
     "@hominem/data": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
