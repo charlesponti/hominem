@@ -1,7 +1,15 @@
-import { useSupabaseAuth } from '@hominem/ui'
-import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
+import { useAuth } from '@hominem/auth'
+import {
+  ChartLine,
+  CircleDollarSignIcon,
+  Landmark,
+  Menu,
+  PieChartIcon,
+  User,
+  X,
+} from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
@@ -27,8 +35,7 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoading } = useSupabaseAuth()
-  const navigate = useNavigate()
+  const { user, isLoading, signInWithOAuth } = useAuth()
   const isLoggedIn = !isLoading && user
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -115,7 +122,21 @@ export function MainNavigation() {
     }
   }
 
+<<<<<<< HEAD
   // Desktop sidebar
+=======
+  const handleSignIn = async () => {
+    try {
+      setIsSigningIn(true)
+      await signInWithOAuth('google')
+    } catch (error) {
+      console.error('Sign in failed:', error)
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
+  // Desktop navbar
   if (!isMobile) {
     return (
       <header className="fixed left-0 top-0 h-screen flex flex-col w-14 md:w-16 border-r bg-background z-40">

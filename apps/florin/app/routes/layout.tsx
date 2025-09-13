@@ -1,18 +1,25 @@
-// Auth is now handled client-side with Supabase
-import { useSupabaseAuth } from '@hominem/ui'
-import { Outlet, useNavigation } from 'react-router'
-import { cn } from '~/lib/utils'
+import { getServerAuth, getServerAuthConfig } from '@hominem/auth/server-index'
+import { Outlet, redirect, useNavigation } from 'react-router'
 import { MainNavigation } from '../components/main-navigation'
 import type { Route } from './+types/layout'
 
-export async function loader(loaderArgs: Route.LoaderArgs) {
-  // Auth is now handled client-side with Supabase
-  // Redirect logic will be handled in components
-  return {}
+export async function loader(args: Route.LoaderArgs) {
+  const config = getServerAuthConfig()
+  const { user } = await getServerAuth(args.request, config)
+  const pathname = new URL(args.request.url).pathname
+
+  if (pathname === '/' && user?.id) {
+    return redirect('/finance')
+  }
+
+  if (pathname !== '/' && !user?.id) {
+    return redirect('/')
+  }
+
+  return { userId: user?.id }
 }
 
 export default function Layout({ loaderData }: Route.ComponentProps) {
-  const { userId } = useSupabaseAuth()
   const navigation = useNavigation()
   const isNavigating = navigation.state !== 'idle'
 

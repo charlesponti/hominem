@@ -1,7 +1,8 @@
-import { randomUUID } from 'node:crypto'
+import { UserAuthService } from '@hominem/data'
 import { users } from '@hominem/data/schema'
 import type { User } from '@supabase/supabase-js'
 import { initTRPC, TRPCError } from '@trpc/server'
+import { eq } from 'drizzle-orm'
 import { db } from '../../db'
 import { createClient } from '../../lib/supabase/server'
 import { logger } from '../logger'
@@ -122,31 +123,26 @@ export const createContext = async (request?: Request): Promise<Context> => {
       return { db }
     }
 
-    // Get or create user in our own database
-    let localUser = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.supabaseId, supabaseUser.id),
-    })
+    // Use standardized service to find or create user
+    let localUser: typeof users.$inferSelect
+    try {
+      const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
 
-    if (!localUser) {
-      try {
-        ;[localUser] = await db
-          .insert(users)
-          .values({
-            id: randomUUID(),
-            email: supabaseUser.email || '',
-            name: supabaseUser.user_metadata?.name || supabaseUser.user_metadata?.full_name,
-            supabaseId: supabaseUser.id,
-          })
-          .returning()
-        logger.info('New user created in local DB', { userId: localUser.id })
-      } catch (dbError) {
-        logger.error('Failed to create user in local DB', {
-          error: dbError as Error,
-          supabaseId: supabaseUser.id,
-        })
-        // Still return a context, but without a user, so the request is unauthenticated
-        return { db }
+      // Get the full user record from database
+      const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
+      if (!user) {
+        throw new Error('User not found after creation')
       }
+
+      localUser = user
+      logger.info('User authenticated via standardized service', { userId: localUser.id })
+    } catch (dbError) {
+      logger.error('Failed to find or create user in local DB', {
+        error: dbError as Error,
+        supabaseId: supabaseUser.id,
+      })
+      // Still return a context, but without a user, so the request is unauthenticated
+      return { db }
     }
 
     logger.debug('User authenticated', {

@@ -1,4 +1,4 @@
-import { SupabaseAuthProvider } from '@hominem/ui'
+import { AuthProvider } from '@hominem/auth'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
@@ -83,13 +83,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
   const trpcClient = createTRPCClient()
   return (
-    <SupabaseAuthProvider>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
           <Outlet />
-        </QueryClientProvider>
-      </trpc.Provider>
-    </SupabaseAuthProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
   )
 }
 

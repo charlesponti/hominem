@@ -1,9 +1,7 @@
-'use client'
-
-import { useSupabaseAuth } from '@hominem/ui'
-import { AlertCircle, Building2, CreditCard, Link } from 'lucide-react'
+import { useAuth } from '@hominem/auth'
+import { AlertCircle, Building2, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { usePlaidLink, type PlaidLinkOnExit, type PlaidLinkOnSuccess } from 'react-plaid-link'
+import { type PlaidLinkOnExit, type PlaidLinkOnSuccess, usePlaidLink } from 'react-plaid-link'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
@@ -26,7 +24,7 @@ export function PlaidLink({
   variant = 'default',
   children,
 }: PlaidLinkProps) {
-  const { userId } = useSupabaseAuth()
+  const { user } = useAuth()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 
@@ -36,6 +34,7 @@ export function PlaidLink({
     error: createTokenError,
   } = useCreateLinkToken()
 
+  const userId = user?.id
   const { exchangeToken, isLoading: isExchanging, error: exchangeError } = useExchangeToken()
 
   // Initialize link token only when user clicks the button
@@ -206,37 +205,27 @@ export function PlaidLink({
 
   // Default button variant
   return (
-    <div className={className}>
-      {hasError && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Connection Error</AlertTitle>
-          <AlertDescription>
-            {createTokenError || exchangeError
-              ? 'Failed to connect bank account'
-              : 'An unknown error occurred'}
-          </AlertDescription>
-        </Alert>
+    <Button
+      onClick={handleClick}
+      disabled={!isReady && !(!linkToken && !isLoading)}
+      className={cn('flex items-center gap-2', className)}
+    >
+      {isLoading ? (
+        <>
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
+          {isCreatingToken
+            ? 'Initializing...'
+            : isExchanging
+              ? 'Connecting...'
+              : 'Loading...'}
+        </>
+      ) : (
+        <>
+          <Building2 className="h-4 w-4" />
+          {children || 'Connect Bank Account'}
+        </>
       )}
-
-      <Button
-        onClick={handleClick}
-        disabled={!isReady && !(!linkToken && !isLoading)}
-        className="w-full"
-      >
-        {isLoading ? (
-          <>
-            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
-            {isCreatingToken ? 'Initializing...' : isExchanging ? 'Connecting...' : 'Loading...'}
-          </>
-        ) : (
-          <>
-            <CreditCard className="mr-2 h-4 w-4" />
-            {children || 'Connect Bank Account'}
-          </>
-        )}
-      </Button>
-    </div>
+    </Button>
   )
 }
 

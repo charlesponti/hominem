@@ -1,6 +1,5 @@
-import { useApiClient, useSupabaseAuth } from '@hominem/ui'
-import type { Transaction as FinanceTransaction } from '@hominem/utils/types'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@hominem/auth'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Navigate } from 'react-router'
 import { RouteLink } from '~/components/route-link'
@@ -17,23 +16,23 @@ import {
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
-import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import { trpc } from '~/lib/trpc'
 
 export default function AccountPage() {
-  const { userId, isLoading, logout } = useSupabaseAuth()
-  const api = useApiClient()
+  const { signOut } = useAuth()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
   const { accountsMap } = useFinanceAccounts()
   const { transactions } = useFinanceTransactions()
 
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  if (!userId) {
-    return <Navigate to="/auth/signin" replace />
+  const handleLogout = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   const exportTransactions = () => {

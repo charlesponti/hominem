@@ -1,9 +1,14 @@
+import {
+  createSupabaseServerClient,
+  getServerAuth,
+  getServerAuthConfig,
+} from '@hominem/auth/server-index'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
-import { createSupabaseServerClient, getServerSession } from '~/lib/supabase/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user } = await getServerSession(request)
-  const { supabase } = createSupabaseServerClient(request)
+  const config = getServerAuthConfig()
+  const { user } = await getServerAuth(request, config)
+  const { supabase } = createSupabaseServerClient(request, config)
 
   const url = new URL(request.url)
   const redirectUri = url.searchParams.get('redirect_uri')
@@ -18,7 +23,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       data: { session },
     } = await supabase.auth.getSession()
     if (session?.access_token) {
-      return redirect(`${redirectUri}?token=${session.access_token}&refresh_token=${session.refresh_token}`)
+      return redirect(
+        `${redirectUri}?token=${session.access_token}&refresh_token=${session.refresh_token}`
+      )
     }
   }
 

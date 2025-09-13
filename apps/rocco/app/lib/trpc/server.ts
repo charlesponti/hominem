@@ -24,6 +24,6 @@ export const createCaller = (request: Request) =>
 const defaultCaller = appRouter.createCaller(() => createContext())
 
 export const { trpc, HydrateClient } = createHydrationHelpers<typeof appRouter>(
-  defaultCaller as any,
+  defaultCaller,
   getQueryClient
 )
