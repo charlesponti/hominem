@@ -1,8 +1,8 @@
-import { RedirectToSignIn, SignOutButton, useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import type { Transaction as FinanceTransaction } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Navigate } from 'react-router'
 import { RouteLink } from '~/components/route-link'
 import {
   AlertDialog,
@@ -20,7 +20,7 @@ import { toast } from '~/components/ui/use-toast'
 import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 
 export default function AccountPage() {
-  const { userId } = useAuth()
+  const { userId, isLoading, logout } = useSupabaseAuth()
   const api = useApiClient()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
@@ -28,8 +28,12 @@ export default function AccountPage() {
   const { accountsMap } = useFinanceAccounts()
   const { transactions } = useFinanceTransactions()
 
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
   if (!userId) {
-    return <RedirectToSignIn />
+    return <Navigate to="/auth/signin" replace />
   }
 
   const exportTransactions = () => {
@@ -179,9 +183,9 @@ export default function AccountPage() {
                 <h3 className="font-medium">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">End your current session.</p>
               </div>
-              <SignOutButton>
-                <Button variant="outline">Sign Out</Button>
-              </SignOutButton>
+              <Button variant="outline" onClick={() => logout()}>
+                Sign Out
+              </Button>
             </div>
           </CardContent>
         </Card>

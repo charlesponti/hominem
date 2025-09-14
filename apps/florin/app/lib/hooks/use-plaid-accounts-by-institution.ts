@@ -1,7 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import { useQuery } from '@tanstack/react-query'
 
 // Define query keys
@@ -26,7 +25,7 @@ interface PlaidAccountByInstitution {
  * Hook for fetching Plaid accounts for a specific institution
  */
 export function usePlaidAccountsByInstitution(institutionId: string | null, options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const defaultOptions = {

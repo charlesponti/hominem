@@ -30,11 +30,11 @@ This repo uses the following technologies:
 - **companies**: manage company information
 
 ## Authentication
-The API uses Clerk for authentication. You'll need to set up the following environment variables:
-- `CLERK_SECRET_KEY`
-- `CLERK_PUBLISHABLE_KEY`
+The API uses Supabase Auth for authentication. You'll need to set up the following environment variables:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-All authenticated routes will use Clerk's JWT verification to validate requests.
+All authenticated routes will use Supabase's JWT verification to validate requests. Clients should include the Authorization header with a Bearer token from Supabase.
 
 ## API Endpoints
 

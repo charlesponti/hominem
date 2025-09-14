@@ -1,6 +1,5 @@
 import { env } from './lib/env.js'
 
-import { clerkPlugin } from '@clerk/fastify'
 import fastifyCircuitBreaker from '@fastify/circuit-breaker'
 import type { FastifyCookieOptions } from '@fastify/cookie'
 import fastifyCookie from '@fastify/cookie'
@@ -85,20 +84,8 @@ export async function createServer(
     })
     await server.register(fastifyHelmet)
 
-    // Register Clerk plugin if keys are provided and not empty
-    if (
-      env.CLERK_SECRET_KEY &&
-      env.CLERK_PUBLISHABLE_KEY &&
-      env.CLERK_SECRET_KEY !== '' &&
-      env.CLERK_PUBLISHABLE_KEY !== ''
-    ) {
-      await server.register(clerkPlugin, {
-        secretKey: env.CLERK_SECRET_KEY,
-        publishableKey: env.CLERK_PUBLISHABLE_KEY,
-      })
-    } else {
-      server.log.warn('Clerk keys are not provided. Authentication is disabled.')
-    }
+    // Supabase auth is handled via JWT verification in middleware
+    server.log.info('Supabase authentication enabled.')
 
     // Register rate limit plugin with Redis client
     await server.register(rateLimitPlugin, {

@@ -14,7 +14,7 @@
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
-    "@clerk/react-router": "^1.3.0",
+    "@supabase/supabase-js": "^2.49.8",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hookform/resolvers": "^5.0.1",

@@ -20,7 +20,6 @@
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",
     "@ai-sdk/openai": "^1.3.10",
-    "@clerk/fastify": "^2.1.26",
     "@fastify/circuit-breaker": "^4.0.2",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.0.0",

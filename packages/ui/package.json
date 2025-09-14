@@ -6,7 +6,7 @@
     "lint": "biome lint ./src --fix"
   },
   "devDependencies": {
-    "@clerk/react-router": "^1.3.0",
+    "@supabase/supabase-js": "^2.49.8",
     "@hominem/tsconfigs": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@tanstack/react-query": "^5.71.1",

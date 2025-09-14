@@ -43,7 +43,7 @@ declare module 'fastify' {
     file: MultipartFile
     user?: User
     userId?: string | null
-    clerkId?: string | null
+    supabaseUserId?: string | null
     query: Record<string, string>
   }
 }

@@ -1,5 +1,4 @@
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import type { Content, TaskStatus } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../../components/ui/use-toast'
@@ -7,7 +6,7 @@ import { useToast } from '../../components/ui/use-toast'
 const CONTENT_QUERY_KEY_BASE = 'content'
 
 export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
-  const { userId, isSignedIn } = useAuth()
+  const { userId, isAuthenticated } = useSupabaseAuth()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -21,7 +20,7 @@ export function useUpdateContent(options: { queryKey?: unknown[] } = {}) {
     { previousContent: Content[] | undefined }
   >({
     mutationFn: async (itemData) => {
-      if (!isSignedIn || !userId) {
+      if (!isAuthenticated || !userId) {
         throw new Error('User must be signed in to update content.')
       }
       if (!itemData.id) {

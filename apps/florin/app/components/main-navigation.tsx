@@ -1,7 +1,7 @@
-import { SignInButton, useUser } from '@clerk/react-router'
+import { useSupabaseAuth } from '@hominem/ui'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { useLocation } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
@@ -27,8 +27,9 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoaded } = useUser()
-  const isLoggedIn = isLoaded && user
+  const { user, isLoading } = useSupabaseAuth()
+  const navigate = useNavigate()
+  const isLoggedIn = !isLoading && user
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
@@ -163,11 +164,14 @@ export function MainNavigation() {
                 </Button>
               </RouteLink>
             ) : (
-              <SignInButton>
-                <Button variant="ghost" size="icon" className="rounded-none">
-                  <User className="h-[18px] w-[18px]" />
-                </Button>
-              </SignInButton>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-none"
+                onClick={() => navigate('/auth/signin')}
+              >
+                <User className="h-[18px] w-[18px]" />
+              </Button>
             )}
           </div>
         </div>
@@ -199,11 +203,14 @@ export function MainNavigation() {
               </Button>
             </RouteLink>
           ) : (
-            <SignInButton>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <User className="h-[18px] w-[18px]" />
-              </Button>
-            </SignInButton>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => navigate('/auth/signin')}
+            >
+              <User className="h-[18px] w-[18px]" />
+            </Button>
           )}
 
           <Button variant="ghost" size="icon" className="ml-1" onClick={toggleMenu}>

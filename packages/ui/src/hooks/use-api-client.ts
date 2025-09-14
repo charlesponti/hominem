@@ -1,5 +1,5 @@
-import { useAuth } from '@clerk/react-router'
 import { useCallback, useMemo, useState } from 'react'
+import { supabase, useSupabaseAuth } from './use-supabase-auth'
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL
 
@@ -19,7 +19,7 @@ type ApiState = {
  * React hook for API client that handles fetch requests with authentication
  */
 export function useApiClient() {
-  const { getToken } = useAuth()
+  const { user } = useSupabaseAuth()
   const [state, setState] = useState<ApiState>({
     isLoading: false,
     error: null,
@@ -42,10 +42,12 @@ export function useApiClient() {
           defaultHeaders['Content-Type'] = 'application/json'
         }
 
-        // Get token from Clerk client-side
-        const token = await getToken()
-        if (token) {
-          defaultHeaders.Authorization = `Bearer ${token}`
+        // Get token from Supabase
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (session?.access_token) {
+          defaultHeaders.Authorization = `Bearer ${session.access_token}`
         }
 
         const res = await fetch(`${API_URL}${endpoint}`, {
@@ -80,7 +82,7 @@ export function useApiClient() {
         throw error
       }
     },
-    [getToken]
+    []
   )
 
   /**

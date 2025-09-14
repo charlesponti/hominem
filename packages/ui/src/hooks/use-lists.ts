@@ -1,8 +1,8 @@
-import { useAuth } from '@clerk/react-router'
 import { useApiClient } from '@hominem/ui'
 import type { ListSelect as List, ListInsert, ListInviteSelect } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useSupabaseAuth } from './use-supabase-auth'
 
 // Define query keys at the top of the file as constants
 const LISTS_KEY = [['lists', 'getAll']]
@@ -25,7 +25,7 @@ type NewList = Omit<ListInsert, 'userId' | 'id'>
  * Hook for creating a new list
  */
 export function useCreateList() {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
   const [data, setData] = useState<NewList>({
@@ -133,7 +133,7 @@ export function useDeleteList() {
  * Hook for fetching all lists with customizable options
  */
 export function useLists(options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   // Default options with sensible values
@@ -164,7 +164,7 @@ export function useLists(options = {}) {
  * Hook for fetching a specific list by ID
  */
 export function useList(id: string, options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   // Default options with sensible values
@@ -274,7 +274,7 @@ export function useAcceptListInvite() {
  * Hook for fetching list invites
  */
 export function useListInvites(options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   // Default options with sensible values
@@ -305,7 +305,7 @@ export function useListInvites(options = {}) {
  * Hook for fetching invites for a specific list
  */
 export function useListInvitesByList(listId: string, options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   // Default options with sensible values

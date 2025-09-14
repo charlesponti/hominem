@@ -1,28 +1,32 @@
-import { createClerkClient, getAuth } from '@clerk/fastify'
 import { db } from '@hominem/utils/db'
 import { users } from '@hominem/utils/schema'
+import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { env } from '../lib/env.js'
 
-export const client = createClerkClient({
-  publishableKey: env.CLERK_PUBLISHABLE_KEY,
-  secretKey: env.CLERK_SECRET_KEY,
+export const supabaseAdmin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
 })
 
-export async function getHominemUser(clerkId: string): Promise<typeof users.$inferSelect | null> {
-  if (!clerkId) return null
+export async function getHominemUser(
+  supabaseUserId: string
+): Promise<typeof users.$inferSelect | null> {
+  if (!supabaseUserId) return null
 
-  const [user] = await db.select().from(users).where(eq(users.clerkId, clerkId))
+  const [user] = await db.select().from(users).where(eq(users.supabaseUserId, supabaseUserId))
 
-  // Create a user for this clerk user if one does not exist
+  // Create a user for this Supabase user if one does not exist
   if (!user) {
-    const clerkUser = await client.users.getUser(clerkId)
-    if (clerkUser) {
+    const { data: supabaseUser, error } = await supabaseAdmin.auth.admin.getUserById(supabaseUserId)
+    if (!error && supabaseUser?.user) {
       const [newUser] = await db.insert(users).values({
         id: crypto.randomUUID(),
-        email: clerkUser.emailAddresses[0].emailAddress,
-        clerkId,
+        email: supabaseUser.user.email || '',
+        supabaseUserId,
       })
 
       return newUser
@@ -40,18 +44,31 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
   }
 
   try {
-    const auth = getAuth(request)
-    if (!auth.userId) {
+    // Get the Authorization header
+    const authHeader = request.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return reply.code(401).send({ error: 'Unauthorized' })
     }
 
-    const user = await getHominemUser(auth.userId)
-    if (!user) {
+    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
+
+    // Verify the JWT token with Supabase
+    const {
+      data: { user },
+      error,
+    } = await supabaseAdmin.auth.getUser(token)
+
+    if (error || !user) {
+      return reply.code(401).send({ error: 'Unauthorized' })
+    }
+
+    const hominemUser = await getHominemUser(user.id)
+    if (!hominemUser) {
       return reply.status(401).send({ error: 'Unauthorized' })
     }
 
-    request.user = user
-    request.userId = user.id
+    request.user = hominemUser
+    request.userId = hominemUser.id
   } catch (error) {
     request.log.error(error)
     return reply.status(401).send({ error: 'Unauthorized' })

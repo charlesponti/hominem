@@ -1,7 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { supabase, useApiClient, useSupabaseAuth } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -20,7 +19,7 @@ const PROGRESS_UPDATE_THROTTLE = 100
 export function useImportTransactionsStore() {
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
-  const { getToken } = useAuth()
+  const { userId } = useSupabaseAuth()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
   const [error, setError] = useState<Error | null>(null)

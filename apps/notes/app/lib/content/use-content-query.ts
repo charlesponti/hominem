@@ -1,5 +1,4 @@
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import type { Content, ContentType } from '@hominem/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { useToast } from '../../components/ui/use-toast'
@@ -14,7 +13,7 @@ export interface UseContentQueryOptions {
 }
 
 export function useContentQuery(options: UseContentQueryOptions = {}) {
-  const { userId, isSignedIn } = useAuth()
+  const { userId, isAuthenticated } = useSupabaseAuth()
   const apiClient = useApiClient()
   const { toast } = useToast()
 
@@ -39,7 +38,7 @@ export function useContentQuery(options: UseContentQueryOptions = {}) {
   const contentQuery = useQuery<Content[], Error>({
     queryKey: getQueryKey(),
     queryFn: async () => {
-      if (!isSignedIn || !userId) {
+      if (!isAuthenticated || !userId) {
         return []
       }
       const queryParams = new URLSearchParams()

@@ -1,49 +1,54 @@
-import { useUser } from '@clerk/react-router'
-import { getAuth } from '@clerk/react-router/ssr.server'
+import { supabase, useSupabaseAuth } from '@hominem/ui'
 import { Check, Copy, Terminal } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import type { Route } from './+types/cli'
 
 export async function loader(args: Route.LoaderArgs) {
-  // Get the Clerk auth state from the request
-  const auth = await getAuth(args)
-  const { userId, getToken } = auth
-
-  // If no user is logged in, return null token
-  if (!userId) {
-    return { token: null, error: null }
-  }
-
-  try {
-    // Generate a JWT token for the Clerk user that can be used with the CLI
-    const token = await getToken({
-      template: 'hominem-cli',
-    })
-
-    // Return the token
-    return { token, error: null }
-  } catch (error) {
-    console.error('Token generation error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate token'
-    return { token: null, error: errorMessage }
-  }
+  // Supabase auth is handled client-side, no server-side token generation needed
+  return {}
 }
 
 export default function AuthCli({ loaderData }: Route.ComponentProps) {
-  const { user, isLoaded } = useUser()
+  const { user, isLoading } = useSupabaseAuth()
   const [searchParams] = useSearchParams()
   const urlToken = searchParams.get('token')
   const [copied, setCopied] = useState(false)
+  const [authToken, setAuthToken] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // Get data from the loader
-  const { token: loaderToken, error: loaderError } = loaderData
+  // Get the current session token
+  const getSessionToken = async () => {
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
+      if (error) {
+        setError(error.message)
+        return
+      }
+      if (session?.access_token) {
+        setAuthToken(session.access_token)
+        setError(null)
+      } else {
+        setError('No active session found')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to get session')
+    }
+  }
 
-  // Use URL token if available, otherwise use loader token
-  const authToken = urlToken || loaderToken
-  const error = loaderError
+  // Get token on component mount
+  useEffect(() => {
+    if (user && !urlToken) {
+      getSessionToken()
+    } else if (urlToken) {
+      setAuthToken(urlToken)
+    }
+  }, [user, urlToken])
 
   const handleCopyToken = () => {
     if (!authToken) return
@@ -60,10 +65,12 @@ export default function AuthCli({ loaderData }: Route.ComponentProps) {
   }
 
   // Protected route that requires authentication
-  if (isLoaded && !user) {
-    // This will likely be handled by a route protection mechanism,
-    // but keeping it for compatibility
-    return <Navigate to="/sign-in" replace />
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/auth/signin" replace />
   }
 
   return (
@@ -112,7 +119,7 @@ export default function AuthCli({ loaderData }: Route.ComponentProps) {
             </div>
 
             <div className="pt-2">
-              <Button onClick={() => window.location.reload()} className="w-full">
+              <Button onClick={getSessionToken} className="w-full">
                 Generate New Token
               </Button>
             </div>

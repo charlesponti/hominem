@@ -1,7 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -160,7 +159,7 @@ export function useExchangeToken() {
  * @deprecated Use useAllAccounts() instead for unified account and connection data
  */
 export function usePlaidConnections(options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const defaultOptions = {
@@ -211,7 +210,7 @@ export function usePlaidConnections(options = {}) {
  * @deprecated Use useAllAccounts() instead for unified account data
  */
 export function usePlaidAccounts(options = {}) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const defaultOptions = {

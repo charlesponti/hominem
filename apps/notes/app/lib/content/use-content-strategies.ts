@@ -1,5 +1,4 @@
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import type { ContentStrategiesSelect, ContentStrategy } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -26,7 +25,7 @@ type UpdateContentStrategyData = {
  * Hook to fetch all content strategies for the current user
  */
 export function useContentStrategies() {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const query = useQuery<ContentStrategiesSelect[]>({
@@ -51,7 +50,7 @@ export function useContentStrategies() {
  * Hook to fetch a specific content strategy by ID
  */
 export function useContentStrategy(strategyId: string) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
 
   const query = useQuery<ContentStrategiesSelect>({
@@ -78,7 +77,7 @@ export function useContentStrategy(strategyId: string) {
  * Hook to create a new content strategy
  */
 export function useCreateContentStrategy() {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
   const [data, setData] = useState<CreateContentStrategyData>({
@@ -121,7 +120,7 @@ export function useCreateContentStrategy() {
  * Hook to update an existing content strategy
  */
 export function useUpdateContentStrategy() {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
   const [data, setData] = useState<ContentStrategy | null>(null)
@@ -159,7 +158,7 @@ export function useUpdateContentStrategy() {
  * Hook to delete a content strategy
  */
 export function useDeleteContentStrategy() {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
 

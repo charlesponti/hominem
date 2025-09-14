@@ -1,5 +1,4 @@
-import { ClerkProvider } from '@clerk/react-router'
-import { rootAuthLoader } from '@clerk/react-router/ssr.server'
+import { SupabaseAuthProvider } from '@hominem/ui'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
@@ -11,7 +10,8 @@ import { getQueryClient } from './lib/get-query-client'
 import { UserProvider } from './lib/user-context'
 
 export async function loader(args: Route.LoaderArgs) {
-  return rootAuthLoader(args)
+  // No auth loader needed for Supabase - handled client-side
+  return {}
 }
 
 export const meta: Route.MetaFunction = () => {
@@ -86,8 +86,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
-
 function AppProviders({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient()
 
@@ -107,16 +105,11 @@ function AppProviders({ children }: { children: React.ReactNode }) {
 
 export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
   return (
-    <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
-      loaderData={loaderData}
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
-    >
+    <SupabaseAuthProvider>
       <AppProviders>
         <Outlet />
       </AppProviders>
-    </ClerkProvider>
+    </SupabaseAuthProvider>
   )
 }
 

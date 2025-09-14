@@ -1,13 +1,9 @@
-import { getAuth } from '@clerk/react-router/ssr.server'
-import { Link, redirect } from 'react-router'
+import { Link } from 'react-router'
 import type { Route } from '../+types/root'
 
 export async function loader(loaderArgs: Route.LoaderArgs) {
-  const auth = await getAuth(loaderArgs)
-
-  if (auth.userId) {
-    return redirect('/notes')
-  }
+  // Auth is handled client-side with Supabase
+  return {}
 }
 
 export default function HomePage() {

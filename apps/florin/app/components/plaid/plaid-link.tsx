@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
+import { useSupabaseAuth } from '@hominem/ui'
 import { AlertCircle, Building2, CreditCard, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { usePlaidLink, type PlaidLinkOnExit, type PlaidLinkOnSuccess } from 'react-plaid-link'
@@ -26,7 +26,7 @@ export function PlaidLink({
   variant = 'default',
   children,
 }: PlaidLinkProps) {
-  const { userId } = useAuth()
+  const { userId } = useSupabaseAuth()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 

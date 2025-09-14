@@ -1,7 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/react-router'
-import { useApiClient } from '@hominem/ui'
+import { supabase, useApiClient, useSupabaseAuth } from '@hominem/ui'
 import type { BudgetCategory } from '@hominem/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -23,14 +22,16 @@ type BudgetCategoryUpdate = Partial<Omit<BudgetCategory, 'userId' | 'budgetId'>>
 
 // Centralize auth token handling
 const useAuthHeaders = () => {
-  const { userId, getToken } = useAuth()
+  const { userId } = useSupabaseAuth()
 
   const getAuthHeaders = async () => {
     if (!userId) throw new Error('User not authenticated to get headers.')
-    const token = await getToken()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     return {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token || userId}`,
+      Authorization: `Bearer ${session?.access_token || userId}`,
     }
   }
   return { getAuthHeaders, userId }
