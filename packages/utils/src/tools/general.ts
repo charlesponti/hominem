@@ -1,6 +1,63 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 
+// Generic tool interface
+interface Tool {
+  description?: string
+  parameters?: {
+    type: string
+    properties?: Record<string, unknown>
+    required?: string[]
+    omit?: (params: Record<string, unknown>) => Record<string, unknown>
+  }
+  execute: (args: Record<string, unknown>) => Promise<unknown>
+}
+
+/**
+ * Binds userId to tools that require it, removing userId from the parameters schema if present.
+ * Shallow clones the tool and only overrides the execute method for performance and memory safety.
+ */
+export function bindUserIdToTools(tools: Record<string, Tool>, userId: string) {
+  const boundTools: Record<string, Tool> = {}
+
+  for (const [key, originalTool] of Object.entries(tools)) {
+    // Skip tools that don't have the expected structure
+    if (!originalTool || typeof originalTool !== 'object') {
+      console.warn(`Skipping malformed tool: ${key}`)
+      continue
+    }
+
+    // Check if the tool has parameters and if it has a userId field
+    let hasUserId = false
+    try {
+      hasUserId =
+        originalTool.parameters?.shape?.userId ||
+        (originalTool.parameters &&
+          typeof originalTool.parameters.shape === 'function' &&
+          originalTool.parameters.shape().userId)
+    } catch (error) {
+      console.warn(`Error checking userId for tool ${key}:`, error)
+      // If we can't check for userId, just copy the tool as-is
+      boundTools[key] = originalTool
+      continue
+    }
+
+    if (hasUserId) {
+      // Shallow clone, remove userId from parameters, override execute
+      const { parameters, ...rest } = originalTool
+      boundTools[key] = {
+        ...rest,
+        parameters: parameters?.omit ? parameters.omit({ userId: true }) : parameters,
+        execute: async (args: Record<string, unknown>) => originalTool.execute({ ...args, userId }),
+      }
+    } else {
+      boundTools[key] = originalTool
+    }
+  }
+
+  return boundTools
+}
+
 const CalculatorToolSchema = z.object({
   calculations: z.array(
     z.object({

@@ -1,55 +1,35 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr'
 
 export function createSupabaseServerClient(request: Request) {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+  const headers = new Headers()
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+  const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error(
-      'Missing required Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
-    )
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Missing Supabase environment variables')
   }
 
-  // Parse cookies from request headers
-  const cookieHeader = request.headers.get('Cookie') || ''
-  const cookies = new Map<string, string>()
-
-  // Parse cookie string into key-value pairs
-  if (cookieHeader) {
-    for (const cookie of cookieHeader.split(';')) {
-      const [name, ...rest] = cookie.trim().split('=')
-      if (name && rest.length > 0) {
-        cookies.set(name.trim(), rest.join('=').trim())
-      }
-    }
-  }
-
-  return createServerClient(supabaseUrl, supabaseKey, {
+  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll() {
-        return Array.from(cookies.entries()).map(([name, value]) => ({
-          name,
-          value,
-        }))
+        return parseCookieHeader(request.headers.get('Cookie') ?? '') as {
+          name: string
+          value: string
+        }[]
       },
       setAll(cookiesToSet) {
-        // In server context, we can't set cookies directly
-        // This would typically be handled by the response headers
-        // For React Router, cookie setting should be handled in the response
-        for (const { name, value } of cookiesToSet) {
-          if (value) {
-            cookies.set(name, value)
-          } else {
-            cookies.delete(name)
-          }
+        for (const { name, value, options } of cookiesToSet) {
+          headers.append('Set-Cookie', serializeCookieHeader(name, value, options))
         }
       },
     },
   })
+
+  return { supabase, headers }
 }
 
 export async function getServerSession(request: Request) {
-  const supabase = createSupabaseServerClient(request)
+  const { supabase } = createSupabaseServerClient(request)
 
   try {
     const {
@@ -62,7 +42,7 @@ export async function getServerSession(request: Request) {
     }
 
     return { user: session.user, session }
-  } catch (error) {
+  } catch {
     return { user: null, session: null }
   }
 }

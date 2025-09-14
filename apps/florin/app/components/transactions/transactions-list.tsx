@@ -1,31 +1,29 @@
-'use client'
-
-import type { FinanceAccount, Transaction as FinanceTransaction } from '@hominem/utils/types'
-import { format } from 'date-fns'
-import { Calendar, CreditCard, DollarSign, Tag } from 'lucide-react'
-import { Card } from '~/components/ui/card'
+import { CreditCard, DollarSign, Tag } from 'lucide-react'
+import type {
+  useFinanceAccountsWithMap,
+  useFinanceTransactions,
+} from '~/lib/hooks/use-finance-data'
 import { cn } from '~/lib/utils'
+
+type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number]
+type AccountsMap = ReturnType<typeof useFinanceAccountsWithMap>['accountsMap']
+type AccountFromMap = NonNullable<AccountsMap> extends Map<string, infer T> ? T : never
 
 type TransactionsListProps = {
   loading: boolean
   error: string | null
-  transactions: FinanceTransaction[]
-  accountsMap: Map<string, FinanceAccount>
+  transactions: TransactionFromAPI[]
+  accountsMap: AccountsMap
 }
 
-function TransactionAmount({ transaction }: { transaction: FinanceTransaction }) {
+function TransactionAmount({ transaction }: { transaction: TransactionFromAPI }) {
   const amount = Number.parseFloat(transaction.amount)
   const isNegative = amount < 0
   const displayAmount = Math.abs(amount).toFixed(2)
 
   return (
     <div className="text-right">
-      <div
-        className={cn(
-          'text-lg font-semibold tabular-nums',
-          isNegative ? 'text-red-600' : 'text-emerald-600'
-        )}
-      >
+      <div className={cn('font-semibold', isNegative ? 'text-red-600' : 'text-emerald-600')}>
         ${displayAmount}
       </div>
     </div>
@@ -36,27 +34,21 @@ function TransactionMetadata({
   transaction,
   account,
 }: {
-  transaction: FinanceTransaction
-  account?: FinanceAccount
+  transaction: TransactionFromAPI
+  account?: AccountFromMap
 }) {
-  const formattedDate = format(new Date(transaction.date), 'MMM d, yyyy', {})
-
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      <div className="flex items-center gap-1">
-        <Calendar className="h-3 w-3" />
-        <span className="font-medium">{formattedDate}</span>
-      </div>
+    <div className="flex justify-between text-xs text-muted-foreground">
       {account && (
         <div className="flex items-center gap-1">
-          <CreditCard className="h-3 w-3" />
-          <span className="font-medium truncate max-w-[120px]">{account.name}</span>
+          <CreditCard className="size-3" />
+          <span>{account.name}</span>
         </div>
       )}
       {transaction.category && (
         <div className="flex items-center gap-1">
-          <Tag className="h-3 w-3" />
-          <span className="font-medium">{transaction.category}</span>
+          <Tag className="size-3" />
+          <span>{transaction.category}</span>
         </div>
       )}
     </div>
@@ -67,27 +59,19 @@ function TransactionListItem({
   transaction,
   account,
 }: {
-  transaction: FinanceTransaction
-  account?: FinanceAccount
+  transaction: TransactionFromAPI
+  account?: AccountFromMap
 }) {
   return (
-    <Card className="group p-4 relative overflow-hidden border-0 bg-white shadow-sm ring-1 ring-gray-950/5 transition-all duration-200 hover:shadow-md hover:ring-gray-950/10">
-      <div className="w-full flex items-center gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div className="min-w-0 flex-1 flex flex-col gap-2">
-              <h3 className="text-base font-semibold text-gray-900 leading-6 truncate pr-2 flex justify-between items-center gap-2">
-                <div className="overflow-ellipsis overflow-hidden whitespace-nowrap">
-                  {transaction.description || 'Transaction'}
-                </div>
-                <TransactionAmount transaction={transaction} />
-              </h3>
-              <TransactionMetadata transaction={transaction} account={account} />
-            </div>
-          </div>
-        </div>
+    <div className="group border-b border-gray-200 py-4 px-2 space-y-2">
+      <div className="w-full flex items-center justify-between gap-4">
+        <h3 className="font-serif text-black tracking-tight">
+          {transaction.description || 'Transaction'}
+        </h3>
+        <TransactionAmount transaction={transaction} />
       </div>
-    </Card>
+      <TransactionMetadata transaction={transaction} account={account} />
+    </div>
   )
 }
 
@@ -99,9 +83,12 @@ export function TransactionsList({
 }: TransactionsListProps) {
   if (loading) {
     return (
-      <div className="space-y-4 mx-auto">
+      <div className="space-y-0 mx-auto border border-gray-200 rounded-lg overflow-hidden">
         {Array.from({ length: 5 }, (_, i) => `skeleton-${Date.now()}-${i}`).map((key) => (
-          <Card key={key} className="p-4 sm:p-6 animate-pulse">
+          <div
+            key={key}
+            className="p-4 sm:p-6 animate-pulse border-b border-gray-100 last:border-b-0"
+          >
             <div className="flex items-start gap-4">
               <div className="h-12 w-12 rounded-full bg-gray-200" />
               <div className="flex-1 space-y-2">
@@ -115,7 +102,7 @@ export function TransactionsList({
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     )
@@ -123,15 +110,15 @@ export function TransactionsList({
 
   if (error) {
     return (
-      <Card className="p-8 text-center border-red-200 bg-red-50 max-w-4xl mx-auto">
+      <div className="p-8 text-center border border-red-200 bg-red-50 rounded-lg max-w-4xl mx-auto">
         <div className="text-red-600 font-medium">{error}</div>
-      </Card>
+      </div>
     )
   }
 
   if (transactions.length === 0) {
     return (
-      <Card className="p-8 text-center border-gray-200 bg-gray-50 max-w-4xl mx-auto">
+      <div className="p-8 text-center border border-gray-200 bg-gray-50 rounded-lg max-w-4xl mx-auto">
         <div className="flex flex-col items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
             <DollarSign className="h-6 w-6 text-gray-400" />
@@ -139,21 +126,19 @@ export function TransactionsList({
           <div className="text-gray-600 font-medium">No transactions found</div>
           <div className="text-sm text-gray-500">Try adjusting your filters or date range</div>
         </div>
-      </Card>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-4 mx-auto">
-      {/* Transactions List */}
-      <div className="space-y-3">
-        {transactions.map((transaction) => {
-          const account = accountsMap.get(transaction.accountId)
-          return (
-            <TransactionListItem key={transaction.id} transaction={transaction} account={account} />
-          )
-        })}
-      </div>
+    <div className="mx-auto border border-gray-200 rounded-lg overflow-hidden">
+      {transactions.map((transaction) => (
+        <TransactionListItem
+          key={transaction.id}
+          transaction={transaction}
+          account={accountsMap.get(transaction.accountId)}
+        />
+      ))}
     </div>
   )
 }

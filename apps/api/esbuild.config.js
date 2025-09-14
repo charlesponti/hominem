@@ -13,7 +13,7 @@ await build({
   plugins: [
     nodeExternalsPlugin({
       // Do not externalize workspace packages to ensure proper bundling
-      allowList: ['@hominem/utils', '@hominem/ai'],
+      allowList: ['@hominem/utils', '@hominem/ai', '@hominem/data', '@hominem/chat-service'],
     }),
     copy({
       // Copy necessary non-JS files

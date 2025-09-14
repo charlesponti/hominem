@@ -1,32 +1,30 @@
-import { useApiClient } from '@hominem/ui'
-import type { TopMerchant } from '@hominem/utils/types'
-import { useQuery } from '@tanstack/react-query'
+import { trpc } from '../trpc'
+
+type UseFinanceTopMerchantsParams = {
+  from?: string
+  to?: string
+  account?: string
+  category?: string
+  limit?: number
+}
 
 export function useFinanceTopMerchants({
   from,
   to,
   account,
   category,
-  limit = 5,
-}: {
-  from?: string
-  to?: string
-  account?: string
-  category?: string
-  limit?: number
-}) {
-  const apiClient = useApiClient()
-  return useQuery<TopMerchant[]>({
-    queryKey: ['finance', 'topMerchants', { from, to, account, category, limit }],
-    queryFn: async () => {
-      const params = new URLSearchParams()
-      if (from) params.append('from', from)
-      if (to) params.append('to', to)
-      if (account) params.append('account', account)
-      if (category) params.append('category', category)
-      params.append('limit', String(limit))
-      return await apiClient.get(`/api/finance/analyze/top-merchants?${params.toString()}`)
+  limit,
+}: UseFinanceTopMerchantsParams) {
+  return trpc.finance.analyze.topMerchants.useQuery(
+    {
+      from,
+      to,
+      account,
+      category,
+      limit,
     },
-    staleTime: 5 * 60 * 1000,
-  })
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  )
 }

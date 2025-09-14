@@ -5,7 +5,7 @@ export async function getPathFiles(
   source: string,
   { extension } = { extension: '.md' }
 ): Promise<string[]> {
-  let files = []
+  let files: string[] = []
   const isDirectory = (await fs.stat(source)).isDirectory()
 
   if (isDirectory) {

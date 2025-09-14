@@ -17,13 +17,13 @@
       "import": "./src/consts.ts",
       "require": "./dist/consts.cjs"
     },
-    "./db": {
-      "import": "./src/db/index.ts",
-      "require": "./dist/db/index.cjs"
-    },
     "./finance": {
       "import": "./src/finance/index.ts",
       "require": "./dist/finance/index.cjs"
+    },
+    "./finance-utils": {
+      "import": "./src/finance.utils.ts",
+      "require": "./dist/finance.utils.cjs"
     },
     "./google-maps": {
       "import": "./src/google/maps.ts",
@@ -65,10 +65,6 @@
       "import": "./src/utils/index.ts",
       "require": "./dist/utils/index.cjs"
     },
-    "./schema": {
-      "import": "./src/db/schema/index.ts",
-      "require": "./dist/db/schema/index.cjs"
-    },
     "./schemas": {
       "import": "./src/schemas/index.ts",
       "require": "./dist/schemas/index.cjs"
@@ -103,11 +99,8 @@
     }
   },
   "scripts": {
-    "db:generate": "pnpm drizzle-kit generate",
-    "migrate": "pnpm drizzle-kit migrate",
-    "db:update": "pnpm drizzle-kit generate && pnpm drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
-    "test": "vitest --run --passWithNoTests",
+    "test": "vitest run --passWithNoTests",
     "build": "pnpm exec node esbuild.config.js",
     "test:watch": "vitest",
     "format": "biome format ./src --fix",
@@ -117,8 +110,7 @@
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
     "@hominem/ai": "workspace:*",
-    "@supabase/storage-js": "^2.7.3",
-    "@supabase/supabase-js": "^2.49.4",
+    "@hominem/data": "workspace:*",
     "ai": "^4.1.54",
     "cheerio": "^1.0.0",
     "compromise": "^14.14.4",
@@ -127,9 +119,10 @@
     "csvtojson": "^2.0.10",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.42.0",
+    "drizzle-orm": "^0.44.2",
     "drizzle-zod": "^0.7.0",
-    "esbuild": "^0.25.0",
+    "effect": "^3.16.10",
+    "esbuild": "^0.21.5",
     "googleapis": "144.0.0",
     "ioredis": "^5.5.0",
     "langchain": "^0.3.15",
@@ -157,10 +150,5 @@
     "typescript": "5.7.3",
     "vfile": "^6.0.3",
     "vitest": "^3.0.6"
-  },
-  "peerDependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "vite": "^5.4.11"
   }
 }

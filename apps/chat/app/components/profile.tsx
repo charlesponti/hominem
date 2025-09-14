@@ -1,19 +1,17 @@
-import { useAuth } from '@/lib/supabase/auth-hooks'
+import type { User } from '@supabase/supabase-js'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
-export function Profile() {
-  const { user, isLoading, logout } = useAuth()
+interface ProfileProps {
+  user: User
+}
 
-  if (isLoading) {
-    return <div className="loading">Loading user data...</div>
-  }
-
-  if (!user) {
-    return <div className="error">User not found</div>
-  }
+export function Profile({ user }: ProfileProps) {
+  const { supabase } = useSupabaseAuth()
 
   const handleLogout = async () => {
     try {
-      await logout()
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
     } catch (error) {
       console.error('Logout error:', error)
     }

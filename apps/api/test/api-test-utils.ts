@@ -1,5 +1,10 @@
-import type { FastifyInstance } from 'fastify'
+import { db } from '@hominem/data'
+import { users } from '@hominem/data/schema'
+import type { Queue } from 'bullmq'
+import { eq } from 'drizzle-orm'
+import type { Hono } from 'hono'
 import { afterAll, beforeAll, beforeEach, expect, vi } from 'vitest'
+import type { AppEnv } from '../src/server.js'
 import { createServer } from '../src/server.js'
 
 /**
@@ -10,21 +15,36 @@ export const globalMocks = {
   queue: {
     add: vi.fn(),
     close: vi.fn(() => Promise.resolve()),
-  },
+    getJob: vi.fn(),
+    getJobs: vi.fn(() => Promise.resolve([])),
+    // Add other queue methods as needed
+  } as Partial<Queue>,
 
   // Auth middleware mock
-  verifyAuth: vi.fn((request, reply, done) => {
-    request.userId = 'test-user-id'
-    done()
+  verifyAuth: vi.fn(async (c, next) => {
+    const testUserId = '00000000-0000-0000-0000-000000000001'
+    c.set('userId', testUserId)
+
+    // For test mode, also set the user object by querying the database
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, testUserId))
+      if (user) {
+        c.set('user', user)
+      }
+    } catch (error) {
+      console.error('Error getting user in test mode:', error)
+    }
+
+    return next()
   }),
 
   // Rate limit middleware mocks
-  rateLimit: vi.fn((request, reply, done) => {
-    done()
+  rateLimit: vi.fn((c, next) => {
+    return next()
   }),
 
-  rateLimitImport: vi.fn((request, reply, done) => {
-    done()
+  rateLimitImport: vi.fn((c, next) => {
+    return next()
   }),
 }
 
@@ -32,18 +52,22 @@ export const globalMocks = {
  * Creates a test server instance with common setup
  */
 export const createTestServer = async (options: { logger?: boolean } = {}) => {
-  const server = await createServer({ logger: options.logger ?? false })
+  const server = createServer()
   if (!server) {
     throw new Error('Server is null')
   }
 
-  // Setup mock queues
-  server.queues = {
-    plaidSync: globalMocks.queue,
-    importTransactions: globalMocks.queue,
-  } as unknown as typeof server.queues
+  // Override the queues middleware for testing with mock queues
+  server.use('*', async (c, next) => {
+    const mockQueues = {
+      plaidSync: globalMocks.queue,
+      importTransactions: globalMocks.queue,
+    }
+    // @ts-expect-error - Using mock queues for testing
+    c.set('queues', mockQueues)
+    await next()
+  })
 
-  await server.ready()
   return server
 }
 
@@ -51,7 +75,7 @@ export const createTestServer = async (options: { logger?: boolean } = {}) => {
  * Common test lifecycle hooks for API route tests
  */
 export const useApiTestLifecycle = () => {
-  let testServer: FastifyInstance
+  let testServer: Hono<AppEnv>
 
   beforeAll(async () => {
     testServer = await createTestServer()
@@ -62,8 +86,9 @@ export const useApiTestLifecycle = () => {
   })
 
   afterAll(async () => {
+    // Hono doesn't need explicit cleanup like Fastify
     if (testServer) {
-      await testServer.close()
+      // No close method needed for Hono
     }
   })
 
@@ -87,54 +112,55 @@ export interface ApiResponse {
  * Helper for making authenticated requests
  */
 export const makeAuthenticatedRequest = async (
-  server: FastifyInstance,
+  server: Hono<AppEnv>,
   options: {
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
     url: string
     payload?: Record<string, unknown>
-    headers?: Record<string, string>
+    headers?: Record<string, string | null>
   }
 ) => {
+  const userId = options.headers?.['x-user-id'] || '00000000-0000-0000-0000-000000000001'
+
   const headers: Record<string, string> = {
-    'x-user-id': 'test-user-id',
+    'x-user-id': userId,
     ...options.headers,
   }
-  if (options.payload) {
-    headers['Content-Type'] = 'application/json'
+
+  const requestInit: RequestInit = {
+    method: options.method,
+    headers: Object.fromEntries(Object.entries(headers).filter(([_, value]) => value !== null)),
   }
 
-  return server.inject({
-    method: options.method,
-    url: options.url,
-    payload: options.payload,
-    headers,
-  })
+  if (options.payload) {
+    headers['Content-Type'] = 'application/json'
+    requestInit.body = JSON.stringify(options.payload)
+  }
+
+  const request = new Request(`http://localhost${options.url}`, requestInit)
+  return server.fetch(request)
 }
 
 /**
  * Helper for parsing JSON responses with proper typing
  */
-export const parseJsonResponse = <T = ApiResponse>(response: { body: string }): T => {
-  return JSON.parse(response.body) as T
+export const parseJsonResponse = async <T = ApiResponse>(response: Response): Promise<T> => {
+  return (await response.json()) as T
 }
 
 /**
  * Common assertion helpers
  */
-export const assertSuccessResponse = <T>(response: { statusCode: number; body: string }) => {
-  const body = parseJsonResponse<T>(response)
-  expect(response.statusCode).toBe(200)
-  // Don't require specific success field - let API consumers handle the response structure
+export const assertSuccessResponse = async <T>(response: Response) => {
+  const body = await parseJsonResponse<T>(response)
+  expect(response.status).toBe(200)
   return body
 }
 
-export const assertErrorResponse = (
-  response: { statusCode: number; body: string },
-  expectedStatus = 500
-) => {
-  const body = parseJsonResponse(response)
-  expect(response.statusCode).toBe(expectedStatus)
-  // Focus on HTTP status codes rather than specific response structure
+export const assertErrorResponse = async (response: Response, expectedStatus = 500) => {
+  const body = await parseJsonResponse(response)
+  expect(response.status).toBe(expectedStatus)
+
   if (expectedStatus >= 400) {
     // Allow various error response formats - either { success: false } or { error: "message" }
     const hasErrorIndicator =

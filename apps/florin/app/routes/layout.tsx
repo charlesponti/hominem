@@ -25,13 +25,9 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
         </div>
       )}
       <div className="bg-background text-foreground min-h-screen-dynamic min-w-full flex flex-col">
-        {userId ? <MainNavigation /> : null}
-        <main
-          className={cn('flex-1 overflow-hidden pt-16 md:pt-0', {
-            'md:pl-16': userId,
-          })}
-        >
-          <div className="md:mx-auto px-2">
+        <MainNavigation />
+        <main className="flex-1 overflow-hidden pt-4 px-2 md:px-0">
+          <div className="container mx-auto" style={{ paddingInline: 0 }}>
             <Outlet />
           </div>
         </main>

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { tools as financeTools } from '../finance/finance.tools'
 import * as bookmarkTools from './bookmarks.tools'
 import * as careerTools from './career.tools'
+import * as contentTools from './content.tools'
 import * as generalTools from './general'
 import * as healthTools from './health.tools'
 import * as listTools from './lists.tools'
@@ -13,38 +14,30 @@ import * as taskTools from './task.tools'
 import * as travelTools from './travel.tools'
 import * as userTools from './user.tools'
 
+// Bookmark tools
+export * from './bookmarks.tools'
+// Job application tools
+export * from './career.tools'
+// Content generation tools
+export * from './content.tools'
 // General tools
 export * from './general'
-
+// Health tracking tools
+export * from './health.tools'
+// List management tools
+export * from './lists.tools'
 // Location tools
 export * from './location.tools'
 
+// Place management tools
+export * from './place.tools'
 // Task management tools
 export * from './task.tools'
 
-// User management tools
-export * from './user.tools'
-
-// Job application tools
-export * from './career.tools'
-
-// Bookmark tools
-export * from './bookmarks.tools'
-
-// List management tools
-export * from './lists.tools'
-
-// Place management tools
-export * from './place.tools'
-
-// Health tracking tools
-export * from './health.tools'
-
 // Travel management tools
 export * from './travel.tools'
-
-// Content generation tools
-export * as contentTools from './content.tools'
+// User management tools
+export * from './user.tools'
 
 // Grouped collections
 export const productivityTools = {
@@ -85,6 +78,7 @@ export const allTools = {
   ...placeTools,
   ...healthTools,
   ...travelPlanningTools,
+  ...contentTools,
 }
 
 export async function getAnswer({ prompt }: { prompt: string }) {

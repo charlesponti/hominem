@@ -7,9 +7,8 @@
     "hominem": "src/index.ts"
   },
   "scripts": {
-    "test": "NODE_ENV=test vitest --run --coverage",
+    "test": "NODE_ENV=test vitest run --coverage",
     "format": "biome format ./src --fix",
-    "db:update": "drizzle-kit generate && drizzle-kit migrate",
     "scrape": "npx playwright test",
     "scrape:headed": "npx playwright test --headed",
     "scrape:debug": "npx playwright test --debug",
@@ -24,7 +23,6 @@
     "@ai-sdk/openai-compatible": "^0.2.13",
     "@hominem/ai": "workspace:*",
     "@hominem/utils": "workspace:*",
-    "@libsql/client": "^0.15.4",
     "@playwright/test": "^1.51.1",
     "ai": "^4.1.54",
     "chalk": "^5.4.1",
@@ -36,7 +34,6 @@
     "csv-parser": "^3.2.0",
     "csv-stringify": "^6.5.1",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.42.0",
     "open": "^10.1.1",
     "ora": "^8.2.0",
     "pdf2json": "^3.1.5",
@@ -48,7 +45,10 @@
     "remark-rehype": "^11.1.1",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "drizzle-orm": "^0.44.2",
+    "@browserbasehq/stagehand": "^2.4.0",
+    "@notionhq/client": "^2.2.15"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",

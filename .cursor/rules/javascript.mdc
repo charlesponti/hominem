@@ -1,0 +1,97 @@
+---
+description: javascript/typescript web rules
+globs: *.tsx. *.ts, *.jsx. *.js
+alwaysApply: false
+---
+
+# JavaScript/TypeScript Development Rules
+
+## Core Principles
+- Write concise, functional code following Standard.js
+- Use descriptive names with auxiliary verbs (isLoading, hasError)
+- Handle errors early with guard clauses
+- Prefer composition over inheritance
+- Practice local-first data management
+
+## Code Style
+- 2 space indentation, single quotes, no semicolons
+- Use ===, camelCase variables, PascalCase components
+- Template literals over concatenation
+- Use specific functions (Number.parseFloat, Number.isNaN)
+- for (const ... of ...) over .forEach
+
+## React Patterns
+- Functional components with hooks
+- Minimize 'use client', 'useEffect', 'useState'
+- Use React Server Components (RSC) when possible
+- Custom hooks for reusable logic
+- React.memo(), useCallback, useMemo for performance
+- Error boundaries and cleanup functions
+
+## State Management
+- Zustand for global state
+- React Query + IndexedDB for data (local-first)
+- Optimistic updates with query invalidation
+- Context for intermediate state sharing
+
+## TypeScript
+- Import types separately: `import type { Foo } from 'bar'`
+- Never use `any` type
+- Use utility types (PartialWithId<T>)
+
+## UI & Styling
+- Mobile-first responsive design
+- Shadcn UI + Radix UI foundations
+- Tailwind for utilities, CSS modules for complex styles
+- No @apply directive
+
+## Performance
+- Route-based code splitting
+- Dynamic loading for non-critical components
+- Optimize images (WebP, lazy loading)
+- PurgeCSS with Tailwind
+
+## Forms & Validation
+- Controlled components
+- React Hook Form for complex forms
+- Zod/Joi for schema validation
+
+## Error Handling
+- Handle errors at function start
+- Early returns for error conditions
+- Model errors as return values in Server Actions
+- User-friendly error messages
+
+## Testing & Security
+- Jest + React Testing Library
+- Sanitize user inputs
+- Semantic HTML + ARIA attributes
+
+## React Query Hook Patterns
+
+### Structure
+```typescript
+export function useEntityOperation() {
+  const queryClient = useQueryClient()
+  const [data, setData] = useState<EntityType | null>(null)
+  
+  const operation = useMutation({
+    mutationFn: async (data: PartialWithId<EntityType>) => {
+      // API call with error handling
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ENTITY_KEY })
+    },
+  })
+  
+  return { data, setData, operation }
+}
+```
+
+### Key Practices
+- Single API operation per hook
+- Consistent return structure: `{ data, setData, operation }`
+- Query key constants at file top
+- Error handling and loading states
+- Authentication integration
+- Options customization support

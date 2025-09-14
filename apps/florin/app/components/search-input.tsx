@@ -1,5 +1,3 @@
-'use client'
-
 import { Search as SearchIcon } from 'lucide-react'
 import { forwardRef, useCallback, useEffect, useState } from 'react'
 import { Input } from './ui/input'

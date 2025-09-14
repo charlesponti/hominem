@@ -1,8 +1,5 @@
-'use client'
-
 import { useIsMobile } from '@hominem/ui'
-import type { BudgetCategory } from '@hominem/utils/types'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import {
   Card,
@@ -23,19 +20,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import { useCreateBudgetCategory, useUpdateBudgetCategory } from '~/lib/hooks/use-budget-data'
+import { trpc, type RouterOutput } from '~/lib/trpc'
 
-// Define the structure for form data
-export interface BudgetCategoryFormData {
-  name: string
-  type: 'income' | 'expense' // Or string if more flexible types are needed
-  allocatedAmount: number
-  id?: string // For updates
-}
+// Derive form data type from tRPC input schema
+export type BudgetCategoryFormData =
+  RouterOutput['finance']['budget']['categories']['create']['input'] & {
+    id?: string // For updates
+  }
 
 // Define props for the component
 interface BudgetCategoryFormProps {
-  category?: BudgetCategory & { allocatedAmount?: number } // Optional: for editing an existing category, extend with allocatedAmount
+  category?: RouterOutput['finance']['budget']['categories']['list'][number] // Optional: for editing an existing category
   onSave: (data: BudgetCategoryFormData) => Promise<void>
   onCancel: () => void
   isLoading?: boolean
@@ -49,11 +44,15 @@ export function BudgetCategoryForm({
 }: BudgetCategoryFormProps) {
   const [name, setName] = useState('')
   const [type, setType] = useState<'income' | 'expense'>('expense')
-  const [allocatedAmount, setAllocatedAmount] = useState<number>(0)
+  const [averageMonthlyExpense, setAverageMonthlyExpense] = useState<string>('')
   const [formError, setFormError] = useState<string | null>(null)
 
-  const { createCategory, isLoading: isCreating, error: createError } = useCreateBudgetCategory()
-  const { updateCategory, isLoading: isUpdating, error: updateError } = useUpdateBudgetCategory()
+  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation()
+  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation()
+
+  const nameId = useId()
+  const typeId = useId()
+  const averageMonthlyExpenseId = useId()
 
   useEffect(() => {
     if (category) {
@@ -63,7 +62,7 @@ export function BudgetCategoryForm({
       } else {
         setType('expense')
       }
-      setAllocatedAmount(category.allocatedAmount || 0)
+      setAverageMonthlyExpense(category.averageMonthlyExpense || '')
     }
   }, [category])
 
@@ -73,22 +72,21 @@ export function BudgetCategoryForm({
     const formData: BudgetCategoryFormData = {
       name,
       type,
-      allocatedAmount,
+      averageMonthlyExpense,
     }
     try {
       if (category?.id) {
-        await updateCategory({
+        await updateCategoryMutation.mutateAsync({
           id: category.id,
           name,
           type,
-          allocatedAmount,
+          averageMonthlyExpense,
         })
       } else {
-        await createCategory({
+        await createCategoryMutation.mutateAsync({
           name,
           type,
-          allocatedAmount,
-          averageMonthlyExpense: allocatedAmount.toString(), // required by BudgetCategoryCreation as string
+          averageMonthlyExpense,
         })
       }
       await onSave(formData)
@@ -98,8 +96,10 @@ export function BudgetCategoryForm({
     }
   }
 
-  const isLoading = isLoadingProp || isCreating || isUpdating
-  const errorMsg = formError || createError?.message || updateError?.message
+  const isLoading =
+    isLoadingProp || createCategoryMutation.isPending || updateCategoryMutation.isPending
+  const errorMsg =
+    formError || createCategoryMutation.error?.message || updateCategoryMutation.error?.message
 
   return (
     <Card className="w-full max-w-md">
@@ -119,9 +119,9 @@ export function BudgetCategoryForm({
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="name">Category Name</Label>
+            <Label htmlFor={nameId}>Category Name</Label>
             <Input
-              id="name"
+              id={nameId}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Groceries, Utilities"
@@ -129,13 +129,13 @@ export function BudgetCategoryForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="type">Category Type</Label>
+            <Label htmlFor={typeId}>Category Type</Label>
             <Select
               value={type}
               onValueChange={(value: 'income' | 'expense') => setType(value)}
               required
             >
-              <SelectTrigger id="type">
+              <SelectTrigger id={typeId}>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -145,12 +145,12 @@ export function BudgetCategoryForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="allocatedAmount">Allocated Amount ($)</Label>
+            <Label htmlFor={averageMonthlyExpenseId}>Average Monthly Amount ($)</Label>
             <Input
-              id="allocatedAmount"
+              id={averageMonthlyExpenseId}
               type="number"
-              value={allocatedAmount}
-              onChange={(e) => setAllocatedAmount(Number.parseFloat(e.target.value) || 0)}
+              value={averageMonthlyExpense}
+              onChange={(e) => setAverageMonthlyExpense(e.target.value)}
               placeholder="e.g., 500"
               required
               min="0"

@@ -1,6 +1,6 @@
+import type { BaseJob } from './jobs'
 import { logger } from './logger'
 import { redis } from './redis'
-import type { BaseJob } from './types'
 
 export const IMPORT_JOBS_LIST_KEY = 'import:active-jobs'
 export const IMPORT_JOB_PREFIX = 'import:job:'
@@ -149,7 +149,7 @@ export async function getJobsByIds<T extends BaseJob>(jobIds: string[]): Promise
     )
     // Filter out null jobs
     return jobs.filter((job): job is Awaited<T> => !!job)
-  } catch (error) {
+  } catch (_error) {
     return []
   }
 }

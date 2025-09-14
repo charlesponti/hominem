@@ -2,11 +2,9 @@ import { SupabaseAuthProvider } from '@hominem/ui'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-
 import type { Route } from './+types/root'
-import { UserProvider } from './context/user-context'
 import './globals.css'
-import { getQueryClient } from './lib/get-query-client'
+import { createTRPCClient, queryClient, trpc } from './lib/trpc'
 
 export async function loader(args: Route.LoaderArgs) {
   // No auth loader needed for Supabase - handled client-side
@@ -58,7 +56,7 @@ export const links: Route.LinksFunction = () => [
   { rel: 'icon', type: 'image/png', sizes: '192x192', href: 'icons/android-icon-192x192.png' },
 
   // Web Manifest
-  { rel: 'manifest', href: 'icons/manifest.json' },
+  { rel: 'manifest', href: '/manifest.json' },
 
   // Safari Pinned Tab Icon
   { rel: 'mask-icon', href: 'icons/safari-pinned-tab.svg', color: '#ffffff' },
@@ -83,15 +81,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
-  const queryClient = getQueryClient()
-
+  const trpcClient = createTRPCClient()
   return (
     <SupabaseAuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <UserProvider>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
           <Outlet />
-        </UserProvider>
-      </QueryClientProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
     </SupabaseAuthProvider>
   )
 }

@@ -13,20 +13,20 @@ export const supabaseAdmin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE
 })
 
 export async function getHominemUser(
-  supabaseUserId: string
+  supabaseId: string
 ): Promise<typeof users.$inferSelect | null> {
-  if (!supabaseUserId) return null
+  if (!supabaseId) return null
 
-  const [user] = await db.select().from(users).where(eq(users.supabaseUserId, supabaseUserId))
+  const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseId))
 
   // Create a user for this Supabase user if one does not exist
   if (!user) {
-    const { data: supabaseUser, error } = await supabaseAdmin.auth.admin.getUserById(supabaseUserId)
+    const { data: supabaseUser, error } = await supabaseAdmin.auth.admin.getUserById(supabaseId)
     if (!error && supabaseUser?.user) {
       const [newUser] = await db.insert(users).values({
         id: crypto.randomUUID(),
         email: supabaseUser.user.email || '',
-        supabaseUserId,
+        supabaseId,
       })
 
       return newUser

@@ -1,16 +1,10 @@
-/**
- * Finance account types
- */
-import type { FinanceAccount, FinanceAccountInsert } from '../db/schema/finance.schema.js'
-
-/**
- * Transaction types used across the monorepo
- */
 import type {
+  FinanceAccount,
+  FinanceAccountInsert,
   FinanceTransaction,
   FinanceTransactionInsert,
   TransactionType,
-} from '../db/schema/finance.schema.js'
+} from '@hominem/data/schema'
 
 export type {
   FinanceAccount,
@@ -20,7 +14,6 @@ export type {
   TransactionType,
 }
 
-export type { TimeSeriesDataPoint, TimeSeriesStats } from './finance-analyze.service.js'
 export interface CategoryAggregate {
   category: string
   totalAmount: number
@@ -51,56 +44,6 @@ export type TopMerchant = {
 }
 
 /**
- * Capital One transaction format
- */
-export interface CapitalOneTransaction {
-  Date: string
-  Description: string
-  Category: string
-  Type: string
-  Amount: string
-  AccountName?: string
-  AccountNumber?: string
-}
-
-/**
- * Copilot transaction format from CSV export
- */
-export interface CopilotTransaction {
-  date: string
-  name: string
-  amount: string
-  status: string
-  category: string
-  parent_category?: string | null
-  'parent category'?: string | null
-  excluded: string | 'true' | 'false'
-  tags: string
-  type: string
-  account: string
-  account_mask: string
-  'account mask': string
-  note: string
-  recurring: string
-}
-
-/**
- * Aggregation types
- */
-
-export interface CategoryAggregate {
-  category: string
-  totalAmount: number
-  count: number
-}
-
-export interface MonthAggregate {
-  month: string
-  totalAmount: number
-  count: number
-}
-
-/**
  * Transaction processing result
  */
 export interface TransactionResult {
@@ -127,6 +70,7 @@ export interface QueryOptions {
   sortBy?: string | string[]
   sortDirection?: 'asc' | 'desc' | ('asc' | 'desc')[]
   search?: string
+  includeExcluded?: boolean
 
   // Legacy options (for backward compatibility)
   from?: string

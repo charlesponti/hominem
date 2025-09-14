@@ -1,11 +1,11 @@
 import { eq, type SQL } from 'drizzle-orm'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
-import { db } from '../db/index'
+import { db } from '@hominem/data/db'
 import {
   job_applications,
   type JobApplication,
   type JobApplicationInsert,
-} from '../db/schema/career.schema'
+} from '@hominem/data/schema'
 
 export const JobApplicationSchema = createSelectSchema(job_applications)
 export const JobApplicationInsertSchema = createInsertSchema(job_applications)

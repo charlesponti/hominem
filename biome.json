@@ -1,15 +1,16 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
   "files": {
-    "ignore": [
-      "apps/carmen",
-      "coverage",
-      "dist",
-      "build",
-      "node_modules",
-      ".next",
-      ".turbo",
-      ".vercel"
+    "includes": [
+      "**",
+      "!**/apps/carmen",
+      "!**/coverage",
+      "!**/dist",
+      "!**/build",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/.turbo",
+      "!**/.vercel"
     ],
     "maxSize": 2000000
   },
@@ -22,13 +23,7 @@
     "lineWidth": 100,
     "attributePosition": "auto"
   },
-  "organizeImports": {
-    "enabled": true,
-    "include": [
-      "apps/**/*.{ts,tsx}",
-      "packages/**/*.{ts,tsx}"
-    ]
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "rules": {
       "recommended": true,
@@ -40,16 +35,24 @@
         "noConsole": {
           "level": "warn",
           "options": {
-            "allow": [
-              "error",
-              "info",
-              "warn"
-            ]
+            "allow": ["error", "info", "warn"]
           }
         }
       },
       "correctness": {
         "noUnusedImports": "error"
+      },
+      "style": {
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
       }
     }
   },
@@ -77,21 +80,17 @@
   },
   "overrides": [
     {
-      "include": [
-        "**/package.json"
-      ],
+      "includes": ["**/package.json"],
       "formatter": {
         "lineWidth": 1
       }
     },
     {
-      "include": [
-        "**/vite.config.ts"
-      ],
+      "includes": ["**/vite.config.ts"],
       "linter": {
         "rules": {
           "suspicious": {
-            "noConsoleLog": "off"
+            "noConsole": { "level": "off", "options": { "allow": ["log"] } }
           }
         }
       }

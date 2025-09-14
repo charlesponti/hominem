@@ -32,6 +32,7 @@
         "./app/*"
       ]
     },
+    "declaration": false,
     "esModuleInterop": true,
     "noEmit": true,
     "resolveJsonModule": true,

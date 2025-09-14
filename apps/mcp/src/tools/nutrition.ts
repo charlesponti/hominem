@@ -59,7 +59,7 @@ export function registerNutritionTool(server: McpServer) {
           ],
         }
       } catch (error) {
-        console.error('[MCP Health Error]', error)
+        console.error('[MCP Nutrition Error]', error)
         return {
           content: [
             {

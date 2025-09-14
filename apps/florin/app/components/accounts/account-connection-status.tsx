@@ -1,13 +1,8 @@
-import type { FinanceAccount } from '@hominem/utils/types'
-import { AlertCircleIcon, Banknote, CheckCircleIcon, LinkIcon } from 'lucide-react'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import { useFinancialInstitutions } from '~/lib/hooks/use-financial-institutions'
-import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution'
-import { AccountConnectionDialog } from './account-connection-dialog'
+import type { RouterOutput } from '~/lib/trpc'
+import { AccountStatusDisplay } from './account-status-display'
 
 interface AccountConnectionStatusProps {
-  account: FinanceAccount
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
   showDialog?: boolean
 }
 
@@ -15,67 +10,11 @@ export function AccountConnectionStatus({
   account,
   showDialog = true,
 }: AccountConnectionStatusProps) {
-  const { data: institutions } = useFinancialInstitutions()
-  const { accounts: plaidAccounts } = usePlaidAccountsByInstitution(account.institutionId)
-
-  const isLinked = !!account.institutionId
-  const linkedInstitution = institutions?.find((inst) => inst.id === account.institutionId)
-  const linkedPlaidAccount = plaidAccounts.find((plaidAcc) => plaidAcc.id === account.plaidItemId)
-
-  if (!isLinked) {
-    return (
-      <div className="flex items-center space-x-2">
-        <Badge variant="outline" className="text-muted-foreground">
-          <AlertCircleIcon className="h-3 w-3 mr-1" />
-          Not Connected
-        </Badge>
-        {showDialog && (
-          <AccountConnectionDialog
-            account={account}
-            trigger={
-              <Button variant="ghost" size="sm" className="h-6 px-2">
-                <LinkIcon className="h-3 w-3 mr-1" />
-                Connect
-              </Button>
-            }
-          />
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex items-center space-x-2">
-      <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">
-        <CheckCircleIcon className="h-3 w-3 mr-1" />
-        Connected
-      </Badge>
-      {linkedInstitution && (
-        <span className="text-sm text-muted-foreground">to {linkedInstitution.name}</span>
-      )}
-      {linkedPlaidAccount && (
-        <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200">
-          <Banknote className="h-3 w-3 mr-1" />
-          Plaid: {linkedPlaidAccount.name}{' '}
-          {linkedPlaidAccount.mask ? `••••${linkedPlaidAccount.mask}` : ''}
-        </Badge>
-      )}
-      {showDialog && (
-        <AccountConnectionDialog
-          account={account}
-          trigger={
-            <Button variant="ghost" size="sm" className="h-6 px-2">
-              Manage
-            </Button>
-          }
-        />
-      )}
-    </div>
-  )
+  return <AccountStatusDisplay account={account} showDialog={showDialog} />
 }
 
 interface AccountConnectionSummaryProps {
-  accounts: FinanceAccount[]
+  accounts: RouterOutput['finance']['accounts']['all']['accounts']
 }
 
 export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryProps) {

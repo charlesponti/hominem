@@ -1,45 +1,43 @@
-import { logger } from '@hominem/utils/logger'
-import type { FastifyRequest } from 'fastify'
-import { randomUUID } from 'node:crypto'
-import fs from 'node:fs'
-import os from 'node:os'
-import path from 'node:path'
-
 export interface UploadedFile {
   filename: string
   mimetype: string
   filepath: string
   size: number
+  buffer?: Buffer
 }
 
-export async function handleFileUpload(request: FastifyRequest): Promise<UploadedFile | null> {
+/**
+ * Handle file upload and return buffer
+ */
+export async function handleFileUploadBuffer(
+  request: Request
+): Promise<{ filename: string; mimetype: string; buffer: Buffer; size: number } | null> {
   try {
-    // Access the uploaded file from Fastify multipart
-    const data = await request.file()
+    // Check if the request has multipart form data
+    const contentType = request.headers.get('content-type')
+    if (!contentType || !contentType.includes('multipart/form-data')) {
+      return null
+    }
 
-    if (!data) {
+    // Parse the form data
+    const formData = await request.formData()
+    const file = formData.get('file') as File | null
+
+    if (!file) {
       return null
     }
 
     // Get file buffer
-    const buffer = await data.toBuffer()
-
-    // Create a temporary file
-    const tempDir = os.tmpdir()
-    const filename = data.filename || `${randomUUID()}-upload`
-    const filepath = path.join(tempDir, filename)
-
-    // Write buffer to file
-    fs.writeFileSync(filepath, buffer)
+    const buffer = Buffer.from(await file.arrayBuffer())
 
     return {
-      filename: data.filename,
-      mimetype: data.mimetype,
-      filepath,
+      filename: file.name,
+      mimetype: file.type,
+      buffer,
       size: buffer.length,
     }
   } catch (error) {
-    logger.error(error, 'File upload error:')
+    console.error('File upload error:', error)
     return null
   }
 }

@@ -1,5 +1,3 @@
-'use client'
-
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { FC } from 'react'
 import { Button } from '~/components/ui/button'
@@ -8,16 +6,12 @@ interface PaginationControlsProps {
   currentPage: number
   totalPages: number
   onPageChange: (page: number) => void
-  totalItems: number
-  itemsPerPage: number
 }
 
 export const PaginationControls: FC<PaginationControlsProps> = ({
   currentPage,
   totalPages,
   onPageChange,
-  totalItems,
-  itemsPerPage,
 }) => {
   const handlePrevious = () => {
     if (currentPage > 0) {
@@ -35,14 +29,8 @@ export const PaginationControls: FC<PaginationControlsProps> = ({
     return null
   }
 
-  const startItem = currentPage * itemsPerPage + 1
-  const endItem = Math.min((currentPage + 1) * itemsPerPage, totalItems)
-
   return (
-    <div className="flex items-center justify-between mt-4">
-      <div className="text-sm text-muted-foreground">
-        Showing {startItem} to {endItem} of {totalItems} transactions
-      </div>
+    <div className="flex items-center justify-center mt-4">
       <div className="flex items-center space-x-2">
         <Button variant="outline" size="sm" onClick={handlePrevious} disabled={currentPage === 0}>
           <ChevronLeft className="h-4 w-4" />

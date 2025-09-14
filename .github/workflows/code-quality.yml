@@ -12,10 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       APP_URL: ${{ secrets.APP_URL }}
-      NEXT_PUBLIC_API_URL: "http://localhost:3000"
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      CLERK_PUBLISHABLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      CLERK_SECRET_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -24,6 +20,11 @@ jobs:
       REDIS_URL: "redis://localhost:6379"
       SENDGRID_API_KEY: "SG.7Q9Z9ZQzQ9q"
       CHROMA_URL: "http://localhost:8000"
+      SUPABASE_URL: "http://localhost:54321"
+      SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      VITE_SUPABASE_URL: "http://localhost:54321"
+      VITE_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
     services:
       postgres:
         env:
@@ -47,8 +48,9 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
+
     steps:
-      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: styfle/cancel-workflow-action@0.12.1
       - uses: actions/checkout@v4
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
@@ -58,11 +60,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 23.11.0
           cache: 'pnpm'
 
       - name: 📦 Install dependencies
         run: pnpm install
+
+      - name: 🏗️ Wait for services
+        run: |
+          # Wait for postgres to be ready
+          until pg_isready -h localhost -p 4433; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+          # Wait for redis to be ready using netcat
+          until nc -z localhost 6379; do
+            echo "Waiting for redis..."
+            sleep 2
+          done
+          echo "All services are ready!"
 
       - name: 🏗️ Build
         run: pnpm turbo run build
@@ -101,7 +117,7 @@ jobs:
 
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.12.1
         
       - name: Checkout repository
         uses: actions/checkout@v4

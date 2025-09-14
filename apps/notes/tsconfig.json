@@ -1,9 +1,22 @@
 {
   "include": [
-    "**/*",
+    "app/**/*",
     "**/.server/**/*",
     "**/.client/**/*",
     ".react-router/types/**/*"
+  ],
+  "exclude": [
+    "../api/**/*",
+    "../../packages/**/*",
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/api/**/*",
+    "**/src/api/**/*"
   ],
   "compilerOptions": {
     "lib": [
@@ -29,11 +42,17 @@
         "./app/*"
       ]
     },
-    "composite": true,
+    "composite": false,
+    "declaration": false,
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "noEmit": true,
+    "skipDefaultLibCheck": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true
   }
 }

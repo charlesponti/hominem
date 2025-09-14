@@ -1,11 +1,20 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import {
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  redirect,
+  Scripts,
+  ScrollRestoration,
+} from 'react-router'
 
 import type { Route } from './+types/root'
 import './app.css'
 import { getQueryClient } from './lib/get-query-client'
-import { AuthProvider } from './lib/supabase/auth-context'
+import { getServerSession } from './lib/supabase'
+import { createTRPCClient, trpc } from './lib/trpc-client'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -19,6 +28,25 @@ export const links: Route.LinksFunction = () => [
     href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
   },
 ]
+
+export async function loader(loaderArgs: Route.LoaderArgs) {
+  const { user } = await getServerSession(loaderArgs.request)
+  const url = new URL(loaderArgs.request.url)
+  const pathname = url.pathname
+
+  // Define routes that require authentication
+  const protectedRoutes = ['/chat', '/profile']
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
+
+  // Only redirect if accessing a protected route without authentication
+  if (!user && isProtectedRoute) {
+    return redirect('/')
+  }
+
+  return {
+    supabaseId: user?.id || null,
+  }
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -40,19 +68,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 const queryClient = getQueryClient()
 
-function AppProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
-    </QueryClientProvider>
-  )
-}
-
 export default function App() {
+  const trpcClient = createTRPCClient()
+
   return (
-    <AppProviders>
-      <Outlet />
-    </AppProviders>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
+    </trpc.Provider>
   )
 }
 

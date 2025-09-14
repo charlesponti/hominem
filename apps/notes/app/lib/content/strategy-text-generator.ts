@@ -1,4 +1,4 @@
-import type { ContentStrategiesSelect } from '@hominem/utils/schema'
+import type { ContentStrategiesSelect } from '@hominem/data/schema'
 
 export function generateFullStrategyText(strategy: ContentStrategiesSelect): string {
   const sections = [
@@ -104,14 +104,13 @@ export function generateBlogContentPlanText(strategy: ContentStrategiesSelect): 
       ?.map((section, index) => `${index + 1}. ${section.heading}: ${section.content}`)
       .join('\n') || 'No outline available'
 
-  return `Title: ${blog.title}
-Word Count: ${blog.wordCount}
-
-Outline:
-${outline}
-
-SEO Keywords: ${blog.seoKeywords?.join(', ') || 'No keywords'}
-Call to Action: ${blog.callToAction || 'No CTA'}`
+  return [
+    `Title: ${blog.title}`,
+    `Word Count: ${blog.wordCount}`,
+    `Outline:\n${outline}`,
+    `SEO Keywords: ${blog.seoKeywords?.join(', ') || 'No keywords'}`,
+    `Call to Action: ${blog.callToAction || 'No CTA'}`,
+  ].join('\n')
 }
 
 export function generateMonetizationIdeasText(strategy: ContentStrategiesSelect): string {
@@ -129,7 +128,5 @@ export function generateCompetitiveAnalysisText(strategy: ContentStrategiesSelec
     ? analysis.opportunities.join(', ')
     : analysis.opportunities
 
-  return `Content Gaps: ${analysis.gaps || 'No gaps identified'}
-
-Opportunities: ${opportunities || 'No opportunities identified'}`
+  return `Content Gaps: ${analysis.gaps || 'No gaps identified'}\n\nOpportunities: ${opportunities || 'No opportunities identified'}`
 }

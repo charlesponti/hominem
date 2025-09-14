@@ -1,23 +1,17 @@
 import { tool } from 'ai'
-import { and, eq, like, sql } from 'drizzle-orm'
-import crypto from 'node:crypto'
+import { and, eq, like } from 'drizzle-orm'
 import { z } from 'zod'
-import { db } from '../db/index'
+import { db } from '@hominem/data/db'
+import { budgetCategories, type FinanceTransactionInsert } from '@hominem/data/schema'
+import { calculateTransactions } from './analytics/transaction-analytics.service'
+import { createAccount, deleteAccount, listAccounts, updateAccount } from './core/account.service'
 import {
-  budgetCategories,
-  transactions,
-  type FinanceAccountInsert,
-  type FinanceTransactionInsert,
-} from '../db/schema/finance.schema'
-import {
-  calculateTransactions,
-  createNewTransaction,
+  createTransaction,
   deleteTransaction,
   queryTransactions,
   updateTransaction,
-} from './finance.service'
+} from './finance.transactions.service'
 import type { QueryOptions } from './finance.types'
-import FinancialAccountService from './financial-account.service'
 
 export const budgetCalculatorSchema = z.object({
   monthlyIncome: z.number().positive().describe('Monthly income amount'),
@@ -118,19 +112,6 @@ export const deleteTransactionSchema = z.object({
   userId: z.string().describe('User ID who owns this transaction'),
 })
 
-export const getBudgetCategorySuggestionsSchema = z.object({
-  description: z.string().describe('Transaction description to get category suggestions for'),
-  limit: z.number().optional().default(5).describe('Maximum number of suggestions to return'),
-  userId: z.string().describe('User ID who owns the transactions'),
-})
-
-export const getBudgetCategoriesSchema = z.object({
-  userId: z.string().describe('User ID who owns the categories'),
-  categoryName: z.string().optional(),
-  categoryId: z.string().optional(),
-  categoryType: z.string().optional(),
-})
-
 export const calculateTransactionsSchema = z.object({
   calculationType: z
     .enum(['sum', 'average', 'count'])
@@ -154,7 +135,7 @@ export const create_finance_account = tool({
   description: 'Create a new finance account',
   parameters: financeAccountSchema,
   async execute(args) {
-    const created = await FinancialAccountService.createAccount({
+    const created = await createAccount({
       name: args.name,
       type: args.type,
       balance: args.balance,
@@ -170,7 +151,7 @@ export const get_finance_accounts = tool({
   description: 'Get all finance accounts',
   parameters: getFinanceAccountsSchema,
   async execute(args) {
-    let accounts = await FinancialAccountService.listAccounts(args.userId)
+    let accounts = await listAccounts(args.userId)
     if (args.type) {
       accounts = accounts.filter((acc) => acc.type === args.type)
     }
@@ -185,17 +166,18 @@ export const update_finance_account = tool({
   description: 'Update a finance account',
   parameters: updateFinanceAccountSchema,
   async execute(args) {
-    const updates: Partial<FinanceAccountInsert> = {}
+    const updates: Partial<{
+      name: string
+      balance: string
+      interestRate: string | null
+      minimumPayment: string | null
+    }> = {}
     if (args.name) updates.name = args.name
     if (args.balance) updates.balance = args.balance.toString()
     if (args.interestRate) updates.interestRate = args.interestRate.toString()
     if (args.minimumPayment) updates.minimumPayment = args.minimumPayment.toString()
 
-    const updated = await FinancialAccountService.updateAccount(
-      args.accountId,
-      args.userId,
-      updates
-    )
+    const updated = await updateAccount(args.accountId, args.userId, updates)
     return { message: `Updated finance account ${updated.id}`, account: updated }
   },
 })
@@ -204,7 +186,7 @@ export const delete_finance_account = tool({
   description: 'Delete a finance account',
   parameters: deleteFinanceAccountSchema,
   async execute(args) {
-    await FinancialAccountService.deleteAccount(args.accountId, args.userId)
+    await deleteAccount(args.accountId, args.userId)
     return { message: `Deleted finance account ${args.accountId}` }
   },
 })
@@ -229,7 +211,7 @@ export const create_transaction = tool({
       userId: args.userId,
     }
 
-    const result = await createNewTransaction(transaction)
+    const result = await createTransaction(transaction)
     return {
       message: `Created ${args.type} transaction for ${args.amount} on ${args.date}`,
       transaction: result,
@@ -351,56 +333,37 @@ export const loanCalculatorTool = tool({
   },
 })
 
-export const get_budget_category_suggestions = tool({
-  description: 'Get suggested budget categories based on transaction description',
-  parameters: getBudgetCategorySuggestionsSchema,
-  async execute(args) {
-    // Query similar transactions to get category suggestions
-    const similarTransactions = await db
-      .select({
-        category: transactions.category,
-        parentCategory: transactions.parentCategory,
-        count: sql<number>`COUNT(*)`,
-      })
-      .from(transactions)
-      .where(
-        and(
-          like(transactions.description, `%${args.description}%`),
-          eq(transactions.userId, args.userId)
-        )
-      )
-      .groupBy(transactions.category, transactions.parentCategory)
-      .orderBy(sql`count DESC`)
-      .limit(args.limit)
-
-    return {
-      suggestions: similarTransactions.map((tx) => ({
-        category: tx.category,
-        parentCategory: tx.parentCategory,
-        frequency: tx.count,
-      })),
-      message: `Found ${similarTransactions.length} category suggestions for "${args.description}"`,
-    }
-  },
+export const getBudgetCategoriesSchema = z.object({
+  userId: z.string().describe('User ID who owns the categories'),
+  name: z.string().optional(),
+  type: z.string().optional(),
 })
-
 export const get_budget_categories = tool({
   description: 'A tool to get budget categories by id, name, or type.',
   parameters: getBudgetCategoriesSchema,
   execute: async (query) => {
-    const dbQuery = db
+    const dbQuery = await db
       .select()
       .from(budgetCategories)
       .where(
         and(
           eq(budgetCategories.userId, query.userId),
-          query.categoryId ? eq(budgetCategories.id, query.categoryId) : undefined,
-          query.categoryName ? like(budgetCategories.name, `%${query.categoryName}%`) : undefined,
-          query.categoryType ? eq(budgetCategories.type, query.categoryType) : undefined
+          query.name ? like(budgetCategories.name, `%${query.name}%`) : undefined,
+          query.type
+            ? eq(
+                budgetCategories.type,
+                query.type as (typeof budgetCategories.type.enumValues)[number]
+              )
+            : undefined
         )
       )
 
-    return dbQuery
+    return dbQuery.map((category) => ({
+      id: category.id,
+      name: category.name,
+      type: category.type,
+      averageMonthlyExpense: category.averageMonthlyExpense,
+    }))
   },
 })
 
@@ -499,7 +462,6 @@ export const tools = {
   calculate_transactions,
 
   // Budgeting
-  get_budget_category_suggestions,
   get_budget_categories,
 
   budgetCalculatorTool,

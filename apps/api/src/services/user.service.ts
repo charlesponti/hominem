@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { list, token, users } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { list, token, users } from '@hominem/data/schema'
 import { add } from 'date-fns'
 import { eq } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'

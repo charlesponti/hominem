@@ -3,8 +3,10 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-const HOMINEM_CONFIG_DIR = path.join(os.homedir(), '.hominem')
-const CONFIG_FILE_PATH = path.join(HOMINEM_CONFIG_DIR, 'config.json')
+// Allow overriding config path via environment variables
+const DEFAULT_HOMINEM_CONFIG_DIR = path.join(os.homedir(), '.hominem')
+const HOMINEM_CONFIG_DIR = process.env.HOMINEM_CONFIG_DIR || DEFAULT_HOMINEM_CONFIG_DIR
+const CONFIG_FILE_PATH = process.env.HOMINEM_CONFIG_PATH || path.join(HOMINEM_CONFIG_DIR, 'config.json')
 
 /**
  * Reads the authentication token from the Hominem config file.
@@ -32,19 +34,19 @@ export function getAuthTokenFromFile(): string | null {
  * Helper function to create an authenticated axios client
  * @returns An axios instance configured with the authentication token.
  */
-export function getAuthenticatedClient(host = 'localhost', port = '4040') {
-  // Get auth token
+/**
+ * Create an authenticated axios client. Host/port can be overridden via env vars.
+ */
+export function getAuthenticatedClient(
+  host = process.env.HOMINEM_API_HOST || 'localhost',
+  port = process.env.HOMINEM_API_PORT || '4040'
+) {
   const token = getAuthTokenFromFile()
 
-  // Create an axios instance with the auth token
-  const client = axios.create({
+  return axios.create({
     baseURL: `http://${host}:${port}`,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   })
-
-  return client
 }
 
 export function handleApiError(

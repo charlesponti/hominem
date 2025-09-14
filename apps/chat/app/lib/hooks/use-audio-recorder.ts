@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 export interface AudioRecordingState {
   isRecording: boolean
@@ -6,6 +6,7 @@ export interface AudioRecordingState {
   duration: number
   audioBlob: Blob | null
   audioUrl: string | null
+  stream: MediaStream | null
   isSupported: boolean
   error: string | null
 }
@@ -27,8 +28,9 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     duration: 0,
     audioBlob: null,
     audioUrl: null,
+    stream: null,
     isSupported: typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia,
-    error: null
+    error: null,
   })
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -41,14 +43,14 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
   const updateDuration = useCallback(() => {
     if (startTimeRef.current) {
       const elapsed = Date.now() - startTimeRef.current - pausedTimeRef.current
-      setState(prev => ({ ...prev, duration: Math.floor(elapsed / 1000) }))
+      setState((prev) => ({ ...prev, duration: Math.floor(elapsed / 1000) }))
     }
   }, [])
 
   const startRecording = useCallback(async (): Promise<void> => {
     try {
       // Clear any previous error
-      setState(prev => ({ ...prev, error: null }))
+      setState((prev) => ({ ...prev, error: null }))
 
       // Check if already recording
       if (state.isRecording) {
@@ -61,8 +63,8 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100
-        }
+          sampleRate: 44100,
+        },
       })
 
       streamRef.current = stream
@@ -70,10 +72,13 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
       // Create MediaRecorder
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: 'audio/webm;codecs=opus',
       })
 
       mediaRecorderRef.current = mediaRecorder
+
+      // Update state with stream for waveform visualization
+      setState((prev) => ({ ...prev, stream }))
 
       // Set up event handlers
       mediaRecorder.ondataavailable = (event) => {
@@ -83,22 +88,23 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
       }
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { 
-          type: 'audio/webm;codecs=opus' 
+        const audioBlob = new Blob(chunksRef.current, {
+          type: 'audio/webm;codecs=opus',
         })
         const audioUrl = URL.createObjectURL(audioBlob)
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           audioBlob,
           audioUrl,
+          stream: null, // Clear stream when recording stops
           isRecording: false,
-          isPaused: false
+          isPaused: false,
         }))
 
         // Clean up
         if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop())
+          streamRef.current.getTracks().forEach((track) => track.stop())
           streamRef.current = null
         }
 
@@ -110,11 +116,11 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
       mediaRecorder.onerror = (event) => {
         console.error('MediaRecorder error:', event)
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           error: 'Recording failed. Please try again.',
           isRecording: false,
-          isPaused: false
+          isPaused: false,
         }))
       }
 
@@ -123,19 +129,18 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
       startTimeRef.current = Date.now()
       pausedTimeRef.current = 0
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isRecording: true,
         isPaused: false,
-        duration: 0
+        duration: 0,
       }))
 
       // Start duration timer
       intervalRef.current = setInterval(updateDuration, 1000)
-
     } catch (error) {
       console.error('Failed to start recording:', error)
-      
+
       let errorMessage = 'Failed to access microphone.'
       if (error instanceof DOMException) {
         switch (error.name) {
@@ -153,11 +158,11 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         }
       }
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: errorMessage,
         isRecording: false,
-        isPaused: false
+        isPaused: false,
       }))
     }
   }, [state.isRecording, updateDuration])
@@ -172,9 +177,9 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     if (mediaRecorderRef.current && state.isRecording && !state.isPaused) {
       mediaRecorderRef.current.pause()
       pausedTimeRef.current += Date.now() - startTimeRef.current
-      
-      setState(prev => ({ ...prev, isPaused: true }))
-      
+
+      setState((prev) => ({ ...prev, isPaused: true }))
+
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
@@ -186,9 +191,9 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     if (mediaRecorderRef.current && state.isRecording && state.isPaused) {
       mediaRecorderRef.current.resume()
       startTimeRef.current = Date.now()
-      
-      setState(prev => ({ ...prev, isPaused: false }))
-      
+
+      setState((prev) => ({ ...prev, isPaused: false }))
+
       intervalRef.current = setInterval(updateDuration, 1000)
     }
   }, [state.isRecording, state.isPaused, updateDuration])
@@ -205,12 +210,13 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     }
 
     // Reset state
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       duration: 0,
       audioBlob: null,
       audioUrl: null,
-      error: null
+      stream: null,
+      error: null,
     }))
 
     // Clear refs
@@ -237,7 +243,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     pauseRecording,
     resumeRecording,
     clearRecording,
-    downloadRecording
+    downloadRecording,
   }
 }
 

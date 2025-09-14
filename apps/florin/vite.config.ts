@@ -9,4 +9,18 @@ export default defineConfig({
     port: 4444,
     strictPort: true,
   },
+  ssr: {
+    external: ['node:fs', 'node:path', 'node:url', 'node:http'],
+    resolve: {
+      conditions: ['node'],
+    },
+  },
+  optimizeDeps: {
+    exclude: ['@react-router/node'],
+  },
+  build: {
+    rollupOptions: {
+      external: ['@react-router/node'],
+    },
+  },
 })

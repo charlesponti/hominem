@@ -1,4 +1,5 @@
 # Hominem API
+<<<<<<< HEAD
 
 This repo uses the following technologies:
 
@@ -73,3 +74,5 @@ All authenticated routes will use Supabase's JWT verification to validate reques
 
 - `GET /api/companies/search` - Search companies by name
 - `POST /api/companies` - Create a company
+=======
+>>>>>>> main

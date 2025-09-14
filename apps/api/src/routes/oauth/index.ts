@@ -1,9 +1,10 @@
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
-import twitterOAuthPlugin from './twitter.router.js'
+import { Hono } from 'hono'
+import { oauthTwitterCallbackRoutes } from './oauth.twitter.callback.js'
 
-const oauthPlugin: FastifyPluginAsync = async (server: FastifyInstance) => {
-  // Register Twitter OAuth routes
-  await server.register(twitterOAuthPlugin, { prefix: '/twitter' })
-}
+export const oauthRoutes = new Hono()
 
-export default oauthPlugin
+const twitterRoutes = new Hono()
+
+twitterRoutes.route('/callback', oauthTwitterCallbackRoutes)
+
+oauthRoutes.route('/twitter', twitterRoutes)

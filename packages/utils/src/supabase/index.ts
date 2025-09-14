@@ -1,2 +1,7 @@
 export { supabaseAdmin } from './client'
-export { SupabaseStorageService, csvStorageService } from './storage'
+export {
+  SupabaseStorageService,
+  csvStorageService,
+  fileStorageService,
+  type StoredFile,
+} from './storage'

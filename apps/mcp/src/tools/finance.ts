@@ -12,7 +12,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool(
     'create_finance_account',
-    financeTools.create_finance_account.parameters.omit({ userId: undefined }).shape,
+    financeTools.create_finance_account.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
         const response = await apiClient.post('/api/finance/accounts', args)
@@ -25,7 +25,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool(
     'get_finance_accounts',
-    financeTools.get_finance_accounts.parameters.omit({ userId: undefined }).shape,
+    financeTools.get_finance_accounts.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
         const response = await apiClient.get('/api/finance/accounts', { params: args })
@@ -38,7 +38,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool(
     'update_finance_account',
-    financeTools.update_finance_account.parameters.omit({ userId: undefined }).shape,
+    financeTools.update_finance_account.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
         const { accountId, ...updateData } = args
@@ -55,7 +55,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool(
     'delete_finance_account',
-    financeTools.delete_finance_account.parameters.omit({ userId: undefined }).shape,
+    financeTools.delete_finance_account.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
         const { accountId } = args
@@ -73,7 +73,7 @@ export function registerFinanceTools(server: McpServer) {
   // --- Transaction Management --- (Refactored)
   server.tool(
     'create_transaction',
-    financeTools.create_transaction.parameters.omit({ userId: undefined }).shape,
+    financeTools.create_transaction.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
         const response = await apiClient.post('/api/finance/transactions', args)
@@ -99,7 +99,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool(
     'update_transaction',
-    financeTools.update_transaction.parameters.omit({ userId: undefined }).shape,
+    financeTools.update_transaction.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
         const { transactionId, ...updateData } = args
@@ -119,7 +119,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool(
     'delete_transaction',
-    financeTools.delete_transaction.parameters.omit({ userId: undefined }).shape,
+    financeTools.delete_transaction.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
         const { transactionId } = args
@@ -134,14 +134,18 @@ export function registerFinanceTools(server: McpServer) {
     }
   )
 
-  server.tool('get_spending_categories', async (args) => {
-    try {
-      const response = await apiClient.get('/api/finance/categories', { params: args })
-      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
-    } catch (error) {
-      return handleApiError(error, 'get_spending_categories')
+  server.tool(
+    'get_spending_categories',
+    z.object({}).describe('No parameters').shape,
+    async (args) => {
+      try {
+        const response = await apiClient.get('/api/finance/categories', { params: args })
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'get_spending_categories')
+      }
     }
-  })
+  )
 
   server.tool(
     'get_spending_time_series',
@@ -167,14 +171,18 @@ export function registerFinanceTools(server: McpServer) {
     }
   )
 
-  server.tool('get_top_merchants', async () => {
-    try {
-      const response = await apiClient.get('/api/finance/analyze/top-merchants')
-      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
-    } catch (error) {
-      return handleApiError(error, 'get_top_merchants')
+  server.tool(
+    'get_top_merchants',
+    z.object({}).describe('No parameters').shape,
+    async () => {
+      try {
+        const response = await apiClient.get('/api/finance/analyze/top-merchants')
+        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+      } catch (error) {
+        return handleApiError(error, 'get_top_merchants')
+      }
     }
-  })
+  )
 
   server.tool('get_category_breakdown', categoryBreakdownSchema.shape, async (args) => {
     try {
@@ -218,37 +226,6 @@ export function registerFinanceTools(server: McpServer) {
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'calculate_transactions')
-      }
-    }
-  )
-
-  server.tool(
-    'get_budget_category_suggestions',
-    financeTools.get_budget_category_suggestions.parameters.omit({ userId: undefined }).shape,
-    async (args) => {
-      try {
-        const response = await apiClient.post(
-          '/api/finance/analyze/budget-category-suggestions',
-          args
-        )
-        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
-      } catch (error) {
-        return handleApiError(error, 'get_budget_category_suggestions')
-      }
-    }
-  )
-
-  server.tool(
-    'get_budget_categories',
-    financeTools.get_budget_categories.parameters.omit({ userId: undefined }).shape,
-    async (args) => {
-      try {
-        const response = await apiClient.get('/api/finance/analyze/budget-categories', {
-          params: args,
-        })
-        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
-      } catch (error) {
-        return handleApiError(error, 'get_budget_categories')
       }
     }
   )

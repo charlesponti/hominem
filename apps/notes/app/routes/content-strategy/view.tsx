@@ -1,86 +1,46 @@
 'use client'
 
-import { ArrowLeft, FileText } from 'lucide-react'
-import { useCallback } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
-import { CopyButton } from '~/components/copy-button'
-import { KeyboardShortcutsHelp } from '~/components/keyboard-shortcuts-help'
-import { SkipLinks } from '~/components/skip-links'
-import { StrategySection } from '~/components/strategy-section'
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
+import { Link, useParams } from 'react-router'
 import { Button } from '~/components/ui/button'
-import { useContentStrategy } from '~/lib/content/use-content-strategies'
-import { useCopyStrategy } from '~/lib/content/use-copy-strategy'
-import { useKeyboardNavigation } from '~/lib/hooks/use-keyboard-navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { useToast } from '~/components/ui/use-toast'
+import { useContentStrategy, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
 
-export default function ViewContentStrategyPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+export default function ContentStrategyViewPage() {
+  const { id } = useParams<{ id: string }>()
+  const { toast } = useToast()
   const { strategy, isLoading, error } = useContentStrategy(id || '')
-  const {
-    copiedSections,
-    copyFullStrategy,
-    copyKeyInsights,
-    copyBlogContentPlan,
-    copyMonetizationIdeas,
-    copyCompetitiveAnalysis,
-  } = useCopyStrategy(strategy)
+  const { deleteStrategy, isLoading: isDeleting } = useDeleteContentStrategy()
 
-  // Keyboard navigation setup
-  const handleGoBack = useCallback(() => {
-    navigate('/content-strategy')
-  }, [navigate])
+  const handleDelete = async () => {
+    if (!strategy || !confirm('Are you sure you want to delete this strategy? This action cannot be undone.')) {
+      return
+    }
 
-  const handleCopySection = useCallback(
-    (sectionName: string) => {
-      switch (sectionName.toLowerCase()) {
-        case 'key insights':
-          copyKeyInsights()
-          break
-        case 'blog content plan':
-          copyBlogContentPlan()
-          break
-        case 'monetization ideas':
-          copyMonetizationIdeas()
-          break
-        case 'competitive analysis':
-          copyCompetitiveAnalysis()
-          break
-        default:
-          copyFullStrategy()
-      }
-    },
-    [
-      copyKeyInsights,
-      copyBlogContentPlan,
-      copyMonetizationIdeas,
-      copyCompetitiveAnalysis,
-      copyFullStrategy,
-    ]
-  )
-
-  const sections = [
-    'Key insights',
-    'Blog content plan',
-    'Monetization ideas',
-    'Competitive analysis',
-  ]
-
-  const { getShortcutText } = useKeyboardNavigation({
-    onCopyAll: copyFullStrategy,
-    onGoBack: handleGoBack,
-    onCopySection: handleCopySection,
-    sections,
-  })
+    try {
+      await deleteStrategy({ id: strategy.id })
+      toast({
+        title: 'Strategy Deleted',
+        description: 'The content strategy has been deleted successfully.',
+      })
+      // Redirect to strategies list
+      window.location.href = '/content-strategy/saved'
+    } catch (error) {
+      console.error('Failed to delete strategy:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Delete Failed',
+        description: 'Unable to delete the strategy. Please try again.',
+      })
+    }
+  }
 
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
-        <SkipLinks />
-        <div className="flex items-center justify-center p-8" aria-live="polite">
-          <div
-            className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
-            aria-hidden="true"
-          />
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
           <span className="ml-3">Loading strategy...</span>
         </div>
       </div>
@@ -90,18 +50,11 @@ export default function ViewContentStrategyPage() {
   if (error || !strategy) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
-        <SkipLinks />
-        <div className="text-center py-8" role="alert">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" aria-hidden="true" />
-          <h1 className="text-lg font-medium text-gray-900 mb-2">Strategy not found</h1>
-          <p className="text-gray-500 mb-4">
-            The content strategy you're looking for could not be found.
-          </p>
-          <Link to="/content-strategy">
-            <Button>
-              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-              Back to Strategies
-            </Button>
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold mb-2">Strategy Not Found</h2>
+          <p className="text-gray-600 mb-4">The content strategy you're looking for doesn't exist.</p>
+          <Link to="/content-strategy/saved">
+            <Button>Back to Strategies</Button>
           </Link>
         </div>
       </div>
@@ -109,203 +62,238 @@ export default function ViewContentStrategyPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <SkipLinks />
-
+    <div className="container mx-auto p-4 max-w-4xl space-y-6">
       {/* Header */}
-      <nav className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/content-strategy">
+          <Link to="/content-strategy/saved">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-              Back to Strategies
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
             </Button>
           </Link>
+          <div>
+            <h1 className="text-2xl font-bold">{strategy.title}</h1>
+            {strategy.description && (
+              <p className="text-gray-600">{strategy.description}</p>
+            )}
+          </div>
         </div>
-        <CopyButton
-          onClick={copyFullStrategy}
-          sectionName="Full strategy"
-          copiedSections={copiedSections}
-          variant="outline"
-          shortcutKey={getShortcutText('copyAll')}
-        >
-          {copiedSections.has('Full strategy') ? 'Copied!' : 'Copy All'}
-        </CopyButton>
-      </nav>
-
-      <main id="main-content" tabIndex={-1}>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">{strategy.title}</h1>
-          {strategy.description && (
-            <p className="text-gray-600 mt-1" id="strategy-description">
-              {strategy.description}
-            </p>
-          )}
+        <div className="flex gap-2">
+          <Link to={`/content-strategy/edit/${strategy.id}`}>
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
         </div>
+      </div>
 
-        <div className="space-y-6">
-          {/* Strategy Overview */}
-          <StrategySection title="Strategy Details" sectionId="strategy-details" level={2}>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+      {/* Strategy Content */}
+      <div className="grid gap-6">
+        {/* Basic Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Strategy Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <strong>Topic:</strong> {strategy.strategy.topic}
+                <h4 className="font-medium text-gray-900">Topic</h4>
+                <p className="text-gray-600">{strategy.strategy.topic}</p>
               </div>
               <div>
-                <strong>Target Audience:</strong> {strategy.strategy.targetAudience}
-              </div>
-              <div>
-                <strong>Platforms:</strong>{' '}
-                {strategy.strategy.platforms?.join(', ') || 'No platforms'}
-              </div>
-              <div>
-                <strong>Created:</strong>{' '}
-                {strategy.createdAt
-                  ? new Date(strategy.createdAt).toLocaleDateString()
-                  : 'Unknown date'}
+                <h4 className="font-medium text-gray-900">Target Audience</h4>
+                <p className="text-gray-600">{strategy.strategy.targetAudience}</p>
               </div>
             </div>
-          </StrategySection>
+            {strategy.strategy.platforms && strategy.strategy.platforms.length > 0 && (
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Platforms</h4>
+                <div className="flex gap-2 flex-wrap">
+                  {strategy.strategy.platforms.map((platform: string) => (
+                    <span
+                      key={platform}
+                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm"
+                    >
+                      {platform}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Key Insights */}
-          {strategy.strategy.keyInsights && strategy.strategy.keyInsights.length > 0 && (
-            <StrategySection
-              title="Key Insights"
-              onCopy={copyKeyInsights}
-              sectionName="Key insights"
-              copiedSections={copiedSections}
-              showCopyButton={true}
-              sectionId="key-insights"
-              shortcutKey={getShortcutText('copySection')}
-              level={2}
-            >
-              <ul className="list-disc pl-5 space-y-1">
-                {strategy.strategy.keyInsights.map((insight, index) => (
-                  <li key={insight}>{insight}</li>
+        {/* Key Insights */}
+        {strategy.strategy.keyInsights && strategy.strategy.keyInsights.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Key Insights</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {strategy.strategy.keyInsights.map((insight: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span>{insight}</span>
+                  </li>
                 ))}
               </ul>
-            </StrategySection>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Blog Content Plan */}
-          {strategy.strategy.contentPlan?.blog && (
-            <StrategySection
-              title="Blog Content Plan"
-              onCopy={copyBlogContentPlan}
-              sectionName="Blog content plan"
-              copiedSections={copiedSections}
-              showCopyButton={true}
-              sectionId="blog-content-plan"
-              shortcutKey={getShortcutText('copySection')}
-              level={2}
-            >
-              <div className="space-y-4">
+        {/* Content Plan */}
+        {strategy.strategy.contentPlan && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Plan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Blog Content */}
+              {strategy.strategy.contentPlan.blog && (
                 <div>
-                  <h3 className="font-medium text-lg" id="blog-title">
-                    {strategy.strategy.contentPlan.blog.title}
-                  </h3>
-                  <p className="text-sm text-gray-600" aria-describedby="blog-title">
-                    Suggested word count: {strategy.strategy.contentPlan.blog.wordCount}
-                  </p>
-                </div>
-
-                {strategy.strategy.contentPlan.blog.outline && (
-                  <div>
-                    <h4 className="font-medium mb-2">Outline:</h4>
-                    <ol className="list-decimal pl-5 space-y-2">
-                      {strategy.strategy.contentPlan.blog.outline.map((section, index) => (
-                        <li key={`${section.heading}-${section.content}`}>
-                          <span className="font-medium">{section.heading}:</span> {section.content}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-
-                {strategy.strategy.contentPlan.blog.seoKeywords &&
-                  strategy.strategy.contentPlan.blog.seoKeywords.length > 0 && (
+                  <h4 className="font-medium text-gray-900 mb-3">Blog Content</h4>
+                  <div className="space-y-3">
                     <div>
-                      <h4 className="font-medium mb-2">SEO Keywords:</h4>
-                      <div className="flex flex-wrap gap-2" aria-label="SEO keywords">
-                        {strategy.strategy.contentPlan.blog.seoKeywords.map((keyword) => (
+                      <h5 className="font-medium">Title</h5>
+                      <p className="text-gray-600">{strategy.strategy.contentPlan.blog.title}</p>
+                    </div>
+                    <div>
+                      <h5 className="font-medium">Word Count</h5>
+                      <p className="text-gray-600">{strategy.strategy.contentPlan.blog.wordCount} words</p>
+                    </div>
+                    <div>
+                      <h5 className="font-medium">Outline</h5>
+                      <ol className="list-decimal list-inside space-y-1">
+                        {strategy.strategy.contentPlan.blog.outline.map((section: any, index: number) => (
+                          <li key={index} className="text-gray-600">
+                            <strong>{section.heading}:</strong> {section.content}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                    <div>
+                      <h5 className="font-medium">SEO Keywords</h5>
+                      <div className="flex gap-2 flex-wrap">
+                        {strategy.strategy.contentPlan.blog.seoKeywords.map((keyword: string) => (
                           <span
                             key={keyword}
-                            className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm"
+                            className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm"
                           >
                             {keyword}
                           </span>
                         ))}
                       </div>
                     </div>
-                  )}
-
-                {strategy.strategy.contentPlan.blog.callToAction && (
-                  <div>
-                    <h4 className="font-medium mb-1">Call to Action:</h4>
-                    <p className="text-sm bg-gray-50 p-3 rounded">
-                      {strategy.strategy.contentPlan.blog.callToAction}
-                    </p>
+                    <div>
+                      <h5 className="font-medium">Call to Action</h5>
+                      <p className="text-gray-600">{strategy.strategy.contentPlan.blog.callToAction}</p>
+                    </div>
                   </div>
-                )}
-              </div>
-            </StrategySection>
-          )}
+                </div>
+              )}
 
-          {/* Monetization Ideas */}
-          {strategy.strategy.monetization && strategy.strategy.monetization.length > 0 && (
-            <StrategySection
-              title="Monetization Ideas"
-              onCopy={copyMonetizationIdeas}
-              sectionName="Monetization ideas"
-              copiedSections={copiedSections}
-              showCopyButton={true}
-              sectionId="monetization-ideas"
-              shortcutKey={getShortcutText('copySection')}
-              level={2}
-            >
-              <ul className="list-disc pl-5 space-y-1">
-                {strategy.strategy.monetization.map((idea, index) => (
-                  <li key={idea}>{idea}</li>
+              {/* Social Media Content */}
+              {strategy.strategy.contentPlan.socialMedia && strategy.strategy.contentPlan.socialMedia.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Social Media Content</h4>
+                  <div className="space-y-4">
+                    {strategy.strategy.contentPlan.socialMedia.map((platform: any, index: number) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <h5 className="font-medium text-gray-900 mb-2">{platform.platform}</h5>
+                        <div className="space-y-2">
+                          <div>
+                            <h6 className="font-medium text-sm">Best Time to Post</h6>
+                            <p className="text-gray-600 text-sm">{platform.bestTimeToPost}</p>
+                          </div>
+                          <div>
+                            <h6 className="font-medium text-sm">Content Ideas</h6>
+                            <ul className="list-disc list-inside space-y-1">
+                              {platform.contentIdeas.map((idea: string, ideaIndex: number) => (
+                                <li key={ideaIndex} className="text-gray-600 text-sm">{idea}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h6 className="font-medium text-sm">Hashtag Suggestions</h6>
+                            <div className="flex gap-1 flex-wrap">
+                              {platform.hashtagSuggestions.map((hashtag: string) => (
+                                <span
+                                  key={hashtag}
+                                  className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs"
+                                >
+                                  {hashtag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Monetization */}
+        {strategy.strategy.monetization && strategy.strategy.monetization.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Monetization Ideas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {strategy.strategy.monetization.map((idea: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className="text-green-500 mt-1">•</span>
+                    <span>{idea}</span>
+                  </li>
                 ))}
               </ul>
-            </StrategySection>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Competitive Analysis */}
-          {strategy.strategy.competitiveAnalysis && (
-            <StrategySection
-              title="Competitive Analysis"
-              onCopy={copyCompetitiveAnalysis}
-              sectionName="Competitive analysis"
-              copiedSections={copiedSections}
-              showCopyButton={true}
-              sectionId="competitive-analysis"
-              shortcutKey={getShortcutText('copySection')}
-              level={2}
-            >
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-1">Content Gaps:</h3>
-                  <div className="text-sm bg-gray-50 p-3 rounded">
-                    {strategy.strategy.competitiveAnalysis.gaps || 'No gaps identified'}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-1">Opportunities:</h3>
-                  <div className="text-sm bg-gray-50 p-3 rounded">
-                    {Array.isArray(strategy.strategy.competitiveAnalysis.opportunities)
-                      ? strategy.strategy.competitiveAnalysis.opportunities.join(', ')
-                      : strategy.strategy.competitiveAnalysis.opportunities ||
-                        'No opportunities identified'}
-                  </div>
-                </div>
+        {/* Competitive Analysis */}
+        {strategy.strategy.competitiveAnalysis && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Competitive Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900">Content Gaps</h4>
+                <p className="text-gray-600">{strategy.strategy.competitiveAnalysis.gaps}</p>
               </div>
-            </StrategySection>
-          )}
-        </div>
-      </main>
-
-      {/* Help and Keyboard Shortcuts */}
-      <KeyboardShortcutsHelp />
+              <div>
+                <h4 className="font-medium text-gray-900">Opportunities</h4>
+                <ul className="space-y-1">
+                  {strategy.strategy.competitiveAnalysis.opportunities.map((opportunity: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-orange-500 mt-1">•</span>
+                      <span className="text-gray-600">{opportunity}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

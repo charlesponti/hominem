@@ -9,6 +9,6 @@ test('test', async ({ page }) => {
   await page.getByRole('radio', { name: 'No' }).check()
   await page.getByRole('button', { name: 'Continue' }).click()
   await page.getByRole('button', { name: 'Calculate take-home pay' }).click()
-  const tab = await page.getByRole('tabpanel', { name: 'Yearly' })
+  const tab = page.getByRole('tabpanel', { name: 'Yearly' })
   console.log(await tab.innerText())
 })

@@ -7,9 +7,13 @@
     "rootDir": ".",
     "outDir": "build",
     "composite": true,
-    "declaration": true,
+    "declaration": false,
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "paths": {
       "@/*": [
         "src/*"

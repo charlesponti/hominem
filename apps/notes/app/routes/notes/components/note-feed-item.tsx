@@ -1,6 +1,6 @@
 'use client'
 
-import type { Content } from '@hominem/utils/types'
+import type { Note } from '@hominem/utils/types'
 import { Edit, Trash2, X } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import SocialX from '~/components/icons/SocialX'
@@ -11,8 +11,8 @@ import { cn } from '~/lib/utils'
 import { TweetModal } from './tweet-modal'
 
 interface NoteFeedItemProps {
-  note: Content
-  onEdit: (note: Content) => void
+  note: Note
+  onEdit: (note: Note) => void
   onDelete: (id: string) => void
   onRemoveTag: (noteId: string, tagValue: string) => void
   className?: string
@@ -156,10 +156,10 @@ export function NoteFeedItem({
       </div>
 
       <TweetModal
-        open={showTweetModal}
-        onOpenChange={setShowTweetModal}
-        noteContent={note.content}
-        noteTitle={note.title}
+        isOpen={showTweetModal}
+        onClose={() => setShowTweetModal(false)}
+        initialText={note.content}
+        contentId={note.id}
       />
     </div>
   )

@@ -40,8 +40,5 @@
     }
   ],
   "display": "@hominem/root",
-  "include": [
-    "apps",
-    "packages"
-  ]
+  
 }

@@ -1,5 +1,3 @@
-'use client'
-
 import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu'
 import { ListOrdered, PlusCircle } from 'lucide-react'
 import { Button } from '~/components/ui/button'
@@ -11,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import type { SortField, SortOption } from '~/lib/hooks/use-finance-data'
+import type { SortField, SortOption } from '~/lib/hooks/use-sort'
 import { SortRow } from './sort-row'
 
 interface SortControlsProps {

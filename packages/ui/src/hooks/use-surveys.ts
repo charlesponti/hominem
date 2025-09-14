@@ -53,7 +53,7 @@ export function useCreateSurvey() {
     mutationFn: (data: CreateSurveyInput) =>
       apiClient.post<CreateSurveyInput, Survey>('/api/surveys', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [SURVEYS_KEY] })
+      queryClient.invalidateQueries([SURVEYS_KEY])
     },
   })
 
@@ -73,7 +73,7 @@ export function useVoteSurvey() {
     mutationFn: (data: VoteInput) =>
       apiClient.post<VoteInput, { success: boolean }>('/api/surveys/vote', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [SURVEYS_KEY] })
+      queryClient.invalidateQueries([SURVEYS_KEY])
     },
   })
 

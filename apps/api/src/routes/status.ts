@@ -1,20 +1,31 @@
-import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
+import { db } from '@hominem/data'
+import { health } from '@hominem/data/schema'
+import { Hono } from 'hono'
 
-// Status/health endpoint
-const statusPlugin: FastifyPluginAsync = async (server) => {
-  // Simple health check that doesn't require authentication
-  server.get('/health', async () => {
-    return { status: 'ok', serverTime: new Date().toISOString() }
-  })
+export const statusRoutes = new Hono()
 
-  server.get('/status', async (request) => {
-    const isAuth = !!request.userId
-    const serverTime = new Date().toISOString()
-    const uptime = process.uptime()
+// System health check endpoint
+statusRoutes.get('/', async (c) => {
+  try {
+    await db.select().from(health).limit(1)
 
-    return { up: true, isAuth, serverTime, uptime }
-  })
-}
-
-export default fp(statusPlugin)
+    return c.json({
+      status: 'ok',
+      serverTime: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: 'connected',
+    })
+  } catch (error) {
+    console.error('Health check failed:', error)
+    return c.json(
+      {
+        status: 'error',
+        serverTime: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: 'disconnected',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      500
+    )
+  }
+})
