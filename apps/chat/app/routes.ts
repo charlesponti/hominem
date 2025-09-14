@@ -6,6 +6,8 @@ export default [
     route('/chat', 'routes/chat/page.tsx'),
     route('/about', 'routes/about.tsx'),
     route('/profile', 'routes/profile/page.tsx'),
+    route('/auth/signin', 'routes/auth/page.tsx'),
+    route('/auth/signup', 'routes/auth/page.tsx'),
   ]),
   // API Routes
   route('/api/chat-stream', 'routes/api/chat-stream.ts'),

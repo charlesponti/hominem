@@ -26,6 +26,8 @@ export default [
       route('finance/location-comparison', 'routes/finance/location-comparison/page.tsx'),
     ]),
     route('/account', 'routes/account.tsx'),
+    route('/auth/signin', 'routes/auth/signin.tsx'),
+    route('/auth/signup', 'routes/auth/signup.tsx'),
     route('/auth/cli', 'routes/auth/cli.tsx'),
   ]),
 ] as RouteConfig
