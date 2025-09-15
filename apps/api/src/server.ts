@@ -10,14 +10,12 @@ import { env } from './lib/env.js'
 import { supabaseMiddleware } from './middleware/supabase.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { componentsRoutes } from './routes/components/index.js'
-import { goalsRoutes } from './routes/goals.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
 import { oauthRoutes } from './routes/oauth/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
 // Import route handlers
-import { statusRoutes } from './routes/status.js'
-import { userRoutes } from './routes/user/index.js'
+import { statusRoutes } from './routes/status'
 import { vectorRoutes } from './routes/vector.js'
 // Import tRPC router
 import { appRouter } from './trpc/index.js'
@@ -106,9 +104,7 @@ export function createServer(): Hono<AppEnv> | null {
     app.route('/api/oauth', oauthRoutes)
     app.route('/api/vectors', vectorRoutes)
     app.route('/api/possessions', possessionsRoutes)
-    app.route('/api/user', userRoutes)
     app.route('/api/invites', invitesRoutes)
-    app.route('/api/goals', goalsRoutes)
     app.route('/components', componentsRoutes)
     app.route('/api/finance', financeRoutes)
     app.route('/api/finance/plaid', plaidRoutes)
