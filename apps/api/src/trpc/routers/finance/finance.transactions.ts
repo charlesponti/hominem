@@ -1,3 +1,4 @@
+import { insertTransactionSchema, updateTransactionSchema } from '@hominem/data/schema'
 import {
   createTransaction,
   deleteTransaction,
@@ -5,9 +6,8 @@ import {
   queryTransactions,
   updateTransaction,
 } from '@hominem/utils/finance'
-import { insertTransactionSchema, updateTransactionSchema } from '@hominem/data/schema'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../../index.js'
+import { protectedProcedure, router } from '../../procedures.js'
 
 // Transactions tRPC router
 export const transactionsRouter = router({

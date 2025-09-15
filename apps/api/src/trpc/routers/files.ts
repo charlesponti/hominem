@@ -1,6 +1,6 @@
-import { z } from 'zod'
-import { protectedProcedure, router } from '../index'
 import { fileStorageService } from '@hominem/utils/supabase'
+import { z } from 'zod'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const filesRouter = router({
   // Get file by ID

@@ -1,5 +1,7 @@
+import { useSupabaseAuth } from '@hominem/ui'
 import { ArrowRight, BarChart2 } from 'lucide-react'
-import { Link } from 'react-router'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import styles from './home.module.css'
 
 export function meta() {
@@ -14,6 +16,20 @@ export function meta() {
 }
 
 export default function Home() {
+  const { user, isLoading } = useSupabaseAuth()
+  const navigate = useNavigate()
+
+  // Redirect authenticated users to their dashboard
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate('/finance', { replace: true })
+    }
+  }, [isLoading, user, navigate])
+
+  if (isLoading || user) {
+    return null
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Background gradient */}
@@ -31,15 +47,14 @@ export default function Home() {
 
           {/* CTA Button */}
           <div className="mb-16">
-            <Link to="/auth">
-              <button
-                type="button"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                Get Started Free
-                <ArrowRight className="inline-block ml-2 h-5 w-5" />
-              </button>
-            </Link>
+            <button
+              type="button"
+              onClick={() => navigate('/auth/signup')}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              Get Started Free
+              <ArrowRight className="inline-block ml-2 h-5 w-5" />
+            </button>
             <p className="text-sm text-gray-500 mt-3">No credit card required</p>
           </div>
 

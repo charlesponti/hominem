@@ -5,7 +5,7 @@ import { allTools, bindUserIdToTools } from '@hominem/utils/tools'
 import { TRPCError } from '@trpc/server'
 import { generateText, streamText } from 'ai'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 
 const chatService = new ChatService()
 const messageService = new MessageService()

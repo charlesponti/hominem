@@ -1,10 +1,10 @@
+import crypto from 'node:crypto'
 import { db } from '@hominem/data'
 import { bookmark } from '@hominem/data/schema'
 import { and, desc, eq } from 'drizzle-orm'
-import crypto from 'node:crypto'
 import { z } from 'zod'
 import { convertOGContentToBookmark, getOpenGraphData } from '../../lib/bookmarks.utils.js'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const bookmarksRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {

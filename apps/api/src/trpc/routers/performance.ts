@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index.js'
 import { PerformanceMonitorService } from '../../services/performance-monitor.service.js'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const performanceRouter = router({
   // Get performance summary

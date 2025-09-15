@@ -1,12 +1,12 @@
-import { QUEUE_NAMES } from '@hominem/utils/consts'
+import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
 import { financialInstitutions, plaidItems } from '@hominem/data/schema'
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { and, eq } from 'drizzle-orm'
-import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../../../lib/env.js'
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid.js'
-import { protectedProcedure, router } from '../../index.js'
+import { protectedProcedure, router } from '../../procedures.js'
 
 export const plaidRouter = router({
   // Create a new Plaid link token

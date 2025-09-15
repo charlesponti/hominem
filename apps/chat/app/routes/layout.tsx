@@ -8,13 +8,13 @@ import { AppSidebar } from '~/components/app-sidebar'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function Layout() {
-  const rootData = useRouteLoaderData<{ supabaseUserId: string | null }>('root')
+  const rootData = useRouteLoaderData<{ supabaseId: string | null }>('root')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isSigningIn, setIsSigningIn] = useState(false)
   const { supabase } = useSupabaseAuth()
 
-  const userId = rootData?.supabaseUserId || undefined
+  const userId = rootData?.supabaseId || undefined
   const isLoggedIn = !!userId
 
   // Check if mobile (less than 1200px)

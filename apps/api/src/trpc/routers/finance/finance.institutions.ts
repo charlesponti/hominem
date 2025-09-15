@@ -1,4 +1,5 @@
 import { db } from '@hominem/data'
+import { financialInstitutions, plaidItems } from '@hominem/data/schema'
 import {
   createInstitution,
   getAccountById,
@@ -9,10 +10,9 @@ import {
   getUserInstitutionConnections,
   updateAccount,
 } from '@hominem/utils/finance'
-import { financialInstitutions, plaidItems } from '@hominem/data/schema'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../../index.js'
+import { protectedProcedure, router } from '../../procedures.js'
 
 export const institutionsRouter = router({
   // Get all institution connections for the user

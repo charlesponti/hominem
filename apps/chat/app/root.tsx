@@ -44,7 +44,7 @@ export async function loader(loaderArgs: Route.LoaderArgs) {
   }
 
   return {
-    supabaseUserId: user?.id || null,
+    supabaseId: user?.id || null,
   }
 }
 

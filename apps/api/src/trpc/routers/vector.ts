@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import { VectorService } from '../../services/vector.service.js'
 import { fileStorageService } from '@hominem/utils/supabase'
-import { protectedProcedure, router } from '../index.js'
+import { z } from 'zod'
 import { handleFileUploadBuffer } from '../../middleware/file-upload.js'
+import { VectorService } from '../../services/vector.service.js'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const vectorRouter = router({
   // ========================================

@@ -27,9 +27,9 @@ export function ChatInputStreaming({ chatId, onStatusChange }: ChatInputStreamin
   // Get userId from root loader data
   const matches = useMatches()
   const rootData = matches.find((match) => match.id === 'root')?.data as
-    | { supabaseUserId: string | null }
+    | { supabaseId: string | null }
     | undefined
-  const userId = rootData?.supabaseUserId || undefined
+  const userId = rootData?.supabaseId || undefined
 
   const sendMessage = useSendMessage({ chatId, userId })
   const sendMessageStreaming = useSendMessageStreaming({ chatId, userId })

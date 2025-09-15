@@ -25,9 +25,9 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
   // Get userId from root loader data
   const matches = useMatches()
   const rootData = matches.find((match) => match.id === 'root')?.data as
-    | { supabaseUserId: string | null }
+    | { supabaseId: string | null }
     | undefined
-  const userId = rootData?.supabaseUserId || undefined
+  const userId = rootData?.supabaseId || undefined
 
   const sendMessage = useSendMessage({ chatId, userId })
   const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload()

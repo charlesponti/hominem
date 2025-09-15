@@ -3,7 +3,7 @@ import { notes } from '@hominem/data/schema'
 import { TRPCError } from '@trpc/server'
 import { and, asc, desc, eq, gte, ilike, inArray, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 
 // Input schemas
 const createNoteSchema = z.object({

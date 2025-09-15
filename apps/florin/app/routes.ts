@@ -1,39 +1,33 @@
-import { type RouteConfig, index, layout, prefix, route } from '@react-router/dev/routes'
+import { type RouteConfig, index, layout, route } from '@react-router/dev/routes'
 
 export default [
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
-    layout('routes/budget._layout.tsx', [
-      ...prefix('/budget', [
-        index('routes/budget.tsx'),
-        route('categories/:id', 'routes/budget.categories.$id.tsx'),
-        route('categories/new', 'routes/budget.categories.new.tsx'),
-        route('categories/setup', 'routes/budget.categories.setup.tsx'),
-        route('impact', 'routes/budget.impact.tsx'),
-      ]),
+    layout('routes/finance/layout.tsx', [
+      route('finance', 'routes/finance/page.tsx'),
+      route('import', 'routes/import/page.tsx'),
+
+      // Accounts
+      route('accounts', 'routes/accounts/page.tsx'),
+      route('accounts/:id', 'routes/accounts/[id]/page.tsx'),
+
+      // Budget
+      route('budget', 'routes/budget/page.tsx'),
+      route('budget/tracking', 'routes/budget/tracking/page.tsx'),
+
+      // Analytics
+      route('analytics', 'routes/analytics/page.tsx'),
+      route('analytics/monthly/:month', 'routes/analytics/monthly/[month]/page.tsx'),
+      route('analytics/category/:category', 'routes/analytics/category/[category]/page.tsx'),
+      route('analytics/categories', 'routes/analytics/categories/page.tsx'),
+
+      // Random
+      route('finance/runway', 'routes/finance/runway/page.tsx'),
+      route('finance/location-comparison', 'routes/finance/location-comparison/page.tsx'),
     ]),
-
-    route('finance', 'routes/finance.tsx'),
-    route('import', 'routes/import.tsx'),
-
-    // Accounts
-    route('accounts', 'routes/accounts.tsx'),
-    route('accounts/:id', 'routes/accounts.$id.tsx'),
-
-    // Analytics
-    route('analytics', 'routes/analytics.tsx'),
-    route('analytics/monthly/:month', 'routes/analytics.monthly.$month.tsx'),
-    route('analytics/category/:category', 'routes/analytics.category.$category.tsx'),
-    route('analytics/categories', 'routes/analytics.categories.tsx'),
-
-    // Random
-    route('finance/runway', 'routes/finance.runway.tsx'),
-    route('finance/location-comparison', 'routes/finance.location-comparison.tsx'),
-
     route('/account', 'routes/account.tsx'),
-    route('/auth/cli', 'routes/auth.cli.tsx'),
-    route('/auth/callback', 'routes/auth.callback.tsx'),
-    route('/api/auth/validate-token', 'routes/api.auth.validate-token.ts'),
-    route('/api/auth/refresh-token', 'routes/api.auth.refresh-token.ts'),
+    route('/auth/signin', 'routes/auth/signin.tsx'),
+    route('/auth/signup', 'routes/auth/signup.tsx'),
+    route('/auth/cli', 'routes/auth/cli.tsx'),
   ]),
 ] as RouteConfig

@@ -12,9 +12,9 @@ export default function ChatPage({ params }: Route.ComponentProps) {
 
   // Get userId from root loader data
   const rootData = matches.find((match) => match.id === 'root')?.data as
-    | { supabaseUserId: string | null }
+    | { supabaseId: string | null }
     | undefined
-  const userId = rootData?.supabaseUserId ?? ''
+  const userId = rootData?.supabaseId ?? ''
 
   if (!userId) {
     redirect('/')

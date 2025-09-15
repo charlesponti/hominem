@@ -14,7 +14,7 @@ import {
   updateBudgetCategory,
 } from '@hominem/utils/finance'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../../index.js'
+import { protectedProcedure, router } from '../../procedures.js'
 
 export const budgetRouter = router({
   categories: {

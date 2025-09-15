@@ -1,6 +1,6 @@
 import { calculateRunway, calculateRunwayProjection } from '@hominem/utils/finance'
 import { z } from 'zod'
-import { publicProcedure } from '../../index.js'
+import { publicProcedure } from '../../procedures.js'
 
 export const runwayRouter = publicProcedure
   .input(

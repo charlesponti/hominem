@@ -1,6 +1,6 @@
 import { ContentService } from '@hominem/utils/services'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 import { twitterRouter } from './twitter'
 
 export const contentRouter = router({
@@ -14,7 +14,17 @@ export const contentRouter = router({
           .transform(
             (val) =>
               val?.split(',') as
-                | ('note' | 'task' | 'timer' | 'journal' | 'document' | 'tweet' | 'essay' | 'blog_post' | 'social_post')[]
+                | (
+                    | 'note'
+                    | 'task'
+                    | 'timer'
+                    | 'journal'
+                    | 'document'
+                    | 'tweet'
+                    | 'essay'
+                    | 'blog_post'
+                    | 'social_post'
+                  )[]
                 | undefined
           ),
         query: z.string().optional(),
@@ -45,7 +55,17 @@ export const contentRouter = router({
     .input(
       z.object({
         type: z
-          .enum(['note', 'task', 'timer', 'journal', 'document', 'tweet', 'essay', 'blog_post', 'social_post'])
+          .enum([
+            'note',
+            'task',
+            'timer',
+            'journal',
+            'document',
+            'tweet',
+            'essay',
+            'blog_post',
+            'social_post',
+          ])
           .default('note'),
         title: z.string().optional(),
         content: z.string(),
@@ -134,9 +154,7 @@ export const contentRouter = router({
     .input(
       z.object({
         id: z.string().uuid('Invalid content ID format'),
-        type: z
-          .enum(['note', 'task', 'timer', 'journal', 'document', 'tweet'])
-          .optional(),
+        type: z.enum(['note', 'task', 'timer', 'journal', 'document', 'tweet']).optional(),
         title: z.string().optional(),
         content: z.string().optional(),
         tags: z.array(z.object({ value: z.string() })).optional(),

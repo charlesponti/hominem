@@ -1,9 +1,9 @@
+import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
-import { logger } from '@hominem/utils/logger'
 import { account, content } from '@hominem/data/schema'
+import { logger } from '@hominem/utils/logger'
 import { TRPCError } from '@trpc/server'
 import { and, eq } from 'drizzle-orm'
-import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../../lib/env'
 import {
@@ -12,12 +12,12 @@ import {
   makeTwitterApiRequest,
   storePkceVerifier,
   TWITTER_SCOPES,
-  TwitterPostSchema,
   type TwitterAccount,
+  TwitterPostSchema,
   type TwitterTweetResponse,
   type TwitterTweetsResponse,
 } from '../../lib/oauth.twitter.utils'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const twitterRouter = router({
   // Get connected Twitter accounts
