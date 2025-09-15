@@ -1,4 +1,4 @@
-import { router } from '../../index.js'
+import { router } from '../../procedures.js'
 import { accountsRouter } from './finance.accounts.js'
 import { analyzeRouter } from './finance.analyze.js'
 import { budgetRouter } from './finance.budget.js'

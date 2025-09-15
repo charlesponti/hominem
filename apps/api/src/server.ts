@@ -1,48 +1,47 @@
-import { env } from './lib/env.js'
-
-import fastifyCircuitBreaker from '@fastify/circuit-breaker'
-import type { FastifyCookieOptions } from '@fastify/cookie'
-import fastifyCookie from '@fastify/cookie'
-import fastifyCors from '@fastify/cors'
-import fastifyHelmet from '@fastify/helmet'
-import fastifyMultipart from '@fastify/multipart'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { redis } from '@hominem/utils/redis'
+import { trpcServer } from '@hono/trpc-server'
 import { Queue } from 'bullmq'
-import fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
-import type { ZodSchema } from 'zod'
-
-import { handleError } from './lib/errors.js'
-import adminPlugin from './plugins/admin.js'
-import emailPlugin from './plugins/email.js'
-import rateLimitPlugin from './plugins/rate-limit.js'
-import shutdownPlugin from './plugins/shutdown.js'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { logger } from 'hono/logger'
+import { prettyJSON } from 'hono/pretty-json'
+import { env } from './lib/env.js'
+import { supabaseMiddleware } from './middleware/supabase.js'
 import { aiRoutes } from './routes/ai/index.js'
-import bookmarksPlugin from './routes/bookmarks/bookmarks.router.js'
-import { careerRoutes } from './routes/career.js'
-import { companyRoutes } from './routes/company.js'
-import { contentStrategiesRoutes } from './routes/content-strategies.router.js'
-import { financeRoutes } from './routes/finance/finance.router.js'
-import { plaidRoutes } from './routes/finance/plaid.router.js'
+import { componentsRoutes } from './routes/components/index.js'
+import { goalsRoutes } from './routes/goals.js'
 import { healthRoutes } from './routes/health.js'
-import { invitesPlugin } from './routes/invites.router.js'
-import listsPlugin from './routes/lists.router.js'
-import { contentRoutes } from './routes/notes.js'
-import oauthPlugin from './routes/oauth/index.js'
-import { personalFinanceRoutes } from './routes/personal-finance.js'
-import placesPlugin from './routes/places.router.js'
-import possessionsPlugin from './routes/possessions.router.js'
-import statusPlugin from './routes/status.js'
-import { surveyRoutes } from './routes/surveys.js'
-import usersPlugin from './routes/user.router.js'
-import { vectorRoutes } from './routes/vector.router.js'
-import { webSocketPlugin } from './websocket/index.js'
+import { invitesRoutes } from './routes/invites/index.js'
+import { oauthRoutes } from './routes/oauth/index.js'
+import { possessionsRoutes } from './routes/possessions.js'
+// Import route handlers
+import { statusRoutes } from './routes/status.js'
+import { userRoutes } from './routes/user/index.js'
+import { vectorRoutes } from './routes/vector.js'
+// Import tRPC router
+import { appRouter } from './trpc/index.js'
+// Import finance routes
+import { financeRoutes } from './trpc/routers/finance/index.js'
+import { plaidRoutes } from './trpc/routers/finance/plaid/index.js'
 
-export async function createServer(
-  opts: FastifyServerOptions = {}
-): Promise<FastifyInstance | null> {
+// Define the app environment type
+export type AppEnv = {
+  Bindings: {
+    queues: {
+      plaidSync: Queue
+      importTransactions: Queue
+    }
+  }
+  Variables: {
+    userId?: string
+    user?: unknown
+  }
+}
+
+export function createServer(): Hono<AppEnv> | null {
   try {
-    const server = fastify(opts)
+    const app = new Hono<AppEnv>()
 
     // Set up BullMQ queues using consistent queue names from utils/consts
     const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
@@ -50,123 +49,107 @@ export async function createServer(
       connection: redis,
     })
 
-    // Add queues to fastify instance
-    server.decorate('queues', {
-      plaidSync: plaidSyncQueue,
-      importTransactions: importTransactionsQueue,
+    // Add queues to the app context
+    app.use('*', async (c, next) => {
+      c.set('queues', {
+        plaidSync: plaidSyncQueue,
+        importTransactions: importTransactionsQueue,
+      })
+      await next()
     })
 
-    // Set up global error handler
-    server.setErrorHandler((error, _request, reply) => {
-      return handleError(error, reply)
+    // Add middleware
+    app.use('*', logger())
+    app.use('*', prettyJSON())
+
+    // CORS middleware
+    app.use(
+      '*',
+      cors({
+        origin: [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
+        credentials: true,
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      })
+    )
+
+    // Authentication middleware
+    app.use('*', supabaseMiddleware())
+
+    // Register tRPC routes
+    app.use(
+      '/trpc/*',
+      trpcServer({
+        router: appRouter,
+        createContext: (opts) => {
+          const request = opts.req
+
+          return {
+            req: {
+              header: (name: string) => {
+                return request.headers.get(name) || ''
+              },
+            },
+            queues: {
+              plaidSync: plaidSyncQueue,
+              importTransactions: importTransactionsQueue,
+            },
+            supabaseId: '', // Will be set by auth middleware
+          }
+        },
+      })
+    )
+
+    // Register route handlers
+    app.route('/api/status', statusRoutes)
+    app.route('/api/health', healthRoutes)
+    app.route('/api/ai', aiRoutes)
+    app.route('/api/oauth', oauthRoutes)
+    app.route('/api/vectors', vectorRoutes)
+    app.route('/api/possessions', possessionsRoutes)
+    app.route('/api/user', userRoutes)
+    app.route('/api/invites', invitesRoutes)
+    app.route('/api/goals', goalsRoutes)
+    app.route('/components', componentsRoutes)
+    app.route('/api/finance', financeRoutes)
+    app.route('/api/finance/plaid', plaidRoutes)
+
+    // Root health check
+    app.get('/', (c) => {
+      return c.json({
+        status: 'ok',
+        serverTime: new Date().toISOString(),
+        uptime: process.uptime(),
+      })
     })
 
-    await server.register(fastifyCors, {
-      origin: [env.APP_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    })
-
-    await server.register(fastifyCookie, {
-      secret: env.COOKIE_SECRET,
-      hook: 'onRequest',
-      parseOptions: {},
-    } as FastifyCookieOptions)
-
-    await server.register(fastifyCircuitBreaker)
-    await server.register(fastifyMultipart, {
-      limits: {
-        fileSize: 50 * 1024 * 1024, // 50MB
-        files: 1,
-        fieldNameSize: 100,
-        fieldSize: 1024 * 1024, // 1MB for text fields
-      },
-    })
-    await server.register(fastifyHelmet)
-
-    // Supabase auth is handled via JWT verification in middleware
-    server.log.info('Supabase authentication enabled.')
-
-    // Register rate limit plugin with Redis client
-    await server.register(rateLimitPlugin, {
-      maxHits: 100,
-      segment: 'api',
-      windowLength: 60000, // 1 minute
-    })
-
-    await server.register(shutdownPlugin)
-    await server.register(statusPlugin)
-    await server.register(emailPlugin)
-    await server.register(adminPlugin)
-    await server.register(usersPlugin)
-    await server.register(listsPlugin)
-    await server.register(placesPlugin)
-    await server.register(invitesPlugin)
-    await server.register(bookmarksPlugin)
-    await server.register(aiRoutes, { prefix: '/api/ai' })
-    await server.register(possessionsPlugin, { prefix: '/api' })
-    await server.register(healthRoutes, { prefix: '/api/health' })
-    await server.register(companyRoutes, { prefix: '/api/companies' })
-    await server.register(careerRoutes, { prefix: '/api/career' })
-    await server.register(contentStrategiesRoutes, { prefix: '/api/content-strategies' })
-    await server.register(surveyRoutes, { prefix: '/api/surveys' })
-    await server.register(contentRoutes, { prefix: '/api/content' })
-    await server.register(oauthPlugin, { prefix: '/api/oauth' })
-    await server.register(vectorRoutes, { prefix: '/api/vectors' })
-    await server.register(financeRoutes, { prefix: '/api/finance' })
-    await server.register(personalFinanceRoutes, { prefix: '/api/personal-finance' })
-    await server.register(plaidRoutes, { prefix: '/api/plaid' })
-    await server.register(webSocketPlugin)
-
-    // --- Add onClose hooks ---
-    server.addHook('onClose', async (instance) => {
-      await instance.queues.plaidSync.close()
-      await instance.queues.importTransactions.close()
-    })
-    // --- End onClose hooks ---
-
-    server.setValidatorCompiler(({ schema }: { schema: ZodSchema }) => {
-      return (data) => schema.parse(data)
-    })
-
-    server.setSerializerCompiler(({ schema }: { schema: ZodSchema }) => {
-      return (data) => schema.parse(data)
-    })
-
-    return server
+    return app
   } catch (error) {
-    console.error(error)
+    console.error('Failed to create server:', error)
     return null
   }
 }
 
 export async function startServer() {
-  const server = await createServer({
-    logger: {
-      level: process.env.LOG_LEVEL || 'info',
-      transport:
-        env.NODE_ENV === 'production'
-          ? undefined
-          : {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                translateTime: true,
-                ignore: 'pid,hostname',
-              },
-            },
-    },
-    disableRequestLogging: process.env.ENABLE_REQUEST_LOGGING !== 'true',
-  })
-
-  if (!server) {
+  const app = createServer()
+  if (!app) {
+    console.error('Failed to create server')
     process.exit(1)
   }
 
   try {
-    await server.listen({ port: Number.parseInt(env.PORT, 10), host: '0.0.0.0' })
+    const { serve } = await import('@hono/node-server')
+    const port = Number.parseInt(env.PORT, 10)
+
+    // eslint-disable-next-line no-console
+    console.log(`Starting server on port ${port}`)
+
+    serve({
+      fetch: app.fetch,
+      port,
+      hostname: '0.0.0.0',
+    })
   } catch (err) {
-    server.log.error(err)
+    console.error('Failed to start server:', err)
     process.exit(1)
   }
 }

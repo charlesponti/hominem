@@ -2,7 +2,7 @@ import { google } from '@ai-sdk/google'
 import { generateText } from 'ai'
 import { z } from 'zod'
 import { ContentStrategiesService } from '../../services/content-strategies.service.js'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const tweetRouter = router({
   generate: protectedProcedure
@@ -24,7 +24,9 @@ export const tweetRouter = router({
               'listicle',
               'education',
             ]),
-            z.string().uuid(), // For custom strategy IDs
+            z
+              .string()
+              .uuid(), // For custom strategy IDs
           ])
           .default('storytelling'),
       })
@@ -44,8 +46,10 @@ export const tweetRouter = router({
               'CONTENT STRATEGY: Storytelling - Create a narrative arc with beginning, middle, and end',
             question:
               'CONTENT STRATEGY: Question - Start with a thought-provoking question to drive engagement',
-            statistic: 'CONTENT STRATEGY: Statistic - Lead with a compelling statistic or data point',
-            quote: 'CONTENT STRATEGY: Quote - Transform key insights into quotable, shareable statements',
+            statistic:
+              'CONTENT STRATEGY: Statistic - Lead with a compelling statistic or data point',
+            quote:
+              'CONTENT STRATEGY: Quote - Transform key insights into quotable, shareable statements',
             tip: 'CONTENT STRATEGY: Tip - Present actionable advice or quick wins',
             'behind-the-scenes':
               'CONTENT STRATEGY: Behind-the-scenes - Share process, journey, or insider perspective',
@@ -53,8 +57,10 @@ export const tweetRouter = router({
               'CONTENT STRATEGY: Thread-starter - Create intrigue to encourage thread continuation',
             controversy:
               'CONTENT STRATEGY: Controversy - Present a contrarian or debate-worthy perspective (respectfully)',
-            listicle: 'CONTENT STRATEGY: Listicle - Break down content into numbered points or quick list',
-            education: 'CONTENT STRATEGY: Education - Focus on teaching a concept or sharing knowledge',
+            listicle:
+              'CONTENT STRATEGY: Listicle - Break down content into numbered points or quick list',
+            education:
+              'CONTENT STRATEGY: Education - Focus on teaching a concept or sharing knowledge',
           }
 
           return defaultStrategies[strategy] || defaultStrategies.storytelling
@@ -144,4 +150,4 @@ Return only the tweet text, nothing else.`
         throw new Error('Failed to generate tweet')
       }
     }),
-}) 
+})

@@ -1,15 +1,7 @@
 import { useAuth } from '@hominem/auth'
-import {
-  ChartLine,
-  CircleDollarSignIcon,
-  Landmark,
-  Menu,
-  PieChartIcon,
-  User,
-  X,
-} from 'lucide-react'
+import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
@@ -36,10 +28,13 @@ export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
   const { user, isLoading, signInWithOAuth } = useAuth()
+  const navigate = useNavigate()
   const isLoggedIn = !isLoading && user
+  const isLoaded = !isLoading
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
     // Check if we're on the client side
@@ -122,9 +117,6 @@ export function MainNavigation() {
     }
   }
 
-<<<<<<< HEAD
-  // Desktop sidebar
-=======
   const handleSignIn = async () => {
     try {
       setIsSigningIn(true)

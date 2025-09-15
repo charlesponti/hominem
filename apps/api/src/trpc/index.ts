@@ -1,81 +1,45 @@
-import { db } from '@hominem/data'
-import { users } from '@hominem/data/schema'
-import { initTRPC, TRPCError } from '@trpc/server'
-import type { Queue } from 'bullmq'
-import { eq } from 'drizzle-orm'
-import type { HonoRequest } from 'hono'
-import { getHominemUser } from '../middleware/supabase.js'
+// Import tRPC procedures from separate file to avoid circular dependencies
+import { type Context, protectedProcedure, publicProcedure, router } from './procedures.js'
 
-export interface Context {
-  req: HonoRequest
-  queues: {
-    plaidSync: Queue
-    importTransactions: Queue
-  }
-  user?: typeof users.$inferSelect
-  userId?: string
-  supabaseId: string
-}
+// Import all sub-routers
+import { bookmarksRouter } from './routers/bookmarks.js'
+import { chatsRouter } from './routers/chats.js'
+import { contentRouter } from './routers/content.js'
+import { contentStrategiesRouter } from './routers/content-strategies.js'
+import { filesRouter } from './routers/files.js'
+import { financeRouter } from './routers/finance/finance.trpc.js'
+import { goalsRouter } from './routers/goals.js'
+import { locationRouter } from './routers/location.js'
+import { messagesRouter } from './routers/messages.js'
+import { notesRouter } from './routers/notes.js'
+import { performanceRouter } from './routers/performance.js'
+import { searchRouter } from './routers/search.js'
+import { tweetRouter } from './routers/tweet.js'
+import { twitterRouter } from './routers/twitter.js'
+import { userRouter } from './routers/user.js'
+import { vectorRouter } from './routers/vector.js'
 
-const t = initTRPC.context<Context>().create()
+// Re-export procedures for external use
+export { router, publicProcedure, protectedProcedure, type Context }
 
-const authMiddleware = t.middleware(async ({ ctx, next }) => {
-  // Test mode: use x-user-id header for authentication
-  if (process.env.NODE_ENV === 'test') {
-    const testUserId = ctx.req.header('x-user-id')
-    if (testUserId) {
-      // For test mode, get the user from the database
-      try {
-        const [user] = await db.select().from(users).where(eq(users.id, testUserId))
-        if (user) {
-          if (!user.supabaseId) {
-            throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User missing supabaseId' })
-          }
-          return next({
-            ctx: {
-              ...ctx,
-              user,
-              userId: user.id,
-              supabaseId: user.supabaseId,
-            },
-          })
-        }
-      } catch (error) {
-        console.error('Error getting user in test mode:', error)
-      }
-    }
-  }
-
-  // Production mode: use authorization header
-  const authHeader = ctx.req.header('authorization')
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Missing or invalid authorization header',
-    })
-  }
-
-  const token = authHeader.substring(7)
-  const hominemUser = await getHominemUser(token)
-
-  if (!hominemUser) {
-    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid token or user not found' })
-  }
-
-  if (!hominemUser.supabaseId) {
-    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User missing supabaseId' })
-  }
-
-  return next({
-    ctx: {
-      ...ctx,
-      user: hominemUser,
-      userId: hominemUser.id,
-      supabaseId: hominemUser.supabaseId,
-    },
-  })
+// Create the main app router
+export const appRouter = router({
+  user: userRouter,
+  vector: vectorRouter,
+  twitter: twitterRouter,
+  tweet: tweetRouter,
+  search: searchRouter,
+  performance: performanceRouter,
+  notes: notesRouter,
+  messages: messagesRouter,
+  location: locationRouter,
+  goals: goalsRouter,
+  finance: financeRouter,
+  files: filesRouter,
+  content: contentRouter,
+  contentStrategies: contentStrategiesRouter,
+  chats: chatsRouter,
+  bookmarks: bookmarksRouter,
 })
 
-export const router = t.router
-export const publicProcedure = t.procedure
-export const protectedProcedure = t.procedure.use(authMiddleware)
+export type AppRouter = typeof appRouter
