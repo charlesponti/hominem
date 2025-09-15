@@ -985,6 +985,9 @@ importers:
       '@ai-sdk/openai-compatible':
         specifier: ^0.1.17
         version: 0.1.17(zod@3.25.76)
+      '@browserbasehq/stagehand':
+        specifier: ^2.4.0
+        version: 2.5.0(deepmerge@4.3.1)(dotenv@16.6.1)(react@19.1.1)(zod@3.25.76)
       '@hominem/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -9985,6 +9988,7 @@ packages:
     resolution: {integrity: sha512-Ktz7y9gN6qfIiuZUUrdoXwhaBP5xL8ovwxLWey7ey+oCija3dk01vQ2RSpfwwsFu/sKd7el1hwFPfcX+XgxFiQ==}
     engines: {node: '>=20.18.0'}
     hasBin: true
+    bundledDependencies: []
 
   pdf2pic@3.2.0:
     resolution: {integrity: sha512-p0bp+Mp4iJy2hqSCLvJ521rDaZkzBvDFT9O9Y0BUID3I04/eDaebAFM5t8hoWeo2BCf42cDijLCGJWTOtkJVpA==}
@@ -19594,7 +19598,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.12.2(debug@4.4.3))
+      retry-axios: 2.6.0(axios@1.12.2)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -22383,7 +22387,7 @@ snapshots:
 
   ret@0.5.0: {}
 
-  retry-axios@2.6.0(axios@1.12.2(debug@4.4.3)):
+  retry-axios@2.6.0(axios@1.12.2):
     dependencies:
       axios: 1.12.2(debug@4.4.3)
 
