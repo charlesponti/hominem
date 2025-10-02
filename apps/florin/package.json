@@ -93,7 +93,10 @@
     "vaul": "^1.1.2",
     "vitest-mock-extended": "^3.0.1",
     "zod": "^3.24.2",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "@trpc/client": "^11.0.0",
+    "@trpc/react-query": "^11.0.0",
+    "@trpc/server": "^11.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",

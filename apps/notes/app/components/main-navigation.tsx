@@ -1,4 +1,4 @@
-import { Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
+import { Calendar, Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useUser } from '~/lib/hooks/use-user'
@@ -7,7 +7,7 @@ import { Button } from './ui/button'
 
 const navItems = [
   {
-    title: 'Notes',
+    title: 'Animus',
     url: '/notes',
   },
   {
@@ -16,12 +16,21 @@ const navItems = [
     url: '/content-strategy',
   },
   {
+    title: 'Life Events',
+    url: '/life-events',
+  },
+  {
     title: 'Goals',
     url: '/goals',
   },
   {
     title: 'Habits',
     url: '/habits',
+  },
+  {
+    title: 'Calendar',
+    icon: Calendar,
+    url: '/calendar',
   },
 ]
 
@@ -137,7 +146,7 @@ export function MainNavigation() {
               <span className="bg-purple-500 p-2 rounded-md">
                 <Sparkles className="size-4 text-white" />
               </span>
-              <span className="font-bold text-lg">Sage</span>
+              <span className="font-bold text-lg">Animus</span>
             </Link>
           </div>
 
@@ -187,7 +196,7 @@ export function MainNavigation() {
             <span className="bg-purple-500 p-2 rounded-md">
               <Sparkles className="size-4 text-white" />
             </span>
-            <span className="font-bold text-lg">Sage</span>
+            <span className="font-bold text-lg">Animus</span>
           </Link>
 
           {/* Right Side */}

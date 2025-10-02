@@ -7,7 +7,6 @@
   ],
   "exclude": [
     "../api/**/*",
-    "../../packages/**/*",
     "node_modules",
     "build",
     "dist",

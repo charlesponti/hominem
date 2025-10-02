@@ -74,7 +74,7 @@ export class MessageService {
       logger.info('Message added', { messageId, chatId: params.chatId })
       return newMessage
     } catch (error) {
-      logger.error('Failed to add message:', error)
+      logger.error('Failed to add message:', error as Error)
       throw new ChatError('DATABASE_ERROR', 'Failed to add message to conversation')
     }
   }
@@ -97,7 +97,7 @@ export class MessageService {
 
       return await query
     } catch (error) {
-      logger.error('Failed to get chat messages:', error)
+      logger.error('Failed to get chat messages:', error as Error)
       return []
     }
   }
@@ -113,7 +113,7 @@ export class MessageService {
 
       return message || null
     } catch (error) {
-      logger.error('Failed to get message by ID:', error)
+      logger.error('Failed to get message by ID:', error as Error)
       return null
     }
   }
@@ -135,7 +135,7 @@ export class MessageService {
       logger.info('Message updated', { messageId, contentLength: content.length })
       return updatedMessage || null
     } catch (error) {
-      logger.error('Failed to update message:', error)
+      logger.error('Failed to update message:', error as Error)
       return null
     }
   }
@@ -152,7 +152,7 @@ export class MessageService {
       logger.info('Message deleted', { messageId: messageId })
       return true
     } catch (error) {
-      logger.error('Failed to delete message:', error)
+      logger.error('Failed to delete message:', error as Error)
       return false
     }
   }

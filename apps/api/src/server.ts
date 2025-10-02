@@ -16,7 +16,6 @@ import { oauthRoutes } from './routes/oauth/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
 // Import route handlers
 import { statusRoutes } from './routes/status'
-import { vectorRoutes } from './routes/vector.js'
 // Import tRPC router
 import { appRouter } from './trpc/index.js'
 // Import finance routes
@@ -102,7 +101,6 @@ export function createServer(): Hono<AppEnv> | null {
     app.route('/api/health', healthRoutes)
     app.route('/api/ai', aiRoutes)
     app.route('/api/oauth', oauthRoutes)
-    app.route('/api/vectors', vectorRoutes)
     app.route('/api/possessions', possessionsRoutes)
     app.route('/api/invites', invitesRoutes)
     app.route('/components', componentsRoutes)
@@ -135,9 +133,6 @@ export async function startServer() {
   try {
     const { serve } = await import('@hono/node-server')
     const port = Number.parseInt(env.PORT, 10)
-
-    // eslint-disable-next-line no-console
-    console.log(`Starting server on port ${port}`)
 
     serve({
       fetch: app.fetch,

@@ -20,7 +20,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['@react-router/node'],
+      external: ['@react-router/node', '@trpc/react-query', '@trpc/client', '@trpc/server'],
     },
   },
 })

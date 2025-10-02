@@ -12,7 +12,6 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
-import { events } from './calendar.schema'
 import { users } from './users.schema'
 
 // Enums
@@ -110,9 +109,6 @@ export const financeAccounts = pgTable(
     interestRate: numeric('interest_rate'),
     minimumPayment: numeric('minimum_payment'),
     name: text('name').notNull(),
-    institutionId: text('institution_id').references(() => financialInstitutions.id),
-    plaidAccountId: text('plaid_account_id').unique(),
-    plaidItemId: uuid('plaid_item_id').references(() => plaidItems.id),
     mask: text('mask'),
     isoCurrencyCode: text('iso_currency_code'),
     subtype: text('subtype'),
@@ -122,6 +118,10 @@ export const financeAccounts = pgTable(
     lastUpdated: timestamp('last_updated'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    // Optional foreign keys to institution and plaid linkage
+    institutionId: text('institution_id').references(() => financialInstitutions.id),
+    plaidItemId: uuid('plaid_item_id').references(() => plaidItems.id),
+    plaidAccountId: text('plaid_account_id'),
     userId: uuid('user_id')
       .references(() => users.id)
       .notNull(),
@@ -150,8 +150,6 @@ export const transactions = pgTable(
       .notNull(),
     fromAccountId: uuid('from_account_id').references(() => financeAccounts.id),
     toAccountId: uuid('to_account_id').references(() => financeAccounts.id),
-    eventId: uuid('event_id').references(() => events.id),
-    investmentDetails: jsonb('investment_details'),
     status: text('status'),
     category: text('category'),
     parentCategory: text('parent_category'),
@@ -160,7 +158,6 @@ export const transactions = pgTable(
     accountMask: text('account_mask'),
     note: text('note'),
     recurring: boolean('recurring').default(false),
-    plaidTransactionId: text('plaid_transaction_id').unique(),
     pending: boolean('pending').default(false),
     paymentChannel: text('payment_channel'),
     location: jsonb('location'),
@@ -267,10 +264,6 @@ export const transactionRelations = relations(transactions, ({ one }) => ({
     fields: [transactions.toAccountId],
     references: [financeAccounts.id],
     relationName: 'toAccount',
-  }),
-  event: one(events, {
-    fields: [transactions.eventId],
-    references: [events.id],
   }),
   category: one(budgetCategories, {
     fields: [transactions.category],

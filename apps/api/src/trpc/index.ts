@@ -1,6 +1,6 @@
 // Import tRPC procedures from separate file to avoid circular dependencies
-import { type Context, protectedProcedure, publicProcedure, router } from './procedures.js'
 
+import { type Context, protectedProcedure, publicProcedure, router } from './procedures.js'
 // Import all sub-routers
 import { bookmarksRouter } from './routers/bookmarks.js'
 import { chatsRouter } from './routers/chats.js'

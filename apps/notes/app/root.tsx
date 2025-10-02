@@ -16,7 +16,7 @@ export async function loader(args: Route.LoaderArgs) {
 
 export const meta: Route.MetaFunction = () => {
   return [
-    { title: 'Sage' },
+    { title: 'Animus' },
     { name: 'description', content: 'Organize and manage your personal notes and knowledge' },
   ]
 }

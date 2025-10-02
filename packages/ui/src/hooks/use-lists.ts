@@ -25,7 +25,6 @@ type NewList = Omit<ListInsert, 'userId' | 'id'>
  * Hook for creating a new list
  */
 export function useCreateList() {
-  const { userId } = useSupabaseAuth()
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
   const [data, setData] = useState<NewList>({
@@ -215,7 +214,7 @@ export function useSendListInvite() {
         throw err
       }
     },
-    onSuccess: (result, variables) => {
+    onSuccess: (_result, variables) => {
       // Invalidate both lists and invites queries
       queryClient.invalidateQueries({ queryKey: LISTS_KEY })
       queryClient.invalidateQueries({ queryKey: LIST_INVITES_KEY })
