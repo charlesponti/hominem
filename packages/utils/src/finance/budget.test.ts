@@ -18,12 +18,14 @@ describe('Budget Categories Unique Constraint', () => {
           supabaseId: `supabase_${testUserId}`,
           email: 'test1@example.com',
           name: 'Test User 1',
+          isAdmin: false,
         },
         {
           id: testUserId2,
           supabaseId: `supabase_${testUserId2}`,
           email: 'test2@example.com',
           name: 'Test User 2',
+          isAdmin: false,
         },
       ])
       .onConflictDoNothing()
