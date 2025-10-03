@@ -1,11 +1,8 @@
-import { configureStore } from '@reduxjs/toolkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type RenderOptions, render, screen } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
-import { Provider } from 'react-redux'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { vi } from 'vitest'
-import { rootReducer } from '~/lib/store'
 import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './mocks'
 
 const mockSupabaseUser = {
@@ -93,13 +90,6 @@ vi.mock('react-router', async () => {
     },
   }
 })
-
-export function createTestStore(preloadedState: Record<string, unknown> = {}) {
-  return configureStore({
-    reducer: rootReducer,
-    preloadedState,
-  })
-}
 
 export function createTestQueryClient() {
   return new QueryClient({
@@ -196,22 +186,13 @@ export { mockTrpcClient }
 export function renderWithProviders(
   ui: ReactElement,
   {
-    preloadedState = {},
     queryClient = createTestQueryClient(),
   }: {
-    preloadedState?: Record<string, unknown>
     queryClient?: QueryClient
   } = {},
   options: RenderOptions = {}
 ) {
-  const store = createTestStore(preloadedState)
-
-  return render(
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-    </Provider>,
-    options
-  )
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, options)
 }
 
 export function renderWithRouter(
@@ -226,25 +207,19 @@ export function renderWithRouter(
     initialEntries?: string[]
   },
   {
-    preloadedState = {},
     queryClient = createTestQueryClient(),
   }: {
-    preloadedState?: Record<string, unknown>
     queryClient?: QueryClient
   } = {}
 ) {
-  const store = createTestStore(preloadedState)
-
   const router = createMemoryRouter(config.routes, {
     initialEntries: config.initialEntries || ['/'],
   })
 
   return render(
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   )
 }
 
