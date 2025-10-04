@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { Route } from './+types/life-events.people'
 
@@ -53,6 +53,8 @@ export async function action({ request }: Route.ActionArgs) {
 export default function PeoplePage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
   const people = loaderData as Person[]
+  const firstNameId = useId()
+  const lastNameId = useId()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
@@ -130,24 +132,27 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
             <form method="post">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-black mb-2">
+                  <label
+                    htmlFor={firstNameId}
+                    className="block text-sm font-medium text-black mb-2"
+                  >
                     First Name
                   </label>
                   <input
                     type="text"
-                    id="firstName"
+                    id={firstNameId}
                     name="firstName"
                     placeholder="Enter first name"
                     className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
                   />
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-black mb-2">
+                  <label htmlFor={lastNameId} className="block text-sm font-medium text-black mb-2">
                     Last Name
                   </label>
                   <input
                     type="text"
-                    id="lastName"
+                    id={lastNameId}
                     name="lastName"
                     placeholder="Enter last name"
                     className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
@@ -188,14 +193,14 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label
-                          htmlFor="editFirstName"
+                          htmlFor={`editFirstName-${person.id}`}
                           className="block text-sm font-medium text-black mb-2"
                         >
                           First Name
                         </label>
                         <input
                           type="text"
-                          id="editFirstName"
+                          id={`editFirstName-${person.id}`}
                           value={editingPerson.firstName || ''}
                           onChange={(e) =>
                             setEditingPerson((prev) =>
@@ -207,14 +212,14 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                       </div>
                       <div>
                         <label
-                          htmlFor="editLastName"
+                          htmlFor={`editLastName-${person.id}`}
                           className="block text-sm font-medium text-black mb-2"
                         >
                           Last Name
                         </label>
                         <input
                           type="text"
-                          id="editLastName"
+                          id={`editLastName-${person.id}`}
                           value={editingPerson.lastName || ''}
                           onChange={(e) =>
                             setEditingPerson((prev) =>
@@ -237,12 +242,14 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                       </div>
                       <div className="flex gap-2">
                         <button
+                          type="button"
                           className="btn btn-sm bg-blue-600 text-white hover:bg-blue-700 border-0"
                           onClick={() => startEdit(person)}
                         >
                           Edit
                         </button>
                         <button
+                          type="button"
                           className="btn btn-sm bg-red-600 text-white hover:bg-red-700 border-0"
                           onClick={() => deletePerson(person.id)}
                         >
@@ -254,6 +261,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                   {editingPerson && editingPerson.id === person.id && (
                     <div className="flex gap-2 mt-4">
                       <button
+                        type="button"
                         className="btn bg-blue-600 text-white hover:bg-blue-700 border-0"
                         onClick={() => {
                           // Handle update logic here
@@ -263,6 +271,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                         Save Changes
                       </button>
                       <button
+                        type="button"
                         className="btn bg-gray-500 text-white hover:bg-gray-600 border-0"
                         onClick={cancelEdit}
                       >
@@ -279,6 +288,3 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
-
-
-

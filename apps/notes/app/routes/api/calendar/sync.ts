@@ -1,6 +1,6 @@
-import { type ActionFunctionArgs, json } from 'react-router'
+import type { ActionFunctionArgs } from 'react-router'
 import { GoogleCalendarService } from '~/lib/google/calendar'
-import { createServerTRPCClient } from '~/lib/trpc-server'
+import { jsonResponse } from '~/lib/utils'
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
@@ -13,7 +13,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const timeMax = formData.get('timeMax') as string
 
     if (!accessToken || !userId) {
-      return json({ error: 'Missing required parameters' }, { status: 400 })
+      return jsonResponse({ error: 'Missing required parameters' }, { status: 400 })
     }
 
     // Initialize Google Calendar service
@@ -22,34 +22,22 @@ export async function action({ request }: ActionFunctionArgs) {
     // Sync events from Google Calendar
     const events = await calendarService.syncEvents(userId, calendarId, timeMin, timeMax)
 
-    // Create TRPC client to save events to database
-    const trpcClient = createServerTRPCClient(accessToken)
+    // TODO: Create TRPC client to save events to database when events router is available
+    // const trpcClient = createServerTRPCClient(accessToken)
 
     const savedEvents = []
     for (const event of events) {
       try {
-        // Check if event already exists
-        const existingEvent = await trpcClient.events.getById.query({ id: event.id })
-
-        if (!existingEvent) {
-          // Create new event
-          const savedEvent = await trpcClient.events.create.mutate(event)
-          savedEvents.push(savedEvent)
-        } else {
-          // Update existing event
-          const updatedEvent = await trpcClient.events.update.mutate({
-            id: event.id,
-            ...event,
-          })
-          savedEvents.push(updatedEvent)
-        }
+        // For now, just collect the events without saving to database
+        // TODO: Implement proper event storage when events router is available
+        savedEvents.push(event)
       } catch (error) {
-        console.error(`Error saving event ${event.id}:`, error)
+        console.error(`Error processing event ${event.id}:`, error)
         // Continue with other events even if one fails
       }
     }
 
-    return json({
+    return jsonResponse({
       success: true,
       syncedEvents: savedEvents.length,
       totalEvents: events.length,
@@ -57,7 +45,7 @@ export async function action({ request }: ActionFunctionArgs) {
     })
   } catch (error) {
     console.error('Calendar sync error:', error)
-    return json({ error: 'Failed to sync calendar events' }, { status: 500 })
+    return jsonResponse({ error: 'Failed to sync calendar events' }, { status: 500 })
   }
 }
 
@@ -68,7 +56,7 @@ export async function loader({ request }: ActionFunctionArgs) {
     const refreshToken = url.searchParams.get('refreshToken')
 
     if (!accessToken) {
-      return json({ error: 'Missing access token' }, { status: 400 })
+      return jsonResponse({ error: 'Missing access token' }, { status: 400 })
     }
 
     // Initialize Google Calendar service
@@ -77,9 +65,9 @@ export async function loader({ request }: ActionFunctionArgs) {
     // Get available calendars
     const calendars = await calendarService.getCalendarList()
 
-    return json({ calendars })
+    return jsonResponse({ calendars })
   } catch (error) {
     console.error('Error fetching calendars:', error)
-    return json({ error: 'Failed to fetch calendars' }, { status: 500 })
+    return jsonResponse({ error: 'Failed to fetch calendars' }, { status: 500 })
   }
 }

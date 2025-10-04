@@ -26,9 +26,9 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
   if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
+        {['total', 'month', 'people', 'tags'].map((type) => (
           <div
-            key={i}
+            key={`skeleton-${type}`}
             className="h-20 bg-gray-200 animate-pulse rounded"
             style={{ backgroundColor: 'var(--color-notion-gray-bg)' }}
           />
@@ -79,9 +79,9 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {stats.map((stat, index) => (
+      {stats.map((stat) => (
         <div
-          key={index}
+          key={stat.label}
           className="p-4 rounded-lg border"
           style={{
             backgroundColor: 'var(--color-notion-bg)',
@@ -107,7 +107,3 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
 }
 
 export default StatsDisplay
-
-
-
-

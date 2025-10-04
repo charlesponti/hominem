@@ -1,4 +1,5 @@
 import type React from 'react'
+import { useId } from 'react'
 
 interface FiltersSectionProps {
   filterType: string
@@ -21,6 +22,9 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
   onSortByChange,
   onFilterChange,
 }) => {
+  const filterTypeId = useId()
+  const filterCompanionId = useId()
+  const sortById = useId()
   return (
     <div
       className="p-4 rounded-lg border"
@@ -36,14 +40,14 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
         {/* Type Filter */}
         <div>
           <label
-            htmlFor="filterType"
+            htmlFor={filterTypeId}
             className="block text-xs font-medium mb-1"
             style={{ color: 'var(--color-notion-text-secondary)' }}
           >
             Type
           </label>
           <select
-            id="filterType"
+            id={filterTypeId}
             value={filterType}
             onChange={(e) => onFilterTypeChange(e.target.value)}
             className="w-full px-3 py-2 text-sm border rounded-md"
@@ -66,14 +70,14 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
         {/* Companion Filter */}
         <div>
           <label
-            htmlFor="filterCompanion"
+            htmlFor={filterCompanionId}
             className="block text-xs font-medium mb-1"
             style={{ color: 'var(--color-notion-text-secondary)' }}
           >
             Companion
           </label>
           <select
-            id="filterCompanion"
+            id={filterCompanionId}
             value={filterCompanion}
             onChange={(e) => onFilterCompanionChange(e.target.value)}
             className="w-full px-3 py-2 text-sm border rounded-md"
@@ -95,14 +99,14 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
         {/* Sort By */}
         <div>
           <label
-            htmlFor="sortBy"
+            htmlFor={sortById}
             className="block text-xs font-medium mb-1"
             style={{ color: 'var(--color-notion-text-secondary)' }}
           >
             Sort By
           </label>
           <select
-            id="sortBy"
+            id={sortById}
             value={sortBy}
             onChange={(e) => onSortByChange(e.target.value)}
             className="w-full px-3 py-2 text-sm border rounded-md"
@@ -122,6 +126,7 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
       {/* Apply Filters Button */}
       <div className="mt-4">
         <button
+          type="button"
           onClick={onFilterChange}
           className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 hover:-translate-y-px"
           style={{
@@ -144,7 +149,3 @@ const FiltersSection: React.FC<FiltersSectionProps> = ({
 }
 
 export default FiltersSection
-
-
-
-
