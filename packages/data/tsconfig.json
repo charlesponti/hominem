@@ -6,7 +6,6 @@
     "baseUrl": ".",
     "outDir": "./build",
     "rootDir": "./src",
-    "module": "ES2022",
     "paths": {
       "@/*": [
         "./src/*"

@@ -1,22 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "@hominem/root",
   "extends": "./packages/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": ".",
     "baseUrl": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "target": "ES2022",
     "outDir": "dist",
     "paths": {
       "@utils/*": [
         "packages/utils/src/*"
       ]
     },
-    "allowImportingTsExtensions": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "allowImportingTsExtensions": false
   },
   "files": [],
   "references": [
@@ -38,7 +35,5 @@
     {
       "path": "./packages/utils"
     }
-  ],
-  "display": "@hominem/root",
-  
+  ]
 }

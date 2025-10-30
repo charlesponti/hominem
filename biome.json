@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.2/schema.json",
   "files": {
     "includes": [
       "**",
@@ -23,7 +23,13 @@
     "lineWidth": 100,
     "attributePosition": "auto"
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "rules": {
       "recommended": true,
@@ -35,7 +41,11 @@
         "noConsole": {
           "level": "warn",
           "options": {
-            "allow": ["error", "info", "warn"]
+            "allow": [
+              "error",
+              "info",
+              "warn"
+            ]
           }
         }
       },
@@ -80,17 +90,28 @@
   },
   "overrides": [
     {
-      "includes": ["**/package.json"],
+      "includes": [
+        "**/package.json"
+      ],
       "formatter": {
         "lineWidth": 1
       }
     },
     {
-      "includes": ["**/vite.config.ts"],
+      "includes": [
+        "**/vite.config.ts"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
-            "noConsole": { "level": "off", "options": { "allow": ["log"] } }
+            "noConsole": {
+              "level": "off",
+              "options": {
+                "allow": [
+                  "log"
+                ]
+              }
+            }
           }
         }
       }

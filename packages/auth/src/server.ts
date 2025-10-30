@@ -1,11 +1,19 @@
 import { UserAuthService } from '@hominem/data'
-import { createClient } from '@supabase/supabase-js'
+import {
+  createClient,
+  type SupabaseClient,
+  type Session as SupabaseSession,
+  type User as SupabaseUser,
+} from '@supabase/supabase-js'
 import type { AuthConfig, HominemUser, ServerAuthResult } from './types'
 
 /**
  * Create Supabase server client for SSR
  */
-export function createSupabaseServerClient(request: Request, config: AuthConfig) {
+export function createSupabaseServerClient(
+  request: Request,
+  config: AuthConfig
+): { supabase: SupabaseClient; headers: Headers } {
   const headers = new Headers()
 
   const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
@@ -84,8 +92,8 @@ export async function requireServerAuth(
   config: AuthConfig
 ): Promise<{
   user: HominemUser
-  supabaseUser: any
-  session: any
+  supabaseUser: SupabaseUser
+  session: SupabaseSession
 }> {
   const auth = await getServerAuth(request, config)
 

@@ -6,6 +6,8 @@ node_modules
 
 # testing
 coverage
+playwright-report
+test-results
 
 # next.js
 .react-router
@@ -26,6 +28,8 @@ results.json
 results/
 output/
 
+# bun
+bun.lockb
 
 # Google credentials
 credentials.json
@@ -35,6 +39,7 @@ token.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+bun-debug.log*
 
 # local env files
 .env
@@ -45,6 +50,14 @@ yarn-error.log*
 
 # turbo
 .turbo
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
 
 supabase/.temp
 supabase/.branches
