@@ -4,12 +4,21 @@ export default [
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
 
+    // API Routes
     route('api/life-events/events', 'routes/api/life-events/events.ts'),
     route('api/life-events/events/:id', 'routes/api/life-events/events.$id.ts'),
     route('api/life-events/people', 'routes/api/life-events/people.ts'),
     route('api/life-events/tags', 'routes/api/life-events/tags.ts'),
     route('api/calendar/sync', 'routes/api/calendar/sync.ts'),
+    route('api/upload', 'routes/api/upload.ts'),
+    route('api/transcribe', 'routes/api/transcribe.ts'),
+    route('api/speech', 'routes/api/speech.ts'),
 
+    // Chat Routes
+    route('chat', 'routes/chat/index.tsx'),
+    route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
+
+    // Other Routes
     layout('routes/notes/layout.tsx', [route('notes', 'routes/notes/page.tsx')]),
     route('/content-strategy', 'routes/content-strategy/saved.tsx'),
     route('/content-strategy/create', 'routes/content-strategy/create.tsx'),
@@ -22,5 +31,6 @@ export default [
     route('/account', 'routes/account.tsx'),
     route('/auth/signin', 'routes/auth/signin.tsx'),
     route('/auth/signup', 'routes/auth/signup.tsx'),
+    route('/auth/callback', 'routes/auth.callback.tsx'),
   ]),
 ] as RouteConfig
