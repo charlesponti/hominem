@@ -56,7 +56,7 @@ export class ChatService {
 
       return newChat
     } catch (error) {
-      logger.error('Failed to create chat:', error as Error)
+      logger.error(`Failed to create chat:: ${error}`)
       throw new ChatError('DATABASE_ERROR', 'Failed to create chat conversation')
     }
   }
@@ -71,7 +71,7 @@ export class ChatService {
 
       return chatData
     } catch (error) {
-      logger.error('Failed to get chat:', error as Error)
+      logger.error(`Failed to get chat:: ${error}`)
       if (error instanceof Error && error.message.includes('Access denied')) {
         throw error
       }
@@ -117,10 +117,10 @@ export class ChatService {
         .returning()
         .then(takeUniqueOrThrow)
 
-      logger.info('Active chat created', { chatId: newChat.id, userId })
+      logger.info(`Active chat created: ${newChat.id} for user ${userId}`)
       return newChat
     } catch (error) {
-      logger.error('Error creating or fetching chat:', error as Error)
+      logger.error(`Error creating or fetching chat:: ${error}`)
       throw new ChatError('DATABASE_ERROR', 'Failed to get or create active chat')
     }
   }
@@ -139,7 +139,7 @@ export class ChatService {
 
       return chats
     } catch (error) {
-      logger.error('Failed to get user chats:', error as Error)
+      logger.error(`Failed to get user chats:: ${error}`)
       return []
     }
   }
@@ -170,10 +170,10 @@ export class ChatService {
         throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
       }
 
-      logger.info('Chat title updated', { chatId: chatId, title: title })
+      logger.info(`Chat title updated: ${chatId} - "${title}"`)
       return updatedChat
     } catch (error) {
-      logger.error('Failed to update chat title:', error as Error)
+      logger.error(`Failed to update chat title:: ${error}`)
       if (error instanceof Error && error.message.includes('Chat not found')) {
         throw error
       }
@@ -214,11 +214,11 @@ export class ChatService {
           .where(eq(chat.id, chatId))
           .returning()
 
-        logger.info('Chat title auto-updated', { chatId: chatId, title })
+        logger.info(`Chat title auto-updated: ${chatId} - "${title}"`)
         return updatedChat
       }
     } catch (error) {
-      logger.error('Failed to update chat title from conversation', error as Error)
+      logger.error(`Failed to update chat title from conversation: ${error}`)
     }
 
     return null
@@ -243,10 +243,10 @@ export class ChatService {
       // Then, delete the chat itself
       await db.delete(chat).where(eq(chat.id, chatId))
 
-      logger.info('Chat deleted', { chatId: chatId })
+      logger.info(`Chat deleted: ${chatId}`)
       return true
     } catch (error) {
-      logger.error('Failed to delete chat:', error as Error)
+      logger.error(`Failed to delete chat:: ${error}`)
       if (error instanceof Error && error.message.includes('Chat not found')) {
         throw error
       }
@@ -268,7 +268,7 @@ export class ChatService {
 
       return chats.filter((c) => c.title.toLowerCase().includes(params.query.toLowerCase()))
     } catch (error) {
-      logger.error('Failed to search chats:', error as Error)
+      logger.error(`Failed to search chats:: ${error}`)
       return []
     }
   }
@@ -288,10 +288,10 @@ export class ChatService {
 
       await db.delete(chatMessage).where(eq(chatMessage.chatId, chatId))
 
-      logger.info('Chat messages cleared', { chatId: chatId })
+      logger.info(`Chat messages cleared: ${chatId}`)
       return true
     } catch (error) {
-      logger.error('Failed to clear chat messages:', error as Error)
+      logger.error(`Failed to clear chat messages:: ${error}`)
       if (error instanceof Error && error.message.includes('Chat not found')) {
         throw error
       }
