@@ -8,8 +8,8 @@
     "build"
   ],
   "scripts": {
-    "dev": "pnpm tsx --watch src/index.ts | pino-pretty",
-    "start": "pnpm tsx src/index.ts",
+    "dev": "bun --watch src/index.ts | pino-pretty",
+    "start": "bun src/index.ts",
     "format": "biome format ./src --fix"
   },
   "dependencies": {
