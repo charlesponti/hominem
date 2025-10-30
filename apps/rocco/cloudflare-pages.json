@@ -1,15 +1,25 @@
 {
 	"build": {
 		"output_dir": "build",
-		"command": "cd ../.. && pnpm turbo run build --filter=@pontistudios/rocco",
+		"command": "cd ../.. && bun turbo run build --filter=@pontistudios/rocco",
 		"environment": {
 			"NODE_VERSION": "20"
 		}
 	},
 	"routes": [
-		{ "pattern": "/assets/*", "ttl": 31536000 },
-		{ "pattern": "/*.*", "ttl": 31536000 },
-		{ "pattern": "/*", "script": "index.html", "ttl": 0 }
+		{
+			"pattern": "/assets/*",
+			"ttl": 31536000
+		},
+		{
+			"pattern": "/*.*",
+			"ttl": 31536000
+		},
+		{
+			"pattern": "/*",
+			"script": "index.html",
+			"ttl": 0
+		}
 	],
 	"headers": {
 		"/*": {

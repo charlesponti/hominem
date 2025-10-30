@@ -33,6 +33,7 @@ export type AppEnv = {
   Variables: {
     userId?: string
     user?: unknown
+    supabaseId?: string
   }
 }
 
@@ -77,7 +78,7 @@ export function createServer(): Hono<AppEnv> | null {
       '/trpc/*',
       trpcServer({
         router: appRouter,
-        createContext: (opts) => {
+        createContext: (opts, c) => {
           const request = opts.req
 
           return {
@@ -90,7 +91,9 @@ export function createServer(): Hono<AppEnv> | null {
               plaidSync: plaidSyncQueue,
               importTransactions: importTransactionsQueue,
             },
-            supabaseId: '', // Will be set by auth middleware
+            user: c.get('user'),
+            userId: c.get('userId'),
+            supabaseId: c.get('supabaseId') || '',
           }
         },
       })

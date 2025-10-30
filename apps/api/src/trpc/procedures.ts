@@ -20,6 +20,18 @@ export interface Context {
 const t = initTRPC.context<Context>().create()
 
 const authMiddleware = t.middleware(async ({ ctx, next }) => {
+  // If user is already authenticated by Hono middleware, use that
+  if (ctx.user && ctx.userId && ctx.supabaseId) {
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+        userId: ctx.userId,
+        supabaseId: ctx.supabaseId,
+      },
+    })
+  }
+
   // Test mode: use x-user-id header for authentication
   if (process.env.NODE_ENV === 'test') {
     const testUserId = ctx.req.header('x-user-id')
@@ -46,7 +58,7 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
     }
   }
 
-  // Production mode: use authorization header
+  // Fallback: use authorization header
   const authHeader = ctx.req.header('authorization')
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new TRPCError({

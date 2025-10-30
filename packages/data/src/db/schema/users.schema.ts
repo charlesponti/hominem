@@ -26,7 +26,7 @@ export const users = pgTable(
     photoUrl: text('photo_url'), // Keep for backward compatibility
 
     // Admin status (can be overridden locally)
-    isAdmin: boolean('isAdmin').default(false).notNull(),
+    isAdmin: boolean('isadmin').default(false).notNull(),
 
     // Timestamps
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
