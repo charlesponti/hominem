@@ -1,4 +1,3 @@
-import { useSupabaseAuth } from '@hominem/ui'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
@@ -6,6 +5,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { useToast } from '~/components/ui/use-toast'
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function AccountPage() {
   const { userId, isLoading, logout } = useSupabaseAuth()
@@ -44,22 +44,6 @@ export default function AccountPage() {
     }
   }, [urlParams, toast, refetch])
 
-  const handleSyncSuccess = (data: { synced: number }) => {
-    toast({
-      title: 'Tweets synced successfully!',
-      description: `Imported ${data.synced} new tweets from your Twitter account.`,
-    })
-  }
-
-  const handleSyncError = (error: unknown) => {
-    console.error('Failed to sync tweets:', error)
-    toast({
-      title: 'Failed to sync tweets',
-      description: 'There was an error syncing your tweets. Please try again.',
-      variant: 'destructive',
-    })
-  }
-
   if (isLoading) {
     return <div>Loading...</div>
   }
@@ -86,10 +70,7 @@ export default function AccountPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <ConnectTwitterAccount
-              onSyncSuccess={handleSyncSuccess}
-              onSyncError={handleSyncError}
-            />
+            <ConnectTwitterAccount />
           </CardContent>
         </Card>
 

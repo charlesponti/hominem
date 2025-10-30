@@ -1,4 +1,4 @@
-import { Calendar, Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
+import { Bot, Calendar, Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useUser } from '~/lib/hooks/use-user'
@@ -9,6 +9,11 @@ const navItems = [
   {
     title: 'Animus',
     url: '/notes',
+  },
+  {
+    title: 'AI Assistant',
+    icon: Bot,
+    url: '/chat',
   },
   {
     title: 'Content Strategy',

@@ -1,5 +1,5 @@
-import { useSupabaseAuth } from '@hominem/ui'
 import { useCallback, useState } from 'react'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export function useTwitterOAuth() {
   const { userId } = useSupabaseAuth()

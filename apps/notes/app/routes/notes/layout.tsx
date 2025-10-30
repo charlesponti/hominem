@@ -1,5 +1,5 @@
-import { useSupabaseAuth } from '@hominem/ui'
 import { Navigate, Outlet } from 'react-router'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function NotesLayout() {
   const { userId, isLoading } = useSupabaseAuth()

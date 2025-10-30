@@ -1,6 +1,5 @@
 'use client'
 
-import { useSupabaseAuth } from '@hominem/ui'
 import { Loader2, RefreshCw, Twitter } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -28,6 +27,7 @@ import { useContentStrategies } from '~/lib/content/use-content-strategies'
 import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
 import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
 import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 interface TweetModalProps {
   open: boolean

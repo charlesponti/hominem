@@ -1,8 +1,8 @@
-import { useSupabaseAuth } from '@hominem/ui'
 import { useState } from 'react'
 import { Navigate } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function SignUpPage() {
   const { user, signInWithGoogle, isLoading } = useSupabaseAuth()
