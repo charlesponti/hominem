@@ -1,59 +1,54 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import axios from 'axios'
-import { getAuthToken } from '../tools/auth'
-
-const API_URL = 'http://localhost:4040/trpc'
+import { getAuthenticatedClient } from '../utils/auth.utils.js'
 
 export function registerNotesResource(server: McpServer) {
+  // Lazy initialize the API client
+  const getApiClient = () => getAuthenticatedClient()
+
   server.resource(
     'notes',
     'note://*',
     async (uri: string) => {
       const noteId = uri.replace('note://', '')
-      const token = getAuthToken()
-      if (!token) {
-        return {
-          error: 'You must be logged in to get a note.',
-        }
-      }
+
       try {
-        const response = await axios.get(`${API_URL}/notes.get?id=${noteId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await getApiClient().get(`/trpc/notes.get?id=${noteId}`)
         const note = response.data
         return {
           content: note.content,
           mimetype: 'text/plain',
         }
       } catch (error: unknown) {
+        // Extract helpful error message
+        let errorMessage = 'Failed to retrieve note.'
+        if (error instanceof Error) {
+          errorMessage = error.message.includes('Authentication')
+            ? error.message
+            : `Error: ${error.message}`
+        }
         return {
-          error: (error as Error).message,
+          error: errorMessage,
         }
       }
     },
     async () => {
-      const token = getAuthToken()
-      if (!token) {
-        return {
-          error: 'You must be logged in to list notes.',
-        }
-      }
       try {
-        const response = await axios.get(`${API_URL}/notes.list`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await getApiClient().get('/trpc/notes.list')
         const notes = response.data
-        return notes.map((note) => ({
+        return notes.map((note: { id: string; title: string }) => ({
           uri: `note://${note.id}`,
           title: note.title,
         }))
       } catch (error: unknown) {
+        // Extract helpful error message
+        let errorMessage = 'Failed to list notes.'
+        if (error instanceof Error) {
+          errorMessage = error.message.includes('Authentication')
+            ? error.message
+            : `Error: ${error.message}`
+        }
         return {
-          error: (error as Error).message,
+          error: errorMessage,
         }
       }
     }

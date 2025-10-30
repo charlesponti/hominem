@@ -1,11 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import axios from 'axios'
 import { z } from 'zod'
-import { getAuthToken } from './auth'
-
-const API_URL = 'http://localhost:4040/trpc'
+import { getAuthenticatedClient, handleApiError } from '../utils/auth.utils.js'
 
 export function registerNotesTool(server: McpServer) {
+  // Lazy initialize the API client - only create it when a tool is actually called
+  const getApiClient = () => getAuthenticatedClient()
+
   server.tool(
     'create_note',
     {
@@ -18,22 +18,7 @@ export function registerNotesTool(server: McpServer) {
     },
     async ({ input }) => {
       try {
-        const token = getAuthToken()
-        if (!token) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'You must be logged in to create a note.',
-              },
-            ],
-          }
-        }
-        const response = await axios.post(`${API_URL}/notes.create`, input, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await getApiClient().post('/trpc/notes.create', input)
         return {
           content: [
             {
@@ -43,14 +28,7 @@ export function registerNotesTool(server: McpServer) {
           ],
         }
       } catch (error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({ status: 'error', error: error.message }, null, 2),
-            },
-          ],
-        }
+        return handleApiError(error, 'create_note')
       }
     }
   )
@@ -62,22 +40,7 @@ export function registerNotesTool(server: McpServer) {
     },
     async () => {
       try {
-        const token = getAuthToken()
-        if (!token) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: 'You must be logged in to list notes.',
-              },
-            ],
-          }
-        }
-        const response = await axios.get(`${API_URL}/notes.list`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const response = await getApiClient().get('/trpc/notes.list')
         return {
           content: [
             {
@@ -87,14 +50,7 @@ export function registerNotesTool(server: McpServer) {
           ],
         }
       } catch (error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({ status: 'error', error: error.message }, null, 2),
-            },
-          ],
-        }
+        return handleApiError(error, 'list_notes')
       }
     }
   )
