@@ -11,11 +11,15 @@
     "build"
   ],
   "scripts": {
-    "build": "pnpm exec node esbuild.config.js",
+    "build": "node esbuild.config.js",
     "dev": "tsup src/index.ts --target=node18 --outDir build  --external electron --external chromium-bidi --watch",
-    "start": "pnpm exec node src/index.ts",
+    "start": "node src/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
-    "format": "biome format ./src --fix"
+    "format": "biome format ./src --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.1.17",
@@ -32,9 +36,11 @@
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
+    "@vitest/ui": "^4.0.3",
     "esbuild": "^0.25.0",
     "esbuild-node-externals": "^1.18.0",
     "esbuild-plugin-copy": "^2.1.1",
-    "tsup": "^8.4.0"
+    "tsup": "^8.4.0",
+    "vitest": "^4.0.3"
   }
 }

@@ -9,33 +9,33 @@ NODE_ENV ?= development
 
 # Install dependencies
 install:
-	pnpm install
+	bun install
 
 # Start the application in production mode
 start:
-	pnpm start
+	bun start
 
 # Start the application in development mode
 dev:
 	@echo "Starting development server..."
-	pm2 start pnpm --name="hominem" -- run dev
+	pm2 start bun --name="hominem" -- run dev
 
 run-redis:
 	@echo "Starting Redis..."
-	pm2 start pnpm --name="hominem-redis" -- run redis
+	pm2 start bun --name="hominem-redis" -- run redis
 
 # Run tests
 test:
-	pnpm run test
+	bun run test
 
 # Build the application
 build:
-	pnpm turbo run lint --force --parallel
-	pnpm turbo run build --force
+	bun turbo run lint --force --parallel
+	bun turbo run build --force
 
 # Run linter
 lint:
-	pnpm turbo run lint --force --parallel
+	bun turbo run lint --force --parallel
 
 # Clean build artifacts and dependencies
 clean:
@@ -71,7 +71,7 @@ test-db-status:
 
 # Run tests with test database
 test-with-db: test-db-start
-	pnpm test
+	bun test
 	$(MAKE) test-db-stop
 
 # Full cleanup and reinstall

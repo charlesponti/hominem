@@ -23,12 +23,12 @@
     }
   },
   "scripts": {
-    "db:generate": "pnpm drizzle-kit generate",
-    "migrate": "pnpm drizzle-kit migrate",
-    "db:update": "pnpm drizzle-kit generate && pnpm drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "db:update": "drizzle-kit generate && drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
     "test": "vitest run --passWithNoTests",
-    "build": "pnpm exec node esbuild.config.js",
+    "build": "node esbuild.config.js",
     "test:watch": "vitest",
     "format": "biome format ./src --fix",
     "clean": "rm -rf build tsconfig.tsbuildinfo"
