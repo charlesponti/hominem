@@ -1,13 +1,13 @@
 # Hominem Project Guidelines
 
 ## Build & Test Commands
-- Install: `pnpm install`
-- Dev: `turbo run dev --parallel` or `pm2 start pnpm --name="hominem" -- run dev` 
-- Build: `turbo run build` or `pnpm turbo run build --force`
-- Lint: `turbo run lint --parallel` or `pnpm turbo run lint --force --parallel`
-- Test: `turbo run test` or `pnpm run test`
-- Single test: `pnpm test -- -t "test name"` or `pnpm test path/to/test.ts`
-- Migrate: `pnpm turbo run migrate`
+- Install: `bun install`
+- Dev: `turbo run dev --parallel` or `pm2 start bun --name="hominem" -- run dev` 
+- Build: `turbo run build` or `bun turbo run build --force`
+- Lint: `turbo run lint --parallel` or `bun turbo run lint --force --parallel`
+- Test: `turbo run test` or `bun run test`
+- Single test: `bun test -- -t "test name"` or `bun test path/to/test.ts`
+- Migrate: `bun turbo run migrate`
 
 ## Code Style Guidelines
 - Follow Biome formatting (2-space indent, 100 char line width)
