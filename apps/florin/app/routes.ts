@@ -1,29 +1,28 @@
-import { type RouteConfig, index, layout, route } from '@react-router/dev/routes'
+import { index, layout, type RouteConfig, route } from '@react-router/dev/routes'
 
 export default [
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
     layout('routes/finance/layout.tsx', [
-      route('finance', 'routes/finance/page.tsx'),
-      route('import', 'routes/import/page.tsx'),
+      route('finance', 'routes/finance.tsx'),
+      route('import', 'routes/import.tsx'),
 
       // Accounts
-      route('accounts', 'routes/accounts/page.tsx'),
-      route('accounts/:id', 'routes/accounts/[id]/page.tsx'),
+      route('accounts', 'routes/accounts.tsx'),
+      route('accounts/:id', 'routes/accounts.$id.tsx'),
 
       // Budget
-      route('budget', 'routes/budget/page.tsx'),
-      route('budget/tracking', 'routes/budget/tracking/page.tsx'),
+      route('budget', 'routes/budget.tsx'),
 
       // Analytics
-      route('analytics', 'routes/analytics/page.tsx'),
-      route('analytics/monthly/:month', 'routes/analytics/monthly/[month]/page.tsx'),
-      route('analytics/category/:category', 'routes/analytics/category/[category]/page.tsx'),
-      route('analytics/categories', 'routes/analytics/categories/page.tsx'),
+      route('analytics', 'routes/analytics.tsx'),
+      route('analytics/monthly/:month', 'routes/analytics.monthly.$month.tsx'),
+      route('analytics/category/:category', 'routes/analytics.category.$category.tsx'),
+      route('analytics/categories', 'routes/analytics.categories.tsx'),
 
-      // Random
-      route('finance/runway', 'routes/finance/runway/page.tsx'),
-      route('finance/location-comparison', 'routes/finance/location-comparison/page.tsx'),
+      // Finance tools
+      route('finance/runway', 'routes/finance.runway.tsx'),
+      route('finance/location-comparison', 'routes/finance.location-comparison.tsx'),
     ]),
     route('/account', 'routes/account.tsx'),
     route('/auth/signin', 'routes/auth/signin.tsx'),
