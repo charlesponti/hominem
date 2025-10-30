@@ -8,14 +8,15 @@ import { z } from 'zod'
 import { getAuthenticatedClient, handleApiError } from '../utils/auth.utils.js'
 
 export function registerFinanceTools(server: McpServer) {
-  const apiClient = getAuthenticatedClient()
+  // Lazy initialize the API client - only create it when a tool is actually called
+  const getApiClient = () => getAuthenticatedClient()
 
   server.tool(
     'create_finance_account',
     financeTools.create_finance_account.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
-        const response = await apiClient.post('/api/finance/accounts', args)
+        const response = await getApiClient().post('/api/finance/accounts', args)
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'create_finance_account')
@@ -28,7 +29,7 @@ export function registerFinanceTools(server: McpServer) {
     financeTools.get_finance_accounts.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
-        const response = await apiClient.get('/api/finance/accounts', { params: args })
+        const response = await getApiClient().get('/api/finance/accounts', { params: args })
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'get_finance_accounts')
@@ -45,7 +46,7 @@ export function registerFinanceTools(server: McpServer) {
         if (!accountId) {
           throw new Error('Account ID is required for update.')
         }
-        const response = await apiClient.put(`/api/finance/accounts/${accountId}`, updateData)
+        const response = await getApiClient().put(`/api/finance/accounts/${accountId}`, updateData)
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'update_finance_account')
@@ -62,7 +63,7 @@ export function registerFinanceTools(server: McpServer) {
         if (!accountId) {
           throw new Error('Account ID is required for deletion.')
         }
-        const response = await apiClient.delete(`/api/finance/accounts/${accountId}`)
+        const response = await getApiClient().delete(`/api/finance/accounts/${accountId}`)
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'delete_finance_account')
@@ -76,7 +77,7 @@ export function registerFinanceTools(server: McpServer) {
     financeTools.create_transaction.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
-        const response = await apiClient.post('/api/finance/transactions', args)
+        const response = await getApiClient().post('/api/finance/transactions', args)
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'create_transaction')
@@ -89,7 +90,7 @@ export function registerFinanceTools(server: McpServer) {
     financeTools.get_transactions.parameters.omit({ userId: true }).shape,
     async (args) => {
       try {
-        const response = await apiClient.get('/api/finance/transactions', { params: args })
+        const response = await getApiClient().get('/api/finance/transactions', { params: args })
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'get_transactions')
@@ -106,7 +107,7 @@ export function registerFinanceTools(server: McpServer) {
         if (!transactionId) {
           throw new Error('Transaction ID is required for update.')
         }
-        const response = await apiClient.put(
+        const response = await getApiClient().put(
           `/api/finance/transactions/${transactionId}`,
           updateData
         )
@@ -126,7 +127,7 @@ export function registerFinanceTools(server: McpServer) {
         if (!transactionId) {
           throw new Error('Transaction ID is required for deletion.')
         }
-        const response = await apiClient.delete(`/api/finance/transactions/${transactionId}`)
+        const response = await getApiClient().delete(`/api/finance/transactions/${transactionId}`)
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'delete_transaction')
@@ -139,7 +140,7 @@ export function registerFinanceTools(server: McpServer) {
     z.object({}).describe('No parameters').shape,
     async (args) => {
       try {
-        const response = await apiClient.get('/api/finance/categories', { params: args })
+        const response = await getApiClient().get('/api/finance/categories', { params: args })
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'get_spending_categories')
@@ -161,7 +162,7 @@ export function registerFinanceTools(server: McpServer) {
     }).shape,
     async (args) => {
       try {
-        const response = await apiClient.get('/api/finance/analyze/spending-time-series', {
+        const response = await getApiClient().get('/api/finance/analyze/spending-time-series', {
           params: args,
         })
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
@@ -176,7 +177,7 @@ export function registerFinanceTools(server: McpServer) {
     z.object({}).describe('No parameters').shape,
     async () => {
       try {
-        const response = await apiClient.get('/api/finance/analyze/top-merchants')
+        const response = await getApiClient().get('/api/finance/analyze/top-merchants')
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'get_top_merchants')
@@ -186,7 +187,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool('get_category_breakdown', categoryBreakdownSchema.shape, async (args) => {
     try {
-      const response = await apiClient.get('/api/finance/analyze/category-breakdown', {
+      const response = await getApiClient().get('/api/finance/analyze/category-breakdown', {
         params: args,
       })
       return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
@@ -200,7 +201,7 @@ export function registerFinanceTools(server: McpServer) {
     financeTools.budgetCalculatorTool.parameters.shape,
     async (args) => {
       try {
-        const response = await apiClient.post('/api/personal-finance/budget', args)
+        const response = await getApiClient().post('/api/personal-finance/budget', args)
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'calculate_budget_breakdown')
@@ -210,7 +211,7 @@ export function registerFinanceTools(server: McpServer) {
 
   server.tool('calculate_runway', runwayCalculationSchema.shape, async (args) => {
     try {
-      const response = await apiClient.post('/api/personal-finance/runway', args)
+      const response = await getApiClient().post('/api/personal-finance/runway', args)
       return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
     } catch (error) {
       return handleApiError(error, 'calculate_runway')
@@ -222,7 +223,7 @@ export function registerFinanceTools(server: McpServer) {
     financeTools.calculate_transactions.parameters.omit({ userId: undefined }).shape,
     async (args) => {
       try {
-        const response = await apiClient.post('/api/finance/analyze/calculate', args)
+        const response = await getApiClient().post('/api/finance/analyze/calculate', args)
         return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
       } catch (error) {
         return handleApiError(error, 'calculate_transactions')
