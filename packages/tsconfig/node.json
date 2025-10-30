@@ -5,9 +5,9 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "target": "ESNext",
+    "target": "ES2022",
     "lib": [
-      "ESNext"
+      "ES2022"
     ]
   }
 }
