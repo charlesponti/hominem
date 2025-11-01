@@ -1,9 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    ".env.local",
-    "**/.env.*local"
-  ],
+  "globalDependencies": [".env.local", "**/.env.*local"],
   "globalEnv": [
     "APP_URL",
     "SUPABASE_URL",
@@ -25,16 +22,8 @@
   ],
   "tasks": {
     "build": {
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "build/**",
-        "dist/**",
-        "*.tsbuildinfo"
-      ],
-      "dependsOn": [
-        "^build"
-      ]
+      "outputs": [".next/**", "!.next/cache/**", "build/**", "dist/**", "*.tsbuildinfo"],
+      "dependsOn": ["^build"]
     },
     "lint": {
       "outputs": []
@@ -45,9 +34,7 @@
     },
     "test": {
       "dependsOn": [],
-      "outputs": [
-        "coverage/**"
-      ]
+      "outputs": ["coverage/**"]
     },
     "format": {
       "outputs": []
@@ -56,9 +43,7 @@
       "cache": false
     },
     "start": {
-      "dependsOn": [
-        "build"
-      ]
+      "dependsOn": ["build"]
     },
     "clean": {
       "cache": false

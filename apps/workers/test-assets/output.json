@@ -6,13 +6,7 @@
       "email": null,
       "phone_number": null,
       "position": "writer",
-      "tags": [
-        "executive producer",
-        "comedy",
-        "television",
-        "CBS",
-        "ABC"
-      ],
+      "tags": ["executive producer", "comedy", "television", "CBS", "ABC"],
       "credits": [
         {
           "role": "executive producer",

@@ -1,4 +1,4 @@
-import type { ContentStrategiesSelect, ContentStrategy } from '@hominem/utils/types'
+import type { ContentStrategy } from '@hominem/utils/types'
 import { trpc } from '~/lib/trpc'
 
 // Type for creating a new content strategy
@@ -57,7 +57,7 @@ export function useContentStrategy(strategyId: string) {
  */
 export function useCreateContentStrategy() {
   const utils = trpc.useUtils()
-  
+
   const createStrategy = trpc.contentStrategies.create.useMutation({
     onSuccess: () => {
       utils.contentStrategies.list.invalidate()
@@ -77,7 +77,7 @@ export function useCreateContentStrategy() {
  */
 export function useUpdateContentStrategy() {
   const utils = trpc.useUtils()
-  
+
   const updateStrategy = trpc.contentStrategies.update.useMutation({
     onSuccess: (updatedStrategy) => {
       utils.contentStrategies.list.invalidate()
@@ -98,7 +98,7 @@ export function useUpdateContentStrategy() {
  */
 export function useDeleteContentStrategy() {
   const utils = trpc.useUtils()
-  
+
   const deleteStrategy = trpc.contentStrategies.delete.useMutation({
     onSuccess: () => {
       utils.contentStrategies.list.invalidate()
@@ -111,4 +111,4 @@ export function useDeleteContentStrategy() {
     isError: deleteStrategy.isError,
     error: deleteStrategy.error,
   }
-} 
+}

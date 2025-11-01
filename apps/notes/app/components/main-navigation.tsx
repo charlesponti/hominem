@@ -98,7 +98,7 @@ export function MainNavigation() {
   }, [menuOpen])
 
   // Close the menu when navigating to a new page
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: closeMenu is stable and only need to react to pathname changes
   useEffect(() => {
     closeMenu()
   }, [pathname])

@@ -3,9 +3,9 @@ import { PaginationControls } from '~/components/finance/pagination-controls'
 import { TransactionFilters } from '~/components/finance/transaction-filters'
 import { TransactionsList } from '~/components/transactions/transactions-list'
 import {
+  type FilterArgs,
   useFinanceAccountsWithMap,
   useFinanceTransactions,
-  type FilterArgs,
 } from '~/lib/hooks/use-finance-data'
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
 import { useSort } from '~/lib/hooks/use-sort'

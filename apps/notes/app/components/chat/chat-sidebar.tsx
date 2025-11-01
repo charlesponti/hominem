@@ -95,7 +95,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
                 onClick={handleNavigation}
               >
                 Home
-              </Link>
+              </RouterLink>
             </nav>
           </div>
         )}

@@ -1,9 +1,9 @@
-import { lmstudio } from '@/utils/lmstudio'
 import { generateText } from 'ai'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import { consola } from 'consola'
 import ora from 'ora'
+import { lmstudio } from '@/utils/lmstudio'
 
 export const askCommand = new Command()
   .command('ask')

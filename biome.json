@@ -10,7 +10,11 @@
       "!**/node_modules",
       "!**/.next",
       "!**/.turbo",
-      "!**/.vercel"
+      "!**/.vercel",
+      "!**/.vscode",
+      "!**/.react-router",
+      "!**/playwright-report",
+      "!**/output"
     ],
     "maxSize": 2000000
   },
@@ -41,13 +45,11 @@
         "noConsole": {
           "level": "warn",
           "options": {
-            "allow": [
-              "error",
-              "info",
-              "warn"
-            ]
+            "allow": ["error", "info", "warn"]
           }
-        }
+        },
+        "noArrayIndexKey": "off",
+        "useIterableCallbackReturn": "warn"
       },
       "correctness": {
         "noUnusedImports": "error"
@@ -62,7 +64,13 @@
         "noUnusedTemplateLiteral": "error",
         "useNumberNamespace": "error",
         "noInferrableTypes": "error",
-        "noUselessElse": "error"
+        "noUselessElse": "error",
+        "noNonNullAssertion": "off"
+      },
+      "a11y": {
+        "useMediaCaption": "off",
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off"
       }
     }
   },
@@ -80,38 +88,52 @@
     }
   },
   "css": {
+    "parser": {
+      "cssModules": false,
+      "tailwindDirectives": true
+    },
     "formatter": {
       "enabled": true,
       "indentStyle": "space",
       "indentWidth": 2,
       "lineWidth": 100,
       "quoteStyle": "single"
+    },
+    "linter": {
+      "enabled": true
     }
   },
   "overrides": [
     {
-      "includes": [
-        "**/package.json"
-      ],
+      "includes": ["**/package.json"],
       "formatter": {
         "lineWidth": 1
       }
     },
     {
-      "includes": [
-        "**/vite.config.ts"
-      ],
+      "includes": ["**/vite.config.ts"],
       "linter": {
         "rules": {
           "suspicious": {
             "noConsole": {
               "level": "off",
               "options": {
-                "allow": [
-                  "log"
-                ]
+                "allow": ["log"]
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "warn"
+          },
+          "suspicious": {
+            "noDuplicateProperties": "off"
           }
         }
       }

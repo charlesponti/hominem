@@ -132,4 +132,3 @@ export const tripsRouter = router({
       }
     }),
 })
-

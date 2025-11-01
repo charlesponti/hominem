@@ -111,7 +111,7 @@ describe('helper functions', () => {
       ['unknown-model', 'Unknown'],
       ['', 'Unknown'],
     ])('should correctly identify provider for %s', async (model, expected) => {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      // biome-ignore lint/suspicious/noExplicitAny: need any for dynamic import in test
       const impo = (await vi.importActual(PATH)) as any
       expect(impo.guessProvider(model)).toBe(expected)
     })
@@ -125,7 +125,7 @@ describe('helper functions', () => {
       ['unknown-model', 0],
       ['', 0],
     ])('should return correct custom model ID for %s', async (model, expected) => {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      // biome-ignore lint/suspicious/noExplicitAny: need any for dynamic import in test
       const impo = (await vi.importActual(PATH)) as any
       expect(impo.getCustomModelId(model)).toBe(expected)
     })

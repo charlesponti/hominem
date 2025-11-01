@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import type { Route } from '../+types/root'
 
-export async function loader(loaderArgs: Route.LoaderArgs) {
+export async function loader(_loaderArgs: Route.LoaderArgs) {
   // Auth is handled client-side with Supabase
   return {}
 }

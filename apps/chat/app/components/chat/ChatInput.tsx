@@ -30,7 +30,7 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
   const userId = rootData?.supabaseId || undefined
 
   const sendMessage = useSendMessage({ chatId, userId })
-  const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload()
+  const { uploadState, clearAll } = useFileUpload()
 
   const characterCount = inputValue.length
   const hasInput = inputValue.trim().length > 0
@@ -91,13 +91,13 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
     setShowAudioRecorder(true)
   }, [])
 
-  const handleFilesUploaded = useCallback((files: any[]) => {
+  const handleFilesUploaded = useCallback((_files: any[]) => {
     // Files are already uploaded by the FileUploader component
     // The useFileUpload hook manages the state internally
   }, [])
 
   const handleAudioRecorded = useCallback(
-    async (audioBlob: Blob, transcript?: string) => {
+    async (_audioBlob: Blob, transcript?: string) => {
       setShowAudioRecorder(false)
 
       if (transcript?.trim()) {

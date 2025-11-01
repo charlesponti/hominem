@@ -1,4 +1,4 @@
-import { redirect, type LoaderFunctionArgs } from 'react-router'
+import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { getServerSession } from '~/lib/supabase/server'
 import { createServerTRPCClient } from '~/lib/trpc-server'
 

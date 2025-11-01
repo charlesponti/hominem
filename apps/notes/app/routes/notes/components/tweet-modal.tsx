@@ -145,7 +145,7 @@ export function TweetModal({
           saveAsContent: true, // Always save as content for better tracking
         },
         {
-          onSuccess: (data) => {
+          onSuccess: (_data) => {
             const message = contentId
               ? 'Tweet posted and content updated!'
               : 'Tweet posted and saved to notes!'

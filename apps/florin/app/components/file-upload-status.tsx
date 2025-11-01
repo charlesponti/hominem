@@ -7,7 +7,9 @@ import { cn } from '~/lib/utils'
 
 export const FileUploadStatus = memo(function FileUploadStatus({
   uploadStatus,
-}: { uploadStatus?: FileStatus }) {
+}: {
+  uploadStatus?: FileStatus
+}) {
   if (!uploadStatus) return null
   const { status, error, stats } = uploadStatus
 
@@ -139,7 +141,10 @@ const ProcessingStats = memo(function ProcessingStats({ stats }: { stats: FileSt
 const ProcessingStat = memo(function ProcessingStat({
   label,
   value,
-}: { label: string; value?: number }) {
+}: {
+  label: string
+  value?: number
+}) {
   if (value === undefined) return null
   return (
     <div>

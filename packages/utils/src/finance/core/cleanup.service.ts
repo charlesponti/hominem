@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm'
 import { db } from '@hominem/data/db'
 import { budgetGoals, financeAccounts, plaidItems, transactions } from '@hominem/data/schema'
+import { eq } from 'drizzle-orm'
 import { logger } from '../../logger'
 
 /**

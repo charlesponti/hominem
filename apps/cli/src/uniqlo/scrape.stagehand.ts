@@ -1,9 +1,10 @@
-import { env } from '@/env'
-import { Stagehand } from '@browserbasehq/stagehand'
 import fs from 'node:fs'
 import path from 'node:path'
+import { Stagehand } from '@browserbasehq/stagehand'
 import ora from 'ora'
 import { z } from 'zod'
+import { env } from '@/env'
+
 const SCRATCHPAD_DIR = path.resolve(__dirname, 'output')
 
 if (!fs.existsSync(SCRATCHPAD_DIR)) {

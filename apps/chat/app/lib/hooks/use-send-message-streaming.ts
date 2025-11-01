@@ -58,8 +58,6 @@ export function useSendMessageStreaming({ chatId, userId }: { chatId: string; us
     onSuccess: async (data, variables, context) => {
       const currentChatId = context?.currentChatId || variables.chatId || chatId
 
-      console.log('Streaming mutation successful, updating cache for chatId:', currentChatId)
-
       // Update the cache with the real data from the server
       utils.chats.getMessages.setData({ chatId: currentChatId, limit: 50 }, (oldData) => {
         if (!oldData) return oldData
@@ -127,7 +125,7 @@ export function useSendMessageStreaming({ chatId, userId }: { chatId: string; us
         })
       }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousMessages && context?.currentChatId) {
         queryClient.setQueryData(

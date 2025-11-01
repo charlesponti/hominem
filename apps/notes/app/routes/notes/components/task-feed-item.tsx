@@ -1,13 +1,13 @@
 import type { Note } from '@hominem/utils/types'
 import { format } from 'date-fns'
 import {
-    CalendarDays,
-    CheckCircle2,
-    Edit,
-    PauseCircle,
-    PlayCircle,
-    Target,
-    Trash2,
+  CalendarDays,
+  CheckCircle2,
+  Edit,
+  PauseCircle,
+  PlayCircle,
+  Target,
+  Trash2,
 } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -61,7 +61,7 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const _getStatusColor = (status: string) => {
     switch (status) {
       case 'todo':
         return 'from-slate-500 to-slate-600'

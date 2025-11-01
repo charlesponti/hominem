@@ -11,12 +11,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { trpc } from '~/lib/trpc'
 
-interface HistoryData {
-  date: string
-  budgeted: number
-  actual: number
-}
-
 interface BudgetHistoryChartProps {
   historyMonths?: number
 }

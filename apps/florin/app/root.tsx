@@ -6,7 +6,7 @@ import type { Route } from './+types/root'
 import './globals.css'
 import { createTRPCClient, queryClient, trpc } from './lib/trpc'
 
-export async function loader(args: Route.LoaderArgs) {
+export async function loader(_args: Route.LoaderArgs) {
   // No auth loader needed for Supabase - handled client-side
   return {}
 }

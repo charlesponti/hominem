@@ -69,7 +69,7 @@ export default function NotesPage() {
   }, [refetch])
 
   // Stats calculations
-  const stats = useMemo(() => {
+  const _stats = useMemo(() => {
     const notes = allContentItems.filter((item) => item.type === 'note')
     const tasks = allContentItems.filter((item) => item.type === 'task')
     const timers = allContentItems.filter((item) => item.type === 'timer')
@@ -116,9 +116,9 @@ export default function NotesPage() {
     const item = allContentItems.find((n) => n.id === noteId)
     if (!item) return
     const newTags = (item.tags || []).filter((tag: { value: string }) => tag.value !== tagValue)
-    updateItem.mutate({ 
-      id: noteId, 
-      data: { tags: newTags }
+    updateItem.mutate({
+      id: noteId,
+      data: { tags: newTags },
     })
   }
 

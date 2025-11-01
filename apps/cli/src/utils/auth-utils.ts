@@ -1,7 +1,7 @@
-import axios from 'axios'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import axios from 'axios'
 
 const CONFIG_FILE = path.join(os.homedir(), '.hominem', 'config.json')
 
@@ -15,7 +15,7 @@ async function readAuthConfig(): Promise<AuthConfig | null> {
   try {
     const content = await fs.readFile(CONFIG_FILE, 'utf-8')
     return JSON.parse(content)
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }
@@ -26,7 +26,7 @@ async function writeAuthConfig(config: AuthConfig): Promise<void> {
 }
 
 export async function getValidAccessToken(): Promise<string | null> {
-  let config = await readAuthConfig()
+  const config = await readAuthConfig()
 
   if (!config || !config.accessToken) {
     return null
@@ -41,10 +41,9 @@ export async function getValidAccessToken(): Promise<string | null> {
   if (now - tokenIssuedAt > oneHour && config.refreshToken) {
     // Token expired, try to refresh
     try {
-      const response = await axios.post(
-        `http://localhost:4444/api/auth/refresh-token`,
-        { refreshToken: config.refreshToken }
-      )
+      const response = await axios.post('http://localhost:4444/api/auth/refresh-token', {
+        refreshToken: config.refreshToken,
+      })
       const { accessToken, refreshToken: newRefreshToken } = response.data
 
       if (accessToken) {
@@ -55,10 +54,9 @@ export async function getValidAccessToken(): Promise<string | null> {
         }
         await writeAuthConfig(config)
         return accessToken
-      } else {
-        return null // Refresh failed
       }
-    } catch (error) {
+      return null // Refresh failed
+    } catch (_error) {
       return null
     }
   }

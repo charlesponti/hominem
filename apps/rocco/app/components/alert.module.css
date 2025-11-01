@@ -1,94 +1,94 @@
 .container {
-	position: relative;
-	display: flex;
-	align-items: flex-start;
-	gap: 0.75rem;
-	padding: 1rem;
-	margin-bottom: 1.25rem;
-	border-radius: 0.75rem;
-	backdrop-filter: blur(8px);
-	transition: all 0.2s ease;
-	animation: fadeIn 0.3s ease forwards;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  animation: fadeIn 0.3s ease forwards;
 }
 
 /* Type-specific styles */
 .success {
-	background: rgba(16, 185, 129, 0.1);
-	border: 1px solid rgba(16, 185, 129, 0.2);
-	color: #065f46;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #065f46;
 }
 
 .error {
-	background: rgba(244, 63, 94, 0.1);
-	border: 1px solid rgba(244, 63, 94, 0.2);
-	color: #991b1b;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: #991b1b;
 }
 
 .warning {
-	background: rgba(250, 204, 21, 0.1);
-	border: 1px solid rgba(250, 204, 21, 0.2);
-	color: #92400e;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  color: #92400e;
 }
 
 .info {
-	background: rgba(99, 102, 241, 0.1);
-	border: 1px solid rgba(99, 102, 241, 0.2);
-	color: #3730a3;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #3730a3;
 }
 
 @keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: translateY(-8px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .iconWrapper {
-	display: flex;
-	padding-top: 0.125rem;
+  display: flex;
+  padding-top: 0.125rem;
 }
 
 .iconWrapper svg {
-	color: inherit;
+  color: inherit;
 }
 
 .iconSuccess svg {
-	color: #10b981;
+  color: #10b981;
 }
 
 .iconError svg {
-	color: #f43f5e;
+  color: #f43f5e;
 }
 
 .iconWarning svg {
-	color: #facc15;
+  color: #facc15;
 }
 
 .iconInfo svg {
-	color: #6366f1;
+  color: #6366f1;
 }
 
 .content {
-	flex: 1;
-	font-size: 0.875rem;
-	line-height: 1.5;
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .dismissButton {
-	background: none;
-	border: none;
-	color: inherit;
-	cursor: pointer;
-	padding: 0.25rem;
-	border-radius: 0.25rem;
-	opacity: 0.7;
-	transition: opacity 0.2s ease;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
 }
 
 .dismissButton:hover {
-	opacity: 1;
+  opacity: 1;
 }

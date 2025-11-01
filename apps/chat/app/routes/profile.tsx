@@ -15,7 +15,7 @@ export async function loader(loaderArgs: Route.LoaderArgs) {
 }
 
 // Using the proper parameter name without destructuring
-export function meta(args: Route.MetaArgs) {
+export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Profile' }, { name: 'description', content: 'User profile page' }]
 }
 

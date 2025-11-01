@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import { trpc, type RouterOutput } from '~/lib/trpc'
+import { type RouterOutput, trpc } from '~/lib/trpc'
 
 // Derive form data type from tRPC input schema
 export type BudgetCategoryFormData =

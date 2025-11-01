@@ -1,4 +1,3 @@
-import type { UseTRPCMutationOptions } from '@trpc/react-query/shared'
 import { useToast } from '~/components/ui/use-toast'
 import { trpc } from '~/lib/trpc'
 
@@ -30,15 +29,17 @@ export function useMutationWithOptimistic<TInput, TOutput>({
       if (optimisticUpdate) {
         // Cancel any outgoing refetches
         await (utils as any)[optimisticUpdate.queryKey].cancel()
-        
+
         // Snapshot the previous value
-        const previousData = (utils as any)[optimisticUpdate.queryKey].getData()
-        
-        // Optimistically update to the new value
-        (utils as any)[optimisticUpdate.queryKey].setData(undefined, (old: any) =>
-          optimisticUpdate.updateFn(old, newData)
-        )
-        
+        const previousData = (utils as any)[optimisticUpdate.queryKey]
+          .getData()(
+            // Optimistically update to the new value
+            utils as any
+          )
+          [optimisticUpdate.queryKey].setData(undefined, (old: any) =>
+            optimisticUpdate.updateFn(old, newData)
+          )
+
         // Return a context object with the snapshotted value
         return { previousData }
       }
@@ -52,9 +53,9 @@ export function useMutationWithOptimistic<TInput, TOutput>({
     onError: (err: Error, variables: TInput, context: any) => {
       if (optimisticUpdate && context?.previousData) {
         // If the mutation fails, use the context returned from onMutate to roll back
-        (utils as any)[optimisticUpdate.queryKey].setData(undefined, context.previousData)
+        ;(utils as any)[optimisticUpdate.queryKey].setData(undefined, context.previousData)
       }
-      
+
       const errorMessage = defaultErrorMessage || err.message || 'An error occurred'
       toast({
         variant: 'destructive',
@@ -65,8 +66,8 @@ export function useMutationWithOptimistic<TInput, TOutput>({
     onSettled: () => {
       if (optimisticUpdate) {
         // Always refetch after error or success to ensure we have the latest data
-        (utils as any)[optimisticUpdate.queryKey].invalidate()
+        ;(utils as any)[optimisticUpdate.queryKey].invalidate()
       }
     },
   })
-} 
+}

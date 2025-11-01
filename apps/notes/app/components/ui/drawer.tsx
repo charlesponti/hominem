@@ -3,10 +3,11 @@ import { Drawer as DrawerPrimitive } from 'vaul'
 
 import { cn } from '~/lib/utils'
 
-const Drawer = ({ children, ...props }: React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root {...props}>
-    {children}
-  </DrawerPrimitive.Root>
+const Drawer = ({
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Root>) => (
+  <DrawerPrimitive.Root {...props}>{children}</DrawerPrimitive.Root>
 )
 Drawer.displayName = 'Drawer'
 
@@ -84,7 +85,14 @@ const DrawerDescription = React.forwardRef<
 DrawerDescription.displayName = DrawerPrimitive.Description.displayName
 
 export {
-    Drawer, DrawerClose,
-    DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerPortal, DrawerTitle, DrawerTrigger
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerPortal,
+  DrawerTitle,
+  DrawerTrigger,
 }
-

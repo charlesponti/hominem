@@ -9,9 +9,7 @@
     "moduleResolution": "NodeNext",
     "outDir": "dist",
     "paths": {
-      "@utils/*": [
-        "packages/utils/src/*"
-      ]
+      "@utils/*": ["packages/utils/src/*"]
     },
     "allowImportingTsExtensions": false
   },

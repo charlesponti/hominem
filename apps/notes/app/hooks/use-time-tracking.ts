@@ -11,7 +11,7 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
   const startTimer = async () => {
     const now = new Date().toISOString()
     const firstStartTime = task.taskMetadata?.firstStartTime || now
-    
+
     await updateNote.mutateAsync({
       id: task.id,
       data: {
@@ -29,7 +29,7 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
     if (!task.taskMetadata?.startTime) return
 
     const startTime = new Date(task.taskMetadata.startTime).getTime()
-    const now = new Date().getTime()
+    const now = Date.now()
     const elapsed = now - startTime
     const currentDuration = (task.taskMetadata.duration || 0) + elapsed
 
@@ -50,7 +50,7 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
     if (!task.taskMetadata?.startTime) return
 
     const startTime = new Date(task.taskMetadata.startTime).getTime()
-    const now = new Date().getTime()
+    const now = Date.now()
     const elapsed = now - startTime
     const currentDuration = (task.taskMetadata.duration || 0) + elapsed
 
@@ -105,4 +105,4 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
     resetTimerForInProgressTask,
     isLoading: updateNote.isPending,
   }
-} 
+}

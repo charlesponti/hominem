@@ -1,8 +1,8 @@
 import { Plus, User } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
-import { Button } from '~/components/ui/button'
 import { ChatList } from '~/components/chat/ChatList'
+import { Button } from '~/components/ui/button'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 

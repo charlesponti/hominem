@@ -1,10 +1,11 @@
+import crypto from 'node:crypto'
 import { db } from '@hominem/data'
-import { redis, waitForRateLimit } from '@hominem/utils/redis'
 import { artists } from '@hominem/data/schema'
+import { redis, waitForRateLimit } from '@hominem/utils/redis'
 import type { Artist } from '@hominem/utils/types'
 import axios from 'axios'
 import { sql } from 'drizzle-orm'
-import crypto from 'node:crypto'
+
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env
 const authToken = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')
 

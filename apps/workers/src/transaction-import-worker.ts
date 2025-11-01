@@ -12,7 +12,7 @@ import { Effect } from 'effect'
 import { HealthService } from './health.service'
 import { AppLive, CsvStorage, Logger, Redis } from './services'
 
-const CONCURRENCY = process.env.WORKER_CONCURRENCY
+const _CONCURRENCY = process.env.WORKER_CONCURRENCY
   ? Number.parseInt(process.env.WORKER_CONCURRENCY, 10)
   : 3
 
@@ -181,7 +181,7 @@ const program = Effect.gen(function* ($) {
     )
   )
 
-  const healthService = new HealthService(worker, 'Transaction Import Worker')
+  const _healthService = new HealthService(worker, 'Transaction Import Worker')
 
   worker.on('active', (job: Job<ImportTransactionsQueuePayload>) => {
     logger.info(`Job ${job.id} (${job.data.fileName}) started processing`)

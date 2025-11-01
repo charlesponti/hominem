@@ -1,33 +1,33 @@
 {
-	"build": {
-		"output_dir": "build",
-		"command": "cd ../.. && bun turbo run build --filter=@pontistudios/rocco",
-		"environment": {
-			"NODE_VERSION": "20"
-		}
-	},
-	"routes": [
-		{
-			"pattern": "/assets/*",
-			"ttl": 31536000
-		},
-		{
-			"pattern": "/*.*",
-			"ttl": 31536000
-		},
-		{
-			"pattern": "/*",
-			"script": "index.html",
-			"ttl": 0
-		}
-	],
-	"headers": {
-		"/*": {
-			"X-Frame-Options": "DENY",
-			"X-Content-Type-Options": "nosniff",
-			"Referrer-Policy": "strict-origin-when-cross-origin",
-			"Permissions-Policy": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
-			"Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.googleapis.com https://*.gstatic.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com"
-		}
-	}
+  "build": {
+    "output_dir": "build",
+    "command": "cd ../.. && bun turbo run build --filter=@pontistudios/rocco",
+    "environment": {
+      "NODE_VERSION": "20"
+    }
+  },
+  "routes": [
+    {
+      "pattern": "/assets/*",
+      "ttl": 31536000
+    },
+    {
+      "pattern": "/*.*",
+      "ttl": 31536000
+    },
+    {
+      "pattern": "/*",
+      "script": "index.html",
+      "ttl": 0
+    }
+  ],
+  "headers": {
+    "/*": {
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.googleapis.com https://*.gstatic.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com"
+    }
+  }
 }

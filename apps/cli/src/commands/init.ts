@@ -1,9 +1,9 @@
-import chalk from 'chalk'
-import { Command } from 'commander'
-import { consola } from 'consola'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import chalk from 'chalk'
+import { Command } from 'commander'
+import { consola } from 'consola'
 
 export const command = new Command('init')
   .description('Initialize Hominem environment')
@@ -17,7 +17,7 @@ export const command = new Command('init')
       try {
         await fs.access(hominemDir)
         consola.info(chalk.blue(`Directory already exists: ${hominemDir}`))
-      } catch (error) {
+      } catch (_error) {
         // Create the directory
         await fs.mkdir(hominemDir, { recursive: true })
         consola.success(chalk.green(`Created directory: ${hominemDir}`))
@@ -28,7 +28,7 @@ export const command = new Command('init')
       try {
         await fs.access(dbPath)
         consola.info(chalk.blue(`Database file already exists: ${dbPath}`))
-      } catch (error) {
+      } catch (_error) {
         // Create empty file
         await fs.writeFile(dbPath, '')
         consola.success(chalk.green(`Created database file: ${dbPath}`))

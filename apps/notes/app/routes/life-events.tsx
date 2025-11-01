@@ -52,7 +52,10 @@ export async function action({ request }: Route.ActionArgs) {
   const eventData: any = {}
   for (const [key, value] of formData.entries()) {
     if (key === 'people') {
-      ;(eventData.people ||= []).push(value as string)
+      if (!eventData.people) {
+        eventData.people = []
+      }
+      eventData.people.push(value as string)
       continue
     }
     eventData[key] = value

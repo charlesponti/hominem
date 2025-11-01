@@ -1,7 +1,4 @@
 import { RefreshCcw, Trash2 } from 'lucide-react'
-import { Button } from '~/components/ui/button'
-import { toast } from '~/components/ui/use-toast'
-import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +10,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '~/components/ui/alert-dialog'
+import { Button } from '~/components/ui/button'
+import { toast } from '~/components/ui/use-toast'
+import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
 import type { RouterOutput } from '~/lib/trpc'
 import { PlaidStatusBadge } from './plaid-status-badge'
 

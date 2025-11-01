@@ -1,10 +1,9 @@
+import axios from 'axios'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import { consola } from 'consola'
-
-import { getAuthToken } from '@/utils/auth.utils'
-import axios from 'axios'
 import ora from 'ora'
+import { getAuthToken } from '@/utils/auth.utils'
 
 export const command = new Command('generate')
   .description('Generate text using an AI model')

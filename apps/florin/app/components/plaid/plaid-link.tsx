@@ -38,7 +38,7 @@ export function PlaidLink({
   const { exchangeToken, isLoading: isExchanging, error: exchangeError } = useExchangeToken()
 
   // Initialize link token only when user clicks the button
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: createLinkToken is stable from mutation
   const initializeLinkToken = useCallback(() => {
     if (!userId || linkToken || isCreatingToken) return
 
@@ -56,7 +56,7 @@ export function PlaidLink({
   }, [userId, linkToken, isCreatingToken, onError])
 
   // Handle successful connection
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: exchangeToken is stable from mutation
   const handleOnSuccess = useCallback<PlaidLinkOnSuccess>(
     (publicToken, metadata) => {
       if (!metadata.institution) {
@@ -100,7 +100,7 @@ export function PlaidLink({
 
   // Handle connection errors
   const handleOnExit = useCallback<PlaidLinkOnExit>(
-    (error, metadata) => {
+    (error, _metadata) => {
       if (error) {
         console.error('Plaid Link error:', error)
         const errorMessage = error.error_message || 'Failed to connect bank account'
@@ -213,11 +213,7 @@ export function PlaidLink({
       {isLoading ? (
         <>
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
-          {isCreatingToken
-            ? 'Initializing...'
-            : isExchanging
-              ? 'Connecting...'
-              : 'Loading...'}
+          {isCreatingToken ? 'Initializing...' : isExchanging ? 'Connecting...' : 'Loading...'}
         </>
       ) : (
         <>

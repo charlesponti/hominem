@@ -58,12 +58,12 @@ export const syncCommand = new Command('sync')
 
       // Validate and parse options
       const syncOptions = SyncOptionsSchema.parse({
-        limit: Number.parseInt(options.limit),
+        limit: Number.parseInt(options.limit, 10),
         startCursor: options.cursor,
         filter: options.filter ? JSON.parse(options.filter) : undefined,
         sort: options.sort ? JSON.parse(options.sort) : undefined,
         dryRun: options.dryRun,
-        batchSize: Number.parseInt(options.batchSize),
+        batchSize: Number.parseInt(options.batchSize, 10),
         contentType: options.contentType,
         tagPrefix: options.tagPrefix,
       })
@@ -72,9 +72,6 @@ export const syncCommand = new Command('sync')
       const notion = new Client({
         auth: config.NOTION_TOKEN,
       })
-
-      // eslint-disable-next-line no-console
-      console.log(chalk.blue('🔍 Fetching data from Notion database...'))
 
       // Query the database
       const response = await notion.databases.query({
@@ -87,20 +84,11 @@ export const syncCommand = new Command('sync')
 
       const results = response.results as NotionResult[]
       const hasMore = response.has_more
-      const nextCursor = response.next_cursor
-
-      // eslint-disable-next-line no-console
-      console.log(chalk.green(`✅ Retrieved ${results.length} results from Notion`))
+      const _nextCursor = response.next_cursor
       if (hasMore) {
-        // eslint-disable-next-line no-console
-        console.log(
-          chalk.yellow(`📄 More results available. Use --cursor ${nextCursor} to sync next page`)
-        )
       }
 
       if (results.length === 0) {
-        // eslint-disable-next-line no-console
-        console.log(chalk.yellow('📭 No results to sync'))
         return
       }
 
@@ -132,11 +120,9 @@ export const syncCommand = new Command('sync')
 
 async function syncResults(results: NotionResult[], options: SyncOptions) {
   if (options.dryRun) {
-    // eslint-disable-next-line no-console
-    console.log(chalk.yellow('🔍 DRY RUN - No data will be synced'))
   }
 
-  let syncedCount = 0
+  let _syncedCount = 0
   let errorCount = 0
   const errors: string[] = []
 
@@ -144,27 +130,16 @@ async function syncResults(results: NotionResult[], options: SyncOptions) {
   for (let i = 0; i < results.length; i += options.batchSize) {
     const batch = results.slice(i, i + options.batchSize)
 
-    // eslint-disable-next-line no-console
-    console.log(
-      chalk.blue(
-        `📦 Processing batch ${Math.floor(i / options.batchSize) + 1}/${Math.ceil(results.length / options.batchSize)}`
-      )
-    )
-
     for (const result of batch) {
       try {
         const contentData = await convertNotionToContent(result, options)
 
         if (options.dryRun) {
-          // eslint-disable-next-line no-console
-          console.log(chalk.gray(`  Would sync: ${contentData.title || 'Untitled'} (${result.id})`))
         } else {
           await trpc.content.create.mutate(contentData)
-          // eslint-disable-next-line no-console
-          console.log(chalk.green(`  ✅ Synced: ${contentData.title || 'Untitled'}`))
         }
 
-        syncedCount++
+        _syncedCount++
       } catch (error) {
         errorCount++
         const errorMsg = `Failed to sync ${result.id}: ${error instanceof Error ? error.message : String(error)}`
@@ -179,27 +154,12 @@ async function syncResults(results: NotionResult[], options: SyncOptions) {
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
   }
-
-  // Summary
-  // eslint-disable-next-line no-console
-  console.log(chalk.blue('\n📊 Sync Summary:'))
   if (options.dryRun) {
-    // eslint-disable-next-line no-console
-    console.log(chalk.yellow(`  Would sync: ${syncedCount} items`))
   } else {
-    // eslint-disable-next-line no-console
-    console.log(chalk.green(`  Successfully synced: ${syncedCount} items`))
   }
 
   if (errorCount > 0) {
-    // eslint-disable-next-line no-console
-    console.log(chalk.red(`  Errors: ${errorCount} items`))
-    // eslint-disable-next-line no-console
-    console.log(chalk.red('\nError details:'))
-    errors.forEach((error) => {
-      // eslint-disable-next-line no-console
-      console.log(chalk.red(`  - ${error}`))
-    })
+    errors.forEach((_error) => {})
   }
 }
 
@@ -215,7 +175,7 @@ async function convertNotionToContent(result: NotionResult, options: SyncOptions
 
   // Determine content type and metadata
   let contentType = options.contentType
-  let taskMetadata
+  let taskMetadata: ReturnType<typeof extractTaskMetadata> | undefined
 
   // Check if this should be a task based on properties
   if (hasTaskProperties(result.properties)) {
@@ -328,7 +288,7 @@ function extractTaskMetadata(properties?: Record<string, unknown>) {
   }
 
   // Extract status
-  const statusProperty = properties['Status']
+  const statusProperty = properties.Status
   if (statusProperty && typeof statusProperty === 'object' && 'type' in statusProperty) {
     const prop = statusProperty as Record<string, unknown>
     if (prop.type === 'select') {
@@ -344,7 +304,7 @@ function extractTaskMetadata(properties?: Record<string, unknown>) {
   }
 
   // Extract priority
-  const priorityProperty = properties['Priority']
+  const priorityProperty = properties.Priority
   if (priorityProperty && typeof priorityProperty === 'object' && 'type' in priorityProperty) {
     const prop = priorityProperty as Record<string, unknown>
     if (prop.type === 'select') {

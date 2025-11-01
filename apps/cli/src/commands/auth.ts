@@ -1,12 +1,12 @@
-import axios from 'axios'
-import chalk from 'chalk'
-import { Command } from 'commander'
-import { consola } from 'consola'
 import fs from 'node:fs'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 import { URL } from 'node:url'
+import axios from 'axios'
+import chalk from 'chalk'
+import { Command } from 'commander'
+import { consola } from 'consola'
 import open from 'open'
 import ora from 'ora'
 
@@ -30,7 +30,7 @@ const command = new Command()
     const saveTokens = async (accessToken: string, refreshToken?: string) => {
       const spinner = ora('Saving authentication token').start()
       try {
-        const config: { accessToken: string; refreshToken?: string; timestamp: string; } = {
+        const config: { accessToken: string; refreshToken?: string; timestamp: string } = {
           accessToken: accessToken,
           timestamp: new Date().toISOString(),
         }
@@ -62,7 +62,7 @@ const command = new Command()
             spinner.info(chalk.yellow('No Google account connected. Google commands may not work.'))
             consola.info('Connect your Google account in the web app to use Google commands.')
           }
-        } catch (err) {
+        } catch (_err) {
           spinner.warn(chalk.yellow('Could not retrieve Google tokens'))
           consola.info('To use Google commands, connect your Google account in the web app.')
         }
@@ -93,7 +93,9 @@ const command = new Command()
 
       if (accessToken) {
         res.writeHead(200, { 'Content-Type': 'text/html' })
-        res.end('<h1>Authentication Successful!</h1><p>You can close this tab and return to the CLI.</p>')
+        res.end(
+          '<h1>Authentication Successful!</h1><p>You can close this tab and return to the CLI.</p>'
+        )
         server.close()
         await saveTokens(accessToken, refreshToken || undefined)
       } else {

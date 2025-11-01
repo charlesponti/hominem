@@ -1,15 +1,15 @@
+import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
-import { logger } from '@hominem/utils/logger'
 import {
   type FinanceAccountInsert,
-  financeAccounts,
   type FinanceTransaction,
+  financeAccounts,
   plaidItems,
   transactions,
 } from '@hominem/data/schema'
+import { logger } from '@hominem/utils/logger'
 import type { Job } from 'bullmq'
 import { and, eq } from 'drizzle-orm'
-import { randomUUID } from 'node:crypto'
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
 import { env } from './env'
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { WorkoutRecommendationSchema } from '../src/tools/workout'
 import { NutritionAnalysisSchema } from '../src/tools/nutrition'
 import { SleepAnalysisSchema } from '../src/tools/sleep'
+import { WorkoutRecommendationSchema } from '../src/tools/workout'
 
 describe('Tool Schema Validation', () => {
   describe('Workout Schema', () => {
@@ -28,7 +28,7 @@ describe('Tool Schema Validation', () => {
 
       const result = WorkoutRecommendationSchema.safeParse(validData)
       expect(result.success).toBe(true)
-      
+
       if (result.success) {
         expect(result.data.title).toBe('Morning Workout')
         expect(result.data.exercises).toHaveLength(2)
@@ -79,7 +79,7 @@ describe('Tool Schema Validation', () => {
 
       const result = NutritionAnalysisSchema.safeParse(validData)
       expect(result.success).toBe(true)
-      
+
       if (result.success) {
         expect(result.data.nutritionalQuality).toBe('Excellent')
         expect(result.data.suggestions).toHaveLength(2)
@@ -118,16 +118,13 @@ describe('Tool Schema Validation', () => {
       const validData = {
         qualityScore: 85,
         sleepCycleSummary: '5 complete cycles',
-        recommendations: [
-          'Maintain consistent sleep schedule',
-          'Avoid screens before bed',
-        ],
+        recommendations: ['Maintain consistent sleep schedule', 'Avoid screens before bed'],
         insights: 'Good sleep quality with minimal disruptions',
       }
 
       const result = SleepAnalysisSchema.safeParse(validData)
       expect(result.success).toBe(true)
-      
+
       if (result.success) {
         expect(result.data.qualityScore).toBe(85)
         expect(result.data.recommendations).toHaveLength(2)

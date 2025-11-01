@@ -1,13 +1,13 @@
 'use client'
 
 import {
-    AlertTriangle,
-    Building2,
-    CreditCard,
-    ExternalLink,
-    Eye,
-    EyeOff,
-    RefreshCcw,
+  AlertTriangle,
+  Building2,
+  CreditCard,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  RefreshCcw,
 } from 'lucide-react'
 import { useState } from 'react'
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
@@ -16,18 +16,22 @@ import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
 import { useAllAccounts } from '~/lib/hooks/use-finance-data'
 
 // Simple account card for overview
-function AccountCard({ account }: { account: ReturnType<typeof useAllAccounts>['accounts'][number] }) {
+function AccountCard({
+  account,
+}: {
+  account: ReturnType<typeof useAllAccounts>['accounts'][number]
+}) {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true)
   const isPlaidAccount = account.isPlaidConnected || false
 
@@ -171,14 +175,16 @@ export default function AccountsPage() {
       </div>
 
       {hasError ? (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Error Loading Data</AlertTitle>
-                <AlertDescription>
-            {allAccountsQuery.error ? allAccountsQuery.error.message : 'Failed to load banking data'}
-                </AlertDescription>
-              </Alert>
-            ) : null}
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error Loading Data</AlertTitle>
+          <AlertDescription>
+            {allAccountsQuery.error
+              ? allAccountsQuery.error.message
+              : 'Failed to load banking data'}
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {/* Loading State */}
       {isLoading && (

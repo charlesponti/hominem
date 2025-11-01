@@ -45,6 +45,7 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
         <ul className="space-y-1">
           <li>
             <button
+              type="button"
               onClick={skipToMain}
               onKeyDown={(e) => e.key === 'Enter' && skipToMain(e)}
               className="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
@@ -54,6 +55,7 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
           </li>
           <li>
             <button
+              type="button"
               onClick={skipToNavigation}
               onKeyDown={(e) => e.key === 'Enter' && skipToNavigation(e)}
               className="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
@@ -63,6 +65,7 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
           </li>
           <li>
             <button
+              type="button"
               onClick={skipToActions}
               onKeyDown={(e) => e.key === 'Enter' && skipToActions(e)}
               className="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"

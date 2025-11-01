@@ -1,9 +1,9 @@
-import { downloadImage } from '@hominem/utils/scraping'
-import * as cheerio from 'cheerio'
-import { consola } from 'consola'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as process from 'node:process'
+import { downloadImage } from '@hominem/utils/scraping'
+import * as cheerio from 'cheerio'
+import { consola } from 'consola'
 import ora from 'ora'
 
 const plantFiles = fs.readdirSync(path.join(__dirname, 'output'))

@@ -1,10 +1,10 @@
-import { QUEUE_NAMES } from '@hominem/utils/consts'
+import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
 import { financialInstitutions, plaidItems } from '@hominem/data/schema'
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { plaidClient } from '../../../../lib/plaid.js'
 

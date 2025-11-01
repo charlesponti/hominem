@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { TIME_UNITS, getDatesFromText, getDaysBetweenDates, getNumberOfDays } from './time.js'
+import { getDatesFromText, getDaysBetweenDates, getNumberOfDays, TIME_UNITS } from './time.js'
 
 describe('TIME_UNITS', () => {
   test('should have correct millisecond values', () => {

@@ -10,7 +10,7 @@ type ExtendedMessage = MessageFromQuery & {
 }
 
 // Component for text parts
-function TextPart({
+function _TextPart({
   text,
   index,
   isStreaming,
@@ -28,7 +28,7 @@ function TextPart({
 }
 
 // Component for tool invocation parts
-function ToolInvocationPart({
+function _ToolInvocationPart({
   toolInvocation,
   index,
 }: {
@@ -69,7 +69,7 @@ function ToolInvocationPart({
 }
 
 // Component for reasoning parts
-function ReasoningPart({ reasoning, index }: { reasoning: string; index: number }) {
+function _ReasoningPart({ reasoning, index }: { reasoning: string; index: number }) {
   return (
     <div
       key={`reasoning-${reasoning.slice(0, 20)}-${index}`}

@@ -1,5 +1,5 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { Stagehand } from '@browserbasehq/stagehand'
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 // Define the structure of the extracted tax data
@@ -75,7 +75,9 @@ export function registerTaxTool(server: McpServer) {
         await locationInput.press('ArrowDown')
         await locationInput.press('Enter')
 
-        await page.waitForSelector('tr:has-text("Total Income Taxes") td:nth-child(4)', { timeout: 10000 })
+        await page.waitForSelector('tr:has-text("Total Income Taxes") td:nth-child(4)', {
+          timeout: 10000,
+        })
 
         const taxTable = page.getByRole('table').filter({ hasText: 'Tax Type Marginal Tax Rate' })
         const taxData: TaxData = await taxTable.locator('tbody tr').evaluateAll((rows) => {
@@ -113,13 +115,20 @@ export function registerTaxTool(server: McpServer) {
 
         const summary: TaxResult['summary'] = {
           'Total Effective Tax Rate':
-            (await taxTable.locator(summaryRowLocators['Total Effective Tax Rate']).textContent())?.trim() || 'N/A',
+            (
+              await taxTable.locator(summaryRowLocators['Total Effective Tax Rate']).textContent()
+            )?.trim() || 'N/A',
           'Total Income Taxes':
-            (await taxTable.locator(summaryRowLocators['Total Income Taxes']).textContent())?.trim() || 'N/A',
+            (
+              await taxTable.locator(summaryRowLocators['Total Income Taxes']).textContent()
+            )?.trim() || 'N/A',
           'Income After Taxes':
-            (await taxTable.locator(summaryRowLocators['Income After Taxes']).textContent())?.trim() || 'N/A',
+            (
+              await taxTable.locator(summaryRowLocators['Income After Taxes']).textContent()
+            )?.trim() || 'N/A',
           'Take-Home Pay':
-            (await taxTable.locator(summaryRowLocators['Take-Home Pay']).textContent())?.trim() || 'N/A',
+            (await taxTable.locator(summaryRowLocators['Take-Home Pay']).textContent())?.trim() ||
+            'N/A',
         }
 
         const result: TaxResult = {
@@ -132,8 +141,11 @@ export function registerTaxTool(server: McpServer) {
       } catch (error) {
         await stagehand.close()
         console.error('[MCP Tax Tool Error]', error)
-        const errorMessage = error instanceof Error ? `Error fetching tax info: ${error.message}` : String(error)
-        return { content: [{ type: 'text', text: JSON.stringify({ error: errorMessage }, null, 2) }] }
+        const errorMessage =
+          error instanceof Error ? `Error fetching tax info: ${error.message}` : String(error)
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ error: errorMessage }, null, 2) }],
+        }
       }
     }
   )

@@ -21,7 +21,10 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            role="img"
+            aria-label="Error icon"
           >
+            <title>Error</title>
             <path d="M12 9v4" />
             <path d="M12 17h.01" />
             <circle cx="12" cy="12" r="10" />
@@ -40,7 +43,10 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            role="img"
+            aria-label="Clock icon"
           >
+            <title>Pending Expiration</title>
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>

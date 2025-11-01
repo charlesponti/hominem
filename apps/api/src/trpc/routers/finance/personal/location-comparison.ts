@@ -1,6 +1,7 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
+
 // Mock cost of living indices for demo
 // In production, this would use real cost of living data APIs
 const costOfLivingIndices = {
@@ -35,11 +36,10 @@ financeLocationComparisonRoutes.post(
   '/',
   zValidator('json', locationComparisonSchema),
   async (c) => {
-  const user = c.get('user')
-  if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
 
     try {
       const userId = c.get('userId')

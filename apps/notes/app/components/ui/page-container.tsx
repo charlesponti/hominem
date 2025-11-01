@@ -7,11 +7,11 @@ interface PageContainerProps {
   padding?: 'none' | 'sm' | 'md' | 'lg'
 }
 
-export function PageContainer({ 
-  children, 
+export function PageContainer({
+  children,
   className,
   maxWidth = '4xl',
-  padding = 'md'
+  padding = 'md',
 }: PageContainerProps) {
   const maxWidthClasses = {
     sm: 'max-w-sm',
@@ -32,13 +32,15 @@ export function PageContainer({
   }
 
   return (
-    <div className={cn(
-      'container mx-auto',
-      maxWidthClasses[maxWidth],
-      paddingClasses[padding],
-      className
-    )}>
+    <div
+      className={cn(
+        'container mx-auto',
+        maxWidthClasses[maxWidth],
+        paddingClasses[padding],
+        className
+      )}
+    >
       {children}
     </div>
   )
-} 
+}

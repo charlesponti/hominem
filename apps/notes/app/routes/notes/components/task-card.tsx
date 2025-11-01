@@ -1,12 +1,12 @@
-import type { Note } from '@hominem/utils/types';
-import { format } from 'date-fns';
-import { CalendarDays, CheckCircle2, Edit, PauseCircle, PlayCircle, Trash2 } from 'lucide-react'; // Added PauseCircle, PlayCircle
-import { Badge } from '~/components/ui/badge';
-import { Button } from '~/components/ui/button';
-import { Card } from '~/components/ui/card';
-import { useTimeTracking } from '~/hooks/use-time-tracking';
-import { cn } from '~/lib/utils';
-import { ElapsedTime } from './elapsed-time';
+import type { Note } from '@hominem/utils/types'
+import { format } from 'date-fns'
+import { CalendarDays, CheckCircle2, Edit, PauseCircle, PlayCircle, Trash2 } from 'lucide-react' // Added PauseCircle, PlayCircle
+import { Badge } from '~/components/ui/badge'
+import { Button } from '~/components/ui/button'
+import { Card } from '~/components/ui/card'
+import { useTimeTracking } from '~/hooks/use-time-tracking'
+import { cn } from '~/lib/utils'
+import { ElapsedTime } from './elapsed-time'
 
 type TaskCardProps = {
   task: Note
@@ -16,7 +16,13 @@ type TaskCardProps = {
   className?: string
 }
 
-export function TaskCard({ task, onDelete, onEdit, onStatusChange, className = '' }: TaskCardProps) {
+export function TaskCard({
+  task,
+  onDelete,
+  onEdit,
+  onStatusChange,
+  className = '',
+}: TaskCardProps) {
   const {
     startTimer,
     pauseTimer,

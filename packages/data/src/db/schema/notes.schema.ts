@@ -1,8 +1,8 @@
 import { relations, sql } from 'drizzle-orm'
 import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
-import { users } from './users.schema'
 import { type BaseContentType, BaseContentTypeSchema, type ContentTag } from './shared.schema'
+import { users } from './users.schema'
 
 export const notes = pgTable(
   'notes',

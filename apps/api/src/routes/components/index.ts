@@ -1,6 +1,6 @@
-import { Hono } from 'hono'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { Hono } from 'hono'
 import type { AppEnv } from '../../server.js'
 
 export const componentsRoutes = new Hono<AppEnv>()

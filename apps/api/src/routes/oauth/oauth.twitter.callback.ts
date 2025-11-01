@@ -1,16 +1,16 @@
+import { randomUUID } from 'node:crypto'
 import { db } from '@hominem/data'
 import { account } from '@hominem/data/schema'
 import { zValidator } from '@hono/zod-validator'
 import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
-import { randomUUID } from 'node:crypto'
 import z from 'zod'
 import { env } from '../../lib/env.js'
 import {
+  getPkceVerifier,
   TWITTER_SCOPES,
   type TwitterTokenResponse,
   type TwitterUserResponse,
-  getPkceVerifier,
 } from '../../lib/oauth.twitter.utils.js'
 
 // Twitter OAuth configuration

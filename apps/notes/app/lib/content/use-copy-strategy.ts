@@ -31,7 +31,7 @@ export function useCopyStrategy(strategy: ContentStrategiesSelect | null) {
             return newSet
           })
         }, 2000)
-      } catch (error) {
+      } catch (_error) {
         toast({
           variant: 'destructive',
           title: 'Copy failed',

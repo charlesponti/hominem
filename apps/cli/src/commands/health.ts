@@ -1,9 +1,9 @@
-import { getAuthToken } from '@/utils/auth.utils'
 import axios from 'axios'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import { consola } from 'consola'
 import ora from 'ora'
+import { getAuthToken } from '@/utils/auth.utils'
 
 export const command = new Command()
   .command('health')
@@ -17,7 +17,7 @@ export const command = new Command()
       let token: ReturnType<typeof getAuthToken>
       try {
         token = getAuthToken()
-      } catch (e) {
+      } catch (_e) {
         // Continue without token for health check
       }
 
@@ -39,7 +39,7 @@ export const command = new Command()
           )
           consola.info('\nAuthentication status:')
           consola.info(JSON.stringify(authResponse.data, null, 2))
-        } catch (err) {
+        } catch (_err) {
           consola.info('\nAuthentication failed. Please re-authenticate with `hominem api auth`')
         }
       } else {

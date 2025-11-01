@@ -58,13 +58,14 @@ export function useTimeSeriesData({
     if (groupBy === 'month') {
       // Convert YYYY-MM to MMM YYYY
       const [year, month] = dateStr.split('-')
-      return new Date(Number.parseInt(year), Number.parseInt(month) - 1, 1).toLocaleDateString(
-        'en-US',
-        {
-          month: 'short',
-          year: 'numeric',
-        }
-      )
+      return new Date(
+        Number.parseInt(year, 10),
+        Number.parseInt(month, 10) - 1,
+        1
+      ).toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      })
     }
     return dateStr
   }

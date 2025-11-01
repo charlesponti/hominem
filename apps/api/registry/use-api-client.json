@@ -4,10 +4,7 @@
   "type": "registry:hook",
   "title": "API Client Hook",
   "description": "React hook for API client that handles fetch requests with Supabase authentication",
-  "dependencies": [
-    "@supabase/supabase-js@latest",
-    "react@^18.0.0"
-  ],
+  "dependencies": ["@supabase/supabase-js@latest", "react@^18.0.0"],
   "registryDependencies": [],
   "files": [
     {

@@ -3,7 +3,7 @@ import { Link, redirect } from 'react-router'
 import { getServerSession } from '~/lib/supabase/server'
 import type { Route } from './+types/home'
 
-export function meta(args: Route.MetaArgs) {
+export function meta(_args: Route.MetaArgs) {
   return [
     { title: 'Hominem - Your AI Personal Assistant' },
     {

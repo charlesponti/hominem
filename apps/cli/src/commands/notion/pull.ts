@@ -1,9 +1,9 @@
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { Client } from '@notionhq/client'
 import chalk from 'chalk'
 import Table from 'cli-table3'
 import { Command } from 'commander'
-import { writeFileSync } from 'fs'
-import { join } from 'path'
 import { z } from 'zod'
 
 type NotionResult = {
@@ -47,7 +47,7 @@ export const pullCommand = new Command('pull')
 
       // Validate and parse options
       const queryOptions = QueryOptionsSchema.parse({
-        limit: Number.parseInt(options.limit),
+        limit: Number.parseInt(options.limit, 10),
         startCursor: options.cursor,
         filter: options.filter ? JSON.parse(options.filter) : undefined,
         sort: options.sort ? JSON.parse(options.sort) : undefined,
@@ -60,9 +60,6 @@ export const pullCommand = new Command('pull')
         auth: config.NOTION_TOKEN,
       })
 
-      // eslint-disable-next-line no-console
-      console.log(chalk.blue('🔍 Fetching data from Notion database...'))
-
       // Query the database
       const response = await notion.databases.query({
         database_id: config.NOTION_DATABASE_ID,
@@ -74,15 +71,8 @@ export const pullCommand = new Command('pull')
 
       const results = response.results
       const hasMore = response.has_more
-      const nextCursor = response.next_cursor
-
-      // eslint-disable-next-line no-console
-      console.log(chalk.green(`✅ Retrieved ${results.length} results`))
+      const _nextCursor = response.next_cursor
       if (hasMore) {
-        // eslint-disable-next-line no-console
-        console.log(
-          chalk.yellow(`📄 More results available. Use --cursor ${nextCursor} to fetch next page`)
-        )
       }
 
       // Process and display results
@@ -113,8 +103,6 @@ export const pullCommand = new Command('pull')
 
 async function displayResults(results: NotionResult[], options: QueryOptions) {
   if (results.length === 0) {
-    // eslint-disable-next-line no-console
-    console.log(chalk.yellow('📭 No results found'))
     return
   }
 
@@ -136,11 +124,7 @@ async function displayResults(results: NotionResult[], options: QueryOptions) {
   if (options.outputFile) {
     const filePath = join(process.cwd(), options.outputFile)
     writeFileSync(filePath, output)
-    // eslint-disable-next-line no-console
-    console.log(chalk.green(`💾 Results saved to: ${filePath}`))
   } else {
-    // eslint-disable-next-line no-console
-    console.log(output)
   }
 }
 
@@ -149,11 +133,13 @@ function convertToTable(results: NotionResult[]): string {
 
   // Get all unique property keys from all results
   const allKeys = new Set<string>()
-  results.forEach((result) => {
+  for (const result of results) {
     if ('properties' in result && result.properties) {
-      Object.keys(result.properties).forEach((key) => allKeys.add(key))
+      for (const key of Object.keys(result.properties)) {
+        allKeys.add(key)
+      }
     }
-  })
+  }
 
   const headers = ['ID', 'Created', 'Last Edited', ...Array.from(allKeys)]
   const table = new Table({
@@ -185,11 +171,13 @@ function convertToCSV(results: NotionResult[]): string {
 
   // Get all unique property keys
   const allKeys = new Set<string>()
-  results.forEach((result) => {
+  for (const result of results) {
     if ('properties' in result && result.properties) {
-      Object.keys(result.properties).forEach((key) => allKeys.add(key))
+      for (const key of Object.keys(result.properties)) {
+        allKeys.add(key)
+      }
     }
-  })
+  }
 
   const headers = ['ID', 'Created', 'Last Edited', ...Array.from(allKeys)]
   const csvRows = [headers.join(',')]

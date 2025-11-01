@@ -1,10 +1,11 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { openai } from '@ai-sdk/openai'
 import { zValidator } from '@hono/zod-validator'
 import { generateObject } from 'ai'
 import { Hono } from 'hono'
-import fs from 'node:fs/promises'
-import path from 'node:path'
 import { z } from 'zod'
+
 const TourCostBreakdown = z.object({
   transportation: z.object({
     vehicleRental: z.number(),
@@ -51,7 +52,6 @@ aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
   if (!user) {
     return c.json({ error: 'Unauthorized' }, 401)
   }
-
 
   try {
     const validatedInput = c.req.valid('json')

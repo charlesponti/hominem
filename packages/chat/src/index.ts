@@ -1,21 +1,18 @@
 // Services
-export { ChatService } from './service/chat.service'
-export { MessageService } from './service/message.service'
 
 // Types
 export type {
+  ChatStats,
   CreateChatParams,
   SearchChatsParams,
-  ChatStats,
 } from './service/chat.service'
+export { ChatError, ChatService } from './service/chat.service'
 
 export type {
-  CreateMessageParams,
   ChatMessagesOptions,
+  CreateMessageParams,
 } from './service/message.service'
-
-// Error class
-export { ChatError } from './service/chat.service'
+export { MessageService } from './service/message.service'
 
 // Utilities
 export { AuthUtils } from './utils/auth.utils'

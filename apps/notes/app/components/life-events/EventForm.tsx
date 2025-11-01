@@ -14,7 +14,7 @@ interface EventFormProps {
 }
 
 const EventForm: React.FC<EventFormProps> = ({ showAddForm, people, onToggleForm }) => {
-  const [selectedPeople, setSelectedPeople] = useState<Person[]>([])
+  const [_selectedPeople, setSelectedPeople] = useState<Person[]>([])
 
   const handlePeopleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedIds = Array.from(e.target.selectedOptions, (option) => option.value)
@@ -25,6 +25,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, people, onToggleForm
   return (
     <>
       <button
+        type="button"
         className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 hover:-translate-y-px"
         style={{
           backgroundColor: 'var(--color-notion-blue)',
@@ -331,4 +332,3 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, people, onToggleForm
 }
 
 export default EventForm
-

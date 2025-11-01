@@ -34,7 +34,7 @@ export function MainNavigation() {
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
-  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [_isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
     // Check if we're on the client side
@@ -86,7 +86,7 @@ export function MainNavigation() {
   }, [menuOpen])
 
   // Close the menu when navigating to a new page
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: closeMenu is stable and only need to react to pathname changes
   useEffect(() => {
     closeMenu()
   }, [pathname])
@@ -117,7 +117,7 @@ export function MainNavigation() {
     }
   }
 
-  const handleSignIn = async () => {
+  const _handleSignIn = async () => {
     try {
       setIsSigningIn(true)
       await signInWithOAuth('google')

@@ -35,7 +35,7 @@ export function PrioritySelect({
         onValueChange={(newValue: string) => onValueChange(newValue as Priority)}
         disabled={disabled}
       >
-        <SelectTrigger id={id} size='sm' className={className}>
+        <SelectTrigger id={id} size="sm" className={className}>
           <SelectValue placeholder="Select priority" />
         </SelectTrigger>
         <SelectContent className="bg-white dark:bg-slate-800 w-full">

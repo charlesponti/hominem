@@ -31,7 +31,6 @@
     "start:prod": "node apps/api/dist/index.js"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.2",
     "@turbo/gen": "^1.9.7",
     "@types/node": "^22.15.2",
     "@types/react": "^19.1.0",

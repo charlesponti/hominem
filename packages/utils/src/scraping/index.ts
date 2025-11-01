@@ -5,6 +5,7 @@ export { parseLinkedinJobUrl } from './linkedin.utils'
 export * from './queries'
 export * from './scraping.utils'
 export * from './utils/download-image'
+
 import AirbnbListingSchema from './airbnb.schema'
 import { JobPostingSchema } from './job-posting.schema'
 

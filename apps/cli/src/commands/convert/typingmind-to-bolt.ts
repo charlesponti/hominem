@@ -1,7 +1,7 @@
+import { readFileSync, writeFileSync } from 'node:fs'
 import { BoltExportSchema, TypingMindExportSchema } from '@hominem/utils/services'
 import { Command } from 'commander'
 import { consola } from 'consola'
-import { readFileSync, writeFileSync } from 'node:fs'
 import type { z } from 'zod'
 
 export const command = new Command('convert-typingmind-to-bolt')
@@ -69,7 +69,7 @@ export const command = new Command('convert-typingmind-to-bolt')
             systemMessage && typeof systemMessage.content === 'string' ? systemMessage.content : ''
 
           // Convert chat params
-          const chatParams = chat.chatParams || {}
+          const _chatParams = chat.chatParams || {}
 
           return {
             contextSince: -978307200, // Default value from Bolt sample

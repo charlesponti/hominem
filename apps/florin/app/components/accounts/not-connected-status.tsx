@@ -1,12 +1,12 @@
 import { AlertCircleIcon, LinkIcon } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { AccountConnectionDialog } from './account-connection-dialog'
 import type { RouterOutput } from '~/lib/trpc'
+import { AccountConnectionDialog } from './account-connection-dialog'
 
 export function NotConnectedStatus({
   account,
-  showDialog
+  showDialog,
 }: {
   account: RouterOutput['finance']['accounts']['all']['accounts'][number]
   showDialog?: boolean

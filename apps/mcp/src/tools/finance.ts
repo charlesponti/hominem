@@ -172,18 +172,14 @@ export function registerFinanceTools(server: McpServer) {
     }
   )
 
-  server.tool(
-    'get_top_merchants',
-    z.object({}).describe('No parameters').shape,
-    async () => {
-      try {
-        const response = await getApiClient().get('/api/finance/analyze/top-merchants')
-        return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
-      } catch (error) {
-        return handleApiError(error, 'get_top_merchants')
-      }
+  server.tool('get_top_merchants', z.object({}).describe('No parameters').shape, async () => {
+    try {
+      const response = await getApiClient().get('/api/finance/analyze/top-merchants')
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] }
+    } catch (error) {
+      return handleApiError(error, 'get_top_merchants')
     }
-  )
+  })
 
   server.tool('get_category_breakdown', categoryBreakdownSchema.shape, async (args) => {
     try {

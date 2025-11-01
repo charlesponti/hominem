@@ -91,13 +91,13 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
     setShowAudioRecorder(true)
   }, [])
 
-  const handleFilesUploaded = useCallback((files: any[]) => {
+  const handleFilesUploaded = useCallback((_files: any[]) => {
     // Files are already uploaded by the FileUploader component
     // The useFileUpload hook manages the state internally
   }, [])
 
   const handleAudioRecorded = useCallback(
-    async (audioBlob: Blob, transcript?: string) => {
+    async (_audioBlob: Blob, transcript?: string) => {
       setShowAudioRecorder(false)
 
       if (transcript?.trim()) {

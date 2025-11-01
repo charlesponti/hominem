@@ -1,6 +1,6 @@
-import axios from 'axios'
 import fs from 'node:fs'
 import path from 'node:path'
+import axios from 'axios'
 import { logger } from '../../logger'
 
 // Helper function to download image
@@ -8,7 +8,11 @@ export async function downloadImage({
   imagesDir,
   imageUrl,
   name,
-}: { imagesDir: string; imageUrl: string; name: string }): Promise<string | null> {
+}: {
+  imagesDir: string
+  imageUrl: string
+  name: string
+}): Promise<string | null> {
   if (!imageUrl) return null
 
   try {

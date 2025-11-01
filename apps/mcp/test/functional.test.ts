@@ -41,7 +41,7 @@ describe('MCP Server Functional Tests', () => {
   describe('Tool Discovery', () => {
     it('should list all available tools', async () => {
       const result = await client.listTools()
-      
+
       expect(result.tools).toBeDefined()
       expect(result.tools.length).toBeGreaterThan(0)
       expect(result.tools.length).toBe(26)
@@ -117,7 +117,7 @@ describe('MCP Server Functional Tests', () => {
 
       expect(result.content).toBeDefined()
       const data = JSON.parse((result.content as any[])[0].text)
-      
+
       expect(data).toHaveProperty('nutritionalQuality')
       expect(data).toHaveProperty('macroEstimate')
       expect(data.macroEstimate).toHaveProperty('protein')
@@ -141,7 +141,7 @@ describe('MCP Server Functional Tests', () => {
 
       expect(result.content).toBeDefined()
       const data = JSON.parse((result.content as any[])[0].text)
-      
+
       expect(data).toHaveProperty('qualityScore')
       expect(typeof data.qualityScore).toBe('number')
       expect(data.qualityScore).toBeGreaterThanOrEqual(0)
@@ -154,7 +154,7 @@ describe('MCP Server Functional Tests', () => {
   describe('Resources', () => {
     it('should list available resources', async () => {
       const result = await client.listResources()
-      
+
       expect(result.resources).toBeDefined()
       expect(Array.isArray(result.resources)).toBe(true)
     })

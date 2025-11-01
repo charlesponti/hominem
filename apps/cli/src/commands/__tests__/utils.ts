@@ -1,5 +1,5 @@
-import type { BoltExport } from '@hominem/utils/services'
 import fs from 'node:fs'
+import type { BoltExport } from '@hominem/utils/services'
 import { expect, vi } from 'vitest'
 
 export function mockFileSystem(inputData: unknown) {

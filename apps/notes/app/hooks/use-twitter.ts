@@ -51,8 +51,8 @@ export function useTwitterAccounts() {
  * Hook to connect Twitter account
  */
 export function useTwitterConnect() {
-  const utils = trpc.useUtils()
-  
+  const _utils = trpc.useUtils()
+
   const connectMutation = trpc.twitter.authorize.useMutation({
     onSuccess: (data) => {
       // Redirect to Twitter authorization
@@ -72,7 +72,7 @@ export function useTwitterConnect() {
  */
 export function useTwitterDisconnect() {
   const utils = trpc.useUtils()
-  
+
   const disconnectMutation = trpc.twitter.disconnect.useMutation({
     onSuccess: () => {
       utils.twitter.accounts.invalidate()
@@ -91,7 +91,7 @@ export function useTwitterDisconnect() {
  */
 export function useTwitterPost() {
   const utils = trpc.useUtils()
-  
+
   const postMutation = trpc.twitter.post.useMutation({
     onSuccess: () => {
       // Invalidate content queries if we saved as content
@@ -114,7 +114,7 @@ export function useTwitterPost() {
  */
 export function useTwitterSync() {
   const utils = trpc.useUtils()
-  
+
   const syncMutation = trpc.twitter.sync.useMutation({
     onSuccess: () => {
       // Invalidate content queries to show new synced tweets
@@ -159,4 +159,4 @@ export function useTwitterOAuth() {
     // Refetch
     refetch: accountsQuery.refetch,
   }
-} 
+}

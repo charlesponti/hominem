@@ -72,7 +72,7 @@ export default function GoalsPage() {
     onSuccess: () => {
       toast({ description: 'Goal created successfully' })
     },
-    onError: (err, newGoal, context) => {
+    onError: (err, _newGoal, context) => {
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
         context?.previousGoals
@@ -108,7 +108,7 @@ export default function GoalsPage() {
     onSuccess: () => {
       toast({ description: 'Goal updated successfully' })
     },
-    onError: (err, newGoal, context) => {
+    onError: (err, _newGoal, context) => {
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
         context?.previousGoals
@@ -142,7 +142,7 @@ export default function GoalsPage() {
     onSuccess: () => {
       toast({ description: 'Goal archived successfully' })
     },
-    onError: (err, newGoal, context) => {
+    onError: (err, _newGoal, context) => {
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
         context?.previousGoals
@@ -232,25 +232,21 @@ export default function GoalsPage() {
 
       {isLoadingGoals ? (
         <p className="text-center text-muted-foreground mt-10">Loading goals...</p>
+      ) : typedGoals.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {typedGoals.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              onEdit={handleEditClick}
+              onDelete={handleArchiveClick}
+            />
+          ))}
+        </div>
       ) : (
-        <>
-          {typedGoals.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {typedGoals.map((goal) => (
-                <GoalCard
-                  key={goal.id}
-                  goal={goal}
-                  onEdit={handleEditClick}
-                  onDelete={handleArchiveClick}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground mt-10">
-              You haven't set any goals yet. Click "Add New Goal" to get started!
-            </p>
-          )}
-        </>
+        <p className="text-center text-muted-foreground mt-10">
+          You haven't set any goals yet. Click "Add New Goal" to get started!
+        </p>
       )}
 
       <GoalModal

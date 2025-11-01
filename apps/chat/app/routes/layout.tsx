@@ -1,10 +1,9 @@
-import { Outlet, useRouteLoaderData } from 'react-router'
-import { useState, useEffect } from 'react'
 import { Menu, User } from 'lucide-react'
-import { Link as RouterLink } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Outlet, Link as RouterLink, useRouteLoaderData } from 'react-router'
+import { AppSidebar } from '~/components/app-sidebar'
 import { Button } from '~/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '~/components/ui/sheet'
-import { AppSidebar } from '~/components/app-sidebar'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function Layout() {

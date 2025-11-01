@@ -8,11 +8,11 @@ interface LoadingProps {
   fullScreen?: boolean
 }
 
-export function Loading({ 
-  text = 'Loading...', 
-  size = 'md', 
+export function Loading({
+  text = 'Loading...',
+  size = 'md',
   className,
-  fullScreen = false 
+  fullScreen = false,
 }: LoadingProps) {
   const sizeClasses = {
     sm: 'h-4 w-4',
@@ -38,4 +38,4 @@ export function Loading({
   }
 
   return content
-} 
+}

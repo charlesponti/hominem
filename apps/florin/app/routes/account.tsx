@@ -1,7 +1,6 @@
 import { useAuth } from '@hominem/auth'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Navigate } from 'react-router'
 import { RouteLink } from '~/components/route-link'
 import {
   AlertDialog,
@@ -16,8 +15,7 @@ import {
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
-import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
-import { trpc } from '~/lib/trpc'
+import { useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 
 export default function AccountPage() {
   const { signOut } = useAuth()
@@ -27,7 +25,7 @@ export default function AccountPage() {
   const { accountsMap } = useFinanceAccounts()
   const { transactions } = useFinanceTransactions()
 
-  const handleLogout = async () => {
+  const _handleLogout = async () => {
     try {
       await signOut()
     } catch (error) {

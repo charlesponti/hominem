@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useCallback, type MouseEvent } from 'react'
+import { type MouseEvent, useCallback } from 'react'
 import { Link, type LinkProps } from 'react-router'
 import { useRouteLoadingStore } from '../store/route-loading-store'
 

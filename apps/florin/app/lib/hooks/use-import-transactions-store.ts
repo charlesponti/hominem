@@ -1,6 +1,6 @@
 'use client'
 
-import { supabase, useApiClient, useSupabaseAuth } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -57,7 +57,7 @@ export function useImportTransactionsStore() {
   // Connect on initialization, providing token function
   useEffect(() => {
     connect(getToken)
-  }, [connect, getToken])
+  }, [connect])
 
   // Throttled update function to reduce re-render frequency
   const throttledUpdateProgress = useCallback(

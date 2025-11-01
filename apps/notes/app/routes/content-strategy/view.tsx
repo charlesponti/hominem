@@ -3,7 +3,7 @@
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { useToast } from '~/components/ui/use-toast'
 import { useContentStrategy, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
 
@@ -14,7 +14,10 @@ export default function ContentStrategyViewPage() {
   const { deleteStrategy, isLoading: isDeleting } = useDeleteContentStrategy()
 
   const handleDelete = async () => {
-    if (!strategy || !confirm('Are you sure you want to delete this strategy? This action cannot be undone.')) {
+    if (
+      !strategy ||
+      !confirm('Are you sure you want to delete this strategy? This action cannot be undone.')
+    ) {
       return
     }
 
@@ -52,7 +55,9 @@ export default function ContentStrategyViewPage() {
       <div className="container mx-auto p-4 max-w-4xl">
         <div className="text-center py-8">
           <h2 className="text-xl font-semibold mb-2">Strategy Not Found</h2>
-          <p className="text-gray-600 mb-4">The content strategy you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-4">
+            The content strategy you're looking for doesn't exist.
+          </p>
           <Link to="/content-strategy/saved">
             <Button>Back to Strategies</Button>
           </Link>
@@ -74,9 +79,7 @@ export default function ContentStrategyViewPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">{strategy.title}</h1>
-            {strategy.description && (
-              <p className="text-gray-600">{strategy.description}</p>
-            )}
+            {strategy.description && <p className="text-gray-600">{strategy.description}</p>}
           </div>
         </div>
         <div className="flex gap-2">
@@ -172,16 +175,20 @@ export default function ContentStrategyViewPage() {
                     </div>
                     <div>
                       <h5 className="font-medium">Word Count</h5>
-                      <p className="text-gray-600">{strategy.strategy.contentPlan.blog.wordCount} words</p>
+                      <p className="text-gray-600">
+                        {strategy.strategy.contentPlan.blog.wordCount} words
+                      </p>
                     </div>
                     <div>
                       <h5 className="font-medium">Outline</h5>
                       <ol className="list-decimal list-inside space-y-1">
-                        {strategy.strategy.contentPlan.blog.outline.map((section: any, index: number) => (
-                          <li key={index} className="text-gray-600">
-                            <strong>{section.heading}:</strong> {section.content}
-                          </li>
-                        ))}
+                        {strategy.strategy.contentPlan.blog.outline.map(
+                          (section: any, index: number) => (
+                            <li key={index} className="text-gray-600">
+                              <strong>{section.heading}:</strong> {section.content}
+                            </li>
+                          )
+                        )}
                       </ol>
                     </div>
                     <div>
@@ -199,52 +206,59 @@ export default function ContentStrategyViewPage() {
                     </div>
                     <div>
                       <h5 className="font-medium">Call to Action</h5>
-                      <p className="text-gray-600">{strategy.strategy.contentPlan.blog.callToAction}</p>
+                      <p className="text-gray-600">
+                        {strategy.strategy.contentPlan.blog.callToAction}
+                      </p>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Social Media Content */}
-              {strategy.strategy.contentPlan.socialMedia && strategy.strategy.contentPlan.socialMedia.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Social Media Content</h4>
-                  <div className="space-y-4">
-                    {strategy.strategy.contentPlan.socialMedia.map((platform: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <h5 className="font-medium text-gray-900 mb-2">{platform.platform}</h5>
-                        <div className="space-y-2">
-                          <div>
-                            <h6 className="font-medium text-sm">Best Time to Post</h6>
-                            <p className="text-gray-600 text-sm">{platform.bestTimeToPost}</p>
-                          </div>
-                          <div>
-                            <h6 className="font-medium text-sm">Content Ideas</h6>
-                            <ul className="list-disc list-inside space-y-1">
-                              {platform.contentIdeas.map((idea: string, ideaIndex: number) => (
-                                <li key={ideaIndex} className="text-gray-600 text-sm">{idea}</li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div>
-                            <h6 className="font-medium text-sm">Hashtag Suggestions</h6>
-                            <div className="flex gap-1 flex-wrap">
-                              {platform.hashtagSuggestions.map((hashtag: string) => (
-                                <span
-                                  key={hashtag}
-                                  className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs"
-                                >
-                                  {hashtag}
-                                </span>
-                              ))}
+              {strategy.strategy.contentPlan.socialMedia &&
+                strategy.strategy.contentPlan.socialMedia.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Social Media Content</h4>
+                    <div className="space-y-4">
+                      {strategy.strategy.contentPlan.socialMedia.map(
+                        (platform: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <h5 className="font-medium text-gray-900 mb-2">{platform.platform}</h5>
+                            <div className="space-y-2">
+                              <div>
+                                <h6 className="font-medium text-sm">Best Time to Post</h6>
+                                <p className="text-gray-600 text-sm">{platform.bestTimeToPost}</p>
+                              </div>
+                              <div>
+                                <h6 className="font-medium text-sm">Content Ideas</h6>
+                                <ul className="list-disc list-inside space-y-1">
+                                  {platform.contentIdeas.map((idea: string, ideaIndex: number) => (
+                                    <li key={ideaIndex} className="text-gray-600 text-sm">
+                                      {idea}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div>
+                                <h6 className="font-medium text-sm">Hashtag Suggestions</h6>
+                                <div className="flex gap-1 flex-wrap">
+                                  {platform.hashtagSuggestions.map((hashtag: string) => (
+                                    <span
+                                      key={hashtag}
+                                      className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs"
+                                    >
+                                      {hashtag}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </CardContent>
           </Card>
         )}
@@ -282,12 +296,14 @@ export default function ContentStrategyViewPage() {
               <div>
                 <h4 className="font-medium text-gray-900">Opportunities</h4>
                 <ul className="space-y-1">
-                  {strategy.strategy.competitiveAnalysis.opportunities.map((opportunity: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="text-orange-500 mt-1">•</span>
-                      <span className="text-gray-600">{opportunity}</span>
-                    </li>
-                  ))}
+                  {strategy.strategy.competitiveAnalysis.opportunities.map(
+                    (opportunity: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="text-orange-500 mt-1">•</span>
+                        <span className="text-gray-600">{opportunity}</span>
+                      </li>
+                    )
+                  )}
                 </ul>
               </div>
             </CardContent>
