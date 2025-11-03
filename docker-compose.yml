@@ -23,7 +23,7 @@ services:
       retries: 5
 
   test-db:
-    image: postgres:17-alpine
+    image: postgis/postgis:17-3.5-alpine
     container_name: hominem-test-postgres
     ports:
       - "4433:5432"
