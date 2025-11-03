@@ -1,5 +1,4 @@
 services:
-
   rabbitmq:
     image: rabbitmq:3-management
     container_name: hominem-rabbitmq
@@ -24,7 +23,7 @@ services:
       retries: 5
 
   test-db:
-    image: ghcr.io/charlesponti/hominem/pontistudios-postgres:latest
+    image: postgres:17-alpine
     container_name: hominem-test-postgres
     ports:
       - "4433:5432"
