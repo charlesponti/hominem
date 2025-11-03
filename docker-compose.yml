@@ -24,6 +24,7 @@ services:
 
   test-db:
     image: postgis/postgis:17-3.5-alpine
+    platform: linux/amd64
     container_name: hominem-test-postgres
     ports:
       - "4433:5432"
