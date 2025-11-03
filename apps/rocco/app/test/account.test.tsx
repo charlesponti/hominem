@@ -12,10 +12,8 @@ const MOCK_USER = getMockUser()
 let mockLoaderData = { user: MOCK_USER }
 
 // Mock React Router's useLoaderData hook for this specific test
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router')
+vi.mock('react-router', () => {
   return {
-    ...actual,
     useLoaderData: () => mockLoaderData,
     useRouteLoaderData: (routeId: string) => {
       if (routeId === 'routes/layout') {
@@ -44,7 +42,7 @@ describe('Account', () => {
     mockLoaderData.user = userWithoutAvatar
 
     // Mock user profile query
-    vi.mocked(mockTrpcClient.user.getProfile.useQuery).mockReturnValue({
+    mockTrpcClient.user.getProfile.useQuery.mockReturnValue({
       data: userWithoutAvatar,
       isLoading: false,
       error: null as null | { message: string },
@@ -58,7 +56,7 @@ describe('Account', () => {
       isError: false,
       error: null as null | { message: string },
     }
-    vi.mocked(mockTrpcClient.user.deleteAccount.useMutation).mockReturnValue(
+    mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
       mockDeleteMutation as unknown as ReturnType<
         typeof mockTrpcClient.user.deleteAccount.useMutation
       >
@@ -104,7 +102,7 @@ describe('Account', () => {
     }
 
     // Mock user profile query with avatar
-    vi.mocked(mockTrpcClient.user.getProfile.useQuery).mockReturnValue({
+    mockTrpcClient.user.getProfile.useQuery.mockReturnValue({
       data: mockLoaderData.user,
       isLoading: false,
       error: null as null | { message: string },
@@ -118,7 +116,7 @@ describe('Account', () => {
       isError: false,
       error: null as null | { message: string },
     }
-    vi.mocked(mockTrpcClient.user.deleteAccount.useMutation).mockReturnValue(
+    mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
       mockDeleteMutation as unknown as ReturnType<
         typeof mockTrpcClient.user.deleteAccount.useMutation
       >
@@ -148,7 +146,7 @@ describe('Account', () => {
 
   test('shows error alert when deletion has error', async () => {
     // Mock user profile query
-    vi.mocked(mockTrpcClient.user.getProfile.useQuery).mockReturnValue({
+    mockTrpcClient.user.getProfile.useQuery.mockReturnValue({
       data: MOCK_USER,
       isLoading: false,
       error: null as null | { message: string },
@@ -162,7 +160,7 @@ describe('Account', () => {
       isError: true,
       error: { message: 'Failed to delete account' },
     }
-    vi.mocked(mockTrpcClient.user.deleteAccount.useMutation).mockReturnValue(
+    mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
       mockDeleteMutation as unknown as ReturnType<
         typeof mockTrpcClient.user.deleteAccount.useMutation
       >

@@ -80,7 +80,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "date-fns": "^3.6.0",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "0.44.7",
     "eslint": "^9.0.0",
     "eslint-plugin-react": "^7.37.4",
     "framer-motion": "^12.4.1",

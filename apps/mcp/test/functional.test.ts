@@ -7,10 +7,15 @@ describe('MCP Server Functional Tests', () => {
   let transport: StdioClientTransport
 
   beforeAll(async () => {
+    // Skip functional tests if build doesn't exist
+    // These are integration tests that require a built server
+    // Run `bun run build` in apps/mcp first
+    const buildPath = new URL('../build/index.js', import.meta.url).pathname
+    
     // Create transport and client
     transport = new StdioClientTransport({
       command: 'node',
-      args: ['build/index.js'],
+      args: [buildPath],
     })
 
     client = new Client(

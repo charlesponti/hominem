@@ -20,9 +20,9 @@ describe.skip('prolog-csv-lambda', () => {
   it('should process CSV file successfully', async () => {
     const event = JSON.parse(fs.readFileSync(getAssetPath('s3-csv-event.json'), 'utf-8'))
 
-    vi.mocked(csvService.processCSVBuffer).mockResolvedValue(sampleUsers)
-    vi.mocked(s3Service.getObjectFromS3).mockResolvedValue(Buffer.from('test data'))
-    vi.mocked(s3Service.writeJSONToS3).mockResolvedValue('processed/output.json')
+    csvService.processCSVBuffer.mockResolvedValue(sampleUsers)
+    s3Service.getObjectFromS3.mockResolvedValue(Buffer.from('test data'))
+    s3Service.writeJSONToS3.mockResolvedValue('processed/output.json')
 
     const result = await handler(event)
 
@@ -36,8 +36,8 @@ describe.skip('prolog-csv-lambda', () => {
   it('should handle invalid data format', async () => {
     const event = JSON.parse(fs.readFileSync(getAssetPath('s3-csv-event.json'), 'utf-8'))
 
-    vi.mocked(s3Service.getObjectFromS3).mockResolvedValue(Buffer.from('test data'))
-    vi.mocked(csvService.processCSVBuffer).mockRejectedValue(new Error('Invalid data format'))
+    s3Service.getObjectFromS3.mockResolvedValue(Buffer.from('test data'))
+    csvService.processCSVBuffer.mockRejectedValue(new Error('Invalid data format'))
 
     const result = await handler(event)
 

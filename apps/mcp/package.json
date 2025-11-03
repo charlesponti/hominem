@@ -16,6 +16,7 @@
     "start": "node src/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
     "format": "biome format ./src --fix",
+    "pretest": "bun run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",

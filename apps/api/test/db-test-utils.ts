@@ -1,7 +1,6 @@
 import crypto from 'node:crypto'
-import { db } from '@hominem/data'
+import { db, eq } from '@hominem/data'
 import { bookmark, users } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
 import { vi } from 'vitest'
 
 // Track created test users for cleanup
@@ -315,7 +314,7 @@ export const createTestUser = async (overrides = {}): Promise<string> => {
  * Cleans up test data from the database
  */
 export const cleanupTestData = async (): Promise<void> => {
-  // Clean up test bookmarks for created test users
+  // Clean up test data
   for (const userId of createdTestUsers) {
     await db.delete(bookmark).where(eq(bookmark.userId, userId))
     await db.delete(users).where(eq(users.id, userId))

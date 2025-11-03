@@ -78,7 +78,7 @@ describe('tRPC Context', () => {
     }
 
     // Replace the db mock with our specific mock
-    vi.mocked(await import('../db')).db = mockDb
+    vi.doMock('../db', () => ({ db: mockDb }))
 
     const mockRequest = new Request('http://localhost/api/trpc', {
       headers: {
@@ -117,7 +117,7 @@ describe('tRPC Context', () => {
     }
 
     // Replace the db mock with our specific mock
-    vi.mocked(await import('../db')).db = mockDb
+    vi.doMock('../db', () => ({ db: mockDb }))
 
     const mockRequest = new Request('http://localhost/api/trpc', {
       headers: {
@@ -149,7 +149,7 @@ describe('tRPC Context', () => {
     }
 
     // Replace the db mock with our specific mock
-    vi.mocked(await import('../db')).db = mockDb
+    vi.doMock('../db', () => ({ db: mockDb }))
 
     const mockRequest = new Request('http://localhost/api/trpc', {
       headers: {

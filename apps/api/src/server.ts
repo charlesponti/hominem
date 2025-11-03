@@ -41,7 +41,7 @@ export function createServer(): Hono<AppEnv> | null {
   try {
     const app = new Hono<AppEnv>()
 
-    // Set up BullMQ queues using consistent queue names from utils/consts
+    // Set up BullMQ queues using consistent queue names.
     const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
     const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
       connection: redis,
@@ -56,8 +56,10 @@ export function createServer(): Hono<AppEnv> | null {
       await next()
     })
 
-    // Add middleware
+    // Logger middleware
     app.use('*', logger())
+
+    // Pretty JSON middleware
     app.use('*', prettyJSON())
 
     // CORS middleware

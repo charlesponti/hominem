@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, vi } from 'vitest'
 
+// Set NODE_ENV to test for environment variable defaults
+process.env.NODE_ENV = 'test'
+
 // Redis is running in Docker for tests - no mocking needed
 
 vi.mock('sendgrid', () => ({

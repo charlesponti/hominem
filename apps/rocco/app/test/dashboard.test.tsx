@@ -39,10 +39,8 @@ vi.mock('~/hooks/useGeolocation', () => ({
 let mockLoaderData: { lists: unknown[] } = { lists: [] }
 const mockNavigate = vi.fn()
 
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router')
+vi.mock('react-router', () => {
   return {
-    ...actual,
     useLoaderData: () => mockLoaderData,
     useRouteLoaderData: (routeId: string) => {
       if (routeId === 'routes/layout') {
@@ -118,14 +116,14 @@ describe('Dashboard Component Tests', () => {
     vi.clearAllMocks() // Clear all mocks
 
     // Reset geolocation mock to default successful state
-    vi.mocked(useGeolocation).mockReturnValue({
+    useGeolocation.mockReturnValue({
       currentLocation: { latitude: 37.7749, longitude: -122.4194 },
       isLoading: false,
       error: null, // Added error property
     })
 
     // Reset tRPC mock to default successful state
-    vi.mocked(mockTrpcClient.lists.getAll.useQuery).mockReturnValue({
+    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
       data: MOCK_LISTS,
       isLoading: false,
       error: null,
@@ -142,7 +140,7 @@ describe('Dashboard Component Tests', () => {
   })
 
   test('shows empty state when no lists', async () => {
-    vi.mocked(mockTrpcClient.lists.getAll.useQuery).mockReturnValue({
+    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
@@ -156,7 +154,7 @@ describe('Dashboard Component Tests', () => {
   })
 
   test('renders dashboard with loading message when location not available', async () => {
-    vi.mocked(useGeolocation).mockReturnValue({
+    useGeolocation.mockReturnValue({
       currentLocation: null, // Changed undefined to null
       isLoading: true,
       error: null, // Added error property
@@ -170,7 +168,7 @@ describe('Dashboard Component Tests', () => {
   })
 
   test('shows loading state when lists are loading', async () => {
-    vi.mocked(mockTrpcClient.lists.getAll.useQuery).mockReturnValue({
+    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
@@ -185,7 +183,7 @@ describe('Dashboard Component Tests', () => {
   })
 
   test('shows error state when lists fail to load', async () => {
-    vi.mocked(mockTrpcClient.lists.getAll.useQuery).mockReturnValue({
+    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: { message: 'Failed to load lists' },
@@ -204,14 +202,14 @@ describe('Dashboard Route Loader and ErrorBoundary Tests', () => {
     vi.clearAllMocks() // Clear all mocks
 
     // Reset geolocation mock
-    vi.mocked(useGeolocation).mockReturnValue({
+    useGeolocation.mockReturnValue({
       currentLocation: { latitude: 37.7749, longitude: -122.4194 },
       isLoading: false,
       error: null, // Added error property
     })
 
     // Reset tRPC mock
-    vi.mocked(mockTrpcClient.lists.getAll.useQuery).mockReturnValue({
+    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
       data: MOCK_LISTS,
       isLoading: false,
       error: null,

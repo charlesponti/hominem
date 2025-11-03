@@ -22,7 +22,7 @@ pre-commit:
   commands:
     lint:
       tags: lint
-      run: bun lint
+      run: bun run lint
     test:
       tags: test
-      run: bun test
+      run: bun run test

@@ -57,7 +57,7 @@ export function parseTransactionStream(
             logger.warn('Unknown bank format, skipping row:', record)
           }
         } catch (error) {
-          logger.error('Error processing transaction row:', error, record)
+          logger.error('Error processing transaction row:', { error, record })
         }
       }
     })
@@ -126,7 +126,6 @@ export function processTransactionsFromCSVBuffer({
         const account = accountsMap.get(accountName)
         return {
           ...transactionData,
-          // biome-ignore lint/style/noNonNullAssertion: Account should always be found in the map
           accountId: account!.id,
         }
       })
