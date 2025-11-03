@@ -14,8 +14,10 @@ describe('Budget Categories Unique Constraint', () => {
     try {
       await db.select().from(users).limit(1)
       dbAvailable = true
-    } catch (error) {
-      console.warn('Database not available, skipping budget tests. Start test database on port 4433.')
+    } catch {
+      console.warn(
+        'Database not available, skipping budget tests. Start test database on port 4433.'
+      )
       dbAvailable = false
     }
   })
@@ -26,7 +28,7 @@ describe('Budget Categories Unique Constraint', () => {
       context.skip()
       return
     }
-    
+
     await db
       .insert(users)
       .values([
