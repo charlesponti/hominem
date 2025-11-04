@@ -2,33 +2,27 @@ import crypto from 'node:crypto'
 import { db } from '@hominem/data/db'
 import { budgetCategories, users } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-describe('Budget Categories Unique Constraint', () => {
+// Helper to check if DB is available
+async function isDatabaseAvailable(): Promise<boolean> {
+  try {
+    await db.select().from(users).limit(1)
+    return true
+  } catch {
+    console.warn('Database not available, skipping budget tests. Start test database on port 4433.')
+    return false
+  }
+}
+
+const dbAvailable = await isDatabaseAvailable()
+
+describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
   const testUserId = crypto.randomUUID()
   const testUserId2 = crypto.randomUUID()
-  let dbAvailable = false
-
-  // Check if database is available before running tests
-  beforeAll(async () => {
-    try {
-      await db.select().from(users).limit(1)
-      dbAvailable = true
-    } catch {
-      console.warn(
-        'Database not available, skipping budget tests. Start test database on port 4433.'
-      )
-      dbAvailable = false
-    }
-  })
 
   // Create test users before each test
-  beforeEach(async (context) => {
-    if (!dbAvailable) {
-      context.skip()
-      return
-    }
-
+  beforeEach(async () => {
     await db
       .insert(users)
       .values([
