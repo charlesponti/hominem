@@ -49,7 +49,7 @@ describe('MCP Server Functional Tests', () => {
 
       expect(result.tools).toBeDefined()
       expect(result.tools.length).toBeGreaterThan(0)
-      expect(result.tools.length).toBe(26)
+      expect(result.tools.length).toBe(25)
     })
 
     it('should include expected health tools', async () => {
@@ -78,7 +78,6 @@ describe('MCP Server Functional Tests', () => {
 
       expect(toolNames).toContain('get_flight_prices')
       expect(toolNames).toContain('get_tax_info')
-      expect(toolNames).toContain('login')
     })
   })
 

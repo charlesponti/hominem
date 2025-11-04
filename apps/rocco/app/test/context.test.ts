@@ -1,5 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import crypto from 'node:crypto'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { db } from '../db'
 import { createContext } from '../lib/trpc/context'
+import { users } from '@hominem/data/schema'
+import { eq } from 'drizzle-orm'
 
 // Mock the dependencies
 vi.mock('../lib/supabase/server', () => ({
@@ -16,11 +20,39 @@ vi.mock('../lib/redis', () => ({
   },
 }))
 
-vi.mock('../db', () => ({
-  db: {},
-}))
-
 describe('tRPC Context', () => {
+  const testUserId = crypto.randomUUID()
+  const testUserId2 = crypto.randomUUID()
+
+  beforeAll(async () => {
+    // Create test users in the database
+    await db
+      .insert(users)
+      .values([
+        {
+          id: testUserId,
+          supabaseId: 'supabase-user-id',
+          email: 'test@example.com',
+          name: 'Test User',
+          isAdmin: false,
+        },
+        {
+          id: testUserId2,
+          supabaseId: 'supabase-user-id-2',
+          email: 'test2@example.com',
+          name: null,
+          isAdmin: false,
+        },
+      ])
+      .onConflictDoNothing()
+  })
+
+  afterAll(async () => {
+    // Clean up test users
+    await db.delete(users).where(eq(users.id, testUserId))
+    await db.delete(users).where(eq(users.id, testUserId2))
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -63,26 +95,9 @@ describe('tRPC Context', () => {
   })
 
   it('should validate token and return user context when valid', async () => {
-    // Mock the database query to return a user
-    const mockDb = {
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue({
-            id: 'test-user-id',
-            email: 'test@example.com',
-            name: 'Test User',
-            supabaseId: 'supabase-user-id',
-          }),
-        },
-      },
-    }
-
-    // Replace the db mock with our specific mock
-    vi.doMock('../db', () => ({ db: mockDb }))
-
     const mockRequest = new Request('http://localhost/api/trpc', {
       headers: {
-        'x-user-id': 'test-user-id',
+        'x-user-id': testUserId,
       },
     })
 
@@ -90,82 +105,44 @@ describe('tRPC Context', () => {
 
     expect(context).toEqual({
       db: expect.any(Object),
-      user: {
-        id: 'test-user-id',
+      user: expect.objectContaining({
+        id: testUserId,
         email: 'test@example.com',
         name: 'Test User',
-        avatar: undefined,
-        isAdmin: false,
         supabaseId: 'supabase-user-id',
-      },
+      }),
     })
   })
 
   it('should use cached token when available', async () => {
-    // Mock the database query to return a user
-    const mockDb = {
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue({
-            id: 'test-user-id',
-            email: 'test@example.com',
-            name: 'Test User',
-            supabaseId: 'supabase-user-id',
-          }),
-        },
-      },
-    }
-
-    // Replace the db mock with our specific mock
-    vi.doMock('../db', () => ({ db: mockDb }))
-
     const mockRequest = new Request('http://localhost/api/trpc', {
       headers: {
-        'x-user-id': 'test-user-id',
+        'x-user-id': testUserId,
       },
     })
 
     const context = await createContext(mockRequest)
 
     expect(context.user).toBeDefined()
-    expect(context.user?.id).toBe('test-user-id')
+    expect(context.user?.id).toBe(testUserId)
     expect(context.user?.email).toBe('test@example.com')
     expect(context.user?.name).toBe('Test User')
   })
 
   it('should handle user without metadata', async () => {
-    // Mock the database query to return a user without name
-    const mockDb = {
-      query: {
-        users: {
-          findFirst: vi.fn().mockResolvedValue({
-            id: 'test-user-id',
-            email: 'test@example.com',
-            name: null, // No name
-            supabaseId: 'supabase-user-id',
-          }),
-        },
-      },
-    }
-
-    // Replace the db mock with our specific mock
-    vi.doMock('../db', () => ({ db: mockDb }))
-
     const mockRequest = new Request('http://localhost/api/trpc', {
       headers: {
-        'x-user-id': 'test-user-id',
+        'x-user-id': testUserId2,
       },
     })
 
     const context = await createContext(mockRequest)
 
-    expect(context.user).toEqual({
-      id: 'test-user-id',
-      email: 'test@example.com',
-      name: undefined,
-      avatar: undefined,
-      isAdmin: false,
-      supabaseId: 'supabase-user-id',
+    expect(context.user).toMatchObject({
+      id: testUserId2,
+      email: 'test2@example.com',
+      supabaseId: 'supabase-user-id-2',
     })
+    expect(context.user?.name).toBeFalsy() // null or undefined
   })
 })

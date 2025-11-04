@@ -39,8 +39,10 @@ vi.mock('~/hooks/useGeolocation', () => ({
 let mockLoaderData: { lists: unknown[] } = { lists: [] }
 const mockNavigate = vi.fn()
 
-vi.mock('react-router', () => {
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual('react-router')
   return {
+    ...actual,
     useLoaderData: () => mockLoaderData,
     useRouteLoaderData: (routeId: string) => {
       if (routeId === 'routes/layout') {

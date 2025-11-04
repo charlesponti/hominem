@@ -31,6 +31,8 @@
     "start:prod": "node apps/api/dist/index.js"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@turbo/gen": "^1.9.7",
     "@types/node": "^22.15.2",
     "@types/react": "^19.1.0",
@@ -39,7 +41,7 @@
     "drizzle-kit": "^0.31.4",
     "husky": "^9.1.7",
     "lefthook": "^2.0.2",
-    "turbo": "^2.4.4",
+    "turbo": "^2.6.0",
     "typescript": "5.7.3",
     "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.4",

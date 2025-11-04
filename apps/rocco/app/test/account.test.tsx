@@ -12,8 +12,10 @@ const MOCK_USER = getMockUser()
 let mockLoaderData = { user: MOCK_USER }
 
 // Mock React Router's useLoaderData hook for this specific test
-vi.mock('react-router', () => {
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual('react-router')
   return {
+    ...actual,
     useLoaderData: () => mockLoaderData,
     useRouteLoaderData: (routeId: string) => {
       if (routeId === 'routes/layout') {
