@@ -70,12 +70,13 @@ RUN addgroup --gid 1001 nodejs && \
 RUN mkdir -p /app/logs && \
   chown -R hominem:nodejs /app/logs
 
-# Copy pruned package files needed for production
+# Copy package files for reference
 COPY --from=pruner /app/out/json/ .
 
-# Install production dependencies only
-RUN npm install -g bun && \
-  bun install --production
+# Copy node_modules from builder (already has all dependencies we need)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder /app/packages ./packages
 
 # Copy built artifacts
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
