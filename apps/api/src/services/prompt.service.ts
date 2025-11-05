@@ -1,7 +1,7 @@
-import { logger } from '@hominem/utils/logger'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { logger } from '@hominem/utils/logger'
 
 // Get the directory name in ESM
 const __filename = fileURLToPath(import.meta.url)

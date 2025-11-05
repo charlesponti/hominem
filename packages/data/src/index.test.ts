@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { db, takeOne, takeUniqueOrThrow } from './index'
+import { describe, expect, it } from 'vitest'
 import { users } from './db/schema'
+import { db, takeOne, takeUniqueOrThrow } from './index'
 
 describe('@hominem/data', () => {
   it('should export database utilities', () => {

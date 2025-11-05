@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { Form, Link, useActionData, useNavigation } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -27,6 +28,9 @@ export default function CreateTripPage() {
   const actionData = useActionData<typeof action>()
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
+  const nameId = useId()
+  const startDateId = useId()
+  const endDateId = useId()
 
   // Redirect to the new trip page on successful creation
   if (actionData?.success && actionData.tripId) {
@@ -56,11 +60,11 @@ export default function CreateTripPage() {
       <Form method="post" className="max-w-2xl">
         <div className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor={nameId} className="block text-sm font-medium text-gray-700 mb-2">
               Trip Name
             </label>
             <Input
-              id="name"
+              id={nameId}
               name="name"
               placeholder="Enter trip name"
               required
@@ -70,16 +74,16 @@ export default function CreateTripPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor={startDateId} className="block text-sm font-medium text-gray-700 mb-2">
                 Start Date
               </label>
-              <Input id="startDate" name="startDate" type="date" className="w-full" />
+              <Input id={startDateId} name="startDate" type="date" className="w-full" />
             </div>
             <div>
-              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor={endDateId} className="block text-sm font-medium text-gray-700 mb-2">
                 End Date
               </label>
-              <Input id="endDate" name="endDate" type="date" className="w-full" />
+              <Input id={endDateId} name="endDate" type="date" className="w-full" />
             </div>
           </div>
 

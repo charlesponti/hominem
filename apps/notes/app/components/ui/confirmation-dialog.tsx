@@ -44,7 +44,11 @@ export function ConfirmationDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isLoading}
-            className={variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+            className={
+              variant === 'destructive'
+                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                : ''
+            }
           >
             {isLoading ? 'Loading...' : confirmText}
           </AlertDialogAction>
@@ -52,4 +56,4 @@ export function ConfirmationDialog({
       </AlertDialogContent>
     </AlertDialog>
   )
-} 
+}

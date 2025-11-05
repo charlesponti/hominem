@@ -19,7 +19,7 @@ export async function loader(args: Route.LoaderArgs) {
   return { userId: user?.id }
 }
 
-export default function Layout() {
+export default function Layout({ loaderData }: Route.ComponentProps) {
   const navigation = useNavigation()
   const isNavigating = navigation.state !== 'idle'
 

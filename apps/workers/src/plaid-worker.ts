@@ -19,7 +19,6 @@ const CONCURRENCY = 3
 export class PlaidSyncWorker {
   private worker: Worker
   private isShuttingDown = false
-  private healthService: HealthService
 
   /**
    * Initialize the worker
@@ -132,4 +131,4 @@ export class PlaidSyncWorker {
 }
 
 // Bootstrap the worker
-const worker = new PlaidSyncWorker()
+const _worker = new PlaidSyncWorker()

@@ -2,7 +2,7 @@
 
 import type { Note } from '@hominem/utils/types'
 import { Edit, Trash2, X } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { type ReactNode, useMemo, useState } from 'react'
 import SocialX from '~/components/icons/SocialX'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -26,7 +26,7 @@ export function NoteFeedItem({
   className = '',
 }: NoteFeedItemProps) {
   const [showTweetModal, setShowTweetModal] = useState(false)
-  const isTwitterEnabled = useFeatureFlag('twitterIntegration')
+  const _isTwitterEnabled = useFeatureFlag('twitterIntegration')
 
   // Extract hashtags from content
   const extractHashtags = useMemo(() => {

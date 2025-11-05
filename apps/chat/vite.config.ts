@@ -9,7 +9,7 @@ config()
 
 export default defineConfig(({ mode }) => {
   // Load environment variables
-  const env = loadEnv(mode, process.cwd(), '')
+  const _env = loadEnv(mode, process.cwd(), '')
 
   return {
     plugins: [reactRouter(), tsconfigPaths(), tailwindcss()],

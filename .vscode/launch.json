@@ -63,7 +63,7 @@
       "request": "launch",
       "name": "Debug API App (Node.js)",
       "cwd": "${workspaceFolder}/apps/api",
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "bun",
       "runtimeArgs": [
         "dev"
       ],

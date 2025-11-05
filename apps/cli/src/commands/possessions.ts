@@ -1,9 +1,9 @@
-import { getAuthToken } from '@/utils/auth.utils'
 import axios from 'axios'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import { consola } from 'consola'
 import ora from 'ora'
+import { getAuthToken } from '@/utils/auth.utils'
 
 export const command = new Command()
   .name('possessions')
@@ -21,7 +21,7 @@ command
       let token: ReturnType<typeof getAuthToken>
       try {
         token = getAuthToken()
-      } catch (e) {
+      } catch (_e) {
         spinner.warn('Not authenticated. Some features may be limited.')
       }
 

@@ -1,20 +1,20 @@
 import { LLMProvider, type LLMProviderConfig } from '@hominem/ai'
-import {
-  ActionItemsSchema,
-  DecisionsSchema,
-  HabitsSchema,
-  PeopleSchema,
-  TextAnalysisEmotionSchema,
-  TextAnalysisSchema,
-  type ActionItems,
-  type Decisions,
-  type Habits,
-  type People,
-  type TextAnalysis,
-  type TextAnalysisEmotion,
-} from '../schemas'
 import { generateObject } from 'ai'
 import { z } from 'zod'
+import {
+  type ActionItems,
+  ActionItemsSchema,
+  type Decisions,
+  DecisionsSchema,
+  type Habits,
+  HabitsSchema,
+  type People,
+  PeopleSchema,
+  type TextAnalysis,
+  type TextAnalysisEmotion,
+  TextAnalysisEmotionSchema,
+  TextAnalysisSchema,
+} from '../schemas'
 
 export class NLPProcessor {
   private config: LLMProviderConfig

@@ -10,7 +10,7 @@ import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown'
 export default function CategoryAnalyticsPage() {
   const { category } = useParams<{ category: string }>()
   const [selectedAccount, setSelectedAccount] = useState<string>('all')
-  const [dateFrom, setDateFrom] = useState<Date>(subMonths(new Date(), 6))
+  const [dateFrom, _setDateFrom] = useState<Date>(subMonths(new Date(), 6))
   const [dateTo] = useState<Date>(new Date())
   const [chartType, setChartType] = useState<'area' | 'bar'>('area')
 

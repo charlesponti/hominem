@@ -1,17 +1,17 @@
+import {
+  Download,
+  Loader2,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Square,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 import { useEffect } from 'react'
 import { Button } from '~/components/ui/button.js'
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  Volume2, 
-  VolumeX, 
-  SkipBack, 
-  SkipForward,
-  Download,
-  Loader2
-} from 'lucide-react'
-import { useAudioPlayer, formatTime } from '~/lib/hooks/use-audio-player.js'
+import { formatTime, useAudioPlayer } from '~/lib/hooks/use-audio-player.js'
 
 interface AudioPlayerProps {
   src: string
@@ -22,25 +22,16 @@ interface AudioPlayerProps {
   onEnded?: () => void
 }
 
-export function AudioPlayer({ 
-  src, 
-  title, 
+export function AudioPlayer({
+  src,
+  title,
   autoPlay = false,
   className = '',
   showDownload = false,
-  onEnded 
+  onEnded,
 }: AudioPlayerProps) {
-  const { 
-    state, 
-    audioRef, 
-    play, 
-    pause, 
-    stop, 
-    seek, 
-    setVolume, 
-    toggleMute, 
-    loadAudio 
-  } = useAudioPlayer()
+  const { state, audioRef, play, pause, stop, seek, setVolume, toggleMute, loadAudio } =
+    useAudioPlayer()
 
   // Load audio when src changes
   useEffect(() => {
@@ -62,7 +53,7 @@ export function AudioPlayer({
       const handleEnded = () => {
         onEnded?.()
       }
-      
+
       audioRef.current.addEventListener('ended', handleEnded)
       return () => {
         audioRef.current?.removeEventListener('ended', handleEnded)
@@ -86,7 +77,7 @@ export function AudioPlayer({
   }
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(parseFloat(e.target.value))
+    setVolume(Number.parseFloat(e.target.value))
   }
 
   const handleDownload = () => {
@@ -104,35 +95,31 @@ export function AudioPlayer({
     <div className={`bg-muted rounded-lg p-4 space-y-3 ${className}`}>
       {/* Hidden audio element */}
       <audio ref={audioRef} preload="metadata" />
-      
+
       {/* Title */}
-      {title && (
-        <div className="text-sm font-medium truncate">{title}</div>
-      )}
+      {title && <div className="text-sm font-medium truncate">{title}</div>}
 
       {/* Error message */}
-      {state.error && (
-        <div className="text-sm text-destructive">{state.error}</div>
-      )}
+      {state.error && <div className="text-sm text-destructive">{state.error}</div>}
 
       {/* Progress bar */}
       <div className="space-y-2">
-        <div 
+        <div
           className="w-full h-2 bg-secondary rounded-full cursor-pointer relative"
           onClick={handleSeek}
         >
-          <div 
+          <div
             className="h-full bg-primary rounded-full transition-all duration-150"
             style={{ width: `${progressPercent}%` }}
           />
-          
+
           {/* Progress handle */}
-          <div 
+          <div
             className="absolute top-1/2 w-4 h-4 bg-primary rounded-full shadow-md transform -translate-y-1/2 -translate-x-1/2 opacity-0 hover:opacity-100 transition-opacity"
             style={{ left: `${progressPercent}%` }}
           />
         </div>
-        
+
         {/* Time display */}
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>{formatTime(state.currentTime)}</span>
@@ -153,7 +140,7 @@ export function AudioPlayer({
           >
             <SkipBack className="h-4 w-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -169,7 +156,7 @@ export function AudioPlayer({
               <Play className="h-5 w-5" />
             )}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -179,7 +166,7 @@ export function AudioPlayer({
           >
             <Square className="h-4 w-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -195,19 +182,14 @@ export function AudioPlayer({
         <div className="flex items-center gap-2">
           {/* Volume control */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMute}
-              className="h-8 w-8"
-            >
+            <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8">
               {state.isMuted || state.volume === 0 ? (
                 <VolumeX className="h-4 w-4" />
               ) : (
                 <Volume2 className="h-4 w-4" />
               )}
             </Button>
-            
+
             <input
               type="range"
               min="0"

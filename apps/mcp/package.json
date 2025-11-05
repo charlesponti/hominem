@@ -11,31 +11,37 @@
     "build"
   ],
   "scripts": {
-    "build": "pnpm exec node esbuild.config.js",
-    "dev": "tsup src/index.ts --target=node18 --outDir build --external electron --external chromium-bidi --watch",
-    "start": "node build/index.js",
+    "build": "node esbuild.config.js",
+    "dev": "tsup src/index.ts --target=node18 --outDir build  --external electron --external chromium-bidi --watch",
+    "start": "node src/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
-    "format": "biome format ./src --fix"
+    "format": "biome format ./src --fix",
+    "pretest": "bun run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.1.17",
-    "@browserbasehq/stagehand": "^1.14.0",
-    "@clerk/backend": "^1.30.2",
-    "@hominem/data": "workspace:*",
+    "@browserbasehq/stagehand": "^2.4.0",
     "@hominem/utils": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "ai": "^4.1.54",
     "axios": "1.8.4",
     "dotenv": "^16.5.0",
-    "playwright": "^1.53.1",
+    "playwright": "^1.51.1",
+    "playwright-chromium": "^1.51.1",
     "tsdown": "^0.10.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
-    "esbuild": "^0.21.5",
+    "@vitest/ui": "^4.0.3",
+    "esbuild": "^0.25.0",
     "esbuild-node-externals": "^1.18.0",
     "esbuild-plugin-copy": "^2.1.1",
-    "tsup": "^8.4.0"
+    "tsup": "^8.4.0",
+    "vitest": "^4.0.3"
   }
 }

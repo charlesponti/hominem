@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useRevalidator } from 'react-router'
 import { Button } from '~/components/ui/button'
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogTrigger,
 } from '~/components/ui/dialog'
 import { trpc } from '~/lib/trpc/client'
-import { useRevalidator } from 'react-router'
 
 export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
   const [isOpen, setIsOpen] = useState(false)

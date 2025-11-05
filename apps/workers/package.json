@@ -8,8 +8,9 @@
     "build"
   ],
   "scripts": {
-    "dev": "pnpm tsx --watch src/index.ts | pino-pretty",
-    "start": "pnpm tsx src/index.ts",
+    "dev": "bun --watch src/index.ts | pino-pretty",
+    "start": "bun src/index.ts",
+    "test": "vitest run",
     "format": "biome format ./src --fix"
   },
   "dependencies": {
@@ -22,7 +23,7 @@
     "csv-parse": "^5.6.0",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "0.44.7",
     "effect": "^3.16.10",
     "ioredis": "^5.6.1",
     "mailparser": "^3.7.2",

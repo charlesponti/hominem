@@ -1,153 +1,424 @@
 'use client'
 
-import type { User } from '@supabase/supabase-js'
-import { Loader2, RefreshCw, Send, Twitter } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Loader2, RefreshCw, Twitter } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router'
+import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog'
+import { Label } from '~/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
 import { useToast } from '~/components/ui/use-toast'
-import { useTwitterPost } from '~/hooks/use-twitter'
+import { useContentStrategies } from '~/lib/content/use-content-strategies'
+import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
 import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
+import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 interface TweetModalProps {
-  isOpen: boolean
-  onClose: () => void
-  initialText?: string
-  contentId?: string
-  user?: User | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  noteContent: string
+  noteTitle?: string | null
+  contentId?: string // Optional: link to existing content
 }
 
-export function TweetModal({ isOpen, onClose, initialText = '', contentId, user }: TweetModalProps) {
+const TWEET_CHARACTER_LIMIT = 280
+
+type StrategyType = 'default' | 'custom'
+
+const DEFAULT_STRATEGIES = [
+  { value: 'storytelling', label: '📖 Storytelling', description: 'Create a narrative arc' },
+  {
+    value: 'question',
+    label: '❓ Question',
+    description: 'Start with thought-provoking questions',
+  },
+  { value: 'statistic', label: '📊 Statistic', description: 'Lead with compelling data' },
+  { value: 'quote', label: '💬 Quote', description: 'Transform insights into quotable statements' },
+  { value: 'tip', label: '💡 Tip', description: 'Present actionable advice' },
+  {
+    value: 'behind-the-scenes',
+    label: '🎬 Behind the Scenes',
+    description: 'Share process or journey',
+  },
+  {
+    value: 'thread-starter',
+    label: '🧵 Thread Starter',
+    description: 'Create intrigue for threads',
+  },
+  { value: 'controversy', label: '⚡ Controversy', description: 'Present contrarian perspectives' },
+  { value: 'listicle', label: '📝 Listicle', description: 'Break down into numbered points' },
+  { value: 'education', label: '🎓 Education', description: 'Focus on teaching concepts' },
+]
+
+export function TweetModal({
+  open,
+  onOpenChange,
+  noteContent,
+  noteTitle,
+  contentId,
+}: TweetModalProps) {
+  const [strategyType, setStrategyType] = useState<StrategyType>('default')
+  const [strategy, setStrategy] = useState<string>('storytelling')
+
+  const { isAuthenticated } = useSupabaseAuth()
+  const { strategies: customStrategies, isLoading: isLoadingStrategies } = useContentStrategies()
+  const twitterIntegrationEnabled = useFeatureFlag('twitterIntegration')
+
+  const {
+    generateTweet,
+    regenerateTweet,
+    updateTweet,
+    resetTweet,
+    generatedTweet,
+    isEditing,
+    setIsEditing,
+    isGenerating,
+  } = useGenerateTweet()
+
+  const { data: twitterAccounts, isLoading: isLoadingAccounts } = useTwitterAccounts()
+  const postTweet = useTwitterPost()
   const { toast } = useToast()
-  const isTwitterEnabled = useFeatureFlag('twitterIntegration')
-  const { postTweet, isLoading } = useTwitterPost()
-  const [tweetText, setTweetText] = useState(initialText)
-  const [isOverLimit, setIsOverLimit] = useState(false)
 
-  const TWEET_LIMIT = 280
+  const hasTwitterAccount = twitterAccounts && twitterAccounts.length > 0
+  const canPost = twitterIntegrationEnabled && hasTwitterAccount
+  const characterCount = generatedTweet.length
+  const isOverLimit = characterCount > TWEET_CHARACTER_LIMIT
 
-  useEffect(() => {
-    setTweetText(initialText)
-  }, [initialText])
-
-  useEffect(() => {
-    setIsOverLimit(tweetText.length > TWEET_LIMIT)
-  }, [tweetText])
-
-  const handlePost = async () => {
-    if (!tweetText.trim() || isOverLimit) return
-
-    try {
-      postTweet({
-        text: tweetText,
-        contentId,
-        saveAsContent: true,
-      })
-
-      toast({
-        title: 'Tweet Posted!',
-        description: 'Your tweet has been posted successfully.',
-      })
-
-      onClose()
-      setTweetText('')
-    } catch (error) {
-      console.error('Failed to post tweet:', error)
-      toast({
-        variant: 'destructive',
-        title: 'Failed to Post Tweet',
-        description: 'Unable to post tweet. Please try again.',
-      })
+  const handleStrategyTypeChange = (newType: StrategyType) => {
+    setStrategyType(newType)
+    // Reset strategy selection when changing type
+    if (newType === 'default') {
+      setStrategy('storytelling')
+    } else if (customStrategies.length > 0) {
+      setStrategy(customStrategies[0].id)
+    } else {
+      setStrategy('')
     }
   }
 
-  if (!isTwitterEnabled) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Twitter Integration Disabled</DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-4">
-            <Twitter className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">
-              Twitter integration is currently disabled. Please contact your administrator to enable
-              this feature.
-            </p>
-            <Button onClick={onClose}>Close</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
+  const handleGenerate = () => {
+    const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent
+    generateTweet({
+      content,
+      strategyType,
+      strategy,
+    })
   }
 
-  if (!user) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Authentication Required</DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-4">
-            <p className="text-gray-600 mb-4">
-              You need to be logged in to post tweets. Please sign in to continue.
-            </p>
-            <Link to="/account">
-              <Button>Go to Account</Button>
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
+  const handleRegenerate = () => {
+    const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent
+    regenerateTweet({
+      content,
+      strategyType,
+      strategy,
+    })
+  }
+
+  const handleClose = () => {
+    resetTweet()
+    onOpenChange(false)
+  }
+
+  const handlePost = () => {
+    if (canPost) {
+      // Post using API
+      postTweet.mutate(
+        {
+          text: generatedTweet,
+          contentId, // Link to existing content if provided
+          saveAsContent: true, // Always save as content for better tracking
+        },
+        {
+          onSuccess: (_data) => {
+            const message = contentId
+              ? 'Tweet posted and content updated!'
+              : 'Tweet posted and saved to notes!'
+            toast({
+              title: 'Tweet posted successfully!',
+              description: message,
+            })
+            handleClose()
+          },
+          onError: (error) => {
+            console.error('Failed to post tweet:', error)
+            toast({
+              title: 'Failed to post tweet',
+              description: 'There was an error posting your tweet. Please try again.',
+              variant: 'destructive',
+            })
+          },
+        }
+      )
+    } else {
+      // Fallback to browser intent (always available as backup)
+      const tweetText = encodeURIComponent(generatedTweet)
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`
+      window.open(twitterUrl, '_blank')
+      handleClose()
+    }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Twitter className="w-5 h-5" />
-            Post to X (Twitter)
+            <Twitter className="h-5 w-5 text-blue-500" />
+            Generate Tweet
           </DialogTitle>
+          <DialogDescription>
+            Generate a tweet from your note content using AI. Customize the content strategy, then
+            edit before posting.
+            {!isLoadingAccounts && (
+              <div className="mt-2 space-y-2">
+                {twitterIntegrationEnabled ? (
+                  <div className="flex items-center justify-between">
+                    <Badge
+                      variant={hasTwitterAccount ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {hasTwitterAccount
+                        ? '✓ X account connected - can post directly'
+                        : 'No X account connected'}
+                    </Badge>
+                    {!hasTwitterAccount && (
+                      <Link
+                        to="/account"
+                        className="text-xs text-blue-500 hover:text-blue-600 underline"
+                      >
+                        Connect account
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">
+                    ℹ️ Anyone can generate tweets - connect X account to post directly
+                  </Badge>
+                )}
+              </div>
+            )}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <Textarea
-              placeholder="What's happening?"
-              value={tweetText}
-              onChange={(e) => setTweetText(e.target.value)}
-              className="min-h-[120px] resize-none"
-              maxLength={TWEET_LIMIT}
-            />
-            <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
-              <span>
-                {tweetText.length}/{TWEET_LIMIT} characters
-              </span>
-              {isOverLimit && <span className="text-red-500">Over character limit</span>}
+          {/* Settings */}
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="strategy-type">Strategy Type</Label>
+              <Select
+                value={strategyType}
+                onValueChange={(value: StrategyType) => handleStrategyTypeChange(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select strategy type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">🎯 Default Strategies</SelectItem>
+                  <SelectItem value="custom">
+                    ⚙️ Custom Strategies{' '}
+                    {!isAuthenticated
+                      ? '(Sign in required)'
+                      : customStrategies.length > 0
+                        ? `(${customStrategies.length})`
+                        : '(0)'}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="strategy">
+                {strategyType === 'default' ? 'Content Strategy' : 'Your Content Strategy'}
+              </Label>
+              {strategyType === 'default' ? (
+                <Select value={strategy} onValueChange={(value: string) => setStrategy(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select content strategy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEFAULT_STRATEGIES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        <div className="flex flex-col">
+                          <span>{s.label}</span>
+                          <span className="text-xs text-gray-500">{s.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="space-y-2">
+                  {!isAuthenticated ? (
+                    <div className="text-center p-4 border rounded bg-blue-50 dark:bg-blue-950">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                        Sign in to use your custom content strategies
+                      </p>
+                      <Link
+                        to="/sign-in"
+                        className="text-sm text-blue-600 hover:text-blue-700 underline font-medium"
+                      >
+                        Sign in to continue
+                      </Link>
+                    </div>
+                  ) : isLoadingStrategies ? (
+                    <div className="flex items-center justify-center p-4 border rounded">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Loading strategies...
+                    </div>
+                  ) : customStrategies.length > 0 ? (
+                    <Select value={strategy} onValueChange={(value: string) => setStrategy(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your content strategy" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customStrategies.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>
+                            <div className="flex flex-col">
+                              <span>{s.title}</span>
+                              <span className="text-xs text-gray-500">
+                                {s.description || `Topic: ${s.strategy.topic}`}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-center p-4 border rounded bg-gray-50">
+                      <p className="text-sm text-gray-600 mb-2">No custom strategies found</p>
+                      <Link
+                        to="/content-strategy/create"
+                        className="text-sm text-blue-500 hover:text-blue-600 underline"
+                      >
+                        Create your first strategy
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handlePost}
-              disabled={isOverLimit || isLoading}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              {isLoading ? (
-                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+          {/* Generated Tweet */}
+          {(generatedTweet || isGenerating) && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tweet">Generated Tweet</Label>
+                <div className="flex items-center gap-2">
+                  <Badge variant={isOverLimit ? 'destructive' : 'secondary'}>
+                    {characterCount}/{TWEET_CHARACTER_LIMIT}
+                  </Badge>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRegenerate}
+                    disabled={isGenerating}
+                    className="flex items-center gap-1"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                    Regenerate
+                  </Button>
+                </div>
+              </div>
+
+              {isGenerating ? (
+                <div className="flex items-center justify-center p-8 border rounded-md">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span className="ml-2">Generating tweet...</span>
+                </div>
               ) : (
-                <Send className="h-4 w-4 mr-2" />
+                <Textarea
+                  id="tweet"
+                  value={generatedTweet}
+                  onChange={(e) => updateTweet(e.target.value)}
+                  placeholder="Your generated tweet will appear here..."
+                  className="min-h-[100px] resize-none"
+                  maxLength={TWEET_CHARACTER_LIMIT + 50} // Allow some buffer for editing
+                />
               )}
-              Post Tweet
-            </Button>
+            </div>
+          )}
+
+          {/* Note Preview */}
+          <div className="space-y-2">
+            <Label>Note Content</Label>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-md border">
+              {noteTitle && (
+                <h4 className="font-medium text-sm text-slate-900 dark:text-slate-100 mb-2">
+                  {noteTitle}
+                </h4>
+              )}
+              <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-3">
+                {noteContent}
+              </p>
+            </div>
           </div>
         </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+
+          {!generatedTweet ? (
+            <Button
+              onClick={handleGenerate}
+              disabled={
+                isGenerating ||
+                (strategyType === 'custom' &&
+                  (!isAuthenticated || !strategy || customStrategies.length === 0))
+              }
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Generating...
+                </>
+              ) : strategyType === 'custom' && !isAuthenticated ? (
+                'Sign in for Custom Strategies'
+              ) : strategyType === 'custom' && customStrategies.length === 0 ? (
+                'Create a Strategy First'
+              ) : (
+                'Generate Tweet'
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={handlePost}
+              disabled={isOverLimit || postTweet.isLoading}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {postTweet.isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Posting...
+                </>
+              ) : (
+                <>
+                  <Twitter className="h-4 w-4 mr-2" />
+                  {canPost ? 'Post to X' : 'Open in X'}
+                </>
+              )}
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

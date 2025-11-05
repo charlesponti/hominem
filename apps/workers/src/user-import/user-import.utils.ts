@@ -1,9 +1,9 @@
+import { Readable } from 'node:stream'
 import { openai } from '@ai-sdk/openai'
-import { logger } from '@hominem/utils/logger'
 import { UserSchema } from '@hominem/data/schema'
+import { logger } from '@hominem/utils/logger'
 import { generateObject } from 'ai'
 import csv from 'csv-parser'
-import { Readable } from 'node:stream'
 import type { z } from 'zod'
 
 async function processCSVRow(row: Record<string, string>): Promise<z.infer<typeof UserSchema>> {

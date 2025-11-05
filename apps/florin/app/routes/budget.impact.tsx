@@ -22,9 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import { formatCurrency } from '~/lib/number.utils'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
+import { formatCurrency } from '~/lib/number.utils'
 
 const BudgetImpactCalculator = () => {
   const oneTimeId = useId()
@@ -103,7 +103,7 @@ const BudgetImpactCalculator = () => {
     const spendingValues = validMonths.map((month) => month.Spending || 0)
     const meanSpending = averageMonthlyExpenses
     const variance =
-      spendingValues.reduce((sum, value) => sum + Math.pow(value - meanSpending, 2), 0) /
+      spendingValues.reduce((sum, value) => sum + (value - meanSpending) ** 2, 0) /
       spendingValues.length
     const spendingVolatility = Math.sqrt(variance)
 

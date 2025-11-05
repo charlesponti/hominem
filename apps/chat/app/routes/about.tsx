@@ -1,6 +1,6 @@
 import type { Route } from './+types/about'
 
-export function meta(args: Route.MetaArgs) {
+export function meta(_args: Route.MetaArgs) {
   return [{ title: 'About' }, { name: 'description', content: 'About this application' }]
 }
 

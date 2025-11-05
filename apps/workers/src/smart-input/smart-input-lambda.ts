@@ -5,8 +5,8 @@ import { logger } from '@hominem/utils/logger'
 import { generateObject } from 'ai'
 import { ZodError } from 'zod'
 import {
-  CandidatesSchema,
   type Candidates,
+  CandidatesSchema,
   type SubmissionAttachment,
 } from '../../lib/writer.schema'
 import { parseEmail, validateEmailBody } from '../services/email.service'

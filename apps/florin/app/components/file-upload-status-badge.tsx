@@ -3,7 +3,9 @@ import { cn } from '~/lib/utils'
 
 export const FileUploadStatusBadge = memo(function FileUploadStatusBadge({
   status,
-}: { status?: string }) {
+}: {
+  status?: string
+}) {
   if (!status) return null
 
   const getStatusConfig = (status: string): { bg: string; text: string; label: string } => {

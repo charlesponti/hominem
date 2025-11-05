@@ -2,8 +2,8 @@ import { CheckCircleIcon } from 'lucide-react'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { useAllInstitutions } from '~/lib/hooks/use-institutions'
-import { AccountConnectionDialog } from './account-connection-dialog'
 import type { RouterOutput } from '~/lib/trpc'
+import { AccountConnectionDialog } from './account-connection-dialog'
 
 export function ManualInstitutionStatus({
   account,

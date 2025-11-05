@@ -1,166 +1,151 @@
-import type { users } from '@hominem/data/schema'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { redis } from '@hominem/utils/redis'
-import { serve } from '@hono/node-server'
 import { trpcServer } from '@hono/trpc-server'
 import { Queue } from 'bullmq'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { secureHeaders } from 'hono/secure-headers'
+import { prettyJSON } from 'hono/pretty-json'
 import { env } from './lib/env.js'
-import { cache } from './lib/redis.js'
-import { initSentry, sentryErrorHandler, sentryMiddleware } from './lib/sentry.js'
-import { createWebSocketManager } from './lib/websocket.js'
-import { rateLimit, rateLimitIp } from './middleware/rate-limit.js'
 import { supabaseMiddleware } from './middleware/supabase.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { componentsRoutes } from './routes/components/index.js'
-import { goalsRoutes } from './routes/goals.js'
 import { healthRoutes } from './routes/health.js'
 import { invitesRoutes } from './routes/invites/index.js'
-
 import { oauthRoutes } from './routes/oauth/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
-import { statusRoutes } from './routes/status.js'
-import { appRouter } from './routes/trpc.js'
-import { userRoutes } from './routes/user/index.js'
-import { vectorRoutes } from './routes/vector.js'
+// Import route handlers
+import { statusRoutes } from './routes/status'
+// Import tRPC router
+import { appRouter } from './trpc/index.js'
+// Import finance routes
 import { financeRoutes } from './trpc/routers/finance/index.js'
 import { plaidRoutes } from './trpc/routers/finance/plaid/index.js'
 
-export interface AppEnv {
-  Bindings: Record<string, unknown>
-  Variables: {
+// Define the app environment type
+export type AppEnv = {
+  Bindings: {
     queues: {
       plaidSync: Queue
       importTransactions: Queue
     }
+  }
+  Variables: {
     userId?: string
-    user?: typeof users.$inferSelect
-    supabaseId: string
-    cache?: typeof cache
+    user?: unknown
+    supabaseId?: string
   }
 }
 
-export function createServer(): Hono<AppEnv> {
-  // Initialize Sentry
-  initSentry()
+export function createServer(): Hono<AppEnv> | null {
+  try {
+    const app = new Hono<AppEnv>()
 
-  const app = new Hono<AppEnv>()
-
-  // Set up BullMQ queues using consistent queue names from utils/consts
-  const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
-  const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
-    connection: redis,
-  })
-
-  // Add queues and cache to app context
-  app.use('*', async (c, next) => {
-    c.set('queues', {
-      plaidSync: plaidSyncQueue,
-      importTransactions: importTransactionsQueue,
+    // Set up BullMQ queues using consistent queue names.
+    const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: redis })
+    const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
+      connection: redis,
     })
-    c.set('cache', cache)
-    await next()
-  })
 
-  // Set up global error handler
-  app.onError((err, c) => {
-    console.error('Global error handler:', err)
-    sentryErrorHandler(err, c)
-    return c.json({ error: err.message || 'Internal Server Error' }, 500)
-  })
-
-  // Global middleware
-  app.use('*', logger())
-  app.use('*', secureHeaders())
-  app.use('*', sentryMiddleware())
-  app.use('*', supabaseMiddleware())
-  app.use('*', rateLimit)
-  app.use('*', rateLimitIp)
-
-  app.use(
-    '*',
-    cors({
-      origin: [env.FLORIN_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
-      credentials: true,
-      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Authorization'],
+    // Add queues to the app context
+    app.use('*', async (c, next) => {
+      c.set('queues', {
+        plaidSync: plaidSyncQueue,
+        importTransactions: importTransactionsQueue,
+      })
+      await next()
     })
-  )
 
-  app.route('/api/health', healthRoutes)
-  app.route('/api/status', statusRoutes)
-  app.route('/api/components', componentsRoutes)
-  app.route('/components', componentsRoutes)
-  app.route('/api/finance/plaid', plaidRoutes)
-  app.route('/api/finance', financeRoutes)
+    // Logger middleware
+    app.use('*', logger())
 
-  app.route('/api/possessions', possessionsRoutes)
-  app.route('/api/vectors', vectorRoutes)
-  app.route('/api/invites', invitesRoutes)
-  app.route('/api/user', userRoutes)
-  app.route('/api/ai', aiRoutes)
-  app.route('/api/oauth', oauthRoutes)
-  app.route('/api/goals', goalsRoutes)
+    // Pretty JSON middleware
+    app.use('*', prettyJSON())
 
-  app.use(
-    '/trpc/*',
-    trpcServer({
-      router: appRouter,
-      createContext: (_opts, c) => {
-        return {
-          req: c.req,
-          queues: c.get('queues'),
-          user: c.get('user'),
-          userId: c.get('userId'),
-        }
-      },
-      onError: ({ error, path, input }) => {
-        console.error(`tRPC error on path ${path}:`, {
-          error,
-          input,
-        })
-      },
+    // CORS middleware
+    app.use(
+      '*',
+      cors({
+        origin: [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL],
+        credentials: true,
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      })
+    )
+
+    // Authentication middleware
+    app.use('*', supabaseMiddleware())
+
+    // Register tRPC routes
+    app.use(
+      '/trpc/*',
+      trpcServer({
+        router: appRouter,
+        createContext: (opts, c) => {
+          const request = opts.req
+
+          return {
+            req: {
+              header: (name: string) => {
+                return request.headers.get(name) || ''
+              },
+            },
+            queues: {
+              plaidSync: plaidSyncQueue,
+              importTransactions: importTransactionsQueue,
+            },
+            user: c.get('user'),
+            userId: c.get('userId'),
+            supabaseId: c.get('supabaseId') || '',
+          }
+        },
+      })
+    )
+
+    // Register route handlers
+    app.route('/api/status', statusRoutes)
+    app.route('/api/health', healthRoutes)
+    app.route('/api/ai', aiRoutes)
+    app.route('/api/oauth', oauthRoutes)
+    app.route('/api/possessions', possessionsRoutes)
+    app.route('/api/invites', invitesRoutes)
+    app.route('/components', componentsRoutes)
+    app.route('/api/finance', financeRoutes)
+    app.route('/api/finance/plaid', plaidRoutes)
+
+    // Root health check
+    app.get('/', (c) => {
+      return c.json({
+        status: 'ok',
+        serverTime: new Date().toISOString(),
+        uptime: process.uptime(),
+      })
     })
-  )
 
-  return app
+    return app
+  } catch (error) {
+    console.error('Failed to create server:', error)
+    return null
+  }
 }
 
 export async function startServer() {
   const app = createServer()
-
-  const port = Number.parseInt(env.PORT, 10)
-  const server = serve({
-    fetch: app.fetch,
-    port,
-    hostname: '0.0.0.0',
-  })
-
-  // Create WebSocket manager
-  const wsManager = createWebSocketManager()
-
-  // Handle WebSocket upgrade requests
-  server.on('upgrade', wsManager.handleUpgrade)
-
-  console.info(`Server is running on port ${port}`)
-
-  // Handle graceful shutdown
-  const gracefulShutdown = async () => {
-    console.info('Shutting down gracefully...')
-    // Close WebSocket connections
-    await wsManager.close()
-    // Close cache
-    await cache.quit()
-    // Close server
-    server.close()
-    process.exit(0)
+  if (!app) {
+    console.error('Failed to create server')
+    process.exit(1)
   }
 
-  process.on('SIGTERM', gracefulShutdown)
-  process.on('SIGINT', gracefulShutdown)
+  try {
+    const { serve } = await import('@hono/node-server')
+    const port = Number.parseInt(env.PORT, 10)
 
-  return server
+    serve({
+      fetch: app.fetch,
+      port,
+      hostname: '0.0.0.0',
+    })
+  } catch (err) {
+    console.error('Failed to start server:', err)
+    process.exit(1)
+  }
 }

@@ -38,4 +38,3 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
     priceLevel: null,
   }
 }
-

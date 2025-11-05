@@ -18,7 +18,7 @@ describe('Place', () => {
 
   test('renders place details', async () => {
     // Mock place query
-    vi.mocked(mockTrpcClient.places.getById.useQuery).mockReturnValue({
+    mockTrpcClient.places.getById.useQuery.mockReturnValue({
       data: MOCK_PLACE,
       isLoading: false,
       error: null,
@@ -41,7 +41,7 @@ describe('Place', () => {
 
   test('shows loading state', async () => {
     // Mock place query with loading state
-    vi.mocked(mockTrpcClient.places.getById.useQuery).mockReturnValue({
+    mockTrpcClient.places.getById.useQuery.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
@@ -64,7 +64,7 @@ describe('Place', () => {
 
   test('shows error state', async () => {
     // Mock place query with error
-    vi.mocked(mockTrpcClient.places.getById.useQuery).mockReturnValue({
+    mockTrpcClient.places.getById.useQuery.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: { message: 'Place not found' },

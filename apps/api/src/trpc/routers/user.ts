@@ -2,7 +2,7 @@ import { db, UserAuthService } from '@hominem/data'
 import { users } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index.js'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const userRouter = router({
   // Get current user profile

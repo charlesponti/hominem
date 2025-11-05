@@ -7,10 +7,7 @@ import { Card, CardContent } from '~/components/ui/card'
 import { Loading } from '~/components/ui/loading'
 import { PageContainer } from '~/components/ui/page-container'
 import { useToast } from '~/components/ui/use-toast'
-import {
-    useContentStrategies,
-    useDeleteContentStrategy,
-} from '~/hooks/use-content-strategies'
+import { useContentStrategies, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
 
 export default function SavedContentStrategiesPage() {
   const { toast } = useToast()
@@ -76,9 +73,7 @@ export default function SavedContentStrategiesPage() {
               <Card key={strategy.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-semibold text-lg line-clamp-2">
-                      {strategy.title}
-                    </h3>
+                    <h3 className="font-semibold text-lg line-clamp-2">{strategy.title}</h3>
                     <div className="flex items-center gap-2">
                       <Link to={`/content-strategy/view/${strategy.id}`}>
                         <Button variant="ghost" size="icon">
@@ -100,12 +95,8 @@ export default function SavedContentStrategiesPage() {
                     {strategy.description}
                   </p>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      Created {new Date(strategy.createdAt).toLocaleDateString()}
-                    </span>
-                    <span>
-                      {strategy.strategy.platforms?.length || 0} platforms
-                    </span>
+                    <span>Created {new Date(strategy.createdAt).toLocaleDateString()}</span>
+                    <span>{strategy.strategy.platforms?.length || 0} platforms</span>
                   </div>
                 </CardContent>
               </Card>

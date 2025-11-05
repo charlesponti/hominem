@@ -71,10 +71,10 @@ export class MessageService {
         .set({ updatedAt: new Date().toISOString() })
         .where(eq(chat.id, params.chatId))
 
-      logger.info('Message added', { messageId, chatId: params.chatId })
+      logger.info(`Message added: ${messageId} to chat ${params.chatId}`)
       return newMessage
     } catch (error) {
-      logger.error('Failed to add message:', error)
+      logger.error(`Failed to add message: ${error}`)
       throw new ChatError('DATABASE_ERROR', 'Failed to add message to conversation')
     }
   }
@@ -97,7 +97,7 @@ export class MessageService {
 
       return await query
     } catch (error) {
-      logger.error('Failed to get chat messages:', error)
+      logger.error(`Failed to get chat messages: ${error}`)
       return []
     }
   }
@@ -113,7 +113,7 @@ export class MessageService {
 
       return message || null
     } catch (error) {
-      logger.error('Failed to get message by ID:', error)
+      logger.error(`Failed to get message by ID: ${error}`)
       return null
     }
   }
@@ -132,10 +132,10 @@ export class MessageService {
         .where(eq(chatMessage.id, messageId))
         .returning()
 
-      logger.info('Message updated', { messageId, contentLength: content.length })
+      logger.info(`Message updated: ${messageId} (${content.length} chars)`)
       return updatedMessage || null
     } catch (error) {
-      logger.error('Failed to update message:', error)
+      logger.error(`Failed to update message: ${error}`)
       return null
     }
   }
@@ -149,10 +149,10 @@ export class MessageService {
 
       await db.delete(chatMessage).where(whereClause)
 
-      logger.info('Message deleted', { messageId: messageId })
+      logger.info(`Message deleted: ${messageId}`)
       return true
     } catch (error) {
-      logger.error('Failed to delete message:', error)
+      logger.error(`Failed to delete message: ${error}`)
       return false
     }
   }

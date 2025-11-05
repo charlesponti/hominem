@@ -1,6 +1,6 @@
-import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { db } from '@hominem/data'
 import { plaidItems } from '@hominem/data/schema'
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'

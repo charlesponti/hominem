@@ -31,15 +31,13 @@ FROM base AS builder
 WORKDIR /app
 
 # Install build tools
-RUN npm install -g pnpm turbo esbuild
+RUN npm install -g bun turbo esbuild
 
 # Copy the pruned lockfile and package.json files
 COPY --from=pruner /app/out/json/ .
-COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=pruner /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # Install all dependencies (including dev deps for building)
-RUN pnpm install --frozen-lockfile --prod=false
+RUN bun install
 
 # Copy the pruned source code
 COPY --from=pruner /app/out/full/ .
@@ -74,11 +72,10 @@ RUN mkdir -p /app/logs && \
 
 # Copy pruned package files needed for production
 COPY --from=pruner /app/out/json/ .
-COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install production dependencies only
-RUN npm install -g pnpm && \
-  pnpm install --frozen-lockfile --prod=true
+RUN npm install -g bun && \
+  bun install --production
 
 # Copy built artifacts
 COPY --from=builder /app/apps/api/dist ./apps/api/dist

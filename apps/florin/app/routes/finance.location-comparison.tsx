@@ -2,6 +2,7 @@
 
 import type { SyncableEntity } from '@hominem/ui'
 import { useLocalData } from '@hominem/ui'
+import { calculateTakeHome, type StateTaxCode, stateTaxRates } from '@hominem/utils/finance-utils'
 import { Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -17,9 +18,7 @@ import {
 } from '~/components/ui/select'
 import { Slider } from '~/components/ui/slider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { calculateTakeHome, stateTaxRates, type StateTaxCode } from '@hominem/utils/finance-utils'
-import { formatCurrency } from '~/lib/number.utils'
-import { formatPercent } from '~/lib/number.utils'
+import { formatCurrency, formatPercent } from '~/lib/number.utils'
 
 const LocationTaxComparison = () => {
   const [income, setIncome] = useState(100000)

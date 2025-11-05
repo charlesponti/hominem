@@ -1,9 +1,9 @@
-import chalk from 'chalk'
-import { Command } from 'commander'
-import { consola } from 'consola'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import chalk from 'chalk'
+import { Command } from 'commander'
+import { consola } from 'consola'
 import ora from 'ora'
 
 export const command = new Command('playwright')
@@ -22,7 +22,7 @@ export const command = new Command('playwright')
       process.exit(1)
     }
 
-    let args = ['test']
+    const args = ['test']
 
     if (options.file) {
       const filePath = join(scrapeDir, options.file)

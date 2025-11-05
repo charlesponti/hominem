@@ -30,7 +30,7 @@ describe('List', () => {
 
     beforeEach(() => {
       // Mock list query
-      vi.mocked(mockTrpcClient.lists.getById.useQuery).mockReturnValue({
+      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
         data: list,
         isLoading: false,
         error: null,
@@ -70,7 +70,7 @@ describe('List', () => {
 
     beforeEach(() => {
       // Mock list query
-      vi.mocked(mockTrpcClient.lists.getById.useQuery).mockReturnValue({
+      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
         data: list,
         isLoading: false,
         error: null,
@@ -82,7 +82,7 @@ describe('List', () => {
         isLoading: false,
         error: null,
       }
-      vi.mocked(mockTrpcClient.lists.update.useMutation).mockReturnValue(mockUpdateMutation)
+      mockTrpcClient.lists.update.useMutation.mockReturnValue(mockUpdateMutation)
     })
 
     test('should display list menu for own list', async () => {
@@ -110,7 +110,7 @@ describe('List', () => {
       }
 
       // Mock list query with other user's list
-      vi.mocked(mockTrpcClient.lists.getById.useQuery).mockReturnValue({
+      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
         data: otherList,
         isLoading: false,
         error: null,
@@ -158,7 +158,7 @@ describe('List', () => {
         isLoading: false,
         error: null,
       }
-      vi.mocked(mockTrpcClient.lists.update.useMutation).mockReturnValue(mockUpdateMutation)
+      mockTrpcClient.lists.update.useMutation.mockReturnValue(mockUpdateMutation)
 
       renderWithRouter({
         isAuth: true,
@@ -183,7 +183,7 @@ describe('List', () => {
         isLoading: false,
         error: { message: 'Failed to update list' },
       }
-      vi.mocked(mockTrpcClient.lists.update.useMutation).mockReturnValue(mockUpdateMutation)
+      mockTrpcClient.lists.update.useMutation.mockReturnValue(mockUpdateMutation)
 
       renderWithRouter({
         isAuth: true,

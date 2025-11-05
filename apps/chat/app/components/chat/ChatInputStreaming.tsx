@@ -27,13 +27,13 @@ export function ChatInputStreaming({ chatId, onStatusChange }: ChatInputStreamin
   // Get userId from root loader data
   const matches = useMatches()
   const rootData = matches.find((match) => match.id === 'root')?.data as
-    | { supabaseUserId: string | null }
+    | { supabaseId: string | null }
     | undefined
-  const userId = rootData?.supabaseUserId || undefined
+  const userId = rootData?.supabaseId || undefined
 
   const sendMessage = useSendMessage({ chatId, userId })
   const sendMessageStreaming = useSendMessageStreaming({ chatId, userId })
-  const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload()
+  const { uploadState, clearAll } = useFileUpload()
 
   // Use the appropriate mutation based on streaming preference
   const activeMutation = useStreaming ? sendMessageStreaming : sendMessage
@@ -99,13 +99,13 @@ export function ChatInputStreaming({ chatId, onStatusChange }: ChatInputStreamin
     setShowAudioRecorder(true)
   }, [])
 
-  const handleFilesUploaded = useCallback((files: any[]) => {
+  const handleFilesUploaded = useCallback((_files: any[]) => {
     // Files are already uploaded by the FileUploader component
     // The useFileUpload hook manages the state internally
   }, [])
 
   const handleAudioRecorded = useCallback(
-    async (audioBlob: Blob, transcript?: string) => {
+    async (_audioBlob: Blob, transcript?: string) => {
       setShowAudioRecorder(false)
 
       if (transcript?.trim()) {

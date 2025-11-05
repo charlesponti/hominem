@@ -1,10 +1,9 @@
-import type { ActionFunctionArgs } from 'react-router'
-import { createSupabaseServerClient } from '~/lib/supabase/server.js'
-import type { FailedUpload, UploadResponse, UploadedFile } from '~/lib/types/upload.js'
-import { jsonResponse } from '~/lib/utils/json-response'
-
 // Import the services from the API app
 import { fileStorageService } from '@hominem/utils/supabase'
+import type { ActionFunctionArgs } from 'react-router'
+import { createSupabaseServerClient } from '~/lib/supabase/server.js'
+import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upload.js'
+import { jsonResponse } from '~/lib/utils/json-response'
 import { FileProcessorService } from '../../../../apps/api/src/services/file-processor.service.js'
 import { indexProcessedFile } from '../../../../apps/api/src/services/vector-file-integration.service.js'
 

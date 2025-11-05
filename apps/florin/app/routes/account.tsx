@@ -15,20 +15,17 @@ import {
 import { Button, buttonVariants } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { toast } from '~/components/ui/use-toast'
-import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
-import { trpc } from '~/lib/trpc'
+import { useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 
 export default function AccountPage() {
   const { signOut } = useAuth()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
-  const { accountsMap } = useFinanceAccountsWithMap()
-  const { transactions } = useFinanceTransactions({
-    limit: 25,
-  })
+  const { accountsMap } = useFinanceAccounts()
+  const { transactions } = useFinanceTransactions()
 
-  const handleLogout = async () => {
+  const _handleLogout = async () => {
     try {
       await signOut()
     } catch (error) {
@@ -48,7 +45,7 @@ export default function AccountPage() {
     const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account']
     const csvRows = [
       headers.join(','),
-      ...transactions.map((tx) => {
+      ...transactions.map((tx: FinanceTransaction) => {
         const account = accountsMap.get(tx.accountId)
         return [
           tx.date,
@@ -77,7 +74,8 @@ export default function AccountPage() {
     })
   }
 
-  const deleteAllFinanceData = trpc.finance.data.deleteAll.useMutation({
+  const deleteAllFinanceData = useMutation<void, Error, void>({
+    mutationFn: async () => api.delete('/api/finance'),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['finance'] }) // Invalidate all finance related queries
       toast({
@@ -86,7 +84,7 @@ export default function AccountPage() {
       })
       setShowConfirmDelete(false)
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error deleting finance data:', error)
       toast({
         title: 'Error',
@@ -162,10 +160,10 @@ export default function AccountPage() {
               <Button
                 variant="destructive"
                 onClick={() => setShowConfirmDelete(true)}
-                disabled={deleteAllFinanceData.isPending}
+                disabled={deleteAllFinanceData.isLoading}
                 className="mt-2 sm:mt-0"
               >
-                {deleteAllFinanceData.isPending ? 'Deleting...' : 'Delete All Data'}
+                {deleteAllFinanceData.isLoading ? 'Deleting...' : 'Delete All Data'}
               </Button>
             </div>
           </CardContent>
@@ -182,7 +180,7 @@ export default function AccountPage() {
                 <h3 className="font-medium">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">End your current session.</p>
               </div>
-              <Button variant="outline" onClick={handleLogout}>
+              <Button variant="outline" onClick={() => logout()}>
                 Sign Out
               </Button>
             </div>
@@ -200,13 +198,13 @@ export default function AccountPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteAllFinanceData.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteAllFinanceData.isLoading}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteAllFinanceData.mutate()}
-              disabled={deleteAllFinanceData.isPending}
+              disabled={deleteAllFinanceData.isLoading}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {deleteAllFinanceData.isPending ? 'Deleting...' : 'Yes, delete all data'}
+              {deleteAllFinanceData.isLoading ? 'Deleting...' : 'Yes, delete all data'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

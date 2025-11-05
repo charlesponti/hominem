@@ -82,7 +82,7 @@ export function useKeyboardNavigation({
     ) as HTMLElement[]
 
     const currentFocus = document.activeElement
-    let currentIndex = interactiveElements.findIndex((el) => el === currentFocus)
+    let currentIndex = interactiveElements.indexOf(currentFocus)
 
     if (currentIndex === -1) {
       currentIndex = direction === 'next' ? -1 : interactiveElements.length
@@ -144,7 +144,7 @@ export function useKeyboardNavigation({
       // Number keys 1-9 for copying specific sections (Cmd/Ctrl + number)
       if (event.key >= '1' && event.key <= '9' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
-        const sectionIndex = Number.parseInt(event.key) - 1
+        const sectionIndex = Number.parseInt(event.key, 10) - 1
         if (sections[sectionIndex]) {
           onCopySection?.(sections[sectionIndex])
         }
@@ -168,7 +168,7 @@ export function useKeyboardNavigation({
         if (copyButtons.length === 0) return
 
         const currentFocus = document.activeElement
-        let currentIndex = copyButtons.findIndex((button) => button === currentFocus)
+        let currentIndex = copyButtons.indexOf(currentFocus)
 
         if (currentIndex === -1) {
           currentIndex = event.key === 'ArrowDown' ? -1 : copyButtons.length

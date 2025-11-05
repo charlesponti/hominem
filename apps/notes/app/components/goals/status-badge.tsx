@@ -7,7 +7,7 @@ interface StatusBadgeProps {
 export function StatusBadge({ status }: StatusBadgeProps) {
   // Cast the status to GoalStatus since we know it should be one of the valid values
   const goalStatus = status as GoalStatus
-  
+
   return (
     <span
       className={`px-2 py-1 rounded ${

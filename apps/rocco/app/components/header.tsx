@@ -24,6 +24,78 @@ const ACCOUNT = '/account'
 const INVITES = '/invites'
 const APP_NAME = 'rocco'
 
+interface NavigationMenuProps {
+  onLogoutClick: () => void
+}
+
+const NavigationMenu = ({ onLogoutClick }: NavigationMenuProps) => (
+  <DropdownMenu modal={false}>
+    <DropdownMenuTrigger asChild>
+      <Button
+        variant="outline"
+        className="cursor-pointer px-4 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 rounded-2xl"
+      >
+        <span className="flex items-center space-x-4">
+          <UserIcon className="size-4" />
+          <MenuIcon className="size-4" />
+        </span>
+        <span className="sr-only">Toggle navigation menu</span>
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent
+      className="w-56"
+      align="end"
+      sideOffset={8}
+      avoidCollisions={true}
+      side="bottom"
+    >
+      <DropdownMenuItem asChild className="cursor-pointer">
+        <Link to="/explore" className="flex items-center space-x-2">
+          <Globe2Icon className="size-4" />
+          <span>Explore</span>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild className="cursor-pointer">
+        <Link to="/about" className="flex items-center space-x-2">
+          <Info className="size-4" />
+          <span>About</span>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild className="cursor-pointer">
+        <Link to="/trips" className="flex items-center space-x-2">
+          <MapPin className="size-4" />
+          <span>Trips</span>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild className="cursor-pointer">
+        <Link to="/lists" className="flex items-center space-x-2">
+          <List className="size-4" />
+          <span>Lists</span>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild className="cursor-pointer">
+        <Link to={INVITES} className="flex items-center space-x-2">
+          <UserPlus className="size-4" />
+          <span>Invites</span>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild className="cursor-pointer">
+        <Link to={ACCOUNT} className="flex items-center space-x-2">
+          <Settings className="size-4" />
+          <span>Account</span>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="cursor-pointer flex items-center space-x-2"
+        onClick={onLogoutClick}
+      >
+        <LogOut className="size-4" />
+        <span>Log out</span>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+)
+
 function Header() {
   const navigate = useNavigate()
   const supabase = createClient()
@@ -51,74 +123,6 @@ function Header() {
     navigate('/')
   }, [supabase.auth, navigate])
 
-  const NavigationMenu = () => (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="cursor-pointer px-4 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 rounded-2xl"
-        >
-          <span className="flex items-center space-x-4">
-            <UserIcon className="size-4" />
-            <MenuIcon className="size-4" />
-          </span>
-          <span className="sr-only">Toggle navigation menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-56"
-        align="end"
-        sideOffset={8}
-        avoidCollisions={true}
-        side="bottom"
-      >
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link to="/explore" className="flex items-center space-x-2">
-            <Globe2Icon className="size-4" />
-            <span>Explore</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link to="/about" className="flex items-center space-x-2">
-            <Info className="size-4" />
-            <span>About</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link to="/trips" className="flex items-center space-x-2">
-            <MapPin className="size-4" />
-            <span>Trips</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link to="/lists" className="flex items-center space-x-2">
-            <List className="size-4" />
-            <span>Lists</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link to={INVITES} className="flex items-center space-x-2">
-            <UserPlus className="size-4" />
-            <span>Invites</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link to={ACCOUNT} className="flex items-center space-x-2">
-            <Settings className="size-4" />
-            <span>Account</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="cursor-pointer flex items-center space-x-2"
-          onClick={onLogoutClick}
-        >
-          <LogOut className="size-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-
   return (
     <header
       className="fixed top-0 left-0 z-50 w-full shadow-sm bg-white"
@@ -131,7 +135,7 @@ function Header() {
         </Link>
         <div className="flex items-center space-x-2">
           {isAuthenticated ? (
-            <NavigationMenu />
+            <NavigationMenu onLogoutClick={onLogoutClick} />
           ) : (
             <div className="flex items-center space-x-4">
               <Link to="/about" className="text-gray-600 hover:text-gray-900">

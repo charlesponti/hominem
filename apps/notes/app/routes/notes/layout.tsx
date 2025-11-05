@@ -1,18 +1,16 @@
 import { Navigate, Outlet } from 'react-router'
-import { Loading } from '~/components/ui/loading'
-import { useUser } from '~/lib/hooks/use-user'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function NotesLayout() {
-  const { user, isLoading, isAuthenticated } = useUser()
+  const { userId, isLoading } = useSupabaseAuth()
 
-  // Show loading state while checking auth
+  // Show loading while Supabase is loading
   if (isLoading) {
-    return <Loading text="Loading..." fullScreen />
+    return <div>Loading...</div>
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />
+  if (!userId) {
+    return <Navigate to="/auth/signin" replace />
   }
 
   return (

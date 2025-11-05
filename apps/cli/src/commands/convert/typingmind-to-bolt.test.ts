@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { z } from 'zod'
 import { readFileSyncMock, writeFileSyncMock } from '../../../vitest.setup.js'
 import { typingMindBase, validTypingMindInput } from '../__tests__/typingmind.mock.js'
-import { command } from './typingmind-to-bolt.js'
-
-const PATH = '../convert/typingmind-to-bolt'
+import { command, getCustomModelId, guessProvider } from './typingmind-to-bolt.js'
 
 describe('convert-typingmind-to-bolt command', () => {
   beforeEach(() => {
@@ -111,9 +109,7 @@ describe('helper functions', () => {
       ['unknown-model', 'Unknown'],
       ['', 'Unknown'],
     ])('should correctly identify provider for %s', async (model, expected) => {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      const impo = (await vi.importActual(PATH)) as any
-      expect(impo.guessProvider(model)).toBe(expected)
+      expect(guessProvider(model)).toBe(expected)
     })
   })
 
@@ -125,9 +121,7 @@ describe('helper functions', () => {
       ['unknown-model', 0],
       ['', 0],
     ])('should return correct custom model ID for %s', async (model, expected) => {
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      const impo = (await vi.importActual(PATH)) as any
-      expect(impo.getCustomModelId(model)).toBe(expected)
+      expect(getCustomModelId(model)).toBe(expected)
     })
   })
 })

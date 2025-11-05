@@ -8,23 +8,14 @@
     "rootDir": "./src",
     "module": "ES2022",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
   "references": [
     {
       "path": "../ai"
-    },
+    }
   ],
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.json"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts"
-  ]
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

@@ -1,6 +1,6 @@
+import type { ChatFileAttachment } from '~/lib/types/chat.js'
 import { AttachmentsPreview } from './AttachmentsPreview.js'
 import { SearchContextPreview } from './SearchContextPreview.js'
-import type { ChatFileAttachment } from '~/lib/types/chat.js'
 
 interface ChatAttachmentsProps {
   attachedFiles: ChatFileAttachment[]

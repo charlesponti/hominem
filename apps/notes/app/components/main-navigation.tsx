@@ -1,4 +1,4 @@
-import { Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
+import { Bot, Calendar, Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useUser } from '~/lib/hooks/use-user'
@@ -7,13 +7,22 @@ import { Button } from './ui/button'
 
 const navItems = [
   {
-    title: 'Notes',
+    title: 'Animus',
     url: '/notes',
+  },
+  {
+    title: 'AI Assistant',
+    icon: Bot,
+    url: '/chat',
   },
   {
     title: 'Content Strategy',
     icon: Lightbulb,
     url: '/content-strategy',
+  },
+  {
+    title: 'Life Events',
+    url: '/life-events',
   },
   {
     title: 'Goals',
@@ -22,6 +31,11 @@ const navItems = [
   {
     title: 'Habits',
     url: '/habits',
+  },
+  {
+    title: 'Calendar',
+    icon: Calendar,
+    url: '/calendar',
   },
 ]
 
@@ -84,7 +98,7 @@ export function MainNavigation() {
   }, [menuOpen])
 
   // Close the menu when navigating to a new page
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: closeMenu is stable and only need to react to pathname changes
   useEffect(() => {
     closeMenu()
   }, [pathname])
@@ -137,7 +151,7 @@ export function MainNavigation() {
               <span className="bg-purple-500 p-2 rounded-md">
                 <Sparkles className="size-4 text-white" />
               </span>
-              <span className="font-bold text-lg">Sage</span>
+              <span className="font-bold text-lg">Animus</span>
             </Link>
           </div>
 
@@ -187,7 +201,7 @@ export function MainNavigation() {
             <span className="bg-purple-500 p-2 rounded-md">
               <Sparkles className="size-4 text-white" />
             </span>
-            <span className="font-bold text-lg">Sage</span>
+            <span className="font-bold text-lg">Animus</span>
           </Link>
 
           {/* Right Side */}

@@ -1,36 +1,16 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { redis } from '@hominem/utils/redis'
 import { Command } from 'commander'
 import { consola } from 'consola'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
 import ora from 'ora'
-import { chromium, type Browser, type Page } from 'playwright-chromium'
+import { type Browser, chromium, type Page } from 'playwright-chromium'
 
 export const command = new Command('smgrowers').description(
   'Commands for interacting with SM Growers website'
 )
 
 export default command
-
-interface PlantInfo {
-  name: string
-  scientificName: string
-  category?: string
-  family?: string
-  origin?: string
-  flowerColor?: string
-  bloomtime?: string
-  synonyms?: string
-  height?: string
-  width?: string
-  exposure?: string
-  seaside?: string
-  irrigation?: string
-  winterHardiness?: string
-  poisonous?: string
-  description?: string
-  url: string
-}
 
 interface PlantLink {
   name: string
@@ -99,11 +79,11 @@ async function main() {
 
         // Extract plant information
         const plantHtml = await page.evaluate(
-          ({ name, url }) => {
+          ({ name }) => {
             const table = document.querySelector("td[width='100%'][valign='top']")
             return table?.outerHTML || `<div>Could not find table for ${name}</div>`
           },
-          { name: plant.name, url: plant.url }
+          { name: plant.name }
         )
 
         // Save the HTML to a file

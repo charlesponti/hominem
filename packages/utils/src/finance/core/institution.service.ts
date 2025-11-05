@@ -1,6 +1,6 @@
-import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@hominem/data/db'
 import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/data/schema'
+import { and, eq, sql } from 'drizzle-orm'
 import { logger } from '../../logger'
 
 export interface InstitutionConnection {

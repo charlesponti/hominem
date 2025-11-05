@@ -1,10 +1,7 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { useCallback, useMemo, useState } from 'react'
+import { supabase } from './use-supabase-auth'
 
-type ApiClientConfig = {
-  apiUrl?: string
-  supabaseClient: SupabaseClient
-}
+const API_URL = import.meta.env.VITE_PUBLIC_API_URL
 
 type FetchOptions<T> = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -19,39 +16,40 @@ type ApiState = {
 }
 
 /**
- * React hook for API client that handles fetch requests with Supabase authentication
+ * React hook for API client that handles fetch requests with authentication
  */
-export function useApiClient(config: ApiClientConfig) {
+export function useApiClient() {
   const [state, setState] = useState<ApiState>({
     isLoading: false,
     error: null,
   })
 
-  const apiUrl = config.apiUrl
-  const supabase = config.supabaseClient
-
+  /**
+   * Base fetch function with authentication
+   */
   const fetchApi = useCallback(
     async <T, S>(endpoint: string, options: FetchOptions<T> = {}): Promise<S> => {
       const { method = 'GET', body, headers = {}, stream = false } = options
       setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
       try {
+        // Default headers
         const defaultHeaders: Record<string, string> = {}
 
+        // Only set Content-Type for non-FormData requests
         if (!(body instanceof FormData)) {
           defaultHeaders['Content-Type'] = 'application/json'
         }
 
-        if (supabase) {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession()
-          if (session?.access_token) {
-            defaultHeaders.Authorization = `Bearer ${session.access_token}`
-          }
+        // Get token from Supabase
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (session?.access_token) {
+          defaultHeaders.Authorization = `Bearer ${session.access_token}`
         }
 
-        const res = await fetch(`${apiUrl}${endpoint}`, {
+        const res = await fetch(`${API_URL}${endpoint}`, {
           method,
           headers: {
             ...defaultHeaders,
@@ -63,10 +61,7 @@ export function useApiClient(config: ApiClientConfig) {
 
         if (!res.ok) {
           const error = await res.json().catch(() => ({}))
-          const errorMessage = error.message || `HTTP ${res.status}: ${res.statusText}`
-          const errorWithStatus = new Error(errorMessage)
-          ;(errorWithStatus as Error & { status: number }).status = res.status
-          throw errorWithStatus
+          throw new Error(error.message || 'An error occurred')
         }
 
         if (stream) {
@@ -86,9 +81,12 @@ export function useApiClient(config: ApiClientConfig) {
         throw error
       }
     },
-    [apiUrl, supabase]
+    []
   )
 
+  /**
+   * API client methods for common operations - memoized to prevent infinite re-renders
+   */
   const api = useMemo(
     () => ({
       get: <body, returnType>(
@@ -116,6 +114,7 @@ export function useApiClient(config: ApiClientConfig) {
         fetchApi<T, S>(endpoint, { ...options, method: 'PUT', body: data }),
 
       delete: <T, S>(endpoint: string, options?: Omit<FetchOptions<T>, 'method'>) =>
+        // We add body because `fetchApi` use `application/json` as default content type
         fetchApi<T, S>(endpoint, { ...options, method: 'DELETE', body: {} as T }),
     }),
     [fetchApi]

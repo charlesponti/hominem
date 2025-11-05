@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 
 export interface SearchResult {
   title: string

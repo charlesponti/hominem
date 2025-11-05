@@ -10,7 +10,7 @@ export default defineConfig({
     ...devices['Desktop Chrome'],
   },
   webServer: {
-    command: 'pnpm dev',
+    command: 'bun dev',
     port: 3000,
     reuseExistingServer: !process.env.CI,
   },

@@ -1,7 +1,7 @@
-import { getBrowser, getContext } from '@hominem/utils/scraping'
-import { consola } from 'consola'
 import * as fs from 'node:fs'
 import path from 'node:path'
+import { getBrowser, getContext } from '@hominem/utils/scraping'
+import { consola } from 'consola'
 import ora from 'ora'
 
 async function scrapeUniqlo() {

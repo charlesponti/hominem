@@ -1,11 +1,14 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    ".env.local",
-    "**/.env.*local"
-  ],
+  "globalDependencies": [".env.local", "**/.env.*local"],
   "globalEnv": [
     "APP_URL",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_ANON_KEY",
+    "COOKIE_NAME",
+    "COOKIE_SALT",
     "COOKIE_SECRET",
     "DATABASE_URL",
     "GITHUB_TOKEN",
@@ -15,28 +18,12 @@
     "OPENAI_API_KEY",
     "OPENAI_ORG_ID",
     "REDIS_URL",
-    "SENDGRID_API_KEY",
-    "SUPABASE_URL",
-    "SUPABASE_ANON_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "VITE_SUPABASE_URL",
-    "VITE_SUPABASE_ANON_KEY"
+    "SENDGRID_API_KEY"
   ],
   "tasks": {
     "build": {
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "build/**",
-        "dist/**",
-        "*.tsbuildinfo"
-      ],
-      "dependsOn": [
-        "^build"
-      ]
-    },
-    "typecheck": {
-      "outputs": []
+      "outputs": [".next/**", "!.next/cache/**", "build/**", "dist/**", "*.tsbuildinfo"],
+      "dependsOn": ["^build"]
     },
     "lint": {
       "outputs": []
@@ -47,9 +34,7 @@
     },
     "test": {
       "dependsOn": [],
-      "outputs": [
-        "coverage/**"
-      ]
+      "outputs": ["coverage/**"]
     },
     "format": {
       "outputs": []
@@ -58,9 +43,7 @@
       "cache": false
     },
     "start": {
-      "dependsOn": [
-        "build"
-      ]
+      "dependsOn": ["build"]
     },
     "clean": {
       "cache": false

@@ -101,7 +101,7 @@
   "scripts": {
     "lint": "biome lint ./src --fix",
     "test": "vitest run --passWithNoTests",
-    "build": "pnpm exec node esbuild.config.js",
+    "build": "node esbuild.config.js",
     "test:watch": "vitest",
     "format": "biome format ./src --fix",
     "clean": "rm -rf build tsconfig.tsbuildinfo"
@@ -119,7 +119,7 @@
     "csvtojson": "^2.0.10",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "0.44.7",
     "drizzle-zod": "^0.7.0",
     "effect": "^3.16.10",
     "esbuild": "^0.21.5",

@@ -1,6 +1,20 @@
 // Example: Migrating Florin app to unified auth
 // This shows the before/after for key files
 
+import {
+  AuthGuard,
+  AuthProvider,
+  GuestGuard,
+  getServerAuth,
+  getServerAuthConfig,
+  requireServerAuth,
+  useAuth,
+} from '@hominem/auth'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
+import type { LoaderFunctionArgs } from 'react-router'
+import { Links, Meta, Scripts, ScrollRestoration } from 'react-router'
+
 // ============================================================================
 // BEFORE: apps/florin/app/root.tsx
 // ============================================================================
@@ -34,11 +48,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 */
 
-import { AuthProvider, getServerAuth, getServerAuthConfig } from '@hominem/auth'
 // ============================================================================
 // AFTER: apps/florin/app/root.tsx
 // ============================================================================
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const auth = await getServerAuth(request, getServerAuthConfig())
@@ -51,7 +63,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html>
+    <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -94,15 +106,14 @@ export default function Dashboard() {
 // ============================================================================
 // AFTER: apps/florin/app/routes/dashboard.tsx
 // ============================================================================
-import { getServerAuthConfig, requireServerAuth, useAuth } from '@hominem/auth'
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader2({ request }: LoaderFunctionArgs) {
   const { user } = await requireServerAuth(request, getServerAuthConfig())
 
   return { user }
 }
 
-export default function Dashboard() {
+export function Dashboard() {
   const { user } = useAuth() // Now using unified auth hook
 
   return (
@@ -137,7 +148,6 @@ export function UserMenu() {
 // ============================================================================
 // AFTER: apps/florin/app/components/user-menu.tsx
 // ============================================================================
-import { AuthGuard, useAuth } from '@hominem/auth'
 
 export function UserMenu() {
   const { user, signOut } = useAuth()
@@ -146,7 +156,9 @@ export function UserMenu() {
     <AuthGuard>
       <div className="user-menu">
         <span>{user?.name || user?.email}</span>
-        <button onClick={() => signOut()}>Sign Out</button>
+        <button type="button" onClick={() => signOut()}>
+          Sign Out
+        </button>
       </div>
     </AuthGuard>
   )
@@ -192,38 +204,37 @@ export default function Login() {
 // ============================================================================
 // AFTER: apps/florin/app/routes/login.tsx
 // ============================================================================
-import { GuestGuard, useAuth } from '@hominem/auth'
 
-export default function Login() {
+export function Login() {
   const { signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
-    
+
     const { error: signInError } = await signIn(email, password)
     if (signInError) {
       setError(signInError.message)
     }
   }
-  
+
   return (
     <GuestGuard>
       <form onSubmit={handleSubmit}>
         {error && <div className="error">{error}</div>}
-        <input 
-          type="email" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
         />
-        <input 
-          type="password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
         />
         <button type="submit">Sign In</button>
@@ -264,9 +275,8 @@ export default function Admin() {
 // ============================================================================
 // AFTER: apps/florin/app/routes/admin.tsx
 // ============================================================================
-import { AuthGuard, getServerAuthConfig, requireServerAuth, useAuth } from '@hominem/auth'
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader3({ request }: LoaderFunctionArgs) {
   const { user } = await requireServerAuth(request, getServerAuthConfig())
 
   // Admin check is now handled by the auth service
@@ -277,9 +287,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { user }
 }
 
-export default function Admin() {
+export function Admin() {
   const { user } = useAuth()
-  
+
   return (
     <AuthGuard requireAdmin>
       <div>

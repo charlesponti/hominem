@@ -1,24 +1,28 @@
 import 'dotenv/config'
 import { z } from 'zod'
 
+const isTest = process.env.NODE_ENV === 'test'
+
 const envSchema = z.object({
   PORT: z.string().default('4040'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_URL: z.string().url().default('http://localhost:4040'),
   COOKIE_SECRET: z.string().default('supersecret'),
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: isTest
+    ? z.string().url().default('postgresql://postgres:postgres@localhost:5432/hominem_test')
+    : z.string().url(),
 
   FLORIN_URL: z.string().url().default('http://localhost:4444'),
   ROCCO_URL: z.string().url().default('http://localhost:4454'),
   NOTES_URL: z.string().url().default('http://localhost:4445'),
   CHAT_URL: z.string().url().default('http://localhost:4446'),
 
-  SUPABASE_URL: z.string().url(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string(),
-  SUPABASE_ANON_KEY: z.string(),
+  SUPABASE_URL: isTest ? z.string().url().default('http://localhost:54321') : z.string().url(),
+  SUPABASE_SERVICE_ROLE_KEY: isTest ? z.string().default('test-service-key') : z.string(),
+  SUPABASE_ANON_KEY: isTest ? z.string().default('test-anon-key') : z.string(),
 
   GOOGLE_API_KEY: z.string().default(''),
-  OPENAI_API_KEY: z.string(),
+  OPENAI_API_KEY: isTest ? z.string().default('test-openai-key') : z.string(),
 
   PLAID_CLIENT_ID: z.string().default(''),
   PLAID_API_KEY: z.string().default(''),

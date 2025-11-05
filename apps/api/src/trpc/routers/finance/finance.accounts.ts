@@ -1,4 +1,5 @@
 import { db } from '@hominem/data'
+import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/data/schema'
 import {
   createAccount,
   deleteAccount,
@@ -7,10 +8,9 @@ import {
   listAccountsWithRecentTransactions,
   updateAccount,
 } from '@hominem/utils/finance'
-import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/data/schema'
 import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../../index.js'
+import { protectedProcedure, router } from '../../procedures.js'
 
 export const accountsRouter = router({
   list: protectedProcedure

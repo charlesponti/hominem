@@ -5,8 +5,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { trpc } from '~/lib/trpc'
 import type { RouterOutput } from '~/lib/trpc'
+import { trpc } from '~/lib/trpc'
 
 // Derive type from tRPC instead of defining locally
 export type TransactionCategory = RouterOutput['finance']['budget']['transactionCategories'][0]

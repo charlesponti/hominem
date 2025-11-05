@@ -12,8 +12,6 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
     "lint": "biome lint ./src",
     "format": "biome format ./src --fix"
   },
@@ -23,7 +21,7 @@
     "@hominem/utils": "workspace:*",
     "@trpc/server": "^11.4.2",
     "ai": "^4.3.16",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "0.44.7",
     "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },

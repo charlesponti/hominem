@@ -28,17 +28,21 @@ export function PlaidLink({
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 
-  const createLinkTokenMutation = useCreateLinkToken()
-  const exchangeTokenMutation = useExchangeToken()
+  const {
+    createLinkToken,
+    isLoading: isCreatingToken,
+    error: createTokenError,
+  } = useCreateLinkToken()
 
   const userId = user?.id
+  const { exchangeToken, isLoading: isExchanging, error: exchangeError } = useExchangeToken()
 
   // Initialize link token only when user clicks the button
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: createLinkToken is stable from mutation
   const initializeLinkToken = useCallback(() => {
-    if (!userId || linkToken || createLinkTokenMutation.isPending) return
+    if (!userId || linkToken || isCreatingToken) return
 
-    createLinkTokenMutation.mutate(undefined, {
+    createLinkToken.mutate(undefined, {
       onSuccess: (result) => {
         if (result.success) {
           setLinkToken(result.linkToken)
@@ -49,10 +53,10 @@ export function PlaidLink({
         onError?.(error instanceof Error ? error : new Error('Failed to initialize Plaid Link'))
       },
     })
-  }, [userId, linkToken, createLinkTokenMutation.isPending, onError])
+  }, [userId, linkToken, isCreatingToken, onError])
 
   // Handle successful connection
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: exchangeToken is stable from mutation
   const handleOnSuccess = useCallback<PlaidLinkOnSuccess>(
     (publicToken, metadata) => {
       if (!metadata.institution) {
@@ -61,7 +65,7 @@ export function PlaidLink({
       }
 
       // Use the current exchangeToken mutation directly
-      exchangeTokenMutation.mutate(
+      exchangeToken.mutate(
         {
           publicToken,
           institutionId: metadata.institution.institution_id,
@@ -96,7 +100,7 @@ export function PlaidLink({
 
   // Handle connection errors
   const handleOnExit = useCallback<PlaidLinkOnExit>(
-    (error, metadata) => {
+    (error, _metadata) => {
       if (error) {
         console.error('Plaid Link error:', error)
         const errorMessage = error.error_message || 'Failed to connect bank account'
@@ -120,8 +124,8 @@ export function PlaidLink({
 
   const { open, ready } = usePlaidLink(config)
 
-  const isLoading = createLinkTokenMutation.isPending || exchangeTokenMutation.isPending
-  const hasError = createLinkTokenMutation.error || exchangeTokenMutation.error
+  const isLoading = isCreatingToken || isExchanging
+  const hasError = createTokenError || exchangeError
   const isReady = ready && linkToken && !isLoading
 
   // Auto-open Plaid Link when token is ready
@@ -160,7 +164,7 @@ export function PlaidLink({
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Connection Error</AlertTitle>
               <AlertDescription>
-                {createLinkTokenMutation.error || exchangeTokenMutation.error
+                {createTokenError || exchangeError
                   ? 'Failed to connect bank account'
                   : 'An unknown error occurred'}
               </AlertDescription>
@@ -176,9 +180,9 @@ export function PlaidLink({
             {isLoading ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
-                {createLinkTokenMutation.isPending
+                {isCreatingToken
                   ? 'Initializing...'
-                  : exchangeTokenMutation.isPending
+                  : isExchanging
                     ? 'Connecting...'
                     : 'Loading...'}
               </>
@@ -199,6 +203,7 @@ export function PlaidLink({
     )
   }
 
+  // Default button variant
   return (
     <Button
       onClick={handleClick}
@@ -208,11 +213,7 @@ export function PlaidLink({
       {isLoading ? (
         <>
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
-          {createLinkTokenMutation.isPending
-            ? 'Initializing...'
-            : exchangeTokenMutation.isPending
-              ? 'Connecting...'
-              : 'Loading...'}
+          {isCreatingToken ? 'Initializing...' : isExchanging ? 'Connecting...' : 'Loading...'}
         </>
       ) : (
         <>

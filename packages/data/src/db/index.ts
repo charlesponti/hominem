@@ -8,16 +8,35 @@ const DATABASE_URL =
     : process.env.DATABASE_URL
 
 let client: ReturnType<typeof postgres> | null = null
-let db: PostgresJsDatabase<typeof schema>
+let db: PostgresJsDatabase<typeof schema> | null = null
 
-if (DATABASE_URL) {
-  client = postgres(DATABASE_URL)
-  db = drizzle(client, { schema })
-} else {
-  console.warn('DATABASE_URL not provided.')
+// Lazy initialization - only connect when db is actually accessed
+function getDb(): PostgresJsDatabase<typeof schema> {
+  if (!db) {
+    if (!DATABASE_URL) {
+      throw new Error(
+        'DATABASE_URL not provided. Set DATABASE_URL environment variable or NODE_ENV=test for test database.'
+      )
+    }
+    client = postgres(DATABASE_URL)
+    db = drizzle(client, { schema })
+  }
+  return db
 }
 
-export { client, db }
+// Create a Proxy to intercept db access and initialize lazily
+const dbProxy = new Proxy({} as PostgresJsDatabase<typeof schema>, {
+  get(_target, prop) {
+    const actualDb = getDb()
+    const value = actualDb[prop as keyof typeof actualDb]
+    return typeof value === 'function' ? value.bind(actualDb) : value
+  },
+})
+
+export { client, dbProxy as db }
+
+// Re-export commonly used drizzle-orm utilities
+export { eq, and, or, sql, desc, asc, gt, gte, lt, lte, ne, inArray, notInArray } from 'drizzle-orm'
 
 export const takeOne = <T>(values: T[]): T | undefined => {
   return values[0]

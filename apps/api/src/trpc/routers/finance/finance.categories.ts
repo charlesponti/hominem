@@ -1,6 +1,6 @@
 import { getSpendingCategories } from '@hominem/utils/finance'
 import { Hono } from 'hono'
-import { protectedProcedure, router } from '../../index.js'
+import { protectedProcedure, router } from '../../procedures.js'
 
 // Keep existing Hono route for backward compatibility
 export const financeCategoriesRoutes = new Hono()

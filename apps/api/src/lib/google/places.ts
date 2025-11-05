@@ -1,9 +1,8 @@
-import type { places_v1 } from 'googleapis'
-import fetch from 'node-fetch'
 import { writeFile } from 'node:fs'
 import * as path from 'node:path'
-
 import type { PlaceInsert } from '@hominem/utils/types'
+import type { places_v1 } from 'googleapis'
+import fetch from 'node-fetch'
 import { env } from '../env.js'
 
 interface PlacePhotosResponse {

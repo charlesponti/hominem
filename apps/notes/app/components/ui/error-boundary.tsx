@@ -41,10 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-muted-foreground mb-4 max-w-md">
             An unexpected error occurred. Please try refreshing the page.
           </p>
-          <Button
-            onClick={() => window.location.reload()}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             Refresh Page
           </Button>
@@ -54,4 +51,4 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children
   }
-} 
+}

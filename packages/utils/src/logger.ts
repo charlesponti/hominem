@@ -3,7 +3,7 @@ import pino from 'pino'
 
 const redactFields = ['email', 'password', 'token']
 
-export const logger = pino({
+const pinoLogger = pino({
   level: process.env.LOG_LEVEL || 'debug',
   redact: {
     paths: redactFields.map((field) => `*.${field}`),
@@ -16,8 +16,10 @@ export const logger = pino({
   },
 })
 
-export const log = logger.info.bind(logger)
-export const info = logger.info.bind(logger)
-export const warn = logger.warn.bind(logger)
-export const error = logger.error.bind(logger)
-export const debug = logger.debug.bind(logger)
+// Create a properly typed logger wrapper
+export const logger = {
+  info: (message: string, data?: object) => pinoLogger.info(data, message),
+  error: (message: string, error?: Error | object) => pinoLogger.error(error, message),
+  warn: (message: string, data?: object) => pinoLogger.warn(data, message),
+  debug: (message: string, data?: object) => pinoLogger.debug(data, message),
+}

@@ -3,7 +3,7 @@ import { logger } from './logger'
 
 const redisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
-  port: Number.parseInt(process.env.REDIS_PORT || '6379'),
+  port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD || 'redis_password',
   retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,

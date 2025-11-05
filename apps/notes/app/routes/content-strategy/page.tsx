@@ -186,7 +186,7 @@ export default function ContentStrategyPage() {
         title: 'Copied!',
         description: `${description} copied to clipboard`,
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         variant: 'destructive',
         title: 'Copy failed',
@@ -306,7 +306,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
         title: 'Notes Created!',
         description: 'The content strategy has been converted into notes and copied to clipboard.',
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         variant: 'destructive',
         title: 'Failed to create notes',

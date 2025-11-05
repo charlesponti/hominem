@@ -1,12 +1,11 @@
 'use client'
 
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuth } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'
-import { useSupabaseAuth } from '../supabase/use-auth'
 
 // Define constants for channel names and message types
 const IMPORT_PROGRESS_CHANNEL = REDIS_CHANNELS.IMPORT_PROGRESS
@@ -18,12 +17,9 @@ const IMPORT_TRANSACTIONS_KEY = [['finance', 'import-transactions']] as const
 const PROGRESS_UPDATE_THROTTLE = 100
 
 export function useImportTransactionsStore() {
-  const { supabase } = useSupabaseAuth()
-  const apiClient = useApiClient({
-    apiUrl: import.meta.env.VITE_PUBLIC_API_URL,
-    supabaseClient: supabase,
-  })
+  const apiClient = useApiClient()
   const queryClient = useQueryClient()
+  const { userId } = useSupabaseAuth()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
   const [error, setError] = useState<Error | null>(null)
@@ -60,14 +56,8 @@ export function useImportTransactionsStore() {
 
   // Connect on initialization, providing token function
   useEffect(() => {
-    const getToken = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      return session?.access_token || null
-    }
     connect(getToken)
-  }, [connect, supabase])
+  }, [connect])
 
   // Throttled update function to reduce re-render frequency
   const throttledUpdateProgress = useCallback(
@@ -307,7 +297,7 @@ export function useImportTransactionsStore() {
     startSingleFile: (file: File) => importMutation.mutateAsync([file]),
     removeFileStatus,
     activeJobIds,
-    isImporting: importMutation.isPending,
+    isImporting: importMutation.isLoading,
     isError: importMutation.isError || !!error,
     error,
   }

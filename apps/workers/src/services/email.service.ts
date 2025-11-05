@@ -1,5 +1,5 @@
 import { logger } from '@hominem/utils/logger'
-import { simpleParser, type ParsedMail } from 'mailparser'
+import { type ParsedMail, simpleParser } from 'mailparser'
 import type { LambdaEvent } from '../smart-input/smart-input-lambda'
 
 export async function parseEmail(event: LambdaEvent): Promise<ParsedMail> {

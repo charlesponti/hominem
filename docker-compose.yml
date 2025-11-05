@@ -1,5 +1,4 @@
 services:
-
   rabbitmq:
     image: rabbitmq:3-management
     container_name: hominem-rabbitmq
@@ -23,9 +22,28 @@ services:
       timeout: 5s
       retries: 5
 
+  test-db:
+    image: ghcr.io/charlesponti/hominem/pontistudios-postgres:latest
+    platform: linux/amd64
+    container_name: hominem-test-postgres
+    ports:
+      - "4433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hominem-test
+    volumes:
+      - hominem-test-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   hominem:
     driver: bridge
 
 volumes:
   hominem-redis:
+  hominem-test-db:

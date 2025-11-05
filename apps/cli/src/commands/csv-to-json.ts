@@ -1,9 +1,9 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import { consola } from 'consola'
 import csv from 'csv-parser'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
 
 type CsvRow = Record<string, string>
 /**
@@ -14,7 +14,7 @@ type CsvRow = Record<string, string>
  */
 export async function convertCsv(inputFile: string): Promise<CsvRow[] | null> {
   try {
-    return await new Promise<CsvRow[]>((resolve, reject) => {
+    return await new Promise<CsvRow[]>((resolve, _reject) => {
       const results: CsvRow[] = []
       const stream = fs.createReadStream(inputFile, 'utf-8').pipe(csv())
       stream.on('data', (data) => {

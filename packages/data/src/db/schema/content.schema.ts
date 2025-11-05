@@ -1,8 +1,8 @@
 import { relations, sql } from 'drizzle-orm'
 import { foreignKey, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
-import { users } from './users.schema'
 import { type AllContentType, AllContentTypeSchema, type ContentTag } from './shared.schema'
+import { users } from './users.schema'
 
 export const ContentStrategySchema = z.object({
   topic: z.string().describe('The main topic of the content strategy'),

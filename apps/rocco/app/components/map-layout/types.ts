@@ -6,4 +6,3 @@ export interface MapMarker {
   latitude: number
   longitude: number
 }
-

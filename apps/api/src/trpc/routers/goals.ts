@@ -2,7 +2,7 @@ import { db } from '@hominem/data'
 import { goals } from '@hominem/data/schema'
 import { and, asc, desc, eq, ilike, ne } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index'
+import { protectedProcedure, router } from '../procedures.js'
 
 export const goalsRouter = router({
   list: protectedProcedure

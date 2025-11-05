@@ -228,8 +228,8 @@ export async function seedFinanceTestData({
       .insert(plaidItems)
       .values({
         id: testPlaidItemId,
-        itemId: 'item_test_123',
-        accessToken: 'access-test-token-123',
+        itemId: `item_test_${userId.slice(0, 8)}_123`,
+        accessToken: `access-test-token-${userId.slice(0, 8)}-123`,
         institutionId,
         status: 'active',
         consentExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -256,7 +256,7 @@ export async function seedFinanceTestData({
         interestRate: null,
         minimumPayment: null,
         isoCurrencyCode: 'USD',
-        plaidAccountId: 'plaid-acc-checking-123',
+        plaidAccountId: `plaid-acc-checking-${userId.slice(0, 8)}-123`,
         limit: null,
         meta: null,
         lastUpdated: new Date(),
@@ -275,7 +275,7 @@ export async function seedFinanceTestData({
         interestRate: '0.05',
         minimumPayment: null,
         isoCurrencyCode: 'USD',
-        plaidAccountId: 'plaid-acc-savings-456',
+        plaidAccountId: `plaid-acc-savings-${userId.slice(0, 8)}-456`,
         limit: null,
         meta: null,
         lastUpdated: new Date(),

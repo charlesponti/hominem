@@ -6,6 +6,11 @@ import type { Route } from './+types/root'
 import './globals.css'
 import { createTRPCClient, queryClient, trpc } from './lib/trpc'
 
+export async function loader(_args: Route.LoaderArgs) {
+  // No auth loader needed for Supabase - handled client-side
+  return {}
+}
+
 export const meta: Route.MetaFunction = () => {
   return [
     { title: 'Florin' },
@@ -75,7 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function App() {
+export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
   const trpcClient = createTRPCClient()
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>

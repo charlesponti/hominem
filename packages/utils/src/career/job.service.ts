@@ -1,5 +1,5 @@
 import { db } from '@hominem/data/db'
-import { companies, jobs, type Job, type NewJob } from '@hominem/data/schema'
+import { companies, type Job, jobs, type NewJob } from '@hominem/data/schema'
 import { eq, type SQL } from 'drizzle-orm'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 

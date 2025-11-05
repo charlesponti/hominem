@@ -1,3 +1,4 @@
+import { SupabaseAuthProvider } from '@hominem/ui'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
@@ -8,11 +9,14 @@ import './globals.css'
 import { getQueryClient } from './lib/get-query-client'
 import { trpc, trpcClient } from './lib/trpc'
 
-// No loader needed for Supabase auth
+export async function loader(_args: Route.LoaderArgs) {
+  // No auth loader needed for Supabase - handled client-side
+  return {}
+}
 
 export const meta: Route.MetaFunction = () => {
   return [
-    { title: 'Sage' },
+    { title: 'Animus' },
     { name: 'description', content: 'Organize and manage your personal notes and knowledge' },
   ]
 }
@@ -82,8 +86,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Supabase configuration is handled in the client
-
 function AppProviders({ children }: { children: React.ReactNode }) {
   // Get feature flags from environment variables
   const featureFlags = {
@@ -104,9 +106,11 @@ function AppProviders({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <AppProviders>
-      <Outlet />
-    </AppProviders>
+    <SupabaseAuthProvider>
+      <AppProviders>
+        <Outlet />
+      </AppProviders>
+    </SupabaseAuthProvider>
   )
 }
 
