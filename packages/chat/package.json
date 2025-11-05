@@ -12,8 +12,6 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
     "lint": "biome lint ./src",
     "format": "biome format ./src --fix"
   },
