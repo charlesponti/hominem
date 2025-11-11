@@ -135,7 +135,7 @@ describe('Dashboard Component Tests', () => {
   test('renders dashboard with all components and lists', async () => {
     renderWithProviders(<Dashboard />)
     await waitFor(() => {
-      expect(screen.getByTestId('dashboard-scene')).toBeInTheDocument()
+      expect(screen.getByTestId('home-scene')).toBeInTheDocument()
       expect(screen.getByText(MOCK_LISTS[0].name)).toBeInTheDocument()
       expect(screen.getByText(MOCK_LISTS[1].name)).toBeInTheDocument()
     })
@@ -163,7 +163,7 @@ describe('Dashboard Component Tests', () => {
     })
     renderWithProviders(<Dashboard />)
     await waitFor(() => {
-      expect(screen.getByTestId('dashboard-scene')).toBeInTheDocument()
+      expect(screen.getByTestId('home-scene')).toBeInTheDocument()
       expect(screen.getByText(MOCK_LISTS[0].name)).toBeInTheDocument()
       expect(screen.getByText(MOCK_LISTS[1].name)).toBeInTheDocument()
     })
@@ -178,7 +178,7 @@ describe('Dashboard Component Tests', () => {
 
     renderWithProviders(<Dashboard />)
     await waitFor(() => {
-      expect(screen.getByTestId('dashboard-scene')).toBeInTheDocument()
+      expect(screen.getByTestId('home-scene')).toBeInTheDocument()
       // Should show loading spinner for lists
       expect(screen.getByTestId('loading-spinner')).toBeInTheDocument()
     })
@@ -193,7 +193,7 @@ describe('Dashboard Component Tests', () => {
 
     renderWithProviders(<Dashboard />)
     await waitFor(() => {
-      expect(screen.getByTestId('dashboard-scene')).toBeInTheDocument()
+      expect(screen.getByTestId('home-scene')).toBeInTheDocument()
       expect(screen.getByText('Error loading lists: Failed to load lists')).toBeInTheDocument()
     })
   })

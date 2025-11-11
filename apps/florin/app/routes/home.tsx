@@ -19,7 +19,6 @@ export default function Home() {
   const { user, isLoading } = useSupabaseAuth()
   const navigate = useNavigate()
 
-  // Redirect authenticated users to their dashboard
   useEffect(() => {
     if (!isLoading && user) {
       navigate('/finance', { replace: true })

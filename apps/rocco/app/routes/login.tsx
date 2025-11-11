@@ -11,7 +11,7 @@ export default function Login() {
   const supabase = createClient()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+  const redirectTo = searchParams.get('redirectTo') || '/'
   const emailId = useId()
   const passwordId = useId()
 

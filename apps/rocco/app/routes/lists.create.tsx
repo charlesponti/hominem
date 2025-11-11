@@ -16,15 +16,13 @@ export default function CreateListPage() {
 
   const handleCreate = useCallback(
     (newList: List) => {
-      // Navigate to the newly created list
       navigate(`/lists/${newList.id}`)
     },
     [navigate]
   )
 
   const handleCancel = useCallback(() => {
-    // Navigate back to dashboard
-    navigate('/dashboard')
+    navigate('/')
   }, [navigate])
 
   const handleRequireAuth = useCallback(() => {

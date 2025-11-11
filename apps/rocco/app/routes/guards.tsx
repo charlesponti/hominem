@@ -34,7 +34,7 @@ export async function requireAuth(loaderArgs: LoaderFunctionArgs) {
 /**
  * Guard to restrict access to guests only (not authenticated users)
  * @param request The request object
- * @returns Redirects to dashboard if user is already authenticated
+ * @returns Redirects to home if user is already authenticated
  */
 export async function requireGuest(loaderArgs: LoaderFunctionArgs) {
   const { supabase } = createClient(loaderArgs.request)
@@ -44,7 +44,7 @@ export async function requireGuest(loaderArgs: LoaderFunctionArgs) {
   } = await supabase.auth.getUser()
 
   if (user) {
-    return redirect('/dashboard')
+    return redirect('/')
   }
 
   return { isGuest: true }

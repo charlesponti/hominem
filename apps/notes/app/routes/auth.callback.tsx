@@ -12,7 +12,7 @@ export async function loader({ request }: { request: Request }) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Successful authentication, redirect to the next page or dashboard
+      // Successful authentication, redirect to the next page or home
       return redirect(next, { headers })
     }
   }
