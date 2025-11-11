@@ -114,7 +114,7 @@ export const placesRouter = router({
           phoneNumber: placeInfo.nationalPhoneNumber || null,
           priceLevel: placeInfo.priceLevel || null,
           photos: photoUrls.length > 0 ? photoUrls : undefined,
-          userId: '', // Empty for public places
+          userId: null, // null for public places
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
               ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [number, number])
