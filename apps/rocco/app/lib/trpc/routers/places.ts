@@ -45,7 +45,7 @@ export const placesRouter = router({
   getOrCreateByGoogleMapsIdPublic: publicProcedure
     .input(z.object({ googleMapsId: z.string() }))
     .query(async ({ ctx, input }) => {
-      // First try to find existing place
+      // First try to find existing place (can be read without auth)
       const existingPlace = await ctx.db.query.place.findFirst({
         where: eq(place.googleMapsId, input.googleMapsId),
       })
@@ -53,6 +53,9 @@ export const placesRouter = router({
       if (existingPlace) {
         return existingPlace
       }
+
+      // Places are public entities, so we can create them without authentication
+      // If not found, fetch and create
 
       // If not found, fetch place details from Google Places API
       const apiKey = process.env.VITE_GOOGLE_API_KEY
@@ -98,7 +101,7 @@ export const placesRouter = router({
           return photo.name
         }) || []
 
-      // Create new place with fetched data (without userId since this is public)
+      // Create new place with fetched data (places are public/shared entities)
       const newPlace = await ctx.db
         .insert(place)
         .values({
@@ -114,7 +117,6 @@ export const placesRouter = router({
           phoneNumber: placeInfo.nationalPhoneNumber || null,
           priceLevel: placeInfo.priceLevel || null,
           photos: photoUrls.length > 0 ? photoUrls : undefined,
-          userId: null, // null for public places
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
               ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [number, number])
@@ -193,7 +195,7 @@ export const placesRouter = router({
           return photo.name
         }) || []
 
-      // Create new place with fetched data
+      // Create new place with fetched data (places are public/shared entities)
       const newPlace = await ctx.db
         .insert(place)
         .values({
@@ -209,7 +211,6 @@ export const placesRouter = router({
           phoneNumber: placeInfo.nationalPhoneNumber || null,
           priceLevel: placeInfo.priceLevel || null,
           photos: photoUrls.length > 0 ? photoUrls : undefined,
-          userId: ctx.user.id,
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
               ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [number, number])
@@ -247,7 +248,6 @@ export const placesRouter = router({
         .values({
           id: crypto.randomUUID(),
           ...input,
-          userId: ctx.user.id,
           location:
             input.latitude && input.longitude
               ? ([input.longitude, input.latitude] as [number, number])
@@ -285,6 +285,7 @@ export const placesRouter = router({
       const locationUpdate =
         latitude && longitude ? { location: [longitude, latitude] as [number, number] } : {}
 
+      // Places are public entities, so any authenticated user can update them
       const updatedPlace = await ctx.db
         .update(place)
         .set({
@@ -292,7 +293,7 @@ export const placesRouter = router({
           ...locationUpdate,
           updatedAt: new Date().toISOString(),
         })
-        .where(and(eq(place.id, id), eq(place.userId, ctx.user.id)))
+        .where(eq(place.id, id))
         .returning()
 
       if (updatedPlace.length === 0) {
@@ -309,10 +310,9 @@ export const placesRouter = router({
         throw new Error('User not found in context')
       }
 
-      const deletedPlace = await ctx.db
-        .delete(place)
-        .where(and(eq(place.id, input.id), eq(place.userId, ctx.user.id)))
-        .returning()
+      // Places are public entities, so any authenticated user can delete them
+      // In the future, we might want to add permissions/ownership checks
+      const deletedPlace = await ctx.db.delete(place).where(eq(place.id, input.id)).returning()
 
       if (deletedPlace.length === 0) {
         throw new Error("Place not found or you don't have permission to delete it")
@@ -480,7 +480,6 @@ export const placesRouter = router({
               websiteUri: placeInfo.websiteUri,
               phoneNumber: placeInfo.nationalPhoneNumber,
               priceLevel: placeInfo.priceLevel,
-              userId: ctx.user?.id || '',
               location:
                 placeInfo.location?.latitude && placeInfo.location?.longitude
                   ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [
@@ -566,7 +565,6 @@ export const placesRouter = router({
           finalPlace = existingPlace
         } else {
           const newPlaceData = {
-            userId: ctx.user.id,
             name: placeInput.name,
             googleMapsId: placeInput.googleMapsId,
             address: placeInput.address,

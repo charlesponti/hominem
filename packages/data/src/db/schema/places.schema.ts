@@ -12,7 +12,6 @@ import {
 } from 'drizzle-orm/pg-core'
 import { item } from './items.schema'
 import { tags } from './tags.schema'
-import { users } from './users.schema'
 
 export const place = pgTable(
   'place',
@@ -23,7 +22,6 @@ export const place = pgTable(
     address: text('address'),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-    userId: uuid('userId').notNull(),
     itemId: uuid('itemId'),
     /**
      * The Google Maps ID for this place.
@@ -64,13 +62,6 @@ export const place = pgTable(
   },
   (table) => [
     foreignKey({
-      columns: [table.userId],
-      foreignColumns: [users.id],
-      name: 'place_userId_user_id_fk',
-    })
-      .onUpdate('cascade')
-      .onDelete('cascade'),
-    foreignKey({
       columns: [table.itemId],
       foreignColumns: [item.id],
       name: 'place_itemId_item_id_fk',
@@ -83,10 +74,6 @@ export type Place = typeof place.$inferSelect
 export type PlaceInsert = typeof place.$inferInsert
 
 export const placeRelations = relations(place, ({ one }) => ({
-  user: one(users, {
-    fields: [place.userId],
-    references: [users.id],
-  }),
   item: one(item, {
     fields: [place.itemId],
     references: [item.id],

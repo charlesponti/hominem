@@ -267,6 +267,13 @@
       "when": 1757617541322,
       "tag": "0037_wide_spencer_smythe",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1762900722373,
+      "tag": "0038_dapper_punisher",
+      "breakpoints": true
     }
   ]
 }
