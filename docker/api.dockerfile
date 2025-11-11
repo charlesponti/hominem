@@ -75,7 +75,6 @@ COPY --from=pruner /app/out/json/ .
 
 # Copy node_modules from builder (already has all dependencies we need)
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/packages ./packages
 
 # Copy built artifacts
