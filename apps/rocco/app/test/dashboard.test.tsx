@@ -1,7 +1,5 @@
 import { screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-// Import the hook to be mocked
-import { useGeolocation } from '~/hooks/useGeolocation'
 import type { List, Place, PlaceLocation } from '~/lib/types'
 import Dashboard from '~/routes/index'
 import { MOCK_LISTS } from '~/test/mocks/index'
@@ -31,8 +29,9 @@ vi.mock('~/components/places/places-autocomplete', () => ({
 }))
 
 // Mock the useGeolocation hook
+const mockUseGeolocation = vi.fn()
 vi.mock('~/hooks/useGeolocation', () => ({
-  useGeolocation: vi.fn(),
+  useGeolocation: () => mockUseGeolocation(),
 }))
 
 // Flexible mock for useLoaderData and other react-router hooks
@@ -118,7 +117,7 @@ describe('Dashboard Component Tests', () => {
     vi.clearAllMocks() // Clear all mocks
 
     // Reset geolocation mock to default successful state
-    useGeolocation.mockReturnValue({
+    mockUseGeolocation.mockReturnValue({
       currentLocation: { latitude: 37.7749, longitude: -122.4194 },
       isLoading: false,
       error: null, // Added error property
@@ -156,7 +155,7 @@ describe('Dashboard Component Tests', () => {
   })
 
   test('renders dashboard with loading message when location not available', async () => {
-    useGeolocation.mockReturnValue({
+    mockUseGeolocation.mockReturnValue({
       currentLocation: null, // Changed undefined to null
       isLoading: true,
       error: null, // Added error property
@@ -204,7 +203,7 @@ describe('Dashboard Route Loader and ErrorBoundary Tests', () => {
     vi.clearAllMocks() // Clear all mocks
 
     // Reset geolocation mock
-    useGeolocation.mockReturnValue({
+    mockUseGeolocation.mockReturnValue({
       currentLocation: { latitude: 37.7749, longitude: -122.4194 },
       isLoading: false,
       error: null, // Added error property
