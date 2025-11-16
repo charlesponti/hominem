@@ -32,6 +32,7 @@
     "@hominem/ai": "workspace:*",
     "@hominem/chat-service": "workspace:*",
     "@hominem/data": "workspace:*",
+    "@hominem/notes": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/node-server": "^1.19.2",
     "@hono/trpc-server": "^0.4.0",

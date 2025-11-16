@@ -1,7 +1,7 @@
 import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '../../../../packages/types/trpc'
 import { createClient } from './supabase/client'
+import type { AppRouter } from './trpc/router'
 
 export type RouterInput = inferRouterInputs<AppRouter>
 export type RouterOutput = inferRouterOutputs<AppRouter>
@@ -12,13 +12,15 @@ export const createTRPCClient = () => {
   return trpc.createClient({
     links: [
       httpBatchLink({
-        url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
+        url: '/api/trpc',
         async headers() {
           const supabase = createClient()
+          if (!supabase) {
+            throw new Error('Supabase client not found')
+          }
           const {
             data: { session },
           } = await supabase.auth.getSession()
-
           return session?.access_token ? { authorization: `Bearer ${session.access_token}` } : {}
         },
       }),

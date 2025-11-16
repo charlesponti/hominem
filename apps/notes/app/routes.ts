@@ -1,6 +1,9 @@
 import { index, layout, type RouteConfig, route } from '@react-router/dev/routes'
 
 export default [
+  // API Routes (outside layout)
+  route('api/trpc/*', 'routes/api/trpc.ts'),
+
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
 

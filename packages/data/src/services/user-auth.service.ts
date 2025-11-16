@@ -49,8 +49,14 @@ export class UserAuthService {
       // Create new user
       return await UserAuthService.createUser(supabaseUser)
     } catch (error) {
-      console.error('Error in findOrCreateUser:', error)
-      throw new Error('Failed to find or create user')
+      console.error('Error in findOrCreateUser:', {
+        error: error instanceof Error ? error.message : String(error),
+        supabaseId: supabaseUser.id,
+        email: supabaseUser.email,
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      // Re-throw the original error to preserve error details
+      throw error
     }
   }
 
@@ -63,8 +69,32 @@ export class UserAuthService {
 
       return user ? UserAuthService.mapToUserAuthData(user) : null
     } catch (error) {
-      console.error('Error finding user by supabaseId:', error)
-      return null
+      // Extract full error details including nested causes
+      const errorDetails: Record<string, unknown> = {
+        error: error instanceof Error ? error.message : String(error),
+        supabaseId,
+        stack: error instanceof Error ? error.stack : undefined,
+      }
+
+      // Check for nested error properties (common in Drizzle/Postgres errors)
+      if (error instanceof Error) {
+        if ('cause' in error && error.cause) {
+          errorDetails.cause = error.cause instanceof Error ? error.cause.message : String(error.cause)
+          if (error.cause instanceof Error && 'code' in error.cause) {
+            errorDetails.causeCode = error.cause.code
+          }
+        }
+        if ('code' in error) {
+          errorDetails.code = error.code
+        }
+        if ('name' in error) {
+          errorDetails.name = error.name
+        }
+      }
+
+      console.error('Error finding user by supabaseId:', errorDetails)
+      // Re-throw to let caller handle the error
+      throw error
     }
   }
 
