@@ -78,31 +78,31 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <>
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="p-4 rounded-lg border"
+          className="p-5 rounded-lg border backdrop-blur-sm"
           style={{
             backgroundColor: 'var(--color-notion-bg)',
             borderColor: 'var(--color-notion-border)',
           }}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-2xl">{stat.icon}</span>
-            <span className="text-2xl font-bold" style={{ color: 'var(--color-notion-text)' }}>
+            <span className="text-xl opacity-80">{stat.icon}</span>
+            <span className="text-3xl font-bold tracking-tight" style={{ color: 'var(--color-notion-text)' }}>
               {stat.value}
             </span>
           </div>
           <div
-            className="text-sm font-medium"
+            className="text-xs font-medium uppercase tracking-wide"
             style={{ color: 'var(--color-notion-text-secondary)' }}
           >
             {stat.label}
           </div>
         </div>
       ))}
-    </div>
+    </>
   )
 }
 

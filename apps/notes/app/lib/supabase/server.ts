@@ -2,13 +2,13 @@ import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@s
 
 export function createSupabaseServerClient(request: Request) {
   const headers = new Headers()
-  // Use non-VITE prefixed vars for server-side (VITE_ vars are for client-side only)
-  // Fallback to VITE_ vars for backward compatibility during migration
-  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+  const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new Error('Missing Supabase environment variables. Set SUPABASE_URL and SUPABASE_ANON_KEY (or VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for backward compatibility)')
+    throw new Error(
+      'Missing Supabase environment variables. Set SUPABASE_URL and SUPABASE_ANON_KEY (or VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for backward compatibility)'
+    )
   }
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

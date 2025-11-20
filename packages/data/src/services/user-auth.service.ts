@@ -79,7 +79,8 @@ export class UserAuthService {
       // Check for nested error properties (common in Drizzle/Postgres errors)
       if (error instanceof Error) {
         if ('cause' in error && error.cause) {
-          errorDetails.cause = error.cause instanceof Error ? error.cause.message : String(error.cause)
+          errorDetails.cause =
+            error.cause instanceof Error ? error.cause.message : String(error.cause)
           if (error.cause instanceof Error && 'code' in error.cause) {
             errorDetails.causeCode = error.cause.code
           }

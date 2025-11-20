@@ -1,4 +1,4 @@
-export type { AppRouter } from '../../apps/api/src/routes/trpc'
+export type { AppRouter } from '../../apps/api/src/trpc/index'
 export {
   type Context,
   protectedProcedure,

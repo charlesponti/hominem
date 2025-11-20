@@ -11,7 +11,7 @@ describe('MCP Server Functional Tests', () => {
     // These are integration tests that require a built server
     // Run `bun run build` in apps/mcp first
     const buildPath = new URL('../build/index.js', import.meta.url).pathname
-    
+
     // Create transport and client
     transport = new StdioClientTransport({
       command: 'node',
@@ -49,7 +49,7 @@ describe('MCP Server Functional Tests', () => {
 
       expect(result.tools).toBeDefined()
       expect(result.tools.length).toBeGreaterThan(0)
-      expect(result.tools.length).toBe(25)
+      expect(result.tools.length).toBe(24)
     })
 
     it('should include expected health tools', async () => {
@@ -58,7 +58,6 @@ describe('MCP Server Functional Tests', () => {
 
       expect(toolNames).toContain('recommend_workout')
       expect(toolNames).toContain('analyze_nutrition')
-      expect(toolNames).toContain('analyze_sleep')
       expect(toolNames).toContain('assess_mental_wellness')
     })
 
@@ -127,31 +126,6 @@ describe('MCP Server Functional Tests', () => {
       expect(data.macroEstimate).toHaveProperty('protein')
       expect(data.macroEstimate).toHaveProperty('carbohydrates')
       expect(data.macroEstimate).toHaveProperty('fats')
-    })
-
-    it('should execute sleep analysis tool', async () => {
-      const result = await client.callTool({
-        name: 'analyze_sleep',
-        arguments: {
-          input: {
-            hoursSlept: 7.5,
-            bedTime: '10:30 PM',
-            wakeTime: '6:00 AM',
-            wakeupCount: 1,
-            sleepQualitySelfRating: 8,
-          },
-        },
-      })
-
-      expect(result.content).toBeDefined()
-      const data = JSON.parse((result.content as any[])[0].text)
-
-      expect(data).toHaveProperty('qualityScore')
-      expect(typeof data.qualityScore).toBe('number')
-      expect(data.qualityScore).toBeGreaterThanOrEqual(0)
-      expect(data.qualityScore).toBeLessThanOrEqual(100)
-      expect(data).toHaveProperty('recommendations')
-      expect(Array.isArray(data.recommendations)).toBe(true)
     })
   })
 

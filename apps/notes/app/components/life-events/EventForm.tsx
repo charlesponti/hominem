@@ -24,43 +24,9 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, people, onToggleForm
 
   return (
     <>
-      <button
-        type="button"
-        className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 hover:-translate-y-px"
-        style={{
-          backgroundColor: 'var(--color-notion-blue)',
-          color: 'white',
-          border: 'none',
-        }}
-        onClick={onToggleForm}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#1a73d1'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--color-notion-blue)'
-        }}
-        onMouseDown={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.backgroundColor = '#1565c0'
-        }}
-        onMouseUp={(e) => {
-          e.currentTarget.style.transform = 'translateY(-1px)'
-          e.currentTarget.style.backgroundColor = '#1a73d1'
-        }}
-      >
-        {showAddForm ? '✕ Cancel' : '✨ Add New Event'}
-      </button>
-
       {showAddForm && (
-        <div
-          className="mt-6 p-6 rounded-xl border"
-          style={{
-            backgroundColor: 'var(--color-notion-bg)',
-            borderColor: 'var(--color-notion-border)',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-          }}
-        >
-          <h3 className="text-xl font-semibold mb-5" style={{ color: 'var(--color-notion-text)' }}>
+        <div>
+          <h3 className="text-xl font-semibold mb-6" style={{ color: 'var(--color-notion-text)' }}>
             Add New Event
           </h3>
           <form method="post">
@@ -287,41 +253,16 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, people, onToggleForm
                 }}
               />
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 hover:-translate-y-px"
+                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5"
                 style={{
-                  backgroundColor: 'var(--color-notion-blue)',
-                  color: 'white',
-                  border: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#1a73d1'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-notion-blue)'
+                  backgroundColor: 'var(--color-notion-text)',
+                  color: 'var(--color-notion-bg)',
                 }}
               >
-                Add Event
-              </button>
-              <button
-                type="button"
-                onClick={onToggleForm}
-                className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md border transition-all duration-150 hover:-translate-y-px"
-                style={{
-                  backgroundColor: 'var(--color-notion-bg)',
-                  color: 'var(--color-notion-text)',
-                  borderColor: 'var(--color-notion-border)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-notion-hover)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-notion-bg)'
-                }}
-              >
-                Cancel
+                Create Event
               </button>
             </div>
           </form>

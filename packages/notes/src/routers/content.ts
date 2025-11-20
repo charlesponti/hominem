@@ -1,12 +1,10 @@
-import { ContentService } from '@hominem/utils/services'
 import { PublishingContentTypeSchema } from '@hominem/data/schema'
-import type { AnyRouter } from '@trpc/server'
+import { ContentService } from '@hominem/utils/services'
 import { z } from 'zod'
 
-// Use tRPC's router type - a function that takes a record of routers and returns them
-type RouterBuilder = <TProcRouterRecord extends Record<string, AnyRouter>>(
-  procRouterRecord: TProcRouterRecord
-) => TProcRouterRecord
+// Use tRPC's router type - matches the actual router function signature
+// Accept any function that can be called with a router record object
+type RouterBuilder = (procRouterRecord: Record<string, unknown>) => unknown
 
 // Use a generic type for the procedure that matches tRPC's procedure structure
 // This allows any procedure builder that has .input(), .query(), and .mutation() methods
@@ -19,13 +17,13 @@ type ProtectedProcedure = {
         input: z.infer<TInput>
         ctx: { userId?: string; user?: unknown; supabaseId?: string }
       }) => Promise<TOutput> | TOutput
-    ) => AnyRouter
+    ) => unknown
     mutation: <TOutput>(
       fn: (opts: {
         input: z.infer<TInput>
         ctx: { userId?: string; user?: unknown; supabaseId?: string }
       }) => Promise<TOutput> | TOutput
-    ) => AnyRouter
+    ) => unknown
   }
 }
 

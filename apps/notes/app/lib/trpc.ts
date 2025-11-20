@@ -1,18 +1,19 @@
 import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
+import { createTRPCProxyClient } from '@trpc/client'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import { createClient } from './supabase/client'
-import type { AppRouter } from './trpc/router'
+import type { AppRouter } from '../../../../packages/types/trpc'
 
 export type RouterInput = inferRouterInputs<AppRouter>
 export type RouterOutput = inferRouterOutputs<AppRouter>
 
 export const trpc = createTRPCReact<AppRouter>()
-
 export const createTRPCClient = () => {
-  return trpc.createClient({
+  return createTRPCProxyClient<AppRouter>({
     links: [
       httpBatchLink({
-        url: '/api/trpc',
+        // Point to centralized API server instead of local route
+        url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
         async headers() {
           const supabase = createClient()
           if (!supabase) {

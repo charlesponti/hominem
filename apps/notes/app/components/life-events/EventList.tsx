@@ -50,7 +50,7 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
       {activities.map((activity) => (
         <EventCard key={activity.id} activity={activity} onEditEvent={onEditEvent} />
       ))}
