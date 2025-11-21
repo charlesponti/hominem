@@ -1,5 +1,5 @@
 # Base stage with common tools
-FROM node:23.11-bookworm-slim AS base
+FROM oven/bun:1.1.38-debian AS base
 WORKDIR /app
 
 # Install necessary tools (only what's absolutely needed)
@@ -8,7 +8,7 @@ RUN apt-get update && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-# Set up Node.js environment
+# Set up environment
 ENV PATH="/usr/local/bin:${PATH}"
 ENV NODE_ENV=production
 ENV TURBO_TELEMETRY_DISABLED=1
@@ -18,7 +18,7 @@ FROM base AS pruner
 WORKDIR /app
 
 # Install turbo globally
-RUN npm install -g turbo
+RUN bun install -g turbo
 
 # Copy repo content needed for pruning
 COPY . .
@@ -26,62 +26,48 @@ COPY . .
 # Prune the workspace to only include the API app and its deps
 RUN turbo prune @hominem/api --docker
 
-# Builder stage - build from the pruned source
-FROM base AS builder
+# Dependencies stage - install dependencies
+FROM base AS deps
 WORKDIR /app
-
-# Install build tools
-RUN npm install -g bun turbo esbuild
 
 # Copy the pruned lockfile and package.json files
 COPY --from=pruner /app/out/json/ .
 
-# Install all dependencies (including dev deps for building)
-RUN bun install
-
-# Copy the pruned source code
-COPY --from=pruner /app/out/full/ .
-
-# Copy turbo.json for the build
-COPY turbo.json .
-
-# Build
-WORKDIR /app/apps/api
-RUN node esbuild.config.js
-WORKDIR /app
+# Install only production dependencies
+RUN bun install --production --frozen-lockfile
 
 # Production stage
-FROM node:23.11-bookworm-slim AS release
+FROM oven/bun:1.1.38-debian AS release
 WORKDIR /app
 ENV NODE_ENV=production
 ENV TURBO_TELEMETRY_DISABLED=1
 
 # Install only essential packages for production
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends ca-certificates && \
+  apt-get install -y --no-install-recommends ca-certificates curl && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN addgroup --gid 1001 nodejs && \
+RUN addgroup --gid 1001 bunuser && \
   adduser --uid 1001 --gid 1001 hominem
 
 # Create logs directory with correct permissions
 RUN mkdir -p /app/logs && \
-  chown -R hominem:nodejs /app/logs
+  chown -R hominem:bunuser /app/logs
 
 # Copy package files for reference
 COPY --from=pruner /app/out/json/ .
 
-# Copy node_modules from builder (already has all dependencies we need)
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
-# Copy built artifacts
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
+# Copy source code from pruner (includes packages and app source)
+COPY --from=pruner /app/out/full/packages ./packages
+COPY --from=pruner /app/out/full/apps/api ./apps/api
 
 # Set proper permissions
-RUN chown -R hominem:nodejs /app
+RUN chown -R hominem:bunuser /app
 
 # Security: Run as non-root user
 USER hominem
@@ -93,9 +79,6 @@ EXPOSE ${PORT:-3000}
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:${PORT:-3000}/api/status || exit 1
 
-# Simple startup for the application
-USER hominem
-
-# Start the application
-ENTRYPOINT ["node", "apps/api/dist/index.js"]
+# Start the application directly from source with Bun
+ENTRYPOINT ["bun", "run", "apps/api/src/index.ts"]
 CMD []

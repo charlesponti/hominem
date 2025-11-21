@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { createLifeEvent, getLifeEvents, getPeople } from '../../life-events/db'
+import { createLifeEvent, getLifeEvents, getPeople } from '@hominem/data'
 import { publicProcedure, router } from '../context'
 
 const listInputSchema = z
