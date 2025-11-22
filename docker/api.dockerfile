@@ -17,6 +17,12 @@ ENV TURBO_TELEMETRY_DISABLED=1
 FROM base AS pruner
 WORKDIR /app
 
+# Install Node.js (required for turbo CLI)
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+  apt-get install -y nodejs && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
 # Install turbo globally
 RUN bun install -g turbo
 
