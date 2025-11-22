@@ -19,7 +19,8 @@ WORKDIR /app
 
 # Install Node.js (required for turbo CLI)
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
-  apt-get install -y nodejs && \
+  apt-get update && \
+  apt-get install -y --fix-missing nodejs && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
