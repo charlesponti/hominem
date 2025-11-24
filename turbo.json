@@ -34,7 +34,7 @@
     },
     "test": {
       "dependsOn": [],
-      "outputs": ["coverage/**"]
+      "outputs": []
     },
     "format": {
       "outputs": []

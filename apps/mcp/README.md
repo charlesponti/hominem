@@ -1,29 +1,8 @@
-# health-and-fitness MCP Server
+# Hominem MCP Server
 
-A Model Context Protocol server
+A Model Context Protocol server providing AI-powered tools for health, fitness, finance, productivity, and more.
 
-This is a TypeScript-based MCP server that implements a simple notes system. It demonstrates core MCP concepts by providing:
-
-- Resources representing text notes with URIs and metadata
-- Tools for creating new notes
-- Prompts for generating summaries of notes
-
-## Features
-
-### Resources
-- List and access notes via `note://` URIs
-- Each note has a title, content and metadata
-- Plain text mime type for simple content access
-
-### Tools
-- `create_note` - Create new text notes
-  - Takes title and content as required parameters
-  - Stores note in server state
-
-### Prompts
-- `summarize_notes` - Generate a summary of all stored notes
-  - Includes all note contents as embedded resources
-  - Returns structured prompt for LLM summarization
+This TypeScript-based MCP server integrates with the Hominem ecosystem to provide LLM assistants with access to various tools and resources. The server communicates over stdio and can be used with Claude Desktop or other MCP-compatible clients.
 
 ## Development
 
@@ -61,22 +40,12 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
 
 ### Authentication/configuration
 
-Some tools require authentication to access user-specific data stored in the Hominem API:
+The MCP server provides two types of tools:
 
-**Tools requiring authentication:**
-- Finance tools (accounts, transactions, analytics)
-- Notes tools (create, list notes)
-- Notes resources
+- **Tools requiring authentication** - These access your personal data stored in the Hominem API (e.g., finance accounts, notes, transactions)
+- **Tools without authentication** - These use AI models or external APIs to provide general functionality (e.g., workout recommendations, web scraping)
 
-**Tools that work without authentication:**
-- Workout recommendations
-- Nutrition analysis
-- Sleep tracking
-- Mental wellness assessment
-- Flight search
-- Tax form scraping
-
-**Note:** The MCP server will start successfully even without authentication. Auth is only required when using tools that access your personal data.
+**Note:** The MCP server will start successfully even without authentication. Auth is only required when using tools that access your personal data. To see which tools require authentication, check each tool's documentation or try using it - you'll receive a clear error if authentication is needed.
 
 #### Getting an Authentication Token
 

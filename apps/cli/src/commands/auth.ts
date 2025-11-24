@@ -30,8 +30,8 @@ const command = new Command()
     const saveTokens = async (accessToken: string, refreshToken?: string) => {
       const spinner = ora('Saving authentication token').start()
       try {
-        const config: { accessToken: string; refreshToken?: string; timestamp: string } = {
-          accessToken: accessToken,
+        const config: { token: string; refreshToken?: string; timestamp: string } = {
+          token: accessToken,
           timestamp: new Date().toISOString(),
         }
         if (refreshToken) {
@@ -110,7 +110,7 @@ const command = new Command()
       await open(authUrl)
     })
 
-    server.on('error', (e: any) => {
+    server.on('error', (e: NodeJS.ErrnoException) => {
       if (e.code === 'EADDRINUSE') {
         consola.error(
           chalk.red(

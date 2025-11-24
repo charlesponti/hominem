@@ -49,7 +49,7 @@ describe('MCP Server Functional Tests', () => {
 
       expect(result.tools).toBeDefined()
       expect(result.tools.length).toBeGreaterThan(0)
-      expect(result.tools.length).toBe(24)
+      expect(result.tools.length).toBe(23)
     })
 
     it('should include expected health tools', async () => {
@@ -57,7 +57,6 @@ describe('MCP Server Functional Tests', () => {
       const toolNames = result.tools.map((t) => t.name)
 
       expect(toolNames).toContain('recommend_workout')
-      expect(toolNames).toContain('analyze_nutrition')
       expect(toolNames).toContain('assess_mental_wellness')
     })
 
@@ -104,28 +103,6 @@ describe('MCP Server Functional Tests', () => {
       expect(data).toHaveProperty('duration')
       expect(data).toHaveProperty('exercises')
       expect(Array.isArray(data.exercises)).toBe(true)
-    })
-
-    it('should execute nutrition analysis tool', async () => {
-      const result = await client.callTool({
-        name: 'analyze_nutrition',
-        arguments: {
-          input: {
-            meals: ['Oatmeal with berries', 'Grilled chicken salad'],
-            dietaryPreferences: ['high-protein'],
-            calorieTarget: 2000,
-          },
-        },
-      })
-
-      expect(result.content).toBeDefined()
-      const data = JSON.parse((result.content as any[])[0].text)
-
-      expect(data).toHaveProperty('nutritionalQuality')
-      expect(data).toHaveProperty('macroEstimate')
-      expect(data.macroEstimate).toHaveProperty('protein')
-      expect(data.macroEstimate).toHaveProperty('carbohydrates')
-      expect(data.macroEstimate).toHaveProperty('fats')
     })
   })
 

@@ -12,7 +12,6 @@ import { registerFinanceTools } from './tools/finance'
 import { registerFlightsTool } from './tools/flights'
 import { registerMentalWellnessTool } from './tools/mental-health'
 import { registerNotesTool } from './tools/notes'
-import { registerNutritionTool } from './tools/nutrition'
 import { registerTaxTool } from './tools/taxes'
 import { registerWorkoutTool } from './tools/workout'
 
@@ -24,7 +23,6 @@ const server = new Server({
 
 // Register all tools
 registerWorkoutTool(server)
-registerNutritionTool(server)
 registerMentalWellnessTool(server)
 registerFlightsTool(server)
 registerTaxTool(server)
