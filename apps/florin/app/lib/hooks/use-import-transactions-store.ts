@@ -1,8 +1,8 @@
 'use client'
 
-import { useApiClient, useSupabaseAuth } from '@hominem/ui'
+import { getSupabase, useApiClient } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
-import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/types'
+import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/jobs'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'
@@ -19,7 +19,6 @@ const PROGRESS_UPDATE_THROTTLE = 100
 export function useImportTransactionsStore() {
   const apiClient = useApiClient()
   const queryClient = useQueryClient()
-  const { userId } = useSupabaseAuth()
   const [statuses, setStatuses] = useState<FileStatus[]>([])
   const [activeJobIds, setActiveJobIds] = useState<string[]>([])
   const [error, setError] = useState<Error | null>(null)
@@ -32,6 +31,14 @@ export function useImportTransactionsStore() {
 
   // Get WebSocket store functions
   const { isConnected, connect, sendMessage, subscribe } = useWebSocketStore()
+
+  const getToken = useCallback(async () => {
+    const supabase = getSupabase()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    return session?.access_token || null
+  }, [])
 
   const getStableFile = useCallback((fileName: string): File => {
     const cached = fileCache.current.get(fileName)
@@ -57,7 +64,7 @@ export function useImportTransactionsStore() {
   // Connect on initialization, providing token function
   useEffect(() => {
     connect(getToken)
-  }, [connect])
+  }, [connect, getToken])
 
   // Throttled update function to reduce re-render frequency
   const throttledUpdateProgress = useCallback(
@@ -297,7 +304,7 @@ export function useImportTransactionsStore() {
     startSingleFile: (file: File) => importMutation.mutateAsync([file]),
     removeFileStatus,
     activeJobIds,
-    isImporting: importMutation.isLoading,
+    isImporting: importMutation.isPending,
     isError: importMutation.isError || !!error,
     error,
   }

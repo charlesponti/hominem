@@ -1,7 +1,7 @@
-import { useAuth } from '@hominem/auth'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 import { Button } from './ui/button'
@@ -24,17 +24,19 @@ const navItems = [
   },
 ]
 
-export function MainNavigation() {
+export function MainNavigation({ isAuthenticated }: { isAuthenticated?: boolean }) {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoading, signInWithOAuth } = useAuth()
+  const { user, isLoading } = useSupabaseAuth()
   const navigate = useNavigate()
-  const isLoggedIn = !isLoading && user
+  // Use server state (isAuthenticated prop) for initial render to avoid flash
+  // Use client state (isLoading && user) for updates
+  // If server says authenticated, assume true until client confirms otherwise (or vice versa)
+  const isLoggedIn = user || (isLoading && isAuthenticated)
   const isLoaded = !isLoading
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)
-  const [_isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
     // Check if we're on the client side
@@ -117,15 +119,9 @@ export function MainNavigation() {
     }
   }
 
-  const _handleSignIn = async () => {
-    try {
-      setIsSigningIn(true)
-      await signInWithOAuth('google')
-    } catch (error) {
-      console.error('Sign in failed:', error)
-    } finally {
-      setIsSigningIn(false)
-    }
+  // Hide navigation if not logged in
+  if (!isLoggedIn) {
+    return null
   }
 
   // Desktop navbar

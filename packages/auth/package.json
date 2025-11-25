@@ -2,24 +2,23 @@
   "name": "@hominem/auth",
   "version": "0.0.0",
   "description": "Unified authentication package for Hominem apps",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./src/index.ts",
       "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./src/index.ts"
     },
     "./server-index": {
-      "import": "./dist/server-index.mjs",
+      "import": "./src/server-index.ts",
       "require": "./dist/server-index.js",
-      "types": "./dist/server-index.d.ts"
+      "types": "./src/server-index.ts"
     }
   },
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

@@ -112,8 +112,31 @@ export async function requireServerAuth(
  * Get auth configuration from environment
  */
 export function getServerAuthConfig(): AuthConfig {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  let supabaseUrl: string | undefined
+  let supabaseAnonKey: string | undefined
+
+  // Define interface for import.meta.env to avoid 'any'
+  interface ImportMetaEnv {
+    VITE_SUPABASE_URL?: string
+    SUPABASE_URL?: string
+    VITE_SUPABASE_ANON_KEY?: string
+    SUPABASE_ANON_KEY?: string
+  }
+
+  // Try import.meta.env first (Vite/Client/Edge)
+  // We use unknown cast first to avoid TS errors about ImportMeta not having env
+  const meta = import.meta as unknown as { env?: ImportMetaEnv }
+  if (typeof meta !== 'undefined' && meta.env) {
+    supabaseUrl = meta.env.SUPABASE_URL || meta.env.VITE_SUPABASE_URL
+    supabaseAnonKey = meta.env.SUPABASE_ANON_KEY || meta.env.VITE_SUPABASE_ANON_KEY
+  }
+
+  // Fallback to process.env (Node/Server)
+  if ((!supabaseUrl || !supabaseAnonKey) && typeof process !== 'undefined' && process.env) {
+    supabaseUrl = supabaseUrl || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+    supabaseAnonKey =
+      supabaseAnonKey || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  }
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase environment variables')

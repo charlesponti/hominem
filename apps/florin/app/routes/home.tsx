@@ -1,4 +1,4 @@
-import { useSupabaseAuth } from '@hominem/ui'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { ArrowRight, BarChart2 } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
@@ -16,7 +16,7 @@ export function meta() {
 }
 
 export default function Home() {
-  const { user, isLoading } = useSupabaseAuth()
+  const { user, isLoading, signInWithGoogle } = useSupabaseAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -25,8 +25,20 @@ export default function Home() {
     }
   }, [isLoading, user, navigate])
 
-  if (isLoading || user) {
-    return null
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    )
+  }
+
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    )
   }
 
   return (
@@ -48,7 +60,7 @@ export default function Home() {
           <div className="mb-16">
             <button
               type="button"
-              onClick={() => navigate('/auth/signup')}
+              onClick={() => signInWithGoogle()}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               Get Started Free

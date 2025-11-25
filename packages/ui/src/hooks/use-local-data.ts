@@ -7,19 +7,12 @@
  * })
  */
 import { useApiClient } from '@hominem/ui'
-import { createClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-// Create Supabase client for browser usage
-const supabase =
-  SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null
-
 // Hook to get current user from Supabase
-function useSupabaseUser() {
+function useSupabaseUser(supabase?: SupabaseClient) {
   const [userId, setUserId] = useState<string | null>(null)
   const [isSignedIn, setIsSignedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -54,7 +47,7 @@ function useSupabaseUser() {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [supabase])
 
   return { userId, isSignedIn, isLoading }
 }
@@ -99,6 +92,8 @@ export interface UseLocalDataOptions {
   queryOptions?: Record<string, unknown>
   /** Optional callback to set up custom indices on the store */
   setupStore?: (store: IDBObjectStore) => void
+  /** Optional Supabase client for sync features */
+  supabaseClient?: SupabaseClient
 }
 
 // Shared DB instance map for multi-store/multi-db support
@@ -182,8 +177,9 @@ export function useLocalData<T extends SyncableEntity>({
   staleTime = 5 * 60 * 1000, // 5 minutes by default
   queryOptions = {},
   setupStore,
+  supabaseClient,
 }: UseLocalDataOptions) {
-  const { userId, isSignedIn } = useSupabaseUser()
+  const { userId, isSignedIn } = useSupabaseUser(supabaseClient)
   const queryClient = useQueryClient()
   const apiClient = useApiClient()
   const [error, setError] = useState<Error | null>(null)
@@ -243,7 +239,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(queryKey)
+      queryClient.invalidateQueries({ queryKey })
       setError(null)
     },
   })
@@ -288,7 +284,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(queryKey)
+      queryClient.invalidateQueries({ queryKey })
       setError(null)
     },
   })
@@ -312,7 +308,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(queryKey)
+      queryClient.invalidateQueries({ queryKey })
       setError(null)
     },
   })
@@ -369,7 +365,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(queryKey)
+      queryClient.invalidateQueries({ queryKey })
       setError(null)
     },
   })
@@ -437,7 +433,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(queryKey)
+      queryClient.invalidateQueries({ queryKey })
       setError(null)
     },
   })
@@ -489,7 +485,7 @@ export function useLocalData<T extends SyncableEntity>({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(queryKey)
+      queryClient.invalidateQueries({ queryKey })
       setError(null)
     },
   })

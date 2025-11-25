@@ -21,6 +21,15 @@ For development with auto-rebuild:
 npm run watch
 ```
 
+### Testing
+
+Run tests:
+```bash
+npm test
+```
+
+**Note for CI/CD:** Some tests require a local LM Studio instance running at `http://localhost:1234/v1`. These tests will be automatically skipped in CI environments unless `LM_STUDIO_URL` is set to a valid endpoint.
+
 ## Installation
 
 To use with Claude Desktop, add the server config:
@@ -81,6 +90,9 @@ If you already have a Supabase JWT token, create `~/.hominem/config.json`:
 **API endpoint overrides:**
 - `HOMINEM_API_HOST` - Target a different API host (default: `localhost`)
 - `HOMINEM_API_PORT` - Target a different API port (default: `4040`)
+
+**LLM configuration:**
+- `LM_STUDIO_URL` - Custom LM Studio or OpenAI-compatible endpoint (default: `http://localhost:1234/v1`)
 
 #### Token Expiration and Renewal
 

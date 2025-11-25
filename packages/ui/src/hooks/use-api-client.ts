@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { supabase } from './use-supabase-auth'
+import { getSupabase } from './use-supabase-auth'
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL
 
@@ -19,6 +19,7 @@ type ApiState = {
  * React hook for API client that handles fetch requests with authentication
  */
 export function useApiClient() {
+  const supabase = getSupabase()
   const [state, setState] = useState<ApiState>({
     isLoading: false,
     error: null,
@@ -81,7 +82,7 @@ export function useApiClient() {
         throw error
       }
     },
-    []
+    [supabase]
   )
 
   /**

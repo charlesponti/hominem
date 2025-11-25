@@ -1,6 +1,6 @@
 'use client'
 
-import type { FileStatus, ImportRequestResponse } from '@hominem/utils/types'
+import type { FileStatus, ImportRequestResponse } from '@hominem/utils/jobs'
 import { AnimatePresence, motion } from 'framer-motion'
 import { memo, useCallback, useEffect, useMemo } from 'react'
 import { DropZone } from '~/components/drop-zone'

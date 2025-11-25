@@ -18,9 +18,11 @@ import {
 } from '~/components/ui/select'
 import { Slider } from '~/components/ui/slider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { formatCurrency, formatPercent } from '~/lib/number.utils'
 
 const LocationTaxComparison = () => {
+  const { supabase } = useSupabaseAuth()
   const [income, setIncome] = useState(100000)
   const [selectedStates, setSelectedStates] = useState<StateTaxCode[]>(['CA', 'TX'])
   const [showAddState, setShowAddState] = useState(false)
@@ -96,6 +98,7 @@ const LocationTaxComparison = () => {
     endpoint: '/api/locations',
     storeName: 'locations',
     initialData: [],
+    supabaseClient: supabase,
   })
 
   const [newLocation, setNewLocation] = useState({

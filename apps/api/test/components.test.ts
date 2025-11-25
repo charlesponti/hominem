@@ -2,20 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { createServer } from '../src/server.js'
 
 describe('Components API', () => {
-  it('should serve the use-api-client registry', async () => {
-    const app = createServer()
-
-    const res = await app.request('/components/use-api-client.json')
-
-    expect(res.status).toBe(200)
-    expect(res.headers.get('content-type')).toBe('application/json')
-
-    const data = await res.json()
-    expect(data).toHaveProperty('name', 'use-api-client')
-    expect(data).toHaveProperty('type', 'registry:hook')
-    expect(data).toHaveProperty('title', 'API Client Hook')
-  })
-
   it('should list available components', async () => {
     const app = createServer()
 

@@ -1,8 +1,4 @@
-import {
-  createSupabaseServerClient,
-  getServerAuth,
-  getServerAuthConfig,
-} from '@hominem/auth/server-index'
+import { createSupabaseServerClient, getServerAuth, getServerAuthConfig } from '@hominem/ui/server'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
 
 export async function loader({ request }: LoaderFunctionArgs) {

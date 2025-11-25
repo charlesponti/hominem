@@ -80,30 +80,33 @@ describe('MCP Server Functional Tests', () => {
   })
 
   describe('Tool Execution', () => {
-    it('should execute workout recommendation tool', async () => {
-      const result = await client.callTool({
-        name: 'recommend_workout',
-        arguments: {
-          input: {
-            fitnessLevel: 'beginner',
-            goal: 'general_fitness',
-            timeAvailable: 30,
-            equipment: ['dumbbells'],
-            limitations: [],
+    it.skipIf(!process.env.LM_STUDIO_URL && process.env.CI)(
+      'should execute workout recommendation tool',
+      async () => {
+        const result = await client.callTool({
+          name: 'recommend_workout',
+          arguments: {
+            input: {
+              fitnessLevel: 'beginner',
+              goal: 'general_fitness',
+              timeAvailable: 30,
+              equipment: ['dumbbells'],
+              limitations: [],
+            },
           },
-        },
-      })
+        })
 
-      expect(result.content).toBeDefined()
-      expect(Array.isArray(result.content)).toBe(true)
-      expect((result.content as any[]).length).toBeGreaterThan(0)
+        expect(result.content).toBeDefined()
+        expect(Array.isArray(result.content)).toBe(true)
+        expect((result.content as any[]).length).toBeGreaterThan(0)
 
-      const data = JSON.parse((result.content as any[])[0].text)
-      expect(data).toHaveProperty('title')
-      expect(data).toHaveProperty('duration')
-      expect(data).toHaveProperty('exercises')
-      expect(Array.isArray(data.exercises)).toBe(true)
-    })
+        const data = JSON.parse((result.content as any[])[0].text)
+        expect(data).toHaveProperty('title')
+        expect(data).toHaveProperty('duration')
+        expect(data).toHaveProperty('exercises')
+        expect(Array.isArray(data.exercises)).toBe(true)
+      }
+    )
   })
 
   describe('Resources', () => {

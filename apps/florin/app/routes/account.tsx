@@ -1,5 +1,5 @@
-import { useAuth } from '@hominem/auth'
-import { useQueryClient } from '@tanstack/react-query'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { RouteLink } from '~/components/route-link'
 import {
@@ -18,7 +18,7 @@ import { toast } from '~/components/ui/use-toast'
 import { useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 
 export default function AccountPage() {
-  const { signOut } = useAuth()
+  const { signOut } = useSupabaseAuth()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
@@ -160,10 +160,10 @@ export default function AccountPage() {
               <Button
                 variant="destructive"
                 onClick={() => setShowConfirmDelete(true)}
-                disabled={deleteAllFinanceData.isLoading}
+                disabled={deleteAllFinanceData.isPending}
                 className="mt-2 sm:mt-0"
               >
-                {deleteAllFinanceData.isLoading ? 'Deleting...' : 'Delete All Data'}
+                {deleteAllFinanceData.isPending ? 'Deleting...' : 'Delete All Data'}
               </Button>
             </div>
           </CardContent>
@@ -198,13 +198,13 @@ export default function AccountPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteAllFinanceData.isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteAllFinanceData.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteAllFinanceData.mutate()}
-              disabled={deleteAllFinanceData.isLoading}
+              disabled={deleteAllFinanceData.isPending}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {deleteAllFinanceData.isLoading ? 'Deleting...' : 'Yes, delete all data'}
+              {deleteAllFinanceData.isPending ? 'Deleting...' : 'Yes, delete all data'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

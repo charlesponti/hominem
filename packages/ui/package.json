@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "lint": "biome lint ./src --fix"
+    "lint": "biome lint ./src --fix",
+    "build": "tsup src/index.ts src/server/index.ts --format esm,cjs --dts"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.49.8",
@@ -19,7 +20,8 @@
     "react": "^18.2.0"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./server": "./src/server/index.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8"
