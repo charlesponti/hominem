@@ -58,14 +58,18 @@ export const chatsRouter = router({
     .input(
       z.object({
         title: z.string(),
-        userId: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
-      const { title, userId } = input
+    .mutation(async ({ input, ctx }) => {
+      const { title } = input
+      const { userId } = ctx
 
-      if (!title || !userId || userId === 'anonymous') {
-        throw new Error('Title and userId are required')
+      if (!title) {
+        throw new Error('Title is required')
+      }
+
+      if (!userId) {
+        throw new Error('Unauthorized')
       }
 
       try {
@@ -83,15 +87,20 @@ export const chatsRouter = router({
         chatId: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { chatId } = input
+      const { userId } = ctx
 
       if (!chatId) {
         throw new Error('Chat ID is required')
       }
 
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
+
       try {
-        const success = await chatService.deleteChat(chatId)
+        const success = await chatService.deleteChat(chatId, userId)
         return { success }
       } catch (error) {
         console.error('Failed to delete chat:', error)
@@ -106,15 +115,20 @@ export const chatsRouter = router({
         title: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { chatId, title } = input
+      const { userId } = ctx
 
       if (!chatId || !title) {
         throw new Error('Chat ID and title are required')
       }
 
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
+
       try {
-        const chat = await chatService.updateChatTitle(chatId, title)
+        const chat = await chatService.updateChatTitle(chatId, title, userId)
         return { success: !!chat }
       } catch (error) {
         console.error('Failed to update chat title:', error)
@@ -125,16 +139,21 @@ export const chatsRouter = router({
   searchChats: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
+        userId: z.string().optional(),
         query: z.string(),
         limit: z.number().optional().default(20),
       })
     )
-    .query(async ({ input }) => {
-      const { userId, query, limit } = input
+    .query(async ({ input, ctx }) => {
+      const { query, limit } = input
+      const { userId } = ctx
 
-      if (!userId || userId === 'anonymous' || !query) {
-        throw new Error('User ID and query are required')
+      if (!userId) {
+        throw new Error('Unauthorized')
+      }
+
+      if (!query) {
+        throw new Error('Query is required')
       }
 
       try {

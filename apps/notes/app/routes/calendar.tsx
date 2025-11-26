@@ -1,11 +1,26 @@
+import { data } from 'react-router'
 import { CalendarSync } from '~/components/calendar/calendar-sync'
+import { createSupabaseServerClient } from '~/lib/supabase/server'
+import type { Route } from './+types/calendar'
 
-export async function loader() {
-  // Auth is handled client-side with Supabase
-  return {}
+export async function loader({ request }: { request: Request }) {
+  const { supabase } = createSupabaseServerClient(request)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const googleTokens: { access_token: string; refresh_token: string }[] = []
+  if (session?.provider_token) {
+    googleTokens.push({
+      access_token: session.provider_token,
+      refresh_token: session.provider_refresh_token ?? '',
+    })
+  }
+
+  return data({ googleTokens, userId: session?.user.id })
 }
 
-export default function CalendarPage() {
+export default function CalendarPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -18,7 +33,7 @@ export default function CalendarPage() {
         </div>
 
         <div className="flex justify-center">
-          <CalendarSync userId="current-user" />
+          <CalendarSync userId={loaderData?.userId ?? ''} googleTokens={loaderData?.googleTokens} />
         </div>
 
         <div className="mt-8 text-center">

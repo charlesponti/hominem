@@ -16,6 +16,7 @@ export default [
     route('api/upload', 'routes/api/upload.ts'),
     route('api/transcribe', 'routes/api/transcribe.ts'),
     route('api/speech', 'routes/api/speech.ts'),
+    route('api/auth/google', 'routes/api/auth/google.ts'),
 
     // Chat Routes
     route('chat', 'routes/chat/index.tsx'),
@@ -32,8 +33,11 @@ export default [
     route('/life-events/people', 'routes/life-events.people.tsx'),
     route('/calendar', 'routes/calendar.tsx'),
     route('/account', 'routes/account.tsx'),
+
+    // Auth Routes
     route('/auth/signin', 'routes/auth/signin.tsx'),
     route('/auth/signup', 'routes/auth/signup.tsx'),
+    route('/auth/google', 'routes/auth/google.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
   ]),
 ] as RouteConfig

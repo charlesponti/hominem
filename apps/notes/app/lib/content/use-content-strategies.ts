@@ -1,19 +1,11 @@
-import { useCallback, useState } from 'react'
+import { trpc } from '~/lib/trpc'
 
 export function useContentStrategies() {
-  const [isLoading, setIsLoading] = useState(false)
-
-  const get = useCallback(async (id: string) => {
-    setIsLoading(true)
-    try {
-      return { id, title: 'Sample Strategy', content: 'Sample content' }
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data: strategies, isLoading, error } = trpc.contentStrategies.list.useQuery()
 
   return {
-    get,
+    strategies: strategies || [],
     isLoading,
+    error,
   }
 }

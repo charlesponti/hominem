@@ -53,7 +53,7 @@ export async function loader({ request }: ActionFunctionArgs) {
   try {
     const url = new URL(request.url)
     const accessToken = url.searchParams.get('accessToken')
-    const refreshToken = url.searchParams.get('refreshToken')
+    const refreshToken = url.searchParams.get('refreshToken') ?? undefined
 
     if (!accessToken) {
       return jsonResponse({ error: 'Missing access token' }, { status: 400 })

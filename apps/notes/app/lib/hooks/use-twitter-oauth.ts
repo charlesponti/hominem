@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { trpc } from '~/lib/trpc'
+import { useToast } from '~/components/ui/use-toast'
+import { useCallback } from 'react'
 
 export function useTwitterOAuth() {
-  const { userId } = useSupabaseAuth()
-
+  // keeping this stub as it was in original, potentially unused or pending implementation
   const refetch = useCallback(async () => {}, [])
 
   return {
@@ -12,39 +12,26 @@ export function useTwitterOAuth() {
 }
 
 export function useTwitterAccounts() {
-  const [accounts, _setAccounts] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-
-  const fetchAccounts = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      return []
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data: accounts, isLoading, refetch } = trpc.twitter.accounts.useQuery()
 
   return {
-    accounts,
+    data: accounts || [],
     isLoading,
-    fetchAccounts,
+    refetch,
   }
 }
 
 export function useTwitterPost() {
-  const [isPosting, setIsPosting] = useState(false)
+  const { toast } = useToast()
 
-  const postTweet = useCallback(async (_content: string) => {
-    setIsPosting(true)
-    try {
-      return { success: true }
-    } finally {
-      setIsPosting(false)
-    }
-  }, [])
+  const mutation = trpc.twitter.post.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Tweet posted successfully' })
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error posting tweet', description: error.message, variant: 'destructive' })
+    },
+  })
 
-  return {
-    postTweet,
-    isPosting,
-  }
+  return mutation
 }

@@ -32,7 +32,7 @@ export class ChatError extends Error {
       | 'AUTH_ERROR',
     message: string
   ) {
-    super(message)
+    super(message, { cause })
     this.name = 'ChatError'
   }
 }
@@ -56,7 +56,7 @@ export class ChatService {
 
       return newChat
     } catch (error) {
-      logger.error(`Failed to create chat:: ${error}`)
+      logger.error('Failed to create chat', { error })
       throw new ChatError('DATABASE_ERROR', 'Failed to create chat conversation')
     }
   }

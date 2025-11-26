@@ -12,15 +12,17 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync'
-import { createClient } from '~/lib/supabase/client'
 
 interface CalendarSyncProps {
   userId: string
+  googleTokens?: { access_token: string; refresh_token: string }[]
 }
 
-export function CalendarSync({ userId }: CalendarSyncProps) {
-  const [accessToken, setAccessToken] = useState('')
-  const [refreshToken, setRefreshToken] = useState('')
+export function CalendarSync({ userId, googleTokens }: CalendarSyncProps) {
+  const googleToken = googleTokens?.[0]
+  const accessToken = googleToken?.access_token || ''
+  const refreshToken = googleToken?.refresh_token || ''
+
   const [selectedCalendar, setSelectedCalendar] = useState('primary')
   const [calendars, setCalendars] = useState<Array<{ id: string; summary: string }>>([])
   const [timeRange, setTimeRange] = useState({
@@ -31,40 +33,6 @@ export function CalendarSync({ userId }: CalendarSyncProps) {
   const endDateId = useId()
 
   const { syncCalendar, getCalendars, isLoading, result } = useGoogleCalendarSync()
-
-  // Load Google tokens from localStorage or Supabase
-  useEffect(() => {
-    const loadTokens = async () => {
-      try {
-        const supabase = createClient()
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        if (session?.access_token) {
-          // Try to get Google tokens from the API
-          const response = await fetch('/api/auth/cli', {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          })
-
-          if (response.ok) {
-            const data = await response.json()
-            if (data.googleTokens && data.googleTokens.length > 0) {
-              const googleToken = data.googleTokens[0]
-              setAccessToken(googleToken.access_token)
-              setRefreshToken(googleToken.refresh_token)
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error loading Google tokens:', error)
-      }
-    }
-
-    loadTokens()
-  }, [])
 
   const loadCalendars = useCallback(async () => {
     try {
@@ -126,7 +94,14 @@ export function CalendarSync({ userId }: CalendarSyncProps) {
             <p className="text-muted-foreground">
               Please connect your Google account first to sync calendar events.
             </p>
-            <Button className="mt-4" onClick={() => window.open('/auth/google', '_blank')}>
+            <Button
+              className="mt-4"
+              onClick={() => {
+                window.location.href = `/auth/google?return_to=${encodeURIComponent(
+                  window.location.pathname
+                )}`
+              }}
+            >
               Connect Google Account
             </Button>
           </div>
@@ -171,10 +146,29 @@ export function CalendarSync({ userId }: CalendarSyncProps) {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" onClick={setDefaultTimeRange}>
+                <Button
+                  variant={
+                    timeRange.start &&
+                    timeRange.end &&
+                    timeRange.start ===
+                      new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+                        .toISOString()
+                        .split('T')[0] &&
+                    timeRange.end ===
+                      new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+                        .toISOString()
+                        .split('T')[0]
+                      ? 'default'
+                      : 'outline'
+                  }
+                  onClick={setDefaultTimeRange}
+                >
                   This Month
                 </Button>
-                <Button variant="outline" onClick={() => setTimeRange({ start: '', end: '' })}>
+                <Button
+                  variant={!timeRange.start && !timeRange.end ? 'default' : 'outline'}
+                  onClick={() => setTimeRange({ start: '', end: '' })}
+                >
                   All Time
                 </Button>
               </div>

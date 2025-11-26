@@ -1,8 +1,14 @@
+import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { Link } from 'react-router'
-import type { Route } from '../+types/root'
+import { getServerSession } from '~/lib/supabase/server'
 
-export async function loader(_loaderArgs: Route.LoaderArgs) {
-  // Auth is handled client-side with Supabase
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { user } = await getServerSession(request)
+
+  if (user) {
+    return redirect('/notes')
+  }
+
   return {}
 }
 
