@@ -100,7 +100,7 @@ describe('MCP Server Functional Tests', () => {
         expect(Array.isArray(result.content)).toBe(true)
         expect((result.content as any[]).length).toBeGreaterThan(0)
 
-        const data = JSON.parse((result.content as any[])[0].text)
+        const data = JSON.parse(result.content[0].text)
         expect(data).toHaveProperty('title')
         expect(data).toHaveProperty('duration')
         expect(data).toHaveProperty('exercises')
@@ -120,26 +120,27 @@ describe('MCP Server Functional Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle invalid tool name gracefully', async () => {
-      await expect(
-        client.callTool({
-          name: 'nonexistent_tool',
-          arguments: {},
-        })
-      ).rejects.toThrow()
+      const result = await client.callTool({
+        name: 'nonexistent_tool',
+        arguments: {},
+      })
+
+      expect(result.content).toBeDefined()
+      expect(result.isError).toBe(true)
     })
 
     it('should handle invalid tool arguments', async () => {
-      await expect(
-        client.callTool({
-          name: 'recommend_workout',
-          arguments: {
-            input: {
-              // Missing required fields
-              fitnessLevel: 'invalid_level' as any,
-            },
+      const result = await client.callTool({
+        name: 'recommend_workout',
+        arguments: {
+          input: {
+            fitnessLevel: 'invalid_level',
           },
-        })
-      ).rejects.toThrow()
+        },
+      })
+
+      expect(result.content).toBeDefined()
+      expect(result.isError).toBe(true)
     })
   })
 })

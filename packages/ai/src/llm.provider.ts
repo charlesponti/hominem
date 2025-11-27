@@ -26,31 +26,28 @@ export class LLMProvider {
   }
   private defaultModels: Record<LLMProviderConfig['provider'], string> = {
     openai: 'gpt-4o-mini',
-    lmstudio: 'gemma-3-12b-it',
+    lmstudio: 'qwen/qwen3-4b-thinking-2507',
     google: 'gemini-1.5-pro-latest',
   }
-  private defaultOpenaiModel = 'gpt-4o-mini'
-  private defaultLmStudioModel = 'gemma-3-12b-it'
-  private defaultGoogleModel = 'gemini-1.5-pro-latest'
 
   getModel(): LanguageModelV1 {
     switch (this.config.provider) {
       case 'google': {
-        return google(this.config.model || this.defaultGoogleModel, {
+        return google(this.config.model || this.defaultModels.google, {
           structuredOutputs: true,
         })
       }
       case 'openai':
-        return openai(this.config.model || this.defaultOpenaiModel, { structuredOutputs: true })
+        return openai(this.config.model || this.defaultModels.openai, { structuredOutputs: true })
       case 'lmstudio': {
         const lmstudio = createOpenAICompatible({
           name: 'lmstudio',
           baseURL: 'http://localhost:1234/v1',
         })
-        return lmstudio(this.config.model || this.defaultLmStudioModel)
+        return lmstudio(this.config.model || this.defaultModels.lmstudio)
       }
       default:
-        return openai(this.defaultOpenaiModel, { structuredOutputs: true })
+        return openai(this.defaultModels.openai, { structuredOutputs: true })
     }
   }
 }

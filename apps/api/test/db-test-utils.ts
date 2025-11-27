@@ -1,7 +1,8 @@
-import crypto from 'node:crypto'
-import { db, eq } from '@hominem/data'
+import { db } from '@hominem/data'
+import { eq } from 'drizzle-orm'
 import { bookmark, users } from '@hominem/data/schema'
 import { vi } from 'vitest'
+import { createTestUser as createTestUserShared } from '@hominem/utils/test-fixtures'
 
 // Track created test users for cleanup
 const createdTestUsers: string[] = []
@@ -295,19 +296,9 @@ export const mockDbOperations = {
  * Creates a test user in the database and returns the user ID
  */
 export const createTestUser = async (overrides = {}): Promise<string> => {
-  const userId = crypto.randomUUID()
-  const testUser = {
-    id: userId,
-    email: `test-${Date.now()}@example.com`,
-    name: 'Test User',
-    supabaseId: `supabase-${userId}`,
-    isAdmin: false,
-    ...overrides,
-  }
-
-  await db.insert(users).values(testUser)
-  createdTestUsers.push(userId)
-  return userId
+  const user = await createTestUserShared(overrides)
+  createdTestUsers.push(user.id)
+  return user.id
 }
 
 /**

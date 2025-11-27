@@ -96,6 +96,10 @@
     "./writer": {
       "import": "./src/writer/index.ts",
       "require": "./dist/writer/index.cjs"
+    },
+    "./test-fixtures": {
+      "import": "./test/fixtures.ts",
+      "require": "./test/fixtures.ts"
     }
   },
   "scripts": {

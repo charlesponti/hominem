@@ -47,7 +47,7 @@ export function registerWorkoutTool(server: McpServer) {
         })
 
         const response = await generateObject({
-          model: lmstudio('gemma-3-12b-it'),
+          model: lmstudio('qwen/qwen3-4b-thinking-2507'),
           prompt,
           schema: WorkoutRecommendationSchema,
         })

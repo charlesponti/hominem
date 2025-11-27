@@ -20,7 +20,7 @@ export function registerFlightsTool(server: McpServer) {
       try {
         // Convert natural language to airport codes
         const response = await generateObject({
-          model: lmstudio('gemma-3-12b-it'),
+          model: lmstudio('qwen/qwen3-4b-thinking-2507'),
           prompt: `
             Based on the user input, return the primary airport codes for the origin and destination cities.: 
 

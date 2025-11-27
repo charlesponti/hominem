@@ -3,6 +3,7 @@ import { db } from '@hominem/data/db'
 import { budgetCategories, users } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { createTestUser } from '../../test/fixtures'
 
 // Helper to check if DB is available
 async function isDatabaseAvailable(): Promise<boolean> {
@@ -23,25 +24,8 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
 
   // Create test users before each test
   beforeEach(async () => {
-    await db
-      .insert(users)
-      .values([
-        {
-          id: testUserId,
-          supabaseId: `supabase_${testUserId}`,
-          email: 'test1@example.com',
-          name: 'Test User 1',
-          isAdmin: false,
-        },
-        {
-          id: testUserId2,
-          supabaseId: `supabase_${testUserId2}`,
-          email: 'test2@example.com',
-          name: 'Test User 2',
-          isAdmin: false,
-        },
-      ])
-      .onConflictDoNothing()
+    await createTestUser({ id: testUserId, name: 'Test User 1' })
+    await createTestUser({ id: testUserId2, name: 'Test User 2' })
   })
 
   // Clean up test data

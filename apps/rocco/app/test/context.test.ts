@@ -4,6 +4,7 @@ import { db } from '../db'
 import { createContext } from '../lib/trpc/context'
 import { users } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
+import { createTestUser } from '@hominem/utils/test-fixtures'
 
 // Mock the dependencies
 vi.mock('../lib/supabase/server', () => ({
@@ -26,25 +27,14 @@ describe('tRPC Context', () => {
 
   beforeAll(async () => {
     // Create test users in the database
-    await db
-      .insert(users)
-      .values([
-        {
-          id: testUserId,
-          supabaseId: 'supabase-user-id',
-          email: 'test@example.com',
-          name: 'Test User',
-          isAdmin: false,
-        },
-        {
-          id: testUserId2,
-          supabaseId: 'supabase-user-id-2',
-          email: 'test2@example.com',
-          name: null,
-          isAdmin: false,
-        },
-      ])
-      .onConflictDoNothing()
+    await createTestUser({
+      id: testUserId,
+      name: 'Test User',
+    })
+    await createTestUser({
+      id: testUserId2,
+      name: null,
+    })
   })
 
   afterAll(async () => {
@@ -107,9 +97,9 @@ describe('tRPC Context', () => {
       db: expect.any(Object),
       user: expect.objectContaining({
         id: testUserId,
-        email: 'test@example.com',
+        email: `test-${testUserId}@example.com`,
         name: 'Test User',
-        supabaseId: 'supabase-user-id',
+        supabaseId: `supabase_${testUserId}`,
       }),
     })
   })
@@ -125,7 +115,7 @@ describe('tRPC Context', () => {
 
     expect(context.user).toBeDefined()
     expect(context.user?.id).toBe(testUserId)
-    expect(context.user?.email).toBe('test@example.com')
+    expect(context.user?.email).toBe(`test-${testUserId}@example.com`)
     expect(context.user?.name).toBe('Test User')
   })
 
@@ -140,8 +130,8 @@ describe('tRPC Context', () => {
 
     expect(context.user).toMatchObject({
       id: testUserId2,
-      email: 'test2@example.com',
-      supabaseId: 'supabase-user-id-2',
+      email: `test-${testUserId2}@example.com`,
+      supabaseId: `supabase_${testUserId2}`,
     })
     expect(context.user?.name).toBeFalsy() // null or undefined
   })

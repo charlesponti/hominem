@@ -35,9 +35,6 @@ const dbProxy = new Proxy({} as PostgresJsDatabase<typeof schema>, {
 
 export { client, dbProxy as db }
 
-// Re-export commonly used drizzle-orm utilities
-export { eq, and, or, sql, desc, asc, gt, gte, lt, lte, ne, inArray, notInArray } from 'drizzle-orm'
-
 export const takeOne = <T>(values: T[]): T | undefined => {
   return values[0]
 }
