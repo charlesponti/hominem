@@ -17,4 +17,3 @@ export const createTestUser = async (overrides: Partial<typeof users.$inferInser
 
   return user
 }
-
