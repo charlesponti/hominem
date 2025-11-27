@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export * as financeTestSeed from './__tests__/finance-test-seed'
+export * as financeTestSeed from '../../test/finance-test-seed'
 // Analytics services
 export * from './analytics/aggregation.service'
 export * from './analytics/time-series.service'

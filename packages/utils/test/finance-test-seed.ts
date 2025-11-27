@@ -8,6 +8,7 @@ import {
   users,
 } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
+import { createTestUser } from './fixtures'
 
 export async function seedFinanceTestData({
   userId,
@@ -30,23 +31,11 @@ export async function seedFinanceTestData({
 
   // Create test user - ensure this succeeds before proceeding
   try {
-    await db
-      .insert(users)
-      .values({
-        id: userId,
-        email: `test-${userId.slice(0, 8)}@example.com`, // Make email unique per test
-        name: 'Test User',
-        photoUrl: null,
-        isAdmin: false,
-        supabaseId: `supabase-${userId}`, // Required for authentication
-      })
-      .onConflictDoNothing()
-
-    // Verify user was created
-    const createdUser = await db.select().from(users).where(eq(users.id, userId)).limit(1)
-    if (createdUser.length === 0) {
-      throw new Error(`Failed to create user with ID: ${userId}`)
-    }
+    await createTestUser({
+      id: userId,
+      email: `test-${userId.slice(0, 8)}@example.com`,
+      supabaseId: `supabase-${userId}`,
+    })
   } catch (error) {
     console.error('Failed to create user:', error)
     throw error

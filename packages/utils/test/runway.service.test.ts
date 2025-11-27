@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateRunway, calculateRunwayProjection } from '../core/runway.service'
+import { calculateRunway, calculateRunwayProjection } from '../src/finance/core/runway.service'
 
 describe('Runway Service', () => {
   describe('calculateRunway', () => {

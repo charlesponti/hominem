@@ -4,8 +4,8 @@ import {
   calculateTimeSeriesStats,
   generateTimeSeriesData,
   type TimeSeriesDataPoint,
-} from '../analytics/time-series.service.js'
-import { cleanupFinanceTestData, seedFinanceTestData } from './finance-test-seed.js'
+} from '../src/finance/analytics/time-series.service'
+import { cleanupFinanceTestData, seedFinanceTestData } from './finance-test-seed'
 
 describe.skip('Finance Analyze Service Integration Tests', () => {
   let testUserId: string
