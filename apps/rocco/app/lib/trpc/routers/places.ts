@@ -2,8 +2,70 @@ import crypto from 'node:crypto'
 import { item, list, place } from '@hominem/data/db/schema/index'
 import { and, desc, eq, inArray, or } from 'drizzle-orm'
 import { z } from 'zod'
-import type { ExtendedList, GooglePlacesApiResponse, Place } from '~/lib/types'
+import type {
+  GooglePlaceDetailsResponse,
+  GooglePlacePhoto,
+  GooglePlacesApiResponse,
+  Place,
+} from '~/lib/types'
 import { protectedProcedure, publicProcedure, router } from '../context'
+
+const extractPhotoReferences = (photos?: GooglePlacePhoto[]): string[] => {
+  if (!photos) {
+    return []
+  }
+
+  return photos
+    .map((photo) => photo.name)
+    .filter((name): name is string => typeof name === 'string' && name.length > 0)
+}
+
+const sanitizeStoredPhotos = (photos: string[] | null | undefined): string[] => {
+  if (!Array.isArray(photos)) {
+    return []
+  }
+
+  return photos.filter((photo): photo is string => typeof photo === 'string' && photo.length > 0)
+}
+
+const fetchGooglePlacePhotos = async (googleMapsId: string): Promise<string[]> => {
+  const apiKey = process.env.VITE_GOOGLE_API_KEY
+  if (!apiKey) {
+    console.error('Google API key is not configured')
+    return []
+  }
+
+  try {
+    const response = await fetch(`https://places.googleapis.com/v1/places/${googleMapsId}`, {
+      headers: {
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'photos',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Google Places API photo fetch error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        googleMapsId,
+      })
+      return []
+    }
+
+    const placeInfo = (await response.json()) as GooglePlaceDetailsResponse
+    return extractPhotoReferences(placeInfo.photos)
+  } catch (error) {
+    console.error('Failed to fetch Google Place photos:', error, { googleMapsId })
+    return []
+  }
+}
+
+type ListSummary = {
+  id: string
+  name: string
+}
 
 export const placesRouter = router({
   getAll: publicProcedure.query(async ({ ctx }) => {
@@ -419,21 +481,22 @@ export const placesRouter = router({
       const { id: googleMapsIdOrDbId } = input
 
       let dbPlace: Place | null = null
-      let associatedLists: ExtendedList[] = []
-      let photos: string[] = []
+      let associatedLists: ListSummary[] = []
 
       // Check if input is a valid UUID
       const isUuid = z.string().uuid().safeParse(googleMapsIdOrDbId).success
 
       try {
         if (isUuid) {
-          dbPlace = await ctx.db.query.place.findFirst({
-            where: eq(place.id, googleMapsIdOrDbId),
-          })
+          dbPlace =
+            (await ctx.db.query.place.findFirst({
+              where: eq(place.id, googleMapsIdOrDbId),
+            })) ?? null
         } else {
-          dbPlace = await ctx.db.query.place.findFirst({
-            where: eq(place.googleMapsId, googleMapsIdOrDbId),
-          })
+          dbPlace =
+            (await ctx.db.query.place.findFirst({
+              where: eq(place.googleMapsId, googleMapsIdOrDbId),
+            })) ?? null
         }
 
         if (!dbPlace) {
@@ -468,12 +531,13 @@ export const placesRouter = router({
             )
           }
 
-          const placeData = await placeDetails.json()
-          const placeInfo = placeData
+          const placeInfo = (await placeDetails.json()) as GooglePlaceDetailsResponse
 
           if (!placeInfo) {
             throw new Error('Place not found in Google Places API')
           }
+
+          const fetchedPhotos = extractPhotoReferences(placeInfo.photos)
 
           const [insertedPlace] = await ctx.db
             .insert(place)
@@ -489,6 +553,7 @@ export const placesRouter = router({
               websiteUri: placeInfo.websiteUri,
               phoneNumber: placeInfo.nationalPhoneNumber,
               priceLevel: placeInfo.priceLevel,
+              photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
               location:
                 placeInfo.location?.latitude && placeInfo.location?.longitude
                   ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [
@@ -498,6 +563,10 @@ export const placesRouter = router({
                   : ([0, 0] as [number, number]),
             })
             .returning()
+
+          if (!insertedPlace) {
+            throw new Error('Failed to persist place details')
+          }
 
           dbPlace = insertedPlace
         }
@@ -518,9 +587,6 @@ export const placesRouter = router({
               listRecord !== null && listRecord !== undefined
           )
           .map((listRecord) => ({ id: listRecord.id, name: listRecord.name }))
-
-        // TODO: Implement photo fetching from Google Places API
-        photos = []
       } catch (error) {
         console.error('Error fetching place details by ID:', error, { googleMapsIdOrDbId })
         throw new Error('Failed to fetch place details')
@@ -530,10 +596,32 @@ export const placesRouter = router({
         throw new Error('Place not found after all checks')
       }
 
+      let placePhotos = sanitizeStoredPhotos(dbPlace.photos)
+
+      if (placePhotos.length === 0 && dbPlace.googleMapsId) {
+        const fetchedPhotos = await fetchGooglePlacePhotos(dbPlace.googleMapsId)
+
+        if (fetchedPhotos.length > 0) {
+          placePhotos = fetchedPhotos
+          await ctx.db
+            .update(place)
+            .set({
+              photos: fetchedPhotos,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(place.id, dbPlace.id))
+
+          dbPlace = {
+            ...dbPlace,
+            photos: fetchedPhotos,
+          }
+        }
+      }
+
       return {
         ...dbPlace,
         associatedLists,
-        photos,
+        photos: placePhotos,
       }
     }),
 
@@ -563,7 +651,7 @@ export const placesRouter = router({
       const { listIds, place: placeInput } = input
 
       let finalPlace: Place
-      let affectedLists: ExtendedList[] = []
+      let affectedLists: ListSummary[] = []
 
       try {
         const existingPlace = await ctx.db.query.place.findFirst({
@@ -613,7 +701,9 @@ export const placesRouter = router({
 
         affectedLists = itemsInLists
           .map((item) => item.list)
-          .filter((list) => list !== null && list !== undefined)
+          .filter(
+            (list): list is { id: string; name: string } => list !== null && list !== undefined
+          )
           .map((list) => ({ id: list.id, name: list.name }))
 
         return { place: finalPlace, lists: affectedLists }

@@ -37,7 +37,6 @@ export type PlaceLocation = {
   imageUrl?: string | null
 }
 
-// Type for Google Places API response
 export type GooglePlacesApiResponse = {
   id: string
   displayName?: {
@@ -48,6 +47,9 @@ export type GooglePlacesApiResponse = {
     latitude: number
     longitude: number
   }
+  types?: string[]
+  websiteUri?: string | null
+  phoneNumber?: string | null
 }
 
 // Type for temporary place data from Google Places API
@@ -68,6 +70,25 @@ export type GooglePlaceData = {
   wifiInfo: string | null
   photos?: string[] | null
   priceLevel?: number | null
+}
+
+export type GooglePlacePhoto = {
+  name?: string | null
+}
+
+export type GooglePlaceDetailsResponse = {
+  displayName?: { text?: string | null }
+  formattedAddress?: string | null
+  location?: {
+    latitude?: number | null
+    longitude?: number | null
+  }
+  types?: string[]
+  rating?: number | null
+  websiteUri?: string | null
+  nationalPhoneNumber?: string | null
+  priceLevel?: number | null
+  photos?: GooglePlacePhoto[]
 }
 
 // Extended types for frontend use
