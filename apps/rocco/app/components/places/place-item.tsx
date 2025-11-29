@@ -2,6 +2,7 @@ import type { ListPlace } from '@hominem/data'
 import { ExternalLink, MoreVertical, Star } from 'lucide-react'
 import { type MouseEvent, useState } from 'react'
 import { href, useNavigate } from 'react-router'
+import { useMapInteraction } from '~/contexts/map-interaction-context'
 import PlaceTypes from '~/components/places/PlaceTypes'
 import { Button } from '~/components/ui/button'
 import {
@@ -22,6 +23,7 @@ interface PlaceItemProps {
 
 const PlaceListItem = ({ place, listId, onRemove, onError }: PlaceItemProps) => {
   const navigate = useNavigate()
+  const { setHoveredPlaceId } = useMapInteraction()
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const { mutate: removeListItem } = useRemoveListItem({
     onSuccess: () => {
@@ -50,24 +52,28 @@ const PlaceListItem = ({ place, listId, onRemove, onError }: PlaceItemProps) => 
 
   return (
     <>
-      <div className="relative block px-4 py-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200">
+      <div
+        className="relative block px-4 py-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200"
+        onMouseEnter={() => setHoveredPlaceId(place.itemId)}
+        onMouseLeave={() => setHoveredPlaceId(null)}
+      >
         <button
           aria-label={`View details for ${place.name}`}
           type="button"
           className="flex w-full max-w-full"
           onClick={handleCardClick}
         >
-          <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 mr-3">
+          <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 mr-3">
             {place.imageUrl ? (
               <img src={place.imageUrl} alt={place.name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+              <div className="w-full h-full bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
                 <Star className="text-indigo-400" size={24} />
               </div>
             )}
           </div>
 
-          <div className="flex flex-col flex-1 justify-between text-wrap break-words">
+          <div className="flex flex-col flex-1 justify-between text-wrap wrap-break-word">
             <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">{place.name}</h3>
             <div className="flex items-center">
               <PlaceTypes limit={2} types={place.types || []} />

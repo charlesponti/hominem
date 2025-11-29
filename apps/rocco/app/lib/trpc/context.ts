@@ -135,7 +135,6 @@ export const createContext = async (request?: Request): Promise<Context> => {
       }
 
       localUser = user
-      logger.info('User authenticated via standardized service', { userId: localUser.id })
     } catch (dbError) {
       logger.error('Failed to find or create user in local DB', {
         error: dbError as Error,

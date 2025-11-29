@@ -6,7 +6,7 @@ interface GooglePlacePhoto {
 
 const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY
 
-export async function fetchPlaceDetails(placeId: string): Promise<{ photoUrls: string[] }> {
+export async function fetchPlacePhotos(placeId: string): Promise<{ photoUrls: string[] }> {
   const endpoint = 'https://maps.googleapis.com/maps/api/place/details/json'
   const params = {
     place_id: placeId,

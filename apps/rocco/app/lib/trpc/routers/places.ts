@@ -422,10 +422,19 @@ export const placesRouter = router({
       let associatedLists: ExtendedList[] = []
       let photos: string[] = []
 
+      // Check if input is a valid UUID
+      const isUuid = z.string().uuid().safeParse(googleMapsIdOrDbId).success
+
       try {
-        dbPlace = await ctx.db.query.place.findFirst({
-          where: or(eq(place.id, googleMapsIdOrDbId), eq(place.googleMapsId, googleMapsIdOrDbId)),
-        })
+        if (isUuid) {
+          dbPlace = await ctx.db.query.place.findFirst({
+            where: eq(place.id, googleMapsIdOrDbId),
+          })
+        } else {
+          dbPlace = await ctx.db.query.place.findFirst({
+            where: eq(place.googleMapsId, googleMapsIdOrDbId),
+          })
+        }
 
         if (!dbPlace) {
           // If not in DB, fetch from Google and insert

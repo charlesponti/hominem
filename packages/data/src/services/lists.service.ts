@@ -49,6 +49,8 @@ export interface ListPlace {
   imageUrl: string | null
   types: string[] | null
   type: string
+  latitude: number | null
+  longitude: number | null
 }
 
 /**
@@ -69,6 +71,8 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
         imageUrl: place.imageUrl,
         types: place.types,
         type: item.type,
+        latitude: place.latitude,
+        longitude: place.longitude,
       })
       .from(item)
       .innerJoin(place, eq(item.itemId, place.id))
@@ -233,10 +237,24 @@ export async function getOwnedLists(
           owner_id: users.id,
           owner_email: users.email,
           owner_name: users.name,
+          itemCount: count(item.id),
         })
         .from(list)
         .where(eq(list.userId, userId))
         .leftJoin(users, eq(users.id, list.userId))
+        .leftJoin(item, eq(item.listId, list.id))
+        .groupBy(
+          list.id,
+          list.name,
+          list.description,
+          list.userId,
+          list.isPublic,
+          list.createdAt,
+          list.updatedAt,
+          users.id,
+          users.email,
+          users.name
+        )
         .orderBy(desc(list.createdAt))
     }
 

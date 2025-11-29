@@ -12,7 +12,6 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
   let testAccountId: string
   let testInstitutionId: string
 
-  // Create test data before each test
   beforeEach(async () => {
     testUserId = crypto.randomUUID()
     testAccountId = crypto.randomUUID()
@@ -35,7 +34,6 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
 
   describe('generateTimeSeriesData', () => {
     it('should generate correct time series data from real database queries', async () => {
-      // Act
       const result = await generateTimeSeriesData({
         userId: testUserId,
         from: '2023-01-01',
@@ -43,7 +41,6 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         includeStats: true,
       })
 
-      // Assert
       expect(result.data).toHaveLength(3)
 
       // Data is ordered by date ASC, so January (2023-01) comes first
@@ -74,7 +71,6 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         count: '3',
       })
 
-      // Check stats
       expect(result.stats).not.toBeNull()
       expect(result.stats?.totalIncome).toBe(3300) // 1000 + 1200 + 1100
       expect(result.stats?.totalExpenses).toBe(1500) // 400 + 500 + 600
@@ -82,7 +78,6 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
     })
 
     it('should calculate trend data correctly when compareToPrevious is true', async () => {
-      // Act
       const result = await generateTimeSeriesData({
         userId: testUserId,
         from: '2023-01-01',
@@ -90,7 +85,6 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         compareToPrevious: true,
       })
 
-      // Assert
       expect(result.data[0].trend).toBeUndefined() // January has no previous month
       expect(result.data[1].trend).toBeDefined() // February has trend (compared to January)
       expect(result.data[2].trend).toBeDefined() // March has trend (compared to February)
@@ -117,7 +111,6 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
     })
 
     it('should handle filtering by date range correctly', async () => {
-      // Act - Only query February and March
       const result = await generateTimeSeriesData({
         userId: testUserId,
         from: '2023-02-01',
@@ -125,17 +118,14 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         includeStats: true,
       })
 
-      // Assert
       expect(result.data).toHaveLength(2)
       expect(result.data[0].date).toBe('2023-02') // February comes first (ASC order)
       expect(result.data[1].date).toBe('2023-03') // March comes second
 
-      // Should not include January data
       expect(result.data.find((d) => d.date === '2023-01')).toBeUndefined()
     })
 
     it('should handle empty results gracefully', async () => {
-      // Act - Query for a period with no data
       const result = await generateTimeSeriesData({
         userId: testUserId,
         from: '2024-01-01',
@@ -143,13 +133,11 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         includeStats: true,
       })
 
-      // Assert
       expect(result.data).toHaveLength(0)
       expect(result.stats).toBeNull()
     })
 
     it('should respect groupBy parameter', async () => {
-      // Act - Test with week grouping (though we only have monthly data)
       const result = await generateTimeSeriesData({
         userId: testUserId,
         from: '2023-01-01',
@@ -158,16 +146,12 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         includeStats: false,
       })
 
-      // Assert
       expect(result.query.groupBy).toBe('week')
-      // The actual grouping behavior would depend on the summarizeByMonth implementation
-      // This test ensures the parameter is passed through correctly
     })
   })
 
   describe('calculateTimeSeriesStats', () => {
     it('should calculate correct statistics for real time series data', () => {
-      // Arrange - Create realistic time series data
       const timeSeriesData: TimeSeriesDataPoint[] = [
         {
           date: '2023-03',
@@ -204,10 +188,8 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         },
       ]
 
-      // Act
       const stats = calculateTimeSeriesStats(timeSeriesData)
 
-      // Assert
       expect(stats).toEqual({
         total: 1800, // 500 + 700 + 600
         average: 600, // 1800 / 3

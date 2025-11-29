@@ -1,8 +1,7 @@
+import type { PlaceLocation } from '~/lib/types'
+
 export interface MapLayoutProps {
   children: React.ReactNode
 }
 
-export interface MapMarker {
-  latitude: number
-  longitude: number
-}
+export type MapMarker = PlaceLocation

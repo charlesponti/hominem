@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { MapInteractionProvider } from '~/contexts/map-interaction-context'
 import PlaceItem from '~/components/places/place-item'
 import { getMockPlace } from '~/test/mocks'
 import { renderWithRouter } from '~/test/utils'
@@ -15,6 +16,9 @@ describe('PlaceItem', () => {
     // Convert to ListPlace type
     const listPlace = {
       id: mockPlace.id,
+      itemId: 'test-item-id',
+      itemAddedAt: new Date().toISOString(),
+      type: 'place',
       imageUrl: mockPlace.imageUrl,
       name: mockPlace.name,
       googleMapsId: mockPlace.googleMapsId,
@@ -37,7 +41,9 @@ describe('PlaceItem', () => {
         {
           path: '/',
           Component: () => (
-            <PlaceItem place={listPlace} listId="test-list-id" onRemove={() => {}} />
+            <MapInteractionProvider>
+              <PlaceItem place={listPlace} listId="test-list-id" onRemove={() => {}} />
+            </MapInteractionProvider>
           ),
         },
       ],
@@ -53,6 +59,9 @@ describe('PlaceItem', () => {
     const onRemove = vi.fn()
     const listPlace = {
       id: mockPlace.id,
+      itemId: 'test-item-id',
+      itemAddedAt: new Date().toISOString(),
+      type: 'place',
       imageUrl: mockPlace.imageUrl,
       name: mockPlace.name,
       googleMapsId: mockPlace.googleMapsId,
@@ -82,7 +91,9 @@ describe('PlaceItem', () => {
         {
           path: '/',
           Component: () => (
-            <PlaceItem place={listPlace} listId="test-list-id" onRemove={onRemove} />
+            <MapInteractionProvider>
+              <PlaceItem place={listPlace} listId="test-list-id" onRemove={onRemove} />
+            </MapInteractionProvider>
           ),
         },
       ],
@@ -100,6 +111,9 @@ describe('PlaceItem', () => {
     const mockPlace = getMockPlace()
     const listPlace = {
       id: mockPlace.id,
+      itemId: 'test-item-id',
+      itemAddedAt: new Date().toISOString(),
+      type: 'place',
       imageUrl: null, // Set to null to test placeholder
       name: mockPlace.name,
       googleMapsId: mockPlace.googleMapsId,
@@ -122,7 +136,9 @@ describe('PlaceItem', () => {
         {
           path: '/',
           Component: () => (
-            <PlaceItem place={listPlace} listId="test-list-id" onRemove={() => {}} />
+            <MapInteractionProvider>
+              <PlaceItem place={listPlace} listId="test-list-id" onRemove={() => {}} />
+            </MapInteractionProvider>
           ),
         },
       ],

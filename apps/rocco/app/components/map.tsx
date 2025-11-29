@@ -1,20 +1,25 @@
 import {
   APIProvider,
   Map as GoogleMap,
+  InfoWindow,
   type MapEvent,
   type MapMouseEvent,
   Marker,
   useApiLoadingStatus,
+  useMap,
+  useMapsLibrary,
 } from '@vis.gl/react-google-maps'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Alert from '~/components/alert'
 import Loading from '~/components/loading'
+import { useMapInteraction } from '~/contexts/map-interaction-context'
 import type { Place, PlaceLocation } from '~/lib/types'
 import { cn } from '~/lib/utils'
 import styles from './map.module.css'
 
 export type RoccoMapProps = {
   isLoadingCurrentLocation: boolean
+  currentLocation?: PlaceLocation | null
   setSelected?: (place: Place | null) => void
   zoom: number
   center: PlaceLocation
@@ -22,17 +27,78 @@ export type RoccoMapProps = {
   onMapClick?: (event: MapMouseEvent) => void
   onMarkerClick?: () => void
 }
+
+const MapUpdater = ({
+  center,
+  markers,
+  zoom,
+}: {
+  center: { lat: number; lng: number }
+  markers: PlaceLocation[]
+  zoom: number
+}) => {
+  const map = useMap()
+  const coreLibrary = useMapsLibrary('core')
+
+  useEffect(() => {
+    if (!map) return
+
+    // If we have multiple markers, fit bounds
+    if (markers.length > 1 && coreLibrary?.LatLngBounds) {
+      const bounds = new coreLibrary.LatLngBounds()
+      let hasValidMarker = false
+
+      markers.forEach((marker) => {
+        if (marker.latitude && marker.longitude) {
+          bounds.extend({ lat: marker.latitude, lng: marker.longitude })
+          hasValidMarker = true
+        }
+      })
+
+      if (hasValidMarker) {
+        map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 })
+      }
+    } else if (markers.length === 1 && markers[0].latitude && markers[0].longitude) {
+      // If we have exactly one marker, center on it
+      map.setCenter({ lat: markers[0].latitude, lng: markers[0].longitude })
+      map.setZoom(zoom)
+    } else {
+      // Otherwise use the provided center
+      map.setCenter(center)
+      map.setZoom(zoom)
+    }
+  }, [map, coreLibrary, markers, center, zoom])
+
+  return null
+}
+
 const RoccoMap = ({
   zoom,
   center,
   isLoadingCurrentLocation,
+  currentLocation,
   onMapClick,
   setSelected,
   markers,
 }: RoccoMapProps) => {
   const mapsLoadingState = useApiLoadingStatus()
+  const { hoveredPlaceId } = useMapInteraction()
+  const [selectedMarker, setSelectedMarker] = useState<PlaceLocation | null>(null)
+  const coreLibrary = useMapsLibrary('core')
+  const markerLibrary = useMapsLibrary('marker')
+  const hoverAnimation = markerLibrary?.Animation?.BOUNCE
+  const currentLocationIcon = coreLibrary?.SymbolPath
+    ? {
+        path: coreLibrary.SymbolPath.CIRCLE,
+        scale: 7,
+        fillColor: '#4285F4',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      }
+    : undefined
 
-  // Store map center and zoom in local state, initialize from props
+  // Store map center and zoom in local state for data attributes
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({
     lat: center.latitude,
     lng: center.longitude,
@@ -45,6 +111,7 @@ const RoccoMap = ({
 
       // Remove currently selected marker
       setSelected?.(null)
+      setSelectedMarker(null)
 
       // Hide info window
       if (placeId) {
@@ -101,21 +168,74 @@ const RoccoMap = ({
           </div>
         ) : null}
         <GoogleMap
-          zoom={mapZoom}
-          center={mapCenter}
+          defaultZoom={zoom}
+          defaultCenter={{ lat: center.latitude, lng: center.longitude }}
           onClick={onClick}
           onIdle={handleMapIdle}
           className={cn('flex size-full', styles.map)}
         >
-          {markers.map((marker) => (
+          <MapUpdater
+            center={{ lat: center.latitude, lng: center.longitude }}
+            markers={markers}
+            zoom={zoom}
+          />
+          {currentLocation && !isLoadingCurrentLocation && (
             <Marker
-              key={`${marker.latitude}-${marker.longitude}`}
-              position={{
-                lat: marker.latitude,
-                lng: marker.longitude,
-              }}
+              position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
+              icon={currentLocationIcon}
+              title="Your Location"
+              zIndex={100}
             />
-          ))}
+          )}
+          {markers.map((marker) => {
+            const isHovered = hoveredPlaceId && marker.id === hoveredPlaceId
+            const isSelected = selectedMarker?.id === marker.id
+
+            const animation = isHovered ? hoverAnimation : undefined
+
+            return (
+              <Marker
+                key={`${marker.latitude}-${marker.longitude}`}
+                position={{
+                  lat: marker.latitude,
+                  lng: marker.longitude,
+                }}
+                onClick={() => setSelectedMarker(marker)}
+                zIndex={isHovered || isSelected ? 50 : 1}
+                animation={animation}
+              />
+            )
+          })}
+          {selectedMarker && (
+            <InfoWindow
+              position={{
+                lat: selectedMarker.latitude,
+                lng: selectedMarker.longitude,
+              }}
+              onCloseClick={() => setSelectedMarker(null)}
+              headerContent={
+                <div className="font-semibold text-sm pr-4">{selectedMarker.name || 'Place'}</div>
+              }
+            >
+              <div className="flex flex-col gap-2 max-w-[200px]">
+                {selectedMarker.imageUrl && (
+                  <img
+                    src={selectedMarker.imageUrl}
+                    alt={selectedMarker.name}
+                    className="w-full h-24 object-cover rounded-md"
+                  />
+                )}
+                {selectedMarker.id && (
+                  <a
+                    href={`/places/${selectedMarker.id}`}
+                    className="text-xs text-indigo-600 hover:underline mt-1"
+                  >
+                    View Details
+                  </a>
+                )}
+              </div>
+            </InfoWindow>
+          )}
         </GoogleMap>
       </div>
     </APIProvider>

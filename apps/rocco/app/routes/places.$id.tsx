@@ -12,7 +12,6 @@ import { useToast } from '~/components/ui/use-toast'
 import { useSaveSheet } from '~/hooks/useSaveSheet'
 import { trpc } from '~/lib/trpc/client'
 import { createCaller } from '~/lib/trpc/server'
-import type { Place } from '~/lib/types'
 import type { Route } from './+types/places.$id'
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -24,13 +23,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const trpcServer = createCaller(request)
   const isUuid = z.uuid().safeParse(id).success
 
-  let data: Place
-  if (isUuid) {
-    data = await trpcServer.places.getById({ id })
-  } else {
-    // Use getOrCreate to handle both existing and new places
-    data = await trpcServer.places.getOrCreateByGoogleMapsIdPublic({ googleMapsId: id })
-  }
+  const data = await trpcServer.places.getDetails({ id })
 
   if (!data) {
     throw new Error('Place not found')
@@ -40,13 +33,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export default function PlacePage({ loaderData }: Route.ComponentProps) {
-  const { place } = loaderData
+  const { place: initialPlace } = loaderData
   const { toast } = useToast()
   const { isOpen, open, close } = useSaveSheet()
 
-  const { data: lists = [] } = trpc.places.getListsForPlace.useQuery({
-    placeId: place.id,
-  })
+  const { data: place } = trpc.places.getDetails.useQuery(
+    { id: initialPlace.id },
+    { initialData: initialPlace }
+  )
+
+  const lists = place.associatedLists || []
 
   const onAddToListSuccess = useCallback(() => {
     toast({
@@ -94,7 +90,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
           {/* Lists section */}
           {lists.length > 0 && (
-            <div className="shadow flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <h3 className="font-semibold text-sm text-slate-700">In these lists:</h3>
               <ul className="flex flex-wrap gap-1">
                 {lists.map((list) => (

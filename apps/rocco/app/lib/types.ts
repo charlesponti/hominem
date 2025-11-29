@@ -32,6 +32,9 @@ export type SearchPlace = {
 export type PlaceLocation = {
   latitude: number
   longitude: number
+  id?: string
+  name?: string
+  imageUrl?: string | null
 }
 
 // Type for Google Places API response

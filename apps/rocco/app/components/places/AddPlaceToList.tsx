@@ -6,9 +6,9 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import Loading from '~/components/loading'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
-import { useAddPlaceToList, useGetPlaceLists, useRemoveListItem } from '~/lib/places'
-import { useCreateList, useGetLists } from '~/lib/trpc/api'
-import type { List, Place } from '~/lib/types'
+import { useAddPlaceToList, useRemoveListItem } from '~/lib/places'
+import { useCreateList, useGetListOptions } from '~/lib/trpc/api'
+import type { Place } from '~/lib/types'
 import { cn } from '~/lib/utils'
 import styles from './AddPlaceToList.module.css'
 
@@ -26,8 +26,7 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
   const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
   const isAuthenticated = layoutData?.isAuthenticated ?? false
 
-  const { isLoading, data: lists } = useGetLists()
-  const { data: placeLists, isLoading: isPlaceListLoading } = useGetPlaceLists()
+  const { isLoading, data: lists } = useGetListOptions(place.googleMapsId || '')
   const { mutateAsync: removeFromList } = useRemoveListItem({})
   const { mutate: addToList } = useAddPlaceToList({
     onSuccess: () => {
@@ -45,15 +44,15 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
     },
   })
 
-  const listIds = placeLists ? placeLists.map((list: List) => list.id) : []
-
-  const onListSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (listIds.includes(e.target.id)) {
-      removeFromList({ listId: e.target.id, placeId: place.id })
+  const onListSelectChange = (listId: string, isInList: boolean) => {
+    if (isInList) {
+      if (place.id) {
+        removeFromList({ listId, placeId: place.id })
+      }
       return
     }
 
-    addToList({ listIds: [e.target.id], place })
+    addToList({ listIds: [listId], place })
   }
 
   const handleCreateList = (e: React.FormEvent) => {
@@ -65,7 +64,6 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
     })
   }
 
-  // List of lists displaying their name and a round checkbox that when clicked adds the list to the listIds array
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="pt-10 px-4">
@@ -73,7 +71,7 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
           <h2 className="text-xl font-bold">Add to lists</h2>
           <p className="text-sm">Select lists to add this place to.</p>
         </div>
-        {isLoading || isPlaceListLoading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center h-16">
             <Loading size="xl" />
           </div>
@@ -161,14 +159,14 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
                       type="checkbox"
                       id={list.id}
                       className="absolute h-full w-full invisible -ml-2"
-                      checked={listIds.includes(list.id)}
-                      onChange={onListSelectChange}
+                      checked={list.isInList}
+                      onChange={() => onListSelectChange(list.id, list.isInList)}
                     />
                     {list.name}
                     <Heart
                       size={24}
                       className={cn({
-                        'fill-red-500': listIds.includes(list.id),
+                        'fill-red-500': list.isInList,
                       })}
                     />
                   </label>

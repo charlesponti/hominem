@@ -105,13 +105,6 @@ export const listsRouter = router({
             })
           }
 
-          logger.info('Retrieved list by ID with places', {
-            listId: input.id,
-            userId: ctx.user?.id,
-            isOwnList: list.isOwnList,
-            placeCount: list.places.length,
-          })
-
           return list
         },
         'getById list',

@@ -1,10 +1,6 @@
-import {
-  type QueryClient,
-  type UseMutationOptions,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { type QueryClient, type UseMutationOptions, useMutation } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
+import type { List } from '@hominem/data'
 import { trpc } from './trpc/client'
 import type { Place, PlaceLocation } from './types'
 
@@ -13,35 +9,24 @@ type AddPlaceToListOptions = {
   place: Place
 }
 
-interface ListItem {
-  id: string
-  // Add other item properties as needed
-}
-
-interface ListWithItems {
-  id: string
-  name: string
-  items?: ListItem[]
-  // Add other list properties as needed
-}
-
 export const useRemoveListItem = (
   options: UseMutationOptions<
     unknown,
     AxiosError,
     { listId: string; placeId: string },
-    { previousList: ListWithItems | undefined }
+    { previousList: List | undefined | null }
   >
 ) => {
-  const queryClient = useQueryClient()
+  const utils = trpc.useUtils()
   const removeFromListMutation = trpc.items.removeFromList.useMutation()
 
   return useMutation<
     unknown,
     AxiosError,
     { listId: string; placeId: string },
-    { previousList: ListWithItems | undefined }
+    { previousList: List | undefined | null }
   >({
+    ...options,
     mutationKey: ['deleteListItem'],
     mutationFn: ({ listId, placeId }) => {
       return removeFromListMutation.mutateAsync({
@@ -51,20 +36,18 @@ export const useRemoveListItem = (
     },
     onMutate: async ({ listId, placeId }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({
-        queryKey: ['lists', listId],
-      })
+      await utils.lists.getById.cancel({ id: listId })
 
       // Snapshot the previous value
-      const previousList: ListWithItems | undefined = queryClient.getQueryData(['lists', listId])
+      const previousList = utils.lists.getById.getData({ id: listId })
 
       // Optimistically update to the new value
       if (previousList) {
-        queryClient.setQueryData(['lists', listId], (old: ListWithItems | undefined) => {
-          if (!old || !old.items) return old
+        utils.lists.getById.setData({ id: listId }, (old) => {
+          if (!old || !old.places) return old
           return {
             ...old,
-            items: old.items.filter((item: ListItem) => item.id !== placeId),
+            places: old.places.filter((p) => p.itemId !== placeId),
           }
         })
       }
@@ -73,30 +56,36 @@ export const useRemoveListItem = (
       return { previousList }
     },
     // If the mutation fails, use the context returned from onMutate to roll back
-    onError: (_err, { listId }, context) => {
+    onError: (error, variables, context) => {
       if (context?.previousList) {
-        queryClient.setQueryData(['lists', listId], context.previousList)
+        utils.lists.getById.setData({ id: variables.listId }, context.previousList)
       }
+      // @ts-expect-error - options.onError signature mismatch in environment
+      options?.onError?.(error, variables, context)
     },
     // Always refetch after error or success
-    onSettled: (_, __, { listId }) => {
-      queryClient.invalidateQueries({
-        queryKey: ['lists', listId],
-      })
-      queryClient.invalidateQueries({ queryKey: ['lists'] })
+    onSettled: (data, error, variables, context) => {
+      utils.lists.getById.invalidate({ id: variables.listId })
+      utils.lists.getAll.invalidate()
+      utils.lists.getListOptions.invalidate()
+      // Invalidate place details to update "In these lists" section
+      utils.places.getDetails.invalidate({ id: variables.placeId })
+
+      // @ts-expect-error - options.onSettled signature mismatch in environment
+      options?.onSettled?.(data, error, variables, context)
     },
-    ...options,
   })
 }
 
 export const useAddPlaceToList = (
-  options: UseMutationOptions<unknown, AxiosError, AddPlaceToListOptions>
+  options: UseMutationOptions<Place, AxiosError, AddPlaceToListOptions>
 ) => {
-  const queryClient = useQueryClient()
+  const utils = trpc.useUtils()
   const createPlaceMutation = trpc.places.create.useMutation()
   const addToListMutation = trpc.items.addToList.useMutation()
 
-  return useMutation<unknown, AxiosError, AddPlaceToListOptions>({
+  return useMutation<Place, AxiosError, AddPlaceToListOptions>({
+    ...options,
     mutationKey: ['addPlaceToList'],
     mutationFn: async ({ listIds, place }) => {
       if (!place.googleMapsId) {
@@ -130,17 +119,27 @@ export const useAddPlaceToList = (
       return createdPlace
     },
     // Prefetch related data after successful mutation
-    onSuccess: (_, { listIds }) => {
+    onSuccess: (data, variables, context) => {
+      const { listIds } = variables
       // Invalidate lists and place queries that are affected
       for (const listId of listIds) {
-        queryClient.invalidateQueries({
-          queryKey: ['lists', listId],
-        })
+        utils.lists.getById.invalidate({ id: listId })
       }
 
-      queryClient.invalidateQueries({ queryKey: ['lists'] })
+      utils.lists.getAll.invalidate()
+      utils.lists.getListOptions.invalidate()
+
+      // Invalidate place details to update "In these lists" section
+      if (variables.place.googleMapsId) {
+        utils.places.getDetails.invalidate({ id: variables.place.googleMapsId })
+      }
+      if (data?.id) {
+        utils.places.getDetails.invalidate({ id: data.id })
+      }
+
+      // @ts-expect-error - options.onSuccess signature mismatch in environment
+      options?.onSuccess?.(data, variables, context)
     },
-    ...options,
   })
 }
 

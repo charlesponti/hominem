@@ -1,17 +1,14 @@
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import type { Place } from '~/lib/types'
-import { fetchPlaceDetails } from '../../lib/fetchPlaceDetails'
-import { MAX_PHOTOS } from './constants'
 
 export async function createPlaceFromPrediction(prediction: GooglePlacePrediction): Promise<Place> {
-  let photoUrls: string[] = []
+  // We don't fetch photos here anymore to avoid double fetching.
+  // The photos will be fetched when the user navigates to the place details page.
+  const photoUrls: string[] = []
 
-  try {
-    const details = await fetchPlaceDetails(prediction.place_id)
-    photoUrls = details.photoUrls.slice(0, MAX_PHOTOS)
-  } catch (error) {
-    console.warn('Failed to fetch place details:', error)
-  }
+  const latitude = prediction.location?.latitude || null
+  const longitude = prediction.location?.longitude || null
+  const location: [number, number] = latitude && longitude ? [latitude, longitude] : [0, 0]
 
   return {
     id: prediction.place_id,
@@ -20,17 +17,16 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
     address: prediction.description || '',
     createdAt: '',
     updatedAt: '',
-    userId: '',
     itemId: null,
     googleMapsId: prediction.place_id,
     types: null,
-    imageUrl: photoUrls[0] || null,
+    imageUrl: null,
     phoneNumber: null,
     rating: null,
     websiteUri: null,
-    latitude: null,
-    longitude: null,
-    location: [0, 0],
+    latitude,
+    longitude,
+    location,
     bestFor: null,
     isPublic: false,
     wifiInfo: null,

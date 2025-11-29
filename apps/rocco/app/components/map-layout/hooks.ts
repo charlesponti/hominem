@@ -9,17 +9,18 @@ import type { MapMarker } from './types'
 type PlaceData = AppRouter['places']['getById']['_def']['$types']['output']
 type ListData = AppRouter['lists']['getById']['_def']['$types']['output']
 
-export function usePlaceData(placeId: string | null) {
+export function usePlaceData(placeId: string | null, options?: { enabled?: boolean }) {
   const isGoogleMapsId = placeId && placeId.length <= 10
+  const enabled = options?.enabled ?? true
 
   const { data: placeByUuid } = trpc.places.getById.useQuery(
     { id: placeId || '' },
-    { enabled: Boolean(placeId && !isGoogleMapsId) }
+    { enabled: Boolean(enabled && placeId && !isGoogleMapsId) }
   )
 
   const { data: placeByGoogleId } = trpc.places.getOrCreateByGoogleMapsIdPublic.useQuery(
     { googleMapsId: placeId || '' },
-    { enabled: Boolean(placeId && isGoogleMapsId) }
+    { enabled: Boolean(enabled && placeId && isGoogleMapsId) }
   )
 
   return placeByUuid || placeByGoogleId
@@ -40,9 +41,13 @@ export function useMapCenter(
     if (place?.latitude && place?.longitude) {
       setCenter({ latitude: place.latitude, longitude: place.longitude })
     } else if (currentList?.places && currentList.places.length > 0) {
-      // Note: The current tRPC service doesn't return latitude/longitude for places in lists
-      // This would need to be fixed in the service layer to include coordinate data
-      // For now, we'll skip setting center from list places
+      const firstPlaceWithLocation = currentList.places.find((p) => p.latitude && p.longitude)
+      if (firstPlaceWithLocation?.latitude && firstPlaceWithLocation?.longitude) {
+        setCenter({
+          latitude: firstPlaceWithLocation.latitude,
+          longitude: firstPlaceWithLocation.longitude,
+        })
+      }
     } else if (currentLocation) {
       setCenter(currentLocation)
     }
@@ -61,10 +66,15 @@ export function useMapMarkers(
   }
 
   if (currentList?.places && currentList.places.length > 0) {
-    // Note: The current tRPC service doesn't return latitude/longitude for places in lists
-    // This would need to be fixed in the service layer to include coordinate data
-    // For now, we'll return an empty array since we can't create markers without coordinates
-    return []
+    return currentList.places
+      .filter((p) => p.latitude && p.longitude)
+      .map((p) => ({
+        latitude: p.latitude!,
+        longitude: p.longitude!,
+        id: p.itemId, // Use itemId (Place ID) for matching
+        name: p.name,
+        imageUrl: p.imageUrl,
+      }))
   }
 
   return [{ latitude: center.latitude, longitude: center.longitude }]
