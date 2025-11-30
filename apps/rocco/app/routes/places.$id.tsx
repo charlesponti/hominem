@@ -1,5 +1,5 @@
 import { Globe, ListPlus, MapPin, Phone, Star } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import AddPlaceToList from '~/components/places/AddPlaceToList'
 import PlaceAddress from '~/components/places/PlaceAddress'
 import PlaceMap from '~/components/places/PlaceMap'
@@ -35,7 +35,6 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
   const { place: initialPlace } = loaderData
   const { toast } = useToast()
   const { isOpen, open, close } = useSaveSheet()
-  const [showMobileActions, setShowMobileActions] = useState(true)
 
   const { data: place } = trpc.places.getDetails.useQuery(
     { id: initialPlace.id },
@@ -55,23 +54,9 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
     open()
   }, [open])
 
-  const handleGetDirections = () => {
-    const url = place.googleMapsId
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}&query_place_id=${place.googleMapsId}`
-      : `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`
-    window.open(url, '_blank', 'noopener,noreferrer')
-  }
-
   return (
     <>
-      <div
-        data-testid="place-page"
-        className="h-full overflow-y-auto pb-24 lg:pb-6"
-        onScroll={(e) => {
-          const target = e.currentTarget
-          setShowMobileActions(target.scrollTop < 100)
-        }}
-      >
+      <div data-testid="place-page" className="h-full overflow-y-auto pb-6">
         {/* Hero Photo Gallery - Full Width */}
         <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
           <PlacePhotos alt={place.name} photos={place.photos} />
@@ -88,13 +73,14 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
                 <PlaceTypes types={place.types || []} />
               </div>
 
-              {/* Desktop Save Button */}
+              {/* Save Button */}
               <Button
                 onClick={onSaveClick}
-                className="hidden lg:flex items-center gap-2 px-6 py-3 rounded-full bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
               >
                 <ListPlus size={20} />
-                Save to list
+                <span className="hidden sm:inline">Save to list</span>
+                <span className="sm:hidden">Save</span>
               </Button>
             </div>
           </div>
@@ -171,32 +157,6 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
               <SocialProofSection lists={lists} placeName={place.name} />
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Mobile Sticky Action Bar */}
-      <div
-        className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${
-          showMobileActions ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        <div className="bg-linear-to-r from-indigo-600 to-purple-600 backdrop-blur-lg border-t border-white/20 px-4 py-3 shadow-2xl">
-          <div className="flex gap-2 max-w-2xl mx-auto">
-            <Button
-              onClick={handleGetDirections}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold transition-all hover:scale-105 border border-white/30"
-            >
-              <MapPin size={18} />
-              <span className="text-sm">Directions</span>
-            </Button>
-            <Button
-              onClick={onSaveClick}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-indigo-600 font-semibold shadow-lg transition-all hover:scale-105"
-            >
-              <ListPlus size={18} />
-              <span className="text-sm">Save to list</span>
-            </Button>
-          </div>
         </div>
       </div>
 

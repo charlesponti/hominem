@@ -1,18 +1,18 @@
-import crypto from 'node:crypto'
-import { item, list, place } from '@hominem/data/db/schema/index'
+import { item, list, place } from '@hominem/data'
 import { and, desc, eq, inArray, or } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { z } from 'zod'
+import {
+  getPlaceDetails as fetchGooglePlaceDetails,
+  getPlacePhotos as fetchGooglePlacePhotos,
+  searchPlaces as googleSearchPlaces,
+} from '~/lib/google-places.server'
 import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,
   GooglePlacesApiResponse,
   Place,
 } from '~/lib/types'
-import {
-  getPlaceDetails as fetchGooglePlaceDetails,
-  getPlacePhotos as fetchGooglePlacePhotos,
-  searchPlaces as googleSearchPlaces,
-} from '~/lib/google-places.server'
 import { protectedProcedure, publicProcedure, router } from '../context'
 
 const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photos']): string[] => {
@@ -149,7 +149,7 @@ export const placesRouter = router({
         throw new Error('User not found in context')
       }
 
-      // First try to find existing place
+      // Find existing place
       const existingPlace = await ctx.db.query.place.findFirst({
         where: eq(place.googleMapsId, input.googleMapsId),
       })
@@ -162,7 +162,6 @@ export const placesRouter = router({
         placeId: input.googleMapsId,
       })
 
-      // Create new place with fetched data (places are public/shared entities)
       const newPlace = await ctx.db
         .insert(place)
         .values({
@@ -180,8 +179,17 @@ export const placesRouter = router({
           photos: extractPhotoReferences(placeInfo.photos),
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
-              ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [number, number])
-              : ([0, 0] as [number, number]),
+              ? [placeInfo.location.longitude, placeInfo.location.latitude]
+              : [0, 0],
+        })
+        .onConflictDoUpdate({
+          target: [place.googleMapsId],
+          set: {
+            name: placeInfo.displayName?.text || 'Unknown Place',
+            address: placeInfo.formattedAddress,
+            latitude: placeInfo.location?.latitude,
+            longitude: placeInfo.location?.longitude,
+          },
         })
         .returning()
 
@@ -471,7 +479,10 @@ export const placesRouter = router({
       let placePhotos = sanitizeStoredPhotos(dbPlace.photos)
 
       if (placePhotos.length === 0 && dbPlace.googleMapsId) {
-        const fetchedPhotos = await fetchGooglePlacePhotos(dbPlace.googleMapsId)
+        const fetchedPhotos = await fetchGooglePlacePhotos({
+          placeId: dbPlace.googleMapsId,
+          forceFresh: true,
+        })
 
         if (fetchedPhotos.length > 0) {
           placePhotos = fetchedPhotos

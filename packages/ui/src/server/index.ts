@@ -1,8 +1,8 @@
 import {
   createClient,
+  type SupabaseClient,
   type Session as SupabaseSession,
   type User as SupabaseUser,
-  type SupabaseClient,
 } from '@supabase/supabase-js'
 
 export interface AuthConfig {
@@ -28,30 +28,27 @@ export function getServerAuthConfig(): AuthConfig {
   // Try import.meta.env first (Vite/Client/Edge)
   // We use unknown cast first to avoid TS errors about ImportMeta not having env
   const meta = import.meta as unknown as { env?: ImportMetaEnv }
-  if (typeof meta !== 'undefined' && meta.env) {
+  if (typeof meta?.env !== 'undefined' && meta.env) {
     supabaseUrl = meta.env.SUPABASE_URL || meta.env.VITE_SUPABASE_URL
     supabaseAnonKey = meta.env.SUPABASE_ANON_KEY || meta.env.VITE_SUPABASE_ANON_KEY
   }
 
   // Fallback to process.env (Node/Server)
-  // Use explicit type casting for process to avoid TS errors without @types/node
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  // @ts-expect-error
-  const proc = typeof process !== 'undefined' ? (process as any) : undefined
-  if ((!supabaseUrl || !supabaseAnonKey) && proc && proc.env) {
+  // Use globalThis to access process without requiring @types/node
+  const proc = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process
+  if ((!supabaseUrl || !supabaseAnonKey) && proc?.env) {
     supabaseUrl = supabaseUrl || proc.env.SUPABASE_URL || proc.env.VITE_SUPABASE_URL
     supabaseAnonKey =
       supabaseAnonKey || proc.env.SUPABASE_ANON_KEY || proc.env.VITE_SUPABASE_ANON_KEY
   }
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables')
+    throw new Error(
+      'Missing Supabase configuration: SUPABASE_URL and SUPABASE_ANON_KEY must be set'
+    )
   }
 
-  return {
-    supabaseUrl,
-    supabaseAnonKey,
-  }
+  return { supabaseUrl, supabaseAnonKey }
 }
 
 /**

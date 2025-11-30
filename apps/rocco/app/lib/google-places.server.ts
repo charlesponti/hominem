@@ -1,4 +1,4 @@
-import { GooglePlaceDetailsResponse, GooglePlacesApiResponse } from '~/lib/types'
+import type { GooglePlaceDetailsResponse, GooglePlacesApiResponse } from '~/lib/types'
 
 type CacheEntry<T> = {
   value: T
@@ -45,11 +45,49 @@ const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 5 // 5 minutes
 const MAX_RETRIES = 2
 const RETRY_DELAY_MS = 300
 
-const DEFAULT_SEARCH_FIELD_MASK =
-  'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.websiteUri,places.phoneNumber'
+const [
+  includeId,
+  includeDisplayName,
+  includeFormattedAddress,
+  includeLocation,
+  includeTypes,
+  includeWebsiteUri,
+  includePhoneNumber,
+  includePriceLevel,
+  includePhotos,
+] = [
+  'places.id',
+  'places.displayName',
+  'places.formattedAddress',
+  'places.location',
+  'places.types',
+  'places.websiteUri',
+  'places.phoneNumber',
+  'places.priceLevel',
+  'places.photos',
+]
 
-const DEFAULT_DETAILS_FIELD_MASK =
-  'places.displayName,places.formattedAddress,places.location,places.types,places.rating,places.websiteUri,places.phoneNumber,places.priceLevel,places.photos'
+const DEFAULT_SEARCH_FIELD_MASK = [
+  includeId,
+  includeDisplayName,
+  includeFormattedAddress,
+  includeLocation,
+  includeTypes,
+  includeWebsiteUri,
+  includePhoneNumber,
+].join(',')
+
+const DEFAULT_DETAILS_FIELD_MASK = [
+  includeId,
+  includeDisplayName,
+  includeFormattedAddress,
+  includeLocation,
+  includeTypes,
+  includeWebsiteUri,
+  includePhoneNumber,
+  includePriceLevel,
+  includePhotos,
+].join(',')
 
 const cache = new Map<string, CacheEntry<unknown>>()
 
@@ -253,4 +291,3 @@ export const buildPhotoMediaUrl = ({
 export const googlePlacesTestUtils = {
   clearCache: () => cache.clear(),
 }
-

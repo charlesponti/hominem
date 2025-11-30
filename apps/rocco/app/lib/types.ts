@@ -1,5 +1,4 @@
 import type { item, list, listInvite, place, tags, userLists } from '@hominem/data/db/schema/index'
-
 export type List = typeof list.$inferSelect
 export type ListInsert = typeof list.$inferInsert
 export type ListInvite = typeof listInvite.$inferSelect
@@ -61,6 +60,7 @@ export type GooglePlacesApiResponse = {
   types?: string[]
   websiteUri?: string | null
   phoneNumber?: string | null
+  priceLevel?: string
 }
 
 // Type for temporary place data from Google Places API

@@ -1,4 +1,3 @@
-import type { GooglePlacePrediction } from '~/lib/types'
 import { trpc } from '~/lib/trpc/client'
 
 export type { GooglePlacePrediction } from '~/lib/types'

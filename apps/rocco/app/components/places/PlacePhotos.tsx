@@ -36,7 +36,7 @@ const PlacePhotos = ({ alt, photos }: Props) => {
 
   if (!photos || photos.length === 0) {
     return (
-      <div className="h-80 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl">
+      <div className="h-80 flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50 rounded-2xl">
         <div className="text-center">
           <ImageIcon className="w-16 h-16 text-indigo-300 mx-auto mb-2" />
           <p className="text-gray-500 text-sm">No photos available</p>
@@ -48,11 +48,6 @@ const PlacePhotos = ({ alt, photos }: Props) => {
   return (
     <>
       <div className="relative">
-        {/* Photo counter badge */}
-        <div className="absolute top-4 right-4 z-10 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-lg backdrop-blur-sm">
-          {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
-        </div>
-
         {/* Photo gallery with scroll snap */}
         <div
           className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-4 pb-4 scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-indigo-50"
@@ -66,12 +61,12 @@ const PlacePhotos = ({ alt, photos }: Props) => {
                 type="button"
                 key={photoUrl}
                 onClick={() => openLightbox(index)}
-                className="flex-shrink-0 snap-center group relative cursor-pointer"
+                className="shrink-0 snap-center group relative cursor-pointer"
                 aria-label={`View photo ${index + 1} of ${photos.length}`}
               >
                 <div className="w-[500px] h-[350px] relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
                   {hasFailed ? (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50">
                       <div className="text-center">
                         <ImageIcon className="w-12 h-12 text-indigo-300 mx-auto mb-2" />
                         <p className="text-gray-500 text-xs">Failed to load</p>
