@@ -1,12 +1,11 @@
 import 'dotenv/config'
 import { place } from '@hominem/data/db/schema/index'
 import { and, eq, isNotNull, isNull } from 'drizzle-orm'
+import { getPlacePhotos } from '../app/lib/google-places.server'
 import { db } from '../app/db'
 
-// Google API key
-const GOOGLE_API_KEY = process.env.VITE_GOOGLE_API_KEY
-if (!GOOGLE_API_KEY) {
-  throw new Error('VITE_GOOGLE_API_KEY environment variable is required')
+if (!process.env.GOOGLE_API_KEY && !process.env.VITE_GOOGLE_API_KEY) {
+  throw new Error('GOOGLE_API_KEY environment variable is required')
 }
 
 async function updatePlacePhotos() {
@@ -25,36 +24,14 @@ async function updatePlacePhotos() {
       }
 
       try {
-        // Fetch place details from Google Places API
-        const response = await fetch(
-          `https://places.googleapis.com/v1/places/${placeRecord.googleMapsId}`,
-          {
-            headers: {
-              'X-Goog-Api-Key': GOOGLE_API_KEY,
-              'X-Goog-FieldMask': 'photos',
-            } as HeadersInit,
-          }
-        )
+        const photoUrls = await getPlacePhotos({
+          placeId: placeRecord.googleMapsId,
+          forceFresh: true,
+        })
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error(
-            `Failed to fetch place details for ${placeRecord.googleMapsId}: ${response.status} ${response.statusText}`
-          )
-          console.error(`Error response: ${errorText}`)
-          _errorCount++
+        if (photoUrls.length === 0) {
           continue
         }
-
-        const placeData = await response.json()
-        const photos = placeData.photos
-
-        if (!photos || photos.length === 0) {
-          continue
-        }
-
-        // Extract photo references
-        const photoUrls = photos.map((photo: any) => photo.name)
 
         // Update the place with photo references
         await db

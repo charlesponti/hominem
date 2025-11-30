@@ -4,13 +4,18 @@ import { and, desc, eq, inArray, or } from 'drizzle-orm'
 import { z } from 'zod'
 import type {
   GooglePlaceDetailsResponse,
-  GooglePlacePhoto,
+  GooglePlacePrediction,
   GooglePlacesApiResponse,
   Place,
 } from '~/lib/types'
+import {
+  getPlaceDetails as fetchGooglePlaceDetails,
+  getPlacePhotos as fetchGooglePlacePhotos,
+  searchPlaces as googleSearchPlaces,
+} from '~/lib/google-places.server'
 import { protectedProcedure, publicProcedure, router } from '../context'
 
-const extractPhotoReferences = (photos?: GooglePlacePhoto[]): string[] => {
+const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photos']): string[] => {
   if (!photos) {
     return []
   }
@@ -28,39 +33,26 @@ const sanitizeStoredPhotos = (photos: string[] | null | undefined): string[] => 
   return photos.filter((photo): photo is string => typeof photo === 'string' && photo.length > 0)
 }
 
-const fetchGooglePlacePhotos = async (googleMapsId: string): Promise<string[]> => {
-  const apiKey = process.env.VITE_GOOGLE_API_KEY
-  if (!apiKey) {
-    console.error('Google API key is not configured')
-    return []
-  }
-
-  try {
-    const response = await fetch(`https://places.googleapis.com/v1/places/${googleMapsId}`, {
-      headers: {
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'photos',
-      },
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Google Places API photo fetch error:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText,
-        googleMapsId,
-      })
-      return []
-    }
-
-    const placeInfo = (await response.json()) as GooglePlaceDetailsResponse
-    return extractPhotoReferences(placeInfo.photos)
-  } catch (error) {
-    console.error('Failed to fetch Google Place photos:', error, { googleMapsId })
-    return []
-  }
-}
+const mapGooglePlaceToPrediction = (
+  placeResult: GooglePlacesApiResponse
+): GooglePlacePrediction => ({
+  description: placeResult.displayName?.text ?? '',
+  place_id: placeResult.id,
+  structured_formatting: {
+    main_text: placeResult.displayName?.text ?? '',
+    secondary_text: placeResult.formattedAddress ?? '',
+  },
+  location:
+    placeResult.location &&
+    typeof placeResult.location.latitude === 'number' &&
+    typeof placeResult.location.longitude === 'number'
+      ? {
+          latitude: placeResult.location.latitude,
+          longitude: placeResult.location.longitude,
+        }
+      : null,
+  priceLevel: placeResult.priceLevel,
+})
 
 type ListSummary = {
   id: string
@@ -116,52 +108,9 @@ export const placesRouter = router({
         return existingPlace
       }
 
-      // Places are public entities, so we can create them without authentication
-      // If not found, fetch and create
-
-      // If not found, fetch place details from Google Places API
-      const apiKey = process.env.VITE_GOOGLE_API_KEY
-      if (!apiKey) {
-        console.error('Google API key is not configured')
-        throw new Error('Google Places API is not configured')
-      }
-
-      const placeDetails = await fetch(
-        `https://places.googleapis.com/v1/places/${input.googleMapsId}`,
-        {
-          headers: {
-            'X-Goog-Api-Key': apiKey,
-            'X-Goog-FieldMask':
-              'displayName,formattedAddress,location,types,rating,websiteUri,photos',
-          },
-        }
-      )
-
-      if (!placeDetails.ok) {
-        const errorText = await placeDetails.text()
-        console.error('Google Places API error:', {
-          status: placeDetails.status,
-          statusText: placeDetails.statusText,
-          body: errorText,
-          googleMapsId: input.googleMapsId,
-        })
-        throw new Error(
-          `Failed to fetch place details from Google Places API: ${placeDetails.status} ${placeDetails.statusText}`
-        )
-      }
-
-      const placeData = await placeDetails.json()
-      const placeInfo = placeData
-
-      if (!placeInfo) {
-        throw new Error('Place not found in Google Places API')
-      }
-
-      // Extract photo URLs from the API response
-      const photoUrls =
-        placeInfo.photos?.map((photo: { name: string }) => {
-          return photo.name
-        }) || []
+      const placeInfo = await fetchGooglePlaceDetails({
+        placeId: input.googleMapsId,
+      })
 
       // Create new place with fetched data (places are public/shared entities)
       const newPlace = await ctx.db
@@ -178,7 +127,7 @@ export const placesRouter = router({
           websiteUri: placeInfo.websiteUri,
           phoneNumber: placeInfo.nationalPhoneNumber || null,
           priceLevel: placeInfo.priceLevel || null,
-          photos: photoUrls.length > 0 ? photoUrls : undefined,
+          photos: extractPhotoReferences(placeInfo.photos),
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
               ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [number, number])
@@ -209,53 +158,9 @@ export const placesRouter = router({
         return existingPlace
       }
 
-      // If not found, fetch place details from Google Places API
-      const apiKey = process.env.VITE_GOOGLE_API_KEY
-      if (!apiKey) {
-        console.error('Google API key is not configured')
-        throw new Error('Google Places API is not configured')
-      }
-
-      const placeDetails = await fetch(
-        `https://places.googleapis.com/v1/places/${input.googleMapsId}`,
-        {
-          headers: {
-            'X-Goog-Api-Key': apiKey,
-            'X-Goog-FieldMask':
-              'displayName,formattedAddress,location,types,rating,websiteUri,photos',
-          },
-        }
-      )
-
-      if (!placeDetails.ok) {
-        const errorText = await placeDetails.text()
-        console.error('Google Places API error:', {
-          status: placeDetails.status,
-          statusText: placeDetails.statusText,
-          body: errorText,
-          googleMapsId: input.googleMapsId,
-        })
-        throw new Error(
-          `Failed to fetch place details from Google Places API: ${placeDetails.status} ${placeDetails.statusText}`
-        )
-      }
-
-      const placeData = await placeDetails.json()
-      const placeInfo = placeData
-
-      if (!placeInfo) {
-        throw new Error('Place not found in Google Places API')
-      }
-
-      // Extract photo URLs from the API response
-      // Google Places API returns photo references that need to be converted to URLs
-      const photoUrls =
-        placeInfo.photos?.map((photo: { name: string }) => {
-          // The photo.name contains the photo reference
-          // We'll store the photo reference and let the frontend handle the URL construction
-          // This allows for better caching and size optimization
-          return photo.name
-        }) || []
+      const placeInfo = await fetchGooglePlaceDetails({
+        placeId: input.googleMapsId,
+      })
 
       // Create new place with fetched data (places are public/shared entities)
       const newPlace = await ctx.db
@@ -272,7 +177,7 @@ export const placesRouter = router({
           websiteUri: placeInfo.websiteUri,
           phoneNumber: placeInfo.nationalPhoneNumber || null,
           priceLevel: placeInfo.priceLevel || null,
-          photos: photoUrls.length > 0 ? photoUrls : undefined,
+          photos: extractPhotoReferences(placeInfo.photos),
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
               ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [number, number])
@@ -396,65 +301,55 @@ export const placesRouter = router({
       const { query, latitude, longitude, radius } = input
 
       try {
-        // Use Google Places API for search
-        const apiKey = process.env.VITE_GOOGLE_API_KEY
-        if (!apiKey) {
-          console.error('Google API key is not configured')
-          throw new Error('Google Places API is not configured')
-        }
-
-        const searchUrl = 'https://places.googleapis.com/v1/places:searchText'
-        const response = await fetch(searchUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': apiKey,
-            'X-Goog-FieldMask':
-              'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.websiteUri,places.phoneNumber',
+        const googleResults = await googleSearchPlaces({
+          query,
+          locationBias: {
+            latitude,
+            longitude,
+            radius,
           },
-          body: JSON.stringify({
-            textQuery: query,
-            locationBias: {
-              circle: {
-                center: {
-                  latitude: latitude,
-                  longitude: longitude,
-                },
-                radius: radius,
-              },
-            },
-          }),
         })
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error('Google Places API search error:', {
-            status: response.status,
-            statusText: response.statusText,
-            body: errorText,
-            query,
-          })
-          throw new Error(`Failed to search places: ${response.status} ${response.statusText}`)
-        }
-
-        const data = await response.json()
-        const places = data.places || []
-
-        const searchResults = places.map((p: GooglePlacesApiResponse) => ({
-          googleMapsId: p.id,
-          name: p.displayName?.text || 'Unknown Place',
-          address: p.formattedAddress || '',
-          location: p.location ? [p.location.longitude, p.location.latitude] : [0, 0],
-          types: p.types || [],
-          imageUrl: null, // Will be fetched separately if needed
-          websiteUri: p.websiteUri || null,
-          phoneNumber: p.phoneNumber || null,
+        return googleResults.map((placeResult: GooglePlacesApiResponse) => ({
+          googleMapsId: placeResult.id,
+          name: placeResult.displayName?.text || 'Unknown Place',
+          address: placeResult.formattedAddress || '',
+          location: placeResult.location
+            ? [placeResult.location.longitude, placeResult.location.latitude]
+            : [0, 0],
+          types: placeResult.types || [],
+          imageUrl: null,
+          websiteUri: placeResult.websiteUri || null,
+          phoneNumber: placeResult.phoneNumber || null,
         }))
-
-        return searchResults
       } catch (error) {
         console.error('Could not fetch places:', error)
         throw new Error('Failed to fetch places')
+      }
+    }),
+
+  autocomplete: protectedProcedure
+    .input(
+      z.object({
+        query: z.string().min(2),
+      })
+    )
+    .query(async ({ input }) => {
+      const query = input.query.trim()
+      if (query.length < 2) {
+        return []
+      }
+
+      try {
+        const googleResults = await googleSearchPlaces({
+          query,
+          maxResultCount: 8,
+        })
+
+        return googleResults.map(mapGooglePlaceToPrediction)
+      } catch (error) {
+        console.error('Failed to autocomplete places:', error)
+        throw new Error('Failed to fetch autocomplete suggestions')
       }
     }),
 
@@ -482,7 +377,6 @@ export const placesRouter = router({
 
       let dbPlace: Place | null = null
       let associatedLists: ListSummary[] = []
-
       // Check if input is a valid UUID
       const isUuid = z.string().uuid().safeParse(googleMapsIdOrDbId).success
 
@@ -501,62 +395,34 @@ export const placesRouter = router({
 
         if (!dbPlace) {
           // If not in DB, fetch from Google and insert
-          const apiKey = process.env.VITE_GOOGLE_API_KEY
-          if (!apiKey) {
-            console.error('Google API key is not configured')
-            throw new Error('Google Places API is not configured')
-          }
+          const googlePlace = await fetchGooglePlaceDetails({
+            placeId: googleMapsIdOrDbId,
+          })
 
-          const placeDetails = await fetch(
-            `https://places.googleapis.com/v1/places/${googleMapsIdOrDbId}`,
-            {
-              headers: {
-                'X-Goog-Api-Key': apiKey,
-                'X-Goog-FieldMask':
-                  'places.displayName,places.formattedAddress,places.location,places.types,places.rating,places.websiteUri,places.phoneNumber,places.priceLevel,places.photos',
-              },
-            }
-          )
-
-          if (!placeDetails.ok) {
-            const errorText = await placeDetails.text()
-            console.error('Google Places API error in getDetails:', {
-              status: placeDetails.status,
-              statusText: placeDetails.statusText,
-              body: errorText,
-              googleMapsId: googleMapsIdOrDbId,
-            })
-            throw new Error(
-              `Failed to fetch place details from Google Places API: ${placeDetails.status} ${placeDetails.statusText}`
-            )
-          }
-
-          const placeInfo = (await placeDetails.json()) as GooglePlaceDetailsResponse
-
-          if (!placeInfo) {
+          if (!googlePlace) {
             throw new Error('Place not found in Google Places API')
           }
 
-          const fetchedPhotos = extractPhotoReferences(placeInfo.photos)
+          const fetchedPhotos = extractPhotoReferences(googlePlace.photos)
 
           const [insertedPlace] = await ctx.db
             .insert(place)
             .values({
               id: crypto.randomUUID(),
               googleMapsId: googleMapsIdOrDbId,
-              name: placeInfo.displayName?.text || 'Unknown Place',
-              address: placeInfo.formattedAddress,
-              latitude: placeInfo.location?.latitude,
-              longitude: placeInfo.location?.longitude,
-              types: placeInfo.types,
-              rating: placeInfo.rating,
-              websiteUri: placeInfo.websiteUri,
-              phoneNumber: placeInfo.nationalPhoneNumber,
-              priceLevel: placeInfo.priceLevel,
+              name: googlePlace.displayName?.text || 'Unknown Place',
+              address: googlePlace.formattedAddress,
+              latitude: googlePlace.location?.latitude,
+              longitude: googlePlace.location?.longitude,
+              types: googlePlace.types,
+              rating: googlePlace.rating,
+              websiteUri: googlePlace.websiteUri,
+              phoneNumber: googlePlace.nationalPhoneNumber,
+              priceLevel: googlePlace.priceLevel,
               photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
               location:
-                placeInfo.location?.latitude && placeInfo.location?.longitude
-                  ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [
+                googlePlace.location?.latitude && googlePlace.location?.longitude
+                  ? ([googlePlace.location.longitude, googlePlace.location.latitude] as [
                       number,
                       number,
                     ])
@@ -569,6 +435,12 @@ export const placesRouter = router({
           }
 
           dbPlace = insertedPlace
+        } else if (!dbPlace.googleMapsId && googleMapsIdOrDbId && !isUuid) {
+          // Edge case: DB place missing Google ID (shouldn't happen, but attempt recovery)
+          dbPlace = {
+            ...dbPlace,
+            googleMapsId: googleMapsIdOrDbId,
+          }
         }
 
         const itemsLinkingToThisPlace = await ctx.db.query.item.findMany({

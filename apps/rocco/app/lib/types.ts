@@ -37,6 +37,17 @@ export type PlaceLocation = {
   imageUrl?: string | null
 }
 
+export type GooglePlacePrediction = {
+  description: string
+  place_id: string
+  structured_formatting: {
+    main_text: string
+    secondary_text: string
+  }
+  location: PlaceLocation | null
+  priceLevel?: string
+}
+
 export type GooglePlacesApiResponse = {
   id: string
   displayName?: {

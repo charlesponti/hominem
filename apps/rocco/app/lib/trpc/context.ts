@@ -8,7 +8,6 @@ import { createClient } from '../../lib/supabase/server'
 import { logger } from '../logger'
 import { cacheKeys, cacheUtils } from '../redis'
 
-// Define the context shape
 export interface Context {
   db: typeof db
   user?: {
@@ -143,11 +142,6 @@ export const createContext = async (request?: Request): Promise<Context> => {
       // Still return a context, but without a user, so the request is unauthenticated
       return { db }
     }
-
-    logger.debug('User authenticated', {
-      userId: localUser.id,
-      email: localUser.email,
-    })
 
     // Return context with user information from our database
     return {

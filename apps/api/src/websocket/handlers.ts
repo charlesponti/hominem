@@ -4,13 +4,11 @@ import { logger } from '@hominem/utils/logger'
 import type { Job } from 'bullmq'
 import type { WebSocket } from 'ws'
 
-// Define message handler types
 export interface WebSocketMessage {
   type: string
   [key: string]: unknown
 }
 
-// Extend WebSocket to include queues
 interface WebSocketWithQueues extends WebSocket {
   queues?: {
     importTransactions: {
@@ -27,7 +25,6 @@ export type MessageMiddleware = (
 
 export type MessageHandler = (ws: WebSocket, message: WebSocketMessage) => Promise<void>
 
-// Create handler registry
 class WebSocketHandlerRegistry {
   private handlers: Map<string, MessageHandler> = new Map()
   private middleware: MessageMiddleware[] = []
@@ -72,7 +69,7 @@ class WebSocketHandlerRegistry {
       // Start middleware chain
       await executeMiddleware()
     } catch (error) {
-      logger.error('Error processing WebSocket message:', error)
+      logger.error('Error processing WebSocket message:', { error })
       ws.send(
         JSON.stringify({
           type: 'error',
@@ -83,10 +80,8 @@ class WebSocketHandlerRegistry {
   }
 }
 
-// Create and export the registry
 export const wsHandlers = new WebSocketHandlerRegistry()
 
-// Define example handlers
 wsHandlers.register('ping', async (ws) => {
   ws.send(JSON.stringify({ type: 'pong' }))
 })
@@ -136,7 +131,7 @@ wsHandlers.register(REDIS_CHANNELS.SUBSCRIBE, async (ws) => {
       })
     )
   } catch (error) {
-    logger.error('Error getting jobs from BullMQ:', error)
+    logger.error('Error getting jobs from BullMQ:', { error })
     ws.send(
       JSON.stringify({
         type: 'error',
@@ -155,20 +150,9 @@ wsHandlers.register('chat', async (ws, message) => {
   )
 })
 
-// Example middleware: logging
 wsHandlers.use(async (_ws, message, next) => {
   logger.info(`Processing message of type: ${message.type}`)
   const start = Date.now()
   await next()
   logger.info(`Processed message in ${Date.now() - start}ms`)
-})
-
-// Example middleware: authentication (placeholder)
-wsHandlers.use(async (_ws, message, next) => {
-  // You could check for auth tokens here
-  if (message.token) {
-    // Validate token logic would go here
-    logger.info(`User authenticated: ${message.token}`)
-  }
-  await next()
 })
