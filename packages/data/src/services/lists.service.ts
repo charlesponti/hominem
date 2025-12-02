@@ -1,4 +1,4 @@
-import { and, count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, inArray } from 'drizzle-orm'
 import { db, takeUniqueOrThrow } from '../db'
 import {
   item,
@@ -333,10 +333,53 @@ export function formatList(
 export async function getListPlacesMap(listIds: string[]): Promise<Map<string, ListPlace[]>> {
   const placesMap = new Map<string, ListPlace[]>()
 
+  if (listIds.length === 0) {
+    return placesMap
+  }
+
   try {
-    for (const listId of listIds) {
-      const places = await getListPlaces(listId)
-      placesMap.set(listId, places)
+    const allPlaces = await db
+      .select({
+        id: item.id,
+        itemId: item.itemId,
+        listId: item.listId,
+        description: place.description,
+        itemAddedAt: item.createdAt,
+        googleMapsId: place.googleMapsId,
+        name: place.name,
+        imageUrl: place.imageUrl,
+        types: place.types,
+        type: item.type,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        rating: place.rating,
+        address: place.address,
+      })
+      .from(item)
+      .innerJoin(place, eq(item.itemId, place.id))
+      .where(inArray(item.listId, listIds))
+
+    for (const p of allPlaces) {
+      if (!placesMap.has(p.listId)) {
+        placesMap.set(p.listId, [])
+      }
+
+      const listPlace: ListPlace = {
+        id: p.id,
+        itemId: p.itemId,
+        description: p.description,
+        itemAddedAt: p.itemAddedAt,
+        googleMapsId: p.googleMapsId,
+        name: p.name,
+        imageUrl: p.imageUrl,
+        types: p.types,
+        type: p.type,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        rating: p.rating,
+        address: p.address,
+      }
+      placesMap.get(p.listId)!.push(listPlace)
     }
 
     return placesMap

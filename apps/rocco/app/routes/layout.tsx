@@ -26,14 +26,12 @@ export default function Layout() {
   const isHome = location.pathname === '/'
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden">
+    <div className="h-screen w-full flex flex-col">
       <Header />
-      <div className="flex-1 flex overflow-hidden mt-20 p-4">
-        <div className="flex-1 overflow-hidden">
-          <Suspense fallback={<LoadingScreen />}>
-            <Outlet />
-          </Suspense>
-        </div>
+      <div className="flex-1 flex my-20 p-2">
+        <Suspense fallback={<LoadingScreen />}>
+          <Outlet />
+        </Suspense>
       </div>
       <Toaster />
       {isAuthenticated && !isHome && <Footer />}

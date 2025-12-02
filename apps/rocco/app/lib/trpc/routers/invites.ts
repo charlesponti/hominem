@@ -28,22 +28,15 @@ export const invitesRouter = router({
 
     const outboundInvites = await ctx.db.query.listInvite.findMany({
       where: eq(listInvite.userId, ctx.user.id),
+      with: {
+        list: true,
+      },
     })
 
-    // Fetch related list and user info for each invite
-    const results = await Promise.all(
-      outboundInvites.map(async (invite) => {
-        const [listData] = await ctx.db.query.list.findMany({
-          where: eq(list.id, invite.listId),
-        })
-        return {
-          ...invite,
-          list: listData,
-          user: null, // User info not available
-        }
-      })
-    )
-    return results
+    return outboundInvites.map((invite) => ({
+      ...invite,
+      user: null, // User info not available
+    }))
   }),
 
   // Get all invites for a specific list

@@ -56,6 +56,7 @@ const FIELDS = {
   nationalPhoneNumber: 'nationalPhoneNumber',
   priceLevel: 'priceLevel',
   photos: 'photos',
+  addressComponents: 'addressComponents',
 } as const
 
 // Helper to add 'places.' prefix for search endpoints
@@ -83,6 +84,7 @@ const DEFAULT_DETAILS_FIELD_MASK = [
   FIELDS.nationalPhoneNumber,
   FIELDS.priceLevel,
   FIELDS.photos,
+  FIELDS.addressComponents,
 ].join(',')
 
 const cache = new Map<string, CacheEntry<unknown>>()
@@ -282,6 +284,16 @@ export const buildPhotoMediaUrl = ({
   url.searchParams.set('maxHeightPx', String(maxHeightPx))
   url.searchParams.set('key', getGoogleApiKey())
   return url.toString()
+}
+
+export const getNeighborhoodFromAddressComponents = (
+  addressComponents: GooglePlaceDetailsResponse['addressComponents']
+): string | null => {
+  if (!addressComponents) return null
+  const neighborhood = addressComponents.find((component) =>
+    component.types.includes('neighborhood')
+  )
+  return neighborhood ? neighborhood.longText : null
 }
 
 export const googlePlacesTestUtils = {

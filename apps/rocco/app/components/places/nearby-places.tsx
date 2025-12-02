@@ -78,9 +78,9 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
   }
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="space-y-2 w-full">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Nearby Places</h2>
+        <h2 className="text-lg font-bold text-gray-900">Nearby Places</h2>
         <span className="text-sm text-gray-500">Within {radiusKm}km</span>
       </div>
 
@@ -112,23 +112,11 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-4 flex flex-col justify-between">
+                <div className="flex-1 p-4 flex flex-col gap-2">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">
                       {place.name}
                     </h3>
-                    {place.address && (
-                      <p className="text-sm text-gray-600 truncate mb-2">{place.address}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    {/* Distance */}
-                    <div className="flex items-center text-sm text-indigo-600">
-                      <MapPin size={14} className="mr-1" />
-                      <span>{formatDistance(place.distance)}</span>
-                    </div>
-
                     {/* Lists */}
                     {place.lists.length > 0 && (
                       <div className="flex items-center gap-1">
@@ -139,6 +127,17 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
                         </span>
                       </div>
                     )}
+                    {/* {place.address && (
+                      <p className="text-sm text-gray-600 truncate mb-2">{place.address}</p>
+                    )} */}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    {/* Distance */}
+                    <div className="flex items-center text-sm text-indigo-600">
+                      <MapPin size={14} className="mr-1" />
+                      <span>{formatDistance(place.distance)}</span>
+                    </div>
                   </div>
                 </div>
               </div>

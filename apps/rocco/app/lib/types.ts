@@ -87,9 +87,17 @@ export type GooglePlacePhoto = {
   name?: string | null
 }
 
+export type GoogleAddressComponent = {
+  longText: string
+  shortText: string
+  types: string[]
+  languageCode: string
+}
+
 export type GooglePlaceDetailsResponse = {
   displayName?: { text?: string | null }
   formattedAddress?: string | null
+  addressComponents?: GoogleAddressComponent[]
   location?: {
     latitude?: number | null
     longitude?: number | null

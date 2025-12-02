@@ -123,7 +123,6 @@ describe('Dashboard Component Tests', () => {
       error: null, // Added error property
     })
 
-    // Reset tRPC mock to default successful state
     mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
       data: MOCK_LISTS,
       isLoading: false,

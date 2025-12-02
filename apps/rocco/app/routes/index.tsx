@@ -70,7 +70,7 @@ export default function Index() {
         <div className="max-w-3xl mx-auto text-center space-y-8">
           {/* Hero Section */}
           <div className="space-y-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 mb-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 mb-4">
               <MapPin className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
@@ -86,7 +86,7 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
             <Link
               to="/signup"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-base font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-base font-medium rounded-lg text-white bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
             >
               Get Started Free
             </Link>
@@ -150,20 +150,10 @@ export default function Index() {
   // Authenticated view: Search, Nearby Places, and Lists
   return (
     <div className="flex flex-col gap-8 w-full max-w-6xl mx-auto pb-8" data-testid="home-scene">
-      {/* Hero Search Section */}
-      <div className="space-y-4">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Find Your Next Spot</h1>
-          <p className="text-gray-600">
-            Search for places you've heard about or discover what's nearby
-          </p>
-        </div>
-        <div className="max-w-2xl mx-auto">
-          <PlacesAutocomplete setSelected={handlePlaceSelected} />
-        </div>
+      <div className="w-full max-w-2xl mx-auto">
+        <PlacesAutocomplete setSelected={handlePlaceSelected} />
       </div>
 
-      {/* Nearby Places Section */}
       <NearbyPlaces
         latitude={defaultLocation.latitude}
         longitude={defaultLocation.longitude}
@@ -171,10 +161,7 @@ export default function Index() {
         limit={4}
       />
 
-      {/* Lists Section */}
-      <div className="border-t border-gray-200 pt-8">
-        <Lists />
-      </div>
+      <Lists />
     </div>
   )
 }

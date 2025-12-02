@@ -96,7 +96,6 @@ export default function ListPage() {
         ? { latitude: currentLocation.latitude, longitude: currentLocation.longitude }
         : DEFAULT_CENTER
 
-  console.trace({ isOwner, userId: data.userId, user: user?.id })
   return (
     <MapInteractionProvider>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">

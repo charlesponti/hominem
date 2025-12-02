@@ -201,18 +201,17 @@ export const accountsRouter = router({
       .where(eq(financeAccounts.userId, ctx.userId))
 
     // Get recent transactions for each account using the existing service method
-    const accountsWithTransactions = await Promise.all(
-      allAccounts.map(async (account) => {
-        // Use the existing service method to get recent transactions
-        const accountWithTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5)
-        const accountData = accountWithTransactions.find((acc) => acc.id === account.id)
-
-        return {
-          ...account,
-          transactions: accountData?.transactions || [],
-        }
-      })
+    const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5)
+    const transactionsMap = new Map(
+      accountsWithRecentTransactions.map((acc) => [acc.id, acc.transactions || []])
     )
+
+    const accountsWithTransactions = allAccounts.map((account) => {
+      return {
+        ...account,
+        transactions: transactionsMap.get(account.id) || [],
+      }
+    })
 
     // Get Plaid connections separately starting from plaidItems table
     // This ensures we capture all Plaid connections, even those without corresponding finance accounts

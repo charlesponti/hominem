@@ -16,6 +16,37 @@ export async function getTagsForLifeEvent(eventId: string) {
     .where(eq(schema.eventsTags.eventId, eventId))
 }
 
+// Helper function to get tags for multiple events
+export async function getTagsForLifeEvents(eventIds: string[]) {
+  if (eventIds.length === 0) return new Map()
+
+  const rows = await db
+    .select({
+      eventId: schema.eventsTags.eventId,
+      id: schema.tags.id,
+      name: schema.tags.name,
+      color: schema.tags.color,
+      description: schema.tags.description,
+    })
+    .from(schema.eventsTags)
+    .innerJoin(schema.tags, eq(schema.eventsTags.tagId, schema.tags.id))
+    .where(inArray(schema.eventsTags.eventId, eventIds))
+
+  const map = new Map<string, Array<{ id: string; name: string; color: string | null; description: string | null }>>()
+  for (const row of rows) {
+    if (!map.has(row.eventId)) {
+      map.set(row.eventId, [])
+    }
+    map.get(row.eventId)!.push({
+      id: row.id,
+      name: row.name,
+      color: row.color,
+      description: row.description,
+    })
+  }
+  return map
+}
+
 // Helper function to get people for an event
 export async function getPeopleForLifeEvent(eventId: string) {
   return db
@@ -27,6 +58,35 @@ export async function getPeopleForLifeEvent(eventId: string) {
     .from(schema.eventsUsers)
     .innerJoin(schema.contacts, eq(schema.eventsUsers.personId, schema.contacts.id))
     .where(eq(schema.eventsUsers.eventId, eventId))
+}
+
+// Helper function to get people for multiple events
+export async function getPeopleForLifeEvents(eventIds: string[]) {
+  if (eventIds.length === 0) return new Map()
+
+  const rows = await db
+    .select({
+      eventId: schema.eventsUsers.eventId,
+      id: schema.contacts.id,
+      firstName: schema.contacts.firstName,
+      lastName: schema.contacts.lastName,
+    })
+    .from(schema.eventsUsers)
+    .innerJoin(schema.contacts, eq(schema.eventsUsers.personId, schema.contacts.id))
+    .where(inArray(schema.eventsUsers.eventId, eventIds))
+
+  const map = new Map<string, Array<{ id: string; firstName: string | null; lastName: string | null }>>()
+  for (const row of rows) {
+    if (!map.has(row.eventId)) {
+      map.set(row.eventId, [])
+    }
+    map.get(row.eventId)!.push({
+      id: row.id,
+      firstName: row.firstName,
+      lastName: row.lastName,
+    })
+  }
+  return map
 }
 
 // Helper function to add tags to an event
@@ -150,20 +210,19 @@ export async function getLifeEvents(filters: LifeEventFilters = {}) {
       ? await db.select().from(schema.events).where(and(...conditions)).orderBy(orderByClause)
       : await db.select().from(schema.events).orderBy(orderByClause)
 
-  const eventsWithData = await Promise.all(
-    events.map(async (event) => {
-      const [people, tags] = await Promise.all([
-        getPeopleForLifeEvent(event.id),
-        getTagsForLifeEvent(event.id),
-      ])
+  const eventIds = events.map((e) => e.id)
+  const [peopleMap, tagsMap] = await Promise.all([
+    getPeopleForLifeEvents(eventIds),
+    getTagsForLifeEvents(eventIds),
+  ])
 
-      return {
-        ...event,
-        tags,
-        people,
-      }
-    })
-  )
+  const eventsWithData = events.map((event) => {
+    return {
+      ...event,
+      tags: tagsMap.get(event.id) || [],
+      people: peopleMap.get(event.id) || [],
+    }
+  })
 
   return eventsWithData
 }

@@ -16,7 +16,7 @@ export default function Lists() {
   return (
     <div className="space-y-4 w-full max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Your Lists</h2>
+        <h2 className="text-lg font-bold text-gray-900">Lists</h2>
         <Link
           to="/lists/create"
           className="self-start px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-sm font-medium rounded-lg transition-colors"
@@ -47,26 +47,30 @@ export default function Lists() {
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
-          {lists.map((list) => (
-            <Link
-              key={list.id}
-              to={`/lists/${list.id}`}
-              className="block px-4 py-2 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 truncate">{list.name}</h3>
-                <p className="text-gray-600 text-sm">
-                  {list.itemCount || 0} {(list.itemCount || 0) === 1 ? 'place' : 'places'}
-                </p>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">
-                  {list.isPublic ? 'Public' : 'Private'}
-                </span>
-              </div>
-            </Link>
-          ))}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <ul className="divide-y divide-gray-200">
+            {lists.map((list) => (
+              <li key={list.id}>
+                <Link
+                  to={`/lists/${list.id}`}
+                  className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 truncate">{list.name}</h3>
+                    <p className="text-gray-600 text-sm">
+                      {list.places.length || 0}{' '}
+                      {(list.places.length || 0) === 1 ? 'place' : 'places'}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">
+                      {list.isPublic ? 'Public' : 'Private'}
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

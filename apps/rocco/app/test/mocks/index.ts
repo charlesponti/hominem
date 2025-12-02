@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js'
-import type { List, Place } from '~/lib/types'
+import type { Place } from '~/lib/types'
 
 export * from './place'
 
@@ -64,7 +64,6 @@ export const getMockPlace = (): Place => ({
   address: '123 Test St',
   createdAt: '2021-01-01T00:00:00.000Z',
   updatedAt: '2021-01-01T00:00:00.000Z',
-  userId: USER_ID,
   itemId: '123',
   googleMapsId: '123',
   types: ['type1', 'type2'],
@@ -74,7 +73,7 @@ export const getMockPlace = (): Place => ({
   websiteUri: null,
   latitude: 37.7749,
   longitude: -122.4194,
-  location: [37.7749, -122.4194], // PostGIS point format [x, y]
+  location: [37.7749, -122.4194],
   bestFor: null,
   isPublic: false,
   wifiInfo: null,
@@ -103,7 +102,7 @@ export const getMockLists = () => [
   },
 ]
 
-export const MOCK_LIST: List = {
+export const MOCK_LIST = {
   id: 'list-1',
   name: 'Coffee Spots',
   description: 'Great places for coffee',
@@ -111,9 +110,10 @@ export const MOCK_LIST: List = {
   isPublic: false,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  places: [],
 }
 
-export const MOCK_LISTS: List[] = [
+export const MOCK_LISTS = [
   MOCK_LIST,
   {
     id: 'list-2',
@@ -121,6 +121,7 @@ export const MOCK_LISTS: List[] = [
     description: 'Places to visit on weekends',
     userId: USER_ID,
     isPublic: false,
+    places: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },

@@ -6,7 +6,7 @@ import {
   formatList,
   getListById as getListByIdService,
   getListInvites as getListInvitesService,
-  getListPlaces,
+  getListPlacesMap,
   getOwnedLists,
   getUserLists,
   sendListInvite as sendListInviteService,
@@ -38,20 +38,19 @@ export const listsRouter = router({
             getUserLists(ctx.user.id, itemType),
           ])
 
-          // Fetch places for each list and format them
-          const ownedListsWithPlaces = await Promise.all(
-            ownedLists.map(async (listData) => {
-              const places = await getListPlaces(listData.id)
-              return formatList(listData, places, true)
-            })
-          )
+          // Fetch places for all lists at once
+          const allListIds = [...ownedLists.map((l) => l.id), ...sharedUserLists.map((l) => l.id)]
+          const placesMap = await getListPlacesMap(allListIds)
 
-          const sharedListsWithPlaces = await Promise.all(
-            sharedUserLists.map(async (listData) => {
-              const places = await getListPlaces(listData.id)
-              return formatList(listData, places, false)
-            })
-          )
+          const ownedListsWithPlaces = ownedLists.map((listData) => {
+            const places = placesMap.get(listData.id) || []
+            return formatList(listData, places, true)
+          })
+
+          const sharedListsWithPlaces = sharedUserLists.map((listData) => {
+            const places = placesMap.get(listData.id) || []
+            return formatList(listData, places, false)
+          })
 
           logger.info('Retrieved user lists', {
             userId: ctx.user.id,
