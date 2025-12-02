@@ -9,6 +9,8 @@ import {
   getListPlacesMap,
   getOwnedLists,
   getUserLists,
+  getOwnedListsWithItemCount,
+  getUserListsWithItemCount,
   sendListInvite as sendListInviteService,
   updateList as updateListService,
 } from '@hominem/data'
@@ -17,6 +19,56 @@ import { z } from 'zod'
 import { safeAsync } from '../../errors'
 import { logger } from '../../logger'
 import { protectedProcedure, publicProcedure, router } from '../context'
+
+async function loadListsWithPlaces(userId: string, itemType?: string) {
+  const [ownedLists, sharedUserLists] = await Promise.all([
+    getOwnedLists(userId),
+    getUserLists(userId),
+  ])
+
+  const allListIds = [...ownedLists.map((l) => l.id), ...sharedUserLists.map((l) => l.id)]
+  const placesMap = await getListPlacesMap(allListIds)
+
+  const ownedListsWithPlaces = ownedLists.map((listData) => {
+    const places = placesMap.get(listData.id) || []
+    return formatList(listData, places, true)
+  })
+
+  const sharedListsWithPlaces = sharedUserLists.map((listData) => {
+    const places = placesMap.get(listData.id) || []
+    return formatList(listData, places, false)
+  })
+
+  return {
+    ownedListsWithPlaces,
+    sharedListsWithPlaces,
+  }
+}
+
+async function loadListsWithPlacesWithItemCounts(userId: string, itemType?: string) {
+  const [ownedLists, sharedUserLists] = await Promise.all([
+    getOwnedListsWithItemCount(userId, itemType),
+    getUserListsWithItemCount(userId, itemType),
+  ])
+
+  const allListIds = [...ownedLists.map((l) => l.id), ...sharedUserLists.map((l) => l.id)]
+  const placesMap = await getListPlacesMap(allListIds)
+
+  const ownedListsWithPlaces = ownedLists.map((listData) => {
+    const places = placesMap.get(listData.id) || []
+    return formatList(listData, places, true)
+  })
+
+  const sharedListsWithPlaces = sharedUserLists.map((listData) => {
+    const places = placesMap.get(listData.id) || []
+    return formatList(listData, places, false)
+  })
+
+  return {
+    ownedListsWithPlaces,
+    sharedListsWithPlaces,
+  }
+}
 
 export const listsRouter = router({
   getAll: protectedProcedure
@@ -32,25 +84,10 @@ export const listsRouter = router({
           }
 
           const itemType = input?.itemType
-
-          const [ownedLists, sharedUserLists] = await Promise.all([
-            getOwnedLists(ctx.user.id, itemType),
-            getUserLists(ctx.user.id, itemType),
-          ])
-
-          // Fetch places for all lists at once
-          const allListIds = [...ownedLists.map((l) => l.id), ...sharedUserLists.map((l) => l.id)]
-          const placesMap = await getListPlacesMap(allListIds)
-
-          const ownedListsWithPlaces = ownedLists.map((listData) => {
-            const places = placesMap.get(listData.id) || []
-            return formatList(listData, places, true)
-          })
-
-          const sharedListsWithPlaces = sharedUserLists.map((listData) => {
-            const places = placesMap.get(listData.id) || []
-            return formatList(listData, places, false)
-          })
+          const { ownedListsWithPlaces, sharedListsWithPlaces } = await loadListsWithPlaces(
+            ctx.user.id,
+            itemType
+          )
 
           logger.info('Retrieved user lists', {
             userId: ctx.user.id,
@@ -61,6 +98,37 @@ export const listsRouter = router({
           return [...ownedListsWithPlaces, ...sharedListsWithPlaces]
         },
         'getAll lists',
+        { userId: ctx.user?.id, itemType: input?.itemType }
+      )
+    }),
+
+  getListsWithItems: protectedProcedure
+    .input(z.object({ itemType: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      return safeAsync(
+        async () => {
+          if (!ctx.user) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'User not found in context',
+            })
+          }
+
+          const itemType = input?.itemType
+          const { ownedListsWithPlaces, sharedListsWithPlaces } = await loadListsWithPlacesWithItemCounts(
+            ctx.user.id,
+            itemType
+          )
+
+          logger.info('Retrieved user lists with items', {
+            userId: ctx.user.id,
+            count: ownedListsWithPlaces.length + sharedListsWithPlaces.length,
+            itemType,
+          })
+
+          return [...ownedListsWithPlaces, ...sharedListsWithPlaces]
+        },
+        'getListsWithItems',
         { userId: ctx.user?.id, itemType: input?.itemType }
       )
     }),
