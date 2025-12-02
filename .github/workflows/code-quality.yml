@@ -82,7 +82,7 @@ jobs:
         run: bun run lint
 
       - name: ⚙️ apply database migrations
-        run: bun run migrate
+        run: bun run db:migrate
 
       - name: 🧪 Unit tests
         run: bun run test

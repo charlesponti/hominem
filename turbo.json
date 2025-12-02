@@ -39,7 +39,7 @@
     "format": {
       "outputs": []
     },
-    "migrate": {
+    "db:migrate": {
       "cache": false
     },
     "start": {
