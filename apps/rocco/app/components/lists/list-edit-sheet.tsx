@@ -1,7 +1,7 @@
 import { useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'
-import Input from '~/components/input'
 import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '~/components/ui/sheet'
 import { useUpdateList } from '~/lib/trpc/api'
 import type { List } from '~/lib/types'
@@ -50,24 +50,28 @@ export default function ListEditSheet({ list }: { list: List }) {
           className="flex flex-col gap-4 mt-4"
           onSubmit={handleSave}
         >
-          <Input
-            type="text"
-            id={listNameId}
-            label="Name"
-            name="name"
-            placeholder="Enter list name"
-            autoComplete="off"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <div className="flex flex-col gap-2">
-            <label htmlFor={descriptionId} className="text-sm font-semibold">
+          <div className="space-y-2">
+            <label htmlFor={listNameId} className="text-sm font-medium text-gray-900">
+              Name
+            </label>
+            <Input
+              type="text"
+              id={listNameId}
+              name="name"
+              placeholder="Enter list name"
+              autoComplete="off"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor={descriptionId} className="text-sm font-medium text-gray-900">
               Description
             </label>
             <textarea
               id={descriptionId}
               placeholder="Enter list description"
-              className="border-2 rounded-lg p-2 h-24 w-full"
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               value={description || ''}
               onChange={(e) => setDescription(e.target.value)}
             />
