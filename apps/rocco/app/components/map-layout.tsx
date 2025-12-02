@@ -1,8 +1,9 @@
 import type { MapMouseEvent } from '@vis.gl/react-google-maps'
 import { useCallback, useState } from 'react'
-import { useLocation, useNavigate, useParams, useMatches } from 'react-router'
+import { useLocation, useMatches, useNavigate, useParams } from 'react-router'
 import LazyMap from '~/components/map.lazy'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
+import { MapInteractionProvider } from '~/contexts/map-interaction-context'
 import { useGeolocation } from '~/hooks/useGeolocation'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import type { Place } from '~/lib/types'
@@ -12,8 +13,6 @@ import { useListData, useMapCenter, useMapMarkers, usePlaceData } from './map-la
 import { MapControls } from './map-layout/map-controls'
 import type { MapLayoutProps } from './map-layout/types'
 import { createPlaceFromPrediction } from './map-layout/utils'
-
-import { MapInteractionProvider } from '~/contexts/map-interaction-context'
 
 export default function MapLayout({ children }: MapLayoutProps) {
   const navigate = useNavigate()
@@ -31,7 +30,7 @@ export default function MapLayout({ children }: MapLayoutProps) {
 
   // Data fetching
   // Check for route data first to avoid redundant fetching
-  const placeFromRoute = matches.map((match) => match.data as any).find((data) => data?.place)
+  const placeFromRoute = matches.map((match) => match.loaderData).find((data) => data?.place)
     ?.place as Place | undefined
 
   const placeQuery = usePlaceData(placeId, { enabled: !placeFromRoute })

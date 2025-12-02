@@ -147,9 +147,8 @@ export default function Index() {
     )
   }
 
-  // Authenticated view: Search, Nearby Places, and Lists
   return (
-    <div className="flex flex-col gap-8 w-full max-w-6xl mx-auto pb-8" data-testid="home-scene">
+    <div className="flex flex-col gap-8 min-w-full max-w-6xl mx-auto pb-8" data-testid="home-scene">
       <div className="w-full max-w-2xl mx-auto">
         <PlacesAutocomplete setSelected={handlePlaceSelected} />
       </div>

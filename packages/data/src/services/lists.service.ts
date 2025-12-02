@@ -37,8 +37,6 @@ export interface List {
   updatedAt: string
 }
 
-// No boolean control flags — explicit functions for metadata-only vs counts
-
 /**
  * Type definition for list places
  */
@@ -98,13 +96,13 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
 export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[]> {
   try {
     type SharedListDbResultBase = {
-      id: string | null
-      name: string | null
+      id: string
+      name: string
       description: string | null
-      userId: string | null
-      isPublic: boolean | null
-      createdAt: string | null
-      updatedAt: string | null
+      userId: string
+      isPublic: boolean
+      createdAt: string
+      updatedAt: string
       owner_id: string | null
       owner_email: string | null
       owner_name: string | null
@@ -127,38 +125,36 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
       .select(baseSelect)
       .from(userLists)
       .where(eq(userLists.userId, userId))
-      .leftJoin(list, eq(userLists.listId, list.id))
-      .leftJoin(users, eq(list.userId, users.id))
+      .innerJoin(list, eq(userLists.listId, list.id))
+      .innerJoin(users, eq(list.userId, users.id))
     const results = (await query.orderBy(desc(list.createdAt))) as SharedListDbResultBase[]
 
-    return results
-      .filter((item) => item.id !== null)
-      .map((item) => {
-        const listPart = {
-          id: item.id as string,
-          name: item.name as string,
-          description: item.description,
-          userId: item.userId as string,
-          isPublic: item.isPublic,
-          createdAt: item.createdAt as string,
-          updatedAt: item.updatedAt as string,
-        }
+    return results.map((item) => {
+      const listPart = {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        userId: item.userId,
+        isPublic: item.isPublic,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      }
 
-        const ownerPart = item.owner_id
-          ? {
-              id: item.owner_id,
-              email: item.owner_email as string,
-              name: item.owner_name,
-            }
-          : null
+      const ownerPart = item.owner_id
+        ? {
+            id: item.owner_id,
+            email: item.owner_email as string,
+            name: item.owner_name,
+          }
+        : null
 
-        const listItem: ListWithSpreadOwner = {
-          ...(listPart as ListSelect),
-          owner: ownerPart,
-        }
+      const listItem: ListWithSpreadOwner = {
+        ...(listPart as ListSelect),
+        owner: ownerPart,
+      }
 
-        return listItem
-      })
+      return listItem
+    })
   } catch (error) {
     console.error(`Error fetching shared lists for user ${userId}:`, error)
     return []
@@ -174,13 +170,13 @@ export async function getUserListsWithItemCount(
 ): Promise<ListWithSpreadOwner[]> {
   try {
     type SharedListDbResultBase = {
-      id: string | null
-      name: string | null
+      id: string
+      name: string
       description: string | null
-      userId: string | null
-      isPublic: boolean | null
-      createdAt: string | null
-      updatedAt: string | null
+      userId: string
+      isPublic: boolean
+      createdAt: string
+      updatedAt: string
       owner_id: string | null
       owner_email: string | null
       owner_name: string | null
@@ -203,16 +199,16 @@ export async function getUserListsWithItemCount(
 
     const selectFields = { ...baseSelect, itemCount: count(item.id) }
 
-    let query = db
+    const query = db
       .select(selectFields)
       .from(userLists)
       .where(eq(userLists.userId, userId))
-      .leftJoin(list, eq(userLists.listId, list.id))
+      .innerJoin(list, eq(userLists.listId, list.id))
       .leftJoin(
         item,
         and(eq(userLists.listId, item.listId), itemType ? eq(item.type, itemType) : undefined)
       )
-      .leftJoin(users, eq(list.userId, users.id))
+      .innerJoin(users, eq(list.userId, users.id))
       .groupBy(
         list.id,
         list.name,
@@ -228,38 +224,36 @@ export async function getUserListsWithItemCount(
 
     const results = (await query.orderBy(desc(list.createdAt))) as SharedListDbResult[]
 
-    return results
-      .filter((item) => item.id !== null)
-      .map((item) => {
-        const listPart = {
-          id: item.id as string,
-          name: item.name as string,
-          description: item.description,
-          userId: item.userId as string,
-          isPublic: item.isPublic,
-          createdAt: item.createdAt as string,
-          updatedAt: item.updatedAt as string,
-        }
+    return results.map((item) => {
+      const listPart = {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        userId: item.userId,
+        isPublic: item.isPublic,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      }
 
-        const ownerPart = item.owner_id
-          ? {
-              id: item.owner_id,
-              email: item.owner_email as string,
-              name: item.owner_name,
-            }
-          : null
+      const ownerPart = item.owner_id
+        ? {
+            id: item.owner_id,
+            email: item.owner_email as string,
+            name: item.owner_name,
+          }
+        : null
 
-        const listItem: ListWithSpreadOwner = {
-          ...(listPart as ListSelect),
-          owner: ownerPart,
-        }
+      const listItem: ListWithSpreadOwner = {
+        ...(listPart as ListSelect),
+        owner: ownerPart,
+      }
 
-        if (item.itemCount !== null) {
-          listItem.itemCount = Number(item.itemCount)
-        }
+      if (item.itemCount !== null) {
+        listItem.itemCount = Number(item.itemCount)
+      }
 
-        return listItem
-      })
+      return listItem
+    })
   } catch (error) {
     console.error(`Error fetching shared lists for user ${userId}:`, error)
     return []
@@ -285,8 +279,6 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       owner_email: string | null
       owner_name: string | null
     }
-    type OwnedListDbResultWithCount = OwnedListDbResultBase & { itemCount: string | null }
-    type OwnedListDbResult = OwnedListDbResultBase | OwnedListDbResultWithCount
 
     const baseSelect = {
       id: list.id,
@@ -301,11 +293,11 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       owner_name: users.name,
     }
 
-    let query = db
+    const query = db
       .select(baseSelect)
       .from(list)
       .where(eq(list.userId, userId))
-      .leftJoin(users, eq(users.id, list.userId))
+      .innerJoin(users, eq(users.id, list.userId))
     const queryResults = (await query.orderBy(desc(list.createdAt))) as OwnedListDbResultBase[]
 
     return queryResults.map((dbItem) => {
@@ -379,11 +371,11 @@ export async function getOwnedListsWithItemCount(
 
     const selectFields = { ...baseSelect, itemCount: count(item.id) }
 
-    let query = db
+    const query = db
       .select(selectFields)
       .from(list)
       .where(eq(list.userId, userId))
-      .leftJoin(users, eq(users.id, list.userId))
+      .innerJoin(users, eq(users.id, list.userId))
       .leftJoin(item, and(eq(item.listId, list.id), itemType ? eq(item.type, itemType) : undefined))
       .groupBy(
         list.id,
@@ -549,7 +541,7 @@ export async function getListById(id: string, userId?: string | null): Promise<L
       })
       .from(list)
       .where(eq(list.id, id))
-      .leftJoin(users, eq(users.id, list.userId))
+      .innerJoin(users, eq(users.id, list.userId))
       .then((rows) => rows[0])
 
     if (!result) {

@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
-import { Outlet, useLoaderData } from 'react-router'
-import Footer from '~/components/footer'
+import { Outlet } from 'react-router'
 import Header from '~/components/header'
 import { LoadingScreen } from '~/components/loading'
 import { Toaster } from '~/components/ui/toaster'
@@ -21,18 +20,15 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Layout() {
-  const { isAuthenticated } = useLoaderData<typeof loader>()
-
   return (
     <div className="h-screen w-full flex flex-col">
       <Header />
-      <div className="flex-1 flex my-24 max-w-6xl mx-auto px-2">
+      <div className="flex-1 flex my-24 w-full max-w-6xl mx-auto px-2">
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>
       </div>
       <Toaster />
-      {isAuthenticated && <Footer />}
     </div>
   )
 }

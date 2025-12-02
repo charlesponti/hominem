@@ -1,10 +1,10 @@
-import { Globe, ListPlus, Phone } from 'lucide-react'
+import { ListPlus, Phone } from 'lucide-react'
 import { useCallback } from 'react'
 import AddPlaceToList from '~/components/places/AddPlaceToList'
 import PlaceAddress from '~/components/places/PlaceAddress'
-import PlaceRating from '~/components/places/PlaceRating'
 import PlaceMap from '~/components/places/PlaceMap'
 import PlacePhotos from '~/components/places/PlacePhotos'
+import PlaceRating from '~/components/places/PlaceRating'
 import PlaceTypes from '~/components/places/PlaceTypes'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import SocialProofSection from '~/components/places/SocialProofSection'
@@ -57,20 +57,18 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <div data-testid="place-page" className="h-full overflow-y-auto pb-6">
+      <div data-testid="place-page" className="h-full max-w-full flex flex-col items-start gap-4">
         {/* Hero Photo Gallery - Full Width */}
-        <div className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <div className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700">
           <PlacePhotos alt={place.name} photos={place.photos} />
         </div>
 
-        <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+        <div className="w-full space-y-6">
           {/* Header with Gradient */}
           <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight mb-3">
-                  {place.name}
-                </h1>
+                <h1 className="text-2xl font-bold leading-tight mb-3">{place.name}</h1>
                 <PlaceTypes types={place.types || []} />
               </div>
 
@@ -86,30 +84,17 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
-          {/* Two Column Layout: Info + Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            {/* Left Column - Minimal Info Rows */}
             <div className="space-y-2">
               {place.address && (
-                <div className="flex items-start gap-3 py-2">
-                  <div className="flex-1 min-w-0">
-                    <PlaceAddress
-                      address={place.address}
-                      name={place.name}
-                      place_id={place.googleMapsId || ''}
-                    />
-                  </div>
-                </div>
+                <PlaceAddress
+                  address={place.address}
+                  name={place.name}
+                  place_id={place.googleMapsId || ''}
+                />
               )}
 
-              {place.websiteUri && (
-                <div className="flex items-start gap-3 py-2">
-                  <Globe size={18} className="text-gray-400 mt-0.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <PlaceWebsite website={place.websiteUri} />
-                  </div>
-                </div>
-              )}
+              {place.websiteUri && <PlaceWebsite website={place.websiteUri} />}
 
               {place.phoneNumber && (
                 <div className="flex items-start gap-3 py-2">
@@ -125,13 +110,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
                 </div>
               )}
 
-              {place.rating && (
-                <div className="flex items-start gap-3 py-2">
-                  <div className="flex-1 min-w-0">
-                    <PlaceRating rating={place.rating} />
-                  </div>
-                </div>
-              )}
+              {place.rating && <PlaceRating rating={place.rating} />}
             </div>
 
             {/* Right Column - Map */}

@@ -1,12 +1,7 @@
 import crypto from 'node:crypto'
 import { beforeEach, afterEach, describe, expect, it } from 'vitest'
 import { db } from '../db'
-import {
-  list,
-  users,
-  item as itemTable,
-  userLists,
-} from '../db/schema'
+import { list, users, item as itemTable, userLists } from '../db/schema'
 import {
   getOwnedLists,
   getUserLists,
@@ -22,7 +17,9 @@ async function isDatabaseAvailable(): Promise<boolean> {
     await db.select().from(users).limit(1)
     return true
   } catch {
-    console.warn('Database not available, skipping lists.service tests. Start test database on port 4433.')
+    console.warn(
+      'Database not available, skipping lists.service tests. Start test database on port 4433.'
+    )
     return false
   }
 }
@@ -39,22 +36,37 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     await createTestUser({ id: sharedUserId, name: 'Shared User' })
 
     // Create a list for owner
-    await db.insert(list).values({ id: listId, name: 'Test List', userId: ownerId }).onConflictDoNothing()
+    await db
+      .insert(list)
+      .values({ id: listId, name: 'Test List', userId: ownerId })
+      .onConflictDoNothing()
 
     // Share the list with the shared user
-    await db
-      .insert(userLists)
-      .values({ listId, userId: sharedUserId })
-      .onConflictDoNothing()
+    await db.insert(userLists).values({ listId, userId: sharedUserId }).onConflictDoNothing()
   })
 
   afterEach(async () => {
     // Clean up items, user lists, lists and users
-    await db.delete(itemTable).where(eq(itemTable.listId, listId)).catch(() => {})
-    await db.delete(userLists).where(eq(userLists.listId, listId)).catch(() => {})
-    await db.delete(list).where(eq(list.id, listId)).catch(() => {})
-    await db.delete(users).where(eq(users.id, ownerId)).catch(() => {})
-    await db.delete(users).where(eq(users.id, sharedUserId)).catch(() => {})
+    await db
+      .delete(itemTable)
+      .where(eq(itemTable.listId, listId))
+      .catch(() => {})
+    await db
+      .delete(userLists)
+      .where(eq(userLists.listId, listId))
+      .catch(() => {})
+    await db
+      .delete(list)
+      .where(eq(list.id, listId))
+      .catch(() => {})
+    await db
+      .delete(users)
+      .where(eq(users.id, ownerId))
+      .catch(() => {})
+    await db
+      .delete(users)
+      .where(eq(users.id, sharedUserId))
+      .catch(() => {})
   })
 
   it('getOwnedLists should return lists owned by user (metadata only)', async () => {
@@ -73,8 +85,20 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
 
   it('getOwnedListsWithItemCount should return counts for items in owned lists', async () => {
     // Insert a couple of items for the list
-    const item1 = { id: crypto.randomUUID(), type: 'PLACE', itemId: crypto.randomUUID(), listId, userId: ownerId }
-    const item2 = { id: crypto.randomUUID(), type: 'PLACE', itemId: crypto.randomUUID(), listId, userId: ownerId }
+    const item1 = {
+      id: crypto.randomUUID(),
+      type: 'PLACE',
+      itemId: crypto.randomUUID(),
+      listId,
+      userId: ownerId,
+    }
+    const item2 = {
+      id: crypto.randomUUID(),
+      type: 'PLACE',
+      itemId: crypto.randomUUID(),
+      listId,
+      userId: ownerId,
+    }
     await db.insert(itemTable).values([item1, item2]).onConflictDoNothing()
 
     const owned = await getOwnedListsWithItemCount(ownerId)
@@ -85,7 +109,13 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
 
   it('getUserListsWithItemCount should return counts for items in shared lists', async () => {
     // Insert items
-    const item1 = { id: crypto.randomUUID(), type: 'PLACE', itemId: crypto.randomUUID(), listId, userId: ownerId }
+    const item1 = {
+      id: crypto.randomUUID(),
+      type: 'PLACE',
+      itemId: crypto.randomUUID(),
+      listId,
+      userId: ownerId,
+    }
     await db.insert(itemTable).values(item1).onConflictDoNothing()
 
     const shared = await getUserListsWithItemCount(sharedUserId)

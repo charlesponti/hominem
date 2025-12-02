@@ -48,10 +48,9 @@ const PlacePhotos = ({ alt, photos }: Props) => {
   return (
     <>
       <div className="relative">
-        {/* Photo gallery with scroll snap */}
         <div
-          className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-4 pb-4 scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-indigo-50"
-          style={{ scrollbarWidth: 'thin' }}
+          className="flex pb-2 gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(156, 163, 175, 1) transparent' }}
         >
           {photos.map((photoUrl, index) => {
             const hasFailed = failedImages.has(index)
@@ -64,7 +63,7 @@ const PlacePhotos = ({ alt, photos }: Props) => {
                 className="shrink-0 snap-center group relative cursor-pointer"
                 aria-label={`View photo ${index + 1} of ${photos.length}`}
               >
-                <div className="w-[500px] h-[350px] relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
+                <div className="w-[500px] h-[350px] relative rounded-2xl overflow-hidden hover:scale-3d transition-all duration-300">
                   {hasFailed ? (
                     <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50">
                       <div className="text-center">
@@ -73,21 +72,17 @@ const PlacePhotos = ({ alt, photos }: Props) => {
                       </div>
                     </div>
                   ) : (
-                    <>
-                      <img
-                        src={getImageSize(photoUrl, 800, 560)}
-                        alt={`${alt} - ${index + 1}`}
-                        loading={index === 0 ? 'eager' : 'lazy'}
-                        decoding="async"
-                        sizes="(max-width: 768px) 90vw, 500px"
-                        className={cn(
-                          'absolute inset-0 object-cover w-full h-full transition-all duration-300 group-hover:scale-105'
-                        )}
-                        onError={() => handleImageError(index)}
-                      />
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
-                    </>
+                    <img
+                      src={getImageSize(photoUrl, 800, 560)}
+                      alt={`${alt} - ${index + 1}`}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      sizes="(max-width: 768px) 90vw, 500px"
+                      className={cn(
+                        'absolute inset-0 object-cover w-full h-full transition-all duration-300 group-hover:scale-105'
+                      )}
+                      onError={() => handleImageError(index)}
+                    />
                   )}
                 </div>
               </button>
