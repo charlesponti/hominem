@@ -285,8 +285,6 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       owner_email: string | null
       owner_name: string | null
     }
-    type OwnedListDbResultWithCount = OwnedListDbResultBase & { itemCount: string | null }
-    type OwnedListDbResult = OwnedListDbResultBase | OwnedListDbResultWithCount
 
     const baseSelect = {
       id: list.id,

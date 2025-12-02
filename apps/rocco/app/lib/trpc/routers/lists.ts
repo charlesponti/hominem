@@ -20,7 +20,7 @@ import { safeAsync } from '../../errors'
 import { logger } from '../../logger'
 import { protectedProcedure, publicProcedure, router } from '../context'
 
-async function loadListsWithPlaces(userId: string, itemType?: string) {
+async function loadListsWithPlaces(userId: string, _itemType?: string) {
   const [ownedLists, sharedUserLists] = await Promise.all([
     getOwnedLists(userId),
     getUserLists(userId),
