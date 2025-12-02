@@ -32,7 +32,7 @@ const InviteListItem = ({ listInvite, onAccept }: InviteListItemProps) => {
       </div>
       {accepted ? (
         <Link
-          to={`/list/${list?.id || listInvite.listId}`}
+          to={`/lists/${list?.id || listInvite.listId}`}
           className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
         >
           <span>View list</span>

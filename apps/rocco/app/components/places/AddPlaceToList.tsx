@@ -4,6 +4,7 @@ import { useRouteLoaderData } from 'react-router'
 import ListForm from '~/components/lists/list-form'
 import Loading from '~/components/loading'
 import { Button } from '~/components/ui/button'
+import { Label } from '~/components/ui/label'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places'
 import { useGetLists } from '~/lib/trpc/api'
@@ -102,7 +103,7 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
                   key={list.id}
                   className={`${styles.listItem} relative border hover:cursor-pointer`}
                 >
-                  <label
+                  <Label
                     htmlFor={list.id}
                     className="flex justify-between items-center hover:cursor-pointer p-2"
                   >
@@ -124,7 +125,7 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
                         })}
                       />
                     )}
-                  </label>
+                  </Label>
                 </li>
               ))}
             </ul>

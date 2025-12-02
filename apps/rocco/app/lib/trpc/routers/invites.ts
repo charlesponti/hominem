@@ -1,12 +1,21 @@
-import { list, listInvite } from '@hominem/data/db/schema/index'
+import {
+  acceptListInvite as acceptListInviteService,
+  getListInvites as getListInvitesService,
+  sendListInvite as sendListInviteService,
+} from '@hominem/data'
+import { list, listInvite, userLists, users } from '@hominem/data/db/schema/index'
 import { and, eq } from 'drizzle-orm'
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../context'
 
 export const invitesRouter = router({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     if (!ctx.user) {
-      throw new Error('User not found in context')
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'User not found in context',
+      })
     }
 
     // Query invites with related list data in a single request
@@ -23,7 +32,10 @@ export const invitesRouter = router({
   // Get invites sent by the current user (outbound)
   getAllOutbound: protectedProcedure.query(async ({ ctx }) => {
     if (!ctx.user) {
-      throw new Error('User not found in context')
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'User not found in context',
+      })
     }
 
     const outboundInvites = await ctx.db.query.listInvite.findMany({
@@ -44,7 +56,10 @@ export const invitesRouter = router({
     .input(z.object({ listId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.user) {
-        throw new Error('User not found in context')
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'User not found in context',
+        })
       }
 
       // Only allow if user owns the list
@@ -52,12 +67,14 @@ export const invitesRouter = router({
         where: and(eq(list.id, input.listId), eq(list.userId, ctx.user.id)),
       })
       if (!listItem) {
-        throw new Error("List not found or you don't have permission")
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: "List not found or you don't have permission",
+        })
       }
 
-      const invites = await ctx.db.query.listInvite.findMany({
-        where: eq(listInvite.listId, input.listId),
-      })
+      // Use service layer for consistency
+      const invites = await getListInvitesService(input.listId)
 
       // Attach list info to each invite
       return invites.map((invite) => ({ ...invite, list: listItem }))
@@ -72,7 +89,18 @@ export const invitesRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) {
-        throw new Error('User not found in context')
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'User not found in context',
+        })
+      }
+
+      // Prevent self-invites
+      if (input.invitedUserEmail.toLowerCase() === ctx.user.email?.toLowerCase()) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You cannot invite yourself to a list',
+        })
       }
 
       // Check if user owns the list
@@ -81,30 +109,53 @@ export const invitesRouter = router({
       })
 
       if (!listItem) {
-        throw new Error("List not found or you don't have permission to invite users to it")
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: "List not found or you don't have permission to invite users to it",
+        })
       }
 
-      // Check if invite already exists
-      const existingInvite = await ctx.db.query.listInvite.findFirst({
-        where: and(
-          eq(listInvite.listId, input.listId),
-          eq(listInvite.invitedUserEmail, input.invitedUserEmail)
-        ),
+      // Check if the invited user is already a member
+      const invitedUser = await ctx.db.query.users.findFirst({
+        where: eq(users.email, input.invitedUserEmail),
       })
 
-      if (existingInvite) {
-        throw new Error('Invite already exists for this user and list')
+      if (invitedUser) {
+        const isAlreadyMember = await ctx.db.query.userLists.findFirst({
+          where: and(
+            eq(userLists.listId, input.listId),
+            eq(userLists.userId, invitedUser.id)
+          ),
+        })
+
+        if (isAlreadyMember) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'This user is already a member of this list',
+          })
+        }
       }
 
-      const newInvite = await ctx.db
-        .insert(listInvite)
-        .values({
-          ...input,
-          userId: ctx.user.id,
-        })
-        .returning()
+      // Use service layer for consistency
+      const serviceResponse = await sendListInviteService(
+        input.listId,
+        input.invitedUserEmail,
+        ctx.user.id
+      )
 
-      return newInvite[0]
+      if ('error' in serviceResponse) {
+        throw new TRPCError({
+          code:
+            serviceResponse.status === 404
+              ? 'NOT_FOUND'
+              : serviceResponse.status === 409
+                ? 'CONFLICT'
+                : 'INTERNAL_SERVER_ERROR',
+          message: serviceResponse.error,
+        })
+      }
+
+      return serviceResponse
     }),
 
   accept: protectedProcedure
@@ -115,35 +166,58 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error('User not found in context')
+      if (!ctx.user || !ctx.user.email) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'User not found in context or email not available',
+        })
       }
 
       // Verify the invite is for the current user
-      if (input.invitedUserEmail !== ctx.user.email) {
-        throw new Error('You can only accept invites sent to your email')
-      }
-
-      const updatedInvite = await ctx.db
-        .update(listInvite)
-        .set({
-          accepted: true,
-          acceptedAt: new Date().toISOString(),
-          invitedUserId: ctx.user.id,
+      if (input.invitedUserEmail.toLowerCase() !== ctx.user.email.toLowerCase()) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You can only accept invites sent to your email',
         })
-        .where(
-          and(
-            eq(listInvite.listId, input.listId),
-            eq(listInvite.invitedUserEmail, input.invitedUserEmail)
-          )
-        )
-        .returning()
-
-      if (updatedInvite.length === 0) {
-        throw new Error('Invite not found')
       }
 
-      return updatedInvite[0]
+      // Use service layer to properly grant list access via user_lists table
+      const serviceResponse = await acceptListInviteService(
+        input.listId,
+        ctx.user.id,
+        ctx.user.email
+      )
+
+      if ('error' in serviceResponse) {
+        throw new TRPCError({
+          code:
+            serviceResponse.status === 404
+              ? 'NOT_FOUND'
+              : serviceResponse.status === 400
+                ? 'BAD_REQUEST'
+                : serviceResponse.status === 403
+                  ? 'FORBIDDEN'
+                  : 'INTERNAL_SERVER_ERROR',
+          message: serviceResponse.error,
+        })
+      }
+
+      // Return the updated invite record for backward compatibility
+      const updatedInvite = await ctx.db.query.listInvite.findFirst({
+        where: and(
+          eq(listInvite.listId, input.listId),
+          eq(listInvite.invitedUserEmail, input.invitedUserEmail)
+        ),
+      })
+
+      if (!updatedInvite) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Invite was accepted but could not be retrieved',
+        })
+      }
+
+      return updatedInvite
     }),
 
   decline: protectedProcedure
@@ -155,12 +229,18 @@ export const invitesRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) {
-        throw new Error('User not found in context')
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'User not found in context',
+        })
       }
 
       // Verify the invite is for the current user
-      if (input.invitedUserEmail !== ctx.user.email) {
-        throw new Error('You can only decline invites sent to your email')
+      if (input.invitedUserEmail.toLowerCase() !== ctx.user.email?.toLowerCase()) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You can only decline invites sent to your email',
+        })
       }
 
       const deletedInvite = await ctx.db
@@ -174,7 +254,10 @@ export const invitesRouter = router({
         .returning()
 
       if (deletedInvite.length === 0) {
-        throw new Error('Invite not found')
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invite not found',
+        })
       }
 
       return { success: true }

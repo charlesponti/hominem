@@ -2,8 +2,14 @@ import { ArrowLeft } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useNavigate, useRouteLoaderData } from 'react-router'
 import ListForm from '~/components/lists/list-form'
-import Modal from '~/components/modal'
 import { Button } from '~/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog'
 import { createClient } from '~/lib/supabase/client'
 import type { List } from '~/lib/types'
 
@@ -62,20 +68,24 @@ export default function CreateListPage() {
         />
       </div>
 
-      <Modal isOpen={isSignInOpen} onModalClose={() => setIsSignInOpen(false)}>
-        <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm flex flex-col items-center justify-center gap-4 min-w-sm">
-          <div className="flex flex-col items-center gap-4">
-            <h3 className="text-lg font-semibold text-gray-900">Save your list</h3>
-            <p className="text-sm text-gray-600">You need an account to create and manage lists.</p>
+      <Dialog open={isSignInOpen} onOpenChange={setIsSignInOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save your list</DialogTitle>
+            <DialogDescription>
+              You need an account to create and manage lists.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-4">
+            <Button
+              onClick={onSignInWithGoogle}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer w-full"
+            >
+              Sign In
+            </Button>
           </div>
-          <Button
-            onClick={onSignInWithGoogle}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer w-full"
-          >
-            Sign In
-          </Button>
-        </div>
-      </Modal>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '~/components/ui/sheet'
 import { useUpdateList } from '~/lib/trpc/api'
 import type { List } from '~/lib/types'
@@ -51,9 +52,7 @@ export default function ListEditSheet({ list }: { list: List }) {
           onSubmit={handleSave}
         >
           <div className="space-y-2">
-            <label htmlFor={listNameId} className="text-sm font-medium text-gray-900">
-              Name
-            </label>
+            <Label htmlFor={listNameId}>Name</Label>
             <Input
               type="text"
               id={listNameId}
@@ -65,9 +64,7 @@ export default function ListEditSheet({ list }: { list: List }) {
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor={descriptionId} className="text-sm font-medium text-gray-900">
-              Description
-            </label>
+            <Label htmlFor={descriptionId}>Description</Label>
             <textarea
               id={descriptionId}
               placeholder="Enter list description"
