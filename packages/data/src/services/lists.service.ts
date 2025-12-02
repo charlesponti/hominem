@@ -203,7 +203,7 @@ export async function getUserListsWithItemCount(
 
     const selectFields = { ...baseSelect, itemCount: count(item.id) }
 
-    let query = db
+    const query = db
       .select(selectFields)
       .from(userLists)
       .where(eq(userLists.userId, userId))
@@ -301,7 +301,7 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       owner_name: users.name,
     }
 
-    let query = db
+    const query = db
       .select(baseSelect)
       .from(list)
       .where(eq(list.userId, userId))
@@ -379,7 +379,7 @@ export async function getOwnedListsWithItemCount(
 
     const selectFields = { ...baseSelect, itemCount: count(item.id) }
 
-    let query = db
+    const query = db
       .select(selectFields)
       .from(list)
       .where(eq(list.userId, userId))

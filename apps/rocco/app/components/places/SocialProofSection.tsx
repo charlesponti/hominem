@@ -37,7 +37,7 @@ const SocialProofSection = ({ lists, placeName }: Props) => {
               className="group flex items-center gap-3 rounded-lg p-3 bg-white border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
             >
               {/* Icon */}
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200">
+              <div className="shrink-0 size-9 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200">
                 <List size={16} className="text-gray-600" />
               </div>
 
