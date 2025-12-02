@@ -129,6 +129,12 @@ describe('Dashboard Component Tests', () => {
       isLoading: false,
       error: null,
     } as MockQueryResult<List[]>)
+
+    mockTrpcClient.places.getNearbyFromLists.useQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    })
   })
 
   test('renders dashboard with all components and lists', async () => {
@@ -215,6 +221,12 @@ describe('Dashboard Route Loader and ErrorBoundary Tests', () => {
       isLoading: false,
       error: null,
     } as MockQueryResult<List[]>)
+
+    mockTrpcClient.places.getNearbyFromLists.useQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    })
   })
 
   test.skip('shows error alert when loader throws', async () => {

@@ -1,7 +1,8 @@
-import { Globe, ListPlus, MapPin, Phone, Star } from 'lucide-react'
+import { Globe, ListPlus, Phone } from 'lucide-react'
 import { useCallback } from 'react'
 import AddPlaceToList from '~/components/places/AddPlaceToList'
 import PlaceAddress from '~/components/places/PlaceAddress'
+import PlaceRating from '~/components/places/PlaceRating'
 import PlaceMap from '~/components/places/PlaceMap'
 import PlacePhotos from '~/components/places/PlacePhotos'
 import PlaceTypes from '~/components/places/PlaceTypes'
@@ -91,7 +92,6 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
             <div className="space-y-2">
               {place.address && (
                 <div className="flex items-start gap-3 py-2">
-                  <MapPin size={18} className="text-gray-400 mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <PlaceAddress
                       address={place.address}
@@ -127,12 +127,8 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
               {place.rating && (
                 <div className="flex items-start gap-3 py-2">
-                  <Star size={18} className="text-gray-400 mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xl font-bold text-gray-900">{place.rating}</span>
-                      <span className="text-sm text-gray-500">/ 5</span>
-                    </div>
+                    <PlaceRating rating={place.rating} />
                   </div>
                 </div>
               )}

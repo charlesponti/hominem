@@ -1,5 +1,5 @@
 import { item, list, place } from '@hominem/data'
-import { and, desc, eq, inArray, or } from 'drizzle-orm'
+import { and, desc, eq, inArray, or, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
 import {
@@ -31,6 +31,31 @@ const sanitizeStoredPhotos = (photos: string[] | null | undefined): string[] => 
   }
 
   return photos.filter((photo): photo is string => typeof photo === 'string' && photo.length > 0)
+}
+
+/**
+ * Converts Google Places API price level string to a numeric value.
+ * Google returns strings like "PRICE_LEVEL_MODERATE", but we store integers in the database.
+ */
+const parsePriceLevel = (priceLevel: string | number | null | undefined): number | null => {
+  if (priceLevel === null || priceLevel === undefined) {
+    return null
+  }
+
+  // If it's already a number, return it
+  if (typeof priceLevel === 'number') {
+    return priceLevel
+  }
+
+  const priceLevelMap: Record<string, number> = {
+    PRICE_LEVEL_FREE: 0,
+    PRICE_LEVEL_INEXPENSIVE: 1,
+    PRICE_LEVEL_MODERATE: 2,
+    PRICE_LEVEL_EXPENSIVE: 3,
+    PRICE_LEVEL_VERY_EXPENSIVE: 4,
+  }
+
+  return priceLevelMap[priceLevel] ?? null
 }
 
 const mapGooglePlaceToPrediction = (
@@ -126,7 +151,7 @@ export const placesRouter = router({
           rating: placeInfo.rating,
           websiteUri: placeInfo.websiteUri,
           phoneNumber: placeInfo.nationalPhoneNumber || null,
-          priceLevel: placeInfo.priceLevel || null,
+          priceLevel: parsePriceLevel(placeInfo.priceLevel),
           photos: extractPhotoReferences(placeInfo.photos),
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
@@ -175,7 +200,7 @@ export const placesRouter = router({
           rating: placeInfo.rating,
           websiteUri: placeInfo.websiteUri,
           phoneNumber: placeInfo.nationalPhoneNumber || null,
-          priceLevel: placeInfo.priceLevel || null,
+          priceLevel: parsePriceLevel(placeInfo.priceLevel),
           photos: extractPhotoReferences(placeInfo.photos),
           location:
             placeInfo.location?.latitude && placeInfo.location?.longitude
@@ -328,7 +353,7 @@ export const placesRouter = router({
           types: placeResult.types || [],
           imageUrl: null,
           websiteUri: placeResult.websiteUri || null,
-          phoneNumber: placeResult.phoneNumber || null,
+          phoneNumber: placeResult.nationalPhoneNumber || null,
         }))
       } catch (error) {
         console.error('Could not fetch places:', error)
@@ -426,7 +451,7 @@ export const placesRouter = router({
               rating: googlePlace.rating,
               websiteUri: googlePlace.websiteUri,
               phoneNumber: googlePlace.nationalPhoneNumber,
-              priceLevel: googlePlace.priceLevel,
+              priceLevel: parsePriceLevel(googlePlace.priceLevel),
               photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
               location:
                 googlePlace.location?.latitude && googlePlace.location?.longitude
@@ -657,6 +682,128 @@ export const placesRouter = router({
           googleMapsIdOrDbId,
         })
         throw new Error('Failed to delete place from list')
+      }
+    }),
+
+  // Get nearby places from user's lists
+  getNearbyFromLists: protectedProcedure
+    .input(
+      z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+        radiusKm: z.number().optional().default(5),
+        limit: z.number().optional().default(4),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new Error('User not found in context')
+      }
+
+      const { latitude, longitude, radiusKm, limit: resultLimit } = input
+
+      try {
+        // Query places that are in the user's lists and within the specified radius
+        // Using PostGIS ST_DWithin with geography for accurate distance calculations
+        const nearbyPlaces = await ctx.db
+          .select({
+            id: place.id,
+            name: place.name,
+            address: place.address,
+            latitude: place.latitude,
+            longitude: place.longitude,
+            googleMapsId: place.googleMapsId,
+            types: place.types,
+            imageUrl: place.imageUrl,
+            rating: place.rating,
+            photos: place.photos,
+            websiteUri: place.websiteUri,
+            phoneNumber: place.phoneNumber,
+            priceLevel: place.priceLevel,
+            listId: list.id,
+            listName: list.name,
+            distance: sql<number>`ST_Distance(
+              ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
+              ${place.location}::geography
+            )`.as('distance'),
+          })
+          .from(place)
+          .innerJoin(item, eq(item.itemId, place.id))
+          .innerJoin(list, eq(list.id, item.listId))
+          .where(
+            and(
+              eq(item.itemType, 'PLACE'),
+              or(eq(list.userId, ctx.user.id), eq(item.userId, ctx.user.id)),
+              sql`ST_DWithin(
+                ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
+                ${place.location}::geography,
+                ${radiusKm * 1000}
+              )`
+            )
+          )
+          .orderBy(sql`distance ASC`)
+          .limit(resultLimit)
+
+        // Group places by place ID and aggregate list information
+        const placesMap = new Map<
+          string,
+          {
+            id: string
+            name: string
+            address: string | null
+            latitude: number | null
+            longitude: number | null
+            googleMapsId: string
+            types: string[] | null
+            imageUrl: string | null
+            rating: number | null
+            photos: string[] | null
+            websiteUri: string | null
+            phoneNumber: string | null
+            priceLevel: number | null
+            distance: number
+            lists: Array<{ id: string; name: string }>
+          }
+        >()
+
+        for (const row of nearbyPlaces) {
+          const existing = placesMap.get(row.id)
+          if (existing) {
+            // Add list to existing place
+            if (!existing.lists.some((l) => l.id === row.listId)) {
+              existing.lists.push({ id: row.listId, name: row.listName })
+            }
+          } else {
+            // Create new place entry
+            placesMap.set(row.id, {
+              id: row.id,
+              name: row.name,
+              address: row.address,
+              latitude: row.latitude,
+              longitude: row.longitude,
+              googleMapsId: row.googleMapsId,
+              types: row.types,
+              imageUrl: row.imageUrl,
+              rating: row.rating,
+              photos: row.photos,
+              websiteUri: row.websiteUri,
+              phoneNumber: row.phoneNumber,
+              priceLevel: row.priceLevel,
+              distance: row.distance,
+              lists: [{ id: row.listId, name: row.listName }],
+            })
+          }
+        }
+
+        return Array.from(placesMap.values())
+      } catch (error) {
+        console.error('Error fetching nearby places from lists:', error, {
+          userId: ctx.user.id,
+          latitude,
+          longitude,
+          radiusKm,
+        })
+        throw new Error('Failed to fetch nearby places')
       }
     }),
 })

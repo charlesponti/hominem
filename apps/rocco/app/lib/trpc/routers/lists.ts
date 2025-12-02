@@ -3,62 +3,22 @@ import {
   createList as createListService,
   deleteListItem as deleteListItemService,
   deleteList as deleteListService,
+  formatList,
   getListById as getListByIdService,
   getListInvites as getListInvitesService,
+  getListPlaces,
   getOwnedLists,
   getUserLists,
   sendListInvite as sendListInviteService,
   updateList as updateListService,
 } from '@hominem/data'
-import { item, list, place } from '@hominem/data/db/schema'
 import { TRPCError } from '@trpc/server'
-import { and, desc, eq, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { safeAsync } from '../../errors'
 import { logger } from '../../logger'
 import { protectedProcedure, publicProcedure, router } from '../context'
 
 export const listsRouter = router({
-  getListOptions: protectedProcedure
-    .input(z.object({ googleMapsId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found in context',
-        })
-      }
-
-      // Get all lists for the user
-      const userLists = await ctx.db.query.list.findMany({
-        where: eq(list.userId, ctx.user.id),
-        orderBy: [desc(list.updatedAt)],
-      })
-
-      // For each list, check if the place with googleMapsId is in the list
-      const results = await Promise.all(
-        userLists.map(async (l) => {
-          const placeItems = await ctx.db.query.item.findMany({
-            where: and(eq(item.listId, l.id), eq(item.itemType, 'PLACE')),
-          })
-          // Get all places for these items
-          const placeIds = placeItems.map((i) => i.itemId)
-          let isInList = false
-          if (placeIds.length > 0) {
-            const placesInList = await ctx.db.query.place.findMany({
-              where: inArray(place.id, placeIds),
-            })
-            isInList = placesInList.some((p) => p.googleMapsId === input.googleMapsId)
-          }
-          return {
-            ...l,
-            isInList,
-          }
-        })
-      )
-      return results
-    }),
-
   getAll: protectedProcedure
     .input(z.object({ itemType: z.string().optional() }).optional())
     .query(async ({ ctx, input }) => {
@@ -78,13 +38,28 @@ export const listsRouter = router({
             getUserLists(ctx.user.id, itemType),
           ])
 
+          // Fetch places for each list and format them
+          const ownedListsWithPlaces = await Promise.all(
+            ownedLists.map(async (listData) => {
+              const places = await getListPlaces(listData.id)
+              return formatList(listData, places, true)
+            })
+          )
+
+          const sharedListsWithPlaces = await Promise.all(
+            sharedUserLists.map(async (listData) => {
+              const places = await getListPlaces(listData.id)
+              return formatList(listData, places, false)
+            })
+          )
+
           logger.info('Retrieved user lists', {
             userId: ctx.user.id,
-            count: ownedLists.length + sharedUserLists.length,
+            count: ownedListsWithPlaces.length + sharedListsWithPlaces.length,
             itemType,
           })
 
-          return [...ownedLists, ...sharedUserLists]
+          return [...ownedListsWithPlaces, ...sharedListsWithPlaces]
         },
         'getAll lists',
         { userId: ctx.user?.id, itemType: input?.itemType }

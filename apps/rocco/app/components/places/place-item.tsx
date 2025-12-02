@@ -1,9 +1,7 @@
 import type { ListPlace } from '@hominem/data'
-import { ExternalLink, MoreVertical, Star } from 'lucide-react'
+import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
 import { type MouseEvent, useState } from 'react'
-import { href, useNavigate } from 'react-router'
-import { useMapInteraction } from '~/contexts/map-interaction-context'
-import PlaceTypes from '~/components/places/PlaceTypes'
+import { href } from 'react-router'
 import { Button } from '~/components/ui/button'
 import {
   DropdownMenu,
@@ -12,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
+import { useMapInteraction } from '~/contexts/map-interaction-context'
 import { useRemoveListItem } from '~/lib/places'
 
 interface PlaceItemProps {
@@ -19,10 +18,16 @@ interface PlaceItemProps {
   listId: string
   onRemove?: () => void
   onError?: () => void
+  isSelected?: boolean
 }
 
-const PlaceListItem = ({ place, listId, onRemove, onError }: PlaceItemProps) => {
-  const navigate = useNavigate()
+const PlaceListItem = ({
+  place,
+  listId,
+  onRemove,
+  onError,
+  isSelected = false,
+}: PlaceItemProps) => {
   const { setHoveredPlaceId } = useMapInteraction()
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const { mutate: removeListItem } = useRemoveListItem({
@@ -35,75 +40,54 @@ const PlaceListItem = ({ place, listId, onRemove, onError }: PlaceItemProps) => 
     },
   })
 
-  const handleOpenGoogleMaps = (e: MouseEvent<HTMLButtonElement>, placeName: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-    window.open(`https://www.google.com/maps/search/${encodeURIComponent(placeName)}`, '_blank')
-  }
-
   const onDeleteClick = () => {
-    // Use the item ID for removing from list
     removeListItem({ listId, placeId: place.itemId })
-  }
-
-  const handleCardClick = () => {
-    navigate(href('/places/:id', { id: place.itemId }))
   }
 
   return (
     <>
-      <div
-        className="relative block px-4 py-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200"
+      <li
+        className="flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 bg-none m-2"
         onMouseEnter={() => setHoveredPlaceId(place.itemId)}
         onMouseLeave={() => setHoveredPlaceId(null)}
+        data-selected={isSelected}
       >
-        <button
-          aria-label={`View details for ${place.name}`}
-          type="button"
-          className="flex w-full max-w-full"
-          onClick={handleCardClick}
+        <a
+          className="flex-1 outline-none focus:underline underline-offset-[5px]"
+          href={href('/places/:id', { id: place.itemId })}
         >
-          <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 mr-3">
-            {place.imageUrl ? (
-              <img src={place.imageUrl} alt={place.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                <Star className="text-indigo-400" size={24} />
-              </div>
-            )}
-          </div>
+          {place.name}
+        </a>
 
-          <div className="flex flex-col flex-1 justify-between text-wrap wrap-break-word">
-            <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">{place.name}</h3>
-            <div className="flex items-center">
-              <PlaceTypes limit={2} types={place.types || []} />
-            </div>
-          </div>
-        </button>
-
-        <div className="absolute top-3 right-3 z-10 flex gap-1">
-          <Button
-            type="button"
-            className="p-1.5 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors"
-            onClick={(e: MouseEvent<HTMLButtonElement>) => handleOpenGoogleMaps(e, place.name)}
-            aria-label={`Open ${place.name} in Google Maps`}
-          >
-            <ExternalLink size={14} className="text-indigo-600" />
-          </Button>
+        <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
-                className="p-1.5 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                className="size-8 p-0 rounded-lg bg-white border border-gray-200 text-gray-700"
                 onClick={(e: MouseEvent<HTMLButtonElement>) => {
                   e.preventDefault()
                   e.stopPropagation()
                 }}
+                aria-label="More options"
               >
-                <MoreVertical size={14} />
+                <MoreVertical size={16} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-white border border-gray-200 text-gray-900 shadow-lg">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault()
+                  window.open(
+                    `https://www.google.com/maps/search/${encodeURIComponent(place.name)}`,
+                    '_blank'
+                  )
+                }}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink size={16} className="text-indigo-600" />
+                Open in Maps
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
                   e.preventDefault()
@@ -111,12 +95,13 @@ const PlaceListItem = ({ place, listId, onRemove, onError }: PlaceItemProps) => 
                 }}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
+                <Trash size={16} className="text-red-600" />
                 Remove from list
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </li>
 
       <Sheet open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <SheetContent

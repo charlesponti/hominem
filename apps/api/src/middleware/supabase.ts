@@ -85,9 +85,9 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
           const [user] = await db.select().from(users).where(eq(users.id, testUserId))
           if (user) {
             c.set('user', user)
-            if (user.supabaseId) {
-              c.set('supabaseId', user.supabaseId)
-            }
+            // Ensure supabaseId is set, defaulting to id if null (legacy behavior support)
+            // But since we are migrating, it should ideally be equal
+            c.set('supabaseId', user.supabaseId || user.id)
           }
         } catch (error) {
           console.error('Error getting user in test mode:', error)

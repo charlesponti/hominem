@@ -126,6 +126,9 @@ const mockTrpcClient = {
     getById: {
       useQuery: vi.fn(),
     },
+    getNearbyFromLists: {
+      useQuery: vi.fn(),
+    },
     create: {
       useMutation: vi.fn(),
     },

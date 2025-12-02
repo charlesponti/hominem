@@ -147,10 +147,5 @@ describe('PlaceItem', () => {
     await waitFor(() => {
       expect(screen.getByText(mockPlace.name)).toBeInTheDocument()
     })
-
-    // Check that the placeholder star icon is displayed instead of an image
-    const starIcon = document.querySelector('.lucide-star')
-    expect(starIcon).toBeInTheDocument()
-    expect(starIcon).toHaveClass('lucide-star')
   })
 })

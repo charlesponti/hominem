@@ -56,23 +56,19 @@ export const useRemoveListItem = (
       return { previousList }
     },
     // If the mutation fails, use the context returned from onMutate to roll back
-    onError: (error, variables, context) => {
-      if (context?.previousList) {
-        utils.lists.getById.setData({ id: variables.listId }, context.previousList)
+    onError: (error, variables, mutateResult, context) => {
+      if (mutateResult?.previousList) {
+        utils.lists.getById.setData({ id: variables.listId }, mutateResult.previousList)
       }
-      // @ts-expect-error - options.onError signature mismatch in environment
-      options?.onError?.(error, variables, context)
+      options?.onError?.(error, variables, mutateResult, context)
     },
     // Always refetch after error or success
-    onSettled: (data, error, variables, context) => {
+    onSettled: (data, error, variables, mutateResult, context) => {
       utils.lists.getById.invalidate({ id: variables.listId })
       utils.lists.getAll.invalidate()
-      utils.lists.getListOptions.invalidate()
-      // Invalidate place details to update "In these lists" section
       utils.places.getDetails.invalidate({ id: variables.placeId })
 
-      // @ts-expect-error - options.onSettled signature mismatch in environment
-      options?.onSettled?.(data, error, variables, context)
+      options?.onSettled?.(data, error, variables, mutateResult, context)
     },
   })
 }
@@ -127,7 +123,6 @@ export const useAddPlaceToList = (
       }
 
       utils.lists.getAll.invalidate()
-      utils.lists.getListOptions.invalidate()
 
       // Invalidate place details to update "In these lists" section
       if (variables.place.googleMapsId) {

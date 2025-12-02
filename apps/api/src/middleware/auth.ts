@@ -24,7 +24,7 @@ export async function getHominemUser(
     const { data: supabaseUser, error } = await supabaseAdmin.auth.admin.getUserById(supabaseId)
     if (!error && supabaseUser?.user) {
       const [newUser] = await db.insert(users).values({
-        id: crypto.randomUUID(),
+        id: supabaseId,
         email: supabaseUser.user.email || '',
         supabaseId,
       })

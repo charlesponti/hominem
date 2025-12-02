@@ -99,7 +99,9 @@ describe('tRPC Context', () => {
         id: testUserId,
         email: `test-${testUserId}@example.com`,
         name: 'Test User',
-        supabaseId: `supabase_${testUserId}`,
+        // In our updated fixture logic, if only id is provided, supabaseId = id
+        // The mock user creation sets them equal if one is missing
+        supabaseId: testUserId,
       }),
     })
   })
@@ -131,7 +133,7 @@ describe('tRPC Context', () => {
     expect(context.user).toMatchObject({
       id: testUserId2,
       email: `test-${testUserId2}@example.com`,
-      supabaseId: `supabase_${testUserId2}`,
+      supabaseId: testUserId2,
     })
     expect(context.user?.name).toBeFalsy() // null or undefined
   })

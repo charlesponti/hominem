@@ -3,14 +3,33 @@ import { users } from '@hominem/data/schema'
 import crypto from 'node:crypto'
 
 export const createTestUser = async (overrides: Partial<typeof users.$inferInsert> = {}) => {
-  const id = overrides.id ?? crypto.randomUUID()
+  // If id is provided but supabaseId is not, use id as supabaseId
+  // If supabaseId is provided but id is not, use supabaseId as id
+  // If neither is provided, generate one and use for both
+  let id = overrides.id
+  let supabaseId = overrides.supabaseId
+
+  if (id && !supabaseId) {
+    supabaseId = id
+  } else if (!id && supabaseId) {
+    id = supabaseId
+  } else if (!id && !supabaseId) {
+    id = crypto.randomUUID()
+    supabaseId = id
+  }
+
+  // Fallback for types (should be covered by above logic)
+  if (!id) id = crypto.randomUUID()
+  if (!supabaseId) supabaseId = id
+
   const user = {
-    id,
-    supabaseId: `supabase_${id}`,
     email: `test-${id}@example.com`,
     name: 'Test User',
     isAdmin: false,
     ...overrides,
+    // Ensure these are set to what we calculated if they weren't in overrides
+    id,
+    supabaseId,
   }
 
   await db.insert(users).values(user).onConflictDoNothing()

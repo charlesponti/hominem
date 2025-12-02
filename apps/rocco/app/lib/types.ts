@@ -59,7 +59,7 @@ export type GooglePlacesApiResponse = {
   }
   types?: string[]
   websiteUri?: string | null
-  phoneNumber?: string | null
+  nationalPhoneNumber?: string | null
   priceLevel?: string
 }
 
@@ -98,7 +98,7 @@ export type GooglePlaceDetailsResponse = {
   rating?: number | null
   websiteUri?: string | null
   nationalPhoneNumber?: string | null
-  priceLevel?: number | null
+  priceLevel?: string | null
   photos?: GooglePlacePhoto[]
 }
 

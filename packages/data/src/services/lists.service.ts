@@ -51,6 +51,8 @@ export interface ListPlace {
   type: string
   latitude: number | null
   longitude: number | null
+  rating: number | null
+  address: string | null
 }
 
 /**
@@ -73,6 +75,8 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
         type: item.type,
         latitude: place.latitude,
         longitude: place.longitude,
+        rating: place.rating,
+        address: place.address,
       })
       .from(item)
       .innerJoin(place, eq(item.itemId, place.id))

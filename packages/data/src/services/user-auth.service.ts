@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
@@ -128,7 +127,7 @@ export class UserAuthService {
     const [newUser] = await db
       .insert(users)
       .values({
-        id: randomUUID(),
+        id: supabaseUser.id,
         email: supabaseUser.email,
         name,
         image,

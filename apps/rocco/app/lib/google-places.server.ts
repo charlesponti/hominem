@@ -45,48 +45,44 @@ const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 5 // 5 minutes
 const MAX_RETRIES = 2
 const RETRY_DELAY_MS = 300
 
-const [
-  includeId,
-  includeDisplayName,
-  includeFormattedAddress,
-  includeLocation,
-  includeTypes,
-  includeWebsiteUri,
-  includePhoneNumber,
-  includePriceLevel,
-  includePhotos,
-] = [
-  'places.id',
-  'places.displayName',
-  'places.formattedAddress',
-  'places.location',
-  'places.types',
-  'places.websiteUri',
-  'places.phoneNumber',
-  'places.priceLevel',
-  'places.photos',
-]
+// Field names without prefix (for Place Details API - single place response)
+const FIELDS = {
+  id: 'id',
+  displayName: 'displayName',
+  formattedAddress: 'formattedAddress',
+  location: 'location',
+  types: 'types',
+  websiteUri: 'websiteUri',
+  nationalPhoneNumber: 'nationalPhoneNumber',
+  priceLevel: 'priceLevel',
+  photos: 'photos',
+} as const
 
-const DEFAULT_SEARCH_FIELD_MASK = [
-  includeId,
-  includeDisplayName,
-  includeFormattedAddress,
-  includeLocation,
-  includeTypes,
-  includeWebsiteUri,
-  includePhoneNumber,
-].join(',')
+// Helper to add 'places.' prefix for search endpoints
+const withPlacesPrefix = (fields: string[]) => fields.map((f) => `places.${f}`).join(',')
 
+// For search endpoints (returns places array)
+const DEFAULT_SEARCH_FIELD_MASK = withPlacesPrefix([
+  FIELDS.id,
+  FIELDS.displayName,
+  FIELDS.formattedAddress,
+  FIELDS.location,
+  FIELDS.types,
+  FIELDS.websiteUri,
+  FIELDS.nationalPhoneNumber,
+])
+
+// For place details endpoint (returns single place)
 const DEFAULT_DETAILS_FIELD_MASK = [
-  includeId,
-  includeDisplayName,
-  includeFormattedAddress,
-  includeLocation,
-  includeTypes,
-  includeWebsiteUri,
-  includePhoneNumber,
-  includePriceLevel,
-  includePhotos,
+  FIELDS.id,
+  FIELDS.displayName,
+  FIELDS.formattedAddress,
+  FIELDS.location,
+  FIELDS.types,
+  FIELDS.websiteUri,
+  FIELDS.nationalPhoneNumber,
+  FIELDS.priceLevel,
+  FIELDS.photos,
 ].join(',')
 
 const cache = new Map<string, CacheEntry<unknown>>()
@@ -261,7 +257,7 @@ export const getPlacePhotos = async ({
 }: PlacePhotosOptions): Promise<string[]> => {
   const details = await getPlaceDetails({
     placeId,
-    fieldMask: 'places.photos',
+    fieldMask: FIELDS.photos,
     forceFresh,
   })
 

@@ -1,7 +1,7 @@
 import type { UseMutationOptions } from '@tanstack/react-query'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from './router'
 import { trpc } from './client'
+import type { AppRouter } from './router'
 
 type RouterInputs = inferRouterInputs<AppRouter>
 type RouterOutputs = inferRouterOutputs<AppRouter>
@@ -12,15 +12,6 @@ export const useGetListInvites = (id: string) => {
 
 export const useGetLists = () => {
   return trpc.lists.getAll.useQuery()
-}
-
-export const useGetListOptions = (googleMapsId: string) => {
-  return trpc.lists.getListOptions.useQuery(
-    { googleMapsId },
-    {
-      enabled: !!googleMapsId,
-    }
-  )
 }
 
 export const useCreateList = (
@@ -36,17 +27,9 @@ export const useCreateList = (
     ...options,
     onSuccess: (newList, variables, context, mutation) => {
       utils.lists.getAll.invalidate()
-      utils.lists.getListOptions.invalidate()
 
       utils.lists.getAll.setData(undefined, (oldLists = []) => {
-        // We need to match the type expected by getAll cache (ListWithSpreadOwner)
-        // newList is ExtendedList (from service) which has createdBy instead of owner
-        // and has places.
-        const listToAdd = {
-          ...newList,
-          owner: newList.createdBy, // Map createdBy to owner
-        }
-        return [...oldLists, listToAdd]
+        return [...oldLists, newList]
       })
 
       options?.onSuccess?.(newList, variables, context, mutation)
@@ -80,13 +63,11 @@ export const useUpdateList = (
             ? {
                 ...list,
                 ...updatedList,
-                owner: updatedList.createdBy ?? list.owner,
+                createdBy: updatedList.createdBy ?? list.createdBy,
               }
             : list
         )
       })
-
-      utils.lists.getListOptions.invalidate()
 
       options?.onSuccess?.(updatedList, variables, context, mutation)
     },
@@ -109,7 +90,6 @@ export const useDeleteList = (
         return oldLists.filter((list) => list.id !== variables.id)
       })
       utils.lists.getAll.invalidate()
-      utils.lists.getListOptions.invalidate()
 
       options?.onSuccess?.(data, variables, context, mutation)
     },

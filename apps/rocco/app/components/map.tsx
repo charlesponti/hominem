@@ -84,19 +84,8 @@ const RoccoMap = ({
   const mapsLoadingState = useApiLoadingStatus()
   const { hoveredPlaceId } = useMapInteraction()
   const [selectedMarker, setSelectedMarker] = useState<PlaceLocation | null>(null)
-  const coreLibrary = useMapsLibrary('core')
   const markerLibrary = useMapsLibrary('marker')
   const hoverAnimation = markerLibrary?.Animation?.BOUNCE
-  const currentLocationIcon = coreLibrary?.SymbolPath
-    ? {
-        path: coreLibrary.SymbolPath.CIRCLE,
-        scale: 7,
-        fillColor: '#4285F4',
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 2,
-      }
-    : undefined
 
   // Store map center and zoom in local state for data attributes
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({
@@ -125,8 +114,6 @@ const RoccoMap = ({
 
   // Update center/zoom on user interaction
   const handleMapIdle = (event: MapEvent<unknown>) => {
-    // The Google Maps API uses a complex event structure
-    // We'll need to access the map properties directly
     const map = event.map
     if (map) {
       const newCenter = map.getCenter()
@@ -179,14 +166,14 @@ const RoccoMap = ({
             markers={markers}
             zoom={zoom}
           />
-          {currentLocation && !isLoadingCurrentLocation && (
+          {/* {currentLocation && !isLoadingCurrentLocation && currentLocationIcon && (
             <Marker
               position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
               icon={currentLocationIcon}
               title="Your Location"
               zIndex={100}
             />
-          )}
+          )} */}
           {markers.map((marker) => {
             const isHovered = hoveredPlaceId && marker.id === hoveredPlaceId
             const isSelected = selectedMarker?.id === marker.id

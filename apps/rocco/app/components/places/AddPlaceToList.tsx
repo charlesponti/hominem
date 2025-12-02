@@ -1,13 +1,12 @@
-import { Heart, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { Heart, Loader2, Plus } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useRouteLoaderData } from 'react-router'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import ListForm from '~/components/lists/list-form'
 import Loading from '~/components/loading'
+import { Button } from '~/components/ui/button'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places'
-import { useCreateList, useGetListOptions } from '~/lib/trpc/api'
+import { useGetLists } from '~/lib/trpc/api'
 import type { Place } from '~/lib/types'
 import { cn } from '~/lib/utils'
 import styles from './AddPlaceToList.module.css'
@@ -21,47 +20,42 @@ interface AddPlaceToListProps {
 
 const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [newListName, setNewListName] = useState('')
-  const [newListDescription, setNewListDescription] = useState('')
+  const [loadingListId, setLoadingListId] = useState<string | null>(null)
   const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
   const isAuthenticated = layoutData?.isAuthenticated ?? false
 
-  const { isLoading, data: lists } = useGetListOptions(place.googleMapsId || '')
-  const { mutateAsync: removeFromList } = useRemoveListItem({})
+  const { isLoading, data: rawLists } = useGetLists()
+
+  // Derive isInList from cached lists data
+  const lists = useMemo(() => {
+    if (!rawLists || !place.googleMapsId) return []
+    return rawLists.map((list) => ({
+      ...list,
+      isInList: list.places?.some((p) => p.googleMapsId === place.googleMapsId) ?? false,
+    }))
+  }, [rawLists, place.googleMapsId])
+  const { mutateAsync: removeFromList } = useRemoveListItem({
+    onSettled: () => setLoadingListId(null),
+  })
   const { mutate: addToList } = useAddPlaceToList({
     onSuccess: () => {
       onSuccess?.()
     },
-  })
-  const { mutate: createList, isPending: isCreatingList } = useCreateList({
-    onSuccess: (newList) => {
-      // Automatically add the place to the newly created list
-      addToList({ listIds: [newList.id], place })
-      // Reset form
-      setNewListName('')
-      setNewListDescription('')
-      setShowCreateForm(false)
-    },
+    onSettled: () => setLoadingListId(null),
   })
 
   const onListSelectChange = (listId: string, isInList: boolean) => {
+    setLoadingListId(listId)
     if (isInList) {
       if (place.id) {
         removeFromList({ listId, placeId: place.id })
+      } else {
+        setLoadingListId(null)
       }
       return
     }
 
     addToList({ listIds: [listId], place })
-  }
-
-  const handleCreateList = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newListName.trim() || !isAuthenticated) return
-    createList({
-      name: newListName.trim(),
-      description: newListDescription.trim() || 'No description',
-    })
   }
 
   return (
@@ -77,59 +71,16 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Create new list form */}
             {showCreateForm ? (
               <div className="border rounded-lg p-4 bg-gray-50">
-                <form onSubmit={handleCreateList} className="space-y-3">
-                  <div>
-                    <Label htmlFor="new-list-name">List Name</Label>
-                    <Input
-                      id="new-list-name"
-                      placeholder="Enter list name..."
-                      value={newListName}
-                      onChange={(e) => setNewListName(e.target.value)}
-                      required
-                      disabled={!isAuthenticated || isCreatingList}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="new-list-description">Description (optional)</Label>
-                    <Input
-                      id="new-list-description"
-                      placeholder="Enter description..."
-                      value={newListDescription}
-                      onChange={(e) => setNewListDescription(e.target.value)}
-                      disabled={!isAuthenticated || isCreatingList}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowCreateForm(false)
-                        setNewListName('')
-                        setNewListDescription('')
-                      }}
-                      disabled={isCreatingList}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={!isAuthenticated || isCreatingList || !newListName.trim()}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
-                    >
-                      {isCreatingList ? 'Creating...' : 'Create & Add'}
-                    </Button>
-                  </div>
-                  {!isAuthenticated && (
-                    <p className="text-sm text-gray-500">Sign in to create lists</p>
-                  )}
-                </form>
+                <ListForm
+                  isAuthenticated={isAuthenticated}
+                  onCreate={(newList) => {
+                    addToList({ listIds: [newList.id], place })
+                    setShowCreateForm(false)
+                  }}
+                  onCancel={() => setShowCreateForm(false)}
+                />
               </div>
             ) : (
               <Button
@@ -163,12 +114,16 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
                       onChange={() => onListSelectChange(list.id, list.isInList)}
                     />
                     {list.name}
-                    <Heart
-                      size={24}
-                      className={cn({
-                        'fill-red-500': list.isInList,
-                      })}
-                    />
+                    {loadingListId === list.id ? (
+                      <Loader2 size={24} className="animate-spin text-gray-400" />
+                    ) : (
+                      <Heart
+                        size={24}
+                        className={cn({
+                          'fill-red-500': list.isInList,
+                        })}
+                      />
+                    )}
                   </label>
                 </li>
               ))}
