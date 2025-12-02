@@ -1,10 +1,11 @@
 import type { User } from '@supabase/supabase-js'
-import { MapPin, PlusCircle, Share2 } from 'lucide-react'
+import { MapPin, PlusCircle, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
 import { Link, redirect, useParams, useRouteLoaderData } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
+import AddPlacePanel from '~/components/lists/add-place-panel'
 import ListMenu from '~/components/lists/list-menu'
 import ListTitle from '~/components/lists/list-title'
 import ListVisibilityBadge from '~/components/lists/list-visibility-badge'
@@ -98,6 +99,14 @@ export default function ListPage() {
 
   return (
     <MapInteractionProvider>
+      {/* Add Place Panel */}
+      <AddPlacePanel
+        isOpen={isAddToListOpen}
+        onClose={() => setIsAddToListOpen(false)}
+        listId={data.id}
+        listName={data.name}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
         {/* List content - left on desktop, top on mobile */}
         <div className="overflow-y-auto space-y-8 pb-8">
@@ -123,24 +132,12 @@ export default function ListPage() {
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    {isOwner && !isAddToListOpen && (
-                      <Button
-                        type="button"
-                        data-testid="add-to-list-button"
-                        onClick={() => setIsAddToListOpen(!isAddToListOpen)}
-                        className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors"
-                      >
-                        <PlusCircle size={18} />
-                        <span className="hidden sm:inline">Add Place</span>
-                      </Button>
-                    )}
-
                     {isOwner && (
                       <Link
                         to={`/lists/${data.id}/invites`}
                         className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white hover:bg-gray-50 active:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg shadow-sm transition-colors"
                       >
-                        <Share2 size={18} />
+                        <UserPlus size={18} />
                         <span className="hidden sm:inline">Share</span>
                       </Link>
                     )}
@@ -172,6 +169,21 @@ export default function ListPage() {
                       Add Your First Place
                     </Button>
                   )}
+                </div>
+              )}
+
+              {/* Add Place Button */}
+              {isOwner && !isAddToListOpen && placeCount > 0 && (
+                <div className="flex justify-start">
+                  <Button
+                    type="button"
+                    data-testid="add-to-list-button"
+                    onClick={() => setIsAddToListOpen(!isAddToListOpen)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors"
+                  >
+                    <PlusCircle size={18} />
+                    <span>Add Place</span>
+                  </Button>
                 </div>
               )}
 

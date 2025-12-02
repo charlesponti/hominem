@@ -23,10 +23,7 @@ export const place = pgTable(
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     itemId: uuid('itemId'),
-    /**
-     * The Google Maps ID for this place.
-     */
-    googleMapsId: text('google_maps_id').notNull(),
+    googleMapsId: text('google_maps_id').notNull().unique(),
     types: text('types').array(),
     imageUrl: text('imageUrl'),
     phoneNumber: text('phoneNumber'),

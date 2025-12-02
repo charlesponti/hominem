@@ -24,7 +24,7 @@
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
-    "migrate": "drizzle-kit migrate",
+    "db:migrate": "drizzle-kit migrate",
     "db:update": "drizzle-kit generate && drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
     "test": "vitest run --passWithNoTests",

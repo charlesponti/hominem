@@ -3,7 +3,7 @@ import AppLink from './app-link'
 
 const Footer = () => {
   return (
-    <footer className="visible md:hidden btm-nav z-55 flex justify-between p-0 w-full">
+    <footer className="absolute bottom-0 md:hidden z-55 flex justify-between p-0 w-full">
       <AppLink role="menuitem" to="/" className="p-4 flex-1 flex justify-center">
         <Search className="inline-block" size={24} />
       </AppLink>

@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { Outlet, useLoaderData, useLocation } from 'react-router'
+import { Outlet, useLoaderData } from 'react-router'
 import Footer from '~/components/footer'
 import Header from '~/components/header'
 import { LoadingScreen } from '~/components/loading'
@@ -22,19 +22,17 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Layout() {
   const { isAuthenticated } = useLoaderData<typeof loader>()
-  const location = useLocation()
-  const isHome = location.pathname === '/'
 
   return (
     <div className="h-screen w-full flex flex-col">
       <Header />
-      <div className="flex-1 flex my-20 p-2">
+      <div className="flex-1 flex my-24 max-w-6xl mx-auto px-2">
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>
       </div>
       <Toaster />
-      {isAuthenticated && !isHome && <Footer />}
+      {isAuthenticated && <Footer />}
     </div>
   )
 }
