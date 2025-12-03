@@ -418,8 +418,8 @@ export const placesRouter = router({
 
       let dbPlace: Place | null = null
       let associatedLists: ListSummary[] = []
-      // Check if input is a valid UUID
-      const isUuid = z.string().uuid().safeParse(googleMapsIdOrDbId).success
+
+      const isUuid = z.uuid().safeParse(googleMapsIdOrDbId).success
 
       try {
         if (isUuid) {

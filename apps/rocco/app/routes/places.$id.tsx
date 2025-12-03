@@ -55,13 +55,9 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="w-full space-y-6">
-          <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold leading-tight mb-3">{place.name}</h1>
-                <PlaceTypes types={place.types || []} />
-              </div>
-
+          <div className="flex animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
+            <div className="flex-1 flex items-center justify-between">
+              <h1 className="text-2xl font-bold leading-tight">{place.name}</h1>
               <Button
                 onClick={onSaveClick}
                 className="flex items-center gap-2 px-4 py-2 sm:py-3 rounded bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
@@ -70,6 +66,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
                 <span>Save</span>
               </Button>
             </div>
+            <PlaceTypes types={place.types || []} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
