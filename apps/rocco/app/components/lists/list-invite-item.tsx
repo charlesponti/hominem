@@ -3,6 +3,7 @@ import Alert from '~/components/alert'
 import { Button } from '~/components/ui/button'
 import type { InviteItem } from '~/lib/component-types'
 import { trpc } from '~/lib/trpc/client'
+import Loading from '../loading'
 
 function ListInviteItem({
   invite,
@@ -38,7 +39,7 @@ function ListInviteItem({
           >
             {mutation.isPending ? (
               <span className="animate-pulse">
-                <div className="loader mr-2" />
+                <Loading size="sm" />
                 Accepting...
               </span>
             ) : (
