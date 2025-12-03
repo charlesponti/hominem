@@ -1,4 +1,4 @@
-import { createPlaceFromPrediction } from '~/components/map-layout/utils'
+import { createPlaceFromPrediction } from '~/lib/places'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import {
   Sheet,

@@ -95,7 +95,6 @@ export default function ListPage() {
 
   return (
     <MapInteractionProvider>
-      {/* Add Place Panel */}
       <AddPlacePanel
         isOpen={isAddToListOpen}
         onClose={() => setIsAddToListOpen(false)}
@@ -104,20 +103,16 @@ export default function ListPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-        {/* List content - left on desktop, top on mobile */}
         <div className="overflow-y-auto space-y-4 pb-8">
           {data && (
             <>
-              {/* Hero Section */}
               <div className="relative">
                 <div className="flex items-start justify-between gap-4">
-                  {/* Title and Metadata */}
                   <div className="flex-1">
                     <ListTitle list={data} isOwner={isOwner} />
                     <ListVisibilityBadge isPublic={data.isPublic} />
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {isOwner && (
                       <Link to={`/lists/${data.id}/invites`} className="flex items-center gap-2">
@@ -161,7 +156,6 @@ export default function ListPage() {
                   </div>
                 )}
 
-                {/* Places List */}
                 {placeCount > 0 && data.places && (
                   <PlacesList places={data.places} listId={data.id} onError={handleDeleteError} />
                 )}
