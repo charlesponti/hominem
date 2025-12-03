@@ -11,16 +11,17 @@ import { useGetLists } from '~/lib/trpc/api'
 import type { Place } from '~/lib/types'
 import { cn } from '~/lib/utils'
 import styles from './AddPlaceToList.module.css'
+import { useToast } from '../ui/use-toast'
 
 interface AddPlaceToListProps {
-  onSuccess: () => void
   place: Place
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
 
-const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToListProps) => {
+const AddPlaceToList = ({ place, isOpen, onOpenChange }: AddPlaceToListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const { toast } = useToast()
   const [loadingListId, setLoadingListId] = useState<string | null>(null)
   const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
   const isAuthenticated = layoutData?.isAuthenticated ?? false
@@ -40,7 +41,10 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
   })
   const { mutate: addToList } = useAddPlaceToList({
     onSuccess: () => {
-      onSuccess?.()
+      toast({
+        title: 'Added to list!',
+        variant: 'default',
+      })
     },
     onSettled: () => setLoadingListId(null),
   })

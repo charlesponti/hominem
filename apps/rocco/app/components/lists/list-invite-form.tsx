@@ -3,6 +3,7 @@ import { type SyntheticEvent, useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 
 import { trpc } from '~/lib/trpc/client'
 import type { ListInvite } from '~/lib/types'
@@ -17,9 +18,9 @@ export default function ListInviteForm({ listId, onCreate }: ListInviteFormProps
   const emailId = useId()
 
   const mutation = trpc.invites.create.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (invite) => {
       setEmail('')
-      onCreate(data)
+      onCreate(invite)
     },
   })
 
@@ -32,7 +33,7 @@ export default function ListInviteForm({ listId, onCreate }: ListInviteFormProps
       e.preventDefault()
       await mutation.mutateAsync({ listId, invitedUserEmail: email })
     },
-    [email, mutation.mutateAsync, listId]
+    [email, mutation, listId]
   )
 
   return (
@@ -48,9 +49,9 @@ export default function ListInviteForm({ listId, onCreate }: ListInviteFormProps
 
       <form className="space-y-4" onSubmit={onFormSubmit}>
         <div className="space-y-2">
-          <label htmlFor={emailId} className="text-sm font-medium text-gray-900">
+          <Label htmlFor={emailId} className="text-sm font-medium text-gray-900">
             Email address
-          </label>
+          </Label>
           <Input
             id={emailId}
             type="email"

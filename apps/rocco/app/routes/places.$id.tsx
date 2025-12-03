@@ -9,7 +9,6 @@ import PlaceTypes from '~/components/places/PlaceTypes'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import SocialProofSection from '~/components/places/SocialProofSection'
 import { Button } from '~/components/ui/button'
-import { useToast } from '~/components/ui/use-toast'
 import { useSaveSheet } from '~/hooks/useSaveSheet'
 import { trpc } from '~/lib/trpc/client'
 import { createCaller } from '~/lib/trpc/server'
@@ -34,7 +33,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
 export default function PlacePage({ loaderData }: Route.ComponentProps) {
   const { place: initialPlace } = loaderData
-  const { toast } = useToast()
   const { isOpen, open, close } = useSaveSheet()
 
   const { data: place } = trpc.places.getDetails.useQuery(
@@ -43,13 +41,6 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
   )
 
   const lists = place.associatedLists || []
-
-  const onAddToListSuccess = useCallback(() => {
-    toast({
-      title: `${place.name} added to list!`,
-      variant: 'default',
-    })
-  }, [toast, place])
 
   const onSaveClick = useCallback(() => {
     open()
@@ -129,18 +120,13 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
           {/* Social Proof Section */}
           {lists.length > 0 && (
             <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-400">
-              <SocialProofSection lists={lists} placeName={place.name} />
+              <SocialProofSection lists={lists} />
             </div>
           )}
         </div>
       </div>
 
-      <AddPlaceToList
-        place={place}
-        isOpen={isOpen}
-        onOpenChange={close}
-        onSuccess={onAddToListSuccess}
-      />
+      <AddPlaceToList place={place} isOpen={isOpen} onOpenChange={close} />
     </>
   )
 }

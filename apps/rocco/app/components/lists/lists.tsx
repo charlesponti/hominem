@@ -14,7 +14,7 @@ export default function Lists() {
   } = trpc.lists.getAll.useQuery(undefined, { enabled: isAuthenticated })
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-gray-900">Lists</h2>
         <Link
@@ -57,14 +57,8 @@ export default function Lists() {
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 truncate">{list.name}</h3>
-                    <p className="text-gray-600 text-sm">
-                      {list.places.length || 0}{' '}
-                      {(list.places.length || 0) === 1 ? 'place' : 'places'}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
-                      {list.isPublic ? 'Public' : 'Private'}
+                    <span className="bg-black text-white text-sm rounded-full px-2.5 py-1">
+                      {list.places.length || 0}
                     </span>
                   </div>
                 </Link>

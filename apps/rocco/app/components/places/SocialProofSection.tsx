@@ -10,10 +10,9 @@ type PlaceList = {
 
 type Props = {
   lists: PlaceList[]
-  placeName: string
 }
 
-const SocialProofSection = ({ lists, placeName }: Props) => {
+const SocialProofSection = ({ lists }: Props) => {
   if (lists.length === 0) {
     return null
   }

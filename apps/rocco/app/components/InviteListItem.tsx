@@ -11,6 +11,7 @@ type InviteListItemProps = {
 }
 const InviteListItem = ({ listInvite, onAccept }: InviteListItemProps) => {
   const { accepted, list } = listInvite
+  // Use invites.accept mutation (correct router)
   const { mutate, status } = trpc.invites.accept.useMutation({
     onSuccess: onAccept,
   })

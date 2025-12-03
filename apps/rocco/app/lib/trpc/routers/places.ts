@@ -248,10 +248,11 @@ export const placesRouter = router({
         .values({
           id: crypto.randomUUID(),
           ...input,
-          location:
-            input.latitude && input.longitude
-              ? ([input.longitude, input.latitude] as [number, number])
-              : ([0, 0] as [number, number]), // Default location if coordinates not provided
+          location: input.latitude && input.longitude ? [input.longitude, input.latitude] : [0, 0],
+        })
+        .onConflictDoUpdate({
+          target: [place.googleMapsId],
+          set: input,
         })
         .returning()
 

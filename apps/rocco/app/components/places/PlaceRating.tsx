@@ -9,7 +9,7 @@ type PlaceRatingProps = {
 const PlaceRating = ({ rating, size = 'md' }: PlaceRatingProps) => {
   return (
     <div className="flex gap-2 items-center">
-      <Star size={size === 'md' ? 14 : 20} />
+      <Star size={size === 'md' ? 14 : size === 'lg' ? 18 : 12} />
       <div
         className={cn('flex gap-1', {
           'text-sm': size === 'sm',

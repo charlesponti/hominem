@@ -22,17 +22,10 @@ function ListInviteItem({
   }, [invite.listId, invite.invitedUserEmail, mutation])
 
   return (
-    <li className="card shadow-md px-2 py-4 text-primary flex flex-row justify-between">
-      <div className="flex-1">
-        <p className={`text-lg flex flex-col gap-2${invite.accepted ? '' : ' text-gray-400'}`}>
-          <span className="text-lg font-semibold">{invite.list?.name || 'Unknown List'}</span>
-          <span className="text-sm text-gray-400">{invite.invitedUserEmail}</span>
-        </p>
-        {mutation.error && (
-          <div className="mt-2">
-            <Alert type="error">{mutation.error.message}</Alert>
-          </div>
-        )}
+    <li className="flex items-center justify-between gap-4 p-4 border border-gray-200 rounded-lg">
+      <div>
+        <p className="font-medium text-gray-900">{invite.invitedUserEmail}</p>
+        {mutation.error && <Alert type="error">{mutation.error.message}</Alert>}
       </div>
       <div>
         {invite.accepted ? (
@@ -43,7 +36,14 @@ function ListInviteItem({
             onClick={acceptInvite}
             disabled={mutation.isPending}
           >
-            {mutation.isPending ? 'Accepting...' : 'Accept'}
+            {mutation.isPending ? (
+              <span className="animate-pulse">
+                <div className="loader mr-2" />
+                Accepting...
+              </span>
+            ) : (
+              <span>Accept</span>
+            )}
           </Button>
         )}
       </div>
