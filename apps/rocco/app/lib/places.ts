@@ -1,9 +1,9 @@
+import type { List } from '@hominem/data'
 import { type QueryClient, type UseMutationOptions, useMutation } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
-import type { List } from '@hominem/data'
+import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { trpc } from './trpc/client'
 import type { Place, PlaceLocation } from './types'
-import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 
 type AddPlaceToListOptions = {
   listIds: string[]
@@ -67,7 +67,7 @@ export const useRemoveListItem = (
     onSettled: (data, error, variables, mutateResult, context) => {
       utils.lists.getById.invalidate({ id: variables.listId })
       utils.lists.getAll.invalidate()
-      utils.places.getDetails.invalidate({ id: variables.placeId })
+      utils.places.getDetailsById.invalidate({ id: variables.placeId })
 
       options?.onSettled?.(data, error, variables, mutateResult, context)
     },
@@ -127,10 +127,10 @@ export const useAddPlaceToList = (
 
       // Invalidate place details to update "In these lists" section
       if (variables.place.googleMapsId) {
-        utils.places.getDetails.invalidate({ id: variables.place.googleMapsId })
+        utils.places.getDetailsByGoogleId.invalidate({ googleMapsId: variables.place.googleMapsId })
       }
       if (data?.id) {
-        utils.places.getDetails.invalidate({ id: data.id })
+        utils.places.getDetailsById.invalidate({ id: data.id })
       }
 
       // @ts-expect-error - options.onSuccess signature mismatch in environment
@@ -183,9 +183,9 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
 
   return {
     id: prediction.place_id,
-    name: prediction.structured_formatting?.main_text || prediction.description || '',
+    name: prediction.text || '',
     description: null,
-    address: prediction.structured_formatting?.secondary_text || prediction.description || '',
+    address: prediction.address || '',
     createdAt: '',
     updatedAt: '',
     itemId: null,

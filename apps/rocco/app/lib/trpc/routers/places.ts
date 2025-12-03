@@ -1,5 +1,5 @@
 import { item, list, place } from '@hominem/data'
-import { and, desc, eq, inArray, or, sql } from 'drizzle-orm'
+import { and, eq, or, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
 import {
@@ -7,95 +7,63 @@ import {
   getPlacePhotos as fetchGooglePlacePhotos,
   searchPlaces as googleSearchPlaces,
 } from '~/lib/google-places.server'
-import type {
-  GooglePlaceDetailsResponse,
-  GooglePlacePrediction,
-  GooglePlacesApiResponse,
-  Place,
-} from '~/lib/types'
-import { protectedProcedure, publicProcedure, router } from '../context'
-
-const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photos']): string[] => {
-  if (!photos) {
-    return []
-  }
-
-  return photos
-    .map((photo) => photo.name)
-    .filter((name): name is string => typeof name === 'string' && name.length > 0)
-}
-
-const sanitizeStoredPhotos = (photos: string[] | null | undefined): string[] => {
-  if (!Array.isArray(photos)) {
-    return []
-  }
-
-  return photos.filter((photo): photo is string => typeof photo === 'string' && photo.length > 0)
-}
-
-/**
- * Converts Google Places API price level string to a numeric value.
- * Google returns strings like "PRICE_LEVEL_MODERATE", but we store integers in the database.
- */
-const parsePriceLevel = (priceLevel: string | number | null | undefined): number | null => {
-  if (priceLevel === null || priceLevel === undefined) {
-    return null
-  }
-
-  // If it's already a number, return it
-  if (typeof priceLevel === 'number') {
-    return priceLevel
-  }
-
-  const priceLevelMap: Record<string, number> = {
-    PRICE_LEVEL_FREE: 0,
-    PRICE_LEVEL_INEXPENSIVE: 1,
-    PRICE_LEVEL_MODERATE: 2,
-    PRICE_LEVEL_EXPENSIVE: 3,
-    PRICE_LEVEL_VERY_EXPENSIVE: 4,
-  }
-
-  return priceLevelMap[priceLevel] ?? null
-}
-
-const mapGooglePlaceToPrediction = (
-  placeResult: GooglePlacesApiResponse
-): GooglePlacePrediction => ({
-  description:
-    placeResult.displayName?.text && placeResult.formattedAddress
-      ? `${placeResult.displayName.text}, ${placeResult.formattedAddress}`
-      : (placeResult.displayName?.text ?? placeResult.formattedAddress ?? ''),
-  place_id: placeResult.id,
-  structured_formatting: {
-    main_text: placeResult.displayName?.text ?? '',
-    secondary_text: placeResult.formattedAddress ?? '',
-  },
-  location:
-    placeResult.location &&
-    typeof placeResult.location.latitude === 'number' &&
-    typeof placeResult.location.longitude === 'number'
-      ? {
-          latitude: placeResult.location.latitude,
-          longitude: placeResult.location.longitude,
-        }
-      : null,
-  priceLevel: placeResult.priceLevel,
-})
+import {
+  extractPhotoReferences,
+  mapGooglePlaceToPrediction,
+  parsePriceLevel,
+  sanitizeStoredPhotos,
+} from '~/lib/places-utils'
+import type { Place } from '~/lib/types'
+import { type Context, protectedProcedure, publicProcedure, router } from '../context'
 
 type ListSummary = {
   id: string
   name: string
 }
 
-export const placesRouter = router({
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    const allPlaces = await ctx.db.query.place.findMany({
-      orderBy: [desc(place.createdAt)],
+const enrichPlaceWithDetails = async (ctx: Context, dbPlace: Place) => {
+  const itemsLinkingToThisPlace = await ctx.db.query.item.findMany({
+    where: and(eq(item.itemId, dbPlace.id), eq(item.itemType, 'PLACE')),
+    with: {
+      list: {
+        columns: { id: true, name: true },
+      },
+    },
+  })
+
+  const associatedLists = itemsLinkingToThisPlace
+    .map((itemRecord) => itemRecord.list)
+    .filter((listRecord) => Boolean(listRecord))
+    .map((listRecord) => ({ id: listRecord.id, name: listRecord.name }))
+
+  let placePhotos = sanitizeStoredPhotos(dbPlace.photos)
+
+  if (placePhotos.length === 0 && dbPlace.googleMapsId) {
+    const fetchedPhotos = await fetchGooglePlacePhotos({
+      placeId: dbPlace.googleMapsId,
+      forceFresh: true,
     })
 
-    return allPlaces
-  }),
+    if (fetchedPhotos.length > 0) {
+      placePhotos = fetchedPhotos
+      await ctx.db
+        .update(place)
+        .set({
+          photos: fetchedPhotos,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(place.id, dbPlace.id))
+    }
+  }
 
+  return {
+    ...dbPlace,
+    associatedLists,
+    photos: placePhotos,
+  }
+}
+
+export const placesRouter = router({
   getById: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
@@ -122,107 +90,6 @@ export const placesRouter = router({
       }
 
       return foundPlace
-    }),
-
-  getOrCreateByGoogleMapsIdPublic: publicProcedure
-    .input(z.object({ googleMapsId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      // First try to find existing place (can be read without auth)
-      const existingPlace = await ctx.db.query.place.findFirst({
-        where: eq(place.googleMapsId, input.googleMapsId),
-      })
-
-      if (existingPlace) {
-        return existingPlace
-      }
-
-      const placeInfo = await fetchGooglePlaceDetails({
-        placeId: input.googleMapsId,
-      })
-
-      // Create new place with fetched data (places are public/shared entities)
-      const newPlace = await ctx.db
-        .insert(place)
-        .values({
-          id: crypto.randomUUID(),
-          googleMapsId: input.googleMapsId,
-          name: placeInfo.displayName?.text || 'Unknown Place',
-          address: placeInfo.formattedAddress,
-          latitude: placeInfo.location?.latitude,
-          longitude: placeInfo.location?.longitude,
-          types: placeInfo.types,
-          rating: placeInfo.rating,
-          websiteUri: placeInfo.websiteUri,
-          phoneNumber: placeInfo.nationalPhoneNumber || null,
-          priceLevel: parsePriceLevel(placeInfo.priceLevel),
-          photos: extractPhotoReferences(placeInfo.photos),
-          location:
-            placeInfo.location?.latitude && placeInfo.location?.longitude
-              ? ([placeInfo.location.longitude, placeInfo.location.latitude] as [number, number])
-              : ([0, 0] as [number, number]),
-        })
-        .returning()
-
-      return newPlace[0]
-    }),
-
-  getOrCreateByGoogleMapsId: protectedProcedure
-    .input(
-      z.object({
-        googleMapsId: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error('User not found in context')
-      }
-
-      // Find existing place
-      const existingPlace = await ctx.db.query.place.findFirst({
-        where: eq(place.googleMapsId, input.googleMapsId),
-      })
-
-      if (existingPlace) {
-        return existingPlace
-      }
-
-      const placeInfo = await fetchGooglePlaceDetails({
-        placeId: input.googleMapsId,
-      })
-
-      const newPlace = await ctx.db
-        .insert(place)
-        .values({
-          id: crypto.randomUUID(),
-          googleMapsId: input.googleMapsId,
-          name: placeInfo.displayName?.text || 'Unknown Place',
-          address: placeInfo.formattedAddress,
-          latitude: placeInfo.location?.latitude,
-          longitude: placeInfo.location?.longitude,
-          types: placeInfo.types,
-          rating: placeInfo.rating,
-          websiteUri: placeInfo.websiteUri,
-          phoneNumber: placeInfo.nationalPhoneNumber || null,
-          priceLevel: parsePriceLevel(placeInfo.priceLevel),
-          photos: extractPhotoReferences(placeInfo.photos),
-          location:
-            placeInfo.location?.latitude && placeInfo.location?.longitude
-              ? [placeInfo.location.longitude, placeInfo.location.latitude]
-              : [0, 0],
-        })
-        .onConflictDoUpdate({
-          target: [place.googleMapsId],
-          set: {
-            name: placeInfo.displayName?.text || 'Unknown Place',
-            address: placeInfo.formattedAddress,
-            latitude: placeInfo.location?.latitude,
-            longitude: placeInfo.location?.longitude,
-            location: sql`ST_SetSRID(ST_MakePoint(EXCLUDED.longitude, EXCLUDED.latitude), 4326)`,
-          },
-        })
-        .returning()
-
-      return newPlace[0]
     }),
 
   create: protectedProcedure
@@ -272,7 +139,7 @@ export const placesRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
+        id: z.uuid(),
         name: z.string().min(1).optional(),
         description: z.string().optional(),
         address: z.string().optional(),
@@ -332,46 +199,6 @@ export const placesRouter = router({
       return { success: true }
     }),
 
-  search: protectedProcedure
-    .input(
-      z.object({
-        query: z.string().min(1),
-        latitude: z.number(),
-        longitude: z.number(),
-        radius: z.number().positive(),
-      })
-    )
-    .query(async ({ input }) => {
-      const { query, latitude, longitude, radius } = input
-
-      try {
-        const googleResults = await googleSearchPlaces({
-          query,
-          locationBias: {
-            latitude,
-            longitude,
-            radius,
-          },
-        })
-
-        return googleResults.map((placeResult: GooglePlacesApiResponse) => ({
-          googleMapsId: placeResult.id,
-          name: placeResult.displayName?.text || 'Unknown Place',
-          address: placeResult.formattedAddress || '',
-          location: placeResult.location
-            ? [placeResult.location.longitude, placeResult.location.latitude]
-            : [0, 0],
-          types: placeResult.types || [],
-          imageUrl: null,
-          websiteUri: placeResult.websiteUri || null,
-          phoneNumber: placeResult.nationalPhoneNumber || null,
-        }))
-      } catch (error) {
-        console.error('Could not fetch places:', error)
-        throw new Error('Failed to fetch places')
-      }
-    }),
-
   autocomplete: protectedProcedure
     .input(
       z.object({
@@ -397,50 +224,33 @@ export const placesRouter = router({
       }
     }),
 
-  getListsForPlace: publicProcedure
-    .input(z.object({ placeId: z.string().uuid() }))
+  getDetailsById: protectedProcedure
+    .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      // Find all items where itemId = placeId and itemType = 'PLACE'
-      const items = await ctx.db.query.item.findMany({
-        where: and(eq(item.itemId, input.placeId), eq(item.itemType, 'PLACE')),
+      const { id } = input
+      const dbPlace = await ctx.db.query.place.findFirst({
+        where: eq(place.id, id),
       })
-      const listIds = items.map((i) => i.listId)
-      if (listIds.length === 0) return []
-      // Fetch the lists
-      const lists = await ctx.db.query.list.findMany({
-        where: inArray(list.id, listIds),
-      })
-      return lists
+
+      if (!dbPlace) {
+        throw new Error('Place not found')
+      }
+
+      return enrichPlaceWithDetails(ctx, dbPlace)
     }),
 
-  // Get place details by ID (Google Maps ID or DB ID)
-  getDetails: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
+  getDetailsByGoogleId: protectedProcedure
+    .input(z.object({ googleMapsId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const { id: googleMapsIdOrDbId } = input
-
-      let dbPlace: Place | null = null
-      let associatedLists: ListSummary[] = []
-
-      const isUuid = z.uuid().safeParse(googleMapsIdOrDbId).success
-
+      const { googleMapsId } = input
       try {
-        if (isUuid) {
-          dbPlace =
-            (await ctx.db.query.place.findFirst({
-              where: eq(place.id, googleMapsIdOrDbId),
-            })) ?? null
-        } else {
-          dbPlace =
-            (await ctx.db.query.place.findFirst({
-              where: eq(place.googleMapsId, googleMapsIdOrDbId),
-            })) ?? null
-        }
+        let dbPlace = await ctx.db.query.place.findFirst({
+          where: eq(place.googleMapsId, googleMapsId),
+        })
 
         if (!dbPlace) {
-          // If not in DB, fetch from Google and insert
           const googlePlace = await fetchGooglePlaceDetails({
-            placeId: googleMapsIdOrDbId,
+            placeId: googleMapsId,
           })
 
           if (!googlePlace) {
@@ -453,7 +263,7 @@ export const placesRouter = router({
             .insert(place)
             .values({
               id: crypto.randomUUID(),
-              googleMapsId: googleMapsIdOrDbId,
+              googleMapsId,
               name: googlePlace.displayName?.text || 'Unknown Place',
               address: googlePlace.formattedAddress,
               latitude: googlePlace.location?.latitude,
@@ -479,72 +289,15 @@ export const placesRouter = router({
           }
 
           dbPlace = insertedPlace
-        } else if (!dbPlace.googleMapsId && googleMapsIdOrDbId && !isUuid) {
-          // Edge case: DB place missing Google ID (shouldn't happen, but attempt recovery)
-          dbPlace = {
-            ...dbPlace,
-            googleMapsId: googleMapsIdOrDbId,
-          }
         }
 
-        const itemsLinkingToThisPlace = await ctx.db.query.item.findMany({
-          where: and(eq(item.itemId, dbPlace.id), eq(item.itemType, 'PLACE')),
-          with: {
-            list: {
-              columns: { id: true, name: true },
-            },
-          },
-        })
-
-        associatedLists = itemsLinkingToThisPlace
-          .map((itemRecord) => itemRecord.list)
-          .filter(
-            (listRecord): listRecord is { id: string; name: string } =>
-              listRecord !== null && listRecord !== undefined
-          )
-          .map((listRecord) => ({ id: listRecord.id, name: listRecord.name }))
+        return enrichPlaceWithDetails(ctx, dbPlace)
       } catch (error) {
-        console.error('Error fetching place details by ID:', error, { googleMapsIdOrDbId })
+        console.error('Error fetching place details by Google ID:', error, { googleMapsId })
         throw new Error('Failed to fetch place details')
-      }
-
-      if (!dbPlace) {
-        throw new Error('Place not found after all checks')
-      }
-
-      let placePhotos = sanitizeStoredPhotos(dbPlace.photos)
-
-      if (placePhotos.length === 0 && dbPlace.googleMapsId) {
-        const fetchedPhotos = await fetchGooglePlacePhotos({
-          placeId: dbPlace.googleMapsId,
-          forceFresh: true,
-        })
-
-        if (fetchedPhotos.length > 0) {
-          placePhotos = fetchedPhotos
-          await ctx.db
-            .update(place)
-            .set({
-              photos: fetchedPhotos,
-              updatedAt: new Date().toISOString(),
-            })
-            .where(eq(place.id, dbPlace.id))
-
-          dbPlace = {
-            ...dbPlace,
-            photos: fetchedPhotos,
-          }
-        }
-      }
-
-      return {
-        ...dbPlace,
-        associatedLists,
-        photos: placePhotos,
       }
     }),
 
-  // Add place to multiple lists
   addToLists: protectedProcedure
     .input(
       z.object({

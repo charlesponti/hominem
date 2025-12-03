@@ -43,9 +43,7 @@ function PlacesAutocomplete({
 
   const handleSelect = useCallback(
     (place: GooglePlacePrediction) => {
-      setValue(
-        `${place.structured_formatting.main_text}, ${place.structured_formatting.secondary_text}`
-      )
+      setValue(`${place.text}, ${place.address}`)
       setSelected(place)
       setIsOpen(false)
       setSelectedIndex(-1)
@@ -154,11 +152,9 @@ function PlacesAutocomplete({
                 >
                   <MapPin className="h-4 w-4 text-muted-foreground mr-3 shrink-0" />
                   <div className="flex flex-col truncate flex-1">
-                    <span className="font-medium text-sm text-gray-900">
-                      {suggestion.structured_formatting.main_text}
-                    </span>
+                    <span className="font-medium text-sm text-gray-900">{suggestion.text}</span>
                     <span className="text-muted-foreground font-light text-xs">
-                      {suggestion.structured_formatting.secondary_text}
+                      {suggestion.address}
                     </span>
                   </div>
                   {selectedIndex === index && <Check className="ml-auto h-4 w-4 text-primary" />}

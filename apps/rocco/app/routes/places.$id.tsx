@@ -13,6 +13,8 @@ import { useSaveSheet } from '~/hooks/useSaveSheet'
 import { trpc } from '~/lib/trpc/client'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types/places.$id'
+import type { PlaceWithLists } from '~/lib/types'
+import z from 'zod'
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const { id } = params
@@ -22,7 +24,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const trpcServer = createCaller(request)
 
-  const data = await trpcServer.places.getDetails({ id })
+  let data: PlaceWithLists | null = null
+  if (z.uuid().safeParse(id).success) {
+    data = await trpcServer.places.getDetailsById({ id })
+  } else {
+    data = await trpcServer.places.getDetailsByGoogleId({ googleMapsId: id })
+  }
 
   if (!data) {
     throw new Error('Place not found')
@@ -35,7 +42,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
   const { place: initialPlace } = loaderData
   const { isOpen, open, close } = useSaveSheet()
 
-  const { data: place } = trpc.places.getDetails.useQuery(
+  const { data: place } = trpc.places.getDetailsById.useQuery(
     { id: initialPlace.id },
     { initialData: initialPlace }
   )

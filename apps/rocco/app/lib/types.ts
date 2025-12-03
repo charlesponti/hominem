@@ -6,6 +6,10 @@ export type ListInviteInsert = typeof listInvite.$inferInsert
 export type Place = typeof place.$inferSelect & {
   isPreview?: boolean
 }
+export type PlaceWithLists = Place & {
+  photos?: string[]
+  associatedLists: { id: string; name: string }[]
+}
 export type PlaceInsert = typeof place.$inferInsert
 export type Item = typeof item.$inferSelect
 export type ItemInsert = typeof item.$inferInsert
@@ -37,14 +41,11 @@ export type PlaceLocation = {
 }
 
 export type GooglePlacePrediction = {
-  description: string
   place_id: string
-  structured_formatting: {
-    main_text: string
-    secondary_text: string
-  }
+  text: string
+  address: string
   location: PlaceLocation | null
-  priceLevel?: string
+  priceLevel?: string | number | null
 }
 
 export type GooglePlacesApiResponse = {

@@ -3,14 +3,11 @@ import { createPlaceFromPrediction } from '../places'
 import type { GooglePlacePrediction } from '../types'
 
 describe('createPlaceFromPrediction', () => {
-  it('uses structured_formatting.secondary_text as address if available', async () => {
+  it('uses address as address if available', async () => {
     const prediction: GooglePlacePrediction = {
       place_id: 'test-id',
-      description: 'Test Place, Test Address',
-      structured_formatting: {
-        main_text: 'Test Place',
-        secondary_text: 'Test Address',
-      },
+      text: 'Test Place',
+      address: 'Test Address',
       location: null,
     }
 
@@ -20,20 +17,17 @@ describe('createPlaceFromPrediction', () => {
     expect(place.address).toBe('Test Address')
   })
 
-  it('falls back to description for address if secondary_text is missing', async () => {
+  it('falls back to empty string for address if address is missing', async () => {
     const prediction: GooglePlacePrediction = {
       place_id: 'test-id',
-      description: 'Test Place, Test Address',
-      structured_formatting: {
-        main_text: 'Test Place',
-        secondary_text: '',
-      },
+      text: 'Test Place',
+      address: '',
       location: null,
     }
 
     const place = await createPlaceFromPrediction(prediction)
 
     expect(place.name).toBe('Test Place')
-    expect(place.address).toBe('Test Place, Test Address')
+    expect(place.address).toBe('')
   })
 })
