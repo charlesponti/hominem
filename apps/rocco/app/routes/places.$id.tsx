@@ -55,7 +55,6 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="w-full space-y-6">
-          {/* Header with Gradient */}
           <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
@@ -63,14 +62,12 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
                 <PlaceTypes types={place.types || []} />
               </div>
 
-              {/* Save Button */}
               <Button
                 onClick={onSaveClick}
-                className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                className="flex items-center gap-2 px-4 py-2 sm:py-3 rounded bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
               >
                 <ListPlus size={20} />
-                <span className="hidden sm:inline">Save to list</span>
-                <span className="sm:hidden">Save</span>
+                <span>Save</span>
               </Button>
             </div>
           </div>

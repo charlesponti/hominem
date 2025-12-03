@@ -128,7 +128,7 @@ export default function AboutPage() {
           </p>
           <Link
             to="/"
-            className="inline-block text-white py-4 px-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+            className="inline-block text-white py-4 px-10 bg-linear-to-r from-indigo-600 to-purple-600 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
           >
             Explore the Map
           </Link>

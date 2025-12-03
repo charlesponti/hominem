@@ -152,7 +152,7 @@ function PlacesAutocomplete({
                   )}
                   data-testid="places-autocomplete-option"
                 >
-                  <MapPin className="h-4 w-4 text-muted-foreground mr-3 flex-shrink-0" />
+                  <MapPin className="h-4 w-4 text-muted-foreground mr-3 shrink-0" />
                   <div className="flex flex-col truncate flex-1">
                     <span className="font-medium text-sm text-gray-900">
                       {suggestion.structured_formatting.main_text}

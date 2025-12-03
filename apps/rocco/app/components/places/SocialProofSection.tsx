@@ -18,7 +18,7 @@ const SocialProofSection = ({ lists }: Props) => {
   }
 
   return (
-    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       {/* Header with count */}
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-gray-700">
