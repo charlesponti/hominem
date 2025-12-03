@@ -214,6 +214,7 @@ export const placesRouter = router({
             address: placeInfo.formattedAddress,
             latitude: placeInfo.location?.latitude,
             longitude: placeInfo.location?.longitude,
+            location: sql`ST_SetSRID(ST_MakePoint(EXCLUDED.longitude, EXCLUDED.latitude), 4326)`,
           },
         })
         .returning()
@@ -252,7 +253,13 @@ export const placesRouter = router({
         })
         .onConflictDoUpdate({
           target: [place.googleMapsId],
-          set: input,
+          set: {
+            ...input,
+            location:
+              input.latitude && input.longitude
+                ? sql`ST_SetSRID(ST_MakePoint(EXCLUDED.longitude, EXCLUDED.latitude), 4326)`
+                : sql`ST_SetSRID(ST_MakePoint(0, 0), 4326)`,
+          },
         })
         .returning()
 
