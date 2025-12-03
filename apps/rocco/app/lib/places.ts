@@ -79,7 +79,6 @@ export const useAddPlaceToList = (
 ) => {
   const utils = trpc.useUtils()
   const createPlaceMutation = trpc.places.create.useMutation()
-  const addToListMutation = trpc.items.addToList.useMutation()
 
   return useMutation<Place, AxiosError, AddPlaceToListOptions>({
     ...options,
@@ -88,7 +87,7 @@ export const useAddPlaceToList = (
       if (!place.googleMapsId) {
         throw new Error('googleMapsId is required')
       }
-      // First create the place if it doesn't exist
+      // Create the place and add to lists in one go
       const createdPlace = await createPlaceMutation.mutateAsync({
         name: place.name,
         address: place.address || undefined,
@@ -101,18 +100,9 @@ export const useAddPlaceToList = (
         websiteUri: place.websiteUri || undefined,
         phoneNumber: place.phoneNumber || undefined,
         photos: place.photos || undefined,
+        listIds,
       })
 
-      // Then add the place to all specified lists
-      const promises = listIds.map((listId) =>
-        addToListMutation.mutateAsync({
-          listId,
-          itemId: createdPlace.id,
-          itemType: 'PLACE',
-        })
-      )
-
-      await Promise.all(promises)
       return createdPlace
     },
     // Prefetch related data after successful mutation

@@ -1,5 +1,5 @@
 import { item, list, place } from '@hominem/data'
-import { and, eq, or, sql } from 'drizzle-orm'
+import { and, eq, inArray, or, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
 import {
@@ -107,6 +107,7 @@ export const placesRouter = router({
         websiteUri: z.string().optional(),
         phoneNumber: z.string().optional(),
         photos: z.array(z.string()).optional(),
+        listIds: z.array(z.string().uuid()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -114,26 +115,61 @@ export const placesRouter = router({
         throw new Error('User not found in context')
       }
 
-      const newPlace = await ctx.db
-        .insert(place)
-        .values({
-          id: crypto.randomUUID(),
-          ...input,
-          location: input.latitude && input.longitude ? [input.longitude, input.latitude] : [0, 0],
-        })
-        .onConflictDoUpdate({
-          target: [place.googleMapsId],
-          set: {
-            ...input,
-            location:
-              input.latitude && input.longitude
-                ? sql`ST_SetSRID(ST_MakePoint(EXCLUDED.longitude, EXCLUDED.latitude), 4326)`
-                : sql`ST_SetSRID(ST_MakePoint(0, 0), 4326)`,
-          },
-        })
-        .returning()
+      const { listIds, ...placeData } = input
 
-      return newPlace[0]
+      return await ctx.db.transaction(async (tx) => {
+        const newPlace = await tx
+          .insert(place)
+          .values({
+            id: crypto.randomUUID(),
+            ...placeData,
+            location:
+              placeData.latitude && placeData.longitude
+                ? [placeData.longitude, placeData.latitude]
+                : [0, 0],
+          })
+          .onConflictDoUpdate({
+            target: [place.googleMapsId],
+            set: {
+              ...placeData,
+              location:
+                placeData.latitude && placeData.longitude
+                  ? sql`ST_SetSRID(ST_MakePoint(EXCLUDED.longitude, EXCLUDED.latitude), 4326)`
+                  : sql`ST_SetSRID(ST_MakePoint(0, 0), 4326)`,
+            },
+          })
+          .returning()
+
+        const createdPlace = newPlace[0]
+
+        if (listIds && listIds.length > 0) {
+          // Verify lists ownership
+          const userLists = await tx.query.list.findMany({
+            where: and(inArray(list.id, listIds), eq(list.userId, ctx.user.id)),
+            columns: { id: true },
+          })
+
+          const validListIds = userLists.map((l) => l.id)
+
+          if (validListIds.length > 0) {
+            await tx
+              .insert(item)
+              .values(
+                validListIds.map((listId) => ({
+                  id: crypto.randomUUID(),
+                  listId: listId,
+                  itemId: createdPlace.id,
+                  userId: ctx.user.id,
+                  itemType: 'PLACE' as const,
+                  type: 'PLACE',
+                }))
+              )
+              .onConflictDoNothing()
+          }
+        }
+
+        return createdPlace
+      })
     }),
 
   update: protectedProcedure
