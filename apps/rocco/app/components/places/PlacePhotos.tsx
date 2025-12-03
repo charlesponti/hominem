@@ -47,48 +47,44 @@ const PlacePhotos = ({ alt, photos }: Props) => {
 
   return (
     <>
-      <div className="relative">
-        <div
-          className="flex pb-2 gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth"
-          style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(156, 163, 175, 1) transparent' }}
-        >
-          {photos.map((photoUrl, index) => {
-            const hasFailed = failedImages.has(index)
+      <div
+        className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
+        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(156, 163, 175, 1) transparent' }}
+      >
+        {photos.map((photoUrl, index) => {
+          const hasFailed = failedImages.has(index)
 
-            return (
-              <button
-                type="button"
-                key={photoUrl}
-                onClick={() => openLightbox(index)}
-                className="shrink-0 snap-center group relative cursor-pointer"
-                aria-label={`View photo ${index + 1} of ${photos.length}`}
-              >
-                <div className="aspect-[16/9] w-[500px] sm:w-[300px] relative rounded-2xl overflow-hidden bg-gray-100 hover:scale-105 transition-all duration-300">
-                  {hasFailed ? (
-                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50">
-                      <div className="text-center">
-                        <ImageIcon className="w-12 h-12 text-indigo-300 mx-auto mb-2" />
-                        <p className="text-gray-500 text-xs">Failed to load</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <img
-                      src={getImageSize(photoUrl, 800, 560)}
-                      alt={`${alt} - ${index + 1}`}
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      sizes="(max-width: 768px) 90vw, 500px"
-                      className={cn(
-                        'absolute inset-0 object-cover w-full h-full transition-all duration-300 group-hover:scale-105'
-                      )}
-                      onError={() => handleImageError(index)}
-                    />
-                  )}
+          return (
+            <button
+              type="button"
+              key={photoUrl}
+              onClick={() => openLightbox(index)}
+              className="shrink-0 snap-center group relative cursor-pointer w-[350px] h-[350px] aspect-square rounded-2xl overflow-hidden bg-gray-100 hover:scale-105 transition-all duration-300"
+              aria-label={`View photo ${index + 1} of ${photos.length}`}
+            >
+              {hasFailed ? (
+                <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50">
+                  <div className="text-center">
+                    <ImageIcon className="w-12 h-12 text-indigo-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-xs">Failed to load</p>
+                  </div>
                 </div>
-              </button>
-            )
-          })}
-        </div>
+              ) : (
+                <img
+                  src={getImageSize(photoUrl, 800, 800)}
+                  alt={`${alt} - ${index + 1}`}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  sizes="(max-width: 768px) 90vw, 350px"
+                  className={cn(
+                    'object-cover w-full h-full transition-all duration-300 group-hover:scale-105'
+                  )}
+                  onError={() => handleImageError(index)}
+                />
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* Lightbox */}
