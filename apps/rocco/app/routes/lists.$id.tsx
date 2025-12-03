@@ -9,7 +9,7 @@ import AddPlacePanel from '~/components/lists/add-place-panel'
 import ListMenu from '~/components/lists/list-menu'
 import ListTitle from '~/components/lists/list-title'
 import ListVisibilityBadge from '~/components/lists/list-visibility-badge'
-import Loading from '~/components/loading'
+import Loading, { LoadingScreen } from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
 import PlacesList from '~/components/places/places-list'
 import { Button } from '~/components/ui/button'
@@ -60,11 +60,7 @@ export default function ListPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <Loading size="lg" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (!data) {

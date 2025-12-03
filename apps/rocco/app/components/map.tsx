@@ -145,7 +145,7 @@ const RoccoMap = ({
         data-testid="rocco-map"
         data-zoom={mapZoom}
         data-center={JSON.stringify(mapCenter)}
-        className="flex flex-1 relative overflow-hidden rounded-lg shadow-md size-full"
+        className="flex flex-1 relative overflow-hidden rounded-lg shadow-2xl size-full"
       >
         {isLoadingCurrentLocation ? (
           <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 rounded-lg border-blue-500 bg-blue-200 text-blue-600 text-sm">

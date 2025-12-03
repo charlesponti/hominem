@@ -20,7 +20,7 @@ function ListItem({ list, isOwnList, 'aria-label': ariaLabel }: ListItemProps) {
   return (
     <li
       data-testid={`list-item-${list.id}`}
-      className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200"
+      className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4"
       aria-label={ariaLabel}
     >
       <div className="flex flex-col flex-1 min-w-0">
@@ -28,7 +28,7 @@ function ListItem({ list, isOwnList, 'aria-label': ariaLabel }: ListItemProps) {
           <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
             <Globe size={18} className="text-gray-700" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 truncate">
+          <h3 className="text-base font-medium text-gray-900 truncate">
             <span>{list.name}</span>
             <span className="text-gray-400 text-sm flex items-center gap-1">
               <BookmarkPlus size={15} />
@@ -87,7 +87,7 @@ function ListItem({ list, isOwnList, 'aria-label': ariaLabel }: ListItemProps) {
         <Link
           to={`/lists/${list.id}`}
           data-testid={`list-view-button-${list.id}`}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-base font-medium rounded-lg hover:bg-gray-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
         >
           View
           <ChevronsRight size={17} />
