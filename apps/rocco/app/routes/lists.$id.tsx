@@ -157,7 +157,7 @@ export default function ListPage() {
                       type="button"
                       data-testid="add-to-list-button"
                       onClick={() => setIsAddToListOpen(!isAddToListOpen)}
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg transition-colors"
                     >
                       <PlusCircle size={18} />
                       <span>Add Place</span>
