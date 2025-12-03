@@ -55,8 +55,8 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="w-full space-y-6">
-          <div className="flex animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
-            <div className="flex-1 flex items-center justify-between">
+          <div className="flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
+            <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold leading-tight">{place.name}</h1>
               <Button
                 onClick={onSaveClick}

@@ -63,7 +63,7 @@ const PlacePhotos = ({ alt, photos }: Props) => {
                 className="shrink-0 snap-center group relative cursor-pointer"
                 aria-label={`View photo ${index + 1} of ${photos.length}`}
               >
-                <div className="w-[500px] h-[350px] relative rounded-2xl overflow-hidden hover:scale-3d transition-all duration-300">
+                <div className="aspect-[16/9] w-full max-w-[500px] sm:max-w-[300px] relative rounded-2xl overflow-hidden bg-gray-100 hover:scale-105 transition-all duration-300">
                   {hasFailed ? (
                     <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50">
                       <div className="text-center">
