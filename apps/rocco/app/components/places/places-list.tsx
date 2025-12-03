@@ -1,6 +1,6 @@
 import type { ListPlace } from '@hominem/data'
 import { useCallback, useRef, useState } from 'react'
-import { useNavigate, href } from 'react-router'
+import { href, useNavigate } from 'react-router'
 import PlaceItem from './place-item'
 
 interface PlacesListProps {

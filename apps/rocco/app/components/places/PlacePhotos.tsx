@@ -48,8 +48,12 @@ const PlacePhotos = ({ alt, photos }: Props) => {
   return (
     <>
       <div
-        className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(156, 163, 175, 1) transparent' }}
+        className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2 snap-x snap-mandatory scroll-smooth"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgb(249 249 249) transparent',
+          scrollbarGutter: 'stable',
+        }}
       >
         {photos.map((photoUrl, index) => {
           const hasFailed = failedImages.has(index)

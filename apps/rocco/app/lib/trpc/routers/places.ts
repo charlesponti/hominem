@@ -61,7 +61,10 @@ const parsePriceLevel = (priceLevel: string | number | null | undefined): number
 const mapGooglePlaceToPrediction = (
   placeResult: GooglePlacesApiResponse
 ): GooglePlacePrediction => ({
-  description: placeResult.displayName?.text ?? '',
+  description:
+    placeResult.displayName?.text && placeResult.formattedAddress
+      ? `${placeResult.displayName.text}, ${placeResult.formattedAddress}`
+      : (placeResult.displayName?.text ?? placeResult.formattedAddress ?? ''),
   place_id: placeResult.id,
   structured_formatting: {
     main_text: placeResult.displayName?.text ?? '',

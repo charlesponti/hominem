@@ -7,6 +7,7 @@ type PlaceAddressProps = {
 }
 
 const PlaceAddress = ({ address, name, place_id }: PlaceAddressProps) => {
+  console.log('Rendering PlaceAddress with:', { address, name, place_id })
   return (
     <a
       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${place_id}`}

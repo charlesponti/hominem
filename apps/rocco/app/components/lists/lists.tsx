@@ -53,6 +53,7 @@ export default function Lists() {
               <li key={list.id}>
                 <Link
                   to={`/lists/${list.id}`}
+                  viewTransition
                   className="block px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center justify-between">

@@ -185,7 +185,7 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
     id: prediction.place_id,
     name: prediction.structured_formatting?.main_text || prediction.description || '',
     description: null,
-    address: prediction.description || '',
+    address: prediction.structured_formatting?.secondary_text || prediction.description || '',
     createdAt: '',
     updatedAt: '',
     itemId: null,

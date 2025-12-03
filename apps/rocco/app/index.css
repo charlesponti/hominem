@@ -19,8 +19,8 @@
     --input: hsl(240 5.9% 90%);
     --tw-border-style: solid;
 
-    --primary: hsl(239 84% 67%);
-    --primary-gradient-start: hsl(239 84% 67%);
+    --primary: hsl(0deg 0% 32.98%);
+    --primary-gradient-start: hsl(0deg 0% 32.98%);
     --primary-gradient-end: hsl(263 70% 63%);
     --primary-foreground: hsl(0 0% 100%);
     --destructive: hsl(350 89% 60%);
@@ -64,6 +64,7 @@
   h5,
   h6 {
     color: var(--primary);
+    font-family: 'Georgia', serif;
   }
 
   .text-gradient {

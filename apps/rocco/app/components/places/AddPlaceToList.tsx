@@ -67,7 +67,7 @@ const AddPlaceToList = ({ place, isOpen, onOpenChange }: AddPlaceToListProps) =>
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="pt-10 px-4">
         <div className="my-6">
-          <h2 className="text-xl font-bold">Add to lists</h2>
+          <h2 className="text-xl font-bold font-serif">Add to lists</h2>
           <p className="text-sm">Select lists to add this place to.</p>
         </div>
         {isLoading ? (
