@@ -20,6 +20,7 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
 import { useRemoveListItem } from '~/lib/places'
+import PlaceRow from './place-row'
 
 interface PlaceItemProps {
   place: ListPlace
@@ -54,61 +55,58 @@ const PlaceListItem = ({
 
   return (
     <>
-      <li
-        className="flex items-center justify-between gap-4 p-4"
-        onMouseEnter={() => setHoveredPlaceId(place.itemId)}
-        onMouseLeave={() => setHoveredPlaceId(null)}
-        data-selected={isSelected}
-      >
-        <a
-          className="flex-1 font-medium text-gray-900 outline-none focus:underline underline-offset-[5px]"
+      <li data-selected={isSelected}>
+        <PlaceRow
+          name={place.name}
           href={href('/places/:id', { id: place.itemId })}
-        >
-          {place.name}
-        </a>
-
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                className="px-2 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
-                onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
-                aria-label="More options"
-              >
-                <MoreVertical size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-white border border-gray-200 text-gray-900 shadow-lg">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault()
-                  window.open(
-                    `https://www.google.com/maps/search/${encodeURIComponent(place.name)}`,
-                    '_blank'
-                  )
-                }}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
-                Open in Maps
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault()
-                  setIsDeleteModalOpen(true)
-                }}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash size={16} className="text-red-600" />
-                Remove from list
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          photoUrl={place.photos?.[0] ?? null}
+          imageUrl={place.imageUrl}
+          isSelected={isSelected}
+          onMouseEnter={() => setHoveredPlaceId(place.itemId)}
+          onMouseLeave={() => setHoveredPlaceId(null)}
+          accessory={
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  className="px-2 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
+                  onClick={(e: MouseEvent<HTMLButtonElement>) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  aria-label="More options"
+                >
+                  <MoreVertical size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-white border border-gray-200 text-gray-900 shadow-lg">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault()
+                    window.open(
+                      `https://www.google.com/maps/search/${encodeURIComponent(place.name)}`,
+                      '_blank'
+                    )
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
+                  Open in Maps
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsDeleteModalOpen(true)
+                  }}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash size={16} className="text-red-600" />
+                  Remove from list
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          }
+        />
       </li>
 
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>

@@ -1,25 +1,13 @@
-import { MapPin, Star } from 'lucide-react'
-import { Link } from 'react-router'
-import { env } from '~/lib/env'
+import { MapPin } from 'lucide-react'
 import { trpc } from '~/lib/trpc/client'
 import Loading from '../loading'
+import PlaceRow from './place-row'
 
 type Props = {
   latitude: number
   longitude: number
   radiusKm?: number
   limit?: number
-}
-
-const getImageUrl = (photoUrl: string, width = 400, height = 300): string => {
-  if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
-    return `https://places.googleapis.com/v1/${photoUrl}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
-  }
-
-  if (photoUrl.includes('googleusercontent')) {
-    return `${photoUrl}=w${width}-h${height}-c`
-  }
-  return photoUrl
 }
 
 const formatDistance = (distanceInMeters: number): string => {
@@ -87,47 +75,27 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
 
       <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {places.map((place) => {
-          const photoUrl = place.photos?.[0]
-          const imageUrl = photoUrl ? getImageUrl(photoUrl) : null
           return (
             <li key={place.id}>
-              <Link
-                to={`/places/${place.id}`}
-                className="flex items-center gap-4 p-3 group hover:bg-gray-50 transition-colors"
-              >
-                {/* Image */}
-                <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={place.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <Star className="text-indigo-400" size={28} />
-                  )}
-                </div>
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900 truncate text-base">{place.name}</h3>
-                    <div className="flex items-center text-sm text-indigo-600">
-                      <MapPin size={14} className="mr-1" />
-                      <span>{formatDistance(place.distance)}</span>
-                    </div>
+              <PlaceRow
+                name={place.name}
+                href={`/places/${place.id}`}
+                photoUrl={place.photos?.[0] ?? null}
+                imageUrl={place.imageUrl}
+                meta={
+                  <div className="flex items-center">
+                    <MapPin size={14} className="mr-1" />
+                    <span>{formatDistance(place.distance)}</span>
                   </div>
-                  {/* Lists */}
-                  {place.lists.length > 0 && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-xs text-gray-500">
-                        {place.lists.length === 1
-                          ? place.lists[0].name
-                          : `${place.lists.length} lists`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </Link>
+                }
+                subtitle={
+                  place.lists.length > 0
+                    ? place.lists.length === 1
+                      ? place.lists[0].name
+                      : `${place.lists.length} lists`
+                    : null
+                }
+              />
             </li>
           )
         })}
