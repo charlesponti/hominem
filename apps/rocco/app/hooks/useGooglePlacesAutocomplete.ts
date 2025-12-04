@@ -7,7 +7,10 @@ export interface UseGooglePlacesAutocompleteOptions {
   location?: { latitude: number; longitude: number }
 }
 
-export function useGooglePlacesAutocomplete({ input, location }: UseGooglePlacesAutocompleteOptions) {
+export function useGooglePlacesAutocomplete({
+  input,
+  location,
+}: UseGooglePlacesAutocompleteOptions) {
   const trimmed = input.trim()
   const enabled = trimmed.length >= 3
 
