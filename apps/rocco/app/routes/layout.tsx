@@ -31,7 +31,7 @@ export default function Layout() {
   return (
     <div className="h-screen w-full flex flex-col">
       <Header />
-      <div className="flex-1 flex my-24 w-full max-w-6xl mx-auto px-2">
+      <div className="flex-1 flex my-24 w-full max-w-3xl mx-auto px-2">
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>

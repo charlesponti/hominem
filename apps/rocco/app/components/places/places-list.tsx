@@ -46,7 +46,11 @@ export default function PlacesList({ places, listId, onError }: PlacesListProps)
       className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
       onKeyDown={handleKeyDown}
     >
-      <ul ref={listRef} className="divide-y divide-gray-200" aria-label="Places in list">
+      <ul
+        ref={listRef}
+        className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        aria-label="Places in list"
+      >
         {places.map((place, index) => (
           <PlaceItem
             key={place.id}

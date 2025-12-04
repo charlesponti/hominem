@@ -19,10 +19,10 @@ export default function Lists() {
         <h2 className="text-lg font-bold text-gray-900">Lists</h2>
         <Link
           to="/lists/create"
-          className="self-start px-4 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 text-sm font-medium rounded-lg transition-colors"
+          className="self-start flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          <Plus size={16} className="inline mr-1" />
-          New List
+          <Plus size={16} className="inline" />
+          <span>New List</span>
         </Link>
       </div>
 
@@ -38,35 +38,26 @@ export default function Lists() {
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
           <h3 className="text-lg font-semibold text-gray-900">No lists yet</h3>
           <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
-          <Link
-            to="/lists/create"
-            className="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            <Plus size={16} className="mr-2" />
-            Create a list
-          </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <ul className="divide-y divide-gray-200">
-            {lists.map((list) => (
-              <li key={list.id}>
-                <Link
-                  to={`/lists/${list.id}`}
-                  viewTransition
-                  className="block px-4 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">{list.name}</h3>
-                    <span className="bg-black text-white text-sm rounded-full px-2.5 py-1">
-                      {list.places.length || 0}
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {lists.map((list) => (
+            <li key={list.id}>
+              <Link
+                to={`/lists/${list.id}`}
+                viewTransition
+                className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 truncate">{list.name}</h3>
+                  <span className="bg-black text-white text-sm rounded-full px-2.5 py-1">
+                    {list.places.length || 0}
+                  </span>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   )

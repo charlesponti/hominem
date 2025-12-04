@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useRouteLoaderData } from 'react-router'
-import AboutPage from './about'
 import Lists from '~/components/lists/lists'
 import NearbyPlaces from '~/components/places/nearby-places'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
+import AboutPage from './about'
 
 // Default location: San Francisco (fallback)
 const DEFAULT_LOCATION = {
@@ -70,9 +70,7 @@ export default function Index() {
 
   return (
     <div className="flex flex-col gap-8 min-w-full max-w-6xl mx-auto pb-8" data-testid="home-scene">
-      <div className="w-full max-w-2xl mx-auto">
-        <PlacesAutocomplete setSelected={handlePlaceSelected} />
-      </div>
+      <PlacesAutocomplete setSelected={handlePlaceSelected} />
 
       <NearbyPlaces
         latitude={defaultLocation.latitude}
