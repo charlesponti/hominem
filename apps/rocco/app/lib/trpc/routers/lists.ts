@@ -1,5 +1,5 @@
 import {
-  createList as createListService,
+  createList,
   deleteListItem as deleteListItemService,
   deleteList as deleteListService,
   formatList,
@@ -106,7 +106,7 @@ export const listsRouter = router({
       }
 
       try {
-        const newList = await createListService(input.name, ctx.user.id)
+        const newList = await createList(input.name, ctx.user.id)
         if (!newList) {
           throw new Error('Failed to create list')
         }

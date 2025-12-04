@@ -1,16 +1,16 @@
 import { and, count, desc, eq, inArray } from 'drizzle-orm'
-
 import { db, takeUniqueOrThrow } from '../db'
 import {
   item,
-  type ListInviteSelect,
-  type ListSelect,
   list,
   listInvite,
   place,
   userLists,
   users,
+  type ListInviteSelect,
+  type ListSelect,
 } from '../db/schema'
+import { logger } from '../logger'
 
 export interface ListUser {
   id?: string
@@ -85,7 +85,10 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
 
     return listPlaces
   } catch (error) {
-    console.error(`Error fetching places for list ${listId}:`, error)
+    logger.error('Error fetching places for list', {
+      listId,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return []
   }
 }
@@ -156,7 +159,10 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
       return listItem
     })
   } catch (error) {
-    console.error(`Error fetching shared lists for user ${userId}:`, error)
+    logger.error('Error fetching shared lists for user', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return []
   }
 }
@@ -240,7 +246,10 @@ export async function getUserListsWithItemCount(
       return listItem
     })
   } catch (error) {
-    console.error(`Error fetching shared lists for user ${userId}:`, error)
+    logger.error('Error fetching shared lists for user', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return []
   }
 }
@@ -313,7 +322,10 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       return listItem
     })
   } catch (error) {
-    console.error(`Error fetching owned lists for user ${userId}:`, error)
+    logger.error('Error fetching owned lists for user', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return []
   }
 }
@@ -407,7 +419,10 @@ export async function getOwnedListsWithItemCount(
       return listItem
     })
   } catch (error) {
-    console.error(`Error fetching owned lists for user ${userId}:`, error)
+    logger.error('Error fetching owned lists for user', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
     return []
   }
 }
@@ -573,7 +588,7 @@ export async function getListById(id: string, userId?: string | null): Promise<L
 export async function createList(name: string, userId: string): Promise<List | null> {
   try {
     const start = Date.now()
-    console.log(`[createList] start: ${start}`)
+    logger.info('[lists.service] createList start', { start, name, userId })
 
     const insertStart = Date.now()
     const rawCreatedList = await db
@@ -587,32 +602,42 @@ export async function createList(name: string, userId: string): Promise<List | n
       .returning()
       .then(takeUniqueOrThrow)
     const insertEnd = Date.now()
-    console.log(`[createList] insert done: ${insertEnd} (duration: ${insertEnd - insertStart}ms)`)
+    logger.info('[lists.service] createList insert done', {
+      insertStart,
+      insertEnd,
+      durationMs: insertEnd - insertStart,
+      name,
+      userId,
+    })
 
     const fetchStart = Date.now()
-    // Fetch the newly created list with all necessary details for formatting
     const result = await getListById(rawCreatedList.id, userId)
     const fetchEnd = Date.now()
-    console.log(`[createList] getListById done: ${fetchEnd} (duration: ${fetchEnd - fetchStart}ms)`)
+    logger.info('[lists.service] createList fetch done', {
+      fetchStart,
+      fetchEnd,
+      durationMs: fetchEnd - fetchStart,
+      name,
+      userId,
+    })
 
     const end = Date.now()
-    console.log(`[createList] total duration: ${end - start}ms`)
+    logger.info('[lists.service] createList total duration', {
+      start,
+      end,
+      durationMs: end - start,
+      name,
+      userId,
+    })
     return result
   } catch (error) {
-    console.error(
-      JSON.stringify(
-        {
-          message: 'Failed to create list',
-          service: 'lists.service',
-          function: 'createList',
-          userId,
-          input: { name },
-          error: error instanceof Error ? error.message : String(error),
-        },
-        null,
-        2
-      )
-    )
+    logger.error('Failed to create list', {
+      service: 'lists.service',
+      function: 'createList',
+      userId,
+      input: { name },
+      error: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
 }
@@ -628,11 +653,9 @@ export async function updateList(id: string, name: string, userId: string): Prom
   try {
     await db.update(list).set({ name }).where(eq(list.id, id)).returning().then(takeUniqueOrThrow) // Ensures list existed and was updated
 
-    // Fetch the updated list with all necessary details
     return getListById(id, userId)
   } catch (error) {
     console.error(`Error updating list ${id}:`, error)
-    // Could be an error from DB or if takeUniqueOrThrow failed (e.g. list not found)
     return null
   }
 }

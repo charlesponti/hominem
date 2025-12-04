@@ -15,6 +15,7 @@ import {
 } from '~/lib/places-utils'
 import type { Place } from '~/lib/types'
 import { type Context, protectedProcedure, publicProcedure, router } from '../context'
+import { logger } from '../../logger'
 
 type ListSummary = {
   id: string
@@ -252,7 +253,12 @@ export const placesRouter = router({
       }
 
       const start = Date.now()
-      console.log('[places.autocomplete] start')
+      logger.info('[placesRouter] autocomplete start', {
+        query: input.query,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        radius: input.radius,
+      })
 
       try {
         const locationBias =
@@ -275,25 +281,23 @@ export const placesRouter = router({
         const preds = googleResults.map(mapGooglePlaceToPrediction)
 
         const end = Date.now()
-        console.log(
-          '[places.autocomplete] done',
-          JSON.stringify({
-            results: preds.length,
-            durationMs: end - start,
-            googleFetchMs: fetchEnd - fetchStart,
-          })
-        )
+        logger.info('[placesRouter] autocomplete done', {
+          results: preds.length,
+          durationMs: end - start,
+          googleFetchMs: fetchEnd - fetchStart,
+          query,
+          locationBias,
+        })
 
         return preds
       } catch (error) {
-        console.error(
-          JSON.stringify({
-            message: 'Failed to autocomplete places',
-            service: 'placesRouter',
-            function: 'autocomplete',
-            error: error instanceof Error ? error.message : String(error),
-          })
-        )
+        logger.error('Failed to autocomplete places', {
+          service: 'placesRouter',
+          function: 'autocomplete',
+          error: error instanceof Error ? error.message : String(error),
+          query,
+          locationBias,
+        })
         throw new Error('Failed to fetch autocomplete suggestions')
       }
     }),
@@ -367,7 +371,10 @@ export const placesRouter = router({
 
         return enrichPlaceWithDetails(ctx, dbPlace)
       } catch (error) {
-        console.error('Error fetching place details by Google ID:', error, { googleMapsId })
+        logger.error('Error fetching place details by Google ID', {
+          error: error instanceof Error ? error.message : String(error),
+          googleMapsId,
+        })
         throw new Error('Failed to fetch place details')
       }
     }),
@@ -454,7 +461,11 @@ export const placesRouter = router({
 
         return { place: finalPlace, lists: affectedLists }
       } catch (error) {
-        console.error('Failed to add place to lists:', error, { userId: ctx.user.id, placeInput })
+        logger.error('Failed to add place to lists', {
+          error: error instanceof Error ? error.message : String(error),
+          userId: ctx.user.id,
+          placeInput,
+        })
         throw new Error('Failed to process request')
       }
     }),
@@ -514,7 +525,8 @@ export const placesRouter = router({
 
         return { message: 'Place removed from list successfully' }
       } catch (error) {
-        console.error('Error deleting place from list:', error, {
+        logger.error('Error deleting place from list', {
+          error: error instanceof Error ? error.message : String(error),
           userId: ctx.user.id,
           listId,
           googleMapsIdOrDbId,
@@ -635,7 +647,8 @@ export const placesRouter = router({
 
         return Array.from(placesMap.values())
       } catch (error) {
-        console.error('Error fetching nearby places from lists:', error, {
+        logger.error('Error fetching nearby places from lists', {
+          error: error instanceof Error ? error.message : String(error),
           userId: ctx.user.id,
           latitude,
           longitude,
