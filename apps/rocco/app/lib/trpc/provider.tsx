@@ -14,23 +14,15 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: '/api/trpc',
           async headers() {
-            // Verify the user is authenticated
-            const {
-              data: { user },
-            } = await supabase.auth.getUser()
-
-            if (!user) {
-              return { authorization: '' }
-            }
-
-            // Get the session for the access token
             const {
               data: { session },
             } = await supabase.auth.getSession()
 
-            return {
-              authorization: session?.access_token ? `Bearer ${session.access_token}` : '',
+            if (!session?.access_token) {
+              return {}
             }
+
+            return { authorization: `Bearer ${session.access_token}` }
           },
         }),
       ],
