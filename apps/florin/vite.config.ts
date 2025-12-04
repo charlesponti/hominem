@@ -18,9 +18,4 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@react-router/node'],
   },
-  build: {
-    rollupOptions: {
-      external: ['@react-router/node', '@trpc/react-query', '@trpc/client', '@trpc/server'],
-    },
-  },
 })

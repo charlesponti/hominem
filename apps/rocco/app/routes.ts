@@ -11,9 +11,6 @@ export default [
     // Public routes
     index('./routes/index.tsx'),
 
-    // Explore route with map
-    route('explore', './routes/explore.tsx'),
-
     // About page
     route('about', './routes/about.tsx'),
 

@@ -4,12 +4,20 @@ import { type MouseEvent, useState } from 'react'
 import { href } from 'react-router'
 import { Button } from '~/components/ui/button'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '~/components/ui/dialog'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
 import { useRemoveListItem } from '~/lib/places'
 
@@ -85,7 +93,7 @@ const PlaceListItem = ({
                 }}
                 className="flex items-center gap-2"
               >
-                <ExternalLink size={16} className="text-indigo-600" />
+                <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
                 Open in Maps
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -103,37 +111,37 @@ const PlaceListItem = ({
         </div>
       </li>
 
-      <Sheet open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <SheetContent
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent
           data-testid="place-delete-modal"
-          className="bg-white border-l border-gray-200 text-gray-900"
+          className="sm:max-w-lg"
+          aria-label="Delete place confirmation"
+          showCloseButton
         >
-          <div className="flex flex-col gap-4 mt-8">
-            <h2 className="text-2xl font-semibold">Delete place</h2>
-            <p className="text-gray-600">
+          <DialogHeader>
+            <DialogTitle>Delete place</DialogTitle>
+            <DialogDescription>
               Are you sure you want to delete{' '}
-              <span className="font-medium text-gray-900">{place.name}</span> from your list?
-            </p>
-            <div className="mt-6 flex gap-4 justify-end">
-              <Button
-                type="button"
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
+              <span className="font-semibold text-foreground">{place.name}</span> from your list?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
                 Cancel
               </Button>
-              <button
-                type="button"
-                data-testid="place-delete-confirm-button"
-                onClick={onDeleteClick}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              data-testid="place-delete-confirm-button"
+              onClick={onDeleteClick}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

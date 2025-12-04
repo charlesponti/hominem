@@ -41,10 +41,11 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
     limit,
   })
 
+  const title = <h2 className="text-2xl italic font-light text-gray-900">Nearby</h2>
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">Nearby Places</h2>
+        {title}
         <div className="flex items-center justify-center h-40">
           <Loading size="lg" />
         </div>
@@ -55,7 +56,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
   if (error) {
     return (
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">Nearby Places</h2>
+        {title}
         <div className="text-center py-8">
           <p className="text-red-600">Error loading nearby places: {error.message}</p>
         </div>
@@ -66,7 +67,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
   if (places.length === 0) {
     return (
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">Nearby Places</h2>
+        {title}
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
           <MapPin className="w-12 h-12 text-gray-400 mb-3" />
           <p className="text-gray-600">
@@ -80,8 +81,8 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
   return (
     <div className="space-y-2 w-full">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">Nearby Places</h2>
-        <span className="text-sm text-gray-500">Within {radiusKm}km</span>
+        {title}
+        {/* <span className="text-sm font-light font-serif text-gray-500">Within {radiusKm}km</span> */}
       </div>
 
       <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

@@ -125,10 +125,10 @@ function Header() {
 
   return (
     <header
-      className="fixed top-0 left-0 z-50 w-full shadow-sm bg-white"
+      className="fixed top-0 left-0 z-50 w-full"
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
-      <div className="w-full flex p-4 items-center justify-between">
+      <div className="w-full flex px-2 py-4 md:px-4 items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
           <Globe2Icon className="size-6" />
           <span className="font-bold">{APP_NAME}</span>
