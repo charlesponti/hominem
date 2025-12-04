@@ -239,6 +239,10 @@ export const placesRouter = router({
     .input(
       z.object({
         query: z.string().min(2),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        // optional radius in meters to control location bias for results
+        radius: z.number().optional().default(50000),
       })
     )
     .query(async ({ input }) => {
@@ -247,15 +251,49 @@ export const placesRouter = router({
         return []
       }
 
+      const start = Date.now()
+      console.log('[places.autocomplete] start')
+
       try {
+        const locationBias =
+          typeof input.latitude === 'number' && typeof input.longitude === 'number'
+            ? {
+                latitude: input.latitude,
+                longitude: input.longitude,
+                radius: input.radius ?? 50000,
+              }
+            : undefined
+
+        const fetchStart = Date.now()
         const googleResults = await googleSearchPlaces({
           query,
           maxResultCount: 8,
+          locationBias,
         })
+        const fetchEnd = Date.now()
 
-        return googleResults.map(mapGooglePlaceToPrediction)
+        const preds = googleResults.map(mapGooglePlaceToPrediction)
+
+        const end = Date.now()
+        console.log(
+          '[places.autocomplete] done',
+          JSON.stringify({
+            results: preds.length,
+            durationMs: end - start,
+            googleFetchMs: fetchEnd - fetchStart,
+          })
+        )
+
+        return preds
       } catch (error) {
-        console.error('Failed to autocomplete places:', error)
+        console.error(
+          JSON.stringify({
+            message: 'Failed to autocomplete places',
+            service: 'placesRouter',
+            function: 'autocomplete',
+            error: error instanceof Error ? error.message : String(error),
+          })
+        )
         throw new Error('Failed to fetch autocomplete suggestions')
       }
     }),

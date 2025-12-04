@@ -169,21 +169,6 @@ export async function getUserListsWithItemCount(
   itemType?: string
 ): Promise<ListWithSpreadOwner[]> {
   try {
-    type SharedListDbResultBase = {
-      id: string
-      name: string
-      description: string | null
-      userId: string
-      isPublic: boolean
-      createdAt: string
-      updatedAt: string
-      owner_id: string | null
-      owner_email: string | null
-      owner_name: string | null
-    }
-    type SharedListDbResultWithCount = SharedListDbResultBase & { itemCount: string | null }
-    type SharedListDbResult = SharedListDbResultBase | SharedListDbResultWithCount
-
     const baseSelect = {
       id: list.id,
       name: list.name,
@@ -222,7 +207,7 @@ export async function getUserListsWithItemCount(
         users.name
       )
 
-    const results = (await query.orderBy(desc(list.createdAt))) as SharedListDbResult[]
+    const results = await query.orderBy(desc(list.createdAt))
 
     return results.map((item) => {
       const listPart = {
@@ -587,6 +572,10 @@ export async function getListById(id: string, userId?: string | null): Promise<L
  */
 export async function createList(name: string, userId: string): Promise<List | null> {
   try {
+    const start = Date.now()
+    console.log(`[createList] start: ${start}`)
+
+    const insertStart = Date.now()
     const rawCreatedList = await db
       .insert(list)
       .values({
@@ -597,9 +586,18 @@ export async function createList(name: string, userId: string): Promise<List | n
       })
       .returning()
       .then(takeUniqueOrThrow)
+    const insertEnd = Date.now()
+    console.log(`[createList] insert done: ${insertEnd} (duration: ${insertEnd - insertStart}ms)`)
 
+    const fetchStart = Date.now()
     // Fetch the newly created list with all necessary details for formatting
-    return getListById(rawCreatedList.id, userId)
+    const result = await getListById(rawCreatedList.id, userId)
+    const fetchEnd = Date.now()
+    console.log(`[createList] getListById done: ${fetchEnd} (duration: ${fetchEnd - fetchStart}ms)`)
+
+    const end = Date.now()
+    console.log(`[createList] total duration: ${end - start}ms`)
+    return result
   } catch (error) {
     console.error(
       JSON.stringify(

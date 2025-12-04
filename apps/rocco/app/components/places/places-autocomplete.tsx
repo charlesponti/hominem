@@ -1,5 +1,6 @@
 import { Check, MapPin, Search } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { useGeolocation } from '~/hooks/useGeolocation'
 import Alert from '~/components/alert'
 import { Input } from '~/components/ui/input'
 import {
@@ -23,6 +24,9 @@ function PlacesAutocomplete({
   const DEBOUNCE_TIME_MS = 300 // Reduced for better UX
   const [debouncedValue, setDebouncedValue] = useState('')
 
+  // Add geolocation
+  const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
+
   const onValueChange = useCallback((newValue: string) => {
     setValue(newValue)
     setSelectedIndex(-1)
@@ -39,6 +43,7 @@ function PlacesAutocomplete({
 
   const { data, error, isLoading } = useGooglePlacesAutocomplete({
     input: debouncedValue,
+    location: currentLocation ?? undefined,
   })
 
   const handleSelect = useCallback(
