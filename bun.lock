@@ -9,6 +9,7 @@
         "@supabase/storage-js": "^2.7.3",
         "@supabase/supabase-js": "^2.50.1",
         "@trpc/client": "^11.4.2",
+        "@trpc/react-query": "^11.7.2",
         "@trpc/server": "^11.4.2",
         "axios": "1.8.4",
         "effect": "^3.16.10",
