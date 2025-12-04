@@ -1,12 +1,10 @@
 import { UserAuthService } from '@hominem/data'
 import { users } from '@hominem/data/schema'
-import type { User } from '@supabase/supabase-js'
 import { initTRPC, TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
 import { createClient } from '../../lib/supabase/server'
 import { logger } from '../logger'
-import { cacheKeys, cacheUtils } from '../redis'
 
 export interface Context {
   db: typeof db
@@ -20,28 +18,22 @@ export interface Context {
   }
 }
 
-// Cache TTL constants
-const TOKEN_CACHE_TTL = 1 * 60 // 1 minute
-
-// Optimized token validation with Redis caching
-async function validateTokenWithCache(request: Request) {
-  // First try to get token from Authorization header (client-side tRPC)
+function extractBearerToken(request: Request) {
   const authHeader = request.headers.get('authorization')
-  if (authHeader) {
-    const token = authHeader.replace('Bearer ', '')
+  if (!authHeader?.toLowerCase().startsWith('bearer ')) {
+    return null
+  }
+  const token = authHeader.slice('bearer '.length).trim()
+  return token.length ? token : null
+}
 
-    // Try to get from cache first
-    const cacheKey = cacheKeys.token(token)
-    const cachedToken = await cacheUtils.get<User>(cacheKey)
+// Validate token directly via Supabase (no Redis caching) to mirror Notes behavior
+async function validateToken(request: Request) {
+  const token = extractBearerToken(request)
+  const { supabase } = createClient(request)
 
-    if (cachedToken) {
-      return cachedToken
-    }
-
-    // Create Supabase client for server-side auth verification
-    const { supabase } = createClient(request)
-
-    try {
+  try {
+    if (token) {
       const {
         data: { user },
         error,
@@ -51,20 +43,10 @@ async function validateTokenWithCache(request: Request) {
         return null
       }
 
-      // Cache the token validation result
-      await cacheUtils.set(cacheKey, user, TOKEN_CACHE_TTL)
-
       return user
-    } catch (error) {
-      logger.error('Error validating token', { error: error as Error })
-      return null
     }
-  }
 
-  // If no Authorization header, try to get user from Supabase session cookies (server-side)
-  const { supabase } = createClient(request)
-
-  try {
+    // If no Authorization header, try to get user from Supabase session cookies (server-side)
     const {
       data: { user },
       error,
@@ -76,7 +58,7 @@ async function validateTokenWithCache(request: Request) {
 
     return user
   } catch (error) {
-    logger.error('Error getting user from session', { error: error as Error })
+    logger.error('Error validating token', { error: error as Error })
     return null
   }
 }
@@ -115,8 +97,8 @@ export const createContext = async (request?: Request): Promise<Context> => {
       }
     }
 
-    // Validate token with caching
-    const supabaseUser = await validateTokenWithCache(request)
+    // Validate token (no caching)
+    const supabaseUser = await validateToken(request)
 
     if (!supabaseUser) {
       return { db }
@@ -209,18 +191,3 @@ const isAdmin = t.middleware(({ ctx, next }) => {
 // Export protected procedures
 export const protectedProcedure = t.procedure.use(isAuthed)
 export const adminProcedure = t.procedure.use(isAdmin)
-
-// Cache management utilities
-export const clearTokenCache = async (token?: string) => {
-  if (token) {
-    await cacheUtils.del(cacheKeys.token(token))
-  } else {
-    // Clear all token cache keys (use with caution)
-    console.warn('Clearing all token cache - this is expensive in production')
-  }
-}
-
-// Cache statistics utility
-export const getCacheStats = async () => {
-  return await cacheUtils.getStats()
-}

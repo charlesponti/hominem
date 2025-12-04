@@ -1,24 +1,14 @@
+import { users } from '@hominem/data/schema'
+import { createTestUser } from '@hominem/utils/test-fixtures'
+import { eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../db'
 import { createContext } from '../lib/trpc/context'
-import { users } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
-import { createTestUser } from '@hominem/utils/test-fixtures'
 
 // Mock the dependencies
 vi.mock('../lib/supabase/server', () => ({
   createClient: vi.fn(),
-}))
-
-vi.mock('../lib/redis', () => ({
-  cacheKeys: {
-    token: vi.fn((token: string) => `token:${token}`),
-  },
-  cacheUtils: {
-    get: vi.fn(),
-    set: vi.fn(),
-  },
 }))
 
 describe('tRPC Context', () => {
@@ -104,21 +94,6 @@ describe('tRPC Context', () => {
         supabaseId: testUserId,
       }),
     })
-  })
-
-  it('should use cached token when available', async () => {
-    const mockRequest = new Request('http://localhost/api/trpc', {
-      headers: {
-        'x-user-id': testUserId,
-      },
-    })
-
-    const context = await createContext(mockRequest)
-
-    expect(context.user).toBeDefined()
-    expect(context.user?.id).toBe(testUserId)
-    expect(context.user?.email).toBe(`test-${testUserId}@example.com`)
-    expect(context.user?.name).toBe('Test User')
   })
 
   it('should handle user without metadata', async () => {
