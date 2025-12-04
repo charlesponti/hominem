@@ -87,7 +87,6 @@ const RoccoMap = ({
   const markerLibrary = useMapsLibrary('marker')
   const hoverAnimation = markerLibrary?.Animation?.BOUNCE
 
-  // Store map center and zoom in local state for data attributes
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({
     lat: center.latitude,
     lng: center.longitude,
@@ -146,11 +145,11 @@ const RoccoMap = ({
         data-testid="rocco-map"
         data-zoom={mapZoom}
         data-center={JSON.stringify(mapCenter)}
-        className="flex flex-1 relative overflow-hidden rounded-lg shadow-md size-full"
+        className="flex flex-1 relative overflow-hidden rounded-lg shadow-2xl size-full"
       >
         {isLoadingCurrentLocation ? (
           <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 rounded-lg border-blue-500 bg-blue-200 text-blue-600 text-sm">
-            <span className="animate-ping inline-flex size-1 rounded-full bg-blue-800 opacity-75 mb-[2px] mr-3" />
+            <span className="animate-ping inline-flex size-1 rounded-full bg-blue-800 opacity-75 mb-0.5 mr-3" />
             Loading current location
           </div>
         ) : null}
@@ -166,14 +165,19 @@ const RoccoMap = ({
             markers={markers}
             zoom={zoom}
           />
-          {/* {currentLocation && !isLoadingCurrentLocation && currentLocationIcon && (
+          {/* Current location blue dot - appears when location is loaded */}
+          {currentLocation && !isLoadingCurrentLocation && (
             <Marker
               position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
-              icon={currentLocationIcon}
+              icon={{
+                url: 'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="%234285F4" stroke="%23FFFFFF" stroke-width="2"/></svg>',
+                scaledSize: { width: 20, height: 20 },
+                anchor: { x: 10, y: 10 },
+              }}
               title="Your Location"
               zIndex={100}
             />
-          )} */}
+          )}
           {markers.map((marker) => {
             const isHovered = hoveredPlaceId && marker.id === hoveredPlaceId
             const isSelected = selectedMarker?.id === marker.id

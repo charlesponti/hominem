@@ -1,4 +1,5 @@
 import { Globe, Lock } from 'lucide-react'
+import { cn } from '~/lib/utils'
 
 interface ListVisibilityBadgeProps {
   isPublic: boolean
@@ -6,10 +7,11 @@ interface ListVisibilityBadgeProps {
 
 export default function ListVisibilityBadge({ isPublic }: ListVisibilityBadgeProps) {
   return (
-    <div
-      className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${
-        isPublic ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-      }`}
+    <span
+      className={cn('flex max-w-fit items-center gap-1.5 px-3 py-1 rounded-full', {
+        'bg-green-100 text-green-700': isPublic,
+        'bg-gray-100 text-gray-700': !isPublic,
+      })}
     >
       {isPublic ? (
         <>
@@ -22,6 +24,6 @@ export default function ListVisibilityBadge({ isPublic }: ListVisibilityBadgePro
           <span className="text-xs font-medium">Private</span>
         </>
       )}
-    </div>
+    </span>
   )
 }

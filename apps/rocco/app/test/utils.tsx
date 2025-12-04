@@ -154,6 +154,9 @@ const mockTrpcClient = {
     getAll: {
       useQuery: vi.fn(),
     },
+    getByList: {
+      useQuery: vi.fn(),
+    },
     create: {
       useMutation: vi.fn(),
     },

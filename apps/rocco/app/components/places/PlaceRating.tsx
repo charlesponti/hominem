@@ -1,24 +1,25 @@
 import { Star } from 'lucide-react'
+import { cn } from '~/lib/utils'
 
 type PlaceRatingProps = {
   rating: number
-  size?: 'sm' | 'md'
+  size?: 'sm' | 'md' | 'lg'
 }
 
 const PlaceRating = ({ rating, size = 'md' }: PlaceRatingProps) => {
-  if (size === 'sm') {
-    return (
-      <div className="flex items-center gap-1.5">
-        <Star className="text-yellow-500 fill-yellow-500" size={14} />
-        <span className="text-sm font-medium text-gray-700">{rating.toFixed(1)}</span>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex items-baseline gap-2">
-      <span className="text-xl font-bold text-gray-900">{rating}</span>
-      <span className="text-sm text-gray-500">/ 5</span>
+    <div className="flex gap-2 items-center">
+      <Star size={size === 'md' ? 14 : size === 'lg' ? 18 : 12} />
+      <div
+        className={cn('flex gap-1', {
+          'text-sm': size === 'sm',
+          'text-base': size === 'md',
+          'text-lg': size === 'lg',
+        })}
+      >
+        <span className="text-black font-semibold">{rating}</span>
+        <span className="text-gray-500">/ 5</span>
+      </div>
     </div>
   )
 }

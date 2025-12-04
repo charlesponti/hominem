@@ -1,15 +1,12 @@
 import {
-  acceptListInvite as acceptListInviteService,
   createList as createListService,
   deleteListItem as deleteListItemService,
   deleteList as deleteListService,
   formatList,
   getListById as getListByIdService,
-  getListInvites as getListInvitesService,
   getListPlacesMap,
   getOwnedLists,
   getUserLists,
-  sendListInvite as sendListInviteService,
   updateList as updateListService,
 } from '@hominem/data'
 import { TRPCError } from '@trpc/server'
@@ -17,6 +14,31 @@ import { z } from 'zod'
 import { safeAsync } from '../../errors'
 import { logger } from '../../logger'
 import { protectedProcedure, publicProcedure, router } from '../context'
+
+async function loadListsWithPlaces(userId: string) {
+  const [ownedLists, sharedUserLists] = await Promise.all([
+    getOwnedLists(userId),
+    getUserLists(userId),
+  ])
+
+  const allListIds = [...ownedLists.map((l) => l.id), ...sharedUserLists.map((l) => l.id)]
+  const placesMap = await getListPlacesMap(allListIds)
+
+  const ownedListsWithPlaces = ownedLists.map((listData) => {
+    const places = placesMap.get(listData.id) || []
+    return formatList(listData, places, true)
+  })
+
+  const sharedListsWithPlaces = sharedUserLists.map((listData) => {
+    const places = placesMap.get(listData.id) || []
+    return formatList(listData, places, false)
+  })
+
+  return {
+    ownedListsWithPlaces,
+    sharedListsWithPlaces,
+  }
+}
 
 export const listsRouter = router({
   getAll: protectedProcedure
@@ -32,25 +54,9 @@ export const listsRouter = router({
           }
 
           const itemType = input?.itemType
-
-          const [ownedLists, sharedUserLists] = await Promise.all([
-            getOwnedLists(ctx.user.id, itemType),
-            getUserLists(ctx.user.id, itemType),
-          ])
-
-          // Fetch places for all lists at once
-          const allListIds = [...ownedLists.map((l) => l.id), ...sharedUserLists.map((l) => l.id)]
-          const placesMap = await getListPlacesMap(allListIds)
-
-          const ownedListsWithPlaces = ownedLists.map((listData) => {
-            const places = placesMap.get(listData.id) || []
-            return formatList(listData, places, true)
-          })
-
-          const sharedListsWithPlaces = sharedUserLists.map((listData) => {
-            const places = placesMap.get(listData.id) || []
-            return formatList(listData, places, false)
-          })
+          const { ownedListsWithPlaces, sharedListsWithPlaces } = await loadListsWithPlaces(
+            ctx.user.id
+          )
 
           logger.info('Retrieved user lists', {
             userId: ctx.user.id,
@@ -183,128 +189,6 @@ export const listsRouter = router({
       } catch (error) {
         logger.error('Error deleting list item', { error })
         throw new Error('Failed to delete list item')
-      }
-    }),
-
-  // Get invites for a list
-  getInvites: protectedProcedure
-    .input(z.object({ listId: z.string().uuid() }))
-    .query(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found in context',
-        })
-      }
-
-      try {
-        const invites = await getListInvitesService(input.listId)
-
-        logger.info('Retrieved list invites', {
-          listId: input.listId,
-          userId: ctx.user.id,
-          count: invites.length,
-        })
-
-        return invites
-      } catch (error) {
-        logger.error('Error fetching list invites', { error })
-        throw new Error('Failed to fetch list invites')
-      }
-    }),
-
-  // Send a list invite
-  sendInvite: protectedProcedure
-    .input(
-      z.object({
-        listId: z.string().uuid(),
-        email: z.string().email(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error('User not found in context')
-      }
-
-      try {
-        const serviceResponse = await sendListInviteService(input.listId, input.email, ctx.user.id)
-
-        if ('error' in serviceResponse) {
-          throw new TRPCError({
-            code:
-              serviceResponse.status === 404
-                ? 'NOT_FOUND'
-                : serviceResponse.status === 409
-                  ? 'CONFLICT'
-                  : 'INTERNAL_SERVER_ERROR',
-            message: serviceResponse.error,
-          })
-        }
-
-        logger.info('Sent list invite', {
-          listId: input.listId,
-          invitedEmail: input.email,
-          userId: ctx.user.id,
-        })
-
-        return serviceResponse
-      } catch (error) {
-        logger.error('Error sending list invite', { error })
-        if (error instanceof TRPCError) {
-          throw error
-        }
-        throw new Error('Failed to send list invite')
-      }
-    }),
-
-  // Accept a list invite
-  acceptInvite: protectedProcedure
-    .input(z.object({ listId: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.user.email) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found in context or email not available',
-        })
-      }
-
-      try {
-        const serviceResponse = await acceptListInviteService(
-          input.listId,
-          ctx.user.id,
-          ctx.user.email
-        )
-
-        if ('error' in serviceResponse) {
-          throw new TRPCError({
-            code:
-              serviceResponse.status === 404
-                ? 'NOT_FOUND'
-                : serviceResponse.status === 400
-                  ? 'BAD_REQUEST'
-                  : serviceResponse.status === 403
-                    ? 'FORBIDDEN'
-                    : 'INTERNAL_SERVER_ERROR',
-            message: serviceResponse.error,
-          })
-        }
-
-        logger.info('Accepted list invite', {
-          listId: input.listId,
-          userId: ctx.user.id,
-          email: ctx.user.email,
-        })
-
-        return {
-          message: 'Invite accepted successfully.',
-          data: serviceResponse,
-        }
-      } catch (error) {
-        logger.error('Error accepting list invite', { error })
-        if (error instanceof TRPCError) {
-          throw error
-        }
-        throw new Error('Failed to accept list invite')
       }
     }),
 })

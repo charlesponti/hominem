@@ -27,7 +27,7 @@ export default function Loading({ color, size = 'md' }: LoadingProps) {
 
 export function LoadingScreen() {
   return (
-    <div className="flex items-center justify-center max-h-[300px] mx-auto">
+    <div className="flex items-center justify-center max-h-[300px] mx-auto w-full">
       <Loading size="3xl" />
     </div>
   )

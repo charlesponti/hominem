@@ -10,52 +10,43 @@ type PlaceList = {
 
 type Props = {
   lists: PlaceList[]
-  placeName: string
 }
 
-const SocialProofSection = ({ lists, placeName }: Props) => {
+const SocialProofSection = ({ lists }: Props) => {
   if (lists.length === 0) {
     return null
   }
 
   return (
-    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header with count */}
-      <div className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-gray-700">
-          Saved in {lists.length} {lists.length === 1 ? 'list' : 'lists'}
-        </h3>
-      </div>
+    <div className="space-y-1 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+      <h3 className="font-sans font-semibold">
+        Saved in {lists.length} {lists.length === 1 ? 'list' : 'lists'}
+      </h3>
 
-      {/* Lists grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        {lists.map((list) => {
-          return (
+      <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {lists.map((list) => (
+          <li key={list.id} className="relative hover:cursor-pointer">
             <Link
-              key={list.id}
               to={`/lists/${list.id}`}
-              className="group flex items-center gap-3 rounded-lg p-3 bg-white border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              className="flex justify-between items-center p-2 w-full group"
             >
-              {/* Icon */}
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200">
-                <List size={16} className="text-gray-600" />
-              </div>
-
-              {/* List info */}
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 truncate text-sm group-hover:text-indigo-600 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="shrink-0 size-7 rounded bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200">
+                  <List size={18} className="text-gray-600" />
+                </span>
+                <span className="font-medium text-gray-900 truncate text-sm group-hover:text-indigo-600 transition-colors">
                   {list.name}
-                </div>
-                {list.itemCount !== undefined && (
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    {list.itemCount} {list.itemCount === 1 ? 'place' : 'places'}
-                  </div>
-                )}
+                </span>
               </div>
+              {list.itemCount !== undefined && (
+                <span className="text-xs text-gray-500 ml-2">
+                  {list.itemCount} {list.itemCount === 1 ? 'place' : 'places'}
+                </span>
+              )}
             </Link>
-          )
-        })}
-      </div>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

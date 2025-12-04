@@ -57,7 +57,7 @@ export default function ListForm({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Create New List</h3>
+      <h3 className="text-lg font-semibold text-gray-900">New List</h3>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <fieldset className="flex flex-col gap-2">
@@ -103,7 +103,7 @@ export default function ListForm({
               }
             }}
           >
-            {isPending ? 'Creating...' : 'Create List'}
+            {isPending ? 'Creating...' : 'Create'}
           </Button>
         </div>
       </form>

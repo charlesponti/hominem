@@ -3,6 +3,7 @@ import Alert from '~/components/alert'
 import { Button } from '~/components/ui/button'
 import type { InviteItem } from '~/lib/component-types'
 import { trpc } from '~/lib/trpc/client'
+import Loading from '../loading'
 
 function ListInviteItem({
   invite,
@@ -22,28 +23,28 @@ function ListInviteItem({
   }, [invite.listId, invite.invitedUserEmail, mutation])
 
   return (
-    <li className="card shadow-md px-2 py-4 text-primary flex flex-row justify-between">
-      <div className="flex-1">
-        <p className={`text-lg flex flex-col gap-2${invite.accepted ? '' : ' text-gray-400'}`}>
-          <span className="text-lg font-semibold">{invite.list?.name || 'Unknown List'}</span>
-          <span className="text-sm text-gray-400">{invite.invitedUserEmail}</span>
-        </p>
-        {mutation.error && (
-          <div className="mt-2">
-            <Alert type="error">{mutation.error.message}</Alert>
-          </div>
-        )}
+    <li className="flex items-center justify-between gap-4 p-4">
+      <div>
+        <p className="font-medium text-gray-900">{invite.invitedUserEmail}</p>
+        {mutation.error && <Alert type="error">{mutation.error.message}</Alert>}
       </div>
       <div>
         {invite.accepted ? (
-          <p className="text-md">✅ Accepted</p>
+          <p className="text-base font-medium text-green-600">✅ Accepted</p>
         ) : (
           <Button
-            className="btn-success btn-sm rounded-md"
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
             onClick={acceptInvite}
             disabled={mutation.isPending}
           >
-            {mutation.isPending ? 'Accepting...' : 'Accept'}
+            {mutation.isPending ? (
+              <span className="animate-pulse flex items-center gap-2">
+                <Loading size="sm" />
+                Accepting...
+              </span>
+            ) : (
+              <span>Accept</span>
+            )}
           </Button>
         )}
       </div>

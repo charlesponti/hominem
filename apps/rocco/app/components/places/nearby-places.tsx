@@ -84,20 +84,18 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
         <span className="text-sm text-gray-500">Within {radiusKm}km</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {places.map((place) => {
           const photoUrl = place.photos?.[0]
           const imageUrl = photoUrl ? getImageUrl(photoUrl) : null
-
           return (
-            <Link
-              key={place.id}
-              to={`/places/${place.id}`}
-              className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden group"
-            >
-              <div className="flex">
+            <li key={place.id}>
+              <Link
+                to={`/places/${place.id}`}
+                className="flex items-center gap-4 p-3 group hover:bg-gray-50 transition-colors"
+              >
                 {/* Image */}
-                <div className="w-32 h-32 shrink-0">
+                <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
                   {imageUrl ? (
                     <img
                       src={imageUrl}
@@ -105,46 +103,34 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
-                      <Star className="text-indigo-400" size={32} />
-                    </div>
+                    <Star className="text-indigo-400" size={28} />
                   )}
                 </div>
-
                 {/* Content */}
-                <div className="flex-1 p-4 flex flex-col gap-2">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">
-                      {place.name}
-                    </h3>
-                    {/* Lists */}
-                    {place.lists.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-500">
-                          {place.lists.length === 1
-                            ? place.lists[0].name
-                            : `${place.lists.length} lists`}
-                        </span>
-                      </div>
-                    )}
-                    {/* {place.address && (
-                      <p className="text-sm text-gray-600 truncate mb-2">{place.address}</p>
-                    )} */}
-                  </div>
-
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    {/* Distance */}
+                    <h3 className="font-semibold text-gray-900 truncate text-base">{place.name}</h3>
                     <div className="flex items-center text-sm text-indigo-600">
                       <MapPin size={14} className="mr-1" />
                       <span>{formatDistance(place.distance)}</span>
                     </div>
                   </div>
+                  {/* Lists */}
+                  {place.lists.length > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-xs text-gray-500">
+                        {place.lists.length === 1
+                          ? place.lists[0].name
+                          : `${place.lists.length} lists`}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </li>
           )
         })}
-      </div>
+      </ul>
     </div>
   )
 }

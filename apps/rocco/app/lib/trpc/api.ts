@@ -10,10 +10,6 @@ export const useGetListInvites = (id: string) => {
   return trpc.invites.getByList.useQuery({ listId: id })
 }
 
-export const useGetLists = () => {
-  return trpc.lists.getAll.useQuery()
-}
-
 export const useCreateList = (
   options?: UseMutationOptions<
     RouterOutputs['lists']['create'],

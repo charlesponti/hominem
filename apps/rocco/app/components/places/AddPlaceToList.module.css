@@ -1,9 +1,0 @@
-.listItem:first-of-type {
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-.listItem:last-of-type {
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-}

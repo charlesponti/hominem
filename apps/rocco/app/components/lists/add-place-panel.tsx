@@ -1,4 +1,4 @@
-import { createPlaceFromPrediction } from '~/components/map-layout/utils'
+import { createPlaceFromPrediction } from '~/lib/places'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import {
   Sheet,
@@ -10,6 +10,7 @@ import {
 import { useToast } from '~/components/ui/use-toast'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { useAddPlaceToList } from '~/lib/places'
+import Loading from '../loading'
 
 interface AddPlacePanelProps {
   isOpen: boolean
@@ -71,7 +72,7 @@ export default function AddPlacePanel({ isOpen, onClose, listId, listName }: Add
 
           {addPlaceToList.isPending ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+              <Loading size="lg" />
               <span className="ml-3 text-sm text-gray-600">Adding place...</span>
             </div>
           ) : null}

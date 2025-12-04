@@ -48,7 +48,10 @@ describe('google-places.server helper', () => {
 
     fetchMock.mockResolvedValue(createFetchResponse(payload))
 
-    const params = { query: 'coffee', locationBias: { latitude: 37.5, longitude: -122.3, radius: 500 } }
+    const params = {
+      query: 'coffee',
+      locationBias: { latitude: 37.5, longitude: -122.3, radius: 500 },
+    }
     const first = await searchPlaces(params)
     const second = await searchPlaces(params)
 
@@ -96,4 +99,3 @@ describe('google-places.server helper', () => {
     expect(url).toContain('key=test-key')
   })
 })
-

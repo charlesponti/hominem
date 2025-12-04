@@ -47,13 +47,13 @@ const PlaceListItem = ({
   return (
     <>
       <li
-        className="flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 bg-none m-2"
+        className="flex items-center justify-between gap-4 p-4"
         onMouseEnter={() => setHoveredPlaceId(place.itemId)}
         onMouseLeave={() => setHoveredPlaceId(null)}
         data-selected={isSelected}
       >
         <a
-          className="flex-1 outline-none focus:underline underline-offset-[5px]"
+          className="flex-1 font-medium text-gray-900 outline-none focus:underline underline-offset-[5px]"
           href={href('/places/:id', { id: place.itemId })}
         >
           {place.name}
@@ -64,7 +64,7 @@ const PlaceListItem = ({
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
-                className="size-8 p-0 rounded-lg bg-white border border-gray-200 text-gray-700"
+                className="px-2 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
                 onClick={(e: MouseEvent<HTMLButtonElement>) => {
                   e.preventDefault()
                   e.stopPropagation()

@@ -90,11 +90,15 @@ const PlaceTypes = ({ limit, types }: { limit?: number; types: string[] }) => {
               return false
             }
 
+            if (type.includes('_restaurant') && arr.includes('restaurant')) {
+              return false
+            }
+
             return true
           })
           .map((type) => (
             <PlaceType key={type} emoji={TYPE_EMOJIS[type]}>
-              {type.replace(/_/gi, ' ')}
+              {type.replace(/_store/gi, '').replace(/_/gi, ' ')}
             </PlaceType>
           ))
       )}

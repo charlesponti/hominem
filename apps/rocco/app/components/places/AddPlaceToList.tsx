@@ -1,4 +1,4 @@
-import { Heart, Loader2, Plus } from 'lucide-react'
+import { Heart, Loader2, PlusCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useRouteLoaderData } from 'react-router'
 import ListForm from '~/components/lists/list-form'
@@ -7,25 +7,25 @@ import { Button } from '~/components/ui/button'
 import { Label } from '~/components/ui/label'
 import { Sheet, SheetContent } from '~/components/ui/sheet'
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places'
-import { useGetLists } from '~/lib/trpc/api'
+import { trpc } from '~/lib/trpc/client'
 import type { Place } from '~/lib/types'
 import { cn } from '~/lib/utils'
-import styles from './AddPlaceToList.module.css'
+import { useToast } from '../ui/use-toast'
 
 interface AddPlaceToListProps {
-  onSuccess: () => void
   place: Place
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
 
-const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToListProps) => {
+const AddPlaceToList = ({ place, isOpen, onOpenChange }: AddPlaceToListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const { toast } = useToast()
   const [loadingListId, setLoadingListId] = useState<string | null>(null)
   const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
   const isAuthenticated = layoutData?.isAuthenticated ?? false
 
-  const { isLoading, data: rawLists } = useGetLists()
+  const { isLoading, data: rawLists } = trpc.lists.getAll.useQuery()
 
   // Derive isInList from cached lists data
   const lists = useMemo(() => {
@@ -40,7 +40,10 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
   })
   const { mutate: addToList } = useAddPlaceToList({
     onSuccess: () => {
-      onSuccess?.()
+      toast({
+        title: 'Added to list!',
+        variant: 'default',
+      })
     },
     onSettled: () => setLoadingListId(null),
   })
@@ -63,7 +66,7 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="pt-10 px-4">
         <div className="my-6">
-          <h2 className="text-xl font-bold">Add to lists</h2>
+          <h2 className="text-xl font-bold font-serif">Add to lists</h2>
           <p className="text-sm">Select lists to add this place to.</p>
         </div>
         {isLoading ? (
@@ -71,7 +74,7 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
             <Loading size="xl" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-2">
             {showCreateForm ? (
               <div className="border rounded-lg p-4 bg-gray-50">
                 <ListForm
@@ -84,25 +87,23 @@ const AddPlaceToList = ({ onSuccess, place, isOpen, onOpenChange }: AddPlaceToLi
                 />
               </div>
             ) : (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowCreateForm(true)}
-                className="w-full flex items-center justify-center gap-2"
-                disabled={!isAuthenticated}
-              >
-                <Plus size={16} />
-                Create New List
-              </Button>
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  onClick={() => setShowCreateForm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg transition-colors"
+                  disabled={!isAuthenticated}
+                >
+                  <PlusCircle size={18} />
+                  <span>Create New List</span>
+                </Button>
+              </div>
             )}
 
             {/* Existing lists */}
-            <ul className="list-none">
+            <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               {lists?.map((list) => (
-                <li
-                  key={list.id}
-                  className={`${styles.listItem} relative border hover:cursor-pointer`}
-                >
+                <li key={list.id} className="relative hover:cursor-pointer">
                   <Label
                     htmlFor={list.id}
                     className="flex justify-between items-center hover:cursor-pointer p-2"

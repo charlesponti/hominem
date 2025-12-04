@@ -1,6 +1,7 @@
+import type { List } from '@hominem/data'
 import { type QueryClient, type UseMutationOptions, useMutation } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
-import type { List } from '@hominem/data'
+import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { trpc } from './trpc/client'
 import type { Place, PlaceLocation } from './types'
 
@@ -66,7 +67,7 @@ export const useRemoveListItem = (
     onSettled: (data, error, variables, mutateResult, context) => {
       utils.lists.getById.invalidate({ id: variables.listId })
       utils.lists.getAll.invalidate()
-      utils.places.getDetails.invalidate({ id: variables.placeId })
+      utils.places.getDetailsById.invalidate({ id: variables.placeId })
 
       options?.onSettled?.(data, error, variables, mutateResult, context)
     },
@@ -78,7 +79,6 @@ export const useAddPlaceToList = (
 ) => {
   const utils = trpc.useUtils()
   const createPlaceMutation = trpc.places.create.useMutation()
-  const addToListMutation = trpc.items.addToList.useMutation()
 
   return useMutation<Place, AxiosError, AddPlaceToListOptions>({
     ...options,
@@ -87,7 +87,7 @@ export const useAddPlaceToList = (
       if (!place.googleMapsId) {
         throw new Error('googleMapsId is required')
       }
-      // First create the place if it doesn't exist
+      // Create the place and add to lists in one go
       const createdPlace = await createPlaceMutation.mutateAsync({
         name: place.name,
         address: place.address || undefined,
@@ -100,18 +100,9 @@ export const useAddPlaceToList = (
         websiteUri: place.websiteUri || undefined,
         phoneNumber: place.phoneNumber || undefined,
         photos: place.photos || undefined,
+        listIds,
       })
 
-      // Then add the place to all specified lists
-      const promises = listIds.map((listId) =>
-        addToListMutation.mutateAsync({
-          listId,
-          itemId: createdPlace.id,
-          itemType: 'PLACE',
-        })
-      )
-
-      await Promise.all(promises)
       return createdPlace
     },
     // Prefetch related data after successful mutation
@@ -126,10 +117,10 @@ export const useAddPlaceToList = (
 
       // Invalidate place details to update "In these lists" section
       if (variables.place.googleMapsId) {
-        utils.places.getDetails.invalidate({ id: variables.place.googleMapsId })
+        utils.places.getDetailsByGoogleId.invalidate({ googleMapsId: variables.place.googleMapsId })
       }
       if (data?.id) {
-        utils.places.getDetails.invalidate({ id: data.id })
+        utils.places.getDetailsById.invalidate({ id: data.id })
       }
 
       // @ts-expect-error - options.onSuccess signature mismatch in environment
@@ -169,6 +160,40 @@ export const prefetchPlace = async (queryClient: QueryClient, id: string) => {
     },
     staleTime: 2 * 60 * 1000,
   })
+}
+
+export async function createPlaceFromPrediction(prediction: GooglePlacePrediction): Promise<Place> {
+  // We don't fetch photos here anymore to avoid double fetching.
+  // The photos will be fetched when the user navigates to the place details page.
+  const photoUrls: string[] = []
+
+  const latitude = prediction.location?.latitude || null
+  const longitude = prediction.location?.longitude || null
+  const location: [number, number] = latitude && longitude ? [latitude, longitude] : [0, 0]
+
+  return {
+    id: prediction.place_id,
+    name: prediction.text || '',
+    description: null,
+    address: prediction.address || '',
+    createdAt: '',
+    updatedAt: '',
+    itemId: null,
+    googleMapsId: prediction.place_id,
+    types: null,
+    imageUrl: null,
+    phoneNumber: null,
+    rating: null,
+    websiteUri: null,
+    latitude,
+    longitude,
+    location,
+    bestFor: null,
+    isPublic: false,
+    wifiInfo: null,
+    photos: photoUrls,
+    priceLevel: null,
+  }
 }
 
 export type TextSearchQuery = {

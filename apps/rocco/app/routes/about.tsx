@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion'
-import { Building, Compass, Heart, Users } from 'lucide-react'
+import { BookmarkCheck, MapPin, Share2, Sparkles } from 'lucide-react'
 import { Link } from 'react-router'
-import styles from './about.module.css'
 
 const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
 }
 
 const staggerContainer = {
@@ -13,124 +12,148 @@ const staggerContainer = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.3,
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
     },
   },
 }
 
 export default function AboutPage() {
   return (
-    <div className="bg-white text-gray-800">
+    <div className="bg-white text-gray-900">
       {/* Hero Section */}
       <motion.section
-        className={`relative text-center py-24 px-4 sm:px-6 lg:px-8 ${styles.heroGradient}`}
+        className="relative py-24 sm:py-32 lg:py-40 px-4 sm:px-6 lg:px-8 bg-white"
         initial="hidden"
         animate="visible"
         variants={fadeIn}
       >
-        <div className="absolute inset-0 bg-black opacity-10" />
-        <div className="relative max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 tracking-tight">
-            We're building the future of personal discovery.
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-gray-900 tracking-tight leading-[1.1] max-w-4xl">
+            Your places.
+            <br />
+            Your stories.
           </h1>
-          <p className="mt-6 text-xl text-gray-700 max-w-2xl mx-auto">
-            Rocco is more than just a map. It's a new way to experience your world, remember your
-            journeys, and plan your next adventure with the people you care about.
+          <p className="mt-8 text-xl sm:text-2xl text-gray-600 max-w-2xl leading-relaxed font-light">
+            Stop losing track of places you want to visit. Organize them into lists, share with
+            friends, and actually go.
           </p>
         </div>
       </motion.section>
 
-      {/* Our Story Section */}
+      {/* Problem/Solution Section */}
       <motion.section
-        className="py-20 px-4 sm:px-6 lg:px-8"
+        className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-gray-100"
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
-        variants={staggerContainer}
-      >
-        <div className="max-w-4xl mx-auto">
-          <motion.h2 variants={fadeIn} className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Our Story
-          </motion.h2>
-          <motion.div variants={fadeIn} className="prose prose-lg max-w-none text-gray-600">
-            <p>
-              It all started with a simple problem: a long list of saved places in a notes app, a
-              cluttered map with hundreds of pins, and no easy way to share them. We wanted a
-              beautiful, intuitive tool to not only track our favorite spots but to weave them into
-              stories and share them with friends.
-            </p>
-            <p>
-              We realized that memories are tied to places, and sharing those places is a way of
-              sharing experiences. That's why we built Rocco—to be the canvas for your life's map.
-            </p>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* Core Values Section */}
-      <motion.section
-        className="bg-gray-50 py-20 px-4 sm:px-6 lg:px-8"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
+        viewport={{ once: true, margin: '-100px' }}
         variants={staggerContainer}
       >
         <div className="max-w-5xl mx-auto">
-          <motion.h2 variants={fadeIn} className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Our Core Values
-          </motion.h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <motion.div variants={fadeIn} className="text-center p-6">
-              <Compass size={40} className="mx-auto text-indigo-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Fuel Discovery</h3>
-              <p className="text-gray-600">
-                Inspire curiosity and make it easy to explore the world around you.
+          <motion.div variants={fadeIn} className="mb-20">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 max-w-3xl">
+              You know this feeling
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl font-light leading-relaxed">
+              Your friend texts you a restaurant recommendation. You save it... somewhere. Three
+              months later, you're in that neighborhood and can't remember the name.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 gap-x-12 gap-y-16">
+            <motion.div variants={fadeIn}>
+              <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center mb-5">
+                <BookmarkCheck className="text-white" size={20} strokeWidth={2} />
+              </div>
+              <h3 className="text-xl font-medium mb-3">Never lose a place</h3>
+              <p className="text-gray-600 leading-relaxed font-light">
+                Save restaurants, bars, parks, and more in organized lists you can actually find
+                later.
               </p>
             </motion.div>
-            <motion.div variants={fadeIn} className="text-center p-6">
-              <Heart size={40} className="mx-auto text-indigo-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Design with Heart</h3>
-              <p className="text-gray-600">
-                Craft beautiful, intuitive experiences that are a joy to use.
+
+            <motion.div variants={fadeIn}>
+              <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center mb-5">
+                <MapPin className="text-white" size={20} strokeWidth={2} />
+              </div>
+              <h3 className="text-xl font-medium mb-3">See it on a map</h3>
+              <p className="text-gray-600 leading-relaxed font-light">
+                Visualize your saved places. Plan your day based on what's nearby, not what you
+                remember.
               </p>
             </motion.div>
-            <motion.div variants={fadeIn} className="text-center p-6">
-              <Users size={40} className="mx-auto text-indigo-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Connect People</h3>
-              <p className="text-gray-600">
-                Build tools that help people share experiences and create memories.
+
+            <motion.div variants={fadeIn}>
+              <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center mb-5">
+                <Share2 className="text-white" size={20} strokeWidth={2} />
+              </div>
+              <h3 className="text-xl font-medium mb-3">Share with anyone</h3>
+              <p className="text-gray-600 leading-relaxed font-light">
+                Collaborate on lists with friends. Perfect for trip planning or neighborhood guides.
               </p>
             </motion.div>
-            <motion.div variants={fadeIn} className="text-center p-6">
-              <Building size={40} className="mx-auto text-indigo-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Build to Last</h3>
-              <p className="text-gray-600">
-                Create a sustainable company that will serve our community for years to come.
+
+            <motion.div variants={fadeIn}>
+              <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center mb-5">
+                <Sparkles className="text-white" size={20} strokeWidth={2} />
+              </div>
+              <h3 className="text-xl font-medium mb-3">Beautiful & simple</h3>
+              <p className="text-gray-600 leading-relaxed font-light">
+                No clutter. No learning curve. Just a clean interface that gets out of your way.
               </p>
             </motion.div>
           </div>
         </div>
       </motion.section>
 
+      {/* Origin Story Section */}
+      <motion.section
+        className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-gray-50"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-100px' }}
+        variants={fadeIn}
+      >
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-10">How it started</h2>
+          <div className="space-y-6 text-lg text-gray-600 leading-relaxed font-light">
+            <p>
+              We built Rocco because we were frustrated. Scattered notes. Random screenshots. Pins
+              on maps that meant nothing weeks later.
+            </p>
+            <p>
+              There had to be a better way to remember the coffee shop your colleague mentioned, or
+              organize that list of date night ideas, or share your favorite spots with visiting
+              friends.
+            </p>
+            <p className="text-gray-900">
+              So we built the tool we wished existed: simple enough to use every day, powerful
+              enough to replace all those other systems.
+            </p>
+          </div>
+        </div>
+      </motion.section>
+
       {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
         <motion.div
-          className="text-center max-w-2xl mx-auto"
+          className="max-w-5xl mx-auto"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeIn}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to start your journey?</h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Create your first list for free. No credit card required.
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 max-w-2xl">
+            Start organizing your world
+          </h2>
+          <p className="text-xl text-gray-600 mb-10 font-light max-w-xl">
+            Free to use. No credit card needed. Create your first list in under a minute.
           </p>
           <Link
             to="/"
-            className="inline-block text-white py-4 px-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+            className="inline-flex items-center gap-2 text-white py-3.5 px-8 bg-gray-900 rounded-lg font-medium text-base hover:bg-gray-800 transition-colors"
           >
-            Explore the Map
+            Get Started
           </Link>
         </motion.div>
       </section>

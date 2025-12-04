@@ -9,7 +9,7 @@ import AddPlacePanel from '~/components/lists/add-place-panel'
 import ListMenu from '~/components/lists/list-menu'
 import ListTitle from '~/components/lists/list-title'
 import ListVisibilityBadge from '~/components/lists/list-visibility-badge'
-import Loading from '~/components/loading'
+import Loading, { LoadingScreen } from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
 import PlacesList from '~/components/places/places-list'
 import { Button } from '~/components/ui/button'
@@ -60,11 +60,7 @@ export default function ListPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <Loading size="lg" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (!data) {
@@ -99,7 +95,6 @@ export default function ListPage() {
 
   return (
     <MapInteractionProvider>
-      {/* Add Place Panel */}
       <AddPlacePanel
         isOpen={isAddToListOpen}
         onClose={() => setIsAddToListOpen(false)}
@@ -107,38 +102,21 @@ export default function ListPage() {
         listName={data.name}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-        {/* List content - left on desktop, top on mobile */}
-        <div className="overflow-y-auto space-y-8 pb-8">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+        <div className="overflow-y-auto space-y-4 pb-8">
           {data && (
             <>
-              {/* Hero Section */}
               <div className="relative">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  {/* Title and Metadata */}
-                  <div className="flex-1 space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
                     <ListTitle list={data} isOwner={isOwner} />
-
-                    {data.description && (
-                      <p className="text-base md:text-lg text-gray-700 max-w-2xl">
-                        {data.description}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm">
-                      <ListVisibilityBadge isPublic={data.isPublic} />
-                    </div>
+                    <ListVisibilityBadge isPublic={data.isPublic} />
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     {isOwner && (
-                      <Link
-                        to={`/lists/${data.id}/invites`}
-                        className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white hover:bg-gray-50 active:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg shadow-sm transition-colors"
-                      >
+                      <Link to={`/lists/${data.id}/invites`} className="flex items-center gap-2">
                         <UserPlus size={18} />
-                        <span className="hidden sm:inline">Share</span>
                       </Link>
                     )}
 
@@ -159,43 +137,33 @@ export default function ListPage() {
                   <p className="text-gray-600 mb-6 max-w-md">
                     Start building your list by adding places to see them on the map.
                   </p>
-                  {isOwner && (
-                    <Button
-                      type="button"
-                      onClick={() => setIsAddToListOpen(true)}
-                      className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors"
-                    >
-                      <PlusCircle size={18} />
-                      Add Your First Place
-                    </Button>
-                  )}
                 </div>
               )}
 
               {/* Add Place Button */}
-              {isOwner && !isAddToListOpen && placeCount > 0 && (
-                <div className="flex justify-start">
-                  <Button
-                    type="button"
-                    data-testid="add-to-list-button"
-                    onClick={() => setIsAddToListOpen(!isAddToListOpen)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors"
-                  >
-                    <PlusCircle size={18} />
-                    <span>Add Place</span>
-                  </Button>
-                </div>
-              )}
+              <div className="flex flex-col gap-2">
+                {isOwner && !isAddToListOpen && (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      data-testid="add-to-list-button"
+                      onClick={() => setIsAddToListOpen(!isAddToListOpen)}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg transition-colors"
+                    >
+                      <PlusCircle size={18} />
+                      <span>Add Place</span>
+                    </Button>
+                  </div>
+                )}
 
-              {/* Places List */}
-              {placeCount > 0 && data.places && (
-                <PlacesList places={data.places} listId={data.id} onError={handleDeleteError} />
-              )}
+                {placeCount > 0 && data.places && (
+                  <PlacesList places={data.places} listId={data.id} onError={handleDeleteError} />
+                )}
+              </div>
             </>
           )}
         </div>
 
-        {/* Map - right on desktop, bottom on mobile */}
         <div className="h-[300px] lg:h-full min-h-[300px] rounded-lg overflow-hidden">
           <LazyMap
             isLoadingCurrentLocation={isLoadingLocation}

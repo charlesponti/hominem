@@ -1,4 +1,3 @@
-import { ArrowLeft } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useNavigate, useRouteLoaderData } from 'react-router'
 import ListForm from '~/components/lists/list-form'
@@ -46,18 +45,7 @@ export default function CreateListPage() {
   }, [supabase.auth])
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="mb-6">
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          Back to Dashboard
-        </button>
-      </div>
-
+    <div className="flex flex-col gap-4 w-full">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <ListForm
           onCreate={handleCreate}
@@ -72,9 +60,7 @@ export default function CreateListPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Save your list</DialogTitle>
-            <DialogDescription>
-              You need an account to create and manage lists.
-            </DialogDescription>
+            <DialogDescription>You need an account to create and manage lists.</DialogDescription>
           </DialogHeader>
           <div className="flex justify-center pt-4">
             <Button

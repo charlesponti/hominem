@@ -5,10 +5,10 @@ type AlertErrorProps = {
 }
 function AlertError({ error }: AlertErrorProps) {
   return (
-    <div className="alert alert-error shadow-lg mb-8">
-      <div>
-        <AlertTriangle className="h-6 w-6 flex-shrink-0 text-red-400" />
-        <span>
+    <div className="mb-8">
+      <div className="flex items-start gap-3 p-4 rounded-xl backdrop-blur-md border border-red-200 bg-red-50 text-red-800 animate-fadeIn">
+        <AlertTriangle className="size-6 shrink-0 text-red-400" />
+        <span className="text-sm">
           <p>Something went wrong! {error}</p>
         </span>
       </div>
