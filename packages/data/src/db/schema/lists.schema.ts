@@ -1,12 +1,13 @@
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
-  boolean,
   foreignKey,
   pgTable,
   primaryKey,
   text,
   timestamp,
   uuid,
+  boolean,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { item } from './items.schema'
 import { flight } from './travel.schema'
@@ -77,6 +78,9 @@ export const listInvite = pgTable(
     // The user who sent the invite.
     userId: uuid('userId').notNull(),
     acceptedAt: timestamp('acceptedAt', { precision: 3, mode: 'string' }),
+    token: text('token').default(sql`gen_random_uuid()`).notNull(),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
   (table) => [
     foreignKey({
@@ -104,6 +108,7 @@ export const listInvite = pgTable(
       columns: [table.listId, table.invitedUserEmail],
       name: 'list_invite_pkey',
     }),
+    uniqueIndex('list_invite_token_unique').on(table.token),
   ]
 )
 export type ListInviteSelect = typeof listInvite.$inferSelect

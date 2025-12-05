@@ -1,4 +1,3 @@
-import { Mail } from 'lucide-react'
 import { type SyntheticEvent, useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'
 import { Button } from '~/components/ui/button'
@@ -37,40 +36,31 @@ export default function ListInviteForm({ listId, onCreate }: ListInviteFormProps
   )
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-4">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-          <Mail className="w-5 h-5 text-indigo-600" />
-        </div>
-        <h2 className="text-xl font-semibold text-gray-900">Invite Someone</h2>
-      </div>
-
+    <div className="flex flex-col gap-3">
       {mutation.error && <Alert type="error">{mutation.error.message}</Alert>}
 
-      <form className="space-y-4" onSubmit={onFormSubmit}>
-        <div className="space-y-2">
-          <Label htmlFor={emailId} className="text-sm font-medium text-gray-900">
-            Email address
-          </Label>
-          <Input
-            id={emailId}
-            type="email"
-            name="email"
-            placeholder="colleague@example.com"
-            value={email}
-            onChange={onNameChange}
-          />
-        </div>
+      <form className="flex items-center gap-1" onSubmit={onFormSubmit}>
+        <Label htmlFor={emailId} className="sr-only">
+          Email address
+        </Label>
+        <Input
+          id={emailId}
+          type="email"
+          name="email"
+          placeholder="colleague@example.com"
+          value={email}
+          onChange={onNameChange}
+          className="flex-1 min-w-0"
+          autoComplete="email"
+        />
 
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
-            disabled={email.length === 0 || mutation.isPending}
-          >
-            {mutation.isPending ? 'Sending invitation...' : 'Send Invitation'}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-md shadow-sm transition-colors font-medium"
+          disabled={email.length === 0 || mutation.isPending}
+        >
+          <span>Invit{mutation.isPending ? <span className="fade-in">ing...</span> : 'e'}</span>
+        </Button>
       </form>
     </div>
   )

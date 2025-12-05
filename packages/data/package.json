@@ -34,6 +34,7 @@
     "clean": "rm -rf build tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "resend": "^4.0.1",
     "dotenv": "^16.4.7",
     "drizzle-orm": "0.44.7",
     "drizzle-zod": "^0.7.0",

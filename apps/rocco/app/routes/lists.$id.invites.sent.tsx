@@ -20,7 +20,7 @@ const ListSentInvites = () => {
   const navigate = useNavigate()
   const { user } = useRouteLoaderData('routes/layout') as LayoutLoaderData
   // TODO: Add outbound invites to tRPC router
-  const { data: outboundInvites = [] } = trpc.invites.getAll.useQuery()
+  const { data: outboundInvites = [] } = trpc.invites.getAll.useQuery(undefined)
   const data = outboundInvites
 
   if (user?.id) {

@@ -1,4 +1,4 @@
-import { item, list, place } from '@hominem/data'
+import { item, list, place, userLists } from '@hominem/data'
 import { and, eq, inArray, or, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { z } from 'zod'
@@ -144,13 +144,19 @@ export const placesRouter = router({
         const createdPlace = newPlace[0]
 
         if (listIds && listIds.length > 0) {
-          // Verify lists ownership
-          const userLists = await tx.query.list.findMany({
-            where: and(inArray(list.id, listIds), eq(list.userId, ctx.user.id)),
-            columns: { id: true },
-          })
+          // Verify lists the user owns or has shared access to
+          const accessibleLists = await tx
+            .select({ id: list.id })
+            .from(list)
+            .leftJoin(userLists, eq(userLists.listId, list.id))
+            .where(
+              and(
+                inArray(list.id, listIds),
+                or(eq(list.userId, ctx.user.id), eq(userLists.userId, ctx.user.id))
+              )
+            )
 
-          const validListIds = userLists.map((l) => l.id)
+          const validListIds = accessibleLists.map((l) => l.id)
 
           if (validListIds.length > 0) {
             await tx

@@ -4,8 +4,11 @@ import { vi } from 'vitest'
 process.env.NODE_ENV = 'test'
 
 // Mock external services that shouldn't be called in tests
-vi.mock('sendgrid', () => ({
-  setApiKey: vi.fn(),
-  send: vi.fn(),
-}))
-
+vi.mock('resend', () => {
+  const send = vi.fn()
+  return {
+    Resend: vi.fn(() => ({
+      emails: { send },
+    })),
+  }
+})

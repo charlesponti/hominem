@@ -69,6 +69,7 @@ export default function ListPage() {
   }
 
   const isOwner = data.userId === user?.id
+  const hasAccess = data.hasAccess ?? isOwner
   // Convert places to map markers
   const markers: PlaceLocation[] = (data.places || [])
     .filter((p) => Boolean(p.latitude && p.longitude))
@@ -115,7 +116,7 @@ export default function ListPage() {
                 places={data.places || []}
                 listId={data.id}
                 listName={data.name}
-                canAdd={isOwner}
+                canAdd={hasAccess}
                 onError={handleDeleteError}
               />
             )}

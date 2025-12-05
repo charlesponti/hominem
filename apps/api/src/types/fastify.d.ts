@@ -1,6 +1,5 @@
 import type { MultipartFile } from '@fastify/multipart'
 import type { User } from '@hominem/utils/schema'
-import type { MailService } from '@sendgrid/mail'
 import type { PerformanceService } from '../services/performance.service'
 
 declare module '@fastify/secure-session' {
@@ -21,7 +20,6 @@ declare module 'fastify' {
     redis: Redis
     performanceService: PerformanceService
     getUserId: (FastifyRequest) => string
-    sendgrid: MailService
     sendEmail: (email: string, subject: string, text: string, html: string) => Promise<void>
     sendEmailToken: (email: string, emailToken: string) => void
     jwt: {

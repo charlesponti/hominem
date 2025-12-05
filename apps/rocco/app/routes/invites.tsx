@@ -1,5 +1,5 @@
 import { Mail } from 'lucide-react'
-import { useLoaderData, useRevalidator } from 'react-router'
+import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
 import InviteListItem from '~/components/InviteListItem'
 import Loading from '~/components/loading'
 import type { InviteItem } from '~/lib/component-types'
@@ -8,8 +8,10 @@ import type { Route } from './+types/'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const trpcServer = createCaller(request)
-  const invites = await trpcServer.invites.getAll()
-  return { invites }
+  const url = new URL(request.url)
+  const token = url.searchParams.get('token') || undefined
+  const invites = await trpcServer.invites.getAll(token ? { token } : undefined)
+  return { invites, token }
 }
 
 export function HydrateFallback() {
@@ -21,8 +23,13 @@ export function HydrateFallback() {
 }
 
 const Invites = () => {
-  const { invites } = useLoaderData<typeof loader>()
+  const { invites, token } = useLoaderData<typeof loader>()
   const { revalidate } = useRevalidator()
+  const layoutData = useRouteLoaderData('routes/layout') as {
+    user: { email?: string } | null
+    isAuthenticated: boolean
+  }
+  const currentUserEmail = layoutData?.user?.email?.toLowerCase()
 
   const handleAccept = () => {
     revalidate()
@@ -45,6 +52,12 @@ const Invites = () => {
         </div>
       </div>
 
+      {token && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Invite loaded via secure link. Accepting will attach it to your current Google login.
+        </div>
+      )}
+
       {/* Empty State */}
       {(!invites || invites.length === 0) && (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white p-6 md:p-12 text-center">
@@ -65,6 +78,7 @@ const Invites = () => {
             <InviteListItem
               key={listInvite.listId}
               listInvite={listInvite}
+              currentUserEmail={currentUserEmail}
               onAccept={handleAccept}
             />
           ))}
