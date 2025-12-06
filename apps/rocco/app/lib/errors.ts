@@ -138,7 +138,6 @@ export function formatErrorResponse(error: unknown): {
   details?: unknown
 } {
   if (error instanceof TRPCError) {
-    console.error('TRPCError', error)
     return {
       message: error.message,
       code: error.code,
