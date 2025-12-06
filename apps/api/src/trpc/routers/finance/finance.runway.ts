@@ -1,4 +1,4 @@
-import { calculateRunway, calculateRunwayProjection } from '@hominem/utils/finance'
+import { calculateRunway, calculateRunwayProjection } from '@hominem/data/finance'
 import { z } from 'zod'
 import { publicProcedure } from '../../procedures.js'
 

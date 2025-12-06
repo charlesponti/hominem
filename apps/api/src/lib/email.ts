@@ -35,8 +35,8 @@ export const emailService = {
     const fromName = options.from?.name ?? env.SENDGRID_SENDER_NAME
     const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail
 
-    // Only send an email in prod. Log in development to not waste quota.
-    if (isDev) {
+    // Only send an email in prod. Otherwise, log to not waste quota.
+    if (isDev || isTest) {
       logger.info(`Email sent to: ${options.to}: ${options.text}`)
     } else {
       try {
@@ -57,7 +57,7 @@ export const emailService = {
           sender: fromEmail,
         })
       } catch (err) {
-        logger.error({ err, ...options }, 'Error sending email')
+        logger.error('Error sending email', { err, ...options })
         throw new Error('Error sending email')
       }
     }

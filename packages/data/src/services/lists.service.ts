@@ -846,6 +846,11 @@ export async function acceptListInvite(
       return { error: 'Invite already accepted.', status: 400 }
     }
 
+    const acceptingUser = await db.query.users.findFirst({ where: eq(users.id, acceptingUserId) })
+    if (!acceptingUser) {
+      return { error: 'User account required to accept invite.', status: 404 }
+    }
+
     const acceptedList = await db.transaction(async (tx) => {
       await tx
         .update(listInvite)

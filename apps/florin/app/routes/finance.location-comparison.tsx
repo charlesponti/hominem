@@ -2,7 +2,7 @@
 
 import type { SyncableEntity } from '@hominem/ui'
 import { useLocalData } from '@hominem/ui'
-import { calculateTakeHome, type StateTaxCode, stateTaxRates } from '@hominem/utils/finance-utils'
+import { calculateTakeHome, type StateTaxCode, stateTaxRates } from '@hominem/data/finance-utils'
 import { Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'

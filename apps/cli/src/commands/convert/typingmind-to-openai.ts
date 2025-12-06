@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { type nodeSchema, TypingMindExportSchema } from '@hominem/utils/services'
+import { type nodeSchema, TypingMindExportSchema } from '@hominem/data/services'
 import { Command } from 'commander'
 import { consola } from 'consola'
 import { z } from 'zod'

@@ -19,11 +19,10 @@ export async function clientLoader() {
 const ListSentInvites = () => {
   const navigate = useNavigate()
   const { user } = useRouteLoaderData('routes/layout') as LayoutLoaderData
-  // TODO: Add outbound invites to tRPC router
-  const { data: outboundInvites = [] } = trpc.invites.getAll.useQuery(undefined)
+  const { data: outboundInvites = [] } = trpc.invites.getAllOutbound.useQuery()
   const data = outboundInvites
 
-  if (user?.id) {
+  if (!user?.id) {
     navigate('/')
   }
 

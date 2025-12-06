@@ -1,4 +1,4 @@
-import { deleteAllFinanceData } from '@hominem/utils/finance'
+import { deleteAllFinanceData } from '@hominem/data/finance'
 import { protectedProcedure, router } from '../../procedures.js'
 
 // Data management tRPC router

@@ -1,5 +1,5 @@
 import type { MultipartFile } from '@fastify/multipart'
-import type { User } from '@hominem/utils/schema'
+import type { User } from '@hominem/data/schema'
 import type { PerformanceService } from '../services/performance.service'
 
 declare module '@fastify/secure-session' {

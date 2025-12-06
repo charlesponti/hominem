@@ -1,4 +1,4 @@
-import { travelPlanningTools } from '@hominem/utils/tools'
+import { travelPlanningTools } from '@hominem/data/tools'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { generateObject } from 'ai'
 import { z } from 'zod'

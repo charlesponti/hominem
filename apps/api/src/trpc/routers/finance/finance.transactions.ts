@@ -2,10 +2,9 @@ import { insertTransactionSchema, updateTransactionSchema } from '@hominem/data/
 import {
   createTransaction,
   deleteTransaction,
-  getAccountById,
   queryTransactions,
   updateTransaction,
-} from '@hominem/utils/finance'
+} from '@hominem/data/finance'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'
 

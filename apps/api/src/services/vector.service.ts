@@ -17,7 +17,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
 
     return response.data[0].embedding
   } catch (error) {
-    logger.error('Error generating embedding:', error)
+    logger.error('Error generating embedding:', { error })
     throw error
   }
 }
@@ -52,7 +52,7 @@ export namespace VectorService {
 
       return { recordsProcessed }
     } catch (error) {
-      logger.error('CSV processing error:', error)
+      logger.error('CSV processing error:', { error })
       throw error
     }
   }
@@ -186,7 +186,7 @@ export namespace VectorService {
         })),
       }
     } catch (error) {
-      logger.error('Vector query error:', error)
+      logger.error('Vector query error:', { error })
       throw error
     }
   }
@@ -236,7 +236,7 @@ export namespace VectorService {
 
       return { success: true, chunksProcessed: totalChunks }
     } catch (error) {
-      logger.error('Markdown ingestion error:', error)
+      logger.error('Markdown ingestion error:', { error })
       throw error
     }
   }
@@ -284,7 +284,7 @@ export namespace VectorService {
         })),
       }
     } catch (error) {
-      logger.error('User document search error:', error)
+      logger.error('User document search error:', { error })
       throw error
     }
   }
@@ -304,7 +304,7 @@ export namespace VectorService {
 
       return results
     } catch (error) {
-      logger.error('Get user documents error:', error)
+      logger.error('Get user documents error:', { error })
       throw error
     }
   }
@@ -324,7 +324,7 @@ export namespace VectorService {
 
       return { success: true }
     } catch (error) {
-      logger.error('Delete user documents error:', error)
+      logger.error('Delete user documents error:', { error })
       throw error
     }
   }

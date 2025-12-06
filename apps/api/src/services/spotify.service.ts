@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { db } from '@hominem/data'
 import { artists } from '@hominem/data/schema'
 import { redis, waitForRateLimit } from '@hominem/utils/redis'
-import type { Artist } from '@hominem/utils/types'
+import type { Artist } from '@hominem/data/schema'
 import axios from 'axios'
 import { sql } from 'drizzle-orm'
 

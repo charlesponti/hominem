@@ -1,13 +1,12 @@
 import { db } from '@hominem/data'
 import { transactions } from '@hominem/data/schema'
+import { buildWhereConditions, categoryBreakdownSchema } from '@hominem/data/finance'
 import {
-  buildWhereConditions,
   calculateTransactions,
-  categoryBreakdownSchema,
   findTopMerchants,
   generateTimeSeriesData,
   summarizeByCategory,
-} from '@hominem/utils/finance'
+} from '@hominem/data/finance'
 import { count, desc, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'
@@ -29,7 +28,6 @@ export const analyzeRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      // Use the service to generate time series data
       const result = await generateTimeSeriesData({
         from: input.from,
         to: input.to,

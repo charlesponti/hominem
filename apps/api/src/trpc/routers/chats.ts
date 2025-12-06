@@ -1,14 +1,32 @@
 import { openai } from '@ai-sdk/openai'
 import { ChatService, MessageService } from '@hominem/chat-service'
 import type { ChatMessageSelect } from '@hominem/data/schema'
-import { allTools, bindUserIdToTools } from '@hominem/utils/tools'
+import { allTools } from '@hominem/data/tools'
 import { TRPCError } from '@trpc/server'
+import type { Tool, ToolExecutionOptions, ToolSet } from 'ai'
 import { generateText, streamText } from 'ai'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures.js'
 
 const chatService = new ChatService()
 const messageService = new MessageService()
+
+const withUserContextTools = (tools: ToolSet, userId: string): ToolSet =>
+  Object.fromEntries(
+    Object.entries(tools).map(([name, tool]) => {
+      if (!tool || typeof tool.execute !== 'function') {
+        return [name, tool]
+      }
+
+      const wrappedTool: Tool = {
+        ...tool,
+        execute: async (args: Record<string, unknown>, options: ToolExecutionOptions) =>
+          tool.execute!({ ...args, userId }, options),
+      }
+
+      return [name, wrappedTool]
+    })
+  )
 
 export const chatsRouter = router({
   getUserChats: protectedProcedure
@@ -190,13 +208,12 @@ export const chatsRouter = router({
       try {
         const startTime = Date.now()
 
-        // Bind userId to tools that need it
-        const userBoundTools = bindUserIdToTools(allTools, userId)
+        const userContextTools = withUserContextTools(allTools, userId)
 
         // Generate AI response using messages format with tools
         const response = await generateText({
           model: openai('gpt-4.1'),
-          tools: userBoundTools,
+          tools: userContextTools,
           messages: [
             {
               role: 'user',
@@ -299,8 +316,7 @@ export const chatsRouter = router({
       try {
         const startTime = Date.now()
 
-        // Bind userId to tools that need it
-        const userBoundTools = bindUserIdToTools(allTools, userId)
+        const userContextTools = withUserContextTools(allTools, userId)
 
         // Save the user message first
         const userMessage = await messageService.addMessage({
@@ -313,7 +329,7 @@ export const chatsRouter = router({
         // Create a streaming response
         const stream = await streamText({
           model: openai('gpt-4.1'),
-          tools: userBoundTools,
+          tools: userContextTools,
           messages: [
             {
               role: 'user',

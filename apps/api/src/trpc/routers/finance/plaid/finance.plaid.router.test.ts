@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { financeTestSeed } from '@hominem/utils/finance'
+import { financeTestSeed } from '@hominem/data/finance'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 import {
   assertErrorResponse,

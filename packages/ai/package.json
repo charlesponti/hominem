@@ -17,13 +17,13 @@
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
-    "typescript": "5.7.3"
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.20",
     "@ai-sdk/openai": "^1.2.1",
     "@ai-sdk/openai-compatible": "^0.1.13",
-    "ai": "^4.1.54",
+    "ai": "^4.3.16",
     "ollama-ai-provider": "^1.2.0"
   }
 }

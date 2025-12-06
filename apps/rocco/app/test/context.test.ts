@@ -1,5 +1,5 @@
+import { createTestUser } from '@hominem/data/fixtures'
 import { users } from '@hominem/data/schema'
-import { createTestUser } from '@hominem/utils/test-fixtures'
 import { eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'

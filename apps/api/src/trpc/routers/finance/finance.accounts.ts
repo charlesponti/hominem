@@ -1,5 +1,4 @@
 import { db } from '@hominem/data'
-import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/data/schema'
 import {
   createAccount,
   deleteAccount,
@@ -7,7 +6,8 @@ import {
   listAccounts,
   listAccountsWithRecentTransactions,
   updateAccount,
-} from '@hominem/utils/finance'
+} from '@hominem/data/finance'
+import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/data/schema'
 import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'

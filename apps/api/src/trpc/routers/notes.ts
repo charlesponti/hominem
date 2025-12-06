@@ -1,5 +1,5 @@
 import { NoteContentTypeSchema, type NoteInsert, TaskMetadataSchema } from '@hominem/data/schema'
-import { NotesService } from '@hominem/utils/services'
+import { NotesService } from '@hominem/data/services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

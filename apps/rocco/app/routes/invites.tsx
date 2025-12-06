@@ -76,7 +76,7 @@ const Invites = () => {
         <ul className="space-y-4">
           {invites.map((listInvite: InviteItem) => (
             <InviteListItem
-              key={listInvite.listId}
+              key={`${listInvite.listId}-${listInvite.token}`}
               listInvite={listInvite}
               currentUserEmail={currentUserEmail}
               onAccept={handleAccept}

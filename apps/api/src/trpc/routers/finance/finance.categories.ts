@@ -1,4 +1,4 @@
-import { getSpendingCategories } from '@hominem/utils/finance'
+import { getSpendingCategories } from '@hominem/data/finance'
 import { Hono } from 'hono'
 import { protectedProcedure, router } from '../../procedures.js'
 

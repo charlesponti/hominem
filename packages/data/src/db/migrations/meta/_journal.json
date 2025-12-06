@@ -288,6 +288,13 @@
       "when": 1764890717018,
       "tag": "0040_common_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1764974330779,
+      "tag": "0041_fuzzy_dragon_man",
+      "breakpoints": true
     }
   ]
 }

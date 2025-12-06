@@ -13,7 +13,7 @@ import {
   deleteListInvite,
 } from './lists.service'
 import { and, eq } from 'drizzle-orm'
-import { createTestUser } from '../../../utils/test/fixtures'
+import { createTestUser } from '../fixtures'
 import { listInvite } from '../db/schema/lists.schema'
 
 vi.mock('../resend', () => ({
@@ -234,6 +234,9 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     }
 
     const accepted = await acceptListInvite(inviteListId, inviteeUserId, invite.token)
+    console.log({
+      users: await db.query.users.findMany().then((users) => users.map((u) => u.id)),
+    })
     if ('error' in accepted) {
       expect.fail(`Expected invite to be accepted, got error ${accepted.error}`)
     }

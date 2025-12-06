@@ -6,13 +6,12 @@ import {
   getAllBudgetCategories,
   getBudgetCategoriesWithSpending,
   getBudgetCategoryById,
-  getBudgetHistory,
   getBudgetTrackingData,
   getTransactionCategoriesAnalysis,
   getUserExpenseCategories,
   summarizeByMonth,
   updateBudgetCategory,
-} from '@hominem/utils/finance'
+} from '@hominem/data/finance'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'
 
@@ -114,26 +113,15 @@ export const budgetRouter = router({
       })
     }),
 
-  // Budget History - using new service layer with fallback to original implementation
   history: protectedProcedure
     .input(
       z.object({
         months: z.number().int().min(1).max(60).optional().default(12),
-        useLegacy: z.boolean().optional().default(false),
       })
     )
     .query(async ({ input, ctx }) => {
-      const { months, useLegacy } = input
+      const { months } = input
 
-      // Use new service layer by default
-      if (!useLegacy) {
-        return await getBudgetHistory({
-          userId: ctx.userId,
-          months: months,
-        })
-      }
-
-      // Fallback to original implementation
       const userExpenseCategories = await getUserExpenseCategories(ctx.userId)
 
       const totalMonthlyBudget = userExpenseCategories.reduce(

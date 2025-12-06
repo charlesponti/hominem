@@ -1,7 +1,7 @@
 import './env.ts'
 
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts'
-import { processTransactionsFromCSVBuffer } from '@hominem/utils/finance'
+import { processTransactionsFromCSVBuffer } from '@hominem/data/finance'
 import type {
   ImportTransactionsJob,
   ImportTransactionsQueuePayload,

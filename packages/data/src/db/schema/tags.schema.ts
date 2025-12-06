@@ -5,6 +5,8 @@ export const tags = pgTable('tags', {
   id: uuid('id').primaryKey(),
   name: text('name').notNull(),
   userId: uuid('user_id').references(() => users.id),
+  description: text('description'),
+  color: text('color'),
 })
 
 export type Tag = typeof tags.$inferSelect
