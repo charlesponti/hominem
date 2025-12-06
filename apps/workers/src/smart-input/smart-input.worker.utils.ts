@@ -3,7 +3,7 @@ import { logger } from '@hominem/utils/logger'
 import { generateObject, generateText } from 'ai'
 import type { Attachment } from 'mailparser'
 import type { Result as PDFParseResult } from 'pdf-parse'
-import { type SubmissionAttachment, SubmissionAttachmentSchema } from '../../lib/writer.schema'
+import { type SubmissionAttachment, SubmissionAttachmentSchema } from '../lib/writer.schema'
 
 const pdfParse = require('pdf-parse')
 

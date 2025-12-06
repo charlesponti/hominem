@@ -1,27 +1,19 @@
 import 'dotenv/config'
 
 import { openai } from '@ai-sdk/openai'
+import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
+import { redis } from '@hominem/utils/redis'
 import { generateObject } from 'ai'
+import { type Job, Worker } from 'bullmq'
 import { ZodError } from 'zod'
-import {
-  type Candidates,
-  CandidatesSchema,
-  type SubmissionAttachment,
-} from '../../lib/writer.schema'
+import { HealthService } from '../health.service'
+import { type Candidates, CandidatesSchema, type SubmissionAttachment } from '../lib/writer.schema'
 import { parseEmail, validateEmailBody } from '../services/email.service'
-import { processAttachments } from './smart-input-lambda.utils'
+import { processAttachments } from './smart-input.worker.utils'
 
-export interface LambdaEvent {
-  Records: [
-    {
-      ses: {
-        mail: {
-          content: string
-        }
-      }
-    },
-  ]
+export interface SmartInputJobData {
+  emailContent: string
 }
 
 export function mergeWriterData(writerData: Candidates, attachmentResults: SubmissionAttachment[]) {
@@ -45,12 +37,12 @@ export function mergeWriterData(writerData: Candidates, attachmentResults: Submi
   return results
 }
 
-export const handler = async (event: LambdaEvent) => {
-  try {
-    logger.info('Starting Lambda handler', { eventRecords: event.Records.length })
+export async function processSmartInputEmail(emailContent: string) {
+  logger.info('Starting smart input processing job')
 
+  try {
     logger.info('Starting email parsing...')
-    const email = await parseEmail(event)
+    const email = await parseEmail(emailContent)
     logger.info('Email parsed successfully', { attachmentCount: email.attachments?.length })
 
     logger.info('Starting email body validation...')
@@ -66,7 +58,7 @@ export const handler = async (event: LambdaEvent) => {
     logger.info('Starting attachment processing...')
     const candidateNames = writerData.candidates.map((c) => c.name)
     logger.debug('Processing attachments for candidates', { candidateNames })
-    const attachmentResults = await processAttachments(email.attachments, candidateNames)
+    const attachmentResults = await processAttachments(email.attachments ?? [], candidateNames)
     logger.info('Attachments processed successfully', { resultCount: attachmentResults.length })
 
     const writerDataWithAttachments = mergeWriterData(writerData, attachmentResults)
@@ -74,29 +66,15 @@ export const handler = async (event: LambdaEvent) => {
       finalResultCount: writerDataWithAttachments.length,
     })
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        writerDataWithAttachments,
-      }),
-    }
+    return writerDataWithAttachments
   } catch (error) {
-    logger.error('Lambda handler error', { error })
+    logger.error('Smart input processing error', { error })
 
     if (error instanceof ZodError) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          error: 'Invalid writer data format',
-          details: error.errors,
-        }),
-      }
+      throw new Error(`Invalid writer data format: ${JSON.stringify(error.errors)}`)
     }
 
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' }),
-    }
+    throw error
   }
 }
 
@@ -125,3 +103,55 @@ export async function processEmailBody(emailBody: string): Promise<Candidates> {
     throw error
   }
 }
+
+const CONCURRENCY = Number.parseInt(process.env.SMART_INPUT_CONCURRENCY ?? '1', 10)
+
+const processSmartInputJob = async (job: Job<SmartInputJobData>) => {
+  logger.info(`Processing smart input job ${job.id}`)
+  if (!job.data?.emailContent) {
+    throw new Error('emailContent is required to process smart input job')
+  }
+
+  const writerDataWithAttachments = await processSmartInputEmail(job.data.emailContent)
+  return { writerDataWithAttachments }
+}
+
+const smartInputWorker = new Worker<SmartInputJobData>(
+  QUEUE_NAMES.SMART_INPUT,
+  processSmartInputJob,
+  {
+    connection: redis,
+    concurrency: CONCURRENCY,
+  }
+)
+
+const smartInputHealth = new HealthService(smartInputWorker, 'Smart Input Worker')
+
+smartInputWorker.on('completed', (job) => {
+  logger.info(`Smart input job ${job.id} completed successfully`)
+})
+
+smartInputWorker.on('failed', (job, error) => {
+  logger.error(`Smart input job ${job?.id} failed`, { error, jobId: job?.id })
+})
+
+smartInputWorker.on('error', (error) => {
+  logger.error('Smart input worker error', { error })
+})
+
+let isSmartInputShuttingDown = false
+const handleSmartInputShutdown = async (signal: NodeJS.Signals) => {
+  if (isSmartInputShuttingDown) return
+  isSmartInputShuttingDown = true
+  logger.info(`Smart input worker received ${signal}, cleaning up...`)
+  try {
+    await smartInputWorker.close()
+    logger.info('Smart input worker closed successfully')
+    logger.info(smartInputHealth.getHealthSummary())
+  } catch (error) {
+    logger.error('Error during smart input worker shutdown', { error })
+  }
+}
+
+process.on('SIGTERM', () => void handleSmartInputShutdown('SIGTERM'))
+process.on('SIGINT', () => void handleSmartInputShutdown('SIGINT'))
