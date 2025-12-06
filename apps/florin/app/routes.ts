@@ -22,7 +22,6 @@ export default [
 
     // Finance tools
     route('finance/runway', 'routes/finance.runway.tsx'),
-    route('finance/location-comparison', 'routes/finance.location-comparison.tsx'),
     route('/account', 'routes/account.tsx'),
     route('/auth/signin', 'routes/auth/signin.tsx'),
     route('/auth/signup', 'routes/auth/signup.tsx'),
