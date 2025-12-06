@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import { createClient } from '~/lib/supabase/client'
 
 export default function Login() {

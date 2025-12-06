@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
+} from '@hominem/ui/components/ui/dropdown-menu'
 import type { ExtendedList } from '~/lib/types'
 
 interface ListItemProps {

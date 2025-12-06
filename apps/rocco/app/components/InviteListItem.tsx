@@ -1,7 +1,7 @@
 import { ArrowRight, ListCheck } from 'lucide-react'
 import { useCallback } from 'react'
 import { Link } from 'react-router'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import type { InviteItem } from '~/lib/component-types'
 import { trpc } from '~/lib/trpc/client'
 

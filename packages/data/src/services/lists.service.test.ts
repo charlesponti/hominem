@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { sendInviteEmail } from '../resend'
 import { db } from '../db'
 import { list, users, item as itemTable, userLists } from '../db/schema'
@@ -63,46 +63,6 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
 
     // Share the list with the shared user
     await db.insert(userLists).values({ listId, userId: sharedUserId }).onConflictDoNothing()
-  })
-
-  afterEach(async () => {
-    // Clean up items, user lists, lists and users
-    await db
-      .delete(itemTable)
-      .where(eq(itemTable.listId, listId))
-      .catch(() => {})
-    await db
-      .delete(userLists)
-      .where(eq(userLists.listId, listId))
-      .catch(() => {})
-    await db
-      .delete(list)
-      .where(eq(list.id, listId))
-      .catch(() => {})
-    await db
-      .delete(listInvite)
-      .where(eq(listInvite.listId, listId))
-      .catch(() => {})
-    await db
-      .delete(listInvite)
-      .where(eq(listInvite.listId, inviteListId))
-      .catch(() => {})
-    await db
-      .delete(list)
-      .where(eq(list.id, inviteListId))
-      .catch(() => {})
-    await db
-      .delete(users)
-      .where(eq(users.id, ownerId))
-      .catch(() => {})
-    await db
-      .delete(users)
-      .where(eq(users.id, sharedUserId))
-      .catch(() => {})
-    await db
-      .delete(users)
-      .where(eq(users.id, inviteeUserId))
-      .catch(() => {})
   })
 
   it('getOwnedLists should return lists owned by user (metadata only)', async () => {
@@ -234,9 +194,6 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     }
 
     const accepted = await acceptListInvite(inviteListId, inviteeUserId, invite.token)
-    console.log({
-      users: await db.query.users.findMany().then((users) => users.map((u) => u.id)),
-    })
     if ('error' in accepted) {
       expect.fail(`Expected invite to be accepted, got error ${accepted.error}`)
     }

@@ -17,12 +17,6 @@ export const tripsRouter = router({
         }
 
         const trips = await getAllTrips(ctx.user.id)
-
-        logger.info('Retrieved user trips', {
-          userId: ctx.user.id,
-          count: trips.length,
-        })
-
         return trips
       },
       'getAll trips',
@@ -51,15 +45,9 @@ export const tripsRouter = router({
             })
           }
 
-          logger.info('Retrieved trip by ID', {
-            tripId: input.id,
-            userId: ctx.user.id,
-            itemCount: trip.items?.length || 0,
-          })
-
           return trip
         },
-        'getById trip',
+        'trip.getById',
         { tripId: input.id, userId: ctx.user?.id }
       )
     }),
@@ -89,12 +77,6 @@ export const tripsRouter = router({
           throw new Error('Failed to create trip')
         }
 
-        logger.info('Created new trip', {
-          tripId: newTrip.id,
-          userId: ctx.user.id,
-          name: input.name,
-        })
-
         return newTrip
       } catch (error) {
         logger.error('Error creating trip', { error })
@@ -119,15 +101,9 @@ export const tripsRouter = router({
       try {
         const newTripItem = await addItemToTrip(input)
 
-        logger.info('Added item to trip', {
-          tripId: input.tripId,
-          itemId: input.itemId,
-          userId: ctx.user.id,
-        })
-
         return newTripItem
       } catch (error) {
-        logger.error('Error adding item to trip', { error })
+        logger.error('[trip.addItem]', { error })
         throw new Error('Failed to add item to trip')
       }
     }),

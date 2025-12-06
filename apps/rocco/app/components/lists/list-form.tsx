@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
 import { useCreateList } from '~/lib/trpc/api'
 import type { List } from '~/lib/types'
-import { Label } from '../ui/label'
 
 interface ListFormProps {
   onCreate: (list: List) => void

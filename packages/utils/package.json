@@ -9,17 +9,9 @@
       "import": "./src/supabase/index.ts",
       "require": "./dist/supabase/index.cjs"
     },
-    "./career": {
-      "import": "./src/career/index.ts",
-      "require": "./dist/career/index.cjs"
-    },
     "./consts": {
       "import": "./src/consts.ts",
       "require": "./dist/consts.cjs"
-    },
-    "./google-maps": {
-      "import": "./src/google/maps.ts",
-      "require": "./dist/google/maps.cjs"
     },
     "./imports": {
       "import": "./src/imports.helpers.ts",
@@ -44,10 +36,6 @@
     "./nlp": {
       "import": "./src/nlp/index.ts",
       "require": "./dist/nlp/index.cjs"
-    },
-    "./notes": {
-      "import": "./src/services/notes.service.ts",
-      "require": "./dist/services/notes.service.cjs"
     },
     "./redis": {
       "import": "./src/redis.ts",

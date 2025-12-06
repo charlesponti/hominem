@@ -12,6 +12,9 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"],
+      "@hominem/ui/components/ui/*": ["../../packages/ui/src/components/ui/*"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
       "@hominem/data/*": ["../../packages/data/src/*"]
     },
     "esModuleInterop": true,

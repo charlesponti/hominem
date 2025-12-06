@@ -21,7 +21,6 @@
 - Code: `apps/rocco/app/lib/trpc/routers/invites.ts` → `create` → `sendListInvite` in `packages/data/src/services/lists.service.ts`.
 - Email is lowercased and deduped per list (`listId` + `invitedUserEmail`).
 - Delivery: `sendListInvite` now calls `sendInviteEmail` (Resend) with a link built from `APP_BASE_URL`. If no base URL is set, the invite is still created but the email is skipped and a warning is logged.
-- Required env: `RESEND_API_KEY`, `SENDGRID_SENDER_EMAIL` (sender address), `APP_BASE_URL` for invite links.
 - Guards:
   - Cannot invite yourself (compare to requester email).
   - If invited user already belongs to the list, reject with conflict.

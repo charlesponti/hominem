@@ -1,6 +1,6 @@
 import { ArrowLeftIcon, ArrowRightIcon } from '@radix-ui/react-icons'
-import { Button } from 'app/components/ui/button'
-import { cn } from 'app/lib/utils'
+import { Button } from '~/components/ui/button'
+import { cn } from '~/lib/utils'
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
 import * as React from 'react'
 

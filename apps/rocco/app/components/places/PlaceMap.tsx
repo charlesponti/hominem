@@ -1,7 +1,7 @@
 import { ExternalLink, MapPin } from 'lucide-react'
 import { memo } from 'react'
 import { env } from '~/lib/env'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 
 type Props = {
   latitude: number

@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Outlet } from 'react-router'
 import Header from '~/components/header'
 import { LoadingScreen } from '~/components/loading'
-import { Toaster } from '~/components/ui/toaster'
+import { Toaster } from '@hominem/ui/components/ui/toaster'
 import { createClient } from '~/lib/supabase/server'
 import type { Route } from './+types/layout'
 

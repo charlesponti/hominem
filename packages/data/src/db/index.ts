@@ -9,17 +9,28 @@ const DATABASE_URL =
 
 let client: ReturnType<typeof postgres> | null = null
 let db: PostgresJsDatabase<typeof schema> | null = null
+let testDbOverride: PostgresJsDatabase<typeof schema> | null = null
 
-// Lazy initialization - only connect when db is actually accessed
-function getDb(): PostgresJsDatabase<typeof schema> {
-  if (!db) {
+function ensureClient(): ReturnType<typeof postgres> {
+  if (!client) {
     if (!DATABASE_URL) {
       throw new Error(
         'DATABASE_URL not provided. Set DATABASE_URL environment variable or NODE_ENV=test for test database.'
       )
     }
     client = postgres(DATABASE_URL)
-    db = drizzle(client, { schema })
+  }
+  return client
+}
+
+// Lazy initialization - only connect when db is actually accessed
+function getDb(): PostgresJsDatabase<typeof schema> {
+  if (testDbOverride) {
+    return testDbOverride
+  }
+  if (!db) {
+    const activeClient = ensureClient()
+    db = drizzle(activeClient, { schema })
   }
   return db
 }
@@ -32,6 +43,23 @@ const dbProxy = new Proxy({} as PostgresJsDatabase<typeof schema>, {
     return typeof value === 'function' ? value.bind(actualDb) : value
   },
 })
+
+export function setTestDb(override: PostgresJsDatabase<typeof schema> | null): void {
+  testDbOverride = override
+}
+
+export function getTestClient(): ReturnType<typeof postgres> {
+  return ensureClient()
+}
+
+export function getDatabaseUrl(): string {
+  if (!DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL not provided. Set DATABASE_URL environment variable or NODE_ENV=test for test database.'
+    )
+  }
+  return DATABASE_URL
+}
 
 export { client, dbProxy as db }
 

@@ -16,15 +16,15 @@ function getApiKey(): string {
 }
 
 function getFromEmail(): string {
-  const from = process.env.SENDGRID_SENDER_EMAIL || process.env.RESEND_FROM_EMAIL
+  const from = process.env.RESEND_FROM_EMAIL
   if (!from) {
-    throw new Error('SENDGRID_SENDER_EMAIL (or RESEND_FROM_EMAIL) is not set')
+    throw new Error('RESEND_FROM_EMAIL is not set')
   }
   return from
 }
 
 function formatFrom(fromEmail: string): string {
-  const name = process.env.SENDGRID_SENDER_NAME
+  const name = process.env.RESEND_FROM_NAME
   return name ? `${name} <${fromEmail}>` : fromEmail
 }
 
@@ -32,13 +32,10 @@ export async function sendInviteEmail({
   to,
   listName,
   inviteLink,
-  fromEmail,
 }: SendInviteEmailParams): Promise<void> {
   const resend = new Resend(getApiKey())
-
-  const from = formatFrom(fromEmail ?? getFromEmail())
+  const from = formatFrom(getFromEmail())
   const subject = `You've been invited to collaborate on "${listName}"`
-
   const text = [
     `You've been invited to collaborate on "${listName}".`,
     `Open this link to accept: ${inviteLink}`,

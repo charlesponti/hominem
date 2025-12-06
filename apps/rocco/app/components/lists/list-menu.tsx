@@ -6,7 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
+} from '@hominem/ui/components/ui/dropdown-menu'
 import type { List } from '~/lib/types'
 import ListEditSheet from './list-edit-sheet'
 

@@ -33,8 +33,8 @@ const envSchema = z.object({
   TWITTER_CLIENT_SECRET: z.string().default(''),
 
   RESEND_API_KEY: z.string().default(''),
-  SENDGRID_SENDER_EMAIL: z.string().default(''),
-  SENDGRID_SENDER_NAME: z.string().default(''),
+  RESEND_FROM_EMAIL: z.string().default(''),
+  RESEND_FROM_NAME: z.string().default(''),
 })
 
 export const env = new Proxy({} as z.infer<typeof envSchema>, {

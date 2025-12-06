@@ -531,6 +531,7 @@
         "@emotion/styled": "^11.13.0",
         "@headlessui/react": "^2.1.10",
         "@hominem/data": "workspace:*",
+        "@hominem/ui": "workspace:*",
         "@hominem/utils": "workspace:*",
         "@radix-ui/react-accordion": "^1.2.11",
         "@radix-ui/react-dialog": "^1.1.14",
@@ -727,20 +728,37 @@
       "name": "@hominem/ui",
       "version": "0.0.0",
       "dependencies": {
+        "@hominem/utils": "workspace:*",
+        "@radix-ui/react-accordion": "^1.2.11",
+        "@radix-ui/react-dialog": "^1.1.14",
+        "@radix-ui/react-dropdown-menu": "^2.1.15",
+        "@radix-ui/react-icons": "^1.3.2",
+        "@radix-ui/react-label": "^2.1.7",
+        "@radix-ui/react-popover": "^1.1.14",
+        "@radix-ui/react-progress": "^1.1.7",
+        "@radix-ui/react-radio-group": "^1.3.7",
+        "@radix-ui/react-slider": "^1.3.5",
+        "@radix-ui/react-slot": "^1.2.3",
+        "@radix-ui/react-tabs": "^1.1.12",
+        "@radix-ui/react-toast": "^1.2.14",
         "@supabase/supabase-js": "^2.49.8",
+        "@tanstack/react-query": "^5.59.9",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "cmdk": "^1.1.1",
+        "embla-carousel-react": "^8.6.0",
+        "lucide-react": "^0.534.0",
+        "tailwind-merge": "3.2.0",
+        "vaul": "^1.1.1",
       },
       "devDependencies": {
         "@hominem/tsconfigs": "workspace:*",
-        "@hominem/utils": "workspace:*",
-        "@supabase/supabase-js": "^2.49.8",
-        "@tanstack/react-query": "^5.71.1",
-        "lucide-react": "^0.484.0",
-        "react": "^18.2.0",
+        "react": "^19.2.0",
         "tsup": "^8.0.2",
         "typescript": "5.9.3",
       },
       "peerDependencies": {
-        "react": "^18.2.0",
+        "react": "^19.2.0",
       },
     },
     "packages/utils": {
@@ -4820,9 +4838,9 @@
 
     "@hominem/rocco/zod": ["zod@4.1.13", "", {}, "sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig=="],
 
-    "@hominem/ui/lucide-react": ["lucide-react@0.484.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-oZy8coK9kZzvqhSgfbGkPtTgyjpBvs3ukLgDPv14dSOZtBtboryWF5o8i3qen7QbGg7JhiJBz5mK1p8YoMZTLQ=="],
+    "@hominem/ui/lucide-react": ["lucide-react@0.534.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-4Bz7rujQ/mXHqCwjx09ih/Q9SCizz9CjBV5repw9YSHZZZaop9/Oj0RgCDt6WdEaeAPfbcZ8l2b4jzApStqgNw=="],
 
-    "@hominem/ui/react": ["react@18.3.1", "", { "dependencies": { "loose-envify": "^1.1.0" } }, "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ=="],
+    "@hominem/ui/tailwind-merge": ["tailwind-merge@3.2.0", "", {}, "sha512-FQT/OVqCD+7edmmJpsgCsY820RTD5AkBryuG5IUqR5YQZSdj5xlH5nLgH7YPths7WsLPSpSBNneJdM8aS8aeFA=="],
 
     "@hominem/utils/esbuild": ["esbuild@0.21.5", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.21.5", "@esbuild/android-arm": "0.21.5", "@esbuild/android-arm64": "0.21.5", "@esbuild/android-x64": "0.21.5", "@esbuild/darwin-arm64": "0.21.5", "@esbuild/darwin-x64": "0.21.5", "@esbuild/freebsd-arm64": "0.21.5", "@esbuild/freebsd-x64": "0.21.5", "@esbuild/linux-arm": "0.21.5", "@esbuild/linux-arm64": "0.21.5", "@esbuild/linux-ia32": "0.21.5", "@esbuild/linux-loong64": "0.21.5", "@esbuild/linux-mips64el": "0.21.5", "@esbuild/linux-ppc64": "0.21.5", "@esbuild/linux-riscv64": "0.21.5", "@esbuild/linux-s390x": "0.21.5", "@esbuild/linux-x64": "0.21.5", "@esbuild/netbsd-x64": "0.21.5", "@esbuild/openbsd-x64": "0.21.5", "@esbuild/sunos-x64": "0.21.5", "@esbuild/win32-arm64": "0.21.5", "@esbuild/win32-ia32": "0.21.5", "@esbuild/win32-x64": "0.21.5" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw=="],
 

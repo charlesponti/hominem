@@ -1,14 +1,14 @@
 import { useCallback, useState } from 'react'
 import { useNavigate, useRouteLoaderData } from 'react-router'
 import ListForm from '~/components/lists/list-form'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog'
+} from '@hominem/ui/components/ui/dialog'
 import { createClient } from '~/lib/supabase/client'
 import type { List } from '~/lib/types'
 

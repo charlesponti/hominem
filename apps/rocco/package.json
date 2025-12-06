@@ -28,6 +28,7 @@
     "@emotion/styled": "^11.13.0",
     "@headlessui/react": "^2.1.10",
     "@hominem/data": "workspace:*",
+    "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
