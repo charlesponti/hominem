@@ -18,7 +18,7 @@ This repo uses the following technologies:
   - application analytics: [*Segment*](https://segment.com/)
   - application monitoring: [*Sentry*](https://sentry.io/)
 - **Other**
-  - [*Sendgrid*](https://sendgrid.com/): Email delivery service
+  - [*Resend*](https://resend.com/): Email delivery service
 
 
 ## Application Features

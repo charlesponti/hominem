@@ -21,11 +21,9 @@ function PlacesAutocomplete({
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const DEBOUNCE_TIME_MS = 300 // Reduced for better UX
+  const DEBOUNCE_TIME_MS = 300
   const [debouncedValue, setDebouncedValue] = useState('')
-
-  // Add geolocation
-  const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
+  const { currentLocation } = useGeolocation()
 
   const onValueChange = useCallback((newValue: string) => {
     setValue(newValue)

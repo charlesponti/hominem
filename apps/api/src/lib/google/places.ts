@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs'
 import * as path from 'node:path'
-import type { PlaceInsert } from '@hominem/utils/types'
+import type { PlaceInsert } from '@hominem/data/types'
 import type { places_v1 } from 'googleapis'
 import fetch from 'node-fetch'
 import { env } from '../env.js'

@@ -17,14 +17,6 @@
       "import": "./src/consts.ts",
       "require": "./dist/consts.cjs"
     },
-    "./finance": {
-      "import": "./src/finance/index.ts",
-      "require": "./dist/finance/index.cjs"
-    },
-    "./finance-utils": {
-      "import": "./src/finance.utils.ts",
-      "require": "./dist/finance.utils.cjs"
-    },
     "./google-maps": {
       "import": "./src/google/maps.ts",
       "require": "./dist/google/maps.cjs"
@@ -85,10 +77,6 @@
       "import": "./src/time.ts",
       "require": "./dist/time.cjs"
     },
-    "./tools": {
-      "import": "./src/tools/index.ts",
-      "require": "./dist/tools/index.cjs"
-    },
     "./types": {
       "import": "./src/types/index.ts",
       "require": "./dist/types/index.cjs"
@@ -115,11 +103,9 @@
     "@ai-sdk/openai": "^1.1.9",
     "@hominem/ai": "workspace:*",
     "@hominem/data": "workspace:*",
-    "ai": "^4.1.54",
+    "ai": "^4.3.16",
     "cheerio": "^1.0.0",
     "compromise": "^14.14.4",
-    "csv-parse": "^5.6.0",
-    "csv-parser": "^3.2.0",
     "csvtojson": "^2.0.10",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
@@ -151,7 +137,7 @@
     "esbuild-node-externals": "^1.18.0",
     "esbuild-plugin-copy": "^2.1.1",
     "jsdom": "^26.0.0",
-    "typescript": "5.7.3",
+    "typescript": "5.9.3",
     "vfile": "^6.0.3",
     "vitest": "^3.0.6"
   }

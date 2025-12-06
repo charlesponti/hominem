@@ -6,7 +6,6 @@ import { Command } from 'commander'
 import { command as aiCommand } from './commands/ai'
 import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
-import { command as financeCommand } from './commands/finance'
 import { command as initCommand } from './commands/init'
 import { command as notesNotesCommand } from './commands/notes'
 import { command as notionCommand } from './commands/notion'
@@ -25,7 +24,6 @@ async function init() {
   program.addCommand(notesNotesCommand)
   program.addCommand(toolsCommand)
   program.addCommand(convertCommand)
-  program.addCommand(financeCommand)
   program.addCommand(notionCommand)
 
   program.parse(process.argv)

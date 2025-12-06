@@ -32,7 +32,7 @@ const envSchema = z.object({
   TWITTER_CLIENT_ID: z.string().default(''),
   TWITTER_CLIENT_SECRET: z.string().default(''),
 
-  SENDGRID_API_KEY: z.string().default(''),
+  RESEND_API_KEY: z.string().default(''),
   SENDGRID_SENDER_EMAIL: z.string().default(''),
   SENDGRID_SENDER_NAME: z.string().default(''),
 })

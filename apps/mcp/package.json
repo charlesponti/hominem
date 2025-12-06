@@ -16,18 +16,15 @@
     "start": "node src/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
     "format": "biome format ./src --fix",
-    "pretest": "bun run build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "pretest": "bun run build"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.1.17",
     "@browserbasehq/stagehand": "^2.4.0",
+    "@hominem/data": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.7.0",
-    "ai": "^4.1.54",
+    "ai": "^4.3.16",
     "axios": "1.8.4",
     "dotenv": "^16.5.0",
     "playwright": "^1.51.1",

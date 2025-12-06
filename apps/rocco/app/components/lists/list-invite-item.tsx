@@ -18,9 +18,9 @@ function ListInviteItem({
   const acceptInvite = useCallback(async () => {
     await mutation.mutateAsync({
       listId: invite.listId,
-      invitedUserEmail: invite.invitedUserEmail,
+      token: invite.token,
     })
-  }, [invite.listId, invite.invitedUserEmail, mutation])
+  }, [invite.listId, invite.token, mutation])
 
   return (
     <li className="flex items-center justify-between gap-4 p-4">

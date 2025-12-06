@@ -26,12 +26,12 @@ async function loadListsWithPlaces(userId: string) {
 
   const ownedListsWithPlaces = ownedLists.map((listData) => {
     const places = placesMap.get(listData.id) || []
-    return formatList(listData, places, true)
+    return formatList(listData, places, true, true)
   })
 
   const sharedListsWithPlaces = sharedUserLists.map((listData) => {
     const places = placesMap.get(listData.id) || []
-    return formatList(listData, places, false)
+    return formatList(listData, places, false, true)
   })
 
   return {

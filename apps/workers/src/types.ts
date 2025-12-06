@@ -1,4 +1,4 @@
-import type { BaseJob, ImportTransactionsJob } from '@hominem/utils/types'
+import type { BaseJob, ImportTransactionsJob } from '@hominem/utils/jobs/types'
 
 /**
  * Job status update result

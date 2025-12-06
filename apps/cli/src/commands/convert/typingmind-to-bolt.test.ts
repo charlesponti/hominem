@@ -1,4 +1,4 @@
-import { BoltExportSchema } from '@hominem/utils/services'
+import { BoltExportSchema } from '@hominem/data/services'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { z } from 'zod'
 import { readFileSyncMock, writeFileSyncMock } from '../../../vitest.setup.js'

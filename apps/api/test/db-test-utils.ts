@@ -1,8 +1,8 @@
 import { db } from '@hominem/data'
-import { eq } from 'drizzle-orm'
+import { createTestUser as createTestUserShared } from '@hominem/data/fixtures'
 import { bookmark, users } from '@hominem/data/schema'
+import { eq } from 'drizzle-orm'
 import { vi } from 'vitest'
-import { createTestUser as createTestUserShared } from '@hominem/utils/test-fixtures'
 
 // Track created test users for cleanup
 const createdTestUsers: string[] = []

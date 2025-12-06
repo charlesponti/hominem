@@ -3,9 +3,6 @@ import { z } from 'zod'
 import { getAuthenticatedClient, handleApiError } from '../utils/auth.utils.js'
 
 export function registerNotesTool(server: McpServer) {
-  // Lazy initialize the API client - only create it when a tool is actually called
-  const getApiClient = () => getAuthenticatedClient()
-
   server.tool(
     'create_note',
     {
@@ -18,7 +15,7 @@ export function registerNotesTool(server: McpServer) {
     },
     async ({ input }) => {
       try {
-        const response = await getApiClient().post('/trpc/notes.create', input)
+        const response = await getAuthenticatedClient().post('/trpc/notes.create', input)
         return {
           content: [
             {
@@ -40,7 +37,7 @@ export function registerNotesTool(server: McpServer) {
     },
     async () => {
       try {
-        const response = await getApiClient().get('/trpc/notes.list')
+        const response = await getAuthenticatedClient().get('/trpc/notes.list')
         return {
           content: [
             {

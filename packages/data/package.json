@@ -13,9 +13,25 @@
       "import": "./src/db/index.ts",
       "require": "./dist/db/index.cjs"
     },
+    "./finance": {
+      "import": "./src/finance/index.ts",
+      "require": "./dist/finance/index.cjs"
+    },
+    "./fixtures": {
+      "import": "./src/fixtures.ts",
+      "require": "./dist/fixtures.cjs"
+    },
     "./schema": {
       "import": "./src/db/schema/index.ts",
       "require": "./dist/db/schema/index.cjs"
+    },
+    "./tools": {
+      "import": "./src/tools/index.ts",
+      "require": "./dist/tools/index.cjs"
+    },
+    "./services": {
+      "import": "./src/services/index.ts",
+      "require": "./dist/services/index.cjs"
     },
     "./types": {
       "import": "./src/types.ts",
@@ -25,6 +41,7 @@
   "scripts": {
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate-test": "DATABASE_URL=postgres://postgres:postgres@localhost:4433/hominem-test drizzle-kit migrate",
     "db:update": "drizzle-kit generate && drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
     "test": "vitest run --passWithNoTests",
@@ -34,18 +51,22 @@
     "clean": "rm -rf build tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.2.12",
+    "ai": "^4.3.16",
+    "csv-parse": "^5.6.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "0.44.7",
     "drizzle-zod": "^0.7.0",
     "pino": "^9.7.0",
     "postgres": "^3.4.5",
+    "resend": "^4.0.1",
     "zod": "^3.24.3"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "esbuild": "^0.21.5",
     "esbuild-node-externals": "^1.18.0",
-    "typescript": "5.7.3",
+    "typescript": "5.9.3",
     "vitest": "^3.0.6"
   }
 }

@@ -126,23 +126,22 @@ export const createAWSMocks = () => {
 }
 
 /**
- * Email service mocks (SendGrid)
+ * Email service mocks (Resend)
  */
 export const createEmailMocks = () => {
-  const sendMail = vi.fn()
-  const setApiKey = vi.fn()
+  const send = vi.fn()
 
-  const mockSendGridLib = () => {
-    vi.mock('@sendgrid/mail', () => ({
-      setApiKey,
-      send: sendMail,
+  const mockResendLib = () => {
+    vi.mock('resend', () => ({
+      Resend: vi.fn(() => ({
+        emails: { send },
+      })),
     }))
   }
 
   return {
-    sendMail,
-    setApiKey,
-    mockSendGridLib,
+    send,
+    mockResendLib,
   }
 }
 
@@ -233,7 +232,7 @@ export const setupAllExternalMocks = () => {
   stripe.mockStripeLib()
   openai.mockOpenAILib()
   aws.mockAWSLib()
-  email.mockSendGridLib()
+  email.mockResendLib()
   google.mockGoogleLib()
   queues.mockBullLib()
 

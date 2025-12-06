@@ -11,10 +11,14 @@ process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret'
 
 // Redis is running in Docker for tests - no mocking needed
 
-vi.mock('sendgrid', () => ({
-  setApiKey: vi.fn(),
-  send: vi.fn(),
-}))
+vi.mock('resend', () => {
+  const send = vi.fn()
+  return {
+    Resend: vi.fn(() => ({
+      emails: { send },
+    })),
+  }
+})
 
 vi.mock('../src/analytics', () => ({
   track: vi.fn(),

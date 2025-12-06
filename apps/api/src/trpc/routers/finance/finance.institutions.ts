@@ -2,14 +2,12 @@ import { db } from '@hominem/data'
 import { financialInstitutions, plaidItems } from '@hominem/data/schema'
 import {
   createInstitution,
-  getAccountById,
   getAllInstitutions,
   getInstitution,
   getInstitutionAccounts,
   getUserAccounts,
   getUserInstitutionConnections,
-  updateAccount,
-} from '@hominem/utils/finance'
+} from '@hominem/data/finance'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'

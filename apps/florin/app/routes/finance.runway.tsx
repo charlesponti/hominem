@@ -1,5 +1,3 @@
-'use client'
-
 import { AlertTriangle, Calendar, DollarSign, TrendingDown } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import {
@@ -42,7 +40,6 @@ export default function RunwayPage() {
     date: '',
   })
 
-  // TRPC mutation for runway calculation
   const runwayMutation = trpc.finance.runway.useMutation()
 
   const chartData = useMemo(() => {

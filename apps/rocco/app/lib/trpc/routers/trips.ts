@@ -1,4 +1,4 @@
-import { addItemToTrip, createTrip, getAllTrips, getTripById } from '@hominem/data'
+import { addItemToTrip, createTrip, getAllTrips, getTripById } from '@hominem/data/services'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { safeAsync } from '../../errors'

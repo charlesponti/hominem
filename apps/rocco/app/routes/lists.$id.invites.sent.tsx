@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import { Link, useNavigate, useRouteLoaderData } from 'react-router'
+import { Link, Navigate, useRouteLoaderData } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
 
 interface LayoutLoaderData {
@@ -17,14 +17,14 @@ export async function clientLoader() {
 }
 
 const ListSentInvites = () => {
-  const navigate = useNavigate()
   const { user } = useRouteLoaderData('routes/layout') as LayoutLoaderData
-  // TODO: Add outbound invites to tRPC router
-  const { data: outboundInvites = [] } = trpc.invites.getAll.useQuery()
+  const { data: outboundInvites = [] } = trpc.invites.getAllOutbound.useQuery(undefined, {
+    enabled: Boolean(user?.id),
+  })
   const data = outboundInvites
 
-  if (user?.id) {
-    navigate('/')
+  if (!user?.id) {
+    return <Navigate to="/" replace />
   }
 
   return (

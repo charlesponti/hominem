@@ -82,7 +82,7 @@ export function toTRPCError(error: unknown): TRPCError {
   }
 
   if (error instanceof DatabaseError) {
-    logger.error('Database error converted to tRPC error', { error })
+    logger.error('Database error converted to tRPC error', { error }, error)
     return new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Database operation failed',
@@ -90,7 +90,7 @@ export function toTRPCError(error: unknown): TRPCError {
   }
 
   if (error instanceof ExternalServiceError) {
-    logger.error('External service error converted to tRPC error', { error })
+    logger.error('External service error converted to tRPC error', { error }, error)
     return new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: `${error.service} service unavailable`,
@@ -98,7 +98,7 @@ export function toTRPCError(error: unknown): TRPCError {
   }
 
   if (error instanceof Error) {
-    logger.error('Unknown error converted to tRPC error', { error })
+    logger.error('Unknown error converted to tRPC error', { error }, error)
     return new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'An unexpected error occurred',
@@ -119,10 +119,14 @@ export function safeAsync<T>(
   context?: Record<string, unknown>
 ): Promise<T> {
   return fn().catch((error) => {
-    logger.error(`Error in ${operation}`, {
-      ...context,
-      error: error as Error,
-    })
+    logger.error(
+      `Error in ${operation}`,
+      {
+        ...context,
+        error: error as Error,
+      },
+      error as Error
+    )
     throw toTRPCError(error)
   })
 }

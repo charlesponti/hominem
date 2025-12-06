@@ -20,7 +20,18 @@ export default function ListInvites() {
     refetch: getInvites,
     isLoading: isLoadingInvites,
   } = trpc.invites.getByList.useQuery({ listId })
+  const deleteInvite = trpc.invites.delete.useMutation()
   const onInviteSuccess = useCallback(() => getInvites(), [getInvites])
+  const onDeleteInvite = useCallback(
+    async (invitedUserEmail: string) => {
+      const confirmed = window.confirm(`Remove invite for ${invitedUserEmail}?`)
+      if (!confirmed) return
+
+      await deleteInvite.mutateAsync({ listId, invitedUserEmail })
+      await getInvites()
+    },
+    [deleteInvite, getInvites, listId]
+  )
 
   if (isLoadingInvites) {
     return <LoadingScreen />
@@ -85,9 +96,19 @@ export default function ListInvites() {
                     Accepted
                   </span>
                 ) : (
-                  <span className="px-3 py-1 text-sm font-medium text-amber-700 bg-amber-100 rounded-full">
-                    Pending
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 text-sm font-medium text-amber-700 bg-amber-100 rounded-full">
+                      Pending
+                    </span>
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-red-600 hover:text-red-700 disabled:text-red-300"
+                      onClick={() => onDeleteInvite(invitedUserEmail)}
+                      disabled={deleteInvite.isPending}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 )}
               </li>
             ))}

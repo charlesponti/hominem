@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { and, count, desc, eq, inArray } from 'drizzle-orm'
 import { db, takeUniqueOrThrow } from '../db'
 import {
@@ -10,6 +11,7 @@ import {
   type ListInviteSelect,
   type ListSelect,
 } from '../db/schema'
+import { sendInviteEmail } from '../resend'
 import { logger } from '../logger'
 
 export interface ListUser {
@@ -30,6 +32,7 @@ export interface List {
   userId: string
   createdBy: { id: string; email: string; name: string | null } | null
   isOwnList?: boolean
+  hasAccess?: boolean
   places: ListPlace[]
   isPublic: boolean
   users?: ListUser[]
@@ -433,7 +436,8 @@ export async function getOwnedListsWithItemCount(
 export function formatList(
   listData: ListWithSpreadOwner,
   places: ListPlace[],
-  isOwn: boolean
+  isOwn: boolean,
+  hasAccess?: boolean
 ): List {
   return {
     id: listData.id,
@@ -448,6 +452,7 @@ export function formatList(
         }
       : null,
     isOwnList: isOwn,
+    hasAccess: hasAccess ?? isOwn,
     places: places || [],
     isPublic: listData.isPublic ?? false,
     createdAt: listData.createdAt,
@@ -572,7 +577,18 @@ export async function getListById(id: string, userId?: string | null): Promise<L
     }
 
     const places = await getListPlaces(id)
-    return formatList(listDataForFormat, places, listDataForFormat.userId === userId)
+
+    const isOwnList = listDataForFormat.userId === userId
+    let hasAccess = isOwnList
+
+    if (!hasAccess && userId) {
+      const sharedAccess = await db.query.userLists.findFirst({
+        where: and(eq(userLists.listId, id), eq(userLists.userId, userId)),
+      })
+      hasAccess = Boolean(sharedAccess)
+    }
+
+    return formatList(listDataForFormat, places, isOwnList, hasAccess)
   } catch (error) {
     console.error(`Error fetching list ${id}:`, error)
     return null
@@ -722,6 +738,7 @@ export async function sendListInvite(
   invitingUserId: string
 ): Promise<ListInviteSelect | { error: string; status: number }> {
   try {
+    const normalizedInvitedEmail = invitedUserEmail.toLowerCase()
     const listRecord = await db.query.list.findFirst({
       where: eq(list.id, listId),
     })
@@ -731,28 +748,62 @@ export async function sendListInvite(
     }
 
     const existingInvite = await db.query.listInvite.findFirst({
-      where: and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, invitedUserEmail)),
+      where: and(
+        eq(listInvite.listId, listId),
+        eq(listInvite.invitedUserEmail, normalizedInvitedEmail)
+      ),
     })
 
     if (existingInvite) {
       return { error: 'An invite for this email address to this list already exists.', status: 409 }
     }
 
+    const token = crypto.randomBytes(32).toString('hex')
+
     const invitedUserRecord = await db.query.users.findFirst({
-      where: eq(users.email, invitedUserEmail),
+      where: eq(users.email, normalizedInvitedEmail),
     })
 
     const createdInvite = await db
       .insert(listInvite)
       .values({
         listId: listId,
-        invitedUserEmail: invitedUserEmail,
+        invitedUserEmail: normalizedInvitedEmail,
         invitedUserId: invitedUserRecord?.id || null,
         accepted: false,
         userId: invitingUserId,
+        token,
       })
       .returning()
       .then(takeUniqueOrThrow)
+
+    const baseUrl = process.env.APP_BASE_URL || ''
+    const inviteLink = baseUrl
+      ? `${baseUrl.replace(/\/$/, '')}/invites?token=${token}&listId=${listId}`
+      : ''
+
+    if (!inviteLink) {
+      logger.warn('Invite created but APP_BASE_URL not set; email not sent', {
+        listId,
+        invitedUserEmail: normalizedInvitedEmail,
+      })
+      return createdInvite
+    }
+
+    try {
+      await sendInviteEmail({
+        to: normalizedInvitedEmail,
+        listName: listRecord.name,
+        inviteLink,
+      })
+    } catch (error) {
+      logger.error('Invite email failed to send', {
+        listId,
+        invitedUserEmail: normalizedInvitedEmail,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+
     return createdInvite
   } catch (error) {
     console.error(`Error creating list invite for list ${listId} by user ${invitingUserId}:`, error)
@@ -770,44 +821,46 @@ export async function sendListInvite(
  * Accepts a list invite.
  * @param listId - The ID of the list from the invite.
  * @param acceptingUserId - The ID of the user accepting the invite.
- * @param acceptingUserEmail - The email of the user accepting the invite.
+ * @param token - The invite token used for verification.
  * @returns The list object if successful, or an error string.
  */
 export async function acceptListInvite(
   listId: string,
   acceptingUserId: string,
-  acceptingUserEmail: string
+  token: string
 ): Promise<ListSelect | { error: string; status: number }> {
   try {
     const invite = await db.query.listInvite.findFirst({
-      where: and(
-        eq(listInvite.listId, listId),
-        eq(listInvite.invitedUserEmail, acceptingUserEmail)
-      ),
+      where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
     })
 
     if (!invite) {
       return { error: 'Invite not found.', status: 404 }
     }
 
+    if (invite.invitedUserId && invite.invitedUserId !== acceptingUserId) {
+      return { error: 'Invite belongs to another user.', status: 403 }
+    }
+
     if (invite.accepted) {
       return { error: 'Invite already accepted.', status: 400 }
     }
 
-    if (invite.invitedUserEmail !== acceptingUserEmail) {
-      return { error: 'Forbidden.', status: 403 }
+    const acceptingUser = await db.query.users.findFirst({ where: eq(users.id, acceptingUserId) })
+    if (!acceptingUser) {
+      return { error: 'User account required to accept invite.', status: 404 }
     }
 
     const acceptedList = await db.transaction(async (tx) => {
       await tx
         .update(listInvite)
-        .set({ accepted: true, acceptedAt: new Date().toISOString() })
-        .where(
-          and(
-            eq(listInvite.listId, invite.listId),
-            eq(listInvite.invitedUserEmail, invite.invitedUserEmail)
-          )
-        )
+        .set({
+          accepted: true,
+          acceptedAt: new Date().toISOString(),
+          invitedUserId: acceptingUserId,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(and(eq(listInvite.listId, invite.listId), eq(listInvite.token, invite.token)))
 
       await tx
         .insert(userLists)
@@ -831,5 +884,55 @@ export async function acceptListInvite(
       error
     )
     return { error: 'Failed to accept invite.', status: 500 }
+  }
+}
+
+/**
+ * Deletes a pending invite for a list owned by the requesting user.
+ */
+export async function deleteListInvite({
+  listId,
+  invitedUserEmail,
+  userId,
+}: {
+  listId: string
+  invitedUserEmail: string
+  userId: string
+}): Promise<{ success: true } | { error: string; status: number }> {
+  try {
+    const normalizedEmail = invitedUserEmail.toLowerCase()
+
+    // Ensure the requester owns the list
+    const listRecord = await db.query.list.findFirst({
+      where: and(eq(list.id, listId), eq(list.userId, userId)),
+    })
+
+    if (!listRecord) {
+      return { error: 'List not found or you do not own this list.', status: 403 }
+    }
+
+    const invite = await db.query.listInvite.findFirst({
+      where: and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, normalizedEmail)),
+    })
+
+    if (!invite) {
+      return { error: 'Invite not found.', status: 404 }
+    }
+
+    if (invite.accepted) {
+      return { error: 'Invite has already been accepted and cannot be deleted.', status: 400 }
+    }
+
+    await db
+      .delete(listInvite)
+      .where(and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, normalizedEmail)))
+
+    return { success: true }
+  } catch (error) {
+    console.error(
+      `Error deleting list invite for list ${listId} by user ${userId} for ${invitedUserEmail}:`,
+      error
+    )
+    return { error: 'Failed to delete invite.', status: 500 }
   }
 }

@@ -114,6 +114,7 @@ export type GooglePlaceDetailsResponse = {
 // Extended types for frontend use
 export interface ExtendedList extends List {
   isOwnList?: boolean
+  hasAccess?: boolean
   places?: Item[]
   itemCount?: number
 }

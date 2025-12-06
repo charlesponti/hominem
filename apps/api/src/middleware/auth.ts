@@ -1,5 +1,5 @@
-import { db } from '@hominem/utils/db'
-import { users } from '@hominem/utils/schema'
+import { db } from '@hominem/data'
+import { users } from '@hominem/data/schema'
 import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'

@@ -20,6 +20,7 @@ export const eventTypeEnum = pgEnum('event_type', [
   'Movies',
   'Reading',
 ])
+export type EventTypeEnum = (typeof eventTypeEnum.enumValues)[number]
 
 export const events = pgTable('events', {
   id: uuid('id').primaryKey(),

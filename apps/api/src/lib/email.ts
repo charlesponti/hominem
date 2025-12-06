@@ -1,22 +1,16 @@
 import { logger } from '@hominem/utils/logger'
-import sendgrid, { type MailDataRequired } from '@sendgrid/mail'
+import { Resend } from 'resend'
 import { env } from './env.js'
 
 const isDev = env.NODE_ENV === 'development'
+const isTest = env.NODE_ENV === 'test'
 
-// Initialize SendGrid
-function initializeEmailService() {
-  if (!env.SENDGRID_API_KEY) {
-    logger.error('The SENDGRID_API_KEY env var must be set, otherwise the API cannot send emails.')
-    process.exit(1)
-  }
-
-  // Set SendGrid API key
-  sendgrid.setApiKey(env.SENDGRID_API_KEY)
+if (!env.RESEND_API_KEY && !isDev && !isTest) {
+  logger.error('The RESEND_API_KEY env var must be set, otherwise the API cannot send emails.')
+  process.exit(1)
 }
 
-// Initialize on module load
-initializeEmailService()
+const resend = new Resend(env.RESEND_API_KEY || 'test-resend-key')
 
 export interface EmailOptions {
   to: string
@@ -37,29 +31,33 @@ export const emailService = {
    * Send a generic email
    */
   async sendEmail(options: EmailOptions): Promise<void> {
-    const msg: MailDataRequired = {
-      to: options.to,
-      from: options.from || {
-        email: env.SENDGRID_SENDER_EMAIL,
-        name: env.SENDGRID_SENDER_NAME,
-      },
-      subject: options.subject,
-      text: options.text,
-      html: options.html,
-    }
+    const fromEmail = options.from?.email ?? env.SENDGRID_SENDER_EMAIL
+    const fromName = options.from?.name ?? env.SENDGRID_SENDER_NAME
+    const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail
 
-    // Only send an email in prod. Log in development to not waste SendGrid email quota.
-    if (isDev) {
+    // Only send an email in prod. Otherwise, log to not waste quota.
+    if (isDev || isTest) {
       logger.info(`Email sent to: ${options.to}: ${options.text}`)
     } else {
       try {
-        await sendgrid.send(msg)
+        const result = await resend.emails.send({
+          to: options.to,
+          from,
+          subject: options.subject,
+          text: options.text,
+          html: options.html,
+        })
+
+        if (result.error) {
+          throw result.error
+        }
+
         logger.info('Email sent', {
           receiver: options.to,
-          sender: env.SENDGRID_SENDER_EMAIL,
+          sender: fromEmail,
         })
       } catch (err) {
-        logger.error({ err, ...options }, 'Error sending email')
+        logger.error('Error sending email', { err, ...options })
         throw new Error('Error sending email')
       }
     }
@@ -69,12 +67,8 @@ export const emailService = {
    * Send an authentication token email
    */
   async sendEmailToken(email: string, token: string): Promise<void> {
-    const msg: MailDataRequired = {
+    await this.sendEmail({
       to: email,
-      from: {
-        email: env.SENDGRID_SENDER_EMAIL,
-        name: env.SENDGRID_SENDER_NAME,
-      },
       subject: 'Your Ponti Studios login token',
       text: `The login token for the API is: ${token}`,
       html: `
@@ -85,21 +79,7 @@ export const emailService = {
           <p>The login token for the API is: ${token}</p>
         </div>
       `,
-    }
-
-    // Log the email token in development to not expend SendGrid email quota
-    if (isDev) {
-      logger.info(`Email token for ${email}: ${token}`)
-      return
-    }
-
-    try {
-      await sendgrid.send(msg)
-      logger.info(`sending email token to ${email} from ${env.SENDGRID_SENDER_EMAIL}`)
-    } catch (err) {
-      logger.error({ err, email, token }, 'Error sending email token')
-      throw new Error('Error sending email')
-    }
+    })
   },
 
   /**

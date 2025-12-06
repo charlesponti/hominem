@@ -9,7 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "composite": true,
-    "declaration": false,
+    "declaration": true,
     "downlevelIteration": true,
     "noImplicitAny": false,
     "lib": ["dom"],

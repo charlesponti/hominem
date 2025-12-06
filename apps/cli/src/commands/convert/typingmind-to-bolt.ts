@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { BoltExportSchema, TypingMindExportSchema } from '@hominem/utils/services'
+import { BoltExportSchema, TypingMindExportSchema } from '@hominem/data/services'
 import { Command } from 'commander'
 import { consola } from 'consola'
 import type { z } from 'zod'

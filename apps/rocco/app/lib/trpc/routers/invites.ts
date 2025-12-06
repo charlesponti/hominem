@@ -1,33 +1,61 @@
 import {
   acceptListInvite as acceptListInviteService,
   getListInvites as getListInvitesService,
+  deleteListInvite as deleteListInviteService,
   sendListInvite as sendListInviteService,
 } from '@hominem/data'
 import { list, listInvite, userLists, users } from '@hominem/data/db/schema/index'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, or } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../context'
 
 export const invitesRouter = router({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'User not found in context',
+  getAll: protectedProcedure
+    .input(
+      z
+        .object({
+          token: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'User not found in context',
+        })
+      }
+
+      const normalizedEmail = ctx.user.email?.toLowerCase()
+      const tokenFilter = input?.token
+      const ownershipClause = normalizedEmail
+        ? or(
+            eq(listInvite.invitedUserId, ctx.user.id),
+            eq(listInvite.invitedUserEmail, normalizedEmail)
+          )
+        : eq(listInvite.invitedUserId, ctx.user.id)
+      const whereClause = tokenFilter
+        ? and(eq(listInvite.token, tokenFilter), ownershipClause)
+        : ownershipClause
+
+      // Query invites with related list data in a single request
+      const userInvites = await ctx.db.query.listInvite.findMany({
+        where: whereClause,
+        with: {
+          list: true, // Include the related list data
+        },
       })
-    }
 
-    // Query invites with related list data in a single request
-    const userInvites = await ctx.db.query.listInvite.findMany({
-      where: eq(listInvite.invitedUserEmail, ctx.user.email),
-      with: {
-        list: true, // Include the related list data
-      },
-    })
+      if (tokenFilter && userInvites.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invite not found',
+        })
+      }
 
-    return userInvites
-  }),
+      return userInvites
+    }),
 
   // Get invites sent by the current user (outbound)
   getAllOutbound: protectedProcedure.query(async ({ ctx }) => {
@@ -95,8 +123,10 @@ export const invitesRouter = router({
         })
       }
 
+      const normalizedEmail = input.invitedUserEmail.toLowerCase()
+
       // Prevent self-invites
-      if (input.invitedUserEmail.toLowerCase() === ctx.user.email?.toLowerCase()) {
+      if (normalizedEmail === ctx.user.email?.toLowerCase()) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'You cannot invite yourself to a list',
@@ -117,15 +147,12 @@ export const invitesRouter = router({
 
       // Check if the invited user is already a member
       const invitedUser = await ctx.db.query.users.findFirst({
-        where: eq(users.email, input.invitedUserEmail),
+        where: eq(users.email, normalizedEmail),
       })
 
       if (invitedUser) {
         const isAlreadyMember = await ctx.db.query.userLists.findFirst({
-          where: and(
-            eq(userLists.listId, input.listId),
-            eq(userLists.userId, invitedUser.id)
-          ),
+          where: and(eq(userLists.listId, input.listId), eq(userLists.userId, invitedUser.id)),
         })
 
         if (isAlreadyMember) {
@@ -139,7 +166,7 @@ export const invitesRouter = router({
       // Use service layer for consistency
       const serviceResponse = await sendListInviteService(
         input.listId,
-        input.invitedUserEmail,
+        normalizedEmail,
         ctx.user.id
       )
 
@@ -162,7 +189,7 @@ export const invitesRouter = router({
     .input(
       z.object({
         listId: z.string().uuid(),
-        invitedUserEmail: z.string().email(),
+        token: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -173,20 +200,8 @@ export const invitesRouter = router({
         })
       }
 
-      // Verify the invite is for the current user
-      if (input.invitedUserEmail.toLowerCase() !== ctx.user.email.toLowerCase()) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You can only accept invites sent to your email',
-        })
-      }
-
       // Use service layer to properly grant list access via user_lists table
-      const serviceResponse = await acceptListInviteService(
-        input.listId,
-        ctx.user.id,
-        ctx.user.email
-      )
+      const serviceResponse = await acceptListInviteService(input.listId, ctx.user.id, input.token)
 
       if ('error' in serviceResponse) {
         throw new TRPCError({
@@ -204,10 +219,7 @@ export const invitesRouter = router({
 
       // Return the updated invite record for backward compatibility
       const updatedInvite = await ctx.db.query.listInvite.findFirst({
-        where: and(
-          eq(listInvite.listId, input.listId),
-          eq(listInvite.invitedUserEmail, input.invitedUserEmail)
-        ),
+        where: and(eq(listInvite.listId, input.listId), eq(listInvite.token, input.token)),
       })
 
       if (!updatedInvite) {
@@ -224,6 +236,54 @@ export const invitesRouter = router({
     .input(
       z.object({
         listId: z.string().uuid(),
+        token: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'User not found in context',
+        })
+      }
+
+      const invite = await ctx.db.query.listInvite.findFirst({
+        where: and(eq(listInvite.listId, input.listId), eq(listInvite.token, input.token)),
+      })
+
+      if (!invite) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invite not found',
+        })
+      }
+
+      if (invite.invitedUserId && invite.invitedUserId !== ctx.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'This invite belongs to a different user',
+        })
+      }
+
+      const deletedInvite = await ctx.db
+        .delete(listInvite)
+        .where(and(eq(listInvite.listId, input.listId), eq(listInvite.token, input.token)))
+        .returning()
+
+      if (deletedInvite.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invite not found',
+        })
+      }
+
+      return { success: true }
+    }),
+
+  delete: protectedProcedure
+    .input(
+      z.object({
+        listId: z.string().uuid(),
         invitedUserEmail: z.string().email(),
       })
     )
@@ -235,31 +295,26 @@ export const invitesRouter = router({
         })
       }
 
-      // Verify the invite is for the current user
-      if (input.invitedUserEmail.toLowerCase() !== ctx.user.email?.toLowerCase()) {
+      const result = await deleteListInviteService({
+        listId: input.listId,
+        invitedUserEmail: input.invitedUserEmail,
+        userId: ctx.user.id,
+      })
+
+      if ('error' in result) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You can only decline invites sent to your email',
+          code:
+            result.status === 404
+              ? 'NOT_FOUND'
+              : result.status === 400
+                ? 'BAD_REQUEST'
+                : result.status === 403
+                  ? 'FORBIDDEN'
+                  : 'INTERNAL_SERVER_ERROR',
+          message: result.error,
         })
       }
 
-      const deletedInvite = await ctx.db
-        .delete(listInvite)
-        .where(
-          and(
-            eq(listInvite.listId, input.listId),
-            eq(listInvite.invitedUserEmail, input.invitedUserEmail)
-          )
-        )
-        .returning()
-
-      if (deletedInvite.length === 0) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Invite not found',
-        })
-      }
-
-      return { success: true }
+      return result
     }),
 })

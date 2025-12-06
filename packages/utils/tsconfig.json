@@ -17,13 +17,6 @@
       "path": "../ai"
     }
   ],
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.json",
-    "test/finance-analyze.service.integration.test.ts",
-    "test/finance-test-seed.ts",
-    "test/runway.service.test.ts"
-  ],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],
   "exclude": ["node_modules", "**/*.test.ts"]
 }
