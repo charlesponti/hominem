@@ -29,14 +29,15 @@ export const invitesRouter = router({
 
       const normalizedEmail = ctx.user.email?.toLowerCase()
       const tokenFilter = input?.token
+      const ownershipClause = normalizedEmail
+        ? or(
+            eq(listInvite.invitedUserId, ctx.user.id),
+            eq(listInvite.invitedUserEmail, normalizedEmail)
+          )
+        : eq(listInvite.invitedUserId, ctx.user.id)
       const whereClause = tokenFilter
-        ? eq(listInvite.token, tokenFilter)
-        : normalizedEmail
-          ? or(
-              eq(listInvite.invitedUserEmail, normalizedEmail),
-              eq(listInvite.invitedUserId, ctx.user.id)
-            )
-          : eq(listInvite.invitedUserId, ctx.user.id)
+        ? and(eq(listInvite.token, tokenFilter), ownershipClause)
+        : ownershipClause
 
       // Query invites with related list data in a single request
       const userInvites = await ctx.db.query.listInvite.findMany({
@@ -46,14 +47,11 @@ export const invitesRouter = router({
         },
       })
 
-      if (tokenFilter) {
-        const invite = userInvites[0]
-        if (invite?.invitedUserId && invite.invitedUserId !== ctx.user.id) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'This invite belongs to a different user',
-          })
-        }
+      if (tokenFilter && userInvites.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invite not found',
+        })
       }
 
       return userInvites
