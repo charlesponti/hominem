@@ -17,10 +17,6 @@
       "import": "./src/consts.ts",
       "require": "./dist/consts.cjs"
     },
-    "./finance-utils": {
-      "import": "./src/finance.utils.ts",
-      "require": "./dist/finance.utils.cjs"
-    },
     "./google-maps": {
       "import": "./src/google/maps.ts",
       "require": "./dist/google/maps.cjs"
