@@ -1,8 +1,7 @@
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
-import { ArrowRight, BarChart2 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import styles from './home.module.css'
+import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export function meta() {
   return [
@@ -43,10 +42,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Background gradient */}
-      <div className={styles.heroGradient} />
-
-      <main className="flex-grow flex flex-col items-center justify-center px-6 py-16">
+      <main className="grow flex flex-col items-center justify-center px-6 py-16">
         <div className="max-w-4xl w-full text-center">
           {/* Hero Section */}
           <h1 className="font-serif text-4xl md:text-6xl font-bold mb-6 tracking-tighter">
@@ -67,15 +63,6 @@ export default function Home() {
               <ArrowRight className="inline-block ml-2 h-5 w-5" />
             </button>
             <p className="text-sm text-gray-500 mt-3">No credit card required</p>
-          </div>
-
-          {/* Dashboard Preview */}
-          <div className={styles.heroImage}>
-            <div className="text-white text-center">
-              <BarChart2 className="h-16 w-16 mx-auto mb-4 opacity-80" />
-              <p className="text-lg font-medium">Dashboard Preview</p>
-              <p className="text-sm opacity-75">Coming Soon</p>
-            </div>
           </div>
         </div>
       </main>

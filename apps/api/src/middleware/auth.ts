@@ -3,6 +3,8 @@ import { users } from '@hominem/data/schema'
 import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { createHominemUserFromDb } from '@hominem/auth'
+import type { HominemUser } from '@hominem/auth'
 import { env } from '../lib/env.js'
 
 export const supabaseAdmin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -12,9 +14,7 @@ export const supabaseAdmin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE
   },
 })
 
-export async function getHominemUser(
-  supabaseId: string
-): Promise<typeof users.$inferSelect | null> {
+export async function getHominemUser(supabaseId: string): Promise<HominemUser | null> {
   if (!supabaseId) return null
 
   const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseId))
@@ -29,11 +29,11 @@ export async function getHominemUser(
         supabaseId,
       })
 
-      return newUser
+      return createHominemUserFromDb(newUser)
     }
   }
 
-  return user || null
+  return user ? createHominemUserFromDb(user) : null
 }
 
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {

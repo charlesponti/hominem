@@ -17,10 +17,7 @@
       "require": "./dist/server-index.js"
     }
   },
-  "scripts": {
-    "build": "tsup",
-    "type-check": "tsc --noEmit"
-  },
+  "scripts": {},
   "dependencies": {
     "@hominem/data": "workspace:*",
     "@supabase/supabase-js": "^2.77.0",

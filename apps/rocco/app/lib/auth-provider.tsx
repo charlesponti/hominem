@@ -1,23 +1,19 @@
-import type { Session, User } from '@supabase/supabase-js'
+import type {
+  AuthContextType,
+  HominemUser,
+  SupabaseAuthSession,
+  SupabaseAuthUser,
+} from '@hominem/auth'
+import { createHominemUserFromSupabase } from '@hominem/auth'
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import { createClient } from './supabase/client'
-
-interface AuthContextType {
-  user: User | null
-  session: Session | null
-  isLoading: boolean
-  isSignedIn: boolean
-  signInWithPassword: ReturnType<typeof createClient>['auth']['signInWithPassword']
-  signUp: ReturnType<typeof createClient>['auth']['signUp']
-  signOut: ReturnType<typeof createClient>['auth']['signOut']
-  signInWithOAuth: ReturnType<typeof createClient>['auth']['signInWithOAuth']
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseAuthUser | null>(null)
+  const [hominemUser, setHominemUser] = useState<HominemUser | null>(null)
+  const [session, setSession] = useState<SupabaseAuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
@@ -26,7 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       data: { user: currentUser },
       error,
     } = await supabase.auth.getUser()
-    return { user: currentUser, error }
+    return { user: currentUser as SupabaseAuthUser | null, error }
   }, [supabase.auth])
 
   useEffect(() => {
@@ -34,12 +30,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Get initial authenticated user
     getUser().then(({ user: currentUser }) => {
-      setUser(currentUser)
-      // Get session for access token after user verification
       if (currentUser) {
+        setSupabaseUser(currentUser)
+        setHominemUser(createHominemUserFromSupabase(currentUser))
+        // Get session for access token after user verification
         supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-          setSession(currentSession)
+          setSession(currentSession as SupabaseAuthSession | null)
         })
+      } else {
+        setSupabaseUser(null)
+        setHominemUser(null)
+        setSession(null)
       }
       setIsLoading(false)
     })
@@ -51,10 +52,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const {
           data: { user: verifiedUser },
         } = await supabase.auth.getUser()
-        setUser(verifiedUser)
-        setSession(newSession)
+        const typedUser = verifiedUser as SupabaseAuthUser | null
+        setSupabaseUser(typedUser)
+        setHominemUser(typedUser ? createHominemUserFromSupabase(typedUser) : null)
+        setSession(newSession as SupabaseAuthSession | null)
       } else {
-        setUser(null)
+        setSupabaseUser(null)
+        setHominemUser(null)
         setSession(null)
       }
       setIsLoading(false)
@@ -65,15 +69,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [getUser, supabase.auth])
 
-  const value = {
-    user,
+  const refreshUser = useCallback(async () => {
+    if (!supabaseUser) return
+    setHominemUser(createHominemUserFromSupabase(supabaseUser))
+  }, [supabaseUser])
+
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      return { error: error || undefined }
+    },
+    [supabase.auth]
+  )
+
+  const signUp = useCallback(
+    async (email: string, password: string) => {
+      const { error } = await supabase.auth.signUp({ email, password })
+      return { error: error || undefined }
+    },
+    [supabase.auth]
+  )
+
+  const signInWithOAuth = useCallback(
+    async (provider: 'google' | 'github' | 'discord') => {
+      const { error } = await supabase.auth.signInWithOAuth({ provider })
+      return { error: error || undefined }
+    },
+    [supabase.auth]
+  )
+
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut()
+    return { error: error || undefined }
+  }, [supabase.auth])
+
+  const resetPassword = useCallback(
+    async (email: string) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email)
+      return { error: error || undefined }
+    },
+    [supabase.auth]
+  )
+
+  const value: AuthContextType = {
+    user: hominemUser,
+    supabaseUser,
     session,
     isLoading,
-    isSignedIn: !!user,
-    signInWithPassword: supabase.auth.signInWithPassword,
-    signUp: supabase.auth.signUp,
-    signOut: supabase.auth.signOut,
-    signInWithOAuth: supabase.auth.signInWithOAuth,
+    isAuthenticated: !!hominemUser,
+    signIn,
+    signUp,
+    signInWithOAuth,
+    signOut,
+    resetPassword,
+    refreshUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -89,17 +138,17 @@ export const useAuth = () => {
 
 // Convenience hooks for compatibility with existing code
 export const useUser = () => {
-  const { user, isLoading } = useAuth()
+  const { supabaseUser, isLoading } = useAuth()
   return {
-    user: user
+    user: supabaseUser
       ? {
-          id: user.id,
-          email: user.email,
-          fullName: user.user_metadata?.full_name || user.user_metadata?.name,
-          firstName: user.user_metadata?.first_name,
-          lastName: user.user_metadata?.last_name,
-          primaryEmailAddress: { emailAddress: user.email },
-          imageUrl: user.user_metadata?.avatar_url,
+          id: supabaseUser.id,
+          email: supabaseUser.email,
+          fullName: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name,
+          firstName: supabaseUser.user_metadata?.first_name,
+          lastName: supabaseUser.user_metadata?.last_name,
+          primaryEmailAddress: { emailAddress: supabaseUser.email },
+          imageUrl: supabaseUser.user_metadata?.avatar_url,
         }
       : null,
     isLoaded: !isLoading,

@@ -1,11 +1,13 @@
 import { UserAuthService } from '@hominem/data'
-import {
-  createClient,
-  type SupabaseClient,
-  type Session as SupabaseSession,
-  type User as SupabaseUser,
-} from '@supabase/supabase-js'
-import type { AuthConfig, HominemUser, ServerAuthResult } from './types'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createHominemUserFromDb } from './user'
+import type {
+  AuthConfig,
+  HominemUser,
+  ServerAuthResult,
+  SupabaseAuthSession,
+  SupabaseAuthUser,
+} from './types'
 
 /**
  * Create Supabase server client for SSR
@@ -51,21 +53,12 @@ export async function getServerAuth(
       }
     }
 
-    const supabaseUser = session.user
+    const supabaseUser = session.user as SupabaseAuthUser
 
     // Get or create Hominem user
     const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
 
-    const hominemUser: HominemUser = {
-      id: userAuthData.id,
-      email: userAuthData.email,
-      name: userAuthData.name || undefined,
-      image: userAuthData.image || undefined,
-      supabaseId: userAuthData.supabaseId,
-      isAdmin: userAuthData.isAdmin || false,
-      createdAt: userAuthData.createdAt,
-      updatedAt: userAuthData.updatedAt,
-    }
+    const hominemUser: HominemUser = createHominemUserFromDb(userAuthData)
 
     return {
       user: hominemUser,
@@ -92,8 +85,8 @@ export async function requireServerAuth(
   config: AuthConfig
 ): Promise<{
   user: HominemUser
-  supabaseUser: SupabaseUser
-  session: SupabaseSession
+  supabaseUser: SupabaseAuthUser
+  session: SupabaseAuthSession
 }> {
   const auth = await getServerAuth(request, config)
 

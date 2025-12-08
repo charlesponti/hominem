@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { redirect, useMatches } from 'react-router'
 import { ChatInput } from '~/components/chat/ChatInput.js'
 import { ChatMessages } from '~/components/chat/ChatMessages.js'
-import type { Route } from '../+types/chat.chat.$chatId'
+import type { Route } from './+types/chat.$chatId'
 
 export default function ChatPage({ params }: Route.ComponentProps) {
   const { chatId } = params

@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
+    "@supabase/supabase-js": "^2.77.0",
     "esbuild": "^0.21.5",
     "esbuild-node-externals": "^1.18.0",
     "typescript": "5.9.3",

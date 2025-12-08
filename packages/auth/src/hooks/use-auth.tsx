@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
-import { createHominemUserFromSupabase, createSupabaseClient, getAuthConfig } from '../client'
-import type { AuthContextType, HominemUser } from '../types'
+import { createSupabaseClient, getAuthConfig } from '../client'
+import { createHominemUserFromSupabase } from '../user'
+import type { AuthContextType, HominemUser, SupabaseAuthSession, SupabaseAuthUser } from '../types'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -10,8 +11,8 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<HominemUser | null>(null)
-  const [supabaseUser, setSupabaseUser] = useState<any>(null)
-  const [session, setSession] = useState<any>(null)
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseAuthUser | null>(null)
+  const [session, setSession] = useState<SupabaseAuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const config = getAuthConfig()
@@ -44,11 +45,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return
         }
 
-        if (initialSession?.user) {
-          const hominemUser = createHominemUserFromSupabase(initialSession.user)
+        const typedSession = initialSession as SupabaseAuthSession | null
+
+        if (typedSession?.user) {
+          const hominemUser = createHominemUserFromSupabase(typedSession.user)
           if (mounted) {
-            setSupabaseUser(initialSession.user)
-            setSession(initialSession)
+            setSupabaseUser(typedSession.user)
+            setSession(typedSession)
             setUser(hominemUser)
           }
         }
@@ -69,10 +72,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       if (!mounted) return
 
-      if (newSession?.user) {
-        const hominemUser = createHominemUserFromSupabase(newSession.user)
-        setSupabaseUser(newSession.user)
-        setSession(newSession)
+      const typedSession = newSession as SupabaseAuthSession | null
+
+      if (typedSession?.user) {
+        const hominemUser = createHominemUserFromSupabase(typedSession.user)
+        setSupabaseUser(typedSession.user)
+        setSession(typedSession)
         setUser(hominemUser)
       } else {
         setSupabaseUser(null)

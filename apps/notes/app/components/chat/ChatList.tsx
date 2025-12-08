@@ -4,7 +4,7 @@ import { Link as RouterLink, useNavigate, useParams } from 'react-router'
 import { Button } from '@hominem/ui/components/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { useDeleteChat } from '~/lib/hooks/use-delete-chat'
-import { trpc } from '~/lib/trpc'
+import { trpc } from '~/lib/trpc-client'
 import { formatChatDate } from '~/lib/utils/date-utils'
 
 interface ChatListProps {

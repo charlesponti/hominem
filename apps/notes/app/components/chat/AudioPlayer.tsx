@@ -59,7 +59,7 @@ export function AudioPlayer({
         audioRef.current?.removeEventListener('ended', handleEnded)
       }
     }
-  }, [onEnded, audioRef.current])
+  }, [onEnded])
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()

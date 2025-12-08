@@ -1,10 +1,11 @@
-import type { User } from '@supabase/supabase-js'
+import type { SupabaseAuthUser } from '@hominem/auth'
+import { createHominemUserFromSupabase } from '@hominem/auth'
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from './client'
 
 export function useSupabaseAuth() {
   const supabase = createClient()
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<SupabaseAuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -13,7 +14,7 @@ export function useSupabaseAuth() {
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      setUser((session?.user as SupabaseAuthUser | null) ?? null)
       setIsLoading(false)
     }
 
@@ -23,7 +24,7 @@ export function useSupabaseAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
+      setUser((session?.user as SupabaseAuthUser | null) ?? null)
       setIsLoading(false)
     })
 
@@ -69,7 +70,7 @@ export function useSupabaseAuth() {
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    return user
+    return user as SupabaseAuthUser | null
   }, [supabase.auth])
 
   const signInWithGoogle = useCallback(async () => {
@@ -84,6 +85,7 @@ export function useSupabaseAuth() {
 
   return {
     user,
+    hominemUser: user ? createHominemUserFromSupabase(user) : null,
     isAuthenticated: !!user,
     isLoading,
     login,

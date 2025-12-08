@@ -63,7 +63,6 @@
     "ioredis": "^5.6.1",
     "isbot": "^5.1.27",
     "lucide-react": "^0.534.0",
-    "postgres": "^3.4.7",
     "posthog-node": "^3.1.8",
     "prop-types": "^15.8.1",
     "react": "^19.1.0",

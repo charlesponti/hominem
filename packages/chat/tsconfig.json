@@ -1,6 +1,7 @@
 {
-  "extends": "@hominem/tsconfigs/base.json",
+  "extends": "../tsconfig/workspace.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "./dist",
     "rootDir": "./src",
     "module": "ESNext",

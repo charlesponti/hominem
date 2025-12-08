@@ -1,5 +1,5 @@
 import { router } from './context'
-import { lifeEventsRouter } from './routers'
+import { lifeEventsRouter } from './routers/life-events'
 
 export const appRouter = router({
   lifeEvents: lifeEventsRouter,

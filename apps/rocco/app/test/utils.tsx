@@ -51,7 +51,7 @@ vi.mock('~/lib/auth-provider', () => ({
     user: mockSupabaseUser,
     session: mockSession,
     isLoading: false,
-    isSignedIn: true,
+    isAuthenticated: true,
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
     signOut: vi.fn(),

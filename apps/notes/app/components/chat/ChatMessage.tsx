@@ -1,4 +1,4 @@
-import type { RouterOutput } from '~/lib/trpc.js'
+import type { RouterOutput } from '~/lib/trpc-client.js'
 import { cn } from '~/lib/utils'
 
 // Get the inferred type from the tRPC query using RouterOutput
@@ -30,7 +30,6 @@ function _TextPart({
 // Component for tool invocation parts
 function _ToolInvocationPart({
   toolInvocation,
-  index,
 }: {
   toolInvocation: {
     toolName: string

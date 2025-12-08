@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Utils Package",
-  "extends": "@hominem/tsconfigs/library.json",
+  "extends": "../tsconfig/library.json",
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "./build",
@@ -9,7 +9,19 @@
     "module": "ES2022",
     "paths": {
       "@/*": ["./src/*"],
-      "test": ["./test/*"]
+      "test": ["./test/*"],
+      "@hominem/ui": ["../ui/src/index.ts"],
+      "@hominem/ui/*": ["../ui/src/*"],
+      "@hominem/utils": ["./src/index.ts"],
+      "@hominem/utils/*": ["./src/*"],
+      "@hominem/data": ["../data/src/index.ts"],
+      "@hominem/data/*": ["../data/src/*"],
+      "@hominem/chat": ["../chat/src/index.ts"],
+      "@hominem/chat/*": ["../chat/src/*"],
+      "@hominem/ai": ["../ai/src/index.ts"],
+      "@hominem/ai/*": ["../ai/src/*"],
+      "@hominem/auth": ["../auth/src/index.ts"],
+      "@hominem/auth/*": ["../auth/src/*"]
     }
   },
   "references": [

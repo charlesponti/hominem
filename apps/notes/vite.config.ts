@@ -10,10 +10,23 @@ const __dirname = path.dirname(__filename)
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      // Ensure server-only dependencies (e.g., postgres) stay out of the client bundle
+      external: ['postgres', 'node:perf_hooks', 'perf_hooks'],
+    },
+  },
   resolve: {
     alias: {
       '~': path.resolve(__dirname, 'app'),
     },
+  },
+  optimizeDeps: {
+    exclude: ['postgres'],
+  },
+  ssr: {
+    external: ['postgres'],
   },
   server: {
     port: 4445,

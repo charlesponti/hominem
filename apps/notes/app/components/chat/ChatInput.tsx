@@ -1,7 +1,7 @@
+import { Button } from '@hominem/ui/components/ui/button'
 import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { useMatches } from 'react-router'
-import { Button } from '@hominem/ui/components/ui/button'
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
 import { useSendMessage } from '~/lib/hooks/use-send-message.js'
 import { ChatModals } from './ChatModals.js'
@@ -30,7 +30,7 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
   const userId = rootData?.supabaseId || undefined
 
   const sendMessage = useSendMessage({ chatId, userId })
-  const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload()
+  const { uploadState, clearAll } = useFileUpload()
 
   const characterCount = inputValue.length
   const hasInput = inputValue.trim().length > 0
@@ -89,11 +89,6 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
 
   const handleAudioRecord = useCallback(() => {
     setShowAudioRecorder(true)
-  }, [])
-
-  const handleFilesUploaded = useCallback((_files: any[]) => {
-    // Files are already uploaded by the FileUploader component
-    // The useFileUpload hook manages the state internally
   }, [])
 
   const handleAudioRecorded = useCallback(
@@ -184,13 +179,12 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
         </div>
       </div>
 
-      {/* File Upload and Audio Recording Modals */}
       <ChatModals
         showFileUploader={showFileUploader}
         showAudioRecorder={showAudioRecorder}
         onCloseFileUploader={() => setShowFileUploader(false)}
         onCloseAudioRecorder={() => setShowAudioRecorder(false)}
-        onFilesUploaded={handleFilesUploaded}
+        onFilesUploaded={() => {}}
         onAudioRecorded={handleAudioRecorded}
       />
     </>
