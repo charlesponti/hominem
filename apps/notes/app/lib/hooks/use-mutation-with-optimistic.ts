@@ -1,4 +1,4 @@
-import { useToast } from '~/components/ui/use-toast'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { trpc } from '~/lib/trpc'
 
 interface UseMutationWithOptimisticOptions<TInput, TOutput> {

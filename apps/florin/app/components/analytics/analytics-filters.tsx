@@ -1,21 +1,21 @@
-import { X } from 'lucide-react'
-import { type Dispatch, type SetStateAction, useId } from 'react'
-import { AccountSelect } from '~/components/account-select'
-import { CategorySelect } from '~/components/category-select'
-import { DatePicker } from '~/components/date-picker'
-import { GroupBySelect } from '~/components/group-by-select'
+import { DatePicker } from '@hominem/ui/components/date-picker'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '~/components/ui/accordion'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent } from '~/components/ui/card'
-import { Label } from '~/components/ui/label'
-import { Skeleton } from '~/components/ui/skeleton'
-import { Switch } from '~/components/ui/switch'
+} from '@hominem/ui/components/ui/accordion'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent } from '@hominem/ui/components/ui/card'
+import { Label } from '@hominem/ui/components/ui/label'
+import { Skeleton } from '@hominem/ui/components/ui/skeleton'
+import { Switch } from '@hominem/ui/components/ui/switch'
+import { X } from 'lucide-react'
+import { type Dispatch, type SetStateAction, useId } from 'react'
+import { AccountSelect } from '~/components/account-select'
+import { CategorySelect } from '~/components/category-select'
+import { GroupBySelect } from '~/components/group-by-select'
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
 import { trpc } from '~/lib/trpc'
 
@@ -236,11 +236,11 @@ export function AnalyticsFilters({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor={dateFromId}>From Date</Label>
-                  <DatePicker date={dateFrom} setDate={setDateFrom} placeholder="Start date" />
+                  <DatePicker value={dateFrom} onSelect={setDateFrom} placeholder="Start date" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={dateToId}>To Date</Label>
-                  <DatePicker date={dateTo} setDate={setDateTo} placeholder="End date" />
+                  <DatePicker value={dateTo} onSelect={setDateTo} placeholder="End date" />
                 </div>
               </div>
 
@@ -248,8 +248,7 @@ export function AnalyticsFilters({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <AccountSelect
                   selectedAccount={selectedAccount}
-                  onAccountChange={setSelectedAccount}
-                  accounts={safeAccounts}
+                  setSelectedAccount={setSelectedAccount}
                   isLoading={isLoading}
                   showLabel={true}
                 />

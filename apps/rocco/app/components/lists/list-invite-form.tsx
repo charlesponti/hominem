@@ -1,8 +1,8 @@
 import { type SyntheticEvent, useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
 
 import { trpc } from '~/lib/trpc/client'
 import type { ListInvite } from '~/lib/types'

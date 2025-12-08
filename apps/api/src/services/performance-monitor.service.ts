@@ -20,7 +20,7 @@ interface APIMetrics {
   userId?: string
 }
 
-interface ErrorMetric {
+export interface ErrorMetric {
   id: string
   message: string
   stack?: string

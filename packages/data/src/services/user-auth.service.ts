@@ -1,7 +1,28 @@
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { db } from '../db'
 import { users } from '../db/schema'
+
+type AuthUserMetadata = {
+  avatar_url?: string
+  full_name?: string
+  display_name?: string
+  name?: string
+  picture?: string
+  image?: string
+  isAdmin?: boolean
+  is_admin?: boolean
+}
+
+type AuthAppMetadata = {
+  isAdmin?: boolean
+  is_admin?: boolean
+}
+
+type SupabaseAuthUser = SupabaseUser & {
+  user_metadata: AuthUserMetadata
+  app_metadata: AuthAppMetadata
+}
 
 export interface UserAuthData {
   id: string
@@ -22,7 +43,7 @@ export class UserAuthService {
    * Find or create a user from Supabase auth data
    * This is the single source of truth for user creation/lookup
    */
-  static async findOrCreateUser(supabaseUser: SupabaseUser): Promise<UserAuthData> {
+  static async findOrCreateUser(supabaseUser: SupabaseAuthUser): Promise<UserAuthData> {
     try {
       // First, try to find existing user by supabaseId
       const existingUser = await UserAuthService.findBySupabaseId(supabaseUser.id)
@@ -115,7 +136,7 @@ export class UserAuthService {
   /**
    * Create a new user from Supabase data
    */
-  private static async createUser(supabaseUser: SupabaseUser): Promise<UserAuthData> {
+  private static async createUser(supabaseUser: SupabaseAuthUser): Promise<UserAuthData> {
     if (!supabaseUser.email) {
       throw new Error('Cannot create user without email')
     }
@@ -149,7 +170,7 @@ export class UserAuthService {
    */
   private static async updateUserFromSupabase(
     userId: string,
-    supabaseUser: SupabaseUser
+    supabaseUser: SupabaseAuthUser
   ): Promise<void> {
     const name = UserAuthService.extractName(supabaseUser)
     const image = UserAuthService.extractImage(supabaseUser)

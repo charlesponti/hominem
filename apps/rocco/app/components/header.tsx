@@ -11,13 +11,13 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect } from 'react'
 import { Link, useNavigate, useRevalidator, useRouteLoaderData } from 'react-router'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
+} from '@hominem/ui/components/ui/dropdown-menu'
 import { createClient } from '~/lib/supabase/client'
 
 const ACCOUNT = '/account'

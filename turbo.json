@@ -18,7 +18,7 @@
     "OPENAI_API_KEY",
     "OPENAI_ORG_ID",
     "REDIS_URL",
-    "SENDGRID_API_KEY"
+    "RESEND_API_KEY"
   ],
   "tasks": {
     "build": {

@@ -10,7 +10,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { Button } from '~/components/ui/button.js'
+import { Button } from '@hominem/ui/components/ui/button'
 import { formatDuration, useAudioRecorder } from '~/lib/hooks/use-audio-recorder.js'
 import { AudioPlayer } from './AudioPlayer.js'
 import { AudioWaveform } from './AudioWaveform.js'
@@ -50,6 +50,15 @@ export function AudioRecorder({
     await startRecording()
   }, [startRecording])
 
+  const handleStopRecording = useCallback(async () => {
+    stopRecording()
+
+    // Auto-transcribe if enabled
+    if (autoTranscribe && state.audioBlob) {
+      await transcribeAudio(state.audioBlob)
+    }
+  }, [stopRecording, autoTranscribe, state.audioBlob])
+
   const transcribeAudio = useCallback(
     async (audioBlob: Blob) => {
       if (!audioBlob) return
@@ -83,15 +92,6 @@ export function AudioRecorder({
     },
     [onTranscription]
   )
-
-  const handleStopRecording = useCallback(async () => {
-    stopRecording()
-
-    // Auto-transcribe if enabled
-    if (autoTranscribe && state.audioBlob) {
-      await transcribeAudio(state.audioBlob)
-    }
-  }, [stopRecording, autoTranscribe, state.audioBlob, transcribeAudio])
 
   const handleSendRecording = useCallback(() => {
     if (state.audioBlob) {

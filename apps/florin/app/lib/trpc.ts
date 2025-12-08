@@ -1,5 +1,5 @@
-import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
 import { createTRPCProxyClient } from '@trpc/client'
+import { createTRPCReact, httpBatchLink } from '@trpc/react-query'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '../../../../packages/types/trpc'
 import { getQueryClient } from './get-query-client'

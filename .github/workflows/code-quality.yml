@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       APP_URL: ${{ secrets.APP_URL }}
+      CHROMA_URL: "http://localhost:8000"
       COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       REDIS_URL: "redis://localhost:6379"
-      SENDGRID_API_KEY: "SG.7Q9Z9ZQzQ9q"
-      CHROMA_URL: "http://localhost:8000"
+      RESEND_API_KEY: "SG.7Q9Z9ZQzQ9q"
       SUPABASE_URL: "http://localhost:54321"
       SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="

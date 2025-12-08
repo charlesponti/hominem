@@ -1,10 +1,10 @@
+import { Button } from '@hominem/ui/components/ui/button'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
-import { Button } from './ui/button'
 
 const navItems = [
   {
@@ -153,7 +153,7 @@ export function MainNavigation({ isAuthenticated }: { isAuthenticated?: boolean 
               >
                 <item.icon className="h-[18px] w-[18px]" />
                 {pathname === item.url && (
-                  <span className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-[2px] h-5 bg-primary" />
+                  <span className="absolute -left-px top-1/2 -translate-y-1/2 w-[2px] h-5 bg-primary" />
                 )}
               </RouteLink>
             ))}

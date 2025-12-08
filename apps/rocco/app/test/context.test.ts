@@ -1,9 +1,6 @@
 import { createTestUser } from '@hominem/data/fixtures'
-import { users } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
 import crypto from 'node:crypto'
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { db } from '../db'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createContext } from '../lib/trpc/context'
 
 // Mock the dependencies
@@ -25,12 +22,6 @@ describe('tRPC Context', () => {
       id: testUserId2,
       name: null,
     })
-  })
-
-  afterAll(async () => {
-    // Clean up test users
-    await db.delete(users).where(eq(users.id, testUserId))
-    await db.delete(users).where(eq(users.id, testUserId2))
   })
 
   beforeEach(() => {

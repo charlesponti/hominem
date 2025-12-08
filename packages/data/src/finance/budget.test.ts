@@ -1,8 +1,7 @@
 import crypto from 'node:crypto'
 import { db } from '@hominem/data/db'
 import { budgetCategories, users } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { createTestUser } from '../fixtures'
 
 // Helper to check if DB is available
@@ -22,18 +21,9 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
   const testUserId = crypto.randomUUID()
   const testUserId2 = crypto.randomUUID()
 
-  // Create test users before each test
   beforeEach(async () => {
     await createTestUser({ id: testUserId, name: 'Test User 1' })
     await createTestUser({ id: testUserId2, name: 'Test User 2' })
-  })
-
-  // Clean up test data
-  afterEach(async () => {
-    await db.delete(budgetCategories).where(eq(budgetCategories.userId, testUserId))
-    await db.delete(budgetCategories).where(eq(budgetCategories.userId, testUserId2))
-    await db.delete(users).where(eq(users.id, testUserId))
-    await db.delete(users).where(eq(users.id, testUserId2))
   })
 
   it('should allow creating categories with unique names for the same user', async () => {

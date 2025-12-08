@@ -1,17 +1,29 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { redirect, type LoaderFunctionArgs } from 'react-router'
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { getServerSession } from '~/lib/supabase/server'
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { user } = await getServerSession(request)
+
+  if (!user) {
+    return redirect('/')
+  }
+
+  return { user }
+}
 
 export default function SignInPage() {
-  const { user, signInWithGoogle, isLoading } = useSupabaseAuth()
+  const { signInWithGoogle, isLoading } = useSupabaseAuth()
   const [error, setError] = useState('')
-
-  // Redirect if already authenticated
-  if (user) {
-    return <Navigate to="/" replace />
-  }
 
   const handleGoogleLogin = async () => {
     try {
@@ -22,7 +34,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/50">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background to-muted/50">
       <div className="w-full max-w-md space-y-8 p-8">
         <Card>
           <CardHeader>
@@ -46,12 +58,6 @@ export default function SignInPage() {
               >
                 {isLoading ? 'Loading...' : 'Continue with Google'}
               </Button>
-            </div>
-
-            <div className="text-center mt-6">
-              <a href="/auth/signup" className="text-sm text-primary hover:underline">
-                Don't have an account? Sign up
-              </a>
             </div>
           </CardContent>
         </Card>

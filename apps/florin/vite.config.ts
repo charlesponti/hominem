@@ -5,6 +5,12 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      external: ['node:perf_hooks', 'perf_hooks'],
+    },
+  },
   server: {
     port: 4444,
     strictPort: true,

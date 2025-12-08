@@ -1,6 +1,10 @@
 {
-  "extends": "@hominem/tsconfigs/react-library.json",
+  "extends": "../tsconfig/react-library.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"]
+    },
     "outDir": "dist",
     "module": "ESNext",
     "rootDir": ".",

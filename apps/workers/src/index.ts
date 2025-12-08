@@ -1,22 +1,10 @@
-/**
- * Combined worker service that runs all worprocess.on('uncaughtException', (error: Error) => {
-  logger.error({ error }, 'Uncaught exception in main process')
-  gracefulShutdown(1)
-})
-
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error({ error: reason }, 'Unhandled promise rejection in main process')
-  gracefulShutdown(1)
-})arallel
- * This is a centralized entry point for Railway deployment
- * The worker instances are created and started in their respective files
- */
 import { logger } from '@hominem/utils/logger'
 import './env.ts'
 
 // Import all worker entry points
 import './plaid-worker'
 import './transaction-import-worker'
+import './smart-input/smart-input.worker.ts'
 
 // Production-ready process management
 let isShuttingDown = false
@@ -55,29 +43,23 @@ process.on('SIGINT', () => {
 
 // Handle uncaught exceptions gracefully
 process.on('uncaughtException', (error) => {
-  logger.error(
-    {
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        cause: error.cause,
-      },
+  logger.error('Uncaught exception in main process:', {
+    error: {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause,
     },
-    'Uncaught exception in main process:'
-  )
+  })
   console.error('Full uncaught exception details:', error)
   gracefulShutdown(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error(
-    {
-      error: reason,
-      promise: promise.toString(),
-    },
-    'Unhandled promise rejection in main process:'
-  )
+  logger.error('Unhandled promise rejection in main process:', {
+    error: reason,
+    promise: promise.toString(),
+  })
   console.error('Full unhandled rejection details:', reason)
   gracefulShutdown(1)
 })

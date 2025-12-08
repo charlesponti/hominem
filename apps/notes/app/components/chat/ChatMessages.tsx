@@ -1,6 +1,6 @@
 import { Bot } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { type RouterOutput, trpc } from '~/lib/trpc.js'
+import { type RouterOutput, trpc } from '~/lib/trpc/client'
 import { ChatMessage } from './ChatMessage.js'
 
 type MessageFromQuery = RouterOutput['chats']['getMessages'][0]

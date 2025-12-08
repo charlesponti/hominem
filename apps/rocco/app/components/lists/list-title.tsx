@@ -1,8 +1,8 @@
 import { Check, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { useToast } from '~/components/ui/use-toast'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Input } from '@hominem/ui/components/ui/input'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { trpc } from '~/lib/trpc/client'
 
 interface ListTitleProps {

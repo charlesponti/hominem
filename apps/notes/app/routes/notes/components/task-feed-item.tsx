@@ -1,4 +1,6 @@
-import type { Note } from '@hominem/utils/types'
+import type { Note } from '@hominem/data/types'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
 import { format } from 'date-fns'
 import {
   CalendarDays,
@@ -9,8 +11,6 @@ import {
   Target,
   Trash2,
 } from 'lucide-react'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
 import { useTimeTracking } from '~/hooks/use-time-tracking'
 import { cn } from '~/lib/utils'
 import { ElapsedTime } from './elapsed-time'
@@ -88,7 +88,7 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
             <Button
               variant="outline"
               size="icon"
-              className="h-6 w-6 rounded-full border-slate-300 dark:border-slate-600 flex-shrink-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="h-6 w-6 rounded-full border-slate-300 dark:border-slate-600 shrink-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               onClick={() => {
                 if (status === 'done') {
                   setTaskToTodoAndResetTime()

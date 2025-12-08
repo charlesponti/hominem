@@ -1,19 +1,17 @@
-'use client'
-
+import { Badge } from '@hominem/ui/components/ui/badge'
 import { subMonths } from 'date-fns'
 import { useCallback, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { TransactionFilters } from '~/components/finance/transaction-filters'
-import { Badge } from '~/components/ui/badge'
 import { type FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data'
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
-import type { SortOption } from '~/lib/hooks/use-sort'
+import { useSort } from '~/lib/hooks/use-sort'
 import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'
 
 export default function CategoriesAnalyticsPage() {
   const navigate = useNavigate()
-  const { selectedAccount, setSelectedAccount } = useSelectedAccount()
+  const { selectedAccount } = useSelectedAccount()
 
   // Initialize filters with default date range
   const [filters, setFilters] = useState<FilterArgs>({
@@ -22,9 +20,8 @@ export default function CategoriesAnalyticsPage() {
   })
 
   const [searchValue, setSearchValue] = useState('')
-  const [sortOptions, setSortOptions] = useState<SortOption[]>([])
+  const { sortOptions, addSortOption, updateSortOption, removeSortOption } = useSort([])
 
-  // Get accounts data for the filters
   const {
     accountsMap,
     isLoading: accountsLoading,
@@ -53,11 +50,6 @@ export default function CategoriesAnalyticsPage() {
     setSearchValue(value)
   }, [])
 
-  // Handle sort options changes
-  const handleSortOptionsChange = useCallback((newSortOptions: SortOption[]) => {
-    setSortOptions(newSortOptions)
-  }, [])
-
   // Handle refresh
   const handleRefresh = useCallback(() => {
     refetchAccounts()
@@ -80,7 +72,9 @@ export default function CategoriesAnalyticsPage() {
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         sortOptions={sortOptions}
-        onSortOptionsChange={handleSortOptionsChange}
+        addSortOption={addSortOption}
+        updateSortOption={updateSortOption}
+        removeSortOption={removeSortOption}
         onRefresh={handleRefresh}
         loading={isLoading}
       />

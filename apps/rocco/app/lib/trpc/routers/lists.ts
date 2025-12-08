@@ -53,16 +53,9 @@ export const listsRouter = router({
             })
           }
 
-          const itemType = input?.itemType
           const { ownedListsWithPlaces, sharedListsWithPlaces } = await loadListsWithPlaces(
             ctx.user.id
           )
-
-          logger.info('Retrieved user lists', {
-            userId: ctx.user.id,
-            count: ownedListsWithPlaces.length + sharedListsWithPlaces.length,
-            itemType,
-          })
 
           return [...ownedListsWithPlaces, ...sharedListsWithPlaces]
         },

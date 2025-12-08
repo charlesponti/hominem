@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "AI Package",
-  "extends": "@hominem/tsconfigs/library.json",
+  "extends": "../tsconfig/library.json",
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": "./src",
@@ -9,7 +9,19 @@
     "emitDeclarationOnly": true,
     "outDir": "./build",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@hominem/ui": ["../ui/src/index.ts"],
+      "@hominem/ui/*": ["../ui/src/*"],
+      "@hominem/utils": ["../utils/src/index.ts"],
+      "@hominem/utils/*": ["../utils/src/*"],
+      "@hominem/data": ["../data/src/index.ts"],
+      "@hominem/data/*": ["../data/src/*"],
+      "@hominem/chat": ["../chat/src/index.ts"],
+      "@hominem/chat/*": ["../chat/src/*"],
+      "@hominem/ai": ["./src/index.ts"],
+      "@hominem/ai/*": ["./src/*"],
+      "@hominem/auth": ["../auth/src/index.ts"],
+      "@hominem/auth/*": ["../auth/src/*"]
     }
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],

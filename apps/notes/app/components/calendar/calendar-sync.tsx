@@ -1,16 +1,22 @@
-import { AlertCircle, Calendar, CheckCircle, Loader2 } from 'lucide-react'
-import { useCallback, useEffect, useId, useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
+} from '@hominem/ui/components/ui/select'
+import { AlertCircle, Calendar, CheckCircle, Loader2 } from 'lucide-react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync'
 
 interface CalendarSyncProps {

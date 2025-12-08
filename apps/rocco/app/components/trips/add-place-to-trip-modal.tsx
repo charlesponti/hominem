@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useRevalidator } from 'react-router'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '~/components/ui/dialog'
+} from '@hominem/ui/components/ui/dialog'
 import { trpc } from '~/lib/trpc/client'
 
 export function AddPlaceToTripModal({ tripId }: { tripId: string }) {

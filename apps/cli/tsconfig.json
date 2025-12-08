@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "CLI",
-  "extends": "@hominem/tsconfigs/node.json",
+  "extends": "../../packages/tsconfig/node.json",
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
@@ -14,7 +14,17 @@
     "noImplicitAny": false,
     "lib": ["dom"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
+      "@hominem/utils": ["../../packages/utils/src/index.ts"],
+      "@hominem/utils/*": ["../../packages/utils/src/*"],
+      "@hominem/data": ["../../packages/data/src/index.ts"],
+      "@hominem/data/*": ["../../packages/data/src/*"],
+      "@hominem/chat": ["../../packages/chat/src/index.ts"],
+      "@hominem/chat/*": ["../../packages/chat/src/*"],
+      "@hominem/ai": ["../../packages/ai/src/index.ts"],
+      "@hominem/ai/*": ["../../packages/ai/src/*"]
     }
   },
   "references": [

@@ -1,3 +1,5 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { Target } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -9,8 +11,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'
 

@@ -1,8 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Auth Package",
-  "extends": "@hominem/tsconfigs/base.json",
+  "extends": "../tsconfig/workspace.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "./dist",
     "rootDir": "./src",
     "module": "ESNext",
@@ -13,8 +14,13 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "composite": false
+    "composite": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "references": [
+    {
+      "path": "../data"
+    }
+  ]
 }

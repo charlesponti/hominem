@@ -2,7 +2,7 @@ import { Check, MapPin, Search } from 'lucide-react'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useGeolocation } from '~/hooks/useGeolocation'
 import Alert from '~/components/alert'
-import { Input } from '~/components/ui/input'
+import { Input } from '@hominem/ui/components/ui/input'
 import {
   type GooglePlacePrediction,
   useGooglePlacesAutocomplete,

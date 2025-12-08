@@ -1,6 +1,6 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import type { ReactNode } from 'react'
 import { CopyButton } from '~/components/copy-button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 
 interface StrategySectionProps {
   title: string

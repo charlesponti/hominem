@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '~/components/ui/alert-dialog'
+} from '@hominem/ui/components/ui/alert-dialog'
 import type { DisplayBudgetCategory } from './budget-category-card'
 
 interface DeleteCategoryDialogProps {

@@ -1,10 +1,8 @@
-'use client'
-
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import { Link, useParams } from 'react-router'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { useToast } from '~/components/ui/use-toast'
 import { useContentStrategy, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
 
 export default function ContentStrategyViewPage() {

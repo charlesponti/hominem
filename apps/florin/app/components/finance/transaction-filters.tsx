@@ -1,18 +1,18 @@
-import { ListFilter, RefreshCcw } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { AccountSelect } from '~/components/account-select'
-import { DatePicker } from '~/components/date-picker'
-import { FilterChip } from '~/components/finance/filter-chip'
-import { SortControls } from '~/components/finance/sort-controls'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
-import { SearchInput } from '~/components/ui/search-input'
+} from '@hominem/ui/components/ui/dropdown-menu'
+import { SearchInput } from '@hominem/ui/components/ui/search-input'
+import { ListFilter, RefreshCcw } from 'lucide-react'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { AccountSelect } from '~/components/account-select'
+import { DatePicker } from '@hominem/ui/components/date-picker'
+import { FilterChip } from '~/components/finance/filter-chip'
+import { SortControls } from '~/components/finance/sort-controls'
 import type { FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data'
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
 import type { SortOption } from '~/lib/hooks/use-sort'
@@ -235,8 +235,8 @@ export function TransactionFilters({
                     From Date
                   </label>
                   <DatePicker
-                    date={filters.dateFrom}
-                    setDate={handleDateFromChange}
+                    value={filters.dateFrom}
+                    onSelect={handleDateFromChange}
                     placeholder="Start date"
                   />
                 </div>
@@ -247,8 +247,8 @@ export function TransactionFilters({
                     To Date
                   </label>
                   <DatePicker
-                    date={filters.dateTo}
-                    setDate={handleDateToChange}
+                    value={filters.dateTo}
+                    onSelect={handleDateToChange}
                     placeholder="End date"
                   />
                 </div>

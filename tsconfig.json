@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "@hominem/root",
-  "extends": "./packages/tsconfig/base.json",
+  "extends": "./packages/tsconfig/workspace.json",
   "compilerOptions": {
     "rootDir": ".",
     "baseUrl": ".",

@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [reactRouter(), tsconfigPaths(), tailwindcss()],
+    build: {
+      sourcemap: false,
+    },
     server: {
       port: 4446,
       strictPort: true,

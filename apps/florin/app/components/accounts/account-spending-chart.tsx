@@ -1,3 +1,5 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { subMonths } from 'date-fns'
 import { useMemo, useState } from 'react'
 import {
@@ -11,8 +13,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { formatCurrency } from '~/lib/number.utils'
 

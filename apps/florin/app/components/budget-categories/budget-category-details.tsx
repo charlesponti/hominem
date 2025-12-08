@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Progress } from '~/components/ui/progress'
+import { Progress } from '@hominem/ui/components/ui/progress'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'

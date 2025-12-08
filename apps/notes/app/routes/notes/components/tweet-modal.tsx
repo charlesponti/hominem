@@ -1,10 +1,5 @@
-'use client'
-
-import { Loader2, RefreshCw, Twitter } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -12,17 +7,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog'
-import { Label } from '~/components/ui/label'
+} from '@hominem/ui/components/ui/dialog'
+import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
-import { Textarea } from '~/components/ui/textarea'
-import { useToast } from '~/components/ui/use-toast'
+} from '@hominem/ui/components/ui/select'
+import { Textarea } from '@hominem/ui/components/ui/textarea'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
+import { Loader2, RefreshCw, Twitter } from 'lucide-react'
+import { useState } from 'react'
+import { Link } from 'react-router'
 import { useContentStrategies } from '~/lib/content/use-content-strategies'
 import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
 import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'

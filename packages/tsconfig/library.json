@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Library Package",
-  "extends": "./base.json",
+  "extends": "./workspace.json",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",

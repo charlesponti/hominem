@@ -1,13 +1,12 @@
 import { logger } from '@hominem/utils/logger'
 import { type ParsedMail, simpleParser } from 'mailparser'
-import type { LambdaEvent } from '../smart-input/smart-input-lambda'
 
-export async function parseEmail(event: LambdaEvent): Promise<ParsedMail> {
+export async function parseEmail(rawEmail: string): Promise<ParsedMail> {
   logger.info('Starting email parsing', {
-    contentLength: event.Records[0].ses.mail.content.length,
+    contentLength: rawEmail.length,
   })
   try {
-    const parsedEmail = await simpleParser(event.Records[0].ses.mail.content)
+    const parsedEmail = await simpleParser(rawEmail)
     logger.info('Email parsed successfully', {
       hasAttachments: !!parsedEmail.attachments,
       attachmentCount: parsedEmail.attachments?.length,

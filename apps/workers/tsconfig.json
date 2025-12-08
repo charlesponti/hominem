@@ -1,18 +1,30 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "API",
-  "extends": "@hominem/tsconfigs/node.json",
+  "extends": "../../packages/tsconfig/node.json",
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "build",
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "composite": true,
-    "declaration": false,
+    "declaration": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
+      "@hominem/utils": ["../../packages/utils/src/index.ts"],
+      "@hominem/utils/*": ["../../packages/utils/src/*"],
+      "@hominem/data": ["../../packages/data/src/index.ts"],
+      "@hominem/data/*": ["../../packages/data/src/*"],
+      "@hominem/chat": ["../../packages/chat/src/index.ts"],
+      "@hominem/chat/*": ["../../packages/chat/src/*"],
+      "@hominem/ai": ["../../packages/ai/src/index.ts"],
+      "@hominem/ai/*": ["../../packages/ai/src/*"],
+      "@hominem/auth": ["../../packages/auth/src/index.ts"],
+      "@hominem/auth/*": ["../../packages/auth/src/*"]
     }
   },
   "references": [

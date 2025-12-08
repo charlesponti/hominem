@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
-import type { AuthConfig, HominemUser } from './types'
+import type { AuthConfig } from './types'
+export { createHominemUserFromSupabase } from './user'
 
 /**
  * Create Supabase client for client-side auth
@@ -12,24 +13,6 @@ export function createSupabaseClient(config: AuthConfig) {
       detectSessionInUrl: true,
     },
   })
-}
-
-/**
- * Convert Supabase user to Hominem user (client-side only)
- * This creates a basic user object without database interaction
- */
-export function createHominemUserFromSupabase(supabaseUser: any): HominemUser {
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || '',
-    name: supabaseUser.user_metadata?.name || supabaseUser.user_metadata?.full_name || undefined,
-    image:
-      supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || undefined,
-    supabaseId: supabaseUser.id,
-    isAdmin: false, // Will be updated by server-side auth
-    createdAt: supabaseUser.created_at || new Date().toISOString(),
-    updatedAt: supabaseUser.updated_at || new Date().toISOString(),
-  }
 }
 
 /**

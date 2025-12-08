@@ -1,11 +1,11 @@
-import type { Note, Priority, TaskMetadata } from '@hominem/utils/types'
+import type { Note, Priority, TaskMetadata } from '@hominem/data/types'
+import { DatePicker } from '@hominem/ui/components/date-picker'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Textarea } from '@hominem/ui/components/ui/textarea'
 import { FileText, ListChecks, RefreshCw, Send, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { DatePicker } from '~/components/ui/date-picker'
-import { Input } from '~/components/ui/input'
-import { PrioritySelect } from '~/components/ui/priority-select'
-import { Textarea } from '~/components/ui/textarea'
+import { PrioritySelect } from '~/components/priority-select'
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes'
 import { cn } from '~/lib/utils'
 
@@ -89,7 +89,7 @@ export function InlineCreateForm({
 
   const handleSave = () => {
     setError(null)
-    const titleToSave = inputTitle.trim()
+    const titleToSave = inputTitle.trim() ?? null
     const contentToSave = inputValue.trim()
 
     if (inputMode === 'note' && !contentToSave) return
@@ -97,7 +97,7 @@ export function InlineCreateForm({
     if (!titleToSave && !contentToSave) return
 
     let itemType: Note['type'] = 'note'
-    const additionalData: any = {}
+    const additionalData: Partial<Note> = {}
 
     if (inputMode === 'task') {
       itemType = 'task'
@@ -118,18 +118,16 @@ export function InlineCreateForm({
       additionalData.tags = extractHashtags(contentToSave)
     }
 
-    const payload = {
-      type: itemType,
-      title: titleToSave,
-      content: contentToSave,
-      ...additionalData,
-    }
-
     if (isEditMode) {
       updateItem.mutate(
         {
           id: itemToEdit.id,
-          data: payload,
+          type: itemToEdit.type,
+          title: itemToEdit.title,
+          content: itemToEdit.content,
+          tags: itemToEdit.tags,
+          taskMetadata: itemToEdit.taskMetadata,
+          analysis: itemToEdit.analysis,
         },
         {
           onSuccess: () => {
@@ -143,16 +141,24 @@ export function InlineCreateForm({
         }
       )
     } else {
-      createItem.mutate(payload, {
-        onSuccess: () => {
-          if (onSuccess) onSuccess()
-          setInputValue('')
-          setInputTitle('')
+      createItem.mutate(
+        {
+          type: itemType,
+          title: titleToSave,
+          content: contentToSave,
+          ...additionalData,
         },
-        onError: (err) => {
-          setError(err instanceof Error ? err : new Error('An unknown error occurred'))
-        },
-      })
+        {
+          onSuccess: () => {
+            if (onSuccess) onSuccess()
+            setInputValue('')
+            setInputTitle('')
+          },
+          onError: (err) => {
+            setError(err instanceof Error ? err : new Error('An unknown error occurred'))
+          },
+        }
+      )
     }
   }
 

@@ -1,4 +1,4 @@
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -6,16 +6,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+} from '@hominem/ui/components/ui/dialog'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
+} from '@hominem/ui/components/ui/select'
 import type { DisplayBudgetCategory } from './budget-category-card'
 
 interface FormData {

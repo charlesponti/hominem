@@ -1,5 +1,15 @@
-'use client'
-
+import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
+import { toast } from '@hominem/ui/components/ui/use-toast'
 import {
   AlertTriangle,
   Building2,
@@ -12,18 +22,6 @@ import {
 import { useState } from 'react'
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
 import { RouteLink } from '~/components/route-link'
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card'
-import { toast } from '~/components/ui/use-toast'
 import { useAllAccounts } from '~/lib/hooks/use-finance-data'
 
 // Simple account card for overview

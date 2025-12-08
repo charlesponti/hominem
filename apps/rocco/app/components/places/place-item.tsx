@@ -2,7 +2,7 @@ import type { ListPlace } from '@hominem/data'
 import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
 import { type MouseEvent, useState } from 'react'
 import { href } from 'react-router'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,13 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
-} from '~/components/ui/dialog'
+} from '@hominem/ui/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
+} from '@hominem/ui/components/ui/dropdown-menu'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
 import { useRemoveListItem } from '~/lib/places'
 import PlaceRow from './place-row'

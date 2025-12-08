@@ -1,8 +1,8 @@
 import { Outlet, useLocation, useSearchParams } from 'react-router'
 import { useEffect } from 'react'
 import { MainNavigation } from '~/components/main-navigation'
-import { Toaster } from '~/components/ui/toaster'
-import { useToast } from '~/components/ui/use-toast'
+import { Toaster } from '@hominem/ui/components/ui/toaster'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 
 export default function Layout() {
   const location = useLocation()

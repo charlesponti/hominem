@@ -1,6 +1,7 @@
 export const sampleUsers = [
   {
     id: '1',
+    supabaseId: '1',
     firstName: 'John',
     lastName: 'Doe',
     email: 'john@example.com',
@@ -14,6 +15,7 @@ export const sampleUsers = [
   },
   {
     id: '2',
+    supabaseId: '2',
     firstName: 'Jane',
     lastName: 'Smith',
     email: 'jane@example.com',

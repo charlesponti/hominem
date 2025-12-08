@@ -23,16 +23,10 @@ export interface EmailOptions {
   }
 }
 
-/**
- * Email service for sending emails via SendGrid
- */
 export const emailService = {
-  /**
-   * Send a generic email
-   */
   async sendEmail(options: EmailOptions): Promise<void> {
-    const fromEmail = options.from?.email ?? env.SENDGRID_SENDER_EMAIL
-    const fromName = options.from?.name ?? env.SENDGRID_SENDER_NAME
+    const fromEmail = options.from?.email ?? env.RESEND_FROM_EMAIL
+    const fromName = options.from?.name ?? env.RESEND_FROM_NAME
     const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail
 
     // Only send an email in prod. Otherwise, log to not waste quota.

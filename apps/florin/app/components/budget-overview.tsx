@@ -1,6 +1,6 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { Target } from 'lucide-react'
 import { useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'

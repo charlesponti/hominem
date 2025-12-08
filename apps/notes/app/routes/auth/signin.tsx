@@ -1,7 +1,13 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { Navigate } from 'react-router'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { useToast } from '~/components/ui/use-toast'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function SignInPage() {
@@ -44,12 +50,6 @@ export default function SignInPage() {
               >
                 {isLoading ? 'Loading...' : 'Continue with Google'}
               </Button>
-            </div>
-
-            <div className="text-center mt-6">
-              <a href="/auth/signup" className="text-sm text-primary hover:underline">
-                Don't have an account? Sign up
-              </a>
             </div>
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
+import { Card, CardContent } from '@hominem/ui/components/ui/card'
+import { Skeleton } from '@hominem/ui/components/ui/skeleton'
 import { Link, useNavigate } from 'react-router'
-import { Card, CardContent } from '~/components/ui/card'
-import { Skeleton } from '~/components/ui/skeleton'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { formatCurrency } from '~/lib/number.utils'
 import type { RouterOutput } from '~/lib/trpc'

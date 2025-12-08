@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 
 interface BudgetCategoriesHeaderProps {
   transactionCategoriesCount?: number

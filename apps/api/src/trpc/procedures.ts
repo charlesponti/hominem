@@ -4,6 +4,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import type { Queue } from 'bullmq'
 import { eq } from 'drizzle-orm'
 import type { HonoRequest } from 'hono'
+import type { HominemUser } from '@hominem/auth'
 import { getHominemUser } from '../middleware/supabase.js'
 
 export interface Context {
@@ -12,7 +13,7 @@ export interface Context {
     plaidSync: Queue
     importTransactions: Queue
   }
-  user?: typeof users.$inferSelect
+  user?: HominemUser
   userId?: string
   supabaseId: string
 }
@@ -43,7 +44,7 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
           // In test mode, we accept either existing supabaseId or use ID as fallback
           // This allows tests that create users without specific supabaseId to pass
           const supabaseId = user.supabaseId || user.id
-          
+
           return next({
             ctx: {
               ...ctx,

@@ -42,16 +42,10 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     server: {
       port: 4454,
       strictPort: true,
-      // Enable CORS for development
-      cors: true,
-      allowedHosts: ['rocco.ponti.local'],
     },
 
-    // General performance optimizations
     build: {
-      // Smaller chunks are better for caching
-      // cssCodeSplit: true,
-      // Reduce bundle size
+      cssCodeSplit: true,
       minify: isProd ? 'terser' : false,
       terserOptions: {
         compress: {
@@ -59,8 +53,10 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           drop_debugger: isProd,
         },
       },
-      // Improve source maps in production
-      sourcemap: isProd ? 'hidden' : true,
+      rollupOptions: {
+        external: ['node:perf_hooks', 'perf_hooks'],
+      },
+      sourcemap: Boolean(isProd),
     },
   }
 })

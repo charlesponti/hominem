@@ -1,6 +1,6 @@
 import { Twitter } from 'lucide-react'
-import { Button } from '~/components/ui/button'
-import { useToast } from '~/components/ui/use-toast'
+import { Button } from '@hominem/ui/components/ui/button'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { useTwitterOAuth } from '~/hooks/use-twitter'
 
 export function ConnectTwitterAccount() {

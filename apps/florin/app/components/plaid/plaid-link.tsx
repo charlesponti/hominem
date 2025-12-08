@@ -2,10 +2,16 @@ import { useAuth } from '@hominem/auth'
 import { AlertCircle, Building2, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { type PlaidLinkOnExit, type PlaidLinkOnSuccess, usePlaidLink } from 'react-plaid-link'
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { toast } from '~/components/ui/use-toast'
+import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
+import { toast } from '@hominem/ui/components/ui/use-toast'
 import { useCreateLinkToken, useExchangeToken } from '~/lib/hooks/use-plaid'
 import { cn } from '~/lib/utils'
 

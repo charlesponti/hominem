@@ -1,6 +1,6 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { Progress } from '@hominem/ui/components/ui/progress'
 import { Target, TrendingDown, TrendingUp } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Progress } from '~/components/ui/progress'
 import { formatCurrency } from '~/lib/number.utils'
 
 interface BudgetTrackingSummaryCardsProps {

@@ -1,11 +1,13 @@
 import { db, UserAuthService } from '@hominem/data'
 import { users } from '@hominem/data/schema'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
-import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie } from 'hono/cookie'
+import { createHominemUserFromDb } from '@hominem/auth'
+import type { HominemUser, SupabaseAuthUser } from '@hominem/auth'
 import { env as appEnv } from '../lib/env.js'
 
 declare module 'hono' {
@@ -39,10 +41,10 @@ export const supabaseClient = createClient(appEnv.SUPABASE_URL, appEnv.SUPABASE_
 })
 
 export async function getHominemUser(
-  tokenOrUser: string | SupabaseUser
-): Promise<typeof users.$inferSelect | null> {
+  tokenOrUser: string | SupabaseAuthUser
+): Promise<HominemUser | null> {
   try {
-    let supabaseUser: SupabaseUser
+    let supabaseUser: SupabaseAuthUser
 
     // If token is provided, validate it and get the user
     if (typeof tokenOrUser === 'string') {
@@ -55,7 +57,7 @@ export async function getHominemUser(
         return null
       }
 
-      supabaseUser = user
+      supabaseUser = user as SupabaseAuthUser
     } else {
       // If SupabaseUser object is provided, use it directly
       supabaseUser = tokenOrUser
@@ -66,7 +68,7 @@ export async function getHominemUser(
 
     // Get the full user record from database
     const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
-    return user || null
+    return user ? createHominemUserFromDb(user) : null
   } catch (error) {
     console.error('Error in getHominemUser:', error)
     return null
@@ -84,10 +86,11 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
         try {
           const [user] = await db.select().from(users).where(eq(users.id, testUserId))
           if (user) {
-            c.set('user', user)
+            const hominemUser = createHominemUserFromDb(user)
+            c.set('user', hominemUser)
             // Ensure supabaseId is set, defaulting to id if null (legacy behavior support)
             // But since we are migrating, it should ideally be equal
-            c.set('supabaseId', user.supabaseId || user.id)
+            c.set('supabaseId', hominemUser.supabaseId || hominemUser.id)
           }
         } catch (error) {
           console.error('Error getting user in test mode:', error)

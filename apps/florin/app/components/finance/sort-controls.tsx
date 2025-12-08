@@ -1,6 +1,6 @@
 import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu'
 import { ListOrdered, PlusCircle } from 'lucide-react'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
+} from '@hominem/ui/components/ui/dropdown-menu'
 import type { SortField, SortOption } from '~/lib/hooks/use-sort'
 import { SortRow } from './sort-row'
 

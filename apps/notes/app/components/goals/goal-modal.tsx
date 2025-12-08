@@ -1,18 +1,18 @@
-import type { Goal, GoalMilestone, GoalStatus } from '@hominem/utils/types'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Controller, useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { Button } from '~/components/ui/button'
-import { DatePicker } from '~/components/ui/date-picker'
+import type { Goal, GoalMilestone, GoalStatus } from '@hominem/data/types'
+import { DatePicker } from '@hominem/ui/components/date-picker'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+} from '@hominem/ui/components/ui/dialog'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Controller, useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { GoalMilestoneList } from './goal-milestone-list'
 
 export const GoalFormSchema = z.object({

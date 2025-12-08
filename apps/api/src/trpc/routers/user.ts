@@ -77,11 +77,12 @@ export const userRouter = router({
             name: input.name,
             avatar_url: input.image,
           },
+          app_metadata: {
+            isAdmin: false,
+          },
         }
 
-        const userAuthData = await UserAuthService.findOrCreateUser(
-          supabaseUser as unknown as import('@supabase/supabase-js').User
-        )
+        const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
 
         // Get the full user record from database
         const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))

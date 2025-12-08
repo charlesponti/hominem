@@ -10,7 +10,7 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { useEffect } from 'react'
-import { Button } from '~/components/ui/button.js'
+import { Button } from '@hominem/ui/components/ui/button'
 import { formatTime, useAudioPlayer } from '~/lib/hooks/use-audio-player.js'
 
 interface AudioPlayerProps {
@@ -59,7 +59,7 @@ export function AudioPlayer({
         audioRef.current?.removeEventListener('ended', handleEnded)
       }
     }
-  }, [onEnded, audioRef.current])
+  }, [onEnded])
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()

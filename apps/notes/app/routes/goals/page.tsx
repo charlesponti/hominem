@@ -1,22 +1,22 @@
-import type { Goal } from '@hominem/utils/types'
-import { Plus } from 'lucide-react'
-import { useState } from 'react'
-import { ArchiveModal } from '~/components/goals/archive-modal'
-import { GoalCard } from '~/components/goals/goal-card'
-import type { GoalFormData } from '~/components/goals/goal-modal'
-import { GoalModal } from '~/components/goals/goal-modal'
-import { Button } from '~/components/ui/button'
-import { Checkbox } from '~/components/ui/checkbox'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import type { Goal } from '@hominem/data/types'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Checkbox } from '@hominem/ui/components/ui/checkbox'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
-import { useToast } from '~/components/ui/use-toast'
+} from '@hominem/ui/components/ui/select'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
+import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import { ArchiveModal } from '~/components/goals/archive-modal'
+import { GoalCard } from '~/components/goals/goal-card'
+import type { GoalFormData } from '~/components/goals/goal-modal'
+import { GoalModal } from '~/components/goals/goal-modal'
 import { trpc } from '~/lib/trpc'
 
 export default function GoalsPage() {
@@ -219,7 +219,7 @@ export default function GoalsPage() {
             <Checkbox
               id="showArchived"
               checked={showArchived}
-              onCheckedChange={(checked) => setShowArchived(Boolean(checked))}
+              onCheckedChange={(checked: boolean) => setShowArchived(Boolean(checked))}
             />
             <Label htmlFor="showArchived">Show Archived</Label>
           </div>

@@ -23,6 +23,12 @@ export const QUEUE_NAMES = {
    * - apps/workers/src/plaid-worker.ts (processing jobs)
    */
   PLAID_SYNC: 'plaid-sync',
+  /**
+   * Queue for processing smart input emails and attachments
+   * Used by:
+   * - apps/workers/src/smart-input/smart-input.worker.ts (processing jobs)
+   */
+  SMART_INPUT: 'smart-input',
 } as const
 
 /**
