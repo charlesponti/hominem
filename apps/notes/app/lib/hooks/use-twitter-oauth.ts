@@ -1,5 +1,5 @@
 import { trpc } from '~/lib/trpc'
-import { useToast } from '~/components/ui/use-toast'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { useCallback } from 'react'
 
 export function useTwitterOAuth() {

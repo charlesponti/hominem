@@ -1,6 +1,5 @@
 import { useIsMobile } from '@hominem/ui'
-import { useEffect, useId, useState } from 'react'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Card,
   CardContent,
@@ -8,29 +7,28 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '~/components/ui/card'
-import { Dialog, DialogContent } from '~/components/ui/dialog'
-import { Drawer, DrawerContent } from '~/components/ui/drawer'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+} from '@hominem/ui/components/ui/card'
+import { Dialog, DialogContent } from '@hominem/ui/components/ui/dialog'
+import { Drawer, DrawerContent } from '@hominem/ui/components/ui/drawer'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
+} from '@hominem/ui/components/ui/select'
+import { useEffect, useId, useState } from 'react'
 import { type RouterOutput, trpc } from '~/lib/trpc'
 
-// Derive form data type from tRPC input schema
-export type BudgetCategoryFormData =
-  RouterOutput['finance']['budget']['categories']['create']['input'] & {
-    id?: string // For updates
-  }
+type BudgetCategoryFormData = Pick<
+  RouterOutput['finance']['budget']['categories']['list'][number],
+  'name' | 'type' | 'averageMonthlyExpense'
+>
 
-// Define props for the component
 interface BudgetCategoryFormProps {
-  category?: RouterOutput['finance']['budget']['categories']['list'][number] // Optional: for editing an existing category
+  category?: RouterOutput['finance']['budget']['categories']['list'][number]
   onSave: (data: BudgetCategoryFormData) => Promise<void>
   onCancel: () => void
   isLoading?: boolean

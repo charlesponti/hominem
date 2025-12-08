@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { Button } from '~/components/ui/button.js'
+import { Button } from '@hominem/ui/components/ui/button'
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
 import type { UploadedFile } from '~/lib/types/upload.js'
 

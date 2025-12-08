@@ -1,6 +1,12 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
 import { Edit3, Trash2 } from 'lucide-react'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import type { RouterOutput } from '~/lib/trpc'
 
 // Derive from tRPC type and add UI-specific properties

@@ -9,9 +9,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '~/components/ui/alert-dialog'
-import { Button } from '~/components/ui/button'
-import { toast } from '~/components/ui/use-toast'
+} from '@hominem/ui/components/ui/alert-dialog'
+import { Button } from '@hominem/ui/components/ui/button'
+import { toast } from '@hominem/ui/components/ui/use-toast'
 import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
 import type { RouterOutput } from '~/lib/trpc'
 import { PlaidStatusBadge } from './plaid-status-badge'
@@ -29,7 +29,7 @@ export function PlaidAccountStatus({
   const handleSync = async () => {
     if (!account.plaidItemId) return
     try {
-      await syncItemMutation.mutateAsync({ itemId: account.plaidItemId })
+      await syncItemMutation.syncItem.mutateAsync(account.plaidItemId)
       toast({
         title: 'Sync Started',
         description: `Started syncing data for ${account.name}`,
@@ -49,7 +49,7 @@ export function PlaidAccountStatus({
   const handleRemoveConnection = async () => {
     if (!account.plaidItemId) return
     try {
-      await removeConnectionMutation.mutateAsync({ itemId: account.plaidItemId })
+      await removeConnectionMutation.removeConnection.mutateAsync(account.plaidItemId)
       toast({
         title: 'Connection Removed',
         description: `${account.name} has been disconnected from Plaid.`,
@@ -95,9 +95,9 @@ export function PlaidAccountStatus({
           variant="outline"
           size="sm"
           onClick={handleSync}
-          disabled={syncItemMutation.isPending || account.plaidItemStatus === 'revoked'}
+          disabled={syncItemMutation.isLoading || account.plaidItemStatus === 'revoked'}
         >
-          {syncItemMutation.isPending ? (
+          {syncItemMutation.isLoading ? (
             <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
           ) : (
             <RefreshCcw className="w-4 h-4 mr-2" />
@@ -106,7 +106,7 @@ export function PlaidAccountStatus({
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm" disabled={removeConnectionMutation.isPending}>
+            <Button variant="destructive" size="sm" disabled={removeConnectionMutation.isLoading}>
               <Trash2 className="w-4 h-4 mr-2" />
               Remove Connection
             </Button>

@@ -1,11 +1,9 @@
-'use client'
-
-import type { Content } from '@hominem/utils/types'
+import type { Content } from '@hominem/data/types'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent } from '@hominem/ui/components/ui/card'
 import { Edit, Trash2, X } from 'lucide-react'
 import { useMemo } from 'react'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent } from '~/components/ui/card'
 
 interface NoteCardProps {
   note: Content

@@ -10,7 +10,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { Button } from '~/components/ui/button.js'
+import { Button } from '@hominem/ui/components/ui/button'
 import { formatDuration, useAudioRecorder } from '~/lib/hooks/use-audio-recorder.js'
 import { AudioPlayer } from './AudioPlayer.js'
 import { AudioWaveform } from './AudioWaveform.js'

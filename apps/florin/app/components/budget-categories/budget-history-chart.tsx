@@ -1,3 +1,4 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import {
   CartesianGrid,
   Legend,
@@ -8,7 +9,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { trpc } from '~/lib/trpc'
 
 interface BudgetHistoryChartProps {

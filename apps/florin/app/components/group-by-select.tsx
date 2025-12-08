@@ -1,12 +1,12 @@
-import { useId } from 'react'
-import { Label } from '~/components/ui/label'
+import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
+} from '@hominem/ui/components/ui/select'
+import { useId } from 'react'
 
 type GroupByOption = 'month' | 'week' | 'day'
 

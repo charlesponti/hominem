@@ -1,5 +1,5 @@
+import { Badge } from '@hominem/ui/components/ui/badge'
 import { CheckCircle } from 'lucide-react'
-import { Badge } from '~/components/ui/badge'
 
 export function PlaidStatusBadge({ status }: { status: string | null }) {
   switch (status) {

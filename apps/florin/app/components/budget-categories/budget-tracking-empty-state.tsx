@@ -1,6 +1,6 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent } from '@hominem/ui/components/ui/card'
 import { AlertTriangle, Target } from 'lucide-react'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent } from '~/components/ui/card'
 
 interface BudgetTrackingEmptyStateProps {
   type: 'no-categories' | 'no-spending-data'

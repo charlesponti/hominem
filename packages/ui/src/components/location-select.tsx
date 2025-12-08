@@ -1,9 +1,7 @@
-'use client'
-
 import type { GeocodeFeature } from '@hominem/utils/location'
 import { Building, MapIcon } from 'lucide-react'
 import * as React from 'react'
-import { Button } from '~/components/ui/button'
+import { Button } from './ui/button'
 import {
   Command,
   CommandEmpty,
@@ -11,9 +9,9 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '~/components/ui/command'
-import { Drawer, DrawerContent, DrawerTrigger } from '~/components/ui/drawer'
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
+} from './ui/command'
+import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { useLocationSearch } from '../hooks/use-location-search'
 import { useMediaQuery } from '../hooks/use-media-query'
 

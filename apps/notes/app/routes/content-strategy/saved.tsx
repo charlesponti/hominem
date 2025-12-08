@@ -1,12 +1,10 @@
-'use client'
-
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent } from '@hominem/ui/components/ui/card'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { Eye, FileText, Plus, Trash2 } from 'lucide-react'
 import { Link } from 'react-router'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent } from '~/components/ui/card'
-import { Loading } from '~/components/ui/loading'
-import { PageContainer } from '~/components/ui/page-container'
-import { useToast } from '~/components/ui/use-toast'
+import { Loading } from '~/components/loading'
+import { PageContainer } from '~/components/page-container'
 import { useContentStrategies, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
 
 export default function SavedContentStrategiesPage() {

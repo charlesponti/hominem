@@ -1,9 +1,15 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { useToast } from '~/components/ui/use-toast'
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 

@@ -112,33 +112,7 @@ const tailwindConfig = {
       },
     },
   },
-  plugins: [require('daisyui'), require('tailwindcss-animate')],
-  daisyui: {
-    themes: [
-      {
-        light: {
-          ...require('daisyui/src/theming/themes').light,
-          primary: '#8B5CF6',
-          'primary-focus': '#7C3AED',
-          secondary: '#EC4899',
-          'secondary-focus': '#DB2777',
-          accent: '#0D9488',
-          'accent-focus': '#0F766E',
-        },
-        dark: {
-          ...require('daisyui/src/theming/themes').dark,
-          primary: '#8B5CF6',
-          'primary-focus': '#7C3AED',
-          secondary: '#EC4899',
-          'secondary-focus': '#DB2777',
-          accent: '#0D9488',
-          'accent-focus': '#0F766E',
-          'base-100': '#0f1729',
-        },
-      },
-    ],
-    darkTheme: 'dark',
-  },
+  plugins: [require('tailwindcss-animate')],
 }
 
 export default tailwindConfig

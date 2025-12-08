@@ -1,7 +1,7 @@
+import { useApiClient } from '@hominem/ui'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { RouteLink } from '~/components/route-link'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,67 +11,31 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '~/components/ui/alert-dialog'
-import { Button, buttonVariants } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { toast } from '~/components/ui/use-toast'
-import { useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+} from '@hominem/ui/components/ui/alert-dialog'
+import { Button, buttonVariants } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
+import { toast } from '@hominem/ui/components/ui/use-toast'
+import { ExportTransactions } from '~/components/finance/export-transactions'
+import { RouteLink } from '~/components/route-link'
 
 export default function AccountPage() {
-  const { signOut } = useSupabaseAuth()
+  const { logout } = useSupabaseAuth()
+  const api = useApiClient()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
-  const { accountsMap } = useFinanceAccounts()
-  const { transactions } = useFinanceTransactions()
-
   const _handleLogout = async () => {
     try {
-      await signOut()
+      await logout()
     } catch (error) {
       console.error('Logout error:', error)
     }
-  }
-
-  const exportTransactions = () => {
-    if (!transactions || transactions.length === 0) {
-      toast({
-        title: 'No Transactions',
-        description: 'There are no transactions to export.',
-        variant: 'default',
-      })
-      return
-    }
-    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account']
-    const csvRows = [
-      headers.join(','),
-      ...transactions.map((tx: FinanceTransaction) => {
-        const account = accountsMap.get(tx.accountId)
-        return [
-          tx.date,
-          `"${tx.description?.replace(/"/g, '""') || ''}"`,
-          tx.amount,
-          tx.category || 'Other',
-          tx.type,
-          account?.name || 'Unknown',
-        ].join(',')
-      }),
-    ]
-    const csvContent = csvRows.join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    const date = new Date().toISOString().split('T')[0]
-    a.href = url
-    a.download = `transactions-${date}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    toast({
-      title: 'Export Successful',
-      description: 'Your transactions have been exported as a CSV file.',
-    })
   }
 
   const deleteAllFinanceData = useMutation<void, Error, void>({
@@ -116,17 +80,7 @@ export default function AccountPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-md">
-              <div>
-                <h3 className="text-md font-semibold">Export Transactions</h3>
-                <p className="text-sm text-muted-foreground">
-                  Download all your transactions as a CSV file.
-                </p>
-              </div>
-              <Button variant="outline" onClick={exportTransactions} className="mt-2 sm:mt-0">
-                Export CSV
-              </Button>
-            </div>
+            <ExportTransactions />
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-md">
               <div>
                 <h3 className="text-md font-semibold">Import Transactions</h3>

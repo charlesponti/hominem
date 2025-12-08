@@ -1,12 +1,10 @@
-@import 'tailwindcss';
-@plugin 'daisyui';
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans:
-    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 html,
@@ -154,11 +152,11 @@ body {
 
 /* Prevent zoom on input focus (iOS) */
 @media screen and (max-width: 768px) {
-  input[type='text'],
-  input[type='email'],
-  input[type='number'],
-  input[type='tel'],
-  input[type='url'],
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
   textarea,
   select {
     font-size: 16px;

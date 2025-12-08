@@ -1,3 +1,7 @@
+import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { ArrowLeft, RefreshCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router'
@@ -5,10 +9,6 @@ import { AccountHeader } from '~/components/accounts/account-header'
 import { AccountSpendingChart } from '~/components/accounts/account-spending-chart'
 import { RouteLink } from '~/components/route-link'
 import { TransactionsList } from '~/components/transactions/transactions-list'
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
 
 export default function AccountDetailsPage() {

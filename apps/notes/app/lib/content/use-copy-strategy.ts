@@ -1,6 +1,6 @@
 import type { ContentStrategiesSelect } from '@hominem/data/schema'
 import { useCallback, useState } from 'react'
-import { useToast } from '~/components/ui/use-toast'
+import { useToast } from '@hominem/ui/components/ui/use-toast'
 import {
   generateBlogContentPlanText,
   generateCompetitiveAnalysisText,

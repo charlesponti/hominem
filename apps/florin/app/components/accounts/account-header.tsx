@@ -1,8 +1,14 @@
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@hominem/ui/components/ui/card'
 import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react'
 import { RouteLink } from '~/components/route-link'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import type { RouterOutput } from '~/lib/trpc'
 import { AccountConnectionDialog } from './account-connection-dialog'
 import { AccountStatusDisplay } from './account-status-display'

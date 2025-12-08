@@ -2,8 +2,8 @@ import { Menu, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Outlet, Link as RouterLink, useRouteLoaderData } from 'react-router'
 import { AppSidebar } from '~/components/app-sidebar'
-import { Button } from '~/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '~/components/ui/sheet'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@hominem/ui/components/ui/sheet'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function Layout() {

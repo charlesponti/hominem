@@ -1,5 +1,14 @@
-'use client'
-
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@hominem/ui/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@hominem/ui/components/ui/select'
 import { AlertTriangle, BarChart3, Calendar, TrendingUp } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import {
@@ -11,17 +20,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { formatCurrency } from '~/lib/number.utils'

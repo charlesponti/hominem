@@ -1,5 +1,5 @@
 {
-  "include": ["app/**/*", ".react-router/types/**/*"],
+  "include": ["app/**/*", ".react-router/types/**/*", "../../packages/ui/src/components/ui/alert-dialog.tsx", "../../packages/ui/src/components/ui/alert.tsx", "../../packages/ui/src/components/ui/aspect-ratio.tsx", "../../packages/ui/src/components/ui/avatar.tsx", "../../packages/ui/src/components/ui/badge.tsx", "../../packages/ui/src/components/ui/calendar.tsx", "../../packages/ui/src/components/ui/card.tsx", "../../packages/ui/src/components/ui/checkbox.tsx", "../../packages/ui/src/components/ui/collapsible.tsx", "../../packages/ui/src/components/ui/context-menu.tsx", "../../packages/ui/src/components/ui/form.tsx", "../../packages/ui/src/components/ui/hover-card.tsx", "../../packages/ui/src/components/ui/menubar.tsx", "../../packages/ui/src/components/ui/navigation-menu.tsx", "../../packages/ui/src/components/ui/scroll-area.tsx", "../../packages/ui/src/components/ui/search-input.tsx", "../../packages/ui/src/components/ui/select.tsx", "../../packages/ui/src/components/ui/separator.tsx", "../../packages/ui/src/components/ui/sidebar.tsx", "../../packages/ui/src/components/ui/skeleton.tsx", "../../packages/ui/src/components/ui/switch.tsx", "../../packages/ui/src/components/ui/table.tsx", "../../packages/ui/src/components/ui/textarea.tsx", "../../packages/ui/src/components/ui/toggle-group.tsx", "../../packages/ui/src/components/ui/toggle.tsx", "../../packages/ui/src/components/ui/tooltip.tsx"],
   "exclude": [
     "../api/**/*",
     "../../packages/**/*",
@@ -23,7 +23,10 @@
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"],
+      "@hominem/ui/components/ui/*": ["../../packages/ui/src/components/ui/*"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"]
     },
     "declaration": false,
     "composite": false,

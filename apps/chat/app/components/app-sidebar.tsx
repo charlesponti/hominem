@@ -1,8 +1,8 @@
+import { Button } from '@hominem/ui/components/ui/button'
 import { Plus, User } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
 import { ChatList } from '~/components/chat/ChatList'
-import { Button } from '~/components/ui/button'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 
@@ -59,7 +59,7 @@ export function AppSidebar({ userId, onNewChat, isMobile = false, onClose }: App
   return (
     <div className="flex flex-col h-full bg-muted/10">
       {/* Header with Logo */}
-      <div className="p-4 border-b flex-shrink-0">
+      <div className="p-4 border-b shrink-0">
         <RouterLink to="/" className="flex items-center space-x-2 mb-4" onClick={handleNavigation}>
           <span className="text-2xl">💬</span>
           <span className="font-bold text-lg">Chat</span>
@@ -104,7 +104,7 @@ export function AppSidebar({ userId, onNewChat, isMobile = false, onClose }: App
       </div>
 
       {/* Bottom Profile Section - Fixed */}
-      <div className="p-4 border-t flex-shrink-0">
+      <div className="p-4 border-t shrink-0">
         {isLoggedIn ? (
           <RouterLink
             to="/profile"

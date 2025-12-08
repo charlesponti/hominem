@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Wifi, WifiOff } from 'lucide-react'
 import { cn } from '~/lib/utils'
-import { Badge } from './ui/badge'
+import { Badge } from '../../../../packages/ui/src/components/ui/badge'
 
 export function WebSocketConnectionBadge({ isConnected }: { isConnected: boolean }) {
   return (

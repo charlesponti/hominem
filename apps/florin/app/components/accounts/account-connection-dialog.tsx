@@ -1,21 +1,21 @@
-import { LinkIcon, UnlinkIcon } from 'lucide-react'
-import { useState } from 'react'
-import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '~/components/ui/dialog'
+} from '@hominem/ui/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
+} from '@hominem/ui/components/ui/select'
+import { LinkIcon, UnlinkIcon } from 'lucide-react'
+import { useState } from 'react'
 import { useFinancialInstitutions } from '~/lib/hooks/use-finance-data'
 import { useLinkAccountToInstitution, useUnlinkAccountFromInstitution } from '~/lib/hooks/use-plaid'
 import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution'
@@ -40,7 +40,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
   const linkedInstitution = institutionsQuery.data?.find(
     (inst) => inst.id === account.institutionId
   )
-  const linkedPlaidAccount = plaidAccountsQuery.data?.find(
+  const linkedPlaidAccount = plaidAccountsQuery.accounts?.find(
     (plaidAcc) => plaidAcc.id === account.plaidItemId
   )
 
@@ -53,7 +53,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
     if (!selectedInstitutionId) return
 
     try {
-      await linkMutation.mutateAsync({
+      await linkMutation.linkAccount.mutateAsync({
         accountId: account.id,
         institutionId: selectedInstitutionId,
         plaidItemId:
@@ -71,7 +71,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
 
   const handleUnlink = async () => {
     try {
-      await unlinkMutation.mutateAsync({ accountId: account.id })
+      await unlinkMutation.unlinkAccount.mutateAsync(account.id)
       setOpen(false)
     } catch (error) {
       console.error('Failed to unlink account:', error)
@@ -142,10 +142,10 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                   variant="destructive"
                   size="sm"
                   onClick={handleUnlink}
-                  disabled={unlinkMutation.isPending}
+                  disabled={unlinkMutation.isLoading}
                   className="w-full"
                 >
-                  {unlinkMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
+                  {unlinkMutation.isLoading ? 'Disconnecting...' : 'Disconnect'}
                 </Button>
               </div>
             </div>
@@ -186,12 +186,12 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                         <SelectItem value="loading" disabled>
                           Loading Plaid accounts...
                         </SelectItem>
-                      ) : (plaidAccountsQuery.data || []).length === 0 ? (
+                      ) : (plaidAccountsQuery.accounts || []).length === 0 ? (
                         <SelectItem value="no-accounts" disabled>
                           No Plaid accounts found for this institution
                         </SelectItem>
                       ) : (
-                        (plaidAccountsQuery.data || []).map((plaidAccount) => (
+                        (plaidAccountsQuery.accounts || []).map((plaidAccount) => (
                           <SelectItem key={plaidAccount.id} value={plaidAccount.id}>
                             <div className="flex flex-col">
                               <span>
@@ -218,9 +218,9 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
               <div className="flex justify-end">
                 <Button
                   onClick={handleLink}
-                  disabled={!selectedInstitutionId || linkMutation.isPending}
+                  disabled={!selectedInstitutionId || linkMutation.isLoading}
                 >
-                  {linkMutation.isPending ? 'Connecting...' : 'Connect Account'}
+                  {linkMutation.isLoading ? 'Connecting...' : 'Connect Account'}
                 </Button>
               </div>
             </div>

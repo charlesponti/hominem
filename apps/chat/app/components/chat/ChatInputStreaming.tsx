@@ -1,7 +1,7 @@
 import { LoaderCircle, Mic, Paperclip, Send, Zap } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { useMatches } from 'react-router'
-import { Button } from '~/components/ui/button.js'
+import { Button } from '@hominem/ui/components/ui/button'
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
 import { useSendMessage } from '~/lib/hooks/use-send-message.js'
 import { useSendMessageStreaming } from '~/lib/hooks/use-send-message-streaming.js'

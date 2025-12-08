@@ -1,8 +1,6 @@
-'use client'
-
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { Slider } from '@hominem/ui/components/ui/slider'
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Slider } from '~/components/ui/slider'
 
 const SalesTaxCalculator = () => {
   const [price, setPrice] = useState(100)

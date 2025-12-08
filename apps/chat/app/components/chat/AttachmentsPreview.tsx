@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { Button } from '~/components/ui/button.js'
+import { Button } from '@hominem/ui/components/ui/button'
 import type { AttachmentsPreviewProps } from '~/lib/types/chat'
 
 export function AttachmentsPreview({ files, onRemoveFile, onRemoveAll }: AttachmentsPreviewProps) {

@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useNavigate } from 'react-router'
-import { Button } from '~/components/ui/button'
+import { Button } from '@hominem/ui/components/ui/button'
 
 interface EmptyStateProps {
   transactionCategoriesCount?: number

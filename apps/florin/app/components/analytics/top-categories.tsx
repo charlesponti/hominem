@@ -1,6 +1,6 @@
-import { Badge } from '~/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Skeleton } from '~/components/ui/skeleton'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { Skeleton } from '@hominem/ui/components/ui/skeleton'
 import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'
 

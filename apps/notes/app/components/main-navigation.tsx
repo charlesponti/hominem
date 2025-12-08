@@ -1,9 +1,9 @@
+import { Button } from '@hominem/ui/components/ui/button'
 import { Bot, Calendar, Lightbulb, Menu, Sparkles, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useUser } from '~/lib/hooks/use-user'
 import { cn } from '~/lib/utils'
-import { Button } from './ui/button'
 
 const navItems = [
   {
@@ -42,7 +42,7 @@ const navItems = [
 export function MainNavigation() {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoading, isAuthenticated, signIn } = useUser()
+  const { isLoading, isAuthenticated, signIn } = useUser()
   const [isMobile, setIsMobile] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [animateExit, setAnimateExit] = useState(false)

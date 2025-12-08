@@ -1,3 +1,6 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { Skeleton } from '@hominem/ui/components/ui/skeleton'
 import type { Dispatch, SetStateAction } from 'react'
 import { useId, useMemo } from 'react'
 import {
@@ -12,9 +15,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
-import { Skeleton } from '~/components/ui/skeleton'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { formatCurrency } from '~/lib/number.utils'
 import { adjustDateRange, formatChartDate } from '~/lib/utils/date.utils'

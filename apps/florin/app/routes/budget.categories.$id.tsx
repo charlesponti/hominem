@@ -1,6 +1,3 @@
-import { Save, Trash2 } from 'lucide-react'
-import { useEffect, useId, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,17 +7,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '~/components/ui/alert-dialog'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+} from '@hominem/ui/components/ui/alert-dialog'
+import { Button } from '@hominem/ui/components/ui/button'
+import { Input } from '@hominem/ui/components/ui/input'
+import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
+} from '@hominem/ui/components/ui/select'
+import { Save, Trash2 } from 'lucide-react'
+import { useEffect, useId, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { trpc } from '~/lib/trpc'
 
 const categoryColors = [
