@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 import { BookmarkCheck, MapPin, Share2, Sparkles } from 'lucide-react'
 import { Link } from 'react-router'
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeInOut' } },
 }
 
 const staggerContainer = {
@@ -51,10 +51,10 @@ export default function AboutPage() {
       >
         <div className="max-w-5xl mx-auto">
           <motion.div variants={fadeIn} className="mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 max-w-3xl">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6">
               You know this feeling
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl font-light leading-relaxed">
+            <p className="text-xl text-gray-600 font-light leading-relaxed">
               Your friend texts you a restaurant recommendation. You save it... somewhere. Three
               months later, you're in that neighborhood and can't remember the name.
             </p>
@@ -114,7 +114,7 @@ export default function AboutPage() {
         viewport={{ once: true, margin: '-100px' }}
         variants={fadeIn}
       >
-        <div className="max-w-3xl mx-auto">
+        <div>
           <h2 className="text-3xl sm:text-4xl font-semibold mb-10">How it started</h2>
           <div className="space-y-6 text-lg text-gray-600 leading-relaxed font-light">
             <p>

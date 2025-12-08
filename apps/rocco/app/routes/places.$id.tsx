@@ -56,10 +56,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <div
-        data-testid="place-page"
-        className="h-full max-w-3xl mx-auto flex flex-col items-start gap-4 pb-20"
-      >
+      <div data-testid="place-page" className="flex flex-col items-start gap-4 pb-20">
         {/* Hero Photo Gallery - Full Width */}
         <div className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700">
           <PlacePhotos alt={place.name} photos={place.photos} />

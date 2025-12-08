@@ -10,16 +10,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const trpcClient = createServerTRPCClient(session.access_token)
 
-  const chats = await trpcClient.chats.getUserChats.query({
+  const [firstChat] = await trpcClient.chats.getUserChats.query({
     limit: 1,
   })
-  if (chats.length > 0) {
-    return redirect(`/chat/${chats[0].id}`)
+
+  if (firstChat) {
+    return redirect(`/chat/${firstChat.id}`)
   }
 
   const newChat = await trpcClient.chats.createChat.mutate({
     title: 'New Chat',
-    userId: user.id,
   })
 
   return redirect(`/chat/${newChat.chat.id}`)

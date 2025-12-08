@@ -48,7 +48,7 @@ const PlacePhotos = ({ alt, photos }: Props) => {
   return (
     <>
       <div
-        className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2 snap-x snap-mandatory scroll-smooth"
+        className="w-full max-w-full flex gap-4 overflow-x-auto overflow-y-hidden pb-2 snap-x snap-mandatory scroll-smooth"
         style={{
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgb(249 249 249) transparent',
@@ -63,7 +63,7 @@ const PlacePhotos = ({ alt, photos }: Props) => {
               type="button"
               key={photoUrl}
               onClick={() => openLightbox(index)}
-              className="shrink-0 snap-center group relative cursor-pointer w-[350px] h-[350px] aspect-square rounded-2xl overflow-hidden bg-gray-100 hover:scale-105 transition-all duration-300"
+              className="shrink-0 snap-center group relative cursor-pointer w-[85vw] h-[85vw] max-w-[350px] max-h-[350px] sm:w-[350px] sm:h-[350px] aspect-square rounded-2xl overflow-hidden bg-gray-100 hover:scale-105 transition-all duration-300"
               aria-label={`View photo ${index + 1} of ${photos.length}`}
             >
               {hasFailed ? (

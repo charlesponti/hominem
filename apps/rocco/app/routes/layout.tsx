@@ -29,9 +29,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Layout() {
   return (
-    <div className="h-screen w-full flex flex-col">
+    <div className="h-screen max-w-3xl mx-auto flex flex-col">
       <Header />
-      <div className="flex-1 flex mt-24 mb-4 w-full max-w-3xl mx-auto px-2">
+      <div className="flex-1 flex flex-col mt-24 mb-4 px-2">
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>

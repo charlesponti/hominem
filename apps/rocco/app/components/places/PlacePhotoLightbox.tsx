@@ -23,6 +23,7 @@ const getImageSize = (photoUrl: string, width = 1200, height = 800): string => {
 
 const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Props) => {
   const [activeIndex, setActiveIndex] = useState(currentIndex)
+  const photo = photos[activeIndex]
 
   useEffect(() => {
     setActiveIndex(currentIndex)
@@ -101,15 +102,16 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
       )}
 
       {/* Main image */}
-      <img
-        src={getImageSize(photos[activeIndex], 1600, 1200)}
-        alt={`${alt} - ${activeIndex + 1}`}
-        className="max-w-[90vw] max-h-[90vh] object-contain"
-        onClick={(e) => e.stopPropagation()}
-      />
+      {photo && (
+        <img
+          src={getImageSize(photo, 1600, 1200)}
+          alt={`${alt} - ${activeIndex + 1}`}
+          className="max-w-[90vw] max-h-[90vh] object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
     </div>
   )
 }
 
 export default PlacePhotoLightbox
-
