@@ -10,8 +10,16 @@ export async function loader({ request }: Route.LoaderArgs) {
   const trpcServer = createCaller(request)
   const url = new URL(request.url)
   const token = url.searchParams.get('token') || undefined
-  const invites = await trpcServer.invites.getAll(token ? { token } : undefined)
-  return { invites, token }
+  let tokenMismatch = false
+
+  const invites = (await trpcServer.invites.getAll(token ? { token } : undefined)) as InviteItem[]
+
+  if (token) {
+    const tokenInvite = invites.find((invite) => invite.token === token)
+    tokenMismatch = Boolean(tokenInvite?.belongsToAnotherUser)
+  }
+
+  return { invites, token, tokenMismatch }
 }
 
 export function HydrateFallback() {
@@ -23,7 +31,7 @@ export function HydrateFallback() {
 }
 
 const Invites = () => {
-  const { invites, token } = useLoaderData<typeof loader>()
+  const { invites, token, tokenMismatch } = useLoaderData<typeof loader>()
   const { revalidate } = useRevalidator()
   const layoutData = useRouteLoaderData('routes/layout') as {
     user: { email?: string } | null
@@ -52,14 +60,21 @@ const Invites = () => {
         </div>
       </div>
 
-      {token && (
+      {token && !tokenMismatch && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Invite loaded via secure link. Accepting will attach it to your current Google login.
         </div>
       )}
 
+      {tokenMismatch && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          This invite was found, but it belongs to a different user. Please sign in with the correct
+          email or ask the sender to re-invite you.
+        </div>
+      )}
+
       {/* Empty State */}
-      {(!invites || invites.length === 0) && (
+      {(!invites || invites.length === 0) && !tokenMismatch && (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white p-6 md:p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
             <Mail className="w-8 h-8 text-indigo-600" />

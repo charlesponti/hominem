@@ -838,12 +838,20 @@ export async function acceptListInvite(
       return { error: 'Invite not found.', status: 404 }
     }
 
-    if (invite.invitedUserId && invite.invitedUserId !== acceptingUserId) {
-      return { error: 'Invite belongs to another user.', status: 403 }
-    }
-
     if (invite.accepted) {
       return { error: 'Invite already accepted.', status: 400 }
+    }
+
+    const listRecord = await db.query.list.findFirst({
+      where: eq(list.id, invite.listId),
+    })
+
+    if (!listRecord) {
+      return { error: 'List not found.', status: 404 }
+    }
+
+    if (listRecord.userId === acceptingUserId) {
+      return { error: 'Cannot accept an invite to a list you own.', status: 400 }
     }
 
     const acceptingUser = await db.query.users.findFirst({ where: eq(users.id, acceptingUserId) })
@@ -870,9 +878,11 @@ export async function acceptListInvite(
         })
         .onConflictDoNothing()
 
-      const l = await tx.query.list.findFirst({
-        where: eq(list.id, invite.listId),
-      })
+      const l =
+        listRecord ||
+        (await tx.query.list.findFirst({
+          where: eq(list.id, invite.listId),
+        }))
       if (!l) throw new Error('List not found after accepting invite.')
       return l
     })

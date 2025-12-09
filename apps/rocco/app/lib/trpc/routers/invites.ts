@@ -29,32 +29,61 @@ export const invitesRouter = router({
 
       const normalizedEmail = ctx.user.email?.toLowerCase()
       const tokenFilter = input?.token
+
       const ownershipClause = normalizedEmail
         ? or(
             eq(listInvite.invitedUserId, ctx.user.id),
             eq(listInvite.invitedUserEmail, normalizedEmail)
           )
         : eq(listInvite.invitedUserId, ctx.user.id)
-      const whereClause = tokenFilter
-        ? and(eq(listInvite.token, tokenFilter), ownershipClause)
-        : ownershipClause
 
-      // Query invites with related list data in a single request
-      const userInvites = await ctx.db.query.listInvite.findMany({
-        where: whereClause,
-        with: {
-          list: true, // Include the related list data
-        },
+      // Base invites for this user (email/id match), excluding lists they own
+      const baseInvites = await ctx.db.query.listInvite.findMany({
+        where: ownershipClause,
+        with: { list: true },
       })
 
-      if (tokenFilter && userInvites.length === 0) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Invite not found',
+      const filteredBaseInvites = baseInvites
+        .filter((invite) => invite.list?.userId !== ctx.user.id)
+        .map((invite) => ({ ...invite, belongsToAnotherUser: false }))
+
+      let tokenInvite:
+        | ((typeof baseInvites)[number] & { belongsToAnotherUser: boolean })
+        | undefined
+
+      if (tokenFilter) {
+        const inviteByToken = await ctx.db.query.listInvite.findFirst({
+          where: eq(listInvite.token, tokenFilter),
+          with: { list: true },
         })
+
+        if (!inviteByToken) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Invite not found',
+          })
+        }
+
+        // Ignore token (and invite) if the user owns the target list
+        if (inviteByToken.list?.userId !== ctx.user.id) {
+          const belongsToAnotherUser =
+            (inviteByToken.invitedUserId && inviteByToken.invitedUserId !== ctx.user.id) ||
+            (normalizedEmail &&
+              inviteByToken.invitedUserEmail &&
+              inviteByToken.invitedUserEmail.toLowerCase() !== normalizedEmail)
+
+          tokenInvite = { ...inviteByToken, belongsToAnotherUser: Boolean(belongsToAnotherUser) }
+        }
       }
 
-      return userInvites
+      const invites = tokenInvite
+        ? [
+            tokenInvite,
+            ...filteredBaseInvites.filter((invite) => invite.token !== tokenInvite?.token),
+          ]
+        : filteredBaseInvites
+
+      return invites
     }),
 
   // Get invites sent by the current user (outbound)

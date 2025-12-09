@@ -14,7 +14,7 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       // Ensure server-only dependencies (e.g., postgres) stay out of the client bundle
-      external: ['postgres', 'node:perf_hooks', 'perf_hooks'],
+      external: ['node:perf_hooks', 'perf_hooks'],
     },
   },
   resolve: {
