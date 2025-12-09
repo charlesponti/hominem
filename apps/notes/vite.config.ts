@@ -13,7 +13,6 @@ export default defineConfig({
   build: {
     sourcemap: false,
     rollupOptions: {
-      // Ensure server-only dependencies (e.g., postgres) stay out of the client bundle
       external: ['node:perf_hooks', 'perf_hooks'],
     },
   },
@@ -21,12 +20,6 @@ export default defineConfig({
     alias: {
       '~': path.resolve(__dirname, 'app'),
     },
-  },
-  optimizeDeps: {
-    exclude: ['postgres'],
-  },
-  ssr: {
-    external: ['postgres'],
   },
   server: {
     port: 4445,
