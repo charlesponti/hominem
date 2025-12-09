@@ -214,7 +214,7 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     expect(membership).toBeTruthy()
   })
 
-  it('rejects accepting an invite already bound to another user', async () => {
+  it('allows accepting an invite even if initially linked to a different user', async () => {
     const otherUserId = crypto.randomUUID()
     const otherEmail = 'other-user@example.com'
     await createTestUser({ id: otherUserId, email: otherEmail })
@@ -226,9 +226,9 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
 
     const response = await acceptListInvite(inviteListId, inviteeUserId, invite.token)
 
-    expect('error' in response).toBe(true)
-    if ('error' in response) {
-      expect(response.status).toBe(403)
+    expect('error' in response).toBe(false)
+    if (!('error' in response)) {
+      expect(response.id).toBe(inviteListId)
     }
 
     await db
@@ -287,5 +287,20 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       .returning()
 
     expect(correctDelete.length).toBe(1)
+  })
+
+  it('prevents accepting an invite to a list you own', async () => {
+    const invite = await sendListInvite(listId, invitedEmail, ownerId)
+    if ('error' in invite) {
+      expect.fail(`Expected invite to be created, got error ${invite.error}`)
+    }
+
+    const response = await acceptListInvite(listId, ownerId, invite.token)
+
+    expect('error' in response).toBe(true)
+    if ('error' in response) {
+      expect(response.status).toBe(400)
+      expect(response.error).toBe('Cannot accept an invite to a list you own.')
+    }
   })
 })
