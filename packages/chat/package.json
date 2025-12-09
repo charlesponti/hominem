@@ -20,7 +20,6 @@
     "@hominem/utils": "workspace:*",
     "@trpc/server": "^11.4.2",
     "ai": "^4.3.16",
-    "drizzle-orm": "0.44.7",
     "postgres": "^3.4.5",
     "uuid": "^11.1.0",
     "zod": "^3.24.3"
@@ -28,6 +27,10 @@
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "@types/uuid": "^10.0.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "drizzle-orm": "0.45.0"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "0.45.0"
   }
 }

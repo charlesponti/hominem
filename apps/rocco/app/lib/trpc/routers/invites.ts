@@ -1,12 +1,12 @@
 import {
   acceptListInvite as acceptListInviteService,
-  getListInvites as getListInvitesService,
   deleteListInvite as deleteListInviteService,
+  getListInvites as getListInvitesService,
   sendListInvite as sendListInviteService,
 } from '@hominem/data'
 import { list, listInvite, userLists, users } from '@hominem/data/db/schema/index'
-import { and, eq, or } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
+import { and, eq, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../context'
 
@@ -200,7 +200,6 @@ export const invitesRouter = router({
         })
       }
 
-      // Use service layer to properly grant list access via user_lists table
       const serviceResponse = await acceptListInviteService(input.listId, ctx.user.id, input.token)
 
       if ('error' in serviceResponse) {

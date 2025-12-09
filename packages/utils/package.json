@@ -97,7 +97,6 @@
     "csvtojson": "^2.0.10",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "0.44.7",
     "drizzle-zod": "^0.7.0",
     "effect": "^3.16.10",
     "esbuild": "^0.21.5",
@@ -127,6 +126,10 @@
     "jsdom": "^26.0.0",
     "typescript": "5.9.3",
     "vfile": "^6.0.3",
-    "vitest": "^3.0.6"
+    "vitest": "^3.0.6",
+    "drizzle-orm": "0.45.0"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "0.45.0"
   }
 }

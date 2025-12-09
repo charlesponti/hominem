@@ -5,16 +5,8 @@ import type { InviteItem } from '~/lib/component-types'
 import { trpc } from '~/lib/trpc/client'
 import Loading from '../loading'
 
-function ListInviteItem({
-  invite,
-  onAcceptInvite,
-}: {
-  invite: InviteItem
-  onAcceptInvite: () => void
-}) {
-  const mutation = trpc.invites.accept.useMutation({
-    onSuccess: onAcceptInvite,
-  })
+function ListInviteItem({ invite }: { invite: InviteItem }) {
+  const mutation = trpc.invites.accept.useMutation()
   const acceptInvite = useCallback(async () => {
     await mutation.mutateAsync({
       listId: invite.listId,
