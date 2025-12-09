@@ -5,6 +5,7 @@ import { contentStrategiesRouter } from './routers/content-strategies'
 import { filesRouter } from './routers/files'
 import { financeRouter } from './routers/finance/finance.trpc'
 import { goalsRouter } from './routers/goals'
+import { lifeEventsRouter } from './routers/life-events'
 import { locationRouter } from './routers/location'
 import { messagesRouter } from './routers/messages'
 import { notesRouter } from './routers/notes'
@@ -31,6 +32,7 @@ export const appRouter = router({
   messages: messagesRouter,
   location: locationRouter,
   goals: goalsRouter,
+  lifeEvents: lifeEventsRouter,
   finance: financeRouter,
   files: filesRouter,
   content: contentRouter,

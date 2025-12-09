@@ -3,7 +3,7 @@ import { users } from '@hominem/data/schema'
 import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { createHominemUserFromDb } from '@hominem/auth'
+import { createHominemUserFromDb } from '@hominem/auth/server'
 import type { HominemUser } from '@hominem/auth'
 import { env } from '../lib/env.js'
 

@@ -1,10 +1,15 @@
-import { createContext } from './context'
-import { appRouter } from './router'
+import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
+import type { AppRouter } from '../../../../../packages/types/trpc'
 
-/**
- * Creates a server-side tRPC caller for use in loaders and actions
- * This uses the local router directly without HTTP overhead
- */
-export const createCaller = (request: Request) =>
-  appRouter.createCaller(() => createContext(request))
-
+export function createServerTRPCClient(accessToken?: string) {
+  return createTRPCProxyClient<AppRouter>({
+    links: [
+      httpBatchLink({
+        url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
+        async headers() {
+          return accessToken ? { authorization: `Bearer ${accessToken}` } : {}
+        },
+      }),
+    ],
+  })
+}

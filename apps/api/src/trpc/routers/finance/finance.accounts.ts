@@ -151,7 +151,6 @@ export const accountsRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      // Ensure exists
       const existing = await getAccountById(input.id, ctx.userId)
       if (!existing) {
         throw new Error('Account not found')

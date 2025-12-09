@@ -4,7 +4,6 @@
   "extends": "../../packages/tsconfig/node.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": ".",
     "outDir": "build",
     "composite": false,
     "declaration": false,

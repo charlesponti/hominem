@@ -1,7 +1,6 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
 import { createLifeEvent, getLifeEvents, getPeople } from '@hominem/data'
-import { publicProcedure, router } from '../context'
+import { z } from 'zod'
+import { publicProcedure, router } from '../procedures'
 
 const listInputSchema = z
   .object({
@@ -32,12 +31,12 @@ export const lifeEventsRouter = router({
   create: publicProcedure.input(createLifeEventSchema).mutation(async ({ input }) => {
     const title = input.title.trim()
     if (!title) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Title is required' })
+      throw new Error('Title is required')
     }
 
     const dateValue = input.date ? new Date(input.date) : new Date()
     if (Number.isNaN(dateValue.getTime())) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid event date' })
+      throw new Error('Invalid event date')
     }
 
     return createLifeEvent({
@@ -54,3 +53,5 @@ export const lifeEventsRouter = router({
     list: publicProcedure.query(async () => getPeople()),
   }),
 })
+
+

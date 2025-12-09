@@ -6,8 +6,6 @@
     "declaration": false,
     "declarationMap": false,
     "paths": {
-      "drizzle-orm": ["../../node_modules/drizzle-orm"],
-      "drizzle-orm/*": ["../../node_modules/drizzle-orm/*"],
       "@hominem/ui": ["../../packages/ui/src/index.ts"],
       "@hominem/ui/*": ["../../packages/ui/src/*"],
       "@hominem/utils": ["../../packages/utils/src/index.ts"],

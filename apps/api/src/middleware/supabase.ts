@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie } from 'hono/cookie'
-import { createHominemUserFromDb } from '@hominem/auth'
+import { createHominemUserFromDb } from '@hominem/auth/server'
 import type { HominemUser, SupabaseAuthUser } from '@hominem/auth'
 import { env as appEnv } from '../lib/env.js'
 

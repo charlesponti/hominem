@@ -1,16 +1,13 @@
 import { SupabaseAuthProvider } from '@hominem/ui'
-import { QueryClientProvider } from '@tanstack/react-query'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
 import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
 import type { Route } from './+types/root'
 import './globals.css'
-import { getQueryClient } from './lib/get-query-client'
-import { trpc, trpcClient } from './lib/trpc'
+import { TRPCProvider } from './lib/trpc'
 
 export async function loader(_args: Route.LoaderArgs) {
-  // No auth loader needed for Supabase - handled client-side
   return {}
 }
 
@@ -23,36 +20,36 @@ export const meta: Route.MetaFunction = () => {
 
 export const links: Route.LinksFunction = () => [
   // Favicon
-  { rel: 'icon', type: 'image/x-icon', href: 'icons/favicon.ico' },
-  { rel: 'icon', type: 'image/png', sizes: '16x16', href: 'icons/favicon-16x16.png' },
-  { rel: 'icon', type: 'image/png', sizes: '32x32', href: 'icons/favicon-32x32.png' },
-  { rel: 'icon', type: 'image/png', sizes: '96x96', href: 'icons/favicon-96x96.png' },
+  { rel: 'icon', type: 'image/x-icon', href: '/icons/favicon.ico' },
+  { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/icons/favicon-16x16.png' },
+  { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/icons/favicon-32x32.png' },
+  { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/icons/favicon-96x96.png' },
 
   // Apple Touch Icons
-  { rel: 'apple-touch-icon', href: 'icons/apple-touch-icon.png' },
-  { rel: 'apple-touch-icon', sizes: '57x57', href: 'icons/apple-touch-icon-57x57.png' },
-  { rel: 'apple-touch-icon', sizes: '60x60', href: 'icons/apple-touch-icon-60x60.png' },
-  { rel: 'apple-touch-icon', sizes: '72x72', href: 'icons/apple-touch-icon-72x72.png' },
-  { rel: 'apple-touch-icon', sizes: '76x76', href: 'icons/apple-touch-icon-76x76.png' },
-  { rel: 'apple-touch-icon', sizes: '114x114', href: 'icons/apple-touch-icon-114x114.png' },
-  { rel: 'apple-touch-icon', sizes: '120x120', href: 'icons/apple-touch-icon-120x120.png' },
-  { rel: 'apple-touch-icon', sizes: '144x144', href: 'icons/apple-touch-icon-144x144.png' },
-  { rel: 'apple-touch-icon', sizes: '152x152', href: 'icons/apple-touch-icon-152x152.png' },
-  { rel: 'apple-touch-icon', sizes: '180x180', href: 'icons/apple-touch-icon-180x180.png' },
+  { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
+  { rel: 'apple-touch-icon', sizes: '57x57', href: '/icons/apple-touch-icon-57x57.png' },
+  { rel: 'apple-touch-icon', sizes: '60x60', href: '/icons/apple-touch-icon-60x60.png' },
+  { rel: 'apple-touch-icon', sizes: '72x72', href: '/icons/apple-touch-icon-72x72.png' },
+  { rel: 'apple-touch-icon', sizes: '76x76', href: '/icons/apple-touch-icon-76x76.png' },
+  { rel: 'apple-touch-icon', sizes: '114x114', href: '/icons/apple-touch-icon-114x114.png' },
+  { rel: 'apple-touch-icon', sizes: '120x120', href: '/icons/apple-touch-icon-120x120.png' },
+  { rel: 'apple-touch-icon', sizes: '144x144', href: '/icons/apple-touch-icon-144x144.png' },
+  { rel: 'apple-touch-icon', sizes: '152x152', href: '/icons/apple-touch-icon-152x152.png' },
+  { rel: 'apple-touch-icon', sizes: '180x180', href: '/icons/apple-touch-icon-180x180.png' },
 
   // Android Icons
-  { rel: 'icon', type: 'image/png', sizes: '36x36', href: 'icons/android-icon-36x36.png' },
-  { rel: 'icon', type: 'image/png', sizes: '48x48', href: 'icons/android-icon-48x48.png' },
-  { rel: 'icon', type: 'image/png', sizes: '72x72', href: 'icons/android-icon-72x72.png' },
-  { rel: 'icon', type: 'image/png', sizes: '96x96', href: 'icons/android-icon-96x96.png' },
-  { rel: 'icon', type: 'image/png', sizes: '144x144', href: 'icons/android-icon-144x144.png' },
-  { rel: 'icon', type: 'image/png', sizes: '192x192', href: 'icons/android-icon-192x192.png' },
+  { rel: 'icon', type: 'image/png', sizes: '36x36', href: '/icons/android-icon-36x36.png' },
+  { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/icons/android-icon-48x48.png' },
+  { rel: 'icon', type: 'image/png', sizes: '72x72', href: '/icons/android-icon-72x72.png' },
+  { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/icons/android-icon-96x96.png' },
+  { rel: 'icon', type: 'image/png', sizes: '144x144', href: '/icons/android-icon-144x144.png' },
+  { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/icons/android-icon-192x192.png' },
 
   // Web Manifest
-  { rel: 'manifest', href: 'icons/manifest.json' },
+  { rel: 'manifest', href: '/icons/manifest.json' },
 
   // Safari Pinned Tab Icon
-  { rel: 'mask-icon', href: 'icons/safari-pinned-tab.svg', color: '#ffffff' },
+  { rel: 'mask-icon', href: '/icons/safari-pinned-tab.svg', color: '#ffffff' },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
@@ -92,15 +89,10 @@ function AppProviders({ children }: { children: React.ReactNode }) {
     twitterIntegration: import.meta.env.VITE_FEATURE_TWITTER_INTEGRATION === 'true',
   }
 
-  const queryClient = getQueryClient()
-
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* @ts-ignore - Type compatibility issue between React Query v5 and TRPC */}
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <FeatureFlagsProvider flags={featureFlags}>{children}</FeatureFlagsProvider>
-      </trpc.Provider>
-    </QueryClientProvider>
+    <TRPCProvider>
+      <FeatureFlagsProvider flags={featureFlags}>{children}</FeatureFlagsProvider>
+    </TRPCProvider>
   )
 }
 

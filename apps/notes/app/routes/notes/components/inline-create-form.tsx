@@ -1,10 +1,10 @@
-import type { Note, Priority, TaskMetadata } from '@hominem/data/types'
+import type { Note, NoteInsert, Priority, TaskMetadata } from '@hominem/data/types'
 import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Button } from '@hominem/ui/components/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { Textarea } from '@hominem/ui/components/ui/textarea'
 import { FileText, ListChecks, RefreshCw, Send, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { PrioritySelect } from '~/components/priority-select'
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes'
 import { cn } from '~/lib/utils'
@@ -38,6 +38,7 @@ export function InlineCreateForm({
 }: InlineCreateFormProps) {
   const createItem = useCreateNote()
   const updateItem = useUpdateNote()
+  const [error, setError] = useState<Error | null>(null)
   const [inputMode, setInputMode] = useState<InputMode>(
     itemToEdit ? (itemToEdit.type as InputMode) : defaultInputMode
   )
@@ -49,60 +50,65 @@ export function InlineCreateForm({
   const [taskDueDate, setTaskDueDate] = useState<Date | undefined>(
     itemToEdit?.taskMetadata?.dueDate ? new Date(itemToEdit.taskMetadata.dueDate) : undefined
   )
-  const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-    if (itemToEdit) {
-      setInputMode(itemToEdit.type as InputMode)
-      setInputValue(itemToEdit.content)
-      setInputTitle(itemToEdit.title || '')
-      if (itemToEdit.type === 'task' && itemToEdit.taskMetadata) {
-        setTaskPriority(itemToEdit.taskMetadata.priority || 'medium')
-        setTaskDueDate(
-          itemToEdit.taskMetadata.dueDate ? new Date(itemToEdit.taskMetadata.dueDate) : undefined
-        )
-      } else {
-        setTaskPriority('medium')
-        setTaskDueDate(undefined)
-      }
+  const resetForm = useCallback(() => {
+    setInputMode(defaultInputMode)
+    setInputValue('')
+    setInputTitle('')
+    setTaskPriority('medium')
+    setTaskDueDate(undefined)
+    setError(null)
+  }, [defaultInputMode])
+
+  const hydrateFromItem = useCallback((item: Note) => {
+    setInputMode(item.type as InputMode)
+    setInputValue(item.content)
+    setInputTitle(item.title || '')
+    if (item.type === 'task' && item.taskMetadata) {
+      setTaskPriority(item.taskMetadata.priority || 'medium')
+      setTaskDueDate(item.taskMetadata.dueDate ? new Date(item.taskMetadata.dueDate) : undefined)
     } else {
-      setInputMode(defaultInputMode)
-      setInputValue('')
-      setInputTitle('')
       setTaskPriority('medium')
       setTaskDueDate(undefined)
     }
-  }, [itemToEdit, defaultInputMode])
+  }, [])
 
-  // Reset form when visibility changes to false
   useEffect(() => {
     if (!isVisible) {
-      setInputValue('')
-      setInputTitle('')
-      setTaskPriority('medium')
-      setTaskDueDate(undefined)
-      setError(null)
+      resetForm()
+      return
     }
-  }, [isVisible])
+
+    if (itemToEdit) {
+      hydrateFromItem(itemToEdit)
+      return
+    }
+
+    resetForm()
+  }, [itemToEdit, isVisible, hydrateFromItem, resetForm])
 
   const isEditMode = mode === 'edit' && itemToEdit
+  const isNoteMode = inputMode === 'note'
+  const isTaskMode = inputMode === 'task'
+  const trimmedTitle = inputTitle.trim()
+  const trimmedContent = inputValue.trim()
+  const titleToSave = trimmedTitle || undefined
+  const contentToSave = trimmedContent
+  const isSaving = isEditMode ? updateItem.isPending : createItem.isPending
+  const isSaveDisabled =
+    isSaving || (!trimmedContent && !trimmedTitle) || (isNoteMode && !trimmedContent)
 
   const handleSave = () => {
     setError(null)
-    const titleToSave = inputTitle.trim() ?? null
-    const contentToSave = inputValue.trim()
 
-    if (inputMode === 'note' && !contentToSave) return
-    if (inputMode === 'task' && !titleToSave && !contentToSave) return
-    if (!titleToSave && !contentToSave) return
+    if (isNoteMode && !contentToSave) return
+    if (isTaskMode && !titleToSave && !contentToSave) return
 
-    let itemType: Note['type'] = 'note'
-    const additionalData: Partial<Note> = {}
+    const additionalData: Partial<NoteInsert> = {}
 
-    if (inputMode === 'task') {
-      itemType = 'task'
-      const existingTaskMetadata =
-        isEditMode && itemToEdit?.taskMetadata ? itemToEdit.taskMetadata : {}
+    const itemType: Note['type'] = isTaskMode ? 'task' : 'note'
+    if (isTaskMode) {
+      const existingTaskMetadata = itemToEdit?.taskMetadata ?? {}
       additionalData.taskMetadata = {
         ...existingTaskMetadata,
         status: itemToEdit?.taskMetadata?.status || 'todo',
@@ -114,7 +120,6 @@ export function InlineCreateForm({
       } as TaskMetadata
       additionalData.tags = itemToEdit?.tags || []
     } else {
-      itemType = 'note'
       additionalData.tags = extractHashtags(contentToSave)
     }
 
@@ -123,17 +128,16 @@ export function InlineCreateForm({
         {
           id: itemToEdit.id,
           type: itemToEdit.type,
-          title: itemToEdit.title,
-          content: itemToEdit.content,
-          tags: itemToEdit.tags,
-          taskMetadata: itemToEdit.taskMetadata,
-          analysis: itemToEdit.analysis,
+          title: titleToSave,
+          content: contentToSave,
+          tags: additionalData.tags,
+          taskMetadata: additionalData.taskMetadata,
+          analysis: additionalData.analysis,
         },
         {
           onSuccess: () => {
             if (onSuccess) onSuccess()
-            setInputValue('')
-            setInputTitle('')
+            resetForm()
           },
           onError: (err) => {
             setError(err instanceof Error ? err : new Error('An unknown error occurred'))
@@ -151,8 +155,7 @@ export function InlineCreateForm({
         {
           onSuccess: () => {
             if (onSuccess) onSuccess()
-            setInputValue('')
-            setInputTitle('')
+            resetForm()
           },
           onError: (err) => {
             setError(err instanceof Error ? err : new Error('An unknown error occurred'))
@@ -163,11 +166,7 @@ export function InlineCreateForm({
   }
 
   const handleCancel = () => {
-    setInputValue('')
-    setInputTitle('')
-    setTaskPriority('medium')
-    setTaskDueDate(undefined)
-    setError(null)
+    resetForm()
     if (onCancel) onCancel()
   }
 
@@ -224,7 +223,7 @@ export function InlineCreateForm({
                 value={taskPriority}
                 onValueChange={setTaskPriority}
                 id="task-priority"
-                className="w-full !h-10"
+                className="w-full h-10"
               />
               <DatePicker
                 value={taskDueDate}
@@ -272,15 +271,11 @@ export function InlineCreateForm({
 
             <Button
               onClick={handleSave}
-              disabled={
-                (isEditMode ? updateItem.isPending : createItem.isPending) ||
-                (!inputValue.trim() && !inputTitle.trim()) ||
-                (inputMode === 'note' && !inputValue.trim())
-              }
+              disabled={isSaveDisabled}
               className="h-8 px-3 bg-indigo-500/90 hover:bg-indigo-600/90 text-white backdrop-blur-sm transition-all hover:shadow-md disabled:bg-slate-300/70 disabled:text-slate-500/90 dark:disabled:bg-slate-700/70 dark:disabled:text-slate-500/90"
               title={isEditMode ? 'Save changes' : `Add ${inputMode}`}
             >
-              {(isEditMode ? updateItem.isPending : createItem.isPending) ? (
+              {isSaving ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />

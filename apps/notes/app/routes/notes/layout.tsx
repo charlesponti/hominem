@@ -4,7 +4,6 @@ import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 export default function NotesLayout() {
   const { userId, isLoading } = useSupabaseAuth()
 
-  // Show loading while Supabase is loading
   if (isLoading) {
     return <div>Loading...</div>
   }

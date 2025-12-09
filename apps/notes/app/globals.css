@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import './animations.css';
+@import "tailwindcss";
+@import "./animations.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -13,9 +13,9 @@ body {
 }
 
 @theme {
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
-  --font-serif: 'EB Garamound', ui-serif, serif;
-  --font-sans: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-serif: "EB Garamound", ui-serif, serif;
+  --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

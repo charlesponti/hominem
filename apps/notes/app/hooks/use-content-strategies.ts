@@ -1,24 +1,5 @@
-import type { ContentStrategy } from '@hominem/utils/types'
 import { trpc } from '~/lib/trpc'
 
-// Type for creating a new content strategy
-type CreateContentStrategyData = {
-  title: string
-  description?: string
-  strategy: ContentStrategy
-}
-
-// Type for updating a content strategy
-type UpdateContentStrategyData = {
-  id: string
-  title?: string
-  description?: string
-  strategy?: ContentStrategy
-}
-
-/**
- * Hook to fetch all content strategies for the current user
- */
 export function useContentStrategies() {
   const query = trpc.contentStrategies.list.useQuery(undefined, {
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -32,11 +13,8 @@ export function useContentStrategies() {
   }
 }
 
-/**
- * Hook to fetch a specific content strategy by ID
- */
 export function useContentStrategy(strategyId: string) {
-  const query = trpc.contentStrategies.get.useQuery(
+  const query = trpc.contentStrategies.getById.useQuery(
     { id: strategyId },
     {
       enabled: !!strategyId,
@@ -52,9 +30,6 @@ export function useContentStrategy(strategyId: string) {
   }
 }
 
-/**
- * Hook to create a new content strategy
- */
 export function useCreateContentStrategy() {
   const utils = trpc.useUtils()
 
@@ -72,16 +47,13 @@ export function useCreateContentStrategy() {
   }
 }
 
-/**
- * Hook to update an existing content strategy
- */
 export function useUpdateContentStrategy() {
   const utils = trpc.useUtils()
 
   const updateStrategy = trpc.contentStrategies.update.useMutation({
     onSuccess: (updatedStrategy) => {
       utils.contentStrategies.list.invalidate()
-      utils.contentStrategies.get.invalidate({ id: updatedStrategy.id })
+      utils.contentStrategies.getById.invalidate({ id: updatedStrategy.id })
     },
   })
 
@@ -93,9 +65,6 @@ export function useUpdateContentStrategy() {
   }
 }
 
-/**
- * Hook to delete a content strategy
- */
 export function useDeleteContentStrategy() {
   const utils = trpc.useUtils()
 

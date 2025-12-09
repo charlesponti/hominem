@@ -43,13 +43,6 @@ describe('Account', () => {
     // Update loader data to use user without avatar
     mockLoaderData.user = userWithoutAvatar
 
-    // Mock user profile query
-    mockTrpcClient.user.getProfile.useQuery.mockReturnValue({
-      data: userWithoutAvatar,
-      isLoading: false,
-      error: null as null | { message: string },
-    } as unknown as ReturnType<typeof mockTrpcClient.user.getProfile.useQuery>)
-
     // Mock delete account mutation
     const mockDeleteMutation = {
       mutate: vi.fn() as (...args: unknown[]) => unknown,
@@ -103,13 +96,6 @@ describe('Account', () => {
       },
     }
 
-    // Mock user profile query with avatar
-    mockTrpcClient.user.getProfile.useQuery.mockReturnValue({
-      data: mockLoaderData.user,
-      isLoading: false,
-      error: null as null | { message: string },
-    } as unknown as ReturnType<typeof mockTrpcClient.user.getProfile.useQuery>)
-
     // Mock delete account mutation
     const mockDeleteMutation = {
       mutate: vi.fn() as (...args: unknown[]) => unknown,
@@ -147,13 +133,6 @@ describe('Account', () => {
   })
 
   test('shows error alert when deletion has error', async () => {
-    // Mock user profile query
-    mockTrpcClient.user.getProfile.useQuery.mockReturnValue({
-      data: MOCK_USER,
-      isLoading: false,
-      error: null as null | { message: string },
-    } as unknown as ReturnType<typeof mockTrpcClient.user.getProfile.useQuery>)
-
     // Mock delete account mutation to throw error
     const mockDeleteMutation = {
       mutate: vi.fn() as (...args: unknown[]) => unknown,

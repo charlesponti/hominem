@@ -26,15 +26,13 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   }
 
   return (
-    <div className="flex flex-col h-full w-full mx-auto text-foreground">
-      <div className="flex-1 max-w-3xl mx-auto">
+    <div className="flex flex-col size-full mx-auto text-foreground">
+      <div className="flex-1">
         <ChatMessages chatId={chatId} status={status} error={error} />
       </div>
 
       <div className="border-t p-4 pb-[calc(env(safe-area-inset-bottom)+8px)]">
-        <div className="max-w-3xl mx-auto">
-          <ChatInput chatId={chatId} onStatusChange={handleMessageStatusChange} />
-        </div>
+        <ChatInput chatId={chatId} onStatusChange={handleMessageStatusChange} />
       </div>
     </div>
   )

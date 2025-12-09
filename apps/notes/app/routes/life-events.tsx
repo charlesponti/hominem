@@ -1,55 +1,54 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { createCaller } from '~/lib/trpc/server'
+import type { RouterInput } from '~/lib/trpc'
+import { createServerTRPCClient } from '~/lib/trpc/server'
+import { getServerSession } from '~/lib/supabase/server'
 import EventForm from '../components/life-events/EventForm'
 import EventList from '../components/life-events/EventList'
 import FiltersSection from '../components/life-events/FiltersSection'
 import StatsDisplay from '../components/life-events/StatsDisplay'
 import type { Route } from './+types/life-events'
 
-interface Person {
+interface LifeEventPerson {
   id: string
   firstName?: string
   lastName?: string
 }
 
-interface Activity {
+interface LifeEventActivity {
   id: string
   date?: string
   time?: string
   title: string
   description?: string
   location?: string
-  people?: Person[]
+  people?: LifeEventPerson[]
   tags?: string[]
 }
+
+type LoaderData = Awaited<ReturnType<typeof loader>>
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const type = url.searchParams.get('type') || undefined
   const companion = url.searchParams.get('companion') || undefined
-  const sortBy =
-    (url.searchParams.get('sortBy') as 'date-asc' | 'date-desc' | 'summary') || 'date-desc'
+  type SortBy = 'date-asc' | 'date-desc' | 'summary'
+  const sortParam = url.searchParams.get('sortBy')
+  const sortBy: SortBy =
+    sortParam === 'date-asc' || sortParam === 'summary' ? sortParam : 'date-desc'
 
-  const client = createCaller(request)
-  // Type assertion needed because TypeScript can't infer nested router types
-  const lifeEvents = client.lifeEvents as {
-    list: (input: {
-      tagNames?: string[]
-      companion?: string
-      sortBy?: 'date-asc' | 'date-desc' | 'summary'
-    }) => Promise<unknown>
-    people: { list: (input: Record<string, never>) => Promise<unknown> }
-    create: (input: unknown) => Promise<unknown>
+  const { session } = await getServerSession(request)
+  const trpc = createServerTRPCClient(session?.access_token)
+
+  const listInput: RouterInput['lifeEvents']['list'] = {
+    tagNames: type ? [type] : undefined,
+    companion: companion || undefined,
+    sortBy,
   }
 
   const [events, people] = await Promise.all([
-    lifeEvents.list({
-      tagNames: type ? [type] : undefined,
-      companion,
-      sortBy,
-    }),
-    lifeEvents.people.list({}),
+    trpc.lifeEvents.list.query(listInput),
+    trpc.lifeEvents.people.list.query(),
   ])
 
   return { events, people }
@@ -57,14 +56,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData()
-  const eventData: {
-    title?: string
-    description?: string
-    date?: string
-    type?: string
-    tags?: string[]
-    people?: string[]
-  } = {}
+  const eventData: Partial<RouterInput['lifeEvents']['create']> = {}
 
   for (const [key, value] of formData.entries()) {
     if (key === 'people') {
@@ -76,7 +68,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
     if (key === 'tags') {
       const tagsValue = value as string
-      eventData.tags = tagsValue.split(',').map((tag: string) => tag.trim())
+      eventData.tags = tagsValue.split(',').map((tag) => tag.trim())
       continue
     }
     if (key === 'title' || key === 'description' || key === 'date' || key === 'type') {
@@ -84,28 +76,27 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
-  // Convert date to ISO string if it exists (tRPC will transform it to Date)
   if (eventData.date) {
     eventData.date = new Date(eventData.date).toISOString()
   }
 
-  const client = createCaller(request)
-  // Type assertion needed because TypeScript can't infer nested router types
-  const lifeEvents = client.lifeEvents as {
-    create: (input: {
-      title?: string
-      description?: string
-      date?: string
-      type?: string
-      tags?: string[]
-      people?: string[]
-    }) => Promise<unknown>
+  const { session } = await getServerSession(request)
+  const trpc = createServerTRPCClient(session?.access_token)
+  const createInput: RouterInput['lifeEvents']['create'] = {
+    title: eventData.title ?? '',
+    description: eventData.description,
+    date: eventData.date,
+    type: eventData.type,
+    tags: eventData.tags,
+    people: eventData.people,
   }
-  const event = await lifeEvents.create(eventData)
+  const event = await trpc.lifeEvents.create.mutate(createInput)
   return { success: true, event }
 }
 
-export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
+export default function LifeEventsPage({
+  loaderData,
+}: Route.ComponentProps & { loaderData: LoaderData }) {
   const navigate = useNavigate()
   const [filterType, setFilterType] = useState('')
   const [filterCompanion, setFilterCompanion] = useState('')
@@ -113,19 +104,29 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [companions, setCompanions] = useState<string[]>([])
 
-  const activities = loaderData?.events || []
-  const people = loaderData?.people || []
+  const activities = ((loaderData?.events ?? []) as LifeEventActivity[]).map((activity) => ({
+    ...activity,
+    description: activity.description ?? undefined,
+    people: activity.people?.map((person) => ({
+      ...person,
+      firstName: person.firstName ?? undefined,
+      lastName: person.lastName ?? undefined,
+    })),
+  }))
+  const people = ((loaderData?.people ?? []) as LifeEventPerson[]).map((person) => ({
+    ...person,
+    firstName: person.firstName ?? undefined,
+    lastName: person.lastName ?? undefined,
+  }))
 
   useEffect(() => {
     // Update companions list from activities data
     const allCompanions = new Set<string>()
-    activities.forEach((activity: Activity) => {
-      if (activity.people) {
-        activity.people.forEach((person: Person) => {
-          const name = `${person.firstName || ''} ${person.lastName || ''}`.trim()
-          if (name) allCompanions.add(name)
-        })
-      }
+    activities.forEach((activity) => {
+      activity.people?.forEach((person) => {
+        const name = `${person.firstName || ''} ${person.lastName || ''}`.trim()
+        if (name) allCompanions.add(name)
+      })
     })
     setCompanions(Array.from(allCompanions).sort())
   }, [activities])
@@ -143,7 +144,7 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
     setShowAddForm(!showAddForm)
   }
 
-  const editEvent = (activity: Activity) => {
+  const editEvent = (activity: LifeEventActivity) => {
     navigate(`/life-events/edit/${activity.id}`)
   }
 

@@ -168,9 +168,6 @@ const mockTrpcClient = {
     },
   },
   user: {
-    getProfile: {
-      useQuery: vi.fn(),
-    },
     deleteAccount: {
       useMutation: vi.fn(),
     },

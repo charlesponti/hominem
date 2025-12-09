@@ -5,29 +5,6 @@ import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures.js'
 
 export const userRouter = router({
-  // Get current user profile
-  getProfile: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const userAuthData = await UserAuthService.findBySupabaseId(ctx.supabaseId)
-      if (!userAuthData) {
-        throw new Error('User not found')
-      }
-
-      // Get the full user record from database
-      const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
-      if (!user) {
-        throw new Error('User not found')
-      }
-
-      return user
-    } catch (error) {
-      throw new Error(
-        `Failed to get user profile: ${error instanceof Error ? error.message : String(error)}`
-      )
-    }
-  }),
-
-  // Update user profile
   updateProfile: protectedProcedure
     .input(
       z.object({
@@ -59,7 +36,6 @@ export const userRouter = router({
       }
     }),
 
-  // Find or create user (for auth flows)
   findOrCreate: protectedProcedure
     .input(
       z.object({
@@ -84,7 +60,6 @@ export const userRouter = router({
 
         const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
 
-        // Get the full user record from database
         const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
         if (!user) {
           throw new Error('User not found after creation')

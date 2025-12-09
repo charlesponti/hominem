@@ -1,6 +1,5 @@
 import { trpc } from '~/lib/trpc'
 
-// Hook for listing notes with filters
 export function useNotesList(
   options: {
     types?: ('note' | 'task' | 'timer' | 'journal' | 'document')[]
@@ -18,7 +17,6 @@ export function useNotesList(
   })
 }
 
-// Hook for getting a single note
 export function useNote(id: string) {
   return trpc.notes.get.useQuery(
     { id },
@@ -29,51 +27,42 @@ export function useNote(id: string) {
   )
 }
 
-// Hook for creating a note
 export function useCreateNote() {
   const utils = trpc.useUtils()
 
   return trpc.notes.create.useMutation({
     onSuccess: () => {
-      // Invalidate and refetch notes list
       utils.notes.list.invalidate()
     },
   })
 }
 
-// Hook for updating a note
 export function useUpdateNote() {
   const utils = trpc.useUtils()
 
   return trpc.notes.update.useMutation({
     onSuccess: (data) => {
-      // Invalidate and refetch notes list
       utils.notes.list.invalidate()
-      // Update the specific note in cache
       utils.notes.get.setData({ id: data.id }, data)
     },
   })
 }
 
-// Hook for deleting a note
 export function useDeleteNote() {
   const utils = trpc.useUtils()
 
   return trpc.notes.delete.useMutation({
     onSuccess: () => {
-      // Invalidate and refetch notes list
       utils.notes.list.invalidate()
     },
   })
 }
 
-// Hook for syncing notes
 export function useSyncNotes() {
   const utils = trpc.useUtils()
 
   return trpc.notes.sync.useMutation({
     onSuccess: () => {
-      // Invalidate and refetch notes list
       utils.notes.list.invalidate()
     },
   })
