@@ -1,6 +1,6 @@
 import { UserAuthService } from '@hominem/data'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { createHominemUserFromDb } from './user'
+import { toHominemUser } from './user'
 import type {
   AuthConfig,
   HominemUser,
@@ -58,7 +58,7 @@ export async function getServerAuth(
     // Get or create Hominem user
     const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
 
-    const hominemUser: HominemUser = createHominemUserFromDb(userAuthData)
+    const hominemUser: HominemUser = toHominemUser(userAuthData)
 
     return {
       user: hominemUser,
@@ -140,3 +140,6 @@ export function getServerAuthConfig(): AuthConfig {
     supabaseAnonKey,
   }
 }
+
+// Re-export for consumers importing from '@hominem/auth/server'
+export { toHominemUser }

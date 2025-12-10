@@ -1,3 +1,5 @@
+import type { HominemUser, SupabaseAuthUser } from '@hominem/auth'
+import { toHominemUser } from '@hominem/auth'
 import { db, UserAuthService } from '@hominem/data'
 import { users } from '@hominem/data/schema'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
@@ -6,8 +8,6 @@ import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie } from 'hono/cookie'
-import { createHominemUserFromDb } from '@hominem/auth/server'
-import type { HominemUser, SupabaseAuthUser } from '@hominem/auth'
 import { env as appEnv } from '../lib/env.js'
 
 declare module 'hono' {
@@ -68,7 +68,7 @@ export async function getHominemUser(
 
     // Get the full user record from database
     const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
-    return user ? createHominemUserFromDb(user) : null
+    return user ? toHominemUser(user) : null
   } catch (error) {
     console.error('Error in getHominemUser:', error)
     return null
@@ -86,7 +86,7 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
         try {
           const [user] = await db.select().from(users).where(eq(users.id, testUserId))
           if (user) {
-            const hominemUser = createHominemUserFromDb(user)
+            const hominemUser = toHominemUser(user)
             c.set('user', hominemUser)
             // Ensure supabaseId is set, defaulting to id if null (legacy behavior support)
             // But since we are migrating, it should ideally be equal

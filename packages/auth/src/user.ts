@@ -43,31 +43,46 @@ function extractIsAdmin(
  * Convert a Supabase user to the canonical HominemUser shape.
  * This is a pure client-side mapping (no database lookup).
  */
-export function createHominemUserFromSupabase(supabaseUser: SupabaseAuthUser): HominemUser {
+type HominemUserSource = SupabaseAuthUser | DbUserLike
+
+function isSupabaseUser(source: HominemUserSource): source is SupabaseAuthUser {
+  return 'user_metadata' in source && 'app_metadata' in source
+}
+
+/**
+ * Single entry point for building a HominemUser from either Supabase auth data
+ * (no DB required) or a database row shape. Source-specific helpers below call this.
+ */
+export function toHominemUser(source: HominemUserSource): HominemUser {
+  if (isSupabaseUser(source)) {
+    return {
+      id: source.id,
+      email: source.email || '',
+      name: extractName(source.user_metadata),
+      image: extractImage(source.user_metadata),
+      supabaseId: source.id,
+      isAdmin: extractIsAdmin(source.user_metadata, source.app_metadata),
+      createdAt: source.created_at || new Date().toISOString(),
+      updatedAt: source.updated_at || source.created_at || new Date().toISOString(),
+    }
+  }
+
   return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || '',
-    name: extractName(supabaseUser.user_metadata),
-    image: extractImage(supabaseUser.user_metadata),
-    supabaseId: supabaseUser.id,
-    isAdmin: extractIsAdmin(supabaseUser.user_metadata, supabaseUser.app_metadata),
-    createdAt: supabaseUser.created_at || new Date().toISOString(),
-    updatedAt: supabaseUser.updated_at || supabaseUser.created_at || new Date().toISOString(),
+    id: source.id,
+    email: source.email,
+    name: source.name || undefined,
+    image: source.image || source.photoUrl || undefined,
+    supabaseId: source.supabaseId,
+    isAdmin: Boolean(source.isAdmin),
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
   }
 }
 
 /**
- * Convert a database user row to the canonical HominemUser shape.
+ * Convert a Supabase user to the canonical HominemUser shape.
+ * Thin wrapper around toHominemUser for backwards compatibility.
  */
-export function createHominemUserFromDb(user: DbUserLike): HominemUser {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name || undefined,
-    image: user.image || user.photoUrl || undefined,
-    supabaseId: user.supabaseId,
-    isAdmin: Boolean(user.isAdmin),
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  }
+export function createHominemUserFromSupabase(supabaseUser: SupabaseAuthUser): HominemUser {
+  return toHominemUser(supabaseUser)
 }

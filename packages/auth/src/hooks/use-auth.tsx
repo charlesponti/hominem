@@ -1,32 +1,20 @@
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createSupabaseClient, getAuthConfig } from '../client'
-import { createHominemUserFromSupabase } from '../user'
 import type { AuthContextType, HominemUser, SupabaseAuthSession, SupabaseAuthUser } from '../types'
+import { createHominemUserFromSupabase } from '../user'
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-interface AuthProviderProps {
-  children: ReactNode
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export function useAuth(): AuthContextType {
   const [user, setUser] = useState<HominemUser | null>(null)
   const [supabaseUser, setSupabaseUser] = useState<SupabaseAuthUser | null>(null)
   const [session, setSession] = useState<SupabaseAuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const config = getAuthConfig()
-  const supabase = createSupabaseClient(config)
+  const config = useMemo(() => getAuthConfig(), [])
+  const supabase = useMemo(() => createSupabaseClient(config), [config])
 
   const refreshUser = useCallback(async () => {
     if (!supabaseUser) return
-
-    try {
-      const hominemUser = createHominemUserFromSupabase(supabaseUser)
-      setUser(hominemUser)
-    } catch (error) {
-      console.error('Error refreshing user:', error)
-    }
+    setUser(createHominemUserFromSupabase(supabaseUser))
   }, [supabaseUser])
 
   useEffect(() => {
@@ -34,65 +22,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeAuth = async () => {
       try {
-        // Get initial session
         const {
           data: { session: initialSession },
           error,
         } = await supabase.auth.getSession()
 
+        if (!mounted) return
+
         if (error) {
           console.error('Error getting initial session:', error)
+          setIsLoading(false)
           return
         }
 
         const typedSession = initialSession as SupabaseAuthSession | null
+        const typedUser = (typedSession?.user as SupabaseAuthUser | null) ?? null
 
-        if (typedSession?.user) {
-          const hominemUser = createHominemUserFromSupabase(typedSession.user)
-          if (mounted) {
-            setSupabaseUser(typedSession.user)
-            setSession(typedSession)
-            setUser(hominemUser)
-          }
-        }
+        setSession(typedSession)
+        setSupabaseUser(typedUser)
+        setUser(typedUser ? createHominemUserFromSupabase(typedUser) : null)
+        setIsLoading(false)
       } catch (error) {
+        if (!mounted) return
         console.error('Error initializing auth:', error)
-      } finally {
-        if (mounted) {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     }
 
     initializeAuth()
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!mounted) return
 
       const typedSession = newSession as SupabaseAuthSession | null
+      const typedUser = (typedSession?.user as SupabaseAuthUser | null) ?? null
 
-      if (typedSession?.user) {
-        const hominemUser = createHominemUserFromSupabase(typedSession.user)
-        setSupabaseUser(typedSession.user)
-        setSession(typedSession)
-        setUser(hominemUser)
-      } else {
-        setSupabaseUser(null)
-        setSession(null)
-        setUser(null)
-      }
-
+      setSession(typedSession)
+      setSupabaseUser(typedUser)
+      setUser(typedUser ? createHominemUserFromSupabase(typedUser) : null)
       setIsLoading(false)
     })
 
     return () => {
       mounted = false
-      subscription.unsubscribe()
+      data?.subscription.unsubscribe()
     }
-  }, [supabase.auth])
+  }, [supabase])
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -132,7 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error: error as Error }
       }
     },
-    [supabase.auth, config.redirectTo]
+    [supabase.auth, config]
   )
 
   const signOut = useCallback(async () => {
@@ -158,7 +133,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [supabase.auth, config.redirectTo]
   )
 
-  const value: AuthContextType = {
+  return {
     user,
     supabaseUser,
     session,
@@ -171,14 +146,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     refreshUser,
   }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 }

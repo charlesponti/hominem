@@ -3,7 +3,7 @@ import { users } from '@hominem/data/schema'
 import { createClient } from '@supabase/supabase-js'
 import { eq } from 'drizzle-orm'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { createHominemUserFromDb } from '@hominem/auth/server'
+import { toHominemUser } from '@hominem/auth/server'
 import type { HominemUser } from '@hominem/auth'
 import { env } from '../lib/env.js'
 
@@ -29,11 +29,11 @@ export async function getHominemUser(supabaseId: string): Promise<HominemUser | 
         supabaseId,
       })
 
-      return createHominemUserFromDb(newUser)
+      return toHominemUser(newUser)
     }
   }
 
-  return user ? createHominemUserFromDb(user) : null
+  return user ? toHominemUser(user) : null
 }
 
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
