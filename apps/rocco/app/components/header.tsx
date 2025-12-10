@@ -50,7 +50,7 @@ const NavigationMenu = ({ onLogoutClick }: NavigationMenuProps) => (
       side="bottom"
     >
       <DropdownMenuItem asChild className="cursor-pointer">
-        <Link to="/explore" className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2">
           <Globe2Icon className="size-4" />
           <span>Explore</span>
         </Link>
