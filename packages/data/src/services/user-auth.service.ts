@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
+import { eq, or } from 'drizzle-orm'
 import { db } from '../db'
-import { users } from '../db/schema'
+import { type UserSelect, users } from '../db/schema'
 
 type AuthUserMetadata = {
   avatar_url?: string
@@ -24,49 +24,23 @@ type SupabaseAuthUser = SupabaseUser & {
   app_metadata: AuthAppMetadata
 }
 
-export interface UserAuthData {
-  id: string
-  email: string
-  name?: string
-  image?: string
-  supabaseId: string
-  isAdmin?: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-/**
- * Standardized service for managing the relationship between Supabase auth and local users table
- */
 export class UserAuthService {
-  /**
-   * Find or create a user from Supabase auth data
-   * This is the single source of truth for user creation/lookup
-   */
-  static async findOrCreateUser(supabaseUser: SupabaseAuthUser): Promise<UserAuthData> {
+  static async getUserById(id: string): Promise<UserSelect | undefined> {
+    return db.query.users.findFirst({ where: eq(users.id, id) }) ?? undefined
+  }
+
+  static async getUserByEmail(email: string): Promise<UserSelect | undefined> {
+    return db.query.users.findFirst({ where: eq(users.email, email) }) ?? undefined
+  }
+
+  static async findOrCreateUser(supabaseUser: SupabaseAuthUser): Promise<UserSelect | null> {
     try {
-      // First, try to find existing user by supabaseId
-      const existingUser = await UserAuthService.findBySupabaseId(supabaseUser.id)
-      if (existingUser) {
-        // Update user data if it has changed
-        await UserAuthService.updateUserFromSupabase(existingUser.id, supabaseUser)
-        return existingUser
-      }
+      const existingUser = await UserAuthService.findByIdOrEmail({
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+      })
+      if (existingUser) return existingUser
 
-      // If not found by supabaseId, try by email (for migration scenarios)
-      if (supabaseUser.email) {
-        const userByEmail = await UserAuthService.findByEmail(supabaseUser.email)
-        if (userByEmail) {
-          // Update existing user with supabaseId
-          const updatedUser = await UserAuthService.updateUserSupabaseId(
-            userByEmail.id,
-            supabaseUser.id
-          )
-          return updatedUser
-        }
-      }
-
-      // Create new user
       return await UserAuthService.createUser(supabaseUser)
     } catch (error) {
       console.error('Error in findOrCreateUser:', {
@@ -80,14 +54,28 @@ export class UserAuthService {
     }
   }
 
-  /**
-   * Find user by Supabase ID
-   */
-  static async findBySupabaseId(supabaseId: string): Promise<UserAuthData | null> {
-    try {
-      const [user] = await db.select().from(users).where(eq(users.supabaseId, supabaseId)).limit(1)
+  static async findByIdOrEmail({
+    id,
+    email,
+  }: {
+    id?: string
+    email?: string
+  }): Promise<UserSelect | null> {
+    if (!id && !email) {
+      return null
+    }
 
-      return user ? UserAuthService.mapToUserAuthData(user) : null
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(or(id ? eq(users.id, id) : undefined, email ? eq(users.email, email) : undefined))
+      .limit(1)
+    return user ?? null
+  }
+
+  static async findBySupabaseId(supabaseId: string): Promise<UserSelect | null> {
+    try {
+      return await UserAuthService.findByIdOrEmail({ id: supabaseId })
     } catch (error) {
       // Extract full error details including nested causes
       const errorDetails: Record<string, unknown> = {
@@ -119,24 +107,7 @@ export class UserAuthService {
     }
   }
 
-  /**
-   * Find user by email
-   */
-  static async findByEmail(email: string): Promise<UserAuthData | null> {
-    try {
-      const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
-
-      return user ? UserAuthService.mapToUserAuthData(user) : null
-    } catch (error) {
-      console.error('Error finding user by email:', error)
-      return null
-    }
-  }
-
-  /**
-   * Create a new user from Supabase data
-   */
-  private static async createUser(supabaseUser: SupabaseAuthUser): Promise<UserAuthData> {
+  private static async createUser(supabaseUser: SupabaseAuthUser): Promise<UserSelect | null> {
     if (!supabaseUser.email) {
       throw new Error('Cannot create user without email')
     }
@@ -154,64 +125,13 @@ export class UserAuthService {
         image,
         supabaseId: supabaseUser.id,
         isAdmin,
-        photoUrl: image, // Keep photoUrl in sync with image
+        photoUrl: image,
       })
       .returning()
 
-    if (!newUser) {
-      throw new Error('User not created')
-    }
-
-    return UserAuthService.mapToUserAuthData(newUser)
+    return newUser ?? null
   }
 
-  /**
-   * Update user data from Supabase (for existing users)
-   */
-  private static async updateUserFromSupabase(
-    userId: string,
-    supabaseUser: SupabaseAuthUser
-  ): Promise<void> {
-    const name = UserAuthService.extractName(supabaseUser)
-    const image = UserAuthService.extractImage(supabaseUser)
-    const isAdmin = UserAuthService.extractIsAdmin(supabaseUser)
-
-    await db
-      .update(users)
-      .set({
-        email: supabaseUser.email || '',
-        name,
-        image,
-        isAdmin,
-        photoUrl: image, // Keep photoUrl in sync with image
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(users.id, userId))
-  }
-
-  /**
-   * Update user's supabaseId (for migration scenarios)
-   */
-  private static async updateUserSupabaseId(
-    userId: string,
-    supabaseId: string
-  ): Promise<UserAuthData> {
-    const [updatedUser] = await db
-      .update(users)
-      .set({ supabaseId })
-      .where(eq(users.id, userId))
-      .returning()
-
-    if (!updatedUser) {
-      throw new Error('User not found')
-    }
-
-    return UserAuthService.mapToUserAuthData(updatedUser)
-  }
-
-  /**
-   * Extract name from Supabase user metadata
-   */
   private static extractName(supabaseUser: SupabaseUser): string | null {
     return (
       supabaseUser.user_metadata?.name ||
@@ -245,19 +165,20 @@ export class UserAuthService {
     )
   }
 
-  /**
-   * Map database user to UserAuthData
-   */
-  private static mapToUserAuthData(user: typeof users.$inferSelect): UserAuthData {
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name || undefined,
-      image: user.image || undefined,
-      supabaseId: user.supabaseId,
-      isAdmin: user.isAdmin,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }
+  static async updateProfileBySupabaseId(
+    supabaseId: string,
+    updates: { name?: string; image?: string }
+  ): Promise<UserSelect | null> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        name: updates.name || null,
+        image: updates.image || null,
+        photoUrl: updates.image || null,
+      })
+      .where(eq(users.supabaseId, supabaseId))
+      .returning()
+
+    return updatedUser ?? null
   }
 }

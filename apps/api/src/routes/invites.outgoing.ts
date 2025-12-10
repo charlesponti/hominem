@@ -1,6 +1,4 @@
-import { db } from '@hominem/data'
-import { listInvite } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
+import { getOutboundInvites } from '@hominem/data'
 import { Hono } from 'hono'
 export const invitesOutgoingRoutes = new Hono()
 
@@ -12,7 +10,7 @@ invitesOutgoingRoutes.get('/', async (c) => {
   }
 
   try {
-    const invites = await db.select().from(listInvite).where(eq(listInvite.userId, userId))
+    const invites = await getOutboundInvites(userId)
 
     return c.json(invites)
   } catch (error) {

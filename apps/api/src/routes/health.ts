@@ -1,7 +1,11 @@
-import { db } from '@hominem/data'
-import { health } from '@hominem/data/schema'
+import {
+  createHealthRecord,
+  deleteHealthRecord,
+  getHealthRecord,
+  listHealthRecords,
+  updateHealthRecord,
+} from '@hominem/data'
 import { zValidator } from '@hono/zod-validator'
-import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 
@@ -48,37 +52,15 @@ export const healthRoutes = new Hono()
 healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
   try {
     const query = c.req.valid('query')
-    const conditions = []
+    const results = await listHealthRecords({
+      userId: query.userId,
+      startDate: query.startDate,
+      endDate: query.endDate,
+      activityType: query.activityType,
+    })
 
-    if (query.userId) {
-      conditions.push(eq(health.userId, query.userId))
-    }
-
-    if (query.startDate) {
-      conditions.push(gte(health.date, query.startDate))
-    }
-
-    if (query.endDate) {
-      conditions.push(lte(health.date, query.endDate))
-    }
-
-    if (query.activityType) {
-      conditions.push(eq(health.activityType, query.activityType))
-    }
-
-    // If we have conditions, apply them with AND
-    if (conditions.length > 0) {
-      const results = await db
-        .select()
-        .from(health)
-        .where(and(...conditions))
-        .orderBy(desc(health.date))
-      return c.json(results)
-    }
-
-    // Otherwise return all data
-    const results = await db.select().from(health).orderBy(desc(health.date))
-    return c.json(results)
+    const sorted = results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return c.json(sorted)
   } catch (error) {
     console.error('Error fetching health data:', error)
     return c.json({ error: 'Failed to fetch health data' }, 500)
@@ -95,13 +77,13 @@ healthRoutes.get('/:id', async (c) => {
       return c.json({ error: 'Invalid ID format' }, 400)
     }
 
-    const result = await db.select().from(health).where(eq(health.id, numericId)).limit(1)
+    const result = await getHealthRecord(numericId)
 
-    if (result.length === 0) {
+    if (!result) {
       return c.json({ error: 'Health record not found' }, 404)
     }
 
-    return c.json(result[0])
+    return c.json(result)
   } catch (error) {
     console.error('Error fetching health record:', error)
     return c.json({ error: 'Failed to fetch health record' }, 500)
@@ -113,8 +95,8 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
   try {
     const validated = c.req.valid('json')
 
-    const result = await db.insert(health).values(validated).returning()
-    return c.json(result[0])
+    const result = await createHealthRecord(validated)
+    return c.json(result)
   } catch (error) {
     console.error('Error creating health record:', error)
     return c.json({ error: 'Failed to create health record' }, 500)
@@ -133,17 +115,13 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
 
     const validated = c.req.valid('json')
 
-    const result = await db
-      .update(health)
-      .set(validated)
-      .where(eq(health.id, numericId))
-      .returning()
+    const result = await updateHealthRecord(numericId, validated)
 
-    if (result.length === 0) {
+    if (!result) {
       return c.json({ error: 'Health record not found' }, 404)
     }
 
-    return c.json(result[0])
+    return c.json(result)
   } catch (error) {
     console.error('Error updating health record:', error)
     return c.json({ error: 'Failed to update health record' }, 500)
@@ -160,8 +138,8 @@ healthRoutes.delete('/:id', async (c) => {
       return c.json({ error: 'Invalid ID format' }, 400)
     }
 
-    const result = await db.delete(health).where(eq(health.id, numericId))
-    if (result.count === 0) {
+    const result = await deleteHealthRecord(numericId)
+    if (!result) {
       return c.json({ error: 'Health record not found' }, 404)
     }
 

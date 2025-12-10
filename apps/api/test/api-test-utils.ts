@@ -1,7 +1,4 @@
-import { db } from '@hominem/data'
-import { users } from '@hominem/data/schema'
 import type { Queue } from 'bullmq'
-import { eq } from 'drizzle-orm'
 import type { Hono } from 'hono'
 import { afterAll, beforeAll, beforeEach, expect, vi } from 'vitest'
 import type { AppEnv } from '../src/server.js'
@@ -19,24 +16,6 @@ export const globalMocks = {
     getJobs: vi.fn(() => Promise.resolve([])),
     // Add other queue methods as needed
   } as Partial<Queue>,
-
-  // Auth middleware mock
-  verifyAuth: vi.fn(async (c, next) => {
-    const testUserId = '00000000-0000-0000-0000-000000000001'
-    c.set('userId', testUserId)
-
-    // For test mode, also set the user object by querying the database
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, testUserId))
-      if (user) {
-        c.set('user', user)
-      }
-    } catch (error) {
-      console.error('Error getting user in test mode:', error)
-    }
-
-    return next()
-  }),
 
   // Rate limit middleware mocks
   rateLimit: vi.fn((_c, next) => {

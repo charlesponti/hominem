@@ -1,3 +1,4 @@
+import { getServerAuth, getServerAuthConfig } from '@hominem/auth/server'
 import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr'
 
 export function createSupabaseServerClient(request: Request) {
@@ -29,22 +30,13 @@ export function createSupabaseServerClient(request: Request) {
 }
 
 export async function getServerSession(request: Request) {
-  const { supabase } = createSupabaseServerClient(request)
+  const auth = await getServerAuth(request, getServerAuthConfig())
 
-  try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
-
-    if (error || !user) {
-      return { user: null }
-    }
-
-    return { user }
-  } catch {
+  if (!auth.isAuthenticated || !auth.user) {
     return { user: null }
   }
+
+  return { user: auth.user }
 }
 
 export async function requireAuth(request: Request) {

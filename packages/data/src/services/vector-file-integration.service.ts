@@ -1,25 +1,19 @@
-import type { ProcessedFile } from './file-processor.service.js'
-import { VectorService } from './vector.service.js'
+import type { ProcessedFile } from './file-processor.service'
+import { VectorService } from './vector.service'
 
-/**
- * Automatically index processed files into the vector store
- */
 export async function indexProcessedFile(
   processedFile: ProcessedFile,
-  userId: string,
-  fileUrl?: string
+  userId: string
 ): Promise<{ success: boolean; vectorIds: string[] }> {
   try {
     const vectorIds: string[] = []
 
-    // Only index files that have extractable text content
     if (!processedFile.textContent && !processedFile.content) {
       return { success: true, vectorIds: [] }
     }
 
     const content = processedFile.textContent || processedFile.content || ''
 
-    // Prepare metadata
     const metadata = {
       fileId: processedFile.id,
       originalName: processedFile.originalName,
@@ -29,21 +23,10 @@ export async function indexProcessedFile(
       ...(processedFile.metadata || {}),
     }
 
-    const _options = {
-      title: processedFile.originalName,
-      source: fileUrl || processedFile.id,
-      sourceType: 'file',
-    }
-
-    // For large documents, use chunking
     if (content.length > 1000) {
-      const _result = await VectorService.ingestMarkdown(content, userId, metadata)
-      // Note: ingestMarkdown returns chunksProcessed, but we need to get the actual IDs
-      // This is a limitation of the current API - we'd need to modify the vector service
-      // to return the actual document IDs
+      await VectorService.ingestMarkdown(content, userId, metadata)
       vectorIds.push(`chunked-${processedFile.id}`)
     } else {
-      // For smaller documents, add as single entry
       const result = await VectorService.ingestMarkdown(content, userId, metadata)
       if (result.success) {
         vectorIds.push(processedFile.id)

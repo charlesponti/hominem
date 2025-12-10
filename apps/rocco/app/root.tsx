@@ -1,15 +1,15 @@
+import { SupabaseAuthProvider } from '@hominem/ui'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-import type { Route } from './+types/root'
 import './index.css'
+import { createClient } from './lib/supabase/client'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
 
-// Initialize production logging if in production
 if (process.env.NODE_ENV === 'production') {
   initProductionLogging()
 }
 
-export const links: Route.LinksFunction = () => [
+export const links = () => [
   { rel: 'icon', href: '/favicons/favicon.ico' },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
@@ -19,12 +19,11 @@ export const links: Route.LinksFunction = () => [
   },
 ]
 
-export const meta: Route.MetaFunction = () => [
-  { title: 'rocco' },
-  { name: 'description', content: 'rocco' },
-]
+export const meta = () => [{ title: 'rocco' }, { name: 'description', content: 'rocco' }]
 
 export default function App() {
+  const supabaseClient = createClient()
+
   return (
     <html lang="en">
       <head>
@@ -34,9 +33,11 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <TRPCProvider>
-          <Outlet />
-        </TRPCProvider>
+        <SupabaseAuthProvider client={supabaseClient}>
+          <TRPCProvider>
+            <Outlet />
+          </TRPCProvider>
+        </SupabaseAuthProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

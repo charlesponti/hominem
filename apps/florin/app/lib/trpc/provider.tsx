@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
-import { useState } from 'react'
 import type React from 'react'
+import { useState } from 'react'
 import { createClient } from '../supabase/client'
 import { trpc } from './client'
 
@@ -13,7 +13,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: '/api/trpc',
+          url: import.meta.env.VITE_PUBLIC_API_URL,
           async headers() {
             const {
               data: { session },
@@ -36,4 +36,3 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     </trpc.Provider>
   )
 }
-

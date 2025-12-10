@@ -2,18 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createContext, type ReactNode, useContext } from 'react'
 import { useSupabaseAuth } from '../hooks/use-supabase-auth'
 
-interface SupabaseAuthContextType {
-  user: unknown
-  isAuthenticated: boolean
-  isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  signup: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  resetPassword: (email: string) => Promise<void>
-  signInWithGoogle: () => Promise<void>
-  signInWithGitHub: () => Promise<void>
-  userId?: string
-}
+type SupabaseAuthContextType = ReturnType<typeof useSupabaseAuth>
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined)
 

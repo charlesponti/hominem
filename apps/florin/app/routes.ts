@@ -24,6 +24,7 @@ export default [
     route('finance/runway', 'routes/finance.runway.tsx'),
     route('/account', 'routes/account.tsx'),
     route('/auth/signin', 'routes/auth/signin.tsx'),
+    route('/auth/callback', 'routes/auth.callback.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
   ]),
 ] as RouteConfig

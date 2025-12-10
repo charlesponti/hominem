@@ -1,20 +1,16 @@
-import crypto from 'node:crypto'
-import { db } from '@hominem/data'
-import { bookmark } from '@hominem/data/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import {
+  createBookmarkForUser,
+  deleteBookmarkForUser,
+  listBookmarksByUser,
+  updateBookmarkForUser,
+} from '@hominem/data'
 import { z } from 'zod'
 import { convertOGContentToBookmark, getOpenGraphData } from '../../lib/bookmarks.utils.js'
 import { protectedProcedure, router } from '../procedures.js'
 
 export const bookmarksRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
-    const bookmarks = await db
-      .select()
-      .from(bookmark)
-      .where(eq(bookmark.userId, ctx.userId))
-      .orderBy(desc(bookmark.createdAt))
-
-    return bookmarks
+    return listBookmarksByUser(ctx.userId)
   }),
 
   create: protectedProcedure
@@ -56,16 +52,7 @@ export const bookmarksRouter = router({
           }
         }
 
-        const [newBookmark] = await db
-          .insert(bookmark)
-          .values({
-            ...converted,
-            id: crypto.randomUUID(),
-            userId: ctx.userId,
-          })
-          .returning()
-
-        return newBookmark
+        return await createBookmarkForUser(ctx.userId, converted)
       } catch (error) {
         console.error('Error creating bookmark:', error)
         throw new Error('Failed to create bookmark')
@@ -112,11 +99,7 @@ export const bookmarksRouter = router({
           }
         }
 
-        const [updatedBookmark] = await db
-          .update(bookmark)
-          .set(converted)
-          .where(and(eq(bookmark.id, id), eq(bookmark.userId, ctx.userId)))
-          .returning()
+        const updatedBookmark = await updateBookmarkForUser(id, ctx.userId, converted)
 
         if (!updatedBookmark) {
           throw new Error('Bookmark not found or not owned by user')
@@ -138,8 +121,7 @@ export const bookmarksRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id } = input
 
-      await db.delete(bookmark).where(and(eq(bookmark.id, id), eq(bookmark.userId, ctx.userId)))
-
-      return { success: true }
+      const deleted = await deleteBookmarkForUser(id, ctx.userId)
+      return { success: deleted }
     }),
 })

@@ -1,13 +1,11 @@
-import { db } from '@hominem/data'
-import { transactions } from '@hominem/data/schema'
-import { buildWhereConditions, categoryBreakdownSchema } from '@hominem/data/finance'
 import {
   calculateTransactions,
+  categoryBreakdownSchema,
   findTopMerchants,
   generateTimeSeriesData,
+  getMonthlyStats,
   summarizeByCategory,
 } from '@hominem/data/finance'
-import { count, desc, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'
 
@@ -106,69 +104,6 @@ export const analyzeRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const { month } = input // Format: YYYY-MM
-
-      // Calculate start and end dates for the month (inclusive start, exclusive end)
-      const startDate = new Date(`${month}-01T00:00:00.000Z`)
-      const endDate = new Date(startDate)
-      endDate.setMonth(startDate.getMonth() + 1)
-
-      // Use standardized condition building with month date range
-      const monthFilter = buildWhereConditions({
-        userId: ctx.userId,
-        from: startDate.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
-        to: endDate.toISOString().split('T')[0],
-      })
-
-      const totalsResult = await db
-        .select({
-          totalIncome:
-            sql<number>`sum(case when ${transactions.amount} > 0 then ${transactions.amount} else 0 end)`.mapWith(
-              Number
-            ),
-          totalExpenses:
-            sql<number>`sum(case when ${transactions.amount} < 0 then abs(${transactions.amount}) else 0 end)`.mapWith(
-              Number
-            ),
-          transactionCount: count(),
-        })
-        .from(transactions)
-        .where(monthFilter)
-
-      const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {}
-
-      // 2. Calculate Spending by Category (only expenses)
-      const categorySpendingFilter = buildWhereConditions({
-        userId: ctx.userId,
-        from: startDate.toISOString().split('T')[0],
-        to: endDate.toISOString().split('T')[0],
-        type: 'expense',
-      })
-
-      const categorySpendingResult = await db
-        .select({
-          category: transactions.category,
-          amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number),
-        })
-        .from(transactions)
-        .where(categorySpendingFilter)
-        .groupBy(transactions.category)
-        .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`))
-
-      const stats = {
-        month,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        totalIncome,
-        totalExpenses,
-        netIncome: totalIncome - totalExpenses,
-        transactionCount,
-        categorySpending: categorySpendingResult.map((c) => ({
-          name: c.category,
-          amount: c.amount,
-        })),
-      }
-
-      return stats
+      return getMonthlyStats({ month: input.month, userId: ctx.userId })
     }),
 })

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { FileObject } from '@supabase/storage-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { supabaseAdmin } from './client'
+import { supabaseAdmin } from './admin'
 
 export interface StoredFile {
   id: string
@@ -108,7 +108,7 @@ export class SupabaseStorageService {
    * @returns StoredFile object with metadata
    */
   async storeFile(
-    buffer: ArrayBufferLike,
+    buffer: Buffer,
     originalName: string,
     mimetype: string,
     userId: string

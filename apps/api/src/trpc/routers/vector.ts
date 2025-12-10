@@ -1,7 +1,7 @@
+import { VectorService } from '@hominem/data/vector'
 import { fileStorageService } from '@hominem/utils/supabase'
 import { z } from 'zod'
 import { handleFileUploadBuffer } from '../../middleware/file-upload.js'
-import { VectorService } from '../../services/vector.service.js'
 import { protectedProcedure, router } from '../procedures.js'
 
 export const vectorRouter = router({
@@ -153,7 +153,7 @@ export const vectorRouter = router({
 
         // Store file using fileStorageService (no disk I/O needed)
         const storedFile = await fileStorageService.storeFile(
-          uploadedFile.buffer.buffer,
+          Buffer.from(uploadedFile.buffer.buffer),
           uploadedFile.filename || 'upload.csv',
           uploadedFile.mimetype,
           ctx.userId

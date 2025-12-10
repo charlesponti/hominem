@@ -10,7 +10,6 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
   )
 }
 
-// Create a single supabase client for server-side operations
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: {
     autoRefreshToken: false,

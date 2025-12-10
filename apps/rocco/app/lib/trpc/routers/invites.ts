@@ -1,12 +1,18 @@
 import {
   acceptListInvite as acceptListInviteService,
+  deleteInviteByListAndToken,
   deleteListInvite as deleteListInviteService,
+  getInviteByListAndToken,
+  getInviteByToken,
+  getInvitesForUser,
   getListInvites as getListInvitesService,
+  getListOwnedByUser,
+  getOutboundInvites,
+  isUserMemberOfList,
   sendListInvite as sendListInviteService,
+  UserAuthService,
 } from '@hominem/data'
-import { list, listInvite, userLists, users } from '@hominem/data/db/schema/index'
 import { TRPCError } from '@trpc/server'
-import { and, eq, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../context'
 
@@ -30,18 +36,7 @@ export const invitesRouter = router({
       const normalizedEmail = ctx.user.email?.toLowerCase()
       const tokenFilter = input?.token
 
-      const ownershipClause = normalizedEmail
-        ? or(
-            eq(listInvite.invitedUserId, ctx.user.id),
-            eq(listInvite.invitedUserEmail, normalizedEmail)
-          )
-        : eq(listInvite.invitedUserId, ctx.user.id)
-
-      // Base invites for this user (email/id match), excluding lists they own
-      const baseInvites = await ctx.db.query.listInvite.findMany({
-        where: ownershipClause,
-        with: { list: true },
-      })
+      const baseInvites = await getInvitesForUser(ctx.user.id, normalizedEmail)
 
       const filteredBaseInvites = baseInvites
         .filter((invite) => invite.list?.userId !== ctx.user.id)
@@ -52,10 +47,7 @@ export const invitesRouter = router({
         | undefined
 
       if (tokenFilter) {
-        const inviteByToken = await ctx.db.query.listInvite.findFirst({
-          where: eq(listInvite.token, tokenFilter),
-          with: { list: true },
-        })
+        const inviteByToken = await getInviteByToken(tokenFilter)
 
         if (!inviteByToken) {
           throw new TRPCError({
@@ -95,12 +87,7 @@ export const invitesRouter = router({
       })
     }
 
-    const outboundInvites = await ctx.db.query.listInvite.findMany({
-      where: eq(listInvite.userId, ctx.user.id),
-      with: {
-        list: true,
-      },
-    })
+    const outboundInvites = await getOutboundInvites(ctx.user.id)
 
     return outboundInvites.map((invite) => ({
       ...invite,
@@ -120,9 +107,7 @@ export const invitesRouter = router({
       }
 
       // Only allow if user owns the list
-      const listItem = await ctx.db.query.list.findFirst({
-        where: and(eq(list.id, input.listId), eq(list.userId, ctx.user.id)),
-      })
+      const listItem = await getListOwnedByUser(input.listId, ctx.user.id)
       if (!listItem) {
         throw new TRPCError({
           code: 'FORBIDDEN',
@@ -163,9 +148,7 @@ export const invitesRouter = router({
       }
 
       // Check if user owns the list
-      const listItem = await ctx.db.query.list.findFirst({
-        where: and(eq(list.id, input.listId), eq(list.userId, ctx.user.id)),
-      })
+      const listItem = await getListOwnedByUser(input.listId, ctx.user.id)
 
       if (!listItem) {
         throw new TRPCError({
@@ -175,14 +158,10 @@ export const invitesRouter = router({
       }
 
       // Check if the invited user is already a member
-      const invitedUser = await ctx.db.query.users.findFirst({
-        where: eq(users.email, normalizedEmail),
-      })
+      const invitedUser = await UserAuthService.getUserByEmail(normalizedEmail)
 
       if (invitedUser) {
-        const isAlreadyMember = await ctx.db.query.userLists.findFirst({
-          where: and(eq(userLists.listId, input.listId), eq(userLists.userId, invitedUser.id)),
-        })
+        const isAlreadyMember = await isUserMemberOfList(input.listId, invitedUser.id)
 
         if (isAlreadyMember) {
           throw new TRPCError({
@@ -245,9 +224,9 @@ export const invitesRouter = router({
         })
       }
 
-      // Return the updated invite record for backward compatibility
-      const updatedInvite = await ctx.db.query.listInvite.findFirst({
-        where: and(eq(listInvite.listId, input.listId), eq(listInvite.token, input.token)),
+      const updatedInvite = await getInviteByListAndToken({
+        listId: input.listId,
+        token: input.token,
       })
 
       if (!updatedInvite) {
@@ -275,8 +254,9 @@ export const invitesRouter = router({
         })
       }
 
-      const invite = await ctx.db.query.listInvite.findFirst({
-        where: and(eq(listInvite.listId, input.listId), eq(listInvite.token, input.token)),
+      const invite = await getInviteByListAndToken({
+        listId: input.listId,
+        token: input.token,
       })
 
       if (!invite) {
@@ -293,12 +273,12 @@ export const invitesRouter = router({
         })
       }
 
-      const deletedInvite = await ctx.db
-        .delete(listInvite)
-        .where(and(eq(listInvite.listId, input.listId), eq(listInvite.token, input.token)))
-        .returning()
+      const deleted = await deleteInviteByListAndToken({
+        listId: input.listId,
+        token: input.token,
+      })
 
-      if (deletedInvite.length === 0) {
+      if (!deleted) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Invite not found',

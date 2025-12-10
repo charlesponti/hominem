@@ -2,11 +2,13 @@ import { and, eq, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { db } from '../../db'
 import {
-  financeAccounts,
-  transactions,
   type FinanceAccount,
   type FinanceAccountInsert,
   type FinanceTransaction,
+  financialInstitutions,
+  financeAccounts,
+  plaidItems,
+  transactions,
 } from '../../db/schema'
 import { logger } from '../../logger'
 
@@ -129,6 +131,16 @@ export async function deleteAccount(id: string, userId: string): Promise<void> {
   }
 }
 
+export async function findAccountByNameForUser(
+  userId: string,
+  name: string
+): Promise<FinanceAccount | null> {
+  const existingAccount = await db.query.financeAccounts.findFirst({
+    where: and(eq(financeAccounts.userId, userId), eq(financeAccounts.name, name)),
+  })
+  return existingAccount ?? null
+}
+
 export async function listAccountsWithRecentTransactions(
   userId: string,
   transactionLimit = 5
@@ -199,6 +211,117 @@ export async function listAccountsWithRecentTransactions(
   }
 }
 
+export async function getAccountWithPlaidInfo(
+  accountId: string,
+  userId: string
+): Promise<
+  | (FinanceAccount & {
+      institutionName: string | null
+      institutionLogo: string | null
+      isPlaidConnected: boolean
+      plaidItemStatus: string | null
+      plaidItemError: unknown
+      plaidLastSyncedAt: Date | null
+      plaidItemInternalId: string | null
+      plaidInstitutionId: string | null
+      plaidInstitutionName: string | null
+    })
+  | null
+> {
+  const [account] = await db
+    .select({
+      id: financeAccounts.id,
+      userId: financeAccounts.userId,
+      name: financeAccounts.name,
+      type: financeAccounts.type,
+      balance: financeAccounts.balance,
+      interestRate: financeAccounts.interestRate,
+      minimumPayment: financeAccounts.minimumPayment,
+      institutionId: financeAccounts.institutionId,
+      plaidAccountId: financeAccounts.plaidAccountId,
+      plaidItemId: financeAccounts.plaidItemId,
+      mask: financeAccounts.mask,
+      isoCurrencyCode: financeAccounts.isoCurrencyCode,
+      subtype: financeAccounts.subtype,
+      officialName: financeAccounts.officialName,
+      limit: financeAccounts.limit,
+      meta: financeAccounts.meta,
+      lastUpdated: financeAccounts.lastUpdated,
+      createdAt: financeAccounts.createdAt,
+      updatedAt: financeAccounts.updatedAt,
+      institutionName: financialInstitutions.name,
+      institutionLogo: financialInstitutions.logo,
+      isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`,
+      plaidItemStatus: plaidItems.status,
+      plaidItemError: plaidItems.error,
+      plaidLastSyncedAt: plaidItems.lastSyncedAt,
+      plaidItemInternalId: plaidItems.id,
+      plaidInstitutionId: plaidItems.institutionId,
+      plaidInstitutionName: financialInstitutions.name,
+    })
+    .from(financeAccounts)
+    .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
+    .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+    .where(and(eq(financeAccounts.id, accountId), eq(financeAccounts.userId, userId)))
+
+  return account ?? null
+}
+
+export async function listAccountsWithPlaidInfo(userId: string) {
+  return db
+    .select({
+      id: financeAccounts.id,
+      userId: financeAccounts.userId,
+      name: financeAccounts.name,
+      type: financeAccounts.type,
+      balance: financeAccounts.balance,
+      interestRate: financeAccounts.interestRate,
+      minimumPayment: financeAccounts.minimumPayment,
+      institutionId: financeAccounts.institutionId,
+      plaidAccountId: financeAccounts.plaidAccountId,
+      plaidItemId: financeAccounts.plaidItemId,
+      mask: financeAccounts.mask,
+      isoCurrencyCode: financeAccounts.isoCurrencyCode,
+      subtype: financeAccounts.subtype,
+      officialName: financeAccounts.officialName,
+      limit: financeAccounts.limit,
+      meta: financeAccounts.meta,
+      lastUpdated: financeAccounts.lastUpdated,
+      createdAt: financeAccounts.createdAt,
+      updatedAt: financeAccounts.updatedAt,
+      institutionName: financialInstitutions.name,
+      institutionLogo: financialInstitutions.logo,
+      isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`,
+      plaidItemStatus: plaidItems.status,
+      plaidItemError: plaidItems.error,
+      plaidLastSyncedAt: plaidItems.lastSyncedAt,
+      plaidItemInternalId: plaidItems.id,
+      plaidInstitutionId: plaidItems.institutionId,
+      plaidInstitutionName: financialInstitutions.name,
+    })
+    .from(financeAccounts)
+    .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
+    .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+    .where(eq(financeAccounts.userId, userId))
+}
+
+export async function listPlaidConnectionsForUser(userId: string) {
+  return db
+    .select({
+      id: plaidItems.id,
+      itemId: plaidItems.itemId,
+      institutionId: plaidItems.institutionId,
+      institutionName: financialInstitutions.name,
+      status: plaidItems.status,
+      lastSyncedAt: plaidItems.lastSyncedAt,
+      error: plaidItems.error,
+      createdAt: plaidItems.createdAt,
+    })
+    .from(plaidItems)
+    .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+    .where(eq(plaidItems.userId, userId))
+}
+
 export async function getAccountBalanceSummary(userId: string) {
   try {
     const accounts = await db
@@ -222,29 +345,6 @@ export async function getAccountBalanceSummary(userId: string) {
     }
   } catch (error) {
     logger.error('[getAccountBalanceSummary]:', { error })
-    throw error
-  }
-}
-
-export async function updateAccountBalance(
-  accountId: string,
-  userId: string,
-  newBalance: string
-): Promise<FinanceAccount> {
-  try {
-    const [updated] = await db
-      .update(financeAccounts)
-      .set({ balance: newBalance, updatedAt: new Date() })
-      .where(and(eq(financeAccounts.id, accountId), eq(financeAccounts.userId, userId)))
-      .returning()
-
-    if (!updated) {
-      throw new Error(`Account not found or not updated: ${accountId}`)
-    }
-
-    return updated
-  } catch (error) {
-    logger.error('[updateAccountBalance]:', { error })
     throw error
   }
 }

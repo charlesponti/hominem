@@ -1,5 +1,5 @@
-import { createTestUser } from '@hominem/data/fixtures'
 import crypto from 'node:crypto'
+import { createTestUser } from '@hominem/data/fixtures'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createContext } from '../lib/trpc/context'
 
@@ -31,10 +31,9 @@ describe('tRPC Context', () => {
   it('should return context with db when no request is provided', async () => {
     const context = await createContext()
 
-    expect(context).toEqual({
-      db: expect.any(Object),
+    expect(context).toMatchObject({
+      user: null,
     })
-    expect(context.user).toBeUndefined()
   })
 
   it('should return context with db when no authorization header is present', async () => {
@@ -44,10 +43,9 @@ describe('tRPC Context', () => {
 
     const context = await createContext(mockRequest)
 
-    expect(context).toEqual({
-      db: expect.any(Object),
+    expect(context).toMatchObject({
+      user: null,
     })
-    expect(context.user).toBeUndefined()
   })
 
   it('should handle malformed authorization header', async () => {
@@ -59,10 +57,9 @@ describe('tRPC Context', () => {
 
     const context = await createContext(mockRequest)
 
-    expect(context).toEqual({
-      db: expect.any(Object),
+    expect(context).toMatchObject({
+      user: null,
     })
-    expect(context.user).toBeUndefined()
   })
 
   it('should validate token and return user context when valid', async () => {
@@ -74,8 +71,7 @@ describe('tRPC Context', () => {
 
     const context = await createContext(mockRequest)
 
-    expect(context).toEqual({
-      db: expect.any(Object),
+    expect(context).toMatchObject({
       user: expect.objectContaining({
         id: testUserId,
         email: `test-${testUserId}@example.com`,
@@ -101,6 +97,5 @@ describe('tRPC Context', () => {
       email: `test-${testUserId2}@example.com`,
       supabaseId: testUserId2,
     })
-    expect(context.user?.name).toBeFalsy() // null or undefined
   })
 })

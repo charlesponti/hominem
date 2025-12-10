@@ -1,11 +1,9 @@
 import type { HominemUser, SupabaseAuthUser } from '@hominem/auth'
 import { toHominemUser } from '@hominem/auth'
-import { db, UserAuthService } from '@hominem/data'
-import { users } from '@hominem/data/schema'
-import { createServerClient, parseCookieHeader } from '@supabase/ssr'
+import { UserAuthService } from '@hominem/data'
+import { type CookieMethodsServer, createServerClient, parseCookieHeader } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'
-import { eq } from 'drizzle-orm'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie } from 'hono/cookie'
 import { env as appEnv } from '../lib/env.js'
@@ -13,6 +11,9 @@ import { env as appEnv } from '../lib/env.js'
 declare module 'hono' {
   interface ContextVariableMap {
     supabase: SupabaseClient
+    user?: HominemUser
+    userId?: string
+    supabaseId: string
   }
 }
 
@@ -65,9 +66,11 @@ export async function getHominemUser(
 
     // Use standardized service to find or create user
     const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
+    if (!userAuthData) {
+      return null
+    }
 
-    // Get the full user record from database
-    const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
+    const user = await UserAuthService.getUserById(userAuthData.id)
     return user ? toHominemUser(user) : null
   } catch (error) {
     console.error('Error in getHominemUser:', error)
@@ -84,7 +87,7 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
         c.set('userId', testUserId)
         // For test mode, also set the user object by querying the database
         try {
-          const [user] = await db.select().from(users).where(eq(users.id, testUserId))
+          const user = await UserAuthService.getUserById(testUserId)
           if (user) {
             const hominemUser = toHominemUser(user)
             c.set('user', hominemUser)
@@ -103,44 +106,24 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
     const supabaseUrl = appEnv.SUPABASE_URL
     const supabaseAnonKey = appEnv.SUPABASE_ANON_KEY
 
+    const cookieMethods: CookieMethodsServer = {
+      getAll() {
+        const cookieHeader = c.req.header('Cookie') ?? ''
+        const cookies = parseCookieHeader(cookieHeader)
+        return cookies
+          .filter((cookie): cookie is { name: string; value: string } => cookie.value !== undefined)
+          .map(({ name, value }) => ({ name, value }))
+      },
+      setAll(cookiesToSet) {
+        for (const { name, value, options } of cookiesToSet) {
+          setCookie(c, name, value, options as Parameters<typeof setCookie>[3])
+        }
+      },
+    }
+
     // Create SSR client for cookie-based auth (web apps)
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() {
-          const cookieHeader = c.req.header('Cookie') ?? ''
-          const cookies = parseCookieHeader(cookieHeader)
-          const filteredCookies = cookies.filter(
-            (cookie): cookie is { name: string; value: string } => cookie.value !== undefined
-          )
-          return filteredCookies
-        },
-        setAll(cookiesToSet) {
-          for (const { name, value, options } of cookiesToSet) {
-            if (options) {
-              // Convert Supabase cookie options to Hono cookie options
-              const honoCookieOptions = {
-                domain: options.domain,
-                expires: options.expires,
-                httpOnly: options.httpOnly,
-                maxAge: options.maxAge,
-                path: options.path,
-                secure: options.secure,
-                sameSite: options.sameSite as
-                  | 'Strict'
-                  | 'Lax'
-                  | 'None'
-                  | 'strict'
-                  | 'lax'
-                  | 'none'
-                  | undefined,
-              }
-              setCookie(c, name, value, honoCookieOptions)
-            } else {
-              setCookie(c, name, value)
-            }
-          }
-        },
-      },
+      cookies: cookieMethods,
     })
 
     c.set('supabase', supabase)

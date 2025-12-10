@@ -1,11 +1,9 @@
-// Import the services from the API app
+import { FileProcessorService, indexProcessedFile } from '@hominem/data/services'
 import { fileStorageService } from '@hominem/utils/supabase'
 import type { ActionFunctionArgs } from 'react-router'
 import { createSupabaseServerClient } from '~/lib/supabase/server.js'
 import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upload.js'
 import { jsonResponse } from '~/lib/utils/json-response'
-import { FileProcessorService } from '../../../../api/src/services/file-processor.service.js'
-import { indexProcessedFile } from '../../../../api/src/services/vector-file-integration.service.js'
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -43,7 +41,12 @@ export async function action({ request }: ActionFunctionArgs) {
         const buffer = await file.arrayBuffer()
 
         // Store the file with user authentication
-        const storedFile = await fileStorageService.storeFile(buffer, file.name, file.type, user.id)
+        const storedFile = await fileStorageService.storeFile(
+          Buffer.from(buffer),
+          file.name,
+          file.type,
+          user.id
+        )
 
         // Process the file based on its type
         const processedFile = await FileProcessorService.processFile(
@@ -56,7 +59,7 @@ export async function action({ request }: ActionFunctionArgs) {
         // Index the file in the vector store if file has text content
         let vectorIds: string[] = []
         if (processedFile.textContent || processedFile.content) {
-          const indexResult = await indexProcessedFile(processedFile, user.id, storedFile.url)
+          const indexResult = await indexProcessedFile(processedFile, user.id)
           vectorIds = indexResult.vectorIds
         }
 
@@ -78,8 +81,8 @@ export async function action({ request }: ActionFunctionArgs) {
         successful.push(result.value)
       } else {
         failed.push({
-          name: files[index].name,
-          error: result.reason?.message || 'Unknown error',
+          name: files[index]?.name || 'Unknown file',
+          error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
         })
       }
     })

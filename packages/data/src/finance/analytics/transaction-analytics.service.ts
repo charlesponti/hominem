@@ -1,6 +1,6 @@
+import { count, desc, eq, type SQL, sql } from 'drizzle-orm'
 import { db } from '../../db'
 import { financeAccounts, transactions } from '../../db/schema'
-import { eq, type SQL, sql } from 'drizzle-orm'
 import { buildWhereConditions } from '../finance.transactions.service'
 import type { CategorySummary, QueryOptions, TopMerchant } from '../finance.types'
 
@@ -181,5 +181,66 @@ export async function calculateTransactions(
     average: Number.parseFloat(stats.average?.toString() || '0').toFixed(2),
     minimum: Number.parseFloat(stats.minimum?.toString() || '0').toFixed(2),
     maximum: Number.parseFloat(stats.maximum?.toString() || '0').toFixed(2),
+  }
+}
+
+export async function getMonthlyStats(params: { month: string; userId: string }) {
+  const { month, userId } = params
+  const startDate = new Date(`${month}-01T00:00:00.000Z`)
+  const endDate = new Date(startDate)
+  endDate.setMonth(startDate.getMonth() + 1)
+
+  const monthFilter = buildWhereConditions({
+    userId,
+    from: startDate.toISOString().split('T')[0],
+    to: endDate.toISOString().split('T')[0],
+  })
+
+  const totalsResult = await db
+    .select({
+      totalIncome:
+        sql<number>`sum(case when ${transactions.amount} > 0 then ${transactions.amount} else 0 end)`.mapWith(
+          Number
+        ),
+      totalExpenses:
+        sql<number>`sum(case when ${transactions.amount} < 0 then abs(${transactions.amount}) else 0 end)`.mapWith(
+          Number
+        ),
+      transactionCount: count(),
+    })
+    .from(transactions)
+    .where(monthFilter)
+
+  const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {}
+
+  const categorySpendingFilter = buildWhereConditions({
+    userId,
+    from: startDate.toISOString().split('T')[0],
+    to: endDate.toISOString().split('T')[0],
+    type: 'expense',
+  })
+
+  const categorySpendingResult = await db
+    .select({
+      category: transactions.category,
+      amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number),
+    })
+    .from(transactions)
+    .where(categorySpendingFilter)
+    .groupBy(transactions.category)
+    .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`))
+
+  return {
+    month,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    totalIncome,
+    totalExpenses,
+    netIncome: totalIncome - totalExpenses,
+    transactionCount,
+    categorySpending: categorySpendingResult.map((c) => ({
+      name: c.category,
+      amount: c.amount,
+    })),
   }
 }

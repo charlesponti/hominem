@@ -1,10 +1,8 @@
-import crypto from 'node:crypto'
-import { db } from '@hominem/data'
-import { artists } from '@hominem/data/schema'
-import { redis, waitForRateLimit } from '@hominem/utils/redis'
+import { upsertArtists } from '@hominem/data'
 import type { Artist } from '@hominem/data/schema'
+import { redis, waitForRateLimit } from '@hominem/utils/redis'
 import axios from 'axios'
-import { sql } from 'drizzle-orm'
+import crypto from 'node:crypto'
 
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env
 const authToken = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')
@@ -323,20 +321,9 @@ export async function getGenreArtists(
   }
 
   // Cache results
-  await redis.set(cacheKey, JSON.stringify(artists))
+  await redis.set(cacheKey, JSON.stringify(values))
 
-  await db
-    .insert(artists)
-    .values(values.map(convertSpotifyArtistToArtist))
-    .onConflictDoUpdate({
-      target: artists.spotifyId,
-      set: {
-        name: sql`EXCLUDED.name`,
-        genres: sql`EXCLUDED.genres`,
-        spotifyUrl: sql`EXCLUDED.spotify_url`,
-      },
-    })
-    .returning()
+  await upsertArtists(values.map(convertSpotifyArtistToArtist))
 
   return values
 }

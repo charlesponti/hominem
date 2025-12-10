@@ -66,6 +66,8 @@ export const userLists = pgTable(
     }),
   ]
 )
+export type UserListsSelect = typeof userLists.$inferSelect
+export type UserListsInsert = typeof userLists.$inferInsert
 
 export const listInvite = pgTable(
   'list_invite',

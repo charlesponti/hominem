@@ -1,20 +1,5 @@
+import type { UserSelect } from '@hominem/data'
 import type { AuthAppMetadata, AuthUserMetadata, HominemUser, SupabaseAuthUser } from './types'
-
-/**
- * Minimal database user shape required to construct a HominemUser.
- * Other modules can use this without depending on the database layer directly.
- */
-export type DbUserLike = {
-  id: string
-  email: string
-  name?: string | null
-  image?: string | null
-  photoUrl?: string | null
-  supabaseId: string
-  isAdmin?: boolean | null
-  createdAt: string
-  updatedAt: string
-}
 
 function extractName(userMetadata: AuthUserMetadata): string | undefined {
   return (
@@ -43,7 +28,7 @@ function extractIsAdmin(
  * Convert a Supabase user to the canonical HominemUser shape.
  * This is a pure client-side mapping (no database lookup).
  */
-type HominemUserSource = SupabaseAuthUser | DbUserLike
+type HominemUserSource = SupabaseAuthUser | UserSelect
 
 function isSupabaseUser(source: HominemUserSource): source is SupabaseAuthUser {
   return 'user_metadata' in source && 'app_metadata' in source
@@ -77,12 +62,4 @@ export function toHominemUser(source: HominemUserSource): HominemUser {
     createdAt: source.createdAt,
     updatedAt: source.updatedAt,
   }
-}
-
-/**
- * Convert a Supabase user to the canonical HominemUser shape.
- * Thin wrapper around toHominemUser for backwards compatibility.
- */
-export function createHominemUserFromSupabase(supabaseUser: SupabaseAuthUser): HominemUser {
-  return toHominemUser(supabaseUser)
 }

@@ -1,19 +1,14 @@
-import 'dotenv/config'
-import { place } from '@hominem/data/db/schema/index'
-import { and, eq, isNotNull, isNull } from 'drizzle-orm'
+import { listPlacesMissingPhotos, updatePlacePhotos as setPlacePhotos } from '@hominem/data'
+import { env } from '../app/lib/env'
 import { getPlacePhotos } from '../app/lib/google-places.server'
-import { db } from '../app/db'
 
-if (!process.env.GOOGLE_API_KEY && !process.env.VITE_GOOGLE_API_KEY) {
+if (!env.VITE_GOOGLE_API_KEY) {
   throw new Error('GOOGLE_API_KEY environment variable is required')
 }
 
-async function updatePlacePhotos() {
+async function refreshPlacePhotos() {
   try {
-    // Get all places that have a googleMapsId but no photos
-    const placesToUpdate = await db.query.place.findMany({
-      where: and(isNotNull(place.googleMapsId), isNull(place.photos)),
-    })
+    const placesToUpdate = await listPlacesMissingPhotos()
 
     let _updatedCount = 0
     let _errorCount = 0
@@ -34,13 +29,7 @@ async function updatePlacePhotos() {
         }
 
         // Update the place with photo references
-        await db
-          .update(place)
-          .set({
-            photos: photoUrls,
-            updatedAt: new Date().toISOString(),
-          })
-          .where(eq(place.id, placeRecord.id))
+        await setPlacePhotos(placeRecord.id, photoUrls)
         _updatedCount++
 
         // Add a small delay to avoid hitting API rate limits
@@ -56,4 +45,4 @@ async function updatePlacePhotos() {
 }
 
 // Run the script
-updatePlacePhotos().catch(console.error)
+refreshPlacePhotos().catch(console.error)

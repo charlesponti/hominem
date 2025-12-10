@@ -40,7 +40,7 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
       return c.json({ error: 'Only CSV files are supported' }, 400)
     }
 
-    // Upload file buffer directly to Supabase storage (no disk I/O needed)
+    // Upload file buffer directly to Supabase storage
     const csvFilePath = await csvStorageService.uploadCsvFile(
       uploadedFile.filename,
       uploadedFile.buffer,

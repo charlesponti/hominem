@@ -1,6 +1,5 @@
-import { db, UserAuthService } from '@hominem/data'
-import { users } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
+import type { SupabaseAuthUser } from '@hominem/auth'
+import { UserAuthService } from '@hominem/data'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures.js'
 
@@ -14,15 +13,10 @@ export const userRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const [updatedUser] = await db
-          .update(users)
-          .set({
-            name: input.name || null,
-            image: input.image || null,
-            photoUrl: input.image || null,
-          })
-          .where(eq(users.supabaseId, ctx.supabaseId))
-          .returning()
+        const updatedUser = await UserAuthService.updateProfileBySupabaseId(ctx.supabaseId, {
+          name: input.name,
+          image: input.image,
+        })
 
         if (!updatedUser) {
           throw new Error('User not found')
@@ -58,13 +52,7 @@ export const userRouter = router({
           },
         }
 
-        const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
-
-        const [user] = await db.select().from(users).where(eq(users.id, userAuthData.id))
-        if (!user) {
-          throw new Error('User not found after creation')
-        }
-
+        const user = await UserAuthService.findOrCreateUser(supabaseUser as SupabaseAuthUser)
         return user
       } catch (error) {
         throw new Error(

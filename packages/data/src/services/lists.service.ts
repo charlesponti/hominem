@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { and, count, desc, eq, inArray } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, or } from 'drizzle-orm'
 import { db, takeUniqueOrThrow } from '../db'
 import {
   item,
@@ -10,6 +10,8 @@ import {
   users,
   type ListInviteSelect,
   type ListSelect,
+  type Item as ItemSelect,
+  type UserListsSelect,
 } from '../db/schema'
 import { sendInviteEmail } from '../resend'
 import { logger } from '../logger'
@@ -529,7 +531,7 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
  * @param id - The ID of the list to fetch
  * @returns The list with its places or null if not found
  */
-export async function getListById(id: string, userId?: string | null): Promise<List | null> {
+export async function getListById(id: string, userId?: string | null) {
   try {
     const result = await db
       .select({
@@ -665,11 +667,15 @@ export async function createList(name: string, userId: string): Promise<List | n
  * @param userId - The ID of the user performing the update (for fetching formatted list)
  * @returns The updated list object or null if update failed or list not found
  */
-export async function updateList(id: string, name: string, userId: string): Promise<List | null> {
+export async function updateList(id: string, name: string) {
   try {
-    await db.update(list).set({ name }).where(eq(list.id, id)).returning().then(takeUniqueOrThrow) // Ensures list existed and was updated
-
-    return getListById(id, userId)
+    const updatedList = await db
+      .update(list)
+      .set({ name })
+      .where(eq(list.id, id))
+      .returning()
+      .then(takeUniqueOrThrow)
+    return updatedList
   } catch (error) {
     console.error(`Error updating list ${id}:`, error)
     return null
@@ -723,6 +729,133 @@ export async function getListInvites(listId: string): Promise<Array<ListInviteSe
     console.error(`Error fetching invites for list ${listId}:`, error)
     return []
   }
+}
+
+export async function getListOwnedByUser(
+  listId: string,
+  userId: string
+): Promise<ListSelect | undefined> {
+  return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) })
+}
+
+export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
+  const membership = await db.query.userLists.findFirst({
+    where: and(eq(userLists.listId, listId), eq(userLists.userId, userId)),
+  })
+  return Boolean(membership)
+}
+
+export async function getInvitesForUser(userId: string, normalizedEmail?: string | null) {
+  const ownershipClause = normalizedEmail
+    ? or(eq(listInvite.invitedUserId, userId), eq(listInvite.invitedUserEmail, normalizedEmail))
+    : eq(listInvite.invitedUserId, userId)
+
+  return db.query.listInvite.findMany({
+    where: ownershipClause,
+    with: { list: true },
+  })
+}
+
+export async function getInviteByToken(
+  token: string
+): Promise<(ListInviteSelect & { list: ListSelect | null }) | undefined> {
+  return db.query.listInvite.findFirst({
+    where: eq(listInvite.token, token),
+    with: { list: true },
+  })
+}
+
+export async function getInviteByListAndToken(params: { listId: string; token: string }) {
+  const { listId, token } = params
+  return db.query.listInvite.findFirst({
+    where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
+  })
+}
+
+export async function deleteInviteByListAndToken(params: { listId: string; token: string }) {
+  const { listId, token } = params
+  const deletedInvite = await db
+    .delete(listInvite)
+    .where(and(eq(listInvite.listId, listId), eq(listInvite.token, token)))
+    .returning()
+
+  return deletedInvite.length > 0
+}
+
+export async function getOutboundInvites(userId: string) {
+  return db.query.listInvite.findMany({
+    where: eq(listInvite.userId, userId),
+    with: { list: true },
+  })
+}
+
+export async function addItemToList(params: {
+  listId: string
+  itemId: string
+  itemType: 'FLIGHT' | 'PLACE'
+  userId: string
+}) {
+  const { listId, itemId, itemType, userId } = params
+
+  const listItem = await getListOwnedByUser(listId, userId)
+  if (!listItem) {
+    throw new Error("List not found or you don't have permission to add items to it")
+  }
+
+  const existingItem = await db.query.item.findFirst({
+    where: and(eq(item.listId, listId), eq(item.itemId, itemId)),
+  })
+
+  if (existingItem) {
+    throw new Error('Item is already in this list')
+  }
+
+  const [newItem] = await db
+    .insert(item)
+    .values({
+      id: crypto.randomUUID(),
+      listId,
+      itemId,
+      itemType,
+      userId,
+      type: itemType,
+    })
+    .returning()
+
+  return newItem
+}
+
+export async function removeItemFromList(params: {
+  listId: string
+  itemId: string
+  userId: string
+}): Promise<boolean> {
+  const { listId, itemId, userId } = params
+
+  const listItem = await getListOwnedByUser(listId, userId)
+  if (!listItem) {
+    throw new Error("List not found or you don't have permission to remove items from it")
+  }
+
+  const deletedItem = await db
+    .delete(item)
+    .where(and(eq(item.listId, listId), eq(item.itemId, itemId)))
+    .returning()
+
+  return deletedItem.length > 0
+}
+
+export async function getItemsByListId(listId: string): Promise<ItemSelect[]> {
+  return db.query.item.findMany({
+    where: eq(item.listId, listId),
+    orderBy: [desc(item.createdAt)],
+  })
+}
+
+export async function getUserListLinks(listIds: string[]): Promise<UserListsSelect[]> {
+  return db.query.userLists.findMany({
+    where: inArray(userLists.listId, listIds),
+  })
 }
 
 /**
@@ -824,11 +957,7 @@ export async function sendListInvite(
  * @param token - The invite token used for verification.
  * @returns The list object if successful, or an error string.
  */
-export async function acceptListInvite(
-  listId: string,
-  acceptingUserId: string,
-  token: string
-): Promise<ListSelect | { error: string; status: number }> {
+export async function acceptListInvite(listId: string, acceptingUserId: string, token: string) {
   try {
     const invite = await db.query.listInvite.findFirst({
       where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
@@ -908,7 +1037,7 @@ export async function deleteListInvite({
   listId: string
   invitedUserEmail: string
   userId: string
-}): Promise<{ success: true } | { error: string; status: number }> {
+}) {
   try {
     const normalizedEmail = invitedUserEmail.toLowerCase()
 

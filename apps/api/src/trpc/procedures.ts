@@ -1,10 +1,8 @@
-import { db } from '@hominem/data'
-import { users } from '@hominem/data/schema'
+import type { HominemUser } from '@hominem/auth'
+import { UserAuthService } from '@hominem/data'
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { Queue } from 'bullmq'
-import { eq } from 'drizzle-orm'
 import type { HonoRequest } from 'hono'
-import type { HominemUser } from '@hominem/auth'
 import { getHominemUser } from '../middleware/supabase.js'
 
 export interface Context {
@@ -39,7 +37,7 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
     if (testUserId) {
       // For test mode, get the user from the database
       try {
-        const [user] = await db.select().from(users).where(eq(users.id, testUserId))
+        const user = await UserAuthService.getUserById(testUserId)
         if (user) {
           // In test mode, we accept either existing supabaseId or use ID as fallback
           // This allows tests that create users without specific supabaseId to pass

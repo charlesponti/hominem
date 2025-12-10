@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import type { AuthConfig } from './types'
-export { createHominemUserFromSupabase } from './user'
 
 /**
  * Create Supabase client for client-side auth

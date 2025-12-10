@@ -105,7 +105,6 @@
     "langchain": "^0.3.15",
     "moment": "^2.30.1",
     "ollama-ai-provider": "^1.2.0",
-    "openai": "4.83.0",
     "pino": "^9.6.0",
     "playwright": "^1.51.0",
     "postgres": "^3.4.5",
@@ -120,16 +119,11 @@
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
-    "@playwright/test": "^1.51.0",
     "esbuild-node-externals": "^1.18.0",
     "esbuild-plugin-copy": "^2.1.1",
     "jsdom": "^26.0.0",
     "typescript": "5.9.3",
     "vfile": "^6.0.3",
-    "vitest": "^3.0.6",
-    "drizzle-orm": "0.45.0"
-  },
-  "peerDependencies": {
-    "drizzle-orm": "0.45.0"
+    "vitest": "^3.0.6"
   }
 }

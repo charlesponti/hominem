@@ -1,6 +1,4 @@
-import { db } from '@hominem/data'
-import { goals } from '@hominem/data/schema'
-import { and, asc, desc, eq, ilike, ne } from 'drizzle-orm'
+import { archiveGoal, createGoal, deleteGoal, getGoal, listGoals, updateGoal } from '@hominem/data'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures.js'
 
@@ -14,40 +12,17 @@ export const goalsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { showArchived, sortBy, category } = input
-      const whereClauses = [eq(goals.userId, ctx.userId)]
-
-      if (!showArchived) {
-        whereClauses.push(ne(goals.status, 'archived'))
-      }
-
-      if (category) {
-        whereClauses.push(ilike(goals.goalCategory, `%${category}%`))
-      }
-
-      const orderBy =
-        sortBy === 'dueDate'
-          ? [asc(goals.dueDate)]
-          : sortBy === 'createdAt'
-            ? [desc(goals.createdAt)]
-            : [asc(goals.priority)]
-
-      const userGoals = await db
-        .select()
-        .from(goals)
-        .where(and(...whereClauses))
-        .orderBy(...orderBy)
-
-      return userGoals
+      return listGoals({
+        userId: ctx.userId,
+        showArchived: input.showArchived,
+        sortBy: input.sortBy as 'priority' | 'dueDate' | 'createdAt',
+        category: input.category,
+      })
     }),
   get: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const [goal] = await db
-        .select()
-        .from(goals)
-        .where(and(eq(goals.id, input.id), eq(goals.userId, ctx.userId)))
-      return goal
+      return getGoal(input.id, ctx.userId)
     }),
   create: protectedProcedure
     .input(
@@ -70,11 +45,7 @@ export const goalsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const [goal] = await db
-        .insert(goals)
-        .values({ ...input, userId: ctx.userId })
-        .returning()
-      return goal
+      return createGoal({ ...input, userId: ctx.userId })
     }),
   update: protectedProcedure
     .input(
@@ -99,30 +70,16 @@ export const goalsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input
-      const [goal] = await db
-        .update(goals)
-        .set(data)
-        .where(and(eq(goals.id, id), eq(goals.userId, ctx.userId)))
-        .returning()
-      return goal
+      return updateGoal(id, ctx.userId, data)
     }),
   archive: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const [goal] = await db
-        .update(goals)
-        .set({ status: 'archived' })
-        .where(and(eq(goals.id, input.id), eq(goals.userId, ctx.userId)))
-        .returning()
-      return goal
+      return archiveGoal(input.id, ctx.userId)
     }),
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const [goal] = await db
-        .delete(goals)
-        .where(and(eq(goals.id, input.id), eq(goals.userId, ctx.userId)))
-        .returning()
-      return goal
+      return deleteGoal(input.id, ctx.userId)
     }),
 })

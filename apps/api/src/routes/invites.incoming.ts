@@ -1,6 +1,4 @@
-import { db } from '@hominem/data'
-import { list, listInvite, users } from '@hominem/data/schema'
-import { and, asc, eq } from 'drizzle-orm'
+import { getInvitesForUser } from '@hominem/data'
 import { Hono } from 'hono'
 export const invitesIncomingRoutes = new Hono()
 
@@ -12,15 +10,10 @@ invitesIncomingRoutes.get('/', async (c) => {
   }
 
   try {
-    const invites = await db
-      .select()
-      .from(listInvite)
-      .where(and(eq(listInvite.invitedUserId, userId), eq(listInvite.accepted, false)))
-      .leftJoin(list, eq(list.id, listInvite.listId))
-      .leftJoin(users, eq(users.id, listInvite.userId))
-      .orderBy(asc(listInvite.listId))
+    const invites = await getInvitesForUser(userId)
+    const pendingInvites = invites.filter((invite) => invite.accepted === false)
 
-    return c.json(invites)
+    return c.json(pendingInvites)
   } catch (error) {
     console.error('Error fetching incoming invites:', error)
     return c.json(

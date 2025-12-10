@@ -1,4 +1,4 @@
-export { supabaseAdmin } from './client'
+export { supabaseAdmin } from './admin'
 export {
   csvStorageService,
   fileStorageService,

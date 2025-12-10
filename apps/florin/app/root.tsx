@@ -7,7 +7,6 @@ import './globals.css'
 import { TRPCProvider } from './lib/trpc'
 
 export async function loader(_args: Route.LoaderArgs) {
-  // No auth loader needed for Supabase - handled client-side
   return {}
 }
 
@@ -80,7 +79,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function App({ loaderData }: { loaderData: Route.ComponentProps }) {
+export default function App() {
   const supabaseClient = createClient()
   return (
     <TRPCProvider>

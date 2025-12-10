@@ -1,13 +1,7 @@
 import { UserAuthService } from '@hominem/data'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { AuthConfig, ServerAuthResult, SupabaseAuthUser } from './types'
 import { toHominemUser } from './user'
-import type {
-  AuthConfig,
-  HominemUser,
-  ServerAuthResult,
-  SupabaseAuthSession,
-  SupabaseAuthUser,
-} from './types'
 
 /**
  * Create Supabase server client for SSR
@@ -57,8 +51,16 @@ export async function getServerAuth(
 
     // Get or create Hominem user
     const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser)
+    if (!userAuthData) {
+      return {
+        user: null,
+        supabaseUser: null,
+        session: null,
+        isAuthenticated: false,
+      }
+    }
 
-    const hominemUser: HominemUser = toHominemUser(userAuthData)
+    const hominemUser = toHominemUser(userAuthData)
 
     return {
       user: hominemUser,
@@ -77,33 +79,6 @@ export async function getServerAuth(
   }
 }
 
-/**
- * Require authentication (throws if not authenticated)
- */
-export async function requireServerAuth(
-  request: Request,
-  config: AuthConfig
-): Promise<{
-  user: HominemUser
-  supabaseUser: SupabaseAuthUser
-  session: SupabaseAuthSession
-}> {
-  const auth = await getServerAuth(request, config)
-
-  if (!auth.isAuthenticated || !auth.user) {
-    throw new Response('Unauthorized', { status: 401 })
-  }
-
-  return {
-    user: auth.user,
-    supabaseUser: auth.supabaseUser!,
-    session: auth.session!,
-  }
-}
-
-/**
- * Get auth configuration from environment
- */
 export function getServerAuthConfig(): AuthConfig {
   let supabaseUrl: string | undefined
   let supabaseAnonKey: string | undefined
@@ -117,9 +92,8 @@ export function getServerAuthConfig(): AuthConfig {
   }
 
   // Try import.meta.env first (Vite/Client/Edge)
-  // We use unknown cast first to avoid TS errors about ImportMeta not having env
   const meta = import.meta as unknown as { env?: ImportMetaEnv }
-  if (typeof meta !== 'undefined' && meta.env) {
+  if (meta?.env) {
     supabaseUrl = meta.env.SUPABASE_URL || meta.env.VITE_SUPABASE_URL
     supabaseAnonKey = meta.env.SUPABASE_ANON_KEY || meta.env.VITE_SUPABASE_ANON_KEY
   }

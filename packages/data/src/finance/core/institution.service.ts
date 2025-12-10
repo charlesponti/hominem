@@ -83,7 +83,7 @@ export async function getUserInstitutionConnections(
       error: conn.error,
     }))
   } catch (error) {
-    logger.error('Error getting user institution connections:', error)
+    logger.error('[getUserInstitutionConnections]:', { error })
     throw error
   }
 }
@@ -123,7 +123,7 @@ export async function getUserAccounts(userId: string): Promise<InstitutionAccoun
       updatedAt: account.updatedAt,
     }))
   } catch (error) {
-    logger.error('Error getting user accounts:', error)
+    logger.error('[getUserAccounts]:', { error })
     throw error
   }
 }
@@ -167,7 +167,7 @@ export async function getInstitutionAccounts(
       updatedAt: account.updatedAt,
     }))
   } catch (error) {
-    logger.error('Error getting institution accounts:', error)
+    logger.error('[getInstitutionAccounts]:', { error })
     throw error
   }
 }
@@ -183,7 +183,7 @@ export async function getInstitution(institutionId: string) {
 
     return institution
   } catch (error) {
-    logger.error('Error getting institution:', error)
+    logger.error('[getInstitution]:', { error })
     throw error
   }
 }
@@ -199,7 +199,7 @@ export async function getAllInstitutions() {
 
     return institutions
   } catch (error) {
-    logger.error('Error getting all institutions:', error)
+    logger.error('[getAllInstitutions]:', { error })
     throw error
   }
 }
@@ -232,7 +232,27 @@ export async function createInstitution(data: {
 
     return institution
   } catch (error) {
-    logger.error('Error creating institution:', error)
+    logger.error('Error creating institution:', { error })
     throw error
   }
+}
+
+export async function getInstitutionById(institutionId: string) {
+  return db.query.financialInstitutions.findFirst({
+    where: eq(financialInstitutions.id, institutionId),
+  })
+}
+
+export async function getUserPlaidItemForInstitution(
+  plaidItemId: string,
+  institutionId: string,
+  userId: string
+) {
+  return db.query.plaidItems.findFirst({
+    where: and(
+      eq(plaidItems.id, plaidItemId),
+      eq(plaidItems.userId, userId),
+      eq(plaidItems.institutionId, institutionId)
+    ),
+  })
 }

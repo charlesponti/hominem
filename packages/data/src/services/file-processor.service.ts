@@ -16,15 +16,11 @@ export interface ProcessedFile {
   metadata?: Record<string, unknown>
 }
 
-// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 })
 
 export class FileProcessorService {
-  /**
-   * Process a file and extract relevant information
-   */
   static async processFile(
     buffer: ArrayBuffer,
     originalName: string,
@@ -61,19 +57,14 @@ export class FileProcessorService {
     }
   }
 
-  /**
-   * Process image files
-   */
   private static async processImage(
     buffer: ArrayBuffer,
     file: ProcessedFile
   ): Promise<ProcessedFile> {
     const imageBuffer = Buffer.from(buffer)
 
-    // Get image metadata
     const metadata = await sharp(imageBuffer).metadata()
 
-    // Create thumbnail
     const thumbnailBuffer = await sharp(imageBuffer)
       .resize(200, 200, { fit: 'inside' })
       .jpeg({ quality: 80 })
@@ -81,10 +72,8 @@ export class FileProcessorService {
 
     const thumbnail = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`
 
-    // Use GPT-4 Vision to analyze the image if it's not too large
     let textContent = ''
     if (buffer.byteLength < 20 * 1024 * 1024) {
-      // 20MB limit for Vision API
       try {
         const base64Image = Buffer.from(buffer).toString('base64')
         const response = await openai.chat.completions.create({
@@ -129,9 +118,6 @@ export class FileProcessorService {
     }
   }
 
-  /**
-   * Process document files
-   */
   private static async processDocument(
     buffer: ArrayBuffer,
     file: ProcessedFile,
@@ -145,7 +131,7 @@ export class FileProcessorService {
         textContent = await new Promise<string>((resolve, reject) => {
           const parser = new PDFParser(undefined, true)
           parser.on('pdfParser_dataError', (data) => {
-            reject(data.parserError)
+            reject((data as { parserError: Error }).parserError)
           })
           parser.on('pdfParser_dataReady', () => {
             try {
@@ -167,7 +153,6 @@ export class FileProcessorService {
         textContent = new TextDecoder().decode(buffer)
       }
 
-      // Summarize long documents
       let summary = ''
       if (textContent.length > 1000) {
         try {
@@ -181,7 +166,9 @@ export class FileProcessorService {
               },
               {
                 role: 'user',
-                content: `Please summarize this document:\n\n${textContent.slice(0, 10000)}${textContent.length > 10000 ? '...' : ''}`,
+                content: `Please summarize this document:\n\n${textContent.slice(0, 10000)}${
+                  textContent.length > 10000 ? '...' : ''
+                }`,
               },
             ],
             max_tokens: 300,
@@ -213,15 +200,10 @@ export class FileProcessorService {
     }
   }
 
-  /**
-   * TODO: Process audio files
-   */
   private static async processAudio(
     _buffer: ArrayBuffer,
     file: ProcessedFile
   ): Promise<ProcessedFile> {
-    // For audio files, we'll need to transcribe them using Whisper
-    // This will be implemented in the transcription action
     return {
       ...file,
       metadata: {
@@ -230,15 +212,10 @@ export class FileProcessorService {
     }
   }
 
-  /**
-   * TODO: Process video files
-   */
   private static async processVideo(
     _buffer: ArrayBuffer,
     file: ProcessedFile
   ): Promise<ProcessedFile> {
-    // For video files, we could extract audio and transcribe, or extract frames
-    // For now, just return basic info
     return {
       ...file,
       metadata: {
@@ -248,9 +225,6 @@ export class FileProcessorService {
     }
   }
 
-  /**
-   * Determine file type from mimetype
-   */
   private static getFileType(mimetype: string): ProcessedFile['type'] {
     if (mimetype.startsWith('image/')) {
       return 'image'
@@ -272,9 +246,6 @@ export class FileProcessorService {
     return 'unknown'
   }
 
-  /**
-   * Format file size for display
-   */
   static formatFileSize(bytes: number): string {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
     if (bytes === 0) return '0 Bytes'
@@ -283,9 +254,6 @@ export class FileProcessorService {
     return `${size} ${sizes[i]}`
   }
 
-  /**
-   * Check if a file type is supported for processing
-   */
   static isSupportedFileType(mimetype: string): boolean {
     const supportedTypes = [
       'image/jpeg',

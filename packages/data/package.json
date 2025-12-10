@@ -33,9 +33,17 @@
       "import": "./src/services/index.ts",
       "require": "./dist/services/index.cjs"
     },
+    "./files": {
+      "import": "./src/files.ts",
+      "require": "./dist/files.cjs"
+    },
     "./types": {
       "import": "./src/types.ts",
       "require": "./dist/types.cjs"
+    },
+    "./vector": {
+      "import": "./src/vector.ts",
+      "require": "./dist/vector.cjs"
     }
   },
   "scripts": {
@@ -54,10 +62,16 @@
     "@ai-sdk/google": "^1.2.12",
     "ai": "^4.3.16",
     "csv-parse": "^5.6.0",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.4.7",
     "drizzle-zod": "^0.7.0",
+    "langchain": "^0.3.15",
+    "mammoth": "^1.9.1",
+    "openai": "4.83.0",
+    "pdf2json": "^3.1.6",
     "pino": "^9.7.0",
     "postgres": "^3.4.5",
+    "sharp": "^0.34.2",
     "resend": "^4.0.1",
     "zod": "^3.24.3"
   },

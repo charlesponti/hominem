@@ -1,14 +1,15 @@
-import { db } from '@hominem/data'
 import {
   createAccount,
   deleteAccount,
+  findAccountByNameForUser,
   getAccountById,
+  getAccountWithPlaidInfo,
   listAccounts,
+  listAccountsWithPlaidInfo,
   listAccountsWithRecentTransactions,
+  listPlaidConnectionsForUser,
   updateAccount,
 } from '@hominem/data/finance'
-import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/data/schema'
-import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'
 
@@ -26,44 +27,7 @@ export const accountsRouter = router({
   get: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const account = await db
-        .select({
-          // Core FinanceAccount fields
-          id: financeAccounts.id,
-          userId: financeAccounts.userId,
-          name: financeAccounts.name,
-          type: financeAccounts.type,
-          balance: financeAccounts.balance,
-          interestRate: financeAccounts.interestRate,
-          minimumPayment: financeAccounts.minimumPayment,
-          institutionId: financeAccounts.institutionId,
-          plaidAccountId: financeAccounts.plaidAccountId,
-          plaidItemId: financeAccounts.plaidItemId,
-          mask: financeAccounts.mask,
-          isoCurrencyCode: financeAccounts.isoCurrencyCode,
-          subtype: financeAccounts.subtype,
-          officialName: financeAccounts.officialName,
-          limit: financeAccounts.limit,
-          meta: financeAccounts.meta,
-          lastUpdated: financeAccounts.lastUpdated,
-          createdAt: financeAccounts.createdAt,
-          updatedAt: financeAccounts.updatedAt,
-          // Additional Plaid connection info
-          institutionName: financialInstitutions.name,
-          institutionLogo: financialInstitutions.logo,
-          isPlaidConnected: sql<boolean>`${financeAccounts.plaidItemId} IS NOT NULL`,
-          plaidItemStatus: plaidItems.status,
-          plaidItemError: plaidItems.error,
-          plaidLastSyncedAt: plaidItems.lastSyncedAt,
-          plaidItemInternalId: plaidItems.id,
-          plaidInstitutionId: plaidItems.institutionId,
-          plaidInstitutionName: financialInstitutions.name,
-        })
-        .from(financeAccounts)
-        .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
-        .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-        .where(and(eq(financeAccounts.id, input.id), eq(financeAccounts.userId, ctx.userId)))
-        .then((results) => results[0])
+      const account = await getAccountWithPlaidInfo(input.id, ctx.userId)
 
       if (!account) {
         return null
@@ -89,9 +53,7 @@ export const accountsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       // Check if account with same name already exists for user
-      const existingAccount = await db.query.financeAccounts.findFirst({
-        where: and(eq(financeAccounts.userId, ctx.userId), eq(financeAccounts.name, input.name)),
-      })
+      const existingAccount = await findAccountByNameForUser(ctx.userId, input.name)
 
       if (existingAccount) {
         throw new Error('Account with this name already exists')
@@ -128,15 +90,9 @@ export const accountsRouter = router({
 
       // If name is being changed, check if new name conflicts with existing account
       if (updates.name && updates.name !== existing.name) {
-        const nameConflict = await db.query.financeAccounts.findFirst({
-          where: and(
-            eq(financeAccounts.userId, ctx.userId),
-            eq(financeAccounts.name, updates.name),
-            eq(financeAccounts.id, id)
-          ),
-        })
+        const nameConflict = await findAccountByNameForUser(ctx.userId, updates.name)
 
-        if (nameConflict) {
+        if (nameConflict && nameConflict.id !== id) {
           throw new Error('Another account with this name already exists')
         }
       }
@@ -160,44 +116,7 @@ export const accountsRouter = router({
       return { success: true, message: 'Account deleted successfully' }
     }),
   all: protectedProcedure.query(async ({ ctx }) => {
-    // Get all finance accounts with institution and Plaid connection info
-    const allAccounts = await db
-      .select({
-        // Core FinanceAccount fields
-        id: financeAccounts.id,
-        userId: financeAccounts.userId,
-        name: financeAccounts.name,
-        type: financeAccounts.type,
-        balance: financeAccounts.balance,
-        interestRate: financeAccounts.interestRate,
-        minimumPayment: financeAccounts.minimumPayment,
-        institutionId: financeAccounts.institutionId,
-        plaidAccountId: financeAccounts.plaidAccountId,
-        plaidItemId: financeAccounts.plaidItemId,
-        mask: financeAccounts.mask,
-        isoCurrencyCode: financeAccounts.isoCurrencyCode,
-        subtype: financeAccounts.subtype,
-        officialName: financeAccounts.officialName,
-        limit: financeAccounts.limit,
-        meta: financeAccounts.meta,
-        lastUpdated: financeAccounts.lastUpdated,
-        createdAt: financeAccounts.createdAt,
-        updatedAt: financeAccounts.updatedAt,
-        // Additional Plaid connection info
-        institutionName: financialInstitutions.name,
-        institutionLogo: financialInstitutions.logo,
-        isPlaidConnected: sql<boolean>`${financeAccounts.plaidItemId} IS NOT NULL`,
-        plaidItemStatus: plaidItems.status,
-        plaidItemError: plaidItems.error,
-        plaidLastSyncedAt: plaidItems.lastSyncedAt,
-        plaidItemInternalId: plaidItems.id,
-        plaidInstitutionId: plaidItems.institutionId,
-        plaidInstitutionName: financialInstitutions.name,
-      })
-      .from(financeAccounts)
-      .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
-      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-      .where(eq(financeAccounts.userId, ctx.userId))
+    const allAccounts = await listAccountsWithPlaidInfo(ctx.userId)
 
     // Get recent transactions for each account using the existing service method
     const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5)
@@ -214,20 +133,7 @@ export const accountsRouter = router({
 
     // Get Plaid connections separately starting from plaidItems table
     // This ensures we capture all Plaid connections, even those without corresponding finance accounts
-    const plaidConnections = await db
-      .select({
-        id: plaidItems.id,
-        itemId: plaidItems.itemId,
-        institutionId: plaidItems.institutionId,
-        institutionName: financialInstitutions.name,
-        status: plaidItems.status,
-        lastSyncedAt: plaidItems.lastSyncedAt,
-        error: plaidItems.error,
-        createdAt: plaidItems.createdAt,
-      })
-      .from(plaidItems)
-      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-      .where(eq(plaidItems.userId, ctx.userId))
+    const plaidConnections = await listPlaidConnectionsForUser(ctx.userId)
 
     const uniqueConnections = plaidConnections.map((connection) => ({
       id: connection.id,

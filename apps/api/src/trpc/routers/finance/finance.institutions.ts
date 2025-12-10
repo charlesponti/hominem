@@ -1,14 +1,15 @@
-import { db } from '@hominem/data'
-import { financialInstitutions, plaidItems } from '@hominem/data/schema'
 import {
   createInstitution,
+  getAccountById,
   getAllInstitutions,
   getInstitution,
   getInstitutionAccounts,
+  getInstitutionById,
   getUserAccounts,
   getUserInstitutionConnections,
+  getUserPlaidItemForInstitution,
+  updateAccount,
 } from '@hominem/data/finance'
-import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures.js'
 
@@ -77,9 +78,7 @@ export const institutionsRouter = router({
       }
 
       // Verify institution exists
-      const institution = await db.query.financialInstitutions.findFirst({
-        where: eq(financialInstitutions.id, institutionId),
-      })
+      const institution = await getInstitutionById(institutionId)
 
       if (!institution) {
         throw new Error('Institution not found')
@@ -87,13 +86,11 @@ export const institutionsRouter = router({
 
       // If plaidItemId provided, verify it exists and belongs to user
       if (plaidItemId) {
-        const plaidItem = await db.query.plaidItems.findFirst({
-          where: and(
-            eq(plaidItems.id, plaidItemId),
-            eq(plaidItems.userId, ctx.userId),
-            eq(plaidItems.institutionId, institutionId)
-          ),
-        })
+        const plaidItem = await getUserPlaidItemForInstitution(
+          plaidItemId,
+          institutionId,
+          ctx.userId
+        )
 
         if (!plaidItem) {
           throw new Error('Plaid item not found or does not belong to specified institution')

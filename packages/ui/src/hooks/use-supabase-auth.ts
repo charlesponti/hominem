@@ -26,13 +26,33 @@ export function useSupabaseAuth(client?: SupabaseClient) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const getUser = useCallback(async () => {
+    const {
+      data: { user: currentUser },
+      error,
+    } = await supabaseClient.auth.getUser()
+    if (error) throw error
+    return currentUser ?? null
+  }, [supabaseClient])
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       const {
         data: { session },
       } = await supabaseClient.auth.getSession()
-      setUser(session?.user ?? null)
+      const initialUser = session?.user ?? null
+      if (initialUser) {
+        try {
+          const verified = await getUser()
+          setUser(verified)
+        } catch (error) {
+          console.error('Error verifying initial user:', error)
+          setUser(initialUser)
+        }
+      } else {
+        setUser(null)
+      }
       setIsLoading(false)
     }
 
@@ -42,12 +62,23 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
+      const nextUser = session?.user ?? null
+      if (nextUser) {
+        try {
+          const verified = await getUser()
+          setUser(verified)
+        } catch (error) {
+          console.error('Error verifying user on auth change:', error)
+          setUser(nextUser)
+        }
+      } else {
+        setUser(null)
+      }
       setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
-  }, [supabaseClient])
+  }, [supabaseClient, getUser])
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -102,12 +133,14 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     user,
     isAuthenticated: !!user,
     isLoading,
+    supabase: supabaseClient,
     login,
     signup,
     logout,
     resetPassword,
     signInWithGoogle,
     signInWithGitHub,
+    getUser,
     userId: user?.id,
   }
 }

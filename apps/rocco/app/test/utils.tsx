@@ -46,33 +46,55 @@ vi.mock('~/lib/supabase', () => ({
   },
 }))
 
-vi.mock('~/lib/auth-provider', () => ({
-  useAuth: () => ({
-    user: mockSupabaseUser,
-    session: mockSession,
-    isLoading: false,
-    isAuthenticated: true,
-    signInWithPassword: vi.fn(),
-    signUp: vi.fn(),
-    signOut: vi.fn(),
-    signInWithOAuth: vi.fn(),
-  }),
-  useUser: () => ({
-    user: {
-      id: USER_ID,
-      email: TEST_USER_EMAIL,
-      fullName: TEST_USER_NAME,
-      firstName: 'Test',
-      lastName: 'User',
-      primaryEmailAddress: { emailAddress: TEST_USER_EMAIL },
-      imageUrl: 'https://example.com/avatar.jpg',
-    },
-    isLoaded: true,
-  }),
-  useClerk: () => ({
-    signOut: vi.fn(),
-  }),
-}))
+vi.mock('@hominem/ui', async () => {
+  const actual = await vi.importActual<typeof import('@hominem/ui')>('@hominem/ui')
+  return {
+    ...actual,
+    SupabaseAuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+    useSupabaseAuth: () => ({
+      user: mockSupabaseUser,
+      isAuthenticated: true,
+      isLoading: false,
+      supabase: {
+        auth: {
+          signInWithPassword: vi.fn(),
+          signUp: vi.fn(),
+          signOut: vi.fn(),
+          signInWithOAuth: vi.fn(),
+        },
+      },
+      login: vi.fn(),
+      signup: vi.fn(),
+      logout: vi.fn(),
+      resetPassword: vi.fn(),
+      signInWithGoogle: vi.fn(),
+      signInWithGitHub: vi.fn(),
+      getUser: vi.fn(),
+      userId: USER_ID,
+    }),
+    useSupabaseAuthContext: () => ({
+      user: mockSupabaseUser,
+      isAuthenticated: true,
+      isLoading: false,
+      supabase: {
+        auth: {
+          signInWithPassword: vi.fn(),
+          signUp: vi.fn(),
+          signOut: vi.fn(),
+          signInWithOAuth: vi.fn(),
+        },
+      },
+      login: vi.fn(),
+      signup: vi.fn(),
+      logout: vi.fn(),
+      resetPassword: vi.fn(),
+      signInWithGoogle: vi.fn(),
+      signInWithGitHub: vi.fn(),
+      getUser: vi.fn(),
+      userId: USER_ID,
+    }),
+  }
+})
 
 // Mock React Router's useRouteLoaderData hook
 vi.mock('react-router', async () => {
