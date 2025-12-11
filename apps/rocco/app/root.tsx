@@ -1,4 +1,5 @@
 import { SupabaseAuthProvider } from '@hominem/ui'
+import { useMemo } from 'react'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import './index.css'
 import { createClient } from './lib/supabase/client'
@@ -22,7 +23,9 @@ export const links = () => [
 export const meta = () => [{ title: 'rocco' }, { name: 'description', content: 'rocco' }]
 
 export default function App() {
-  const supabaseClient = createClient()
+  // Create one Supabase client instance for the entire app
+  // This ensures all providers and hooks use the same client
+  const supabaseClient = useMemo(() => createClient(), [])
 
   return (
     <html lang="en">

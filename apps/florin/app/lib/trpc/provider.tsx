@@ -13,7 +13,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: import.meta.env.VITE_PUBLIC_API_URL,
+          url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
           async headers() {
             const {
               data: { session },

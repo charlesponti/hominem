@@ -24,6 +24,3 @@ export function useSupabaseAuthContext() {
   }
   return context
 }
-
-// Compatibility alias for existing code
-export const useAuth = useSupabaseAuthContext

@@ -1,17 +1,18 @@
 import { Plus } from 'lucide-react'
-import { Link, useRouteLoaderData } from 'react-router'
+import { Link } from 'react-router'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { trpc } from '~/lib/trpc/client'
 import Loading from '../loading'
 
 export default function Lists() {
-  const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
-  const isAuthenticated = layoutData?.isAuthenticated ?? false
+  // Use the provider-backed auth context to avoid spawning a new Supabase client.
+  const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
 
   const {
     data: lists = [],
     isLoading,
     error,
-  } = trpc.lists.getAll.useQuery(undefined, { enabled: isAuthenticated })
+  } = trpc.lists.getAll.useQuery(undefined, { enabled: isAuthenticated && !authLoading })
 
   return (
     <div className="space-y-4 w-full">

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useRouteLoaderData } from 'react-router'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import Lists from '~/components/lists/lists'
 import NearbyPlaces from '~/components/places/nearby-places'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
@@ -19,14 +20,18 @@ type Location = {
 
 export default function Index() {
   const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
-  const isAuthenticated = layoutData?.isAuthenticated ?? false
+  // Use the provider-backed auth context to share the single Supabase client.
+  const { isAuthenticated: clientIsAuthenticated, isLoading: authLoading } =
+    useSupabaseAuthContext()
+  // Prefer client auth (localStorage-backed); fall back to loader for SSR.
+  const isAuthenticated = clientIsAuthenticated || layoutData?.isAuthenticated || false
   const navigate = useNavigate()
   const [, setSelectedPlace] = useState<GooglePlacePrediction | null>(null)
   const [userLocation, setUserLocation] = useState<Location | null>(null)
 
   // Get user's current location from browser geolocation API
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || authLoading) return
 
     if (!navigator.geolocation) {
       console.warn('Geolocation is not supported by your browser')
@@ -49,7 +54,7 @@ export default function Index() {
         maximumAge: 300000, // Cache location for 5 minutes
       }
     )
-  }, [isAuthenticated])
+  }, [isAuthenticated, authLoading])
 
   // Use user's geolocation if available, otherwise fall back to default
   const defaultLocation = userLocation || DEFAULT_LOCATION

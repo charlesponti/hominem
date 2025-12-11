@@ -1,5 +1,5 @@
-import type { SupabaseClient, User } from '@supabase/supabase-js'
-import { createClient } from '@supabase/supabase-js'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import { useCallback, useEffect, useState } from 'react'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -17,14 +17,38 @@ export function getSupabase() {
     )
   }
 
-  defaultSupabase = createClient(supabaseUrl, supabaseAnonKey)
+  defaultSupabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
   return defaultSupabase
 }
 
 export function useSupabaseAuth(client?: SupabaseClient) {
   const supabaseClient = client || getSupabase()
-  const [user, setUser] = useState<User | null>(null)
+  // Rely on Supabase's built-in session state instead of manually managing user state
+  const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      const {
+        data: { session: initialSession },
+      } = await supabaseClient.auth.getSession()
+      setSession(initialSession)
+      setIsLoading(false)
+    }
+
+    getInitialSession()
+
+    // Listen for auth changes - Supabase manages session state internally
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabaseClient])
 
   const getUser = useCallback(async () => {
     const {
@@ -34,51 +58,6 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     if (error) throw error
     return currentUser ?? null
   }, [supabaseClient])
-
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabaseClient.auth.getSession()
-      const initialUser = session?.user ?? null
-      if (initialUser) {
-        try {
-          const verified = await getUser()
-          setUser(verified)
-        } catch (error) {
-          console.error('Error verifying initial user:', error)
-          setUser(initialUser)
-        }
-      } else {
-        setUser(null)
-      }
-      setIsLoading(false)
-    }
-
-    getInitialSession()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-      const nextUser = session?.user ?? null
-      if (nextUser) {
-        try {
-          const verified = await getUser()
-          setUser(verified)
-        } catch (error) {
-          console.error('Error verifying user on auth change:', error)
-          setUser(nextUser)
-        }
-      } else {
-        setUser(null)
-      }
-      setIsLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabaseClient, getUser])
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -129,9 +108,14 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     if (error) throw error
   }, [supabaseClient])
 
+  // Derive user and isAuthenticated from session (single source of truth)
+  const user = session?.user ?? null
+  const isAuthenticated = !!session?.user
+
   return {
     user,
-    isAuthenticated: !!user,
+    session,
+    isAuthenticated,
     isLoading,
     supabase: supabaseClient,
     login,

@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu'
 import { createClient } from '~/lib/supabase/client'
+import { useSupabaseAuth } from '@hominem/ui'
 
 const ACCOUNT = '/account'
 const INVITES = '/invites'
@@ -153,20 +154,12 @@ function Header() {
 export default Header
 
 const SignInButton = () => {
-  const supabase = createClient()
-  const onSignInClick = useCallback(async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-  }, [supabase.auth])
+  const { signInWithGoogle } = useSupabaseAuth()
 
   return (
     <Button
       variant="outline"
-      onClick={onSignInClick}
+      onClick={signInWithGoogle}
       className="flex cursor-pointer hover:bg-primary focus:bg-primary"
     >
       Sign In with Google
