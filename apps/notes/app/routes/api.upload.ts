@@ -1,4 +1,5 @@
-import { FileProcessorService, indexProcessedFile } from '@hominem/data/services'
+import { FileProcessorService } from '@hominem/data/files'
+import { indexProcessedFile } from '@hominem/data/vector'
 import { fileStorageService } from '@hominem/utils/supabase'
 import type { ActionFunctionArgs } from 'react-router'
 import { createSupabaseServerClient } from '~/lib/supabase/server.js'
