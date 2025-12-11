@@ -1,58 +1,130 @@
+import { Button } from '@hominem/ui/components/ui/button'
 import { ArrowRight, ListCheck } from 'lucide-react'
 import { useCallback } from 'react'
 import { Link } from 'react-router'
-import { Button } from '@hominem/ui/components/ui/button'
 import type { InviteItem } from '~/lib/component-types'
 import { trpc } from '~/lib/trpc/client'
 
-type InviteListItemProps = {
-  listInvite: InviteItem
-  onAccept: () => void
-  currentUserEmail?: string
-}
-const InviteListItem = ({ listInvite, onAccept, currentUserEmail }: InviteListItemProps) => {
-  const { accepted, list } = listInvite
-  // Use invites.accept mutation (correct router)
-  const { mutate, status } = trpc.invites.accept.useMutation({
-    onSuccess: onAccept,
-  })
+type InviteListItemProps =
+  | {
+      variant: 'preview'
+      preview: {
+        listName: string
+        coverPhoto?: string | null
+        firstItemName?: string | null
+        invitedUserEmail?: string | null
+        onSignIn: () => void
+      }
+    }
+  | {
+      variant?: 'invite'
+      listInvite: InviteItem
+      currentUserEmail?: string
+      canAccept?: boolean
+    }
 
-  const normalizedUserEmail = currentUserEmail?.toLowerCase()
+const InviteListItem = (props: InviteListItemProps) => {
+  const inviteProps = props.variant !== 'preview' ? props : null
+  const previewProps = props.variant === 'preview' ? props : null
+
+  const { mutate, status } = trpc.invites.accept.useMutation()
+
+  const normalizedUserEmail = inviteProps?.currentUserEmail?.toLowerCase()
   const isEmailMismatch =
-    normalizedUserEmail && normalizedUserEmail !== listInvite.invitedUserEmail.toLowerCase()
+    normalizedUserEmail &&
+    inviteProps &&
+    normalizedUserEmail !== inviteProps.listInvite.invitedUserEmail.toLowerCase()
 
   const onAcceptClick = useCallback(() => {
+    if (!inviteProps) return
+
     if (
       isEmailMismatch &&
       !window.confirm(
-        `You were invited as ${listInvite.invitedUserEmail}, but you're signed in as ${normalizedUserEmail}. Accept this invite with your current account?`
+        `You were invited as ${inviteProps.listInvite.invitedUserEmail}, but you're signed in as ${normalizedUserEmail}. Accept this invite with your current account?`
       )
     ) {
       return
     }
 
+    if (!inviteProps.canAccept) {
+      return
+    }
+
     mutate({
-      listId: listInvite.listId,
-      token: listInvite.token,
+      listId: inviteProps.listInvite.listId,
+      token: inviteProps.listInvite.token,
     })
-  }, [
-    isEmailMismatch,
-    listInvite.invitedUserEmail,
-    listInvite.listId,
-    listInvite.token,
-    mutate,
-    normalizedUserEmail,
-  ])
+  }, [inviteProps, isEmailMismatch, mutate, normalizedUserEmail])
+
+  // Handle preview variant
+  if (previewProps) {
+    const { preview } = previewProps
+    return (
+      <li className="flex flex-col gap-3 p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+            <ListCheck className="size-4 text-indigo-600" />
+          </div>
+          <p className="text-xl font-semibold text-gray-900">{preview.listName}</p>
+        </div>
+
+        {preview.coverPhoto ? (
+          <div className="w-full h-40 bg-gray-100 rounded-md overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={preview.coverPhoto}
+              alt={preview.listName}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="w-full h-40 rounded-md bg-linear-to-br from-indigo-50 to-purple-50 border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+            No photo yet
+          </div>
+        )}
+
+        {preview.firstItemName && (
+          <p className="text-sm text-gray-600">
+            First item: <span className="font-medium text-gray-800">{preview.firstItemName}</span>
+          </p>
+        )}
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-gray-600">
+            Sign in to accept this invite{' '}
+            {preview.invitedUserEmail ? (
+              <span>
+                for <span className="text-purple-700 font-medium">{preview.invitedUserEmail}</span>
+              </span>
+            ) : (
+              'with your account.'
+            )}
+          </p>
+          <Button
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
+            onClick={preview.onSignIn}
+          >
+            Continue with Google
+          </Button>
+        </div>
+      </li>
+    )
+  }
+
+  // Handle invite variant - TypeScript knows inviteProps is not null here
+  const { listInvite, canAccept = true } = inviteProps!
+  const { accepted, list } = listInvite
 
   return (
-    <li className="flex flex-row items-center justify-between p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-          <ListCheck className="w-5 h-5 text-indigo-600" />
+    <li className="flex flex-col gap-3 p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+            <ListCheck className="size-4 text-indigo-600" />
+          </div>
+          <p className="text-xl font-semibold text-gray-900">{list?.name || 'Unknown List'}</p>
         </div>
-        <p className="text-xl font-semibold text-gray-900">{list?.name || 'Unknown List'}</p>
-      </div>
-      <div className="flex flex-col items-end gap-1">
         {accepted ? (
           <Link
             to={`/lists/${list?.id || listInvite.listId}`}
@@ -64,18 +136,22 @@ const InviteListItem = ({ listInvite, onAccept, currentUserEmail }: InviteListIt
         ) : (
           <Button
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
-            disabled={status === 'pending'}
+            disabled={status === 'pending' || !canAccept}
             onClick={onAcceptClick}
           >
-            {status === 'pending' ? 'Accepting...' : 'Accept invite'}
+            {status === 'pending'
+              ? 'Accepting...'
+              : canAccept
+                ? 'Accept invite'
+                : 'Sign in to accept'}
           </Button>
         )}
-        {!accepted && isEmailMismatch && (
-          <p className="text-sm text-amber-700">
-            Invited as {listInvite.invitedUserEmail}; signed in as {normalizedUserEmail}
-          </p>
-        )}
       </div>
+      {!accepted && isEmailMismatch && (
+        <p className="text-sm text-amber-700">
+          Invited as {listInvite.invitedUserEmail}; signed in as {normalizedUserEmail}
+        </p>
+      )}
     </li>
   )
 }

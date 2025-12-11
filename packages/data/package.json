@@ -13,6 +13,10 @@
       "import": "./src/db/index.ts",
       "require": "./dist/db/index.cjs"
     },
+    "./files": {
+      "import": "./src/files.ts",
+      "require": "./dist/files.cjs"
+    },
     "./finance": {
       "import": "./src/finance/index.ts",
       "require": "./dist/finance/index.cjs"
@@ -21,21 +25,25 @@
       "import": "./src/fixtures.ts",
       "require": "./dist/fixtures.cjs"
     },
+    "./lists": {
+      "import": "./src/lists.ts",
+      "require": "./dist/lists.cjs"
+    },
+    "./places": {
+      "import": "./src/places.ts",
+      "require": "./dist/places.cjs"
+    },
     "./schema": {
       "import": "./src/db/schema/index.ts",
       "require": "./dist/db/schema/index.cjs"
-    },
-    "./tools": {
-      "import": "./src/tools/index.ts",
-      "require": "./dist/tools/index.cjs"
     },
     "./services": {
       "import": "./src/services/index.ts",
       "require": "./dist/services/index.cjs"
     },
-    "./files": {
-      "import": "./src/files.ts",
-      "require": "./dist/files.cjs"
+    "./tools": {
+      "import": "./src/tools/index.ts",
+      "require": "./dist/tools/index.cjs"
     },
     "./types": {
       "import": "./src/types.ts",

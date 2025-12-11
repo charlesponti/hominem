@@ -1,11 +1,11 @@
-import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { useCallback, useEffect, useState } from 'react'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Lazy load the default client to avoid multiple instances if a custom client is provided
+// Lazy load the default client to avoid multiple instances
 let defaultSupabase: SupabaseClient | undefined
 
 export function getSupabase() {
@@ -23,7 +23,6 @@ export function getSupabase() {
 
 export function useSupabaseAuth(client?: SupabaseClient) {
   const supabaseClient = client || getSupabase()
-  // Rely on Supabase's built-in session state instead of manually managing user state
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -59,51 +58,14 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     return currentUser ?? null
   }, [supabaseClient])
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const { error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
-    },
-    [supabaseClient]
-  )
-
-  const signup = useCallback(
-    async (email: string, password: string) => {
-      const { error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-      })
-      if (error) throw error
-    },
-    [supabaseClient]
-  )
-
   const logout = useCallback(async () => {
     const { error } = await supabaseClient.auth.signOut()
     if (error) throw error
   }, [supabaseClient])
 
-  const resetPassword = useCallback(
-    async (email: string) => {
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email)
-      if (error) throw error
-    },
-    [supabaseClient]
-  )
-
   const signInWithGoogle = useCallback(async () => {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
-    })
-    if (error) throw error
-  }, [supabaseClient])
-
-  const signInWithGitHub = useCallback(async () => {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'github',
     })
     if (error) throw error
   }, [supabaseClient])
@@ -118,12 +80,8 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     isAuthenticated,
     isLoading,
     supabase: supabaseClient,
-    login,
-    signup,
     logout,
-    resetPassword,
     signInWithGoogle,
-    signInWithGitHub,
     getUser,
     userId: user?.id,
   }

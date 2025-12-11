@@ -23,8 +23,6 @@ export const links = () => [
 export const meta = () => [{ title: 'rocco' }, { name: 'description', content: 'rocco' }]
 
 export default function App() {
-  // Create one Supabase client instance for the entire app
-  // This ensures all providers and hooks use the same client
   const supabaseClient = useMemo(() => createClient(), [])
 
   return (

@@ -1,6 +1,3 @@
-'use client'
-
-import { Search as SearchIcon } from 'lucide-react'
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
 import { Input } from './input'
 
@@ -95,11 +92,6 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 
     return (
       <div className={`relative ${className}`}>
-        <SearchIcon
-          className={`absolute left-2 top-2.5 h-4 w-4 text-muted-foreground ${
-            isDebouncing ? 'animate-pulse' : ''
-          }`}
-        />
         <Input
           ref={ref}
           placeholder={placeholder}

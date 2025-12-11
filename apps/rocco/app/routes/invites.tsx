@@ -1,25 +1,44 @@
 import { Mail } from 'lucide-react'
-import { useLoaderData, useRevalidator, useRouteLoaderData } from 'react-router'
+import { useCallback, useMemo } from 'react'
+import { useLoaderData, useRouteLoaderData } from 'react-router'
 import InviteListItem from '~/components/InviteListItem'
 import Loading from '~/components/loading'
 import type { InviteItem } from '~/lib/component-types'
+import { getAuthState } from '~/lib/services/auth-loader.service'
+import { buildInvitePreview } from '~/lib/services/invite-preview.service'
+import { createClient as createBrowserClient } from '~/lib/supabase/client'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types/'
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const trpcServer = createCaller(request)
   const url = new URL(request.url)
   const token = url.searchParams.get('token') || undefined
-  let tokenMismatch = false
 
-  const invites = (await trpcServer.invites.getAll(token ? { token } : undefined)) as InviteItem[]
+  const { isAuthenticated } = await getAuthState(request)
 
-  if (token) {
-    const tokenInvite = invites.find((invite) => invite.token === token)
-    tokenMismatch = Boolean(tokenInvite?.belongsToAnotherUser)
+  // If not authenticated, allow viewing the page and return preview data when possible
+  if (!isAuthenticated) {
+    const preview = token ? await buildInvitePreview(token) : null
+
+    return {
+      invites: [],
+      token,
+      tokenMismatch: false,
+      requiresAuth: true,
+      preview,
+    }
   }
 
-  return { invites, token, tokenMismatch }
+  // Authenticated flow: fetch invites via tRPC
+  const trpcServer = createCaller(request)
+  const invites = (await trpcServer.invites.getAll(token ? { token } : undefined)) as InviteItem[]
+
+  // Check if token belongs to another user
+  const tokenMismatch = token
+    ? Boolean(invites.find((invite) => invite.token === token)?.belongsToAnotherUser)
+    : false
+
+  return { invites, token, tokenMismatch, requiresAuth: false, preview: null }
 }
 
 export function HydrateFallback() {
@@ -31,36 +50,59 @@ export function HydrateFallback() {
 }
 
 const Invites = () => {
-  const { invites, token, tokenMismatch } = useLoaderData<typeof loader>()
-  const { revalidate } = useRevalidator()
+  const { invites, token, tokenMismatch, requiresAuth, preview } = useLoaderData<typeof loader>()
   const layoutData = useRouteLoaderData('routes/layout') as {
     user: { email?: string } | null
     isAuthenticated: boolean
   }
   const currentUserEmail = layoutData?.user?.email?.toLowerCase()
+  const supabase = useMemo(() => createBrowserClient(), [])
 
-  const handleAccept = () => {
-    revalidate()
-  }
+  const onSignIn = useCallback(async () => {
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname + window.location.search)}`
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+      },
+    })
+  }, [supabase])
 
   return (
     <div className="space-y-8 pb-8">
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-              <Mail className="w-6 h-6 text-indigo-600" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Your Invitations</h1>
-          </div>
-          <p className="text-base md:text-lg text-gray-700 max-w-2xl">
-            View and manage your list invitations from other users.
-          </p>
-        </div>
+      <div className="sticky top-0 bg-white z-10 flex items-center gap-2">
+        <Mail className="size-8 text-slate-300" />
+        <h1 className="text-3xl font-semilight text-gray-900">List Invites</h1>
       </div>
 
-      {token && !tokenMismatch && (
+      {requiresAuth && (
+        <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 space-y-2">
+          <p className="font-medium">Sign in to accept this invite</p>
+          <p>We use Google sign-in to attach the invite to your account.</p>
+          <button
+            type="button"
+            onClick={onSignIn}
+            className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+          >
+            Continue with Google
+          </button>
+        </div>
+      )}
+
+      {preview && (
+        <InviteListItem
+          variant="preview"
+          preview={{
+            listName: preview.listName,
+            coverPhoto: preview.coverPhoto,
+            firstItemName: preview.firstItemName,
+            invitedUserEmail: preview.invitedUserEmail,
+            onSignIn,
+          }}
+        />
+      )}
+
+      {token && !tokenMismatch && !requiresAuth && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Invite loaded via secure link. Accepting will attach it to your current Google login.
         </div>
@@ -74,7 +116,7 @@ const Invites = () => {
       )}
 
       {/* Empty State */}
-      {(!invites || invites.length === 0) && !tokenMismatch && (
+      {!requiresAuth && (!invites || invites.length === 0) && !tokenMismatch && (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white p-6 md:p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
             <Mail className="w-8 h-8 text-indigo-600" />
@@ -87,14 +129,14 @@ const Invites = () => {
       )}
 
       {/* Invites List */}
-      {invites && invites.length > 0 && (
+      {!requiresAuth && invites && invites.length > 0 && (
         <ul className="space-y-4">
           {invites.map((listInvite: InviteItem) => (
             <InviteListItem
               key={`${listInvite.listId}-${listInvite.token}`}
               listInvite={listInvite}
               currentUserEmail={currentUserEmail}
-              onAccept={handleAccept}
+              canAccept={layoutData?.isAuthenticated}
             />
           ))}
         </ul>

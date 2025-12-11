@@ -1,11 +1,10 @@
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Plus } from 'lucide-react'
 import { Link } from 'react-router'
-import { useSupabaseAuthContext } from '@hominem/ui'
 import { trpc } from '~/lib/trpc/client'
 import Loading from '../loading'
 
 export default function Lists() {
-  // Use the provider-backed auth context to avoid spawning a new Supabase client.
   const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
 
   const {

@@ -197,79 +197,77 @@ export function TransactionFilters({
   }, [sortOptions, removeSortOption, handleSortChipClick])
 
   return (
-    <>
-      <header className="mb-6">
-        <SearchInput
-          ref={searchInputRef}
-          value={searchValue}
-          onSearchChange={onSearchChange}
-          placeholder="Search transactions..."
-          className="mb-4 max-w-md"
-        />
+    <div className="flex flex-col gap-4">
+      <SearchInput
+        ref={searchInputRef}
+        value={searchValue}
+        onSearchChange={onSearchChange}
+        placeholder="Search transactions..."
+        className="max-w-md"
+      />
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex flex-wrap gap-2">
-            <DropdownMenu open={isFilterControlsOpen} onOpenChange={setIsFilterControlsOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <ListFilter className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64 p-2 space-y-2">
-                <DropdownMenuLabel>Apply Filters</DropdownMenuLabel>
-                <DropdownMenuSeparator />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-wrap gap-2">
+          <DropdownMenu open={isFilterControlsOpen} onOpenChange={setIsFilterControlsOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <ListFilter className="h-4 w-4 mr-2" />
+                Filters
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-64 p-2 space-y-2">
+              <DropdownMenuLabel>Apply Filters</DropdownMenuLabel>
+              <DropdownMenuSeparator />
 
-                {/* Account Filter */}
-                <AccountSelect
-                  selectedAccount={selectedAccount}
-                  onAccountChange={handleSelectedAccountChange}
-                  isLoading={accountsLoading}
-                  showLabel={true}
-                  label="Account"
+              {/* Account Filter */}
+              <AccountSelect
+                selectedAccount={selectedAccount}
+                onAccountChange={handleSelectedAccountChange}
+                isLoading={accountsLoading}
+                showLabel={true}
+                label="Account"
+              />
+
+              {/* Date From Filter */}
+              <div className="space-y-1">
+                <label htmlFor="from-date-filter" className="text-sm font-medium">
+                  From Date
+                </label>
+                <DatePicker
+                  value={filters.dateFrom}
+                  onSelect={handleDateFromChange}
+                  placeholder="Start date"
                 />
+              </div>
 
-                {/* Date From Filter */}
-                <div className="space-y-1">
-                  <label htmlFor="from-date-filter" className="text-sm font-medium">
-                    From Date
-                  </label>
-                  <DatePicker
-                    value={filters.dateFrom}
-                    onSelect={handleDateFromChange}
-                    placeholder="Start date"
-                  />
-                </div>
-
-                {/* Date To Filter */}
-                <div className="space-y-1">
-                  <label htmlFor="to-date-filter" className="text-sm font-medium">
-                    To Date
-                  </label>
-                  <DatePicker
-                    value={filters.dateTo}
-                    onSelect={handleDateToChange}
-                    placeholder="End date"
-                  />
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <SortControls
-              sortOptions={sortOptions || []}
-              addSortOption={addSortOption}
-              updateSortOption={updateSortOption}
-              removeSortOption={removeSortOption}
-              open={isSortControlsOpen}
-              onOpenChange={handleSortControlsOpenChange}
-              focusedSortIndex={focusedSortIndex}
-            />
-            <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-              <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+              {/* Date To Filter */}
+              <div className="space-y-1">
+                <label htmlFor="to-date-filter" className="text-sm font-medium">
+                  To Date
+                </label>
+                <DatePicker
+                  value={filters.dateTo}
+                  onSelect={handleDateToChange}
+                  placeholder="End date"
+                />
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <SortControls
+            sortOptions={sortOptions || []}
+            addSortOption={addSortOption}
+            updateSortOption={updateSortOption}
+            removeSortOption={removeSortOption}
+            open={isSortControlsOpen}
+            onOpenChange={handleSortControlsOpenChange}
+            focusedSortIndex={focusedSortIndex}
+          />
+          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
-      </header>
+      </div>
 
       {/* Active Filters and Sorts Display */}
       {(activeFilters.length > 0 || activeSortOptions.length > 0) && (
@@ -293,6 +291,6 @@ export function TransactionFilters({
           ))}
         </div>
       )}
-    </>
+    </div>
   )
 }

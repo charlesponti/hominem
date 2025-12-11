@@ -40,6 +40,17 @@ function extractListSummaries(
     .map((list) => ({ id: list.id, name: list.name }))
 }
 
+export async function getPlacePhotoById(id: string): Promise<string | undefined> {
+  return db
+    .select({
+      photos: place.photos,
+    })
+    .from(place)
+    .where(eq(place.id, id))
+    .limit(1)
+    .then((results) => results[0]?.photos?.[0])
+}
+
 export async function getPlaceById(id: string): Promise<PlaceSelect | undefined> {
   return db.query.place.findFirst({ where: eq(place.id, id) })
 }

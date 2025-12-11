@@ -2,19 +2,19 @@ import crypto from 'node:crypto'
 import { and, count, desc, eq, inArray, or } from 'drizzle-orm'
 import { db, takeUniqueOrThrow } from '../db'
 import {
+  type Item as ItemSelect,
   item,
+  type ListInviteSelect,
+  type ListSelect,
   list,
   listInvite,
   place,
+  type UserListsSelect,
   userLists,
   users,
-  type ListInviteSelect,
-  type ListSelect,
-  type Item as ItemSelect,
-  type UserListsSelect,
 } from '../db/schema'
-import { sendInviteEmail } from '../resend'
 import { logger } from '../logger'
+import { sendInviteEmail } from '../resend'
 
 export interface ListUser {
   id?: string
@@ -95,6 +95,34 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
       error: error instanceof Error ? error.message : String(error),
     })
     return []
+  }
+}
+
+/**
+ * Gets the first place in a list for preview purposes.
+ * Optimized to fetch only one place, preferring one with an image.
+ * Only fetches minimal fields needed for preview.
+ */
+export async function getPlaceListPreview(listId: string) {
+  try {
+    return await db
+      .select({
+        itemId: item.itemId,
+        name: place.name,
+        description: place.description,
+        imageUrl: place.imageUrl,
+      })
+      .from(item)
+      .innerJoin(place, eq(item.itemId, place.id))
+      .where(eq(item.listId, listId))
+      .limit(1)
+      .then((rows) => rows[0] ?? null)
+  } catch (error) {
+    logger.error('Error fetching first place for preview', {
+      listId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
   }
 }
 

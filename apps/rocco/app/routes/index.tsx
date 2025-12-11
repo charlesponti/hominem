@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useRouteLoaderData } from 'react-router'
 import { useSupabaseAuthContext } from '@hominem/ui'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import Lists from '~/components/lists/lists'
 import NearbyPlaces from '~/components/places/nearby-places'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
@@ -19,12 +19,7 @@ type Location = {
 }
 
 export default function Index() {
-  const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
-  // Use the provider-backed auth context to share the single Supabase client.
-  const { isAuthenticated: clientIsAuthenticated, isLoading: authLoading } =
-    useSupabaseAuthContext()
-  // Prefer client auth (localStorage-backed); fall back to loader for SSR.
-  const isAuthenticated = clientIsAuthenticated || layoutData?.isAuthenticated || false
+  const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
   const navigate = useNavigate()
   const [, setSelectedPlace] = useState<GooglePlacePrediction | null>(null)
   const [userLocation, setUserLocation] = useState<Location | null>(null)

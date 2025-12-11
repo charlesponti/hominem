@@ -1,23 +1,12 @@
 import { Image as ImageIcon } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
-import { env } from '~/lib/env'
+import { buildPlacePhotoUrl } from '~/lib/photo-utils'
 import { cn } from '~/lib/utils'
 import PlacePhotoLightbox from './PlacePhotoLightbox'
 
 type Props = {
   alt: string
   photos: string[] | null | undefined
-}
-
-const getImageSize = (photoUrl: string, width = 600, height = 400): string => {
-  if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
-    return `https://places.googleapis.com/v1/${photoUrl}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
-  }
-
-  if (photoUrl.includes('googleusercontent')) {
-    return `${photoUrl}=w${width}-h${height}-c`
-  }
-  return photoUrl
 }
 
 const PlacePhotos = ({ alt, photos }: Props) => {
@@ -75,7 +64,7 @@ const PlacePhotos = ({ alt, photos }: Props) => {
                 </div>
               ) : (
                 <img
-                  src={getImageSize(photoUrl, 800, 800)}
+                  src={buildPlacePhotoUrl(photoUrl, 800, 800)}
                   alt={`${alt} - ${index + 1}`}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"

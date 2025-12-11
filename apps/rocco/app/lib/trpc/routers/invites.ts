@@ -26,13 +26,6 @@ export const invitesRouter = router({
         .optional()
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found in context',
-        })
-      }
-
       const normalizedEmail = ctx.user.email?.toLowerCase()
       const tokenFilter = input?.token
 
@@ -80,32 +73,13 @@ export const invitesRouter = router({
 
   // Get invites sent by the current user (outbound)
   getAllOutbound: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'User not found in context',
-      })
-    }
-
-    const outboundInvites = await getOutboundInvites(ctx.user.id)
-
-    return outboundInvites.map((invite) => ({
-      ...invite,
-      user: null, // User info not available
-    }))
+    return await getOutboundInvites(ctx.user.id)
   }),
 
   // Get all invites for a specific list
   getByList: protectedProcedure
     .input(z.object({ listId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found in context',
-        })
-      }
-
       // Only allow if user owns the list
       const listItem = await getListOwnedByUser(input.listId, ctx.user.id)
       if (!listItem) {
@@ -115,11 +89,7 @@ export const invitesRouter = router({
         })
       }
 
-      // Use service layer for consistency
-      const invites = await getListInvitesService(input.listId)
-
-      // Attach list info to each invite
-      return invites.map((invite) => ({ ...invite, list: listItem }))
+      return await getListInvitesService(input.listId)
     }),
 
   create: protectedProcedure
@@ -242,18 +212,11 @@ export const invitesRouter = router({
   decline: protectedProcedure
     .input(
       z.object({
-        listId: z.string().uuid(),
+        listId: z.uuid(),
         token: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found in context',
-        })
-      }
-
       const invite = await getInviteByListAndToken({
         listId: input.listId,
         token: input.token,
@@ -291,18 +254,11 @@ export const invitesRouter = router({
   delete: protectedProcedure
     .input(
       z.object({
-        listId: z.string().uuid(),
+        listId: z.uuid(),
         invitedUserEmail: z.string().email(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found in context',
-        })
-      }
-
       const result = await deleteListInviteService({
         listId: input.listId,
         invitedUserEmail: input.invitedUserEmail,

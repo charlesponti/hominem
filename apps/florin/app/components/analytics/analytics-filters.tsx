@@ -1,17 +1,19 @@
 import { DatePicker } from '@hominem/ui/components/date-picker'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@hominem/ui/components/ui/accordion'
 import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/components/ui/button'
-import { Card, CardContent } from '@hominem/ui/components/ui/card'
+import { Card } from '@hominem/ui/components/ui/card'
 import { Label } from '@hominem/ui/components/ui/label'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@hominem/ui/components/ui/sheet'
 import { Skeleton } from '@hominem/ui/components/ui/skeleton'
 import { Switch } from '@hominem/ui/components/ui/switch'
-import { X } from 'lucide-react'
+import { Filter, X } from 'lucide-react'
 import { type Dispatch, type SetStateAction, useId } from 'react'
 import { AccountSelect } from '~/components/account-select'
 import { CategorySelect } from '~/components/category-select'
@@ -149,7 +151,7 @@ function FilterChips({
             type="button"
             size="icon"
             variant="ghost"
-            className="h-4 w-4 p-0 ml-1 flex-shrink-0"
+            className="h-4 w-4 p-0 ml-1 shrink-0"
             aria-label={`Remove ${chip.label}`}
             onClick={(e) => {
               e.stopPropagation()
@@ -201,101 +203,113 @@ export function AnalyticsFilters({
       .filter((cat) => cat.id && cat.name) || []
 
   return (
-    <Accordion type="single" collapsible defaultValue={undefined}>
-      <AccordionItem value="filters">
-        <Card className="border-none shadow-none">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex flex-col sm:flex-row items-center justify-start gap-2 sm:gap-4 w-full">
-              <span className="text-lg font-semibold self-start">Filters</span>
-              <div className="flex-1 min-w-0">
-                <FilterChips
-                  dateFrom={dateFrom}
-                  setDateFrom={setDateFrom}
-                  dateTo={dateTo}
-                  setDateTo={setDateTo}
-                  selectedAccount={selectedAccount}
-                  setSelectedAccount={setSelectedAccount}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={setSelectedCategory}
-                  groupBy={groupBy}
-                  setGroupBy={setGroupBy}
-                  includeStats={includeStats}
-                  setIncludeStats={setIncludeStats}
-                  compareToPrevious={compareToPrevious}
-                  setCompareToPrevious={setCompareToPrevious}
-                  accounts={safeAccounts}
-                  categories={safeCategories}
-                  isLoading={isLoading}
-                />
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <CardContent className="space-y-6">
-              {/* Date Range Filters */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor={dateFromId}>From Date</Label>
-                  <DatePicker value={dateFrom} onSelect={setDateFrom} placeholder="Start date" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={dateToId}>To Date</Label>
-                  <DatePicker value={dateTo} onSelect={setDateTo} placeholder="End date" />
-                </div>
-              </div>
-
-              {/* Account and Category Filters */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <AccountSelect
-                  selectedAccount={selectedAccount}
-                  setSelectedAccount={setSelectedAccount}
-                  isLoading={isLoading}
-                  showLabel={true}
-                />
-                <CategorySelect
-                  selectedCategory={selectedCategory}
-                  onCategoryChange={setSelectedCategory}
-                  categories={safeCategories}
-                  isLoading={isLoading}
-                />
-              </div>
-
-              {/* Group By Filter */}
-              <GroupBySelect groupBy={groupBy} onGroupByChange={setGroupBy} />
-
-              {/* Toggle Filters */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor={includeStatsId}>Include Statistics</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Show summary statistics with the data
-                    </p>
+    <Card className="border-none shadow-none">
+      <div className="px-4 py-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Filter Sheet Trigger */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filters
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Customize Filters</SheetTitle>
+                <SheetDescription>
+                  Refine your analytics view with these filter options
+                </SheetDescription>
+              </SheetHeader>
+              <div className="space-y-6 py-6">
+                {/* Date Range Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={dateFromId}>From Date</Label>
+                    <DatePicker value={dateFrom} onSelect={setDateFrom} placeholder="Start date" />
                   </div>
-                  <Switch
-                    id={includeStatsId}
-                    checked={includeStats}
-                    onCheckedChange={setIncludeStats}
+                  <div className="space-y-2">
+                    <Label htmlFor={dateToId}>To Date</Label>
+                    <DatePicker value={dateTo} onSelect={setDateTo} placeholder="End date" />
+                  </div>
+                </div>
+
+                {/* Account and Category Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <AccountSelect
+                    selectedAccount={selectedAccount}
+                    setSelectedAccount={setSelectedAccount}
+                    isLoading={isLoading}
+                    showLabel={true}
+                  />
+                  <CategorySelect
+                    selectedCategory={selectedCategory}
+                    onCategoryChange={setSelectedCategory}
+                    categories={safeCategories}
+                    isLoading={isLoading}
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor={compareToPreviousId}>Compare to Previous Period</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Show trend information compared to the previous period
-                    </p>
+
+                {/* Group By Filter */}
+                <GroupBySelect groupBy={groupBy} onGroupByChange={setGroupBy} />
+
+                {/* Toggle Filters */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor={includeStatsId}>Include Statistics</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Show summary statistics with the data
+                      </p>
+                    </div>
+                    <Switch
+                      id={includeStatsId}
+                      checked={includeStats}
+                      onCheckedChange={setIncludeStats}
+                    />
                   </div>
-                  <Switch
-                    id={compareToPreviousId}
-                    checked={compareToPrevious}
-                    onCheckedChange={setCompareToPrevious}
-                  />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor={compareToPreviousId}>Compare to Previous Period</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Show trend information compared to the previous period
+                      </p>
+                    </div>
+                    <Switch
+                      id={compareToPreviousId}
+                      checked={compareToPrevious}
+                      onCheckedChange={setCompareToPrevious}
+                    />
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </AccordionContent>
-        </Card>
-      </AccordionItem>
-    </Accordion>
+            </SheetContent>
+          </Sheet>
+
+          {/* Active Filters Display */}
+          <div className="flex-1 min-w-0">
+            <FilterChips
+              dateFrom={dateFrom}
+              setDateFrom={setDateFrom}
+              dateTo={dateTo}
+              setDateTo={setDateTo}
+              selectedAccount={selectedAccount}
+              setSelectedAccount={setSelectedAccount}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              groupBy={groupBy}
+              setGroupBy={setGroupBy}
+              includeStats={includeStats}
+              setIncludeStats={setIncludeStats}
+              compareToPrevious={compareToPrevious}
+              setCompareToPrevious={setCompareToPrevious}
+              accounts={safeAccounts}
+              categories={safeCategories}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
   )
 }
