@@ -34,16 +34,29 @@ export async function buildInvitePreview(token: string): Promise<InvitePreview |
 
     if (firstPlace) {
       firstItemName = firstPlace.name ?? firstPlace.description ?? null
+
+      // Try to get cover photo from imageUrl first, then fall back to fetching photo by ID
       coverPhoto = firstPlace.imageUrl
 
       if (!coverPhoto && firstPlace.itemId) {
-        const photo = await getPlacePhotoById(firstPlace.itemId)
-        coverPhoto = photo ? buildPlacePhotoUrl(photo) : null
+        coverPhoto = await getPlacePhotoById(firstPlace.itemId)
       }
 
-      // Format the photo URL if we have one
+      // Only process with buildPlacePhotoUrl if it's a Google Places photo reference
+      // If it's already a full URL, use it as-is
       if (coverPhoto) {
-        coverPhoto = buildPlacePhotoUrl(coverPhoto)
+        if (
+          coverPhoto.includes('places/') ||
+          coverPhoto.includes('/photos/') ||
+          coverPhoto.includes('googleusercontent')
+        ) {
+          // Google Places photo reference, process it to get absolute URL
+          coverPhoto = buildPlacePhotoUrl(coverPhoto)
+        } else if (!coverPhoto.startsWith('http://') && !coverPhoto.startsWith('https://')) {
+          // Not a Google Places photo reference and not a full URL - skip it
+          coverPhoto = null
+        }
+        // If it's already a full URL (http/https), leave it as-is
       }
     }
   }
@@ -51,7 +64,7 @@ export async function buildInvitePreview(token: string): Promise<InvitePreview |
   return {
     listId: list?.id ?? invite.listId,
     listName: list?.name ?? invite.list?.name ?? 'Shared list',
-    coverPhoto,
+    coverPhoto: coverPhoto || undefined,
     firstItemName,
     invitedUserEmail: invite.invitedUserEmail,
   }

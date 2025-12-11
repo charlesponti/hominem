@@ -74,8 +74,8 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
 
   it('sends an invite email when base URL is configured', async () => {
     const sendInviteEmailMock = vi.mocked(sendInviteEmail)
-    const originalBaseUrl = process.env.APP_BASE_URL
-    process.env.APP_BASE_URL = 'https://app.example.com'
+    const originalBaseUrl = process.env.VITE_APP_BASE_URL
+    process.env.VITE_APP_BASE_URL = 'https://app.example.com'
 
     try {
       const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
@@ -90,7 +90,7 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
         inviteLink: `https://app.example.com/invites?token=${invite.token}&listId=${inviteListId}`,
       })
     } finally {
-      process.env.APP_BASE_URL = originalBaseUrl
+      process.env.VITE_APP_BASE_URL = originalBaseUrl
     }
   })
 

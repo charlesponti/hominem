@@ -938,7 +938,7 @@ export async function sendListInvite(
       .returning()
       .then(takeUniqueOrThrow)
 
-    const baseUrl = process.env.APP_BASE_URL || ''
+    const baseUrl = process.env.VITE_APP_BASE_URL || ''
     const inviteLink = baseUrl
       ? `${baseUrl.replace(/\/$/, '')}/invites?token=${token}&listId=${listId}`
       : ''

@@ -50,14 +50,19 @@ export const invitesRouter = router({
         }
 
         // Ignore token (and invite) if the user owns the target list
-        if (inviteByToken.list?.userId !== ctx.user.id) {
+        const inviteList = inviteByToken.list
+        if (inviteList && inviteList.userId !== ctx.user.id) {
           const belongsToAnotherUser =
             (inviteByToken.invitedUserId && inviteByToken.invitedUserId !== ctx.user.id) ||
             (normalizedEmail &&
               inviteByToken.invitedUserEmail &&
               inviteByToken.invitedUserEmail.toLowerCase() !== normalizedEmail)
 
-          tokenInvite = { ...inviteByToken, belongsToAnotherUser: Boolean(belongsToAnotherUser) }
+          tokenInvite = {
+            ...inviteByToken,
+            list: inviteList,
+            belongsToAnotherUser: Boolean(belongsToAnotherUser),
+          }
         }
       }
 

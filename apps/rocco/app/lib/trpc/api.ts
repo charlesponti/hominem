@@ -6,10 +6,6 @@ import type { AppRouter } from './router'
 type RouterInputs = inferRouterInputs<AppRouter>
 type RouterOutputs = inferRouterOutputs<AppRouter>
 
-export const useGetListInvites = (id: string) => {
-  return trpc.invites.getByList.useQuery({ listId: id })
-}
-
 export const useCreateList = (
   options?: UseMutationOptions<
     RouterOutputs['lists']['create'],
@@ -50,19 +46,24 @@ export const useUpdateList = (
         return {
           ...old,
           ...updatedList,
+          description: updatedList.description ?? old.description,
         }
       })
 
       utils.lists.getAll.setData(undefined, (oldLists = []) => {
-        return oldLists.map((list) =>
-          list.id === updatedList.id
-            ? {
-                ...list,
-                ...updatedList,
-                createdBy: updatedList.createdBy ?? list.createdBy,
-              }
-            : list
-        )
+        return oldLists.map((list) => {
+          if (list.id === updatedList.id) {
+            const description: string = updatedList.description ?? list.description ?? ''
+            return {
+              ...list,
+              name: updatedList.name,
+              description,
+              isPublic: updatedList.isPublic ?? list.isPublic,
+              updatedAt: updatedList.updatedAt,
+            }
+          }
+          return list
+        })
       })
 
       options?.onSuccess?.(updatedList, variables, context, mutation)

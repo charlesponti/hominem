@@ -8,7 +8,8 @@ import { getAuthState } from '~/lib/services/auth-loader.service'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
 import { createClient as createBrowserClient } from '~/lib/supabase/client'
 import { createCaller } from '~/lib/trpc/server'
-import type { Route } from './+types/'
+import type { Route } from './+types/invites'
+import { env } from '~/lib/env'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
@@ -39,6 +40,58 @@ export async function loader({ request }: Route.LoaderArgs) {
     : false
 
   return { invites, token, tokenMismatch, requiresAuth: false, preview: null }
+}
+
+export function meta(args: Route.MetaArgs) {
+  const loaderData = args.loaderData
+  const preview = loaderData?.preview
+
+  // Build URL
+  const fullPath = args.location.pathname + args.location.search
+  const url = new URL(fullPath, env.VITE_APP_BASE_URL)
+
+  // Default meta tags
+  const defaultTags = [
+    { title: 'List Invites - Rocco' },
+    { name: 'description', content: 'View and accept list invitations' },
+  ]
+
+  // If we have preview data, add Open Graph tags for rich link previews
+  if (preview) {
+    const title = `You're invited to "${preview.listName}"`
+    const description = preview.firstItemName
+      ? `Join this list featuring ${preview.firstItemName} and more`
+      : `Join "${preview.listName}" on Rocco`
+
+    const tags = [
+      { title },
+      { name: 'description', content: description },
+      // Open Graph tags
+      { property: 'og:title', content: title },
+      { property: 'og:description', content: description },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: url.href },
+      // Twitter Card tags (also helps with some platforms)
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: title },
+      { name: 'twitter:description', content: description },
+    ]
+
+    if (preview.coverPhoto) {
+      const imageUrl = preview.coverPhoto
+
+      tags.push(
+        { property: 'og:image', content: imageUrl },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { name: 'twitter:image', content: imageUrl }
+      )
+    }
+
+    return tags
+  }
+
+  return defaultTags
 }
 
 export function HydrateFallback() {
