@@ -1,8 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { db } from '@hominem/data'
-import { account } from '@hominem/data/schema'
+import { updateAccount, type AccountRecord } from '@hominem/data/services'
 import { logger } from '@hominem/utils/logger'
-import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { env } from './env.js'
 import { cache } from './redis'
@@ -118,17 +116,7 @@ export type TwitterUserResponse = {
   }
 }
 
-export type TwitterAccount = {
-  id: string
-  userId: string
-  provider: string
-  providerAccountId: string
-  accessToken: string | null
-  refreshToken: string | null
-  expiresAt: Date | null
-  tokenType: string | null
-  scope: string | null
-}
+export type TwitterAccount = AccountRecord
 
 /**
  * Checks if a Twitter token is expired or will expire soon
@@ -178,14 +166,11 @@ export async function refreshTwitterToken(
   const newExpiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null
 
   // Update the account in the database
-  await db
-    .update(account)
-    .set({
-      accessToken: access_token,
-      refreshToken: refresh_token || twitterAccount.refreshToken,
-      expiresAt: newExpiresAt,
-    })
-    .where(eq(account.id, twitterAccount.id))
+  await updateAccount(twitterAccount.id, {
+    accessToken: access_token,
+    refreshToken: refresh_token || twitterAccount.refreshToken,
+    expiresAt: newExpiresAt,
+  })
 
   return {
     accessToken: access_token,

@@ -17,6 +17,7 @@ export * as financeTestSeed from './finance-test-seed'
 export { tools } from './finance.tools'
 export * from './finance.transactions.service'
 export * from './finance.types'
+export * from './plaid.service'
 export * from './processing'
 
 export const categoryBreakdownSchema = z.object({

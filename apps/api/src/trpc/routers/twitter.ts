@@ -1,9 +1,12 @@
 import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/data'
-import { account, content } from '@hominem/data/schema'
+import {
+  ContentService,
+  deleteAccountForUser,
+  getAccountByUserAndProvider,
+  listAccountsByProvider,
+} from '@hominem/data/services'
 import { logger } from '@hominem/utils/logger'
 import { TRPCError } from '@trpc/server'
-import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { env } from '../../lib/env'
 import {
@@ -12,7 +15,6 @@ import {
   makeTwitterApiRequest,
   storePkceVerifier,
   TWITTER_SCOPES,
-  type TwitterAccount,
   TwitterPostSchema,
   type TwitterTweetResponse,
   type TwitterTweetsResponse,
@@ -22,15 +24,7 @@ import { protectedProcedure, router } from '../procedures.js'
 export const twitterRouter = router({
   // Get connected Twitter accounts
   accounts: protectedProcedure.query(async ({ ctx }) => {
-    const accounts = await db
-      .select({
-        id: account.id,
-        provider: account.provider,
-        providerAccountId: account.providerAccountId,
-        expiresAt: account.expiresAt,
-      })
-      .from(account)
-      .where(and(eq(account.userId, ctx.userId), eq(account.provider, 'twitter')))
+    const accounts = await listAccountsByProvider(ctx.userId, 'twitter')
 
     return accounts
   }),
@@ -73,18 +67,9 @@ export const twitterRouter = router({
   disconnect: protectedProcedure
     .input(z.object({ accountId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const [deletedAccount] = await db
-        .delete(account)
-        .where(
-          and(
-            eq(account.id, input.accountId),
-            eq(account.userId, ctx.userId),
-            eq(account.provider, 'twitter')
-          )
-        )
-        .returning()
+      const deleted = await deleteAccountForUser(input.accountId, ctx.userId, 'twitter')
 
-      if (!deletedAccount) {
+      if (!deleted) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Twitter account not found',
@@ -98,20 +83,15 @@ export const twitterRouter = router({
   post: protectedProcedure.input(TwitterPostSchema).mutation(async ({ input, ctx }) => {
     const userId = ctx.userId
     const { text, contentId, saveAsContent } = input
+    const contentService = new ContentService()
 
     try {
       // Find user's Twitter account
-      const userAccount = await db
-        .select()
-        .from(account)
-        .where(and(eq(account.userId, userId), eq(account.provider, 'twitter')))
-        .limit(1)
+      const twitterAccount = await getAccountByUserAndProvider(userId, 'twitter')
 
-      if (userAccount.length === 0) {
+      if (!twitterAccount) {
         throw new Error('No Twitter account connected')
       }
-
-      const twitterAccount = userAccount[0] as TwitterAccount
 
       // Post the tweet using the utility function that handles token refresh automatically
       const tweetResponse = await makeTwitterApiRequest(
@@ -130,18 +110,14 @@ export const twitterRouter = router({
 
       if (!tweetResponse.ok) {
         const errorData = await tweetResponse.json().catch(() => ({}))
-        console.error(tweetResponse)
-        logger.error(
-          {
-            status: tweetResponse.status,
-            statusText: tweetResponse.statusText,
-            error: errorData,
-            userId,
-            accountId: twitterAccount.id,
-            textLength: text.length,
-          },
-          'Failed to post tweet'
-        )
+        logger.error('Failed to post tweet', {
+          status: tweetResponse.status,
+          statusText: tweetResponse.statusText,
+          error: errorData,
+          userId,
+          accountId: twitterAccount.id,
+          textLength: text.length,
+        })
         throw new Error(`Failed to post tweet: ${tweetResponse.status}`)
       }
 
@@ -161,37 +137,28 @@ export const twitterRouter = router({
 
         if (contentId) {
           // Update existing content
-          const updated = await db
-            .update(content)
-            .set({
-              socialMediaMetadata,
-              status: 'published',
-              publishedAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })
-            .where(and(eq(content.id, contentId), eq(content.userId, userId)))
-            .returning()
-
-          contentRecord = updated[0] || null
+          contentRecord = await contentService.update({
+            id: contentId,
+            userId,
+            socialMediaMetadata,
+            status: 'published',
+            publishedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
         } else {
           // Create new content record
-          const newContent = await db
-            .insert(content)
-            .values({
-              id: randomUUID(),
-              type: 'tweet',
-              title: `Tweet - ${new Date().toLocaleDateString()}`,
-              content: text,
-              status: 'published',
-              socialMediaMetadata,
-              userId,
-              publishedAt: new Date().toISOString(),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })
-            .returning()
-
-          contentRecord = newContent[0]
+          contentRecord = await contentService.create({
+            id: randomUUID(),
+            type: 'tweet',
+            title: `Tweet - ${new Date().toLocaleDateString()}`,
+            content: text,
+            status: 'published',
+            socialMediaMetadata,
+            userId,
+            publishedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
         }
       }
 
@@ -209,20 +176,15 @@ export const twitterRouter = router({
   // Sync user's tweets from Twitter
   sync: protectedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.userId
+    const contentService = new ContentService()
 
     try {
       // Find user's Twitter account
-      const userAccount = await db
-        .select()
-        .from(account)
-        .where(and(eq(account.userId, userId), eq(account.provider, 'twitter')))
-        .limit(1)
+      const twitterAccount = await getAccountByUserAndProvider(userId, 'twitter')
 
-      if (userAccount.length === 0) {
+      if (!twitterAccount) {
         throw new Error('No Twitter account connected')
       }
-
-      const twitterAccount = userAccount[0] as TwitterAccount
 
       // Fetch user's recent tweets (last 50)
       const params = new URLSearchParams({
@@ -259,15 +221,12 @@ export const twitterRouter = router({
       }
 
       // Check which tweets already exist in our database
-      const existingTweets = await db
-        .select({ socialMetadata: content.socialMediaMetadata })
-        .from(content)
-        .where(and(eq(content.userId, userId), eq(content.type, 'tweet')))
+      const existingTweets = await contentService.list(userId, { types: ['tweet'] })
 
       const existingTweetIds = new Set(
         existingTweets
           .map((row) => {
-            const metadata = row.socialMetadata as { externalId?: string } | null
+            const metadata = row.socialMediaMetadata as { externalId?: string } | null
             return metadata?.externalId
           })
           .filter(Boolean)
@@ -304,7 +263,9 @@ export const twitterRouter = router({
 
       let insertedCount = 0
       if (contentToInsert.length > 0) {
-        await db.insert(content).values(contentToInsert)
+        for (const item of contentToInsert) {
+          await contentService.create(item)
+        }
         insertedCount = contentToInsert.length
       }
 

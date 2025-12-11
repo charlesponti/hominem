@@ -1,32 +1,9 @@
-import { db } from '@hominem/data/db'
-import {
-  type Content,
-  type ContentInsert,
-  ContentStatusSchema,
-  ContentTypeSchema,
-  content,
-} from '@hominem/data/schema'
 import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm'
-import { z } from 'zod'
+import { db } from '../db/index'
+import { type Content, type ContentInsert, content } from '../db/schema/content.schema'
 
 // Import shared error classes from notes service
 import { ForbiddenError, NotFoundError } from './notes.service'
-
-const UpdateContentZodSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
-  type: ContentTypeSchema.optional(),
-  title: z.string().nullish(),
-  content: z.string().optional(),
-  excerpt: z.string().nullish(),
-  status: ContentStatusSchema.optional(),
-  tags: z.array(z.object({ value: z.string() })).nullish(),
-  socialMediaMetadata: z.any().optional().nullish(),
-  seoMetadata: z.any().optional().nullish(),
-  contentStrategyId: z.string().uuid().nullish(),
-})
-
-export type UpdateContentInput = z.infer<typeof UpdateContentZodSchema>
 
 export class ContentService {
   async create(input: ContentInsert): Promise<Content> {
@@ -154,58 +131,31 @@ export class ContentService {
     return item as Content
   }
 
-  async update(input: UpdateContentInput): Promise<Content> {
-    const validatedInput = UpdateContentZodSchema.parse(input)
-
-    const updateData: Partial<typeof content.$inferInsert> = {}
-    if (validatedInput.type !== undefined) updateData.type = validatedInput.type
-    if (validatedInput.title !== undefined) updateData.title = validatedInput.title
-    if (validatedInput.content !== undefined) updateData.content = validatedInput.content
-    if (validatedInput.excerpt !== undefined) updateData.excerpt = validatedInput.excerpt
-    if (validatedInput.status !== undefined) updateData.status = validatedInput.status
-    if (validatedInput.tags !== undefined)
-      updateData.tags = validatedInput.tags === null ? [] : validatedInput.tags
-    if (validatedInput.socialMediaMetadata !== undefined)
-      updateData.socialMediaMetadata =
-        validatedInput.socialMediaMetadata === null ? undefined : validatedInput.socialMediaMetadata
-    if (validatedInput.seoMetadata !== undefined)
-      updateData.seoMetadata =
-        validatedInput.seoMetadata === null ? undefined : validatedInput.seoMetadata
-    if (validatedInput.contentStrategyId !== undefined)
-      updateData.contentStrategyId = validatedInput.contentStrategyId
-
-    if (Object.keys(updateData).length === 0) {
-      return this.getById(validatedInput.id, validatedInput.userId)
+  async update(input: Partial<Content> & { id: string; userId: string }) {
+    const updateData = {
+      ...input,
+      tags: input.tags === null ? [] : input.tags || [],
+      socialMediaMetadata:
+        input.socialMediaMetadata === null ? undefined : input.socialMediaMetadata,
+      seoMetadata: input.seoMetadata === null ? undefined : input.seoMetadata,
+      updatedAt: new Date().toISOString(),
     }
-
-    updateData.updatedAt = new Date().toISOString()
 
     const [item] = await db
       .update(content)
       .set(updateData)
-      .where(and(eq(content.id, validatedInput.id), eq(content.userId, validatedInput.userId)))
+      .where(and(eq(content.id, input.id), eq(content.userId, input.userId)))
       .returning()
 
-    if (!item) {
-      throw new NotFoundError('Content not found or not authorized to update')
-    }
-    return item as Content
+    return item
   }
 
-  async delete(id: string, userId: string): Promise<Content> {
+  async delete(id: string, userId: string) {
     if (!userId) {
       throw new ForbiddenError('Not authorized to delete content')
     }
 
-    const [item] = await db
-      .delete(content)
-      .where(and(eq(content.id, id), eq(content.userId, userId)))
-      .returning()
-
-    if (!item) {
-      throw new NotFoundError('Content not found or not authorized to delete')
-    }
-    return item as Content
+    await db.delete(content).where(and(eq(content.id, id), eq(content.userId, userId)))
   }
 
   async publish(

@@ -1,7 +1,5 @@
-import { db } from '@hominem/data'
-import { plaidItems } from '@hominem/data/schema'
+import { getPlaidItemByUserAndItemId } from '@hominem/data/finance'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 export const financePlaidSyncRoutes = new Hono()
 
@@ -16,9 +14,7 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
 
   try {
     // Find the plaid item for this user
-    const plaidItem = await db.query.plaidItems.findFirst({
-      where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
-    })
+    const plaidItem = await getPlaidItemByUserAndItemId(userId, itemId)
 
     if (!plaidItem) {
       return c.json({ error: 'Plaid item not found' }, 404)

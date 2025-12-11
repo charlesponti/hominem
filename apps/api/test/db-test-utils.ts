@@ -1,7 +1,5 @@
-import { db } from '@hominem/data'
 import { createTestUser as createTestUserShared } from '@hominem/data/fixtures'
-import { bookmark, users } from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
+import { UserAuthService } from '@hominem/data/services'
 import { vi } from 'vitest'
 
 // Track created test users for cleanup
@@ -307,8 +305,7 @@ export const createTestUser = async (overrides = {}): Promise<string> => {
 export const cleanupTestData = async (): Promise<void> => {
   // Clean up test data
   for (const userId of createdTestUsers) {
-    await db.delete(bookmark).where(eq(bookmark.userId, userId))
-    await db.delete(users).where(eq(users.id, userId))
+    await UserAuthService.deleteUserAndBookmarks(userId)
   }
 
   // Clear the tracking array

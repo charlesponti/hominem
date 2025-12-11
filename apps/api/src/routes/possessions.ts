@@ -1,8 +1,11 @@
 import crypto from 'node:crypto'
-import { db, takeUniqueOrThrow } from '@hominem/data'
-import { possessions } from '@hominem/data/schema'
+import {
+  createPossession,
+  deletePossession,
+  listPossessions,
+  updatePossession,
+} from '@hominem/data/services'
 import { zValidator } from '@hono/zod-validator'
-import { desc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { ForbiddenError } from '../lib/errors.js'
@@ -34,11 +37,7 @@ possessionsRoutes.get('/', async (c) => {
   if (!userId) throw ForbiddenError('Unauthorized')
 
   try {
-    const items = await db
-      .select()
-      .from(possessions)
-      .where(eq(possessions.userId, userId))
-      .orderBy(desc(possessions.createdAt))
+    const items = await listPossessions(userId)
 
     return c.json(items)
   } catch (error) {
@@ -66,16 +65,12 @@ possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c
   try {
     const data = c.req.valid('json')
 
-    const created = await db
-      .insert(possessions)
-      .values({
-        ...data,
-        id: crypto.randomUUID ? crypto.randomUUID() : 'generated-id',
-        userId,
-        dateAcquired: new Date(data.dateAcquired),
-      })
-      .returning()
-      .then(takeUniqueOrThrow)
+    const created = await createPossession({
+      ...data,
+      id: crypto.randomUUID ? crypto.randomUUID() : 'generated-id',
+      userId,
+      dateAcquired: new Date(data.dateAcquired),
+    })
 
     return c.json(created, 201)
   } catch (error) {
@@ -103,14 +98,11 @@ possessionsRoutes.put(
       const { id } = c.req.valid('param')
       const data = c.req.valid('json')
 
-      const updated = await db
-        .update(possessions)
-        .set({
-          ...data,
-          dateAcquired: data.dateAcquired ? new Date(data.dateAcquired) : undefined,
-        })
-        .where(eq(possessions.id, id))
-        .returning()
+      const updated = await updatePossession({
+        id,
+        userId,
+        ...data,
+      })
 
       return c.json(updated)
     } catch (error) {
@@ -139,7 +131,7 @@ possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), a
   try {
     const { id } = c.req.valid('param')
 
-    await db.delete(possessions).where(eq(possessions.id, id))
+    await deletePossession(id, userId)
 
     return c.body(null, 204)
   } catch (error) {

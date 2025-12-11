@@ -1,8 +1,10 @@
-import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/data'
-import { financialInstitutions, plaidItems } from '@hominem/data/schema'
+import {
+  ensureInstitutionExists,
+  getPlaidItemById,
+  upsertPlaidItem,
+  deletePlaidItem,
+} from '@hominem/data/finance'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { env } from '../../../lib/env.js'
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid.js'
@@ -54,50 +56,16 @@ export const plaidRouter = router({
         const itemId = exchangeResponse.data.item_id
 
         // Check if institution exists, create if not
-        const existingInstitution = await db.query.financialInstitutions.findFirst({
-          where: eq(financialInstitutions.id, institutionId),
+        await ensureInstitutionExists(institutionId, institutionName)
+
+        await upsertPlaidItem({
+          userId: ctx.userId,
+          itemId,
+          accessToken,
+          institutionId,
+          status: 'active',
+          lastSyncedAt: null,
         })
-
-        if (!existingInstitution) {
-          // Insert institution
-          await db.insert(financialInstitutions).values({
-            id: institutionId,
-            name: institutionName,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-        }
-
-        // Check if plaid item already exists for this user/institution
-        const existingItem = await db.query.plaidItems.findFirst({
-          where: and(eq(plaidItems.userId, ctx.userId), eq(plaidItems.itemId, itemId)),
-        })
-
-        if (existingItem) {
-          // Update existing item
-          await db
-            .update(plaidItems)
-            .set({
-              accessToken,
-              status: 'active',
-              error: null,
-              updatedAt: new Date(),
-            })
-            .where(eq(plaidItems.id, existingItem.id))
-        } else {
-          // Insert new plaid item
-          await db.insert(plaidItems).values({
-            id: randomUUID(),
-            itemId,
-            accessToken,
-            institutionId,
-            status: 'active',
-            lastSyncedAt: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            userId: ctx.userId,
-          })
-        }
 
         // Queue sync job
         const queues = ctx.queues
@@ -139,9 +107,7 @@ export const plaidRouter = router({
 
       try {
         // Get the plaid item
-        const plaidItem = await db.query.plaidItems.findFirst({
-          where: and(eq(plaidItems.id, itemId), eq(plaidItems.userId, ctx.userId)),
-        })
+        const plaidItem = await getPlaidItemById(itemId, ctx.userId)
 
         if (!plaidItem) {
           throw new Error('Plaid item not found')
@@ -205,7 +171,7 @@ export const plaidRouter = router({
         }
 
         // Delete the plaid item
-        await db.delete(plaidItems).where(eq(plaidItems.id, itemId))
+        await deletePlaidItem(itemId, ctx.userId)
 
         return {
           success: true,

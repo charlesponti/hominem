@@ -1,9 +1,6 @@
-import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/data'
-import { financialInstitutions, plaidItems } from '@hominem/data/schema'
+import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/data/finance'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { zValidator } from '@hono/zod-validator'
-import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { plaidClient } from '../../../../lib/plaid.js'
@@ -33,51 +30,16 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
     const accessToken = exchangeResponse.data.access_token
     const itemId = exchangeResponse.data.item_id
 
-    // Check if institution exists, create if not
-    const existingInstitution = await db.query.financialInstitutions.findFirst({
-      where: eq(financialInstitutions.id, institutionId),
+    await ensureInstitutionExists(institutionId, institutionName)
+
+    await upsertPlaidItem({
+      userId,
+      itemId,
+      accessToken,
+      institutionId,
+      status: 'active',
+      lastSyncedAt: null,
     })
-
-    if (!existingInstitution) {
-      // Insert institution
-      await db.insert(financialInstitutions).values({
-        id: institutionId,
-        name: institutionName,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-    }
-
-    // Check if plaid item already exists for this user/institution
-    const existingItem = await db.query.plaidItems.findFirst({
-      where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
-    })
-
-    if (existingItem) {
-      // Update existing item
-      await db
-        .update(plaidItems)
-        .set({
-          accessToken,
-          status: 'active',
-          error: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(plaidItems.id, existingItem.id))
-    } else {
-      // Insert new plaid item
-      await db.insert(plaidItems).values({
-        id: randomUUID(),
-        itemId,
-        accessToken,
-        institutionId,
-        status: 'active',
-        lastSyncedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId,
-      })
-    }
 
     // Queue sync job
     const queues = c.get('queues')

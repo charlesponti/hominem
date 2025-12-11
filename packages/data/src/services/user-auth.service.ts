@@ -1,7 +1,7 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { eq, or } from 'drizzle-orm'
 import { db } from '../db'
-import { type UserSelect, users } from '../db/schema'
+import { bookmark, type UserSelect, users } from '../db/schema'
 
 type AuthUserMetadata = {
   avatar_url?: string
@@ -180,5 +180,10 @@ export class UserAuthService {
       .returning()
 
     return updatedUser ?? null
+  }
+
+  static async deleteUserAndBookmarks(userId: string): Promise<void> {
+    await db.delete(bookmark).where(eq(bookmark.userId, userId))
+    await db.delete(users).where(eq(users.id, userId))
   }
 }

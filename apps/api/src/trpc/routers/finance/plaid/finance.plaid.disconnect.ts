@@ -1,6 +1,4 @@
-import { db } from '@hominem/data'
-import { plaidItems } from '@hominem/data/schema'
-import { and, eq } from 'drizzle-orm'
+import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem/data/finance'
 import { Hono } from 'hono'
 import { plaidClient } from '../../../../lib/plaid.js'
 export const financePlaidDisconnectRoutes = new Hono()
@@ -16,9 +14,7 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
 
   try {
     // Find the plaid item for this user
-    const plaidItem = await db.query.plaidItems.findFirst({
-      where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
-    })
+    const plaidItem = await getPlaidItemByUserAndItemId(userId, itemId)
 
     if (!plaidItem) {
       return c.json({ error: 'Plaid item not found' }, 404)
@@ -34,14 +30,11 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
     }
 
     // Mark as disconnected in our database
-    await db
-      .update(plaidItems)
-      .set({
-        status: 'error', // Using 'error' status to indicate disconnected
-        error: 'Disconnected by user',
-        updatedAt: new Date(),
-      })
-      .where(eq(plaidItems.id, plaidItem.id))
+    await updatePlaidItemStatusById(plaidItem.id, {
+      status: 'error', // Using 'error' status to indicate disconnected
+      error: 'Disconnected by user',
+      updatedAt: new Date(),
+    })
 
     return c.json({
       success: true,

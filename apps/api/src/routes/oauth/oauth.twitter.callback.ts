@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/data'
-import { account } from '@hominem/data/schema'
+import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/data/services'
 import { zValidator } from '@hono/zod-validator'
-import { and, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import z from 'zod'
 import { env } from '../../lib/env.js'
@@ -88,27 +86,20 @@ oauthTwitterCallbackRoutes.get(
       const { id: twitterUserId } = twitterUser.data
 
       // Check if account already exists
-      const existingAccount = await db
-        .select()
-        .from(account)
-        .where(and(eq(account.provider, 'twitter'), eq(account.providerAccountId, twitterUserId)))
-        .limit(1)
+      const existingAccount = await getAccountByProviderAccountId(twitterUserId, 'twitter')
 
       const expiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null
 
-      if (existingAccount.length > 0) {
+      if (existingAccount) {
         // Update existing account
-        await db
-          .update(account)
-          .set({
-            accessToken: access_token,
-            refreshToken: refresh_token,
-            expiresAt,
-          })
-          .where(eq(account.id, existingAccount[0].id))
+        await updateAccount(existingAccount.id, {
+          accessToken: access_token,
+          refreshToken: refresh_token,
+          expiresAt,
+        })
       } else {
         // Create new account record
-        await db.insert(account).values({
+        await createAccount({
           id: randomUUID(),
           userId,
           type: 'oauth',

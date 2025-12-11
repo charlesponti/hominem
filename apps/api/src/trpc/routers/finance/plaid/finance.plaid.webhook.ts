@@ -1,7 +1,5 @@
-import { db } from '@hominem/data'
-import { plaidItems } from '@hominem/data/schema'
+import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/data/finance'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { verifyPlaidWebhookSignature } from '../../../../lib/plaid.js'
@@ -48,9 +46,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
 
   try {
     // Find the plaid item
-    const plaidItem = await db.query.plaidItems.findFirst({
-      where: eq(plaidItems.itemId, item_id),
-    })
+    const plaidItem = await getPlaidItemByItemId(item_id)
 
     if (!plaidItem) {
       console.warn(`Plaid item ${item_id} not found for webhook`)
@@ -105,23 +101,17 @@ financePlaidWebhookRoutes.post('/', async (c) => {
     } else if (webhook_type === 'ITEM') {
       if (webhook_code === 'ERROR') {
         // Update item status to error
-        await db
-          .update(plaidItems)
-          .set({
-            status: 'error',
-            error: error ? `${error.error_code}: ${error.error_message}` : 'Unknown error',
-            updatedAt: new Date(),
-          })
-          .where(eq(plaidItems.itemId, item_id))
+        await updatePlaidItemStatusByItemId(item_id, {
+          status: 'error',
+          error: error ? `${error.error_code}: ${error.error_message}` : 'Unknown error',
+          updatedAt: new Date(),
+        })
       } else if (webhook_code === 'PENDING_EXPIRATION') {
         // Update item status to pending expiration
-        await db
-          .update(plaidItems)
-          .set({
-            status: 'pending_expiration',
-            updatedAt: new Date(),
-          })
-          .where(eq(plaidItems.itemId, item_id))
+        await updatePlaidItemStatusByItemId(item_id, {
+          status: 'pending_expiration',
+          updatedAt: new Date(),
+        })
       }
     }
 
