@@ -16,6 +16,10 @@ export const links = () => [
     href: 'https://fonts.gstatic.com',
     crossOrigin: 'anonymous',
   },
+  {
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Geist+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
+  },
 ]
 
 export const meta = () => [{ title: 'rocco' }, { name: 'description', content: 'rocco' }]

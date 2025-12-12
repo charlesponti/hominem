@@ -107,7 +107,7 @@ function Header() {
 
   return (
     <header
-      className="fixed top-0 left-0 z-50 w-full"
+      className="fixed top-0 left-0 z-50 w-full bg-background/95 backdrop-blur-md border-b border-border/50"
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
       <div className="flex px-2 py-4 md:px-8 items-center justify-between">

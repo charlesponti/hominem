@@ -1,10 +1,9 @@
 import { SupabaseAuthProvider } from '@hominem/ui'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-import { createClient } from '~/lib/supabase/client'
 import type { Route } from './+types/root'
-import './globals.css'
 import { TRPCProvider } from './lib/trpc'
+import './globals.css'
 
 export async function loader(_args: Route.LoaderArgs) {
   return {}
@@ -80,10 +79,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const supabaseClient = createClient()
   return (
     <TRPCProvider>
-      <SupabaseAuthProvider client={supabaseClient}>
+      <SupabaseAuthProvider>
         <Outlet />
       </SupabaseAuthProvider>
     </TRPCProvider>

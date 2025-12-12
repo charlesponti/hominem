@@ -20,10 +20,9 @@ const staggerContainer = {
 
 export default function AboutPage() {
   return (
-    <div className="bg-white text-gray-900">
-      {/* Hero Section */}
+    <div className="text-gray-900">
       <motion.section
-        className="relative py-24 sm:py-32 lg:py-40 px-4 sm:px-6 lg:px-8 bg-white"
+        className="relative py-24 sm:py-32 lg:py-40 px-4 sm:px-6 lg:px-8"
         initial="hidden"
         animate="visible"
         variants={fadeIn}
