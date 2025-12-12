@@ -4,6 +4,7 @@ import { useCallback } from 'react'
 import { useLoaderData } from 'react-router'
 import InviteListItem from '~/components/InviteListItem'
 import Loading from '~/components/loading'
+import PageTitle from '~/components/page-title'
 import { env } from '~/lib/env'
 import { getAuthState } from '~/lib/services/auth-loader.service'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
@@ -23,7 +24,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     return {
       invites: [],
-      token,
       tokenMismatch: false,
       requiresAuth: true,
       preview,
@@ -39,7 +39,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     ? Boolean(invites.find((invite) => invite.token === token)?.belongsToAnotherUser)
     : false
 
-  return { invites, token, tokenMismatch, requiresAuth: false, preview: null }
+  return { invites, tokenMismatch, requiresAuth: false, preview: null }
 }
 
 export function meta(args: Route.MetaArgs) {
@@ -103,7 +103,7 @@ export function HydrateFallback() {
 }
 
 const Invites = () => {
-  const { invites, token, tokenMismatch, requiresAuth, preview } = useLoaderData<typeof loader>()
+  const { invites, tokenMismatch, requiresAuth, preview } = useLoaderData<typeof loader>()
   const { isAuthenticated, user, supabase } = useSupabaseAuth()
   const currentUserEmail = user?.email?.toLowerCase()
 
@@ -121,29 +121,9 @@ const Invites = () => {
 
   return (
     <div className="space-y-8 pb-8">
-      <div className="sticky top-0 bg-white z-10 flex items-center gap-2">
-        <Mail className="size-8 text-slate-300" />
-        <h1 className="text-3xl font-semilight text-gray-900">List Invites</h1>
+      <div className="sticky top-0 bg-white z-10">
+        <PageTitle title="List Invites" variant="large" />
       </div>
-
-      {preview && (
-        <InviteListItem
-          variant="preview"
-          preview={{
-            listName: preview.listName,
-            coverPhoto: preview.coverPhoto,
-            firstItemName: preview.firstItemName,
-            invitedUserEmail: preview.invitedUserEmail,
-            onSignIn,
-          }}
-        />
-      )}
-
-      {token && !tokenMismatch && !requiresAuth && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Invite loaded via secure link. Accepting will attach it to your current Google login.
-        </div>
-      )}
 
       {tokenMismatch && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
@@ -168,6 +148,18 @@ const Invites = () => {
       {/* Invites List */}
       {!requiresAuth && invites && invites.length > 0 && (
         <ul className="space-y-4">
+          {preview && (
+            <InviteListItem
+              variant="preview"
+              preview={{
+                listName: preview.listName,
+                coverPhoto: preview.coverPhoto,
+                firstItemName: preview.firstItemName,
+                invitedUserEmail: preview.invitedUserEmail,
+                onSignIn,
+              }}
+            />
+          )}
           {invites.map((listInvite: InviteItem) => (
             <InviteListItem
               key={`${listInvite.listId}-${listInvite.token}`}

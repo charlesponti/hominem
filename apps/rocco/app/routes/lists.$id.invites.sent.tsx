@@ -2,6 +2,7 @@ import { useSupabaseAuth } from '@hominem/ui/supabase'
 import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate } from 'react-router'
 import Loading from '~/components/loading'
+import PageTitle from '~/components/page-title'
 import { trpc } from '~/lib/trpc/client'
 
 const ListSentInvites = () => {
@@ -20,7 +21,7 @@ const ListSentInvites = () => {
           Back to invites
         </Link>
       </div>
-      <h1>Sent Invites</h1>
+      <PageTitle title="Sent Invites" variant="serif" />
       <div>
         {isLoading && <Loading />}
         {data?.length === 0 && 'Your invites will appear here.'}

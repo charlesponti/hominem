@@ -11,6 +11,7 @@ import PlaceTypes from '~/components/places/PlaceTypes'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import SocialProofSection from '~/components/places/SocialProofSection'
 import { Button } from '@hominem/ui/button'
+import PageTitle from '~/components/page-title'
 import { useSaveSheet } from '~/hooks/useSaveSheet'
 import { trpc } from '~/lib/trpc/client'
 import { createCaller } from '~/lib/trpc/server'
@@ -64,17 +65,20 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
         <div className="w-full space-y-6">
           <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold leading-tight">{place.name}</h1>
-              <Button
-                type="button"
-                onClick={onSaveClick}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg transition-colors"
-              >
-                <ListPlus size={20} />
-                <span>Save</span>
-              </Button>
-            </div>
+            <PageTitle
+              title={place.name}
+              variant="serif"
+              actions={
+                <Button
+                  type="button"
+                  onClick={onSaveClick}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg transition-colors"
+                >
+                  <ListPlus size={20} />
+                  <span>Save</span>
+                </Button>
+              }
+            />
             <PlaceTypes types={place.types || []} />
           </div>
 

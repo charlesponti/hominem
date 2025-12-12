@@ -4,6 +4,7 @@ import { useLoaderData, useNavigate } from 'react-router'
 import Alert from '~/components/alert'
 import { LoadingScreen } from '~/components/loading'
 import { Button } from '@hominem/ui/button'
+import PageTitle from '~/components/page-title'
 import { trpc } from '~/lib/trpc/client'
 import { requireAuth } from '~/routes/guards'
 import type { Route } from './+types/account'
@@ -82,7 +83,7 @@ export default function Account() {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Account</h1>
+        <PageTitle title="Account" variant="sans" />
         <div className="border border-gray-200 rounded-lg shadow-md p-4 flex flex-col gap-4">
           <div className="flex items-center gap-4">
             {user.user_metadata.image ||

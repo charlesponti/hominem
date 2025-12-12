@@ -1,32 +1,40 @@
-import { Check, Pencil, X } from 'lucide-react'
-import { useState } from 'react'
+import { Check, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { trpc } from '~/lib/trpc/client'
 
-interface ListTitleProps {
-  list: {
-    id: string
-    name: string
-  }
-  isOwner: boolean
+interface ListTitleFormProps {
+  listId: string
+  currentName: string
+  onSuccess?: () => void
+  onCancel: () => void
 }
 
-export default function ListTitle({ list, isOwner }: ListTitleProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedName, setEditedName] = useState(list.name)
+export default function ListTitleForm({
+  listId,
+  currentName,
+  onSuccess,
+  onCancel,
+}: ListTitleFormProps) {
+  const [editedName, setEditedName] = useState(currentName)
   const { toast } = useToast()
   const utils = trpc.useUtils()
 
+  // Sync editedName when currentName changes
+  useEffect(() => {
+    setEditedName(currentName)
+  }, [currentName])
+
   const updateList = trpc.lists.update.useMutation({
     onSuccess: () => {
-      setIsEditing(false)
-      utils.lists.getById.invalidate({ id: list.id })
+      utils.lists.getById.invalidate({ id: listId })
       toast({
         title: 'Success',
         description: 'List name updated successfully.',
       })
+      onSuccess?.()
     },
     onError: (error) => {
       toast({
@@ -37,7 +45,7 @@ export default function ListTitle({ list, isOwner }: ListTitleProps) {
     },
   })
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!editedName.trim()) {
       toast({
         title: 'Error',
@@ -47,85 +55,63 @@ export default function ListTitle({ list, isOwner }: ListTitleProps) {
       return
     }
 
-    if (editedName.trim() === list.name) {
-      setIsEditing(false)
+    if (editedName.trim() === currentName) {
+      onCancel()
       return
     }
 
     updateList.mutate({
-      id: list.id,
+      id: listId,
       name: editedName.trim(),
     })
   }
 
   const handleCancel = () => {
-    setEditedName(list.name)
-    setIsEditing(false)
+    setEditedName(currentName)
+    onCancel()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault()
       handleSave()
     } else if (e.key === 'Escape') {
+      e.preventDefault()
       handleCancel()
     }
   }
 
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-2 w-full max-w-xl">
-        <Input
-          value={editedName}
-          onChange={(e) => setEditedName(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="text-2xl md:text-3xl lg:text-4xl font-bold h-auto py-2 px-3"
-          autoFocus
-        />
-        <div className="flex items-center gap-1 shrink-0">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleSave}
-            disabled={updateList.isPending}
-            className="h-10 w-10 text-green-600 hover:text-green-700 hover:bg-green-50"
-          >
-            <Check size={20} />
-            <span className="sr-only">Save</span>
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleCancel}
-            disabled={updateList.isPending}
-            className="h-10 w-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-          >
-            <X size={20} />
-            <span className="sr-only">Cancel</span>
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex flex-1 justify-between items-center gap-2 group pr-2">
-      <h1 className="font-serif font-semilight italic tracking-tighter text-4xl lg:text-5xl wrap-break-word">
-        {list.name}
-      </h1>
-      {isOwner && (
+    <div className="flex items-center gap-2 w-full max-w-xl">
+      <Input
+        value={editedName}
+        onChange={(e) => setEditedName(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className="text-2xl md:text-3xl lg:text-4xl font-bold h-auto py-2 px-3 font-serif italic tracking-tighter"
+        autoFocus
+      />
+      <div className="flex items-center gap-1 shrink-0">
         <Button
           size="icon"
           variant="ghost"
-          onClick={() => {
-            setEditedName(list.name)
-            setIsEditing(true)
-          }}
-          className="size-8 hover:text-indigo-600 focus-visible:bg-indigo-50"
+          onClick={handleSave}
+          disabled={updateList.isPending}
+          className="h-10 w-10 text-green-600 hover:text-green-700 hover:bg-green-50"
         >
-          <Pencil size={16} />
-          <span className="sr-only">Edit name</span>
+          <Check size={20} />
+          <span className="sr-only">Save</span>
         </Button>
-      )}
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={handleCancel}
+          disabled={updateList.isPending}
+          className="h-10 w-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+        >
+          <X size={20} />
+          <span className="sr-only">Cancel</span>
+        </Button>
+      </div>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { Link, useLoaderData } from 'react-router'
 import { Button } from '@hominem/ui/button'
+import PageTitle from '~/components/page-title'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types'
 
@@ -15,10 +16,15 @@ export default function TripsPage() {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Trips</h1>
-        <Link to="/trips/create">
-          <Button>Create New Trip</Button>
-        </Link>
+        <PageTitle
+          title="Your Trips"
+          variant="serif"
+          actions={
+            <Link to="/trips/create">
+              <Button>Create New Trip</Button>
+            </Link>
+          }
+        />
       </div>
 
       <div className="space-y-4">

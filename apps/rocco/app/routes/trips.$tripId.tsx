@@ -1,5 +1,6 @@
 import { useLoaderData } from 'react-router'
 import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal'
+import PageTitle from '~/components/page-title'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types/trips.$tripId'
 
@@ -18,8 +19,11 @@ export default function TripPage() {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">{trip.name}</h1>
-        <AddPlaceToTripModal tripId={trip.id} />
+        <PageTitle
+          title={trip.name}
+          variant="serif"
+          actions={<AddPlaceToTripModal tripId={trip.id} />}
+        />
       </div>
 
       <div className="space-y-4">

@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import { Form, Link, useActionData, useNavigation } from 'react-router'
 import { Button } from '@hominem/ui/button'
+import PageTitle from '~/components/page-title'
 import { Input } from '@hominem/ui/components/ui/input'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types'
@@ -37,7 +38,7 @@ export default function CreateTripPage() {
     return (
       <div className="p-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Trip Created Successfully!</h1>
+          <PageTitle title="Trip Created Successfully!" variant="sans" className="mb-4" />
           <p className="mb-4">Your trip has been created.</p>
           <Link to={`/trips/${actionData.tripId}`}>
             <Button>View Trip</Button>
@@ -55,7 +56,7 @@ export default function CreateTripPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold mb-6">Create a New Trip</h1>
+      <PageTitle title="Create a New Trip" variant="sans" className="mb-6" />
 
       <Form method="post" className="max-w-2xl">
         <div className="space-y-6">

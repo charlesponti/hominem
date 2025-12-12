@@ -6,6 +6,7 @@ import { Link, useParams } from 'react-router'
 import Alert from '~/components/alert'
 import ListInviteForm from '~/components/lists/list-invite-form'
 import { LoadingScreen } from '~/components/loading'
+import PageTitle from '~/components/page-title'
 import { env } from '~/lib/env'
 import { trpc } from '~/lib/trpc/client'
 
@@ -70,22 +71,19 @@ export default function ListInvites() {
   return (
     <div className="space-y-8 pb-8">
       <div className="relative">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-1.5">
-              <UserPlus className="size-6 text-gray-600" />
-            </div>
-            <header>
-              <Link
-                to={`/lists/${list.id}`}
-                className="font-serif text-3xl md:text-4xl flex items-center gap-2 hover:underline focus-visible:underline underline-offset-4 focus-visible:outline-0"
-              >
-                {list.name}
-              </Link>
-              <p className="font-serif text-gray-600">Invitations</p>
-            </header>
-          </div>
-        </div>
+        <PageTitle
+          title={list.name}
+          subtitle="Invitations"
+          variant="serif"
+          actions={
+            <Link
+              to={`/lists/${list.id}`}
+              className="text-sm text-gray-600 hover:text-gray-900 underline"
+            >
+              View List
+            </Link>
+          }
+        />
       </div>
 
       <div className="space-y-2">

@@ -129,7 +129,12 @@ const InviteListItem = (props: InviteListItemProps) => {
         )}
       </div>
       {!accepted && isEmailMismatch && (
-        <p className="text-xs text-amber-700">Invited as {listInvite.invitedUserEmail}</p>
+        <p className="flex flex-col gap-2 text-sm text-amber-700">
+          <span>
+            Invited as <span className="italic text-purple-400">{listInvite.invitedUserEmail}</span>
+          </span>
+          <span>Accepting will attach it to your current Google login.</span>
+        </p>
       )}
     </li>
   )
