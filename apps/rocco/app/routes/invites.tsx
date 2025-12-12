@@ -1,15 +1,15 @@
+import { useSupabaseAuth } from '@hominem/ui'
 import { Mail } from 'lucide-react'
-import { useCallback, useMemo } from 'react'
-import { useLoaderData, useRouteLoaderData } from 'react-router'
+import { useCallback } from 'react'
+import { useLoaderData } from 'react-router'
 import InviteListItem from '~/components/InviteListItem'
 import Loading from '~/components/loading'
 import type { InviteItem } from '~/lib/component-types'
+import { env } from '~/lib/env'
 import { getAuthState } from '~/lib/services/auth-loader.service'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
-import { createClient as createBrowserClient } from '~/lib/supabase/client'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types/invites'
-import { env } from '~/lib/env'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
@@ -104,22 +104,13 @@ export function HydrateFallback() {
 
 const Invites = () => {
   const { invites, token, tokenMismatch, requiresAuth, preview } = useLoaderData<typeof loader>()
-  const layoutData = useRouteLoaderData('routes/layout') as {
-    user: { email?: string } | null
-    isAuthenticated: boolean
-  }
-  const currentUserEmail = layoutData?.user?.email?.toLowerCase()
-  const supabase = useMemo(() => createBrowserClient(), [])
+  const { isAuthenticated, signInWithGoogle, user } = useSupabaseAuth()
+  const currentUserEmail = user?.email?.toLowerCase()
 
   const onSignIn = useCallback(async () => {
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname + window.location.search)}`
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo,
-      },
-    })
-  }, [supabase])
+    await signInWithGoogle({ redirectToPath: redirectTo })
+  }, [signInWithGoogle])
 
   return (
     <div className="space-y-8 pb-8">
@@ -127,20 +118,6 @@ const Invites = () => {
         <Mail className="size-8 text-slate-300" />
         <h1 className="text-3xl font-semilight text-gray-900">List Invites</h1>
       </div>
-
-      {requiresAuth && (
-        <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 space-y-2">
-          <p className="font-medium">Sign in to accept this invite</p>
-          <p>We use Google sign-in to attach the invite to your account.</p>
-          <button
-            type="button"
-            onClick={onSignIn}
-            className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-          >
-            Continue with Google
-          </button>
-        </div>
-      )}
 
       {preview && (
         <InviteListItem
@@ -189,7 +166,7 @@ const Invites = () => {
               key={`${listInvite.listId}-${listInvite.token}`}
               listInvite={listInvite}
               currentUserEmail={currentUserEmail}
-              canAccept={layoutData?.isAuthenticated}
+              canAccept={isAuthenticated}
             />
           ))}
         </ul>

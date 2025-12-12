@@ -1,3 +1,11 @@
+import { useSupabaseAuth } from '@hominem/ui'
+import { Button } from '@hominem/ui/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@hominem/ui/components/ui/dropdown-menu'
 import {
   Globe2Icon,
   Info,
@@ -9,17 +17,8 @@ import {
   User as UserIcon,
   UserPlus,
 } from 'lucide-react'
-import { useCallback, useEffect } from 'react'
-import { Link, useNavigate, useRevalidator, useRouteLoaderData } from 'react-router'
-import { Button } from '@hominem/ui/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@hominem/ui/components/ui/dropdown-menu'
-import { createClient } from '~/lib/supabase/client'
-import { useSupabaseAuth } from '@hominem/ui'
+import { useCallback } from 'react'
+import { Link, useNavigate } from 'react-router'
 
 const ACCOUNT = '/account'
 const INVITES = '/invites'
@@ -99,52 +98,25 @@ const NavigationMenu = ({ onLogoutClick }: NavigationMenuProps) => (
 
 function Header() {
   const navigate = useNavigate()
-  const supabase = createClient()
-  const revalidator = useRevalidator()
-  const { isAuthenticated } = useRouteLoaderData('routes/layout') as {
-    isAuthenticated: boolean
-  }
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        revalidator.revalidate()
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [supabase, revalidator])
+  const { isAuthenticated, logout } = useSupabaseAuth()
 
   const onLogoutClick = useCallback(async () => {
-    await supabase.auth.signOut()
+    await logout()
     navigate('/')
-  }, [supabase.auth, navigate])
+  }, [logout, navigate])
 
   return (
     <header
       className="fixed top-0 left-0 z-50 w-full"
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
-      <div className="w-full flex px-2 py-4 md:px-4 items-center justify-between">
+      <div className="flex px-2 py-4 md:px-8 items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
           <Globe2Icon className="size-6" />
           <span className="font-bold">{APP_NAME}</span>
         </Link>
         <div className="flex items-center space-x-2">
-          {isAuthenticated ? (
-            <NavigationMenu onLogoutClick={onLogoutClick} />
-          ) : (
-            <div className="flex items-center space-x-4">
-              <Link to="/about" className="text-gray-600 hover:text-gray-900">
-                About
-              </Link>
-              <SignInButton />
-            </div>
-          )}
+          {isAuthenticated ? <NavigationMenu onLogoutClick={onLogoutClick} /> : <SignInButton />}
         </div>
       </div>
     </header>
@@ -156,12 +128,12 @@ export default Header
 const SignInButton = () => {
   const { signInWithGoogle } = useSupabaseAuth()
 
+  const onSignInClick = useCallback(async () => {
+    await signInWithGoogle({ redirectToPath: '/' })
+  }, [signInWithGoogle])
+
   return (
-    <Button
-      variant="outline"
-      onClick={signInWithGoogle}
-      className="flex cursor-pointer hover:bg-primary focus:bg-primary"
-    >
+    <Button onClick={onSignInClick} className="flex cursor-pointer">
       Sign In with Google
     </Button>
   )

@@ -891,12 +891,14 @@ export async function getUserListLinks(listIds: string[]): Promise<UserListsSele
  * @param listId - The ID of the list to invite to.
  * @param invitedUserEmail - The email of the user to invite.
  * @param invitingUserId - The ID of the user sending the invite.
+ * @param baseUrl - The base URL for constructing the invite link.
  * @returns The created invite object or an error string.
  */
 export async function sendListInvite(
   listId: string,
   invitedUserEmail: string,
-  invitingUserId: string
+  invitingUserId: string,
+  baseUrl: string
 ): Promise<ListInviteSelect | { error: string; status: number }> {
   try {
     const normalizedInvitedEmail = invitedUserEmail.toLowerCase()
@@ -938,18 +940,7 @@ export async function sendListInvite(
       .returning()
       .then(takeUniqueOrThrow)
 
-    const baseUrl = process.env.VITE_APP_BASE_URL || ''
-    const inviteLink = baseUrl
-      ? `${baseUrl.replace(/\/$/, '')}/invites?token=${token}&listId=${listId}`
-      : ''
-
-    if (!inviteLink) {
-      logger.warn('Invite created but APP_BASE_URL not set; email not sent', {
-        listId,
-        invitedUserEmail: normalizedInvitedEmail,
-      })
-      return createdInvite
-    }
+    const inviteLink = `${baseUrl.replace(/\/$/, '')}/invites?token=${token}&listId=${listId}`
 
     try {
       await sendInviteEmail({

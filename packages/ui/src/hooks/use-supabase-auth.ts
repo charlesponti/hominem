@@ -21,21 +21,20 @@ export function getSupabase() {
   return defaultSupabase
 }
 
-export function useSupabaseAuth(client?: SupabaseClient) {
-  const supabaseClient = client || getSupabase()
+export function useSupabaseAuth() {
+  const supabaseClient = getSupabase()
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const {
-        data: { session: initialSession },
-      } = await supabaseClient.auth.getSession()
-      setSession(initialSession)
-      setIsLoading(false)
-    }
+  const getInitialSession = useCallback(async () => {
+    const {
+      data: { session: initialSession },
+    } = await supabaseClient.auth.getSession()
+    setSession(initialSession)
+    setIsLoading(false)
+  }, [supabaseClient])
 
+  useEffect(() => {
     getInitialSession()
 
     // Listen for auth changes - Supabase manages session state internally
@@ -47,7 +46,7 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabaseClient])
+  }, [getInitialSession, supabaseClient])
 
   const getUser = useCallback(async () => {
     const {
@@ -63,12 +62,18 @@ export function useSupabaseAuth(client?: SupabaseClient) {
     if (error) throw error
   }, [supabaseClient])
 
-  const signInWithGoogle = useCallback(async () => {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-    })
-    if (error) throw error
-  }, [supabaseClient])
+  const signInWithGoogle = useCallback(
+    async ({ redirectToPath }: { redirectToPath?: string }) => {
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectToPath,
+        },
+      })
+      if (error) throw error
+    },
+    [supabaseClient]
+  )
 
   // Derive user and isAuthenticated from session (single source of truth)
   const user = session?.user ?? null

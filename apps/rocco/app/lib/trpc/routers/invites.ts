@@ -147,10 +147,19 @@ export const invitesRouter = router({
       }
 
       // Use service layer for consistency
+      const baseUrl = process.env.VITE_APP_BASE_URL
+      if (!baseUrl) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Base URL not configured',
+        })
+      }
+
       const serviceResponse = await sendListInviteService(
         input.listId,
         normalizedEmail,
-        ctx.user.id
+        ctx.user.id,
+        baseUrl
       )
 
       if ('error' in serviceResponse) {

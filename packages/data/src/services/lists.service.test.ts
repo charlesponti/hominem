@@ -74,28 +74,28 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
 
   it('sends an invite email when base URL is configured', async () => {
     const sendInviteEmailMock = vi.mocked(sendInviteEmail)
-    const originalBaseUrl = process.env.VITE_APP_BASE_URL
-    process.env.VITE_APP_BASE_URL = 'https://app.example.com'
+    const baseUrl = 'https://app.example.com'
 
-    try {
-      const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
-      if ('error' in invite) {
-        expect.fail(`Expected invite to be created, got error ${invite.error}`)
-      }
-
-      expect(sendInviteEmailMock).toHaveBeenCalledTimes(1)
-      expect(sendInviteEmailMock).toHaveBeenCalledWith({
-        to: invitedEmail,
-        listName: 'Invite List',
-        inviteLink: `https://app.example.com/invites?token=${invite.token}&listId=${inviteListId}`,
-      })
-    } finally {
-      process.env.VITE_APP_BASE_URL = originalBaseUrl
+    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId, baseUrl)
+    if ('error' in invite) {
+      expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
+
+    expect(sendInviteEmailMock).toHaveBeenCalledTimes(1)
+    expect(sendInviteEmailMock).toHaveBeenCalledWith({
+      to: invitedEmail,
+      listName: 'Invite List',
+      inviteLink: `https://app.example.com/invites?token=${invite.token}&listId=${inviteListId}`,
+    })
   })
 
   it('allows the list owner to delete a pending invite', async () => {
-    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
+    const invite = await sendListInvite(
+      inviteListId,
+      invitedEmail,
+      ownerId,
+      'https://app.example.com'
+    )
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
@@ -116,7 +116,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   })
 
   it('prevents deleting an invite that was already accepted', async () => {
-    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
+    const invite = await sendListInvite(
+      inviteListId,
+      invitedEmail,
+      ownerId,
+      'https://app.example.com'
+    )
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
@@ -188,7 +193,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   })
 
   it('acceptListInvite allows invite email to differ from signed-in email', async () => {
-    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
+    const invite = await sendListInvite(
+      inviteListId,
+      invitedEmail,
+      ownerId,
+      'https://app.example.com'
+    )
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
@@ -219,7 +229,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     const otherEmail = 'other-user@example.com'
     await createTestUser({ id: otherUserId, email: otherEmail })
 
-    const invite = await sendListInvite(inviteListId, otherEmail, ownerId)
+    const invite = await sendListInvite(
+      inviteListId,
+      otherEmail,
+      ownerId,
+      'https://app.example.com'
+    )
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
@@ -238,7 +253,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   })
 
   it('rejects accepting with an invalid token', async () => {
-    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
+    const invite = await sendListInvite(
+      inviteListId,
+      invitedEmail,
+      ownerId,
+      'https://app.example.com'
+    )
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
@@ -251,7 +271,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   })
 
   it('rejects double acceptance with the same token', async () => {
-    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
+    const invite = await sendListInvite(
+      inviteListId,
+      invitedEmail,
+      ownerId,
+      'https://app.example.com'
+    )
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
@@ -269,7 +294,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   })
 
   it('decline requires the correct token', async () => {
-    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId)
+    const invite = await sendListInvite(
+      inviteListId,
+      invitedEmail,
+      ownerId,
+      'https://app.example.com'
+    )
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }
@@ -290,7 +320,7 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   })
 
   it('prevents accepting an invite to a list you own', async () => {
-    const invite = await sendListInvite(listId, invitedEmail, ownerId)
+    const invite = await sendListInvite(listId, invitedEmail, ownerId, 'https://app.example.com')
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`)
     }

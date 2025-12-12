@@ -16,6 +16,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./button": "./src/components/ui/button.tsx",
     "./server": "./src/server/index.ts",
     "./components/*": "./src/components/*",
     "./lib/*": "./src/lib/*"

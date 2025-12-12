@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { createContext, type ReactNode, useContext } from 'react'
 import { useSupabaseAuth } from '../hooks/use-supabase-auth'
 
@@ -8,11 +7,10 @@ const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(u
 
 interface SupabaseAuthProviderProps {
   children: ReactNode
-  client?: SupabaseClient
 }
 
-export function SupabaseAuthProvider({ children, client }: SupabaseAuthProviderProps) {
-  const auth = useSupabaseAuth(client)
+export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
+  const auth = useSupabaseAuth()
 
   return <SupabaseAuthContext.Provider value={auth}>{children}</SupabaseAuthContext.Provider>
 }
