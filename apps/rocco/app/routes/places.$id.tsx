@@ -41,7 +41,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
 export default function PlacePage({ loaderData }: Route.ComponentProps) {
   const { place } = loaderData
-  const { isOpen, open, close } = useModal()
+  const { isOpen, open, setIsOpen } = useModal()
 
   const onSaveClick = useCallback(() => {
     open()
@@ -106,7 +106,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
-      <AddPlaceToList place={place} isOpen={isOpen} onOpenChange={close} />
+      <AddPlaceToList place={place} isOpen={isOpen} onOpenChange={setIsOpen} />
     </>
   )
 }

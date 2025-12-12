@@ -1,8 +1,8 @@
-import { Check, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
+import { Check, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { trpc } from '~/lib/trpc/client'
 
 interface ListTitleFormProps {

@@ -1,30 +1,85 @@
+import { and, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
-import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm'
 import { db } from '../db'
 import {
-  item,
-  list,
-  place,
   type Item as ItemSelect,
+  item,
   type ListSelect,
+  list,
   type Place as PlaceSelect,
+  type PlaceInsert,
+  place,
 } from '../db/schema'
 
 export type ListSummary = { id: string; name: string }
 
-type PlaceUpsertInput = {
-  googleMapsId: string
-  name: string
-  address?: string | null
-  latitude?: number | null
-  longitude?: number | null
-  types?: string[] | null
-  imageUrl?: string | null
-  websiteUri?: string | null
-  phoneNumber?: string | null
-  rating?: number | null
-  priceLevel?: number | null
-  photos?: string[] | null
+/**
+ * Computes imageUrl from place database values.
+ * Returns imageUrl if set, otherwise falls back to first photo.
+ */
+export function getPlaceImageUrl(place: Pick<PlaceSelect, 'imageUrl' | 'photos'>): string | null {
+  return place.imageUrl ?? place.photos?.[0] ?? null
+}
+
+// In-memory cache for place lookups
+type CacheEntry<T> = {
+  data: T
+  expiresAt: number
+}
+
+class PlaceCache {
+  private cache = new Map<string, CacheEntry<PlaceSelect>>()
+  readonly TTL_MS = 5 * 60 * 1000 // 5 minutes for googleMapsId lookups
+  readonly TTL_SHORT_MS = 2 * 60 * 1000 // 2 minutes for id lookups
+
+  get(key: string): PlaceSelect | null {
+    const entry = this.cache.get(key)
+    if (!entry) return null
+
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(key)
+      return null
+    }
+
+    return entry.data
+  }
+
+  set(key: string, data: PlaceSelect, ttl: number = this.TTL_MS): void {
+    this.cache.set(key, {
+      data,
+      expiresAt: Date.now() + ttl,
+    })
+  }
+
+  delete(key: string): void {
+    this.cache.delete(key)
+  }
+
+  clear(): void {
+    this.cache.clear()
+  }
+
+  // Clean up expired entries (call periodically)
+  cleanup(): void {
+    const now = Date.now()
+    for (const [key, entry] of this.cache.entries()) {
+      if (now > entry.expiresAt) {
+        this.cache.delete(key)
+      }
+    }
+  }
+}
+
+const placeCache = new PlaceCache()
+
+// Cleanup expired entries every 10 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(
+    () => {
+      placeCache.cleanup()
+    },
+    10 * 60 * 1000
+  )
 }
 
 function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
@@ -52,45 +107,169 @@ export async function getPlacePhotoById(id: string): Promise<string | undefined>
 }
 
 export async function getPlaceById(id: string): Promise<PlaceSelect | undefined> {
-  return db.query.place.findFirst({ where: eq(place.id, id) })
+  const cacheKey = `place:id:${id}`
+  const cached = placeCache.get(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  const result = await db.query.place.findFirst({ where: eq(place.id, id) })
+  if (result) {
+    placeCache.set(cacheKey, result, placeCache.TTL_SHORT_MS)
+  }
+  return result
 }
 
 export async function getPlaceByGoogleMapsId(
   googleMapsId: string
 ): Promise<PlaceSelect | undefined> {
-  return db.query.place.findFirst({ where: eq(place.googleMapsId, googleMapsId) })
-}
-
-export async function ensurePlaceFromGoogleData(data: PlaceUpsertInput): Promise<PlaceSelect> {
-  const existing = await getPlaceByGoogleMapsId(data.googleMapsId)
-  if (existing) {
-    return existing
+  const cacheKey = `place:googleMapsId:${googleMapsId}`
+  const cached = placeCache.get(cacheKey)
+  if (cached) {
+    return cached
   }
 
-  const [created] = await db
+  const result = await db.query.place.findFirst({ where: eq(place.googleMapsId, googleMapsId) })
+  if (result) {
+    placeCache.set(cacheKey, result)
+  }
+  return result
+}
+
+export async function getPlacesByIds(ids: string[]): Promise<PlaceSelect[]> {
+  if (ids.length === 0) {
+    return []
+  }
+  return db.query.place.findMany({ where: inArray(place.id, ids) })
+}
+
+export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise<PlaceSelect[]> {
+  if (googleMapsIds.length === 0) {
+    return []
+  }
+  return db.query.place.findMany({ where: inArray(place.googleMapsId, googleMapsIds) })
+}
+
+export async function ensurePlaceFromGoogleData(data: PlaceInsert): Promise<PlaceSelect> {
+  // Set imageUrl from photos if not provided
+  const imageUrl = data.imageUrl ?? (data.photos && data.photos.length > 0 ? data.photos[0] : null)
+
+  const insertValues = {
+    id: crypto.randomUUID(),
+    googleMapsId: data.googleMapsId,
+    name: data.name,
+    address: data.address ?? null,
+    latitude: data.latitude ?? null,
+    longitude: data.longitude ?? null,
+    location: data.location ?? toLocationTuple(data.latitude, data.longitude),
+    types: data.types ?? null,
+    rating: data.rating ?? null,
+    websiteUri: data.websiteUri ?? null,
+    phoneNumber: data.phoneNumber ?? null,
+    priceLevel: data.priceLevel ?? null,
+    photos: data.photos ?? null,
+    imageUrl,
+  }
+
+  const [result] = await db
     .insert(place)
-    .values({
-      id: crypto.randomUUID(),
-      ...data,
-      address: data.address ?? null,
-      latitude: data.latitude ?? null,
-      longitude: data.longitude ?? null,
-      types: data.types ?? null,
-      imageUrl: data.imageUrl ?? null,
-      websiteUri: data.websiteUri ?? null,
-      phoneNumber: data.phoneNumber ?? null,
-      rating: data.rating ?? null,
-      priceLevel: data.priceLevel ?? null,
-      photos: data.photos ?? null,
-      location: toLocationTuple(data.latitude, data.longitude),
+    .values(insertValues)
+    .onConflictDoUpdate({
+      target: place.googleMapsId,
+      set: {
+        // Always update name if provided
+        name: sql`EXCLUDED.name`,
+        // Update address if provided (can be null)
+        address: sql`EXCLUDED.address`,
+        // Update location if latitude/longitude are provided
+        latitude: sql`EXCLUDED.latitude`,
+        longitude: sql`EXCLUDED.longitude`,
+        location: sql`EXCLUDED.location`,
+        // Update types if provided
+        types: sql`EXCLUDED.types`,
+        // Update rating if provided (can be null)
+        rating: sql`EXCLUDED.rating`,
+        // Update websiteUri if provided (can be null)
+        websiteUri: sql`EXCLUDED."websiteUri"`,
+        // Update phoneNumber if provided (can be null)
+        phoneNumber: sql`EXCLUDED."phoneNumber"`,
+        // Update priceLevel if provided (can be null)
+        priceLevel: sql`EXCLUDED."priceLevel"`,
+        // Update photos if provided
+        photos: sql`EXCLUDED.photos`,
+        // Update imageUrl: use EXCLUDED if provided, otherwise use first photo if photos exist
+        imageUrl: sql`COALESCE(EXCLUDED."imageUrl", CASE WHEN EXCLUDED.photos IS NOT NULL AND array_length(EXCLUDED.photos, 1) > 0 THEN EXCLUDED.photos[1] ELSE place."imageUrl" END)`,
+        updatedAt: new Date().toISOString(),
+      },
     })
     .returning()
 
-  if (!created) {
-    throw new Error('Failed to create place')
+  if (!result) {
+    throw new Error('Failed to ensure place')
   }
 
-  return created
+  // Invalidate cache for this place
+  placeCache.delete(`place:id:${result.id}`)
+  placeCache.delete(`place:googleMapsId:${result.googleMapsId}`)
+  // Update cache with new data
+  placeCache.set(`place:id:${result.id}`, result, placeCache.TTL_SHORT_MS)
+  placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result)
+
+  return result
+}
+
+export async function ensurePlacesFromGoogleData(
+  placesData: PlaceInsert[]
+): Promise<PlaceSelect[]> {
+  if (placesData.length === 0) {
+    return []
+  }
+
+  const insertValues = placesData.map((data) => {
+    const imageUrl =
+      data.imageUrl ?? (data.photos && data.photos.length > 0 ? data.photos[0] : null)
+    return {
+      id: crypto.randomUUID(),
+      googleMapsId: data.googleMapsId,
+      name: data.name,
+      address: data.address ?? null,
+      latitude: data.latitude ?? null,
+      longitude: data.longitude ?? null,
+      location: data.location ?? toLocationTuple(data.latitude, data.longitude),
+      types: data.types ?? null,
+      rating: data.rating ?? null,
+      websiteUri: data.websiteUri ?? null,
+      phoneNumber: data.phoneNumber ?? null,
+      priceLevel: data.priceLevel ?? null,
+      photos: data.photos ?? null,
+      imageUrl,
+    }
+  })
+
+  const results = await db
+    .insert(place)
+    .values(insertValues)
+    .onConflictDoUpdate({
+      target: place.googleMapsId,
+      set: {
+        name: sql`EXCLUDED.name`,
+        address: sql`EXCLUDED.address`,
+        latitude: sql`EXCLUDED.latitude`,
+        longitude: sql`EXCLUDED.longitude`,
+        location: sql`EXCLUDED.location`,
+        types: sql`EXCLUDED.types`,
+        rating: sql`EXCLUDED.rating`,
+        websiteUri: sql`EXCLUDED."websiteUri"`,
+        phoneNumber: sql`EXCLUDED."phoneNumber"`,
+        priceLevel: sql`EXCLUDED."priceLevel"`,
+        photos: sql`EXCLUDED.photos`,
+        imageUrl: sql`COALESCE(EXCLUDED."imageUrl", CASE WHEN EXCLUDED.photos IS NOT NULL AND array_length(EXCLUDED.photos, 1) > 0 THEN EXCLUDED.photos[1] ELSE place."imageUrl" END)`,
+        updatedAt: new Date().toISOString(),
+      },
+    })
+    .returning()
+
+  return results
 }
 
 export async function createOrUpdatePlace(
@@ -122,6 +301,14 @@ export async function createOrUpdatePlace(
     .where(eq(place.id, id))
     .returning()
 
+  if (updated) {
+    // Invalidate and update cache
+    placeCache.delete(`place:id:${id}`)
+    placeCache.delete(`place:googleMapsId:${updated.googleMapsId}`)
+    placeCache.set(`place:id:${id}`, updated, placeCache.TTL_SHORT_MS)
+    placeCache.set(`place:googleMapsId:${updated.googleMapsId}`, updated)
+  }
+
   return updated
 }
 
@@ -130,13 +317,9 @@ export async function deletePlaceById(id: string): Promise<boolean> {
   return result.length > 0
 }
 
-export async function addPlaceToLists(
-  userId: string,
-  listIds: string[],
-  placeInput: PlaceUpsertInput
-) {
+export async function addPlaceToLists(userId: string, listIds: string[], placeData: PlaceInsert) {
   return db.transaction(async (tx) => {
-    const placeRecord = await ensurePlaceFromGoogleData(placeInput)
+    const placeRecord = await ensurePlaceFromGoogleData(placeData)
 
     const itemInsertValues = listIds.map((listId) => ({
       listId,
@@ -148,9 +331,31 @@ export async function addPlaceToLists(
     }))
 
     if (itemInsertValues.length > 0) {
-      await tx.insert(item).values(itemInsertValues).onConflictDoNothing()
+      // Use RETURNING to get inserted items directly, avoiding extra query
+      const insertedItems = await tx
+        .insert(item)
+        .values(itemInsertValues)
+        .onConflictDoNothing()
+        .returning({
+          id: item.id,
+          listId: item.listId,
+          itemId: item.itemId,
+        })
+
+      // Fetch list details for the inserted items
+      if (insertedItems.length > 0) {
+        const insertedListIds = insertedItems.map((i) => i.listId)
+        const listsData = await tx.query.list.findMany({
+          where: inArray(list.id, insertedListIds),
+          columns: { id: true, name: true },
+        })
+
+        const affectedLists = listsData.map((l) => ({ id: l.id, name: l.name }))
+        return { place: placeRecord, lists: affectedLists }
+      }
     }
 
+    // If no items were inserted (all conflicts), fetch existing items
     const itemsInLists = await tx.query.item.findMany({
       where: and(eq(item.itemId, placeRecord.id), eq(item.itemType, 'PLACE')),
       with: {
@@ -233,7 +438,7 @@ export async function getNearbyPlacesFromLists(params: {
       longitude: place.longitude,
       googleMapsId: place.googleMapsId,
       types: place.types,
-      imageUrl: place.imageUrl,
+      imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as('imageUrl'),
       rating: place.rating,
       photos: place.photos,
       websiteUri: place.websiteUri,

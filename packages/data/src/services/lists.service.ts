@@ -77,7 +77,9 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
         itemAddedAt: item.createdAt,
         googleMapsId: place.googleMapsId,
         name: place.name,
-        imageUrl: place.imageUrl,
+        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
+          'imageUrl'
+        ),
         photos: place.photos,
         types: place.types,
         type: item.type,
@@ -629,7 +631,9 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
         itemAddedAt: item.createdAt,
         googleMapsId: place.googleMapsId,
         name: place.name,
-        imageUrl: place.imageUrl,
+        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
+          'imageUrl'
+        ),
         photos: place.photos,
         types: place.types,
         type: item.type,
@@ -654,7 +658,7 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
         itemAddedAt: p.itemAddedAt,
         googleMapsId: p.googleMapsId,
         name: p.name,
-        imageUrl: p.imageUrl ?? p.photos?.[0] ?? null,
+        imageUrl: p.imageUrl,
         photos: p.photos,
         types: p.types,
         type: p.type,
@@ -1234,65 +1238,53 @@ export async function getListsContainingPlace(
   }
 
   try {
-    // First, find the place ID if we only have googleMapsId
-    let resolvedPlaceId: string | null = null
-    if (placeId) {
-      resolvedPlaceId = placeId
-    } else if (googleMapsId) {
-      const foundPlace = await db.query.place.findFirst({
-        where: eq(place.googleMapsId, googleMapsId),
-        columns: { id: true },
-      })
-      resolvedPlaceId = foundPlace?.id || null
-    }
-
-    if (!resolvedPlaceId) {
-      return []
-    }
-
-    // Step 1: Get lists that contain the place and user has access to
+    // Combined query: resolve placeId and get lists in one go
     const listsContainingPlace = await db
       .select({
         id: list.id,
         name: list.name,
+        resolvedPlaceId: place.id,
+        itemCount: sql<number>`
+          (SELECT COUNT(*)::int
+           FROM ${item} i
+           WHERE i."listId" = ${list.id}
+           AND i."itemType" = 'PLACE')
+        `.as('itemCount'),
       })
       .from(list)
-      .innerJoin(item, and(eq(item.listId, list.id), eq(item.itemId, resolvedPlaceId)))
+      .innerJoin(item, eq(item.listId, list.id))
+      .innerJoin(
+        place,
+        and(
+          eq(place.id, item.itemId),
+          placeId
+            ? eq(place.id, placeId)
+            : googleMapsId
+              ? eq(place.googleMapsId, googleMapsId)
+              : sql`false`
+        )
+      )
       .leftJoin(userLists, and(eq(userLists.listId, list.id), eq(userLists.userId, userId)))
       .where(
         and(eq(item.itemType, 'PLACE'), or(eq(list.userId, userId), isNotNull(userLists.listId)))
       )
-      .groupBy(list.id, list.name)
+      .groupBy(list.id, list.name, place.id)
 
     if (listsContainingPlace.length === 0) {
       return []
     }
 
     const listIds = listsContainingPlace.map((l) => l.id)
+    const resolvedPlaceId = listsContainingPlace[0]?.resolvedPlaceId
 
-    // Step 2: Get item counts for each list (single query)
-    const itemCounts = await db
-      .select({
-        listId: item.listId,
-        count: sql<number>`COUNT(*)::int`.as('count'),
-      })
-      .from(item)
-      .where(and(inArray(item.listId, listIds), eq(item.itemType, 'PLACE')))
-      .groupBy(item.listId)
-
-    const countMap = new Map<string, number>()
-    for (const row of itemCounts) {
-      countMap.set(row.listId, Number(row.count))
-    }
-
-    // Step 3: Get thumbnail imageUrl for each list (prefer different place, fallback to any)
-    // Get all places in these lists, then process in JS to get first image per list
+    // Get thumbnail imageUrl for each list (prefer different place, fallback to any)
     const allPlacesInLists = await db
       .select({
         listId: item.listId,
         placeId: place.id,
-        imageUrl: place.imageUrl,
-        photos: place.photos,
+        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
+          'imageUrl'
+        ),
         createdAt: item.createdAt,
       })
       .from(item)
@@ -1307,7 +1299,7 @@ export async function getListsContainingPlace(
       const preferredPlace =
         placesInList.find((p) => p.placeId !== resolvedPlaceId) || placesInList[0]
       if (preferredPlace) {
-        imageMap.set(listId, preferredPlace.imageUrl || preferredPlace.photos?.[0] || null)
+        imageMap.set(listId, preferredPlace.imageUrl)
       }
     }
 
@@ -1315,7 +1307,7 @@ export async function getListsContainingPlace(
     return listsContainingPlace.map((l) => ({
       id: l.id,
       name: l.name,
-      itemCount: countMap.get(l.id) || 0,
+      itemCount: Number(l.itemCount),
       imageUrl: imageMap.get(l.id) || null,
     }))
   } catch (error) {

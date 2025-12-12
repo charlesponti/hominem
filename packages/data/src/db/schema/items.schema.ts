@@ -1,5 +1,6 @@
 import {
   foreignKey,
+  index,
   pgEnum,
   pgTable,
   text,
@@ -32,6 +33,12 @@ export const item = pgTable(
       table.listId.asc().nullsLast(),
       table.itemId.asc().nullsLast()
     ),
+    // Composite index for getItemsForPlace queries
+    index('item_itemId_itemType_idx').on(table.itemId, table.itemType),
+    // Index for getListPlacesMap queries
+    index('item_listId_idx').on(table.listId),
+    // Composite index for filtered queries
+    index('item_listId_itemType_idx').on(table.listId, table.itemType),
     foreignKey({
       columns: [table.listId],
       foreignColumns: [list.id],

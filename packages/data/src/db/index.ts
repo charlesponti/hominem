@@ -18,7 +18,25 @@ function ensureClient(): ReturnType<typeof postgres> {
         'DATABASE_URL not provided. Set DATABASE_URL environment variable or NODE_ENV=test for test database.'
       )
     }
-    client = postgres(DATABASE_URL)
+    // Configure connection pool for better performance and scalability
+    // Defaults: max=20 connections, idle_timeout=30s, max_lifetime=1h
+    // Can be overridden via environment variables
+    const maxConnections = process.env.DB_MAX_CONNECTIONS
+      ? Number.parseInt(process.env.DB_MAX_CONNECTIONS, 10)
+      : 20
+    const idleTimeout = process.env.DB_IDLE_TIMEOUT
+      ? Number.parseInt(process.env.DB_IDLE_TIMEOUT, 10)
+      : 30
+    const maxLifetime = process.env.DB_MAX_LIFETIME
+      ? Number.parseInt(process.env.DB_MAX_LIFETIME, 10)
+      : 3600
+
+    client = postgres(DATABASE_URL, {
+      max: maxConnections, // Maximum number of connections in the pool
+      idle_timeout: idleTimeout, // Close idle connections after N seconds
+      max_lifetime: maxLifetime, // Close connections after N seconds of total lifetime
+      connect_timeout: 10, // Connection timeout in seconds
+    })
   }
   return client
 }

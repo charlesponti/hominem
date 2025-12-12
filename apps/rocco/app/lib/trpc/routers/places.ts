@@ -7,6 +7,7 @@ import {
   getNearbyPlacesFromLists,
   getPlaceByGoogleMapsId,
   getPlaceById,
+  type PlaceInsert,
   type Place as PlaceSelect,
   removePlaceFromList,
   updatePlacePhotos,
@@ -18,10 +19,9 @@ import {
   searchPlaces as googleSearchPlaces,
 } from '~/lib/google-places.server'
 import {
-  extractPhotoReferences,
   mapGooglePlaceToPrediction,
-  parsePriceLevel,
   sanitizeStoredPhotos,
+  transformGooglePlaceToPlaceInsert,
 } from '~/lib/places-utils'
 import { logger } from '../../logger'
 import { type Context, protectedProcedure, publicProcedure, router } from '../context'
@@ -106,7 +106,26 @@ export const placesRouter = router({
         throw new Error('User not found in context')
       }
 
-      const { listIds, ...placeData } = input
+      const { listIds, ...placeInput } = input
+
+      // Transform input to PlaceInsert format
+      const placeData: PlaceInsert = {
+        googleMapsId: placeInput.googleMapsId,
+        name: placeInput.name,
+        address: placeInput.address ?? null,
+        latitude: placeInput.latitude ?? null,
+        longitude: placeInput.longitude ?? null,
+        location:
+          placeInput.latitude && placeInput.longitude
+            ? [placeInput.longitude, placeInput.latitude]
+            : [0, 0],
+        types: placeInput.types ?? null,
+        rating: placeInput.rating ?? null,
+        websiteUri: placeInput.websiteUri ?? null,
+        phoneNumber: placeInput.phoneNumber ?? null,
+        photos: placeInput.photos ?? null,
+        imageUrl: placeInput.imageUrl ?? null,
+      }
 
       const { place: createdPlace } = await addPlaceToLists(ctx.user.id, listIds ?? [], placeData)
 
@@ -264,21 +283,8 @@ export const placesRouter = router({
             throw new Error('Place not found in Google Places API')
           }
 
-          const fetchedPhotos = extractPhotoReferences(googlePlace.photos)
-
-          dbPlace = await ensurePlaceFromGoogleData({
-            googleMapsId,
-            name: googlePlace.displayName?.text || 'Unknown Place',
-            address: googlePlace.formattedAddress,
-            latitude: googlePlace.location?.latitude ?? null,
-            longitude: googlePlace.location?.longitude ?? null,
-            types: googlePlace.types ?? null,
-            rating: googlePlace.rating ?? null,
-            websiteUri: googlePlace.websiteUri ?? null,
-            phoneNumber: googlePlace.nationalPhoneNumber ?? null,
-            priceLevel: parsePriceLevel(googlePlace.priceLevel),
-            photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
-          })
+          const placeData = transformGooglePlaceToPlaceInsert(googlePlace, googleMapsId)
+          dbPlace = await ensurePlaceFromGoogleData(placeData)
         }
 
         return enrichPlaceWithDetails(ctx, dbPlace)
@@ -315,11 +321,28 @@ export const placesRouter = router({
 
       const { listIds, place: placeInput } = input
 
+      // Transform input to PlaceInsert format
+      const placeData: PlaceInsert = {
+        googleMapsId: placeInput.googleMapsId,
+        name: placeInput.name,
+        address: placeInput.address ?? null,
+        latitude: placeInput.latitude ?? null,
+        longitude: placeInput.longitude ?? null,
+        location: [placeInput.longitude, placeInput.latitude],
+        types: placeInput.types ?? null,
+        rating: null,
+        websiteUri: placeInput.websiteUri ?? null,
+        phoneNumber: placeInput.phoneNumber ?? null,
+        photos: null,
+        imageUrl: placeInput.imageUrl ?? null,
+        priceLevel: null,
+      }
+
       let finalPlace: PlaceSelect
       let affectedLists: ListSummary[] = []
 
       try {
-        const result = await addPlaceToLists(ctx.user.id, listIds, placeInput)
+        const result = await addPlaceToLists(ctx.user.id, listIds, placeData)
         finalPlace = result.place
         affectedLists = result.lists
 

@@ -46,7 +46,7 @@ clean:
 	find . -type d -name "coverage" -exec rm -rf {} +
 	find . -type d -name ".next" -exec rm -rf {} +
 	find . -type d -name ".turbo" -exec rm -rf {} +
-	find . -name "bun.lock" -exec rm -rf {}
+	find . -name "bun.lock" -exec rm -rf {} +
 
 # Stop Docker containers
 docker-down:

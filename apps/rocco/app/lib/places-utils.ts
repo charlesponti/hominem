@@ -1,8 +1,41 @@
+import type { PlaceInsert } from '@hominem/data'
 import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,
   GooglePlacesApiResponse,
 } from '~/lib/types'
+
+function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
+  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0]
+}
+
+/**
+ * Transforms Google Places API response to database PlaceInsert format
+ */
+export const transformGooglePlaceToPlaceInsert = (
+  googlePlace: GooglePlaceDetailsResponse,
+  googleMapsId: string
+): PlaceInsert => {
+  const fetchedPhotos = extractPhotoReferences(googlePlace.photos)
+  const latitude = googlePlace.location?.latitude ?? null
+  const longitude = googlePlace.location?.longitude ?? null
+
+  return {
+    googleMapsId,
+    name: googlePlace.displayName?.text || 'Unknown Place',
+    address: googlePlace.formattedAddress ?? null,
+    latitude,
+    longitude,
+    location: toLocationTuple(latitude, longitude),
+    types: googlePlace.types ?? null,
+    rating: googlePlace.rating ?? null,
+    websiteUri: googlePlace.websiteUri ?? null,
+    phoneNumber: googlePlace.nationalPhoneNumber ?? null,
+    priceLevel: parsePriceLevel(googlePlace.priceLevel),
+    photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
+    imageUrl: null, // Will be computed from photos if needed
+  }
+}
 
 export const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photos']): string[] => {
   if (!photos) {

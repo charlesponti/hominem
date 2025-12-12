@@ -1,6 +1,12 @@
 import { Button } from '@hominem/ui/button'
 import { Label } from '@hominem/ui/components/ui/label'
-import { Sheet, SheetContent } from '@hominem/ui/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@hominem/ui/components/ui/sheet'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { useSupabaseAuth } from '@hominem/ui/supabase'
 import { Heart, Loader2, PlusCircle } from 'lucide-react'
@@ -64,10 +70,12 @@ const AddPlaceToList = ({ place, isOpen, onOpenChange }: AddPlaceToListProps) =>
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="pt-10 px-4">
-        <div className="my-6">
-          <h2 className="text-xl font-bold font-serif">Add to lists</h2>
-          <p className="text-sm">Select lists to add this place to.</p>
-        </div>
+        <SheetHeader className="my-6">
+          <SheetTitle className="text-xl font-bold font-serif">Add to lists</SheetTitle>
+          <SheetDescription className="text-sm">
+            Select lists to add this place to.
+          </SheetDescription>
+        </SheetHeader>
         {isLoading ? (
           <div className="flex items-center justify-center h-16">
             <Loading size="xl" />

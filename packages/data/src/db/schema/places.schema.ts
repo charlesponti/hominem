@@ -4,6 +4,7 @@ import {
   doublePrecision,
   foreignKey,
   geometry,
+  index,
   integer,
   pgTable,
   text,
@@ -65,6 +66,12 @@ export const place = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
+    // GIST index for spatial queries (getNearbyPlacesFromLists)
+    index('place_location_gist_idx').using('gist', table.location),
+    // Index for join performance
+    index('place_itemId_idx').on(table.itemId),
+    // Index for recent places queries
+    index('place_updatedAt_idx').on(table.updatedAt),
   ]
 )
 export type Place = typeof place.$inferSelect
