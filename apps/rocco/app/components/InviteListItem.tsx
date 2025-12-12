@@ -42,24 +42,11 @@ const InviteListItem = (props: InviteListItemProps) => {
   const onAcceptClick = useCallback(() => {
     if (!inviteProps) return
 
-    if (
-      isEmailMismatch &&
-      !window.confirm(
-        `You were invited as ${inviteProps.listInvite.invitedUserEmail}, but you're signed in as ${normalizedUserEmail}. Accept this invite with your current account?`
-      )
-    ) {
-      return
-    }
-
-    if (!inviteProps.canAccept) {
-      return
-    }
-
     mutate({
       listId: inviteProps.listInvite.listId,
       token: inviteProps.listInvite.token,
     })
-  }, [inviteProps, isEmailMismatch, mutate, normalizedUserEmail])
+  }, [inviteProps, mutate])
 
   // Handle preview variant
   if (previewProps) {
@@ -142,9 +129,7 @@ const InviteListItem = (props: InviteListItemProps) => {
         )}
       </div>
       {!accepted && isEmailMismatch && (
-        <p className="text-sm text-amber-700">
-          Invited as {listInvite.invitedUserEmail}; signed in as {normalizedUserEmail}
-        </p>
+        <p className="text-xs text-amber-700">Invited as {listInvite.invitedUserEmail}</p>
       )}
     </li>
   )

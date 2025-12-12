@@ -16,7 +16,7 @@ export default function Lists() {
   return (
     <div className="space-y-4 w-full">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl italic font-light text-gray-900">Lists</h2>
+        <h2 className="text-2xl tracking-tight font-light text-gray-900">Lists</h2>
         <Link
           to="/lists/create"
           className="self-start flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors"
@@ -48,8 +48,10 @@ export default function Lists() {
                 className="block px-4 py-3 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-gray-900 truncate">{list.name}</h3>
-                  <span className="bg-black text-white text-sm rounded-full px-2.5 py-1">
+                  <h3 className="font-serif italic tracking-tight font-semilight text-accent-foreground truncate text-lg">
+                    {list.name}
+                  </h3>
+                  <span className="bg-accent text-accent-foreground text-sm rounded-full px-2.5 py-1">
                     {list.places.length || 0}
                   </span>
                 </div>

@@ -108,8 +108,8 @@ export default function ListTitle({ list, isOwner }: ListTitleProps) {
   }
 
   return (
-    <div className="flex items-start gap-2 group">
-      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 wrap-break-word">
+    <div className="flex flex-1 justify-between items-center gap-2 group pr-2">
+      <h1 className="font-serif font-semilight italic tracking-tighter text-4xl lg:text-5xl wrap-break-word">
         {list.name}
       </h1>
       {isOwner && (
@@ -120,7 +120,7 @@ export default function ListTitle({ list, isOwner }: ListTitleProps) {
             setEditedName(list.name)
             setIsEditing(true)
           }}
-          className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-indigo-600 hover:bg-indigo-50 mt-1"
+          className="size-8 hover:text-indigo-600 focus-visible:bg-indigo-50"
         >
           <Pencil size={16} />
           <span className="sr-only">Edit name</span>

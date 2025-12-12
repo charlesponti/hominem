@@ -53,6 +53,7 @@ export interface ListPlace {
   googleMapsId: string | null
   name: string
   imageUrl: string | null
+  photos: string[] | null
   types: string[] | null
   type: string
   latitude: number | null
@@ -77,6 +78,7 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
         googleMapsId: place.googleMapsId,
         name: place.name,
         imageUrl: place.imageUrl,
+        photos: place.photos,
         types: place.types,
         type: item.type,
         latitude: place.latitude,
@@ -628,6 +630,7 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
         googleMapsId: place.googleMapsId,
         name: place.name,
         imageUrl: place.imageUrl,
+        photos: place.photos,
         types: place.types,
         type: item.type,
         latitude: place.latitude,
@@ -651,7 +654,8 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
         itemAddedAt: p.itemAddedAt,
         googleMapsId: p.googleMapsId,
         name: p.name,
-        imageUrl: p.imageUrl,
+        imageUrl: p.imageUrl ?? p.photos?.[0] ?? null,
+        photos: p.photos,
         types: p.types,
         type: p.type,
         latitude: p.latitude,
@@ -863,11 +867,16 @@ export async function deleteListItem(listId: string, itemId: string): Promise<bo
 /**
  * Gets all invites for a specific list
  * @param listId - The ID of the list
- * @returns Array of list invites
+ * @returns Array of list invites with user data for accepted invites
  */
-export async function getListInvites(listId: string): Promise<Array<ListInviteSelect>> {
+export async function getListInvites(listId: string) {
   try {
-    return await db.select().from(listInvite).where(eq(listInvite.listId, listId))
+    return await db.query.listInvite.findMany({
+      where: eq(listInvite.listId, listId),
+      with: {
+        user_invitedUserId: true, // Include user data for accepted invites
+      },
+    })
   } catch (error) {
     console.error(`Error fetching invites for list ${listId}:`, error)
     return []

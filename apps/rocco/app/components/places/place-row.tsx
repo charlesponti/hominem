@@ -19,7 +19,7 @@ const buildImageUrl = (src?: string | null, width = 400, height = 300): string |
 
 type PlaceRowProps = {
   name: string
-  href?: string
+  href: string
   photoUrl?: string | null
   imageUrl?: string | null
   meta?: ReactNode
@@ -50,11 +50,6 @@ export default function PlaceRow({
   const selectedClasses = isSelected ? ' bg-indigo-50' : ''
   const rootClasses = `${baseClasses}${selectedClasses}${className ? ` ${className}` : ''}`
 
-  const ContentWrapper = href ? Link : 'div'
-  const contentProps = href
-    ? { to: href, className: 'flex-1 min-w-0 focus:outline-none' }
-    : { className: 'flex-1 min-w-0' }
-
   return (
     <div
       className={rootClasses}
@@ -62,9 +57,9 @@ export default function PlaceRow({
       onMouseLeave={onMouseLeave}
       data-selected={isSelected}
     >
-      <ContentWrapper {...contentProps}>
+      <Link to={href} className="flex-1 min-w-0 focus:outline-none">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+          <div className="size-16 rounded overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
             {resolvedImage ? (
               <img
                 src={resolvedImage}
@@ -78,7 +73,9 @@ export default function PlaceRow({
 
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-start justify-between gap-3">
-              <h3 className="font-semibold text-gray-900 truncate text-base">{name}</h3>
+              <h3 className="font-serif italic tracking-tighter font-semilight text-accent-foreground truncate text-lg">
+                {name}
+              </h3>
               {meta ? (
                 <div className="flex items-center text-sm text-indigo-600">{meta}</div>
               ) : null}
@@ -86,7 +83,7 @@ export default function PlaceRow({
             {subtitle ? <div className="text-xs text-gray-500 truncate">{subtitle}</div> : null}
           </div>
         </div>
-      </ContentWrapper>
+      </Link>
 
       {accessory ? <div className="ml-2 flex items-center">{accessory}</div> : null}
     </div>

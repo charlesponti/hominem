@@ -2,6 +2,7 @@ import { MapPin } from 'lucide-react'
 import { trpc } from '~/lib/trpc/client'
 import Loading from '../loading'
 import PlaceRow from './place-row'
+import { href } from 'react-router'
 
 type Props = {
   latitude: number
@@ -29,7 +30,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
     limit,
   })
 
-  const title = <h2 className="text-2xl italic font-light text-gray-900">Nearby</h2>
+  const title = <h2 className="text-2xl tracking-tight font-light text-gray-900">Nearby</h2>
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -79,7 +80,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
             <li key={place.id}>
               <PlaceRow
                 name={place.name}
-                href={`/places/${place.id}`}
+                href={href('/places/:id', { id: place.id })}
                 photoUrl={place.photos?.[0] ?? null}
                 imageUrl={place.imageUrl}
                 meta={
@@ -91,7 +92,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
                 subtitle={
                   place.lists.length > 0
                     ? place.lists.length === 1
-                      ? place.lists[0].name
+                      ? place.lists[0]!.name
                       : `${place.lists.length} lists`
                     : null
                 }

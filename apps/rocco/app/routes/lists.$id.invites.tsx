@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
 import { Button } from '@hominem/ui/button'
 import { Check, Link as LinkIcon, Mail, Trash2, UserPlus } from 'lucide-react'
 import { useCallback, useState } from 'react'
@@ -95,8 +96,12 @@ export default function ListInvites() {
         {/* Invites List */}
         {listInvites.length > 0 ? (
           <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {listInvites.map(({ accepted, invitedUserEmail, token }) => {
+            {listInvites.map((invite) => {
+              const { accepted, invitedUserEmail, token, user_invitedUserId } = invite
               const isCopied = copiedToken === token
+              const profilePhoto = user_invitedUserId?.photoUrl || user_invitedUserId?.image
+              const userName: string =
+                user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U'
 
               return (
                 <li
@@ -104,7 +109,16 @@ export default function ListInvites() {
                   className="flex flex-col md:flex-row md:items-center gap-3 p-3 group hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Mail className="text-gray-400 size-5" />
+                    {accepted ? (
+                      <Avatar className="size-10 shrink-0">
+                        {profilePhoto && <AvatarImage src={profilePhoto} alt={userName} />}
+                        <AvatarFallback className="bg-indigo-100 text-indigo-600 text-sm">
+                          {userName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <Mail className="text-gray-400 size-5 shrink-0" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="font-light text-gray-600 truncate text-base">
                         {invitedUserEmail}
