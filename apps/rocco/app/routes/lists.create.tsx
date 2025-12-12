@@ -38,8 +38,8 @@ export default function CreateListPage() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Return the user to this page to preserve context and restore draft
-        redirectTo: `${window.location.origin}/auth/callback?next=/lists/create`,
+        // Add query params directly to redirectTo URL (like notes app does)
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/lists/create')}`,
       },
     })
   }, [supabase.auth])

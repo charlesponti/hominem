@@ -32,7 +32,6 @@ export default [
     route('/account', 'routes/account.tsx'),
 
     // Auth Routes
-    route('/auth/signin', 'routes/auth/signin.tsx'),
     route('/auth/google', 'routes/auth/google.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
   ]),

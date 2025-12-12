@@ -63,11 +63,18 @@ export function useSupabaseAuth() {
   }, [supabaseClient])
 
   const signInWithGoogle = useCallback(
-    async ({ redirectToPath }: { redirectToPath?: string } = {}) => {
+    async ({
+      redirectToPath,
+      queryParams,
+    }: {
+      redirectToPath?: string
+      queryParams?: Record<string, string>
+    } = {}) => {
       const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectToPath,
+          ...(queryParams && { queryParams }),
         },
       })
       if (error) throw error

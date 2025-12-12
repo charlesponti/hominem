@@ -61,7 +61,7 @@ export function createServer() {
   app.use(
     '*',
     cors({
-      origin: [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.CHAT_URL, env.FLORIN_URL],
+      origin: [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.FLORIN_URL],
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     })

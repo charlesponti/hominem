@@ -40,7 +40,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
 
     server: {
-      port: 4454,
+      port: 4446,
       strictPort: true,
     },
 

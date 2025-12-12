@@ -128,11 +128,17 @@ function Header() {
 export default Header
 
 const SignInButton = () => {
-  const { signInWithGoogle } = useSupabaseAuth()
+  const { supabase } = useSupabaseAuth()
 
   const onSignInClick = useCallback(async () => {
-    await signInWithGoogle({ redirectToPath: '/' })
-  }, [signInWithGoogle])
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // Add query params directly to redirectTo URL (like notes app does)
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
+      },
+    })
+  }, [supabase.auth])
 
   return (
     <Button onClick={onSignInClick} className="flex cursor-pointer">

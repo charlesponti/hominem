@@ -13,9 +13,8 @@ const envSchema = z.object({
     : z.string().url(),
 
   FLORIN_URL: z.string().url().default('http://localhost:4444'),
-  ROCCO_URL: z.string().url().default('http://localhost:4454'),
   NOTES_URL: z.string().url().default('http://localhost:4445'),
-  CHAT_URL: z.string().url().default('http://localhost:4446'),
+  ROCCO_URL: z.string().url().default('http://localhost:4446'),
 
   SUPABASE_URL: isTest ? z.string().url().default('http://localhost:54321') : z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: isTest ? z.string().default('test-service-key') : z.string(),

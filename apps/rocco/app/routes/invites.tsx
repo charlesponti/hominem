@@ -108,10 +108,13 @@ const Invites = () => {
   const currentUserEmail = user?.email?.toLowerCase()
 
   const onSignIn = useCallback(async () => {
+    const redirectPath = window.location.pathname + window.location.search
+
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname + window.location.search)}`,
+        // Add query params directly to redirectTo URL (like notes app does)
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
       },
     })
   }, [supabase])
