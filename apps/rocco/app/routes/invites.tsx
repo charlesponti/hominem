@@ -104,13 +104,17 @@ export function HydrateFallback() {
 
 const Invites = () => {
   const { invites, token, tokenMismatch, requiresAuth, preview } = useLoaderData<typeof loader>()
-  const { isAuthenticated, signInWithGoogle, user } = useSupabaseAuth()
+  const { isAuthenticated, user, supabase } = useSupabaseAuth()
   const currentUserEmail = user?.email?.toLowerCase()
 
   const onSignIn = useCallback(async () => {
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname + window.location.search)}`
-    await signInWithGoogle({ redirectToPath: redirectTo })
-  }, [signInWithGoogle])
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname + window.location.search)}`,
+      },
+    })
+  }, [supabase])
 
   return (
     <div className="space-y-8 pb-8">

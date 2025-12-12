@@ -30,14 +30,6 @@ export default function AccountPage() {
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
-  const _handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
-  }
-
   const deleteAllFinanceData = useMutation<void, Error, void>({
     mutationFn: async () => api.delete('/api/finance'),
     onSuccess: async () => {
@@ -123,23 +115,11 @@ export default function AccountPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Authentication</CardTitle>
-            <CardDescription>Manage your session.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 border rounded-md">
-              <div>
-                <h3 className="font-medium">Sign Out</h3>
-                <p className="text-sm text-muted-foreground">End your current session.</p>
-              </div>
-              <Button variant="outline" onClick={() => logout()}>
-                Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex justify-end">
+          <Button variant="destructive" className="px-4" onClick={() => logout()}>
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       <AlertDialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>

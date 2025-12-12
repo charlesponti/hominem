@@ -1,10 +1,8 @@
 import { SupabaseAuthProvider } from '@hominem/ui'
-import { useMemo } from 'react'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-import './index.css'
-import { createClient } from './lib/supabase/client'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
+import './globals.css'
 
 if (process.env.NODE_ENV === 'production') {
   initProductionLogging()
@@ -23,8 +21,6 @@ export const links = () => [
 export const meta = () => [{ title: 'rocco' }, { name: 'description', content: 'rocco' }]
 
 export default function App() {
-  const supabaseClient = useMemo(() => createClient(), [])
-
   return (
     <html lang="en">
       <head>
@@ -34,7 +30,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <SupabaseAuthProvider client={supabaseClient}>
+        <SupabaseAuthProvider>
           <TRPCProvider>
             <Outlet />
           </TRPCProvider>

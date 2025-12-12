@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import './animations.css';
+@import "tailwindcss";
+@import "./animations.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -13,9 +13,9 @@ body {
 }
 
 @theme {
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
-  --font-serif: 'EB Garamound', ui-serif, serif;
-  --font-sans: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-serif: "EB Garamound", ui-serif, serif;
+  --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
 
   --color-background: oklch(var(--background));
   --color-foreground: oklch(var(--foreground));
@@ -23,27 +23,27 @@ body {
   --color-card: oklch(var(--card));
   --color-card-foreground: oklch(var(--card-foreground));
 
-  --color-popover: oklch(var(--popover));
-  --color-popover-foreground: oklch(var(--popover-foreground));
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 
-  --color-primary: oklch(var(--primary));
-  --color-primary-foreground: oklch(var(--primary-foreground));
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
 
-  --color-secondary: oklch(var(--secondary));
-  --color-secondary-foreground: oklch(var(--secondary-foreground));
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 
-  --color-muted: oklch(var(--muted));
-  --color-muted-foreground: oklch(var(--muted-foreground));
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 
-  --color-accent: oklch(var(--accent));
-  --color-accent-foreground: oklch(var(--accent-foreground));
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  --color-destructive: oklch(var(--destructive));
-  --color-destructive-foreground: oklch(var(--destructive-foreground));
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
 
-  --color-border: oklch(var(--border));
-  --color-input: oklch(var(--input));
-  --color-ring: oklch(var(--ring));
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
   --color-chart-1: oklch(var(--chart-1));
   --color-chart-2: oklch(var(--chart-2));

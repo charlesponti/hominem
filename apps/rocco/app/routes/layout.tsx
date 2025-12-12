@@ -25,7 +25,7 @@ export default function Layout() {
   return (
     <div className="h-screen mx-auto flex flex-col overflow-y-auto">
       <Header />
-      <div className="max-w-3xl mx:auto flex-1 flex flex-col mt-24 mb-4 px-2">
+      <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col mt-24 mb-4 px-2">
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>

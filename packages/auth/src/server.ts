@@ -105,6 +105,9 @@ export function getServerAuthConfig(): AuthConfig {
       supabaseAnonKey || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
   }
 
+  // biome-ignore lint/suspicious/noConsole: debugging
+  console.log('[Supabase Config]', { supabaseUrl, supabaseAnonKey })
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase environment variables')
   }
