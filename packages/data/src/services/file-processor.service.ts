@@ -2,7 +2,6 @@ import { Buffer } from 'node:buffer'
 import mammoth from 'mammoth'
 import OpenAI from 'openai'
 import PDFParser from 'pdf2json'
-import sharp from 'sharp'
 
 export interface ProcessedFile {
   id: string
@@ -61,17 +60,6 @@ export class FileProcessorService {
     buffer: ArrayBuffer,
     file: ProcessedFile
   ): Promise<ProcessedFile> {
-    const imageBuffer = Buffer.from(buffer)
-
-    const metadata = await sharp(imageBuffer).metadata()
-
-    const thumbnailBuffer = await sharp(imageBuffer)
-      .resize(200, 200, { fit: 'inside' })
-      .jpeg({ quality: 80 })
-      .toBuffer()
-
-    const thumbnail = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`
-
     let textContent = ''
     if (buffer.byteLength < 20 * 1024 * 1024) {
       try {
@@ -107,14 +95,6 @@ export class FileProcessorService {
     return {
       ...file,
       textContent,
-      thumbnail,
-      metadata: {
-        width: metadata.width,
-        height: metadata.height,
-        format: metadata.format,
-        hasAlpha: metadata.hasAlpha,
-        colorSpace: metadata.space,
-      },
     }
   }
 
