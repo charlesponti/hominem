@@ -1,6 +1,8 @@
+import { Button } from '@hominem/ui/button'
 import { ListPlus } from 'lucide-react'
 import { useCallback } from 'react'
 import z from 'zod'
+import PageTitle from '~/components/page-title'
 import AddPlaceToList from '~/components/places/AddPlaceToList'
 import PlaceAddress from '~/components/places/PlaceAddress'
 import PlaceMap from '~/components/places/PlaceMap'
@@ -10,10 +12,7 @@ import PlaceRating from '~/components/places/PlaceRating'
 import PlaceTypes from '~/components/places/PlaceTypes'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import SocialProofSection from '~/components/places/SocialProofSection'
-import { Button } from '@hominem/ui/button'
-import PageTitle from '~/components/page-title'
-import { useSaveSheet } from '~/hooks/useSaveSheet'
-import { trpc } from '~/lib/trpc/client'
+import { useModal } from '~/hooks/useModal'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceWithLists } from '~/lib/types'
 import type { Route } from './+types/places.$id'
@@ -41,15 +40,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export default function PlacePage({ loaderData }: Route.ComponentProps) {
-  const { place: initialPlace } = loaderData
-  const { isOpen, open, close } = useSaveSheet()
-
-  const { data: place } = trpc.places.getDetailsById.useQuery(
-    { id: initialPlace.id },
-    { initialData: initialPlace }
-  )
-
-  const lists = place.associatedLists || []
+  const { place } = loaderData
+  const { isOpen, open, close } = useModal()
 
   const onSaveClick = useCallback(() => {
     open()
@@ -58,7 +50,6 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <div data-testid="place-page" className="flex flex-col items-start gap-4 pb-20">
-        {/* Hero Photo Gallery - Full Width */}
         <div className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700">
           <PlacePhotos alt={place.name} photos={place.photos} />
         </div>
@@ -72,7 +63,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
                 <Button
                   type="button"
                   onClick={onSaveClick}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 transition-colors"
                 >
                   <ListPlus size={20} />
                   <span>Save</span>
@@ -99,11 +90,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
               {place.rating && <PlaceRating rating={place.rating} />}
             </div>
 
-            {lists.length > 0 && (
-              <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-400">
-                <SocialProofSection lists={lists} />
-              </div>
-            )}
+            <SocialProofSection place={place} />
           </div>
 
           {place.latitude !== null && place.longitude !== null && (

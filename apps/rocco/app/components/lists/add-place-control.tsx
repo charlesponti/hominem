@@ -110,7 +110,7 @@ export default function AddPlaceControl({
             data-testid="add-to-list-button"
             onClick={isOpen ? close : open}
             disabled={!canAdd || status === 'submitting'}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 disabled:bg-indigo-200 text-white rounded-md transition-colors"
+            className="flex items-center gap-2 disabled:bg-indigo-200"
           >
             {!isOpen ? (
               <>

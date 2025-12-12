@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu'
+import { useModal } from '~/hooks/useModal'
 import type { List } from '~/lib/types'
 import ListEditSheet from './list-edit-sheet'
 
@@ -23,16 +24,17 @@ const ListMenuContext = React.createContext<{
 })
 
 const ListMenuProvider = ({ children }: PropsWithChildren) => {
-  const [isEditSheetOpen, setIsEditSheetOpen] = React.useState(false)
-  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = React.useState(false)
+  const editModal = useModal()
+  const deleteModal = useModal()
 
   return (
     <ListMenuContext.Provider
       value={{
-        isEditSheetOpen,
-        setIsEditSheetOpen,
-        isDeleteSheetOpen,
-        setIsDeleteSheetOpen,
+        isEditSheetOpen: editModal.isOpen,
+        setIsEditSheetOpen: (value: boolean) => (value ? editModal.open() : editModal.close()),
+        isDeleteSheetOpen: deleteModal.isOpen,
+        setIsDeleteSheetOpen: (value: boolean) =>
+          value ? deleteModal.open() : deleteModal.close(),
       }}
     >
       {children}

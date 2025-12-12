@@ -26,7 +26,7 @@ const NavigationMenu = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="cursor-pointer px-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 rounded-md"
+          className="cursor-pointer px-2 text-primary focus-visible:ring-2 ring-primary focus-visible:ring-offset-0 rounded-md"
         >
           <MenuIcon className="size-5" />
         </Button>
@@ -91,7 +91,7 @@ function Header() {
       <div className="flex px-2 py-4 md:px-8 items-center justify-between">
         <Link to="/" className="flex items-center space-x-1">
           <img src="/favicons/favicon-96x96.png" alt={APP_NAME} className="size-6" />
-          <span className="font-serif italic tracking-tighter font-semilight text-2xl">
+          <span className="font-serif italic tracking-tighter font-semilight text-2xl text-primary">
             {APP_NAME}
           </span>
         </Link>

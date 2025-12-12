@@ -1218,3 +1218,113 @@ export async function deleteListInvite({
     return { error: 'Failed to delete invite.', status: 500 }
   }
 }
+
+/**
+ * Optimized function to get lists containing a specific place
+ * Returns only essential fields: id, name, itemCount, imageUrl
+ * Uses a highly optimized SQL query
+ */
+export async function getListsContainingPlace(
+  userId: string,
+  placeId?: string,
+  googleMapsId?: string
+): Promise<Array<{ id: string; name: string; itemCount: number; imageUrl: string | null }>> {
+  if (!placeId && !googleMapsId) {
+    return []
+  }
+
+  try {
+    // First, find the place ID if we only have googleMapsId
+    let resolvedPlaceId: string | null = null
+    if (placeId) {
+      resolvedPlaceId = placeId
+    } else if (googleMapsId) {
+      const foundPlace = await db.query.place.findFirst({
+        where: eq(place.googleMapsId, googleMapsId),
+        columns: { id: true },
+      })
+      resolvedPlaceId = foundPlace?.id || null
+    }
+
+    if (!resolvedPlaceId) {
+      return []
+    }
+
+    // Step 1: Get lists that contain the place and user has access to
+    const listsContainingPlace = await db
+      .select({
+        id: list.id,
+        name: list.name,
+      })
+      .from(list)
+      .innerJoin(item, and(eq(item.listId, list.id), eq(item.itemId, resolvedPlaceId)))
+      .leftJoin(userLists, and(eq(userLists.listId, list.id), eq(userLists.userId, userId)))
+      .where(
+        and(eq(item.itemType, 'PLACE'), or(eq(list.userId, userId), isNotNull(userLists.listId)))
+      )
+      .groupBy(list.id, list.name)
+
+    if (listsContainingPlace.length === 0) {
+      return []
+    }
+
+    const listIds = listsContainingPlace.map((l) => l.id)
+
+    // Step 2: Get item counts for each list (single query)
+    const itemCounts = await db
+      .select({
+        listId: item.listId,
+        count: sql<number>`COUNT(*)::int`.as('count'),
+      })
+      .from(item)
+      .where(and(inArray(item.listId, listIds), eq(item.itemType, 'PLACE')))
+      .groupBy(item.listId)
+
+    const countMap = new Map<string, number>()
+    for (const row of itemCounts) {
+      countMap.set(row.listId, Number(row.count))
+    }
+
+    // Step 3: Get thumbnail imageUrl for each list (prefer different place, fallback to any)
+    // Get all places in these lists, then process in JS to get first image per list
+    const allPlacesInLists = await db
+      .select({
+        listId: item.listId,
+        placeId: place.id,
+        imageUrl: place.imageUrl,
+        photos: place.photos,
+        createdAt: item.createdAt,
+      })
+      .from(item)
+      .innerJoin(place, eq(place.id, item.itemId))
+      .where(and(inArray(item.listId, listIds), eq(item.itemType, 'PLACE')))
+      .orderBy(item.listId, item.createdAt)
+
+    const imageMap = new Map<string, string | null>()
+    for (const listId of listIds) {
+      const placesInList = allPlacesInLists.filter((p) => p.listId === listId)
+      // Prefer a place that's not the current one
+      const preferredPlace =
+        placesInList.find((p) => p.placeId !== resolvedPlaceId) || placesInList[0]
+      if (preferredPlace) {
+        imageMap.set(listId, preferredPlace.imageUrl || preferredPlace.photos?.[0] || null)
+      }
+    }
+
+    // Combine results
+    return listsContainingPlace.map((l) => ({
+      id: l.id,
+      name: l.name,
+      itemCount: countMap.get(l.id) || 0,
+      imageUrl: imageMap.get(l.id) || null,
+    }))
+  } catch (error) {
+    logger.error('Error fetching lists containing place', {
+      userId,
+      placeId,
+      googleMapsId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return []
+  }
+}

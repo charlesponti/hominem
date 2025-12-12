@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import {
@@ -8,10 +7,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@hominem/ui/components/ui/dialog'
+import { useModal } from '~/hooks/useModal'
 import { trpc } from '~/lib/trpc/client'
 
 export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const { isOpen, open, close } = useModal()
   const { data: lists } = trpc.lists.getAll.useQuery()
   const addItemMutation = trpc.trips.addItem.useMutation()
   const revalidator = useRevalidator()
@@ -19,13 +19,13 @@ export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
   const handleAddPlace = async (itemId: string) => {
     await addItemMutation.mutateAsync({ tripId, itemId })
     revalidator.revalidate()
-    setIsOpen(false)
+    close()
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(openState) => (openState ? open() : close())}>
       <DialogTrigger asChild>
-        <Button>Add Place</Button>
+        <Button onClick={open}>Add Place</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

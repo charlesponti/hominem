@@ -4,6 +4,7 @@ import {
   deleteList as deleteListService,
   getAllUserListsWithPlaces,
   getListById,
+  getListsContainingPlace,
   updateList as updateListService,
 } from '@hominem/data'
 import { TRPCError } from '@trpc/server'
@@ -147,5 +148,34 @@ export const listsRouter = router({
         logger.error('Error deleting list item', { error })
         throw new Error('Failed to delete list item')
       }
+    }),
+
+  // Get lists containing a specific place (optimized, returns only essential fields)
+  getContainingPlace: protectedProcedure
+    .input(
+      z.object({
+        placeId: z.string().uuid().optional(),
+        googleMapsId: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return safeAsync(
+        async () => {
+          if (!ctx.user) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'User not found in context',
+            })
+          }
+
+          if (!input.placeId && !input.googleMapsId) {
+            return []
+          }
+
+          return await getListsContainingPlace(ctx.user.id, input.placeId, input.googleMapsId)
+        },
+        'getContainingPlace lists',
+        { userId: ctx.user?.id, placeId: input.placeId, googleMapsId: input.googleMapsId }
+      )
     }),
 })

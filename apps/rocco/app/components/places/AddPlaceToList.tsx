@@ -90,7 +90,7 @@ const AddPlaceToList = ({ place, isOpen, onOpenChange }: AddPlaceToListProps) =>
                 <Button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
                   disabled={!isAuthenticated}
                 >
                   <PlusCircle size={18} />

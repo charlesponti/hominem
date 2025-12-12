@@ -89,7 +89,7 @@ export default function ListForm({
           <Button
             type="submit"
             disabled={isPending || !name.trim()}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="flex-1"
             onClick={(e) => {
               if (!isAuthenticated) {
                 e.preventDefault()

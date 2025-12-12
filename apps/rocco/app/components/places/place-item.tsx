@@ -1,16 +1,13 @@
 import type { ListPlace } from '@hominem/data'
-import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
-import { type MouseEvent, useState } from 'react'
-import { href } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from '@hominem/ui/components/ui/dialog'
 import {
   DropdownMenu,
@@ -18,7 +15,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu'
+import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
+import type { MouseEvent } from 'react'
+import { href } from 'react-router'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
+import { useModal } from '~/hooks/useModal'
 import { useRemoveListItem } from '~/lib/places'
 import PlaceRow from './place-row'
 
@@ -38,10 +39,10 @@ const PlaceListItem = ({
   isSelected = false,
 }: PlaceItemProps) => {
   const { setHoveredPlaceId } = useMapInteraction()
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal()
   const { mutate: removeListItem } = useRemoveListItem({
     onSuccess: () => {
-      setIsDeleteModalOpen(false)
+      closeDeleteModal()
       onRemove?.()
     },
     onError: () => {
@@ -68,8 +69,7 @@ const PlaceListItem = ({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  type="button"
-                  className="px-2 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
+                  variant="ghost"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -88,7 +88,7 @@ const PlaceListItem = ({
                       '_blank'
                     )
                   }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 py-2"
                 >
                   <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
                   Open in Maps
@@ -96,9 +96,9 @@ const PlaceListItem = ({
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault()
-                    setIsDeleteModalOpen(true)
+                    openDeleteModal()
                   }}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-600 hover:underline underline-offset-4 hover:bg-red-50 py-2"
                 >
                   <Trash size={16} className="text-red-600" />
                   Remove from list
@@ -109,7 +109,10 @@ const PlaceListItem = ({
         />
       </li>
 
-      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+      <Dialog
+        open={isDeleteModalOpen}
+        onOpenChange={(open) => (open ? openDeleteModal() : closeDeleteModal())}
+      >
         <DialogContent
           data-testid="place-delete-modal"
           className="sm:max-w-lg"

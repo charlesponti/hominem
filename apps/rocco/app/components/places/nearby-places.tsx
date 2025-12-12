@@ -74,7 +74,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
         {/* <span className="text-sm font-light font-serif text-gray-500">Within {radiusKm}km</span> */}
       </div>
 
-      <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <ul className="list-none divide-y divide-gray-100 bg-white/30 rounded-xl shadow-sm border border-white/20 overflow-hidden">
         {places.map((place) => {
           return (
             <li key={place.id}>
@@ -84,7 +84,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
                 photoUrl={place.photos?.[0] ?? null}
                 imageUrl={place.imageUrl}
                 meta={
-                  <div className="flex items-center">
+                  <div className="flex items-center text-sm text-gray-400">
                     <MapPin size={14} className="mr-1" />
                     <span>{formatDistance(place.distance)}</span>
                   </div>

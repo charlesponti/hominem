@@ -93,7 +93,7 @@ const InviteListItem = (props: InviteListItemProps) => {
             )}
           </p>
           <Button
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
+            className="px-4 py-2 rounded-lg shadow-sm transition-colors font-medium"
             onClick={preview.onSignIn}
           >
             Continue with Google
@@ -119,7 +119,7 @@ const InviteListItem = (props: InviteListItemProps) => {
         {accepted ? (
           <Link
             to={`/lists/${list?.id || listInvite.listId}`}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-hover)] text-primary-foreground rounded-lg shadow-sm transition-colors font-medium"
           >
             <span>View list</span>
             <ArrowRight size={18} />
@@ -153,7 +153,7 @@ const AcceptButton = ({
 }) => {
   return (
     <Button
-      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
+      className="px-4 py-2 rounded-lg shadow-sm transition-colors font-medium"
       disabled={status === 'pending' || !canAccept}
       onClick={onAcceptClick}
     >

@@ -17,7 +17,7 @@ export default function Loading({ color, size = 'md' }: LoadingProps) {
   return (
     <output data-testid="loading-spinner">
       <span
-        className="block animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"
+        className="block animate-spin rounded-full border-2 border-gray-200 border-t-blue-600 border-r-blue-600"
         style={{ width: sizes[size], height: sizes[size], color }}
       />
       <span className="sr-only">Loading...</span>

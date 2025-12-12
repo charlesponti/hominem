@@ -1,51 +1,89 @@
-import { List } from 'lucide-react'
 import { Link } from 'react-router'
 import { memo } from 'react'
+import { List } from 'lucide-react'
+import { useSupabaseAuthContext } from '@hominem/ui'
+import { trpc } from '~/lib/trpc/client'
+import type { PlaceWithLists } from '~/lib/types'
+import { env } from '~/lib/env'
 
-type PlaceList = {
-  id: string
-  name: string
-  itemCount?: number
+const buildImageUrl = (src?: string | null, width = 400, height = 300): string | null => {
+  if (!src) return null
+
+  if (src.includes('places/') && src.includes('/photos/')) {
+    return `https://places.googleapis.com/v1/${src}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
+  }
+
+  if (src.includes('googleusercontent')) {
+    return `${src}=w${width}-h${height}-c`
+  }
+
+  return src
 }
 
 type Props = {
-  lists: PlaceList[]
+  place: PlaceWithLists
 }
 
-const SocialProofSection = ({ lists }: Props) => {
-  if (lists.length === 0) {
+const SocialProofSection = ({ place }: Props) => {
+  const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
+
+  const { data: listsContainingPlace = [], isLoading } = trpc.lists.getContainingPlace.useQuery(
+    {
+      placeId: place.id || undefined,
+      googleMapsId: place.googleMapsId || undefined,
+    },
+    {
+      enabled: isAuthenticated && !authLoading && (!!place.id || !!place.googleMapsId),
+    }
+  )
+
+  if (isLoading || listsContainingPlace.length === 0) {
     return null
   }
 
   return (
     <div className="space-y-1 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       <h3 className="font-sans font-semibold">
-        Saved in {lists.length} {lists.length === 1 ? 'list' : 'lists'}
+        Saved in {listsContainingPlace.length}{' '}
+        {listsContainingPlace.length === 1 ? 'list' : 'lists'}
       </h3>
 
       <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {lists.map((list) => (
-          <li key={list.id} className="relative hover:cursor-pointer">
-            <Link
-              to={`/lists/${list.id}`}
-              className="flex justify-between items-center p-2 w-full group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="shrink-0 size-7 rounded bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200">
-                  <List size={18} className="text-gray-600" />
-                </span>
-                <span className="font-medium text-gray-900 truncate text-sm group-hover:text-indigo-600 transition-colors">
-                  {list.name}
-                </span>
-              </div>
-              {list.itemCount !== undefined && (
-                <span className="text-xs text-gray-500 ml-2">
-                  {list.itemCount} {list.itemCount === 1 ? 'place' : 'places'}
-                </span>
-              )}
-            </Link>
-          </li>
-        ))}
+        {listsContainingPlace.map((list) => {
+          const resolvedThumbnail = buildImageUrl(list.imageUrl, 80, 80)
+
+          return (
+            <li key={list.id}>
+              <Link
+                to={`/lists/${list.id}`}
+                viewTransition
+                className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="size-12 rounded overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+                      {resolvedThumbnail ? (
+                        <img
+                          src={resolvedThumbnail}
+                          alt={list.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <List className="text-gray-400" size={20} />
+                      )}
+                    </div>
+                    <h3 className="font-serif italic tracking-tight font-semilight text-accent-foreground truncate text-lg">
+                      {list.name}
+                    </h3>
+                  </div>
+                  <span className="bg-accent text-accent-foreground text-sm rounded-full px-2.5 py-1 shrink-0">
+                    {list.itemCount || 0}
+                  </span>
+                </div>
+              </Link>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )

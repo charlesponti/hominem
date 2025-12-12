@@ -19,7 +19,7 @@ export default function Lists() {
         <h2 className="text-2xl tracking-tight font-light text-gray-900">Lists</h2>
         <Link
           to="/lists/create"
-          className="self-start flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors"
+          className="self-start flex items-center gap-2 px-3 py-2 bg-primary hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-hover)] text-primary-foreground text-sm font-medium rounded-md transition-colors"
         >
           <Plus size={16} className="inline" />
         </Link>

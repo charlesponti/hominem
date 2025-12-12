@@ -72,13 +72,11 @@ export default function PlaceRow({
           </div>
 
           <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="font-serif italic tracking-tighter font-semilight text-accent-foreground truncate text-lg">
                 {name}
               </h3>
-              {meta ? (
-                <div className="flex items-center text-sm text-indigo-600">{meta}</div>
-              ) : null}
+              {meta ?? null}
             </div>
             {subtitle ? <div className="text-xs text-gray-500 truncate">{subtitle}</div> : null}
           </div>
