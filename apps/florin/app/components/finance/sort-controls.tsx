@@ -1,6 +1,6 @@
 import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu'
 import { ListOrdered, PlusCircle } from 'lucide-react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,

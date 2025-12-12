@@ -1,6 +1,6 @@
 import { Check, Pencil, X } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { trpc } from '~/lib/trpc/client'

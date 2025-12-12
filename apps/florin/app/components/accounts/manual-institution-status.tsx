@@ -1,5 +1,5 @@
 import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { CheckCircleIcon } from 'lucide-react'
 import { useAllInstitutions } from '~/lib/hooks/use-institutions'
 import type { RouterOutput } from '~/lib/trpc'

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { and, count, desc, eq, inArray, or } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
 import { db, takeUniqueOrThrow } from '../db'
 import {
   type Item as ItemSelect,
@@ -487,6 +487,121 @@ export function formatList(
     isPublic: listData.isPublic ?? false,
     createdAt: listData.createdAt,
     updatedAt: listData.updatedAt,
+  }
+}
+
+/**
+ * Optimized function to get all lists (owned + shared) with their places in a single SQL query
+ * Uses a single query with LEFT JOIN to get all accessible lists, then fetches places in one query
+ * @param userId - The ID of the user
+ * @returns Object containing ownedListsWithPlaces and sharedListsWithPlaces
+ */
+export async function getAllUserListsWithPlaces(userId: string): Promise<{
+  ownedListsWithPlaces: List[]
+  sharedListsWithPlaces: List[]
+}> {
+  try {
+    // Single query to get all lists the user has access to (owned OR shared)
+    // Uses LEFT JOIN to userLists to identify shared lists, then filters for owned or shared
+    const allLists = await db
+      .select({
+        id: list.id,
+        name: list.name,
+        description: list.description,
+        userId: list.userId,
+        isPublic: list.isPublic,
+        createdAt: list.createdAt,
+        updatedAt: list.updatedAt,
+        owner_id: users.id,
+        owner_email: users.email,
+        owner_name: users.name,
+        isOwned: sql<boolean>`${list.userId} = ${userId}`.as('isOwned'),
+        userLists_userId: userLists.userId,
+      })
+      .from(list)
+      .innerJoin(users, eq(users.id, list.userId))
+      .leftJoin(userLists, and(eq(userLists.listId, list.id), eq(userLists.userId, userId)))
+      .where(
+        or(
+          eq(list.userId, userId), // Owned lists
+          isNotNull(userLists.listId) // Shared lists (join matched)
+        )
+      )
+      .orderBy(desc(list.createdAt))
+
+    if (allLists.length === 0) {
+      return {
+        ownedListsWithPlaces: [],
+        sharedListsWithPlaces: [],
+      }
+    }
+
+    // Deduplicate lists (a list could appear twice if user owns it AND it's shared)
+    const uniqueLists = new Map<string, (typeof allLists)[0]>()
+    for (const dbItem of allLists) {
+      if (!uniqueLists.has(dbItem.id)) {
+        uniqueLists.set(dbItem.id, dbItem)
+      } else {
+        // If already exists, prefer owned status
+        const existing = uniqueLists.get(dbItem.id)!
+        if (dbItem.isOwned && !existing.isOwned) {
+          uniqueLists.set(dbItem.id, dbItem)
+        }
+      }
+    }
+
+    const listIds = Array.from(uniqueLists.keys())
+    const placesMap = await getListPlacesMap(listIds)
+
+    const ownedLists: List[] = []
+    const sharedLists: List[] = []
+
+    for (const dbItem of uniqueLists.values()) {
+      const listPart = {
+        id: dbItem.id,
+        name: dbItem.name,
+        description: dbItem.description,
+        userId: dbItem.userId,
+        isPublic: dbItem.isPublic,
+        createdAt: dbItem.createdAt,
+        updatedAt: dbItem.updatedAt,
+      }
+
+      const ownerPart = dbItem.owner_id
+        ? {
+            id: dbItem.owner_id,
+            email: dbItem.owner_email as string,
+            name: dbItem.owner_name,
+          }
+        : null
+
+      const listData: ListWithSpreadOwner = {
+        ...(listPart as ListSelect),
+        owner: ownerPart,
+      }
+
+      const places = placesMap.get(dbItem.id) || []
+
+      if (dbItem.isOwned) {
+        ownedLists.push(formatList(listData, places, true, true))
+      } else {
+        sharedLists.push(formatList(listData, places, false, true))
+      }
+    }
+
+    return {
+      ownedListsWithPlaces: ownedLists,
+      sharedListsWithPlaces: sharedLists,
+    }
+  } catch (error) {
+    logger.error('Error fetching all user lists with places', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return {
+      ownedListsWithPlaces: [],
+      sharedListsWithPlaces: [],
+    }
   }
 }
 

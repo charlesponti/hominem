@@ -1,7 +1,7 @@
 import { MessageSquare, Search, Trash2 } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { useDeleteChat } from '~/lib/hooks/use-delete-chat'
 import { trpc } from '~/lib/trpc-client'

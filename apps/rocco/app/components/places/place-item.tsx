@@ -2,7 +2,7 @@ import type { ListPlace } from '@hominem/data'
 import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
 import { type MouseEvent, useState } from 'react'
 import { href } from 'react-router'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   Dialog,
   DialogContent,

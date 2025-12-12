@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'

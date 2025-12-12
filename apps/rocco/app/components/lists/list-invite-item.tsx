@@ -1,9 +1,13 @@
+import { Button } from '@hominem/ui/button'
+import type { inferRouterOutputs } from '@trpc/server'
 import React, { useCallback } from 'react'
 import Alert from '~/components/alert'
-import { Button } from '@hominem/ui/components/ui/button'
-import type { InviteItem } from '~/lib/component-types'
 import { trpc } from '~/lib/trpc/client'
+import type { AppRouter } from '~/lib/trpc/router'
 import Loading from '../loading'
+
+type RouterOutput = inferRouterOutputs<AppRouter>
+type InviteItem = RouterOutput['invites']['getAll'][number]
 
 function ListInviteItem({ invite }: { invite: InviteItem }) {
   const mutation = trpc.invites.accept.useMutation()

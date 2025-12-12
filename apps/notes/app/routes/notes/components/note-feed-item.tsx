@@ -1,6 +1,6 @@
 import type { Note } from '@hominem/data/types'
 import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Edit, Trash2, X } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
 import SocialX from '~/components/icons/SocialX'

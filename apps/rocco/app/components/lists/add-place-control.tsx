@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { PlusCircle, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'

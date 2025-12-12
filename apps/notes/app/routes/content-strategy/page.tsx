@@ -1,5 +1,5 @@
 import type { ContentStrategy } from '@hominem/data/schema'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { Checkbox } from '@hominem/ui/components/ui/checkbox'
 import { Input } from '@hominem/ui/components/ui/input'

@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Plus, User } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'

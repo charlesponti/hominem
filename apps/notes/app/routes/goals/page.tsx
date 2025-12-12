@@ -1,5 +1,5 @@
 import type { Goal } from '@hominem/data/types'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Checkbox } from '@hominem/ui/components/ui/checkbox'
 import { Input } from '@hominem/ui/components/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'

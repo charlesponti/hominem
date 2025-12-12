@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Label } from '@hominem/ui/components/ui/label'
 import { Sheet, SheetContent } from '@hominem/ui/components/ui/sheet'
 import { useToast } from '@hominem/ui/components/ui/use-toast'

@@ -1,6 +1,6 @@
 import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Card } from '@hominem/ui/components/ui/card'
 import { Label } from '@hominem/ui/components/ui/label'
 import {

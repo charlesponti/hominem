@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { Skeleton } from '@hominem/ui/components/ui/skeleton'
 import type { Dispatch, SetStateAction } from 'react'

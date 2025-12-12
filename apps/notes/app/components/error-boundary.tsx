@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Component, type ReactNode } from 'react'
 

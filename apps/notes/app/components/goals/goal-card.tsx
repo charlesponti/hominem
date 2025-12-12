@@ -1,6 +1,6 @@
 import type { Goal } from '@hominem/utils/types'
 import { CalendarCheck, Edit, Trash2 } from 'lucide-react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Progress } from '@hominem/ui/components/ui/progress'
 import { PriorityBadge } from './priority-badge'
 import { StatusBadge } from './status-badge'

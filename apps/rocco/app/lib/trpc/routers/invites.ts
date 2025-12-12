@@ -66,12 +66,13 @@ export const invitesRouter = router({
         }
       }
 
-      const invites = tokenInvite
-        ? [
-            tokenInvite,
-            ...filteredBaseInvites.filter((invite) => invite.token !== tokenInvite?.token),
-          ]
-        : filteredBaseInvites
+      const invites: Array<(typeof baseInvites)[number] & { belongsToAnotherUser: boolean }> =
+        tokenInvite
+          ? [
+              tokenInvite,
+              ...filteredBaseInvites.filter((invite) => invite.token !== tokenInvite?.token),
+            ]
+          : filteredBaseInvites
 
       return invites
     }),

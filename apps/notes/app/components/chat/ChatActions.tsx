@@ -1,5 +1,5 @@
 import { Eraser, Globe, Loader2, Mic, Paperclip, Volume2 } from 'lucide-react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 
 interface ChatActionsProps {
   onWebSearch: () => void

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import { useCreateList } from '~/lib/trpc/api'

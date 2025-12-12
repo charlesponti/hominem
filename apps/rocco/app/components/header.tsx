@@ -1,5 +1,5 @@
 import { useSupabaseAuth } from '@hominem/ui'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -98,7 +98,7 @@ const NavigationMenu = ({ onLogoutClick }: NavigationMenuProps) => (
 
 function Header() {
   const navigate = useNavigate()
-  const { isAuthenticated, logout } = useSupabaseAuth()
+  const { isAuthenticated, logout, isLoading } = useSupabaseAuth()
 
   const onLogoutClick = useCallback(async () => {
     await logout()
@@ -115,9 +115,11 @@ function Header() {
           <Globe2Icon className="size-6" />
           <span className="font-bold">{APP_NAME}</span>
         </Link>
-        <div className="flex items-center space-x-2">
-          {isAuthenticated ? <NavigationMenu onLogoutClick={onLogoutClick} /> : <SignInButton />}
-        </div>
+        {!isLoading && (
+          <div className="flex items-center space-x-2">
+            {isAuthenticated ? <NavigationMenu onLogoutClick={onLogoutClick} /> : <SignInButton />}
+          </div>
+        )}
       </div>
     </header>
   )

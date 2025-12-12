@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { useMatches } from 'react-router'

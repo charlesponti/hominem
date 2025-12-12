@@ -1,22 +1,15 @@
-import type { item, list, listInvite, place, tags, userLists } from '@hominem/data/db/schema/index'
-export type List = typeof list.$inferSelect
-export type ListInsert = typeof list.$inferInsert
-export type ListInvite = typeof listInvite.$inferSelect
-export type ListInviteInsert = typeof listInvite.$inferInsert
-export type Place = typeof place.$inferSelect & {
-  isPreview?: boolean
-}
-export type PlaceWithLists = Place & {
-  photos?: string[]
-  associatedLists: { id: string; name: string }[]
-}
-export type PlaceInsert = typeof place.$inferInsert
-export type Item = typeof item.$inferSelect
-export type ItemInsert = typeof item.$inferInsert
-export type Tag = typeof tags.$inferSelect
-export type TagInsert = typeof tags.$inferInsert
-export type UserList = typeof userLists.$inferSelect
-export type UserListInsert = typeof userLists.$inferInsert
+import type { inferRouterOutputs } from '@trpc/server'
+import type { AppRouter } from './trpc/router'
+
+type RouterOutputs = inferRouterOutputs<AppRouter>
+
+// Extract types from tRPC router outputs
+export type List = RouterOutputs['lists']['getAll'][number]
+export type ListInvite = RouterOutputs['invites']['getAll'][number]
+export type Place = RouterOutputs['places']['getById']
+export type PlaceWithLists = RouterOutputs['places']['getDetailsById']
+export type Item = RouterOutputs['items']['getByListId'][number]
+export type InviteItem = RouterOutputs['invites']['getAll'][number]
 
 // Additional types for the frontend
 export interface BaseModel {
@@ -109,18 +102,6 @@ export type GooglePlaceDetailsResponse = {
   nationalPhoneNumber?: string | null
   priceLevel?: string | null
   photos?: GooglePlacePhoto[]
-}
-
-// Extended types for frontend use
-export interface ExtendedList extends List {
-  isOwnList?: boolean
-  hasAccess?: boolean
-  places?: Item[]
-  itemCount?: number
-}
-
-export interface ExtendedListInvite extends ListInvite {
-  list?: List
 }
 
 // Type for places in lists

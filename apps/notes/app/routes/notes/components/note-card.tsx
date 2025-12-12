@@ -1,6 +1,6 @@
 import type { Content } from '@hominem/data/types'
 import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Card, CardContent } from '@hominem/ui/components/ui/card'
 import { Edit, Trash2, X } from 'lucide-react'
 import { useMemo } from 'react'

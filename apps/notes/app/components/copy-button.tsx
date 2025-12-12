@@ -1,6 +1,6 @@
 import { Check, Copy } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 
 interface CopyButtonProps {
   onClick: () => void

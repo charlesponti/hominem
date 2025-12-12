@@ -1,6 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
 import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   Card,
   CardContent,

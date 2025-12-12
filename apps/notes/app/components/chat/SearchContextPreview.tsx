@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import type { SearchContextPreviewProps } from './types.js'
 
 export function SearchContextPreview({ searchContext, onRemove }: SearchContextPreviewProps) {

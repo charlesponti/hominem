@@ -10,7 +10,7 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { useEffect } from 'react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { formatTime, useAudioPlayer } from '~/lib/hooks/use-audio-player.js'
 
 interface AudioPlayerProps {

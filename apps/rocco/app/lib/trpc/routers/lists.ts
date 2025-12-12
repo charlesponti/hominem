@@ -2,11 +2,8 @@ import {
   createList,
   deleteListItem as deleteListItemService,
   deleteList as deleteListService,
-  formatList,
-  getListById as getListByIdService,
-  getListPlacesMap,
-  getOwnedLists,
-  getUserLists,
+  getAllUserListsWithPlaces,
+  getListById,
   updateList as updateListService,
 } from '@hominem/data'
 import { TRPCError } from '@trpc/server'
@@ -14,31 +11,6 @@ import { z } from 'zod'
 import { safeAsync } from '../../errors'
 import { logger } from '../../logger'
 import { protectedProcedure, publicProcedure, router } from '../context'
-
-async function loadListsWithPlaces(userId: string) {
-  const [ownedLists, sharedUserLists] = await Promise.all([
-    getOwnedLists(userId),
-    getUserLists(userId),
-  ])
-
-  const allListIds = [...ownedLists.map((l) => l.id), ...sharedUserLists.map((l) => l.id)]
-  const placesMap = await getListPlacesMap(allListIds)
-
-  const ownedListsWithPlaces = ownedLists.map((listData) => {
-    const places = placesMap.get(listData.id) || []
-    return formatList(listData, places, true, true)
-  })
-
-  const sharedListsWithPlaces = sharedUserLists.map((listData) => {
-    const places = placesMap.get(listData.id) || []
-    return formatList(listData, places, false, true)
-  })
-
-  return {
-    ownedListsWithPlaces,
-    sharedListsWithPlaces,
-  }
-}
 
 export const listsRouter = router({
   getAll: protectedProcedure
@@ -53,7 +25,7 @@ export const listsRouter = router({
             })
           }
 
-          const { ownedListsWithPlaces, sharedListsWithPlaces } = await loadListsWithPlaces(
+          const { ownedListsWithPlaces, sharedListsWithPlaces } = await getAllUserListsWithPlaces(
             ctx.user.id
           )
 
@@ -69,7 +41,7 @@ export const listsRouter = router({
     .query(async ({ ctx, input }) => {
       return safeAsync(
         async () => {
-          const list = await getListByIdService(input.id, ctx.user?.id || null)
+          const list = await getListById(input.id, ctx.user?.id || null)
 
           if (!list) {
             throw new TRPCError({
@@ -130,7 +102,7 @@ export const listsRouter = router({
         throw new Error('Name is required for update')
       }
 
-      const updatedList = await updateListService(id, name, ctx.user.id)
+      const updatedList = await updateListService(id, name)
       if (!updatedList) {
         throw new Error("List not found or you don't have permission to update it")
       }
@@ -138,27 +110,25 @@ export const listsRouter = router({
       return updatedList
     }),
 
-  delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error('User not found in context')
-      }
+  delete: protectedProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ ctx, input }) => {
+    if (!ctx.user) {
+      throw new Error('User not found in context')
+    }
 
-      const success = await deleteListService(input.id, ctx.user.id)
-      if (!success) {
-        throw new Error("List not found or you don't have permission to delete it")
-      }
+    const success = await deleteListService(input.id, ctx.user.id)
+    if (!success) {
+      throw new Error("List not found or you don't have permission to delete it")
+    }
 
-      return { success: true }
-    }),
+    return { success: true }
+  }),
 
   // Delete a specific item from a list
   deleteItem: protectedProcedure
     .input(
       z.object({
-        listId: z.string().uuid(),
-        itemId: z.string().uuid(),
+        listId: z.uuid(),
+        itemId: z.uuid(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -171,12 +141,6 @@ export const listsRouter = router({
         if (!success) {
           throw new Error('Failed to delete list item or item not found')
         }
-
-        logger.info('Deleted item from list', {
-          listId: input.listId,
-          itemId: input.itemId,
-          userId: ctx.user.id,
-        })
 
         return { success: true }
       } catch (error) {

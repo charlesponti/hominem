@@ -1,9 +1,13 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { ArrowRight, ListCheck } from 'lucide-react'
 import { useCallback } from 'react'
 import { Link } from 'react-router'
-import type { InviteItem } from '~/lib/component-types'
+import type { inferRouterOutputs } from '@trpc/server'
+import type { AppRouter } from '~/lib/trpc/router'
 import { trpc } from '~/lib/trpc/client'
+
+type RouterOutput = inferRouterOutputs<AppRouter>
+type InviteItem = RouterOutput['invites']['getAll'][number]
 
 type InviteListItemProps =
   | {
@@ -134,17 +138,7 @@ const InviteListItem = (props: InviteListItemProps) => {
             <ArrowRight size={18} />
           </Link>
         ) : (
-          <Button
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
-            disabled={status === 'pending' || !canAccept}
-            onClick={onAcceptClick}
-          >
-            {status === 'pending'
-              ? 'Accepting...'
-              : canAccept
-                ? 'Accept invite'
-                : 'Sign in to accept'}
-          </Button>
+          <AcceptButton status={status} canAccept={canAccept} onAcceptClick={onAcceptClick} />
         )}
       </div>
       {!accepted && isEmailMismatch && (
@@ -157,3 +151,23 @@ const InviteListItem = (props: InviteListItemProps) => {
 }
 
 export default InviteListItem
+
+const AcceptButton = ({
+  status,
+  canAccept,
+  onAcceptClick,
+}: {
+  status: 'pending' | 'success' | 'error' | 'idle'
+  canAccept: boolean
+  onAcceptClick: () => void
+}) => {
+  return (
+    <Button
+      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors font-medium"
+      disabled={status === 'pending' || !canAccept}
+      onClick={onAcceptClick}
+    >
+      {status === 'pending' ? 'Accepting...' : canAccept ? 'Accept invite' : 'Sign in to accept'}
+    </Button>
+  )
+}

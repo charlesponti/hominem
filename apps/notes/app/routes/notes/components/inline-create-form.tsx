@@ -1,6 +1,6 @@
 import type { Note, NoteInsert, Priority, TaskMetadata } from '@hominem/data/types'
 import { DatePicker } from '@hominem/ui/components/date-picker'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { Textarea } from '@hominem/ui/components/ui/textarea'
 import { FileText, ListChecks, RefreshCw, Send, X } from 'lucide-react'

@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@hominem/ui/components/ui/alert-dialog'
-import { Button, buttonVariants } from '@hominem/ui/components/ui/button'
+import { Button, buttonVariants } from '@hominem/ui/button'
 import {
   Card,
   CardContent,

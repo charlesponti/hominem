@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { DateMonthSelect } from '~/components/date-month-select'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { trpc } from '~/lib/trpc'
 
 interface BudgetTrackingHeaderProps {

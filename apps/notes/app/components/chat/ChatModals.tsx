@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import type { UploadedFile } from '~/lib/types/upload.js'
 import { AudioRecorder } from './AudioRecorder.js'
 import { FileUploader } from './FileUploader.js'

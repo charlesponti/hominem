@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRevalidator } from 'react-router'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   Dialog,
   DialogContent,

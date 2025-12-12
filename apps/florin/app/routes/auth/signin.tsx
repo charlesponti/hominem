@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { redirect, type LoaderFunctionArgs } from 'react-router'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   Card,
   CardContent,

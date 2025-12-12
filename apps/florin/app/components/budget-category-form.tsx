@@ -1,5 +1,5 @@
 import { useIsMobile } from '@hominem/ui'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   Card,
   CardContent,

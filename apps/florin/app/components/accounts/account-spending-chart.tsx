@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { subMonths } from 'date-fns'
 import { useMemo, useState } from 'react'

@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@hominem/ui/components/ui/alert-dialog'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { toast } from '@hominem/ui/components/ui/use-toast'
 import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
 import type { RouterOutput } from '~/lib/trpc'

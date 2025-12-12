@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate, useRouteLoaderData } from 'react-router'
 import ListForm from '~/components/lists/list-form'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   Dialog,
   DialogContent,

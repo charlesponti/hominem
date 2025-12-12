@@ -1,5 +1,5 @@
 import type { Note } from '@hominem/data/types'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { useDebounce } from '@uidotdev/usehooks'
 import { Plus, Search, Sparkles, X } from 'lucide-react'

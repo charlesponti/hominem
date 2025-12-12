@@ -6,6 +6,7 @@ import NearbyPlaces from '~/components/places/nearby-places'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import AboutPage from './about'
+import { LoadingScreen } from '~/components/loading'
 
 // Default location: San Francisco (fallback)
 const DEFAULT_LOCATION = {
@@ -63,7 +64,14 @@ export default function Index() {
     [navigate]
   )
 
-  // Unauthenticated view: Landing page
+  if (authLoading) {
+    return (
+      <div className="pt-40">
+        <LoadingScreen />
+      </div>
+    )
+  }
+
   if (!isAuthenticated) {
     return <AboutPage />
   }

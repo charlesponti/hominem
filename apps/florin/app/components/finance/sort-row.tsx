@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import {
   Select,
   SelectContent,

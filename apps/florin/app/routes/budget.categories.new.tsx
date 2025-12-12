@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { Input } from '@hominem/ui/components/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'

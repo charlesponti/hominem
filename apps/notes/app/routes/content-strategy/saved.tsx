@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Card, CardContent } from '@hominem/ui/components/ui/card'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { Eye, FileText, Plus, Trash2 } from 'lucide-react'

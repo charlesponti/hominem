@@ -7,6 +7,7 @@ import {
   getNearbyPlacesFromLists,
   getPlaceByGoogleMapsId,
   getPlaceById,
+  type Place as PlaceSelect,
   removePlaceFromList,
   updatePlacePhotos,
 } from '@hominem/data'
@@ -22,7 +23,6 @@ import {
   parsePriceLevel,
   sanitizeStoredPhotos,
 } from '~/lib/places-utils'
-import type { Place } from '~/lib/types'
 import { logger } from '../../logger'
 import { type Context, protectedProcedure, publicProcedure, router } from '../context'
 
@@ -31,12 +31,12 @@ type ListSummary = {
   name: string
 }
 
-const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: Place) => {
+const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: PlaceSelect) => {
   const itemsLinkingToThisPlace = await getItemsForPlace(dbPlace.id)
 
   const associatedLists = itemsLinkingToThisPlace
     .map((itemRecord) => itemRecord.list)
-    .filter((listRecord) => Boolean(listRecord))
+    .filter((listRecord): listRecord is { id: string; name: string } => Boolean(listRecord))
     .map((listRecord) => ({ id: listRecord.id, name: listRecord.name }))
 
   let placePhotos = sanitizeStoredPhotos(dbPlace.photos)
@@ -315,7 +315,7 @@ export const placesRouter = router({
 
       const { listIds, place: placeInput } = input
 
-      let finalPlace: Place
+      let finalPlace: PlaceSelect
       let affectedLists: ListSummary[] = []
 
       try {

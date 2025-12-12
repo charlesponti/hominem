@@ -4,11 +4,11 @@ import { useCallback } from 'react'
 import { useLoaderData } from 'react-router'
 import InviteListItem from '~/components/InviteListItem'
 import Loading from '~/components/loading'
-import type { InviteItem } from '~/lib/component-types'
 import { env } from '~/lib/env'
 import { getAuthState } from '~/lib/services/auth-loader.service'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
 import { createCaller } from '~/lib/trpc/server'
+import type { InviteItem } from '~/lib/types'
 import type { Route } from './+types/invites'
 
 export async function loader({ request }: Route.LoaderArgs) {

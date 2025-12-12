@@ -1,6 +1,6 @@
 import { useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'
-import { Button } from '@hominem/ui/components/ui/button'
+import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@hominem/ui/components/ui/sheet'
