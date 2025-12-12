@@ -1,29 +1,14 @@
+import { useSupabaseAuth } from '@hominem/ui/supabase'
 import { ArrowLeft } from 'lucide-react'
-import { Link, Navigate, useRouteLoaderData } from 'react-router'
+import { Link, Navigate } from 'react-router'
+import Loading from '~/components/loading'
 import { trpc } from '~/lib/trpc/client'
 
-interface LayoutLoaderData {
-  user: {
-    id: string
-    email?: string
-    name?: string
-  }
-  isAuthenticated: boolean
-}
-
-export async function clientLoader() {
-  // For now, return empty data and let the client fetch with tRPC
-  return { outboundInvites: [] }
-}
-
 const ListSentInvites = () => {
-  const { user } = useRouteLoaderData('routes/layout') as LayoutLoaderData
-  const { data: outboundInvites = [] } = trpc.invites.getAllOutbound.useQuery(undefined, {
-    enabled: Boolean(user?.id),
-  })
-  const data = outboundInvites
+  const { userId } = useSupabaseAuth()
+  const { data, isLoading } = trpc.invites.getAllOutbound.useQuery()
 
-  if (!user?.id) {
+  if (!userId) {
     return <Navigate to="/" replace />
   }
 
@@ -37,6 +22,7 @@ const ListSentInvites = () => {
       </div>
       <h1>Sent Invites</h1>
       <div>
+        {isLoading && <Loading />}
         {data?.length === 0 && 'Your invites will appear here.'}
         {data && data.length > 0 && (
           <ul className="space-y-2">

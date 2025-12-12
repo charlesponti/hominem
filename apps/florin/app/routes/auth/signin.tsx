@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { redirect, type LoaderFunctionArgs } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import {
@@ -22,16 +22,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function SignInPage() {
-  const { signInWithGoogle, isLoading } = useSupabaseAuth()
+  const { supabase, isLoading } = useSupabaseAuth()
   const [error, setError] = useState('')
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = useCallback(async () => {
     try {
-      await signInWithGoogle()
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
+        },
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed')
     }
-  }
+  }, [supabase.auth])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background to-muted/50">

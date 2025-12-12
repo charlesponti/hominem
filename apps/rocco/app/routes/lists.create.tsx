@@ -1,6 +1,3 @@
-import { useCallback, useState } from 'react'
-import { useNavigate, useRouteLoaderData } from 'react-router'
-import ListForm from '~/components/lists/list-form'
 import { Button } from '@hominem/ui/button'
 import {
   Dialog,
@@ -9,14 +6,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@hominem/ui/components/ui/dialog'
-import { createClient } from '~/lib/supabase/client'
+import { useSupabaseAuth } from '@hominem/ui/supabase'
+import { useCallback, useState } from 'react'
+import { useNavigate } from 'react-router'
+import ListForm from '~/components/lists/list-form'
 import type { List } from '~/lib/types'
 
 export default function CreateListPage() {
   const navigate = useNavigate()
-  const supabase = createClient()
-  const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
-  const isAuthenticated = layoutData?.isAuthenticated ?? false
+  const { isAuthenticated, supabase } = useSupabaseAuth()
   const [isSignInOpen, setIsSignInOpen] = useState(false)
 
   const handleCreate = useCallback(

@@ -1,8 +1,8 @@
-import type { User } from '@supabase/supabase-js'
+import { useSupabaseAuth } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
-import { Link, redirect, useParams, useRouteLoaderData } from 'react-router'
+import { Link, redirect, useParams } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists/list-menu'
@@ -40,10 +40,7 @@ const DEFAULT_CENTER: PlaceLocation = {
 }
 
 export default function ListPage() {
-  const { user } = useRouteLoaderData('routes/layout') as {
-    user: User | null
-    isAuthenticated: boolean
-  }
+  const { user } = useSupabaseAuth()
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const params = useParams<{ id: string }>()
   const { data: listData, isLoading } = trpc.lists.getById.useQuery({
@@ -82,9 +79,9 @@ export default function ListPage() {
     }))
 
   // Calculate map center: first place, current location, or default
-  const mapCenter: PlaceLocation =
+  const mapCenter =
     markers.length > 0
-      ? markers[0]
+      ? (markers[0] as PlaceLocation)
       : currentLocation
         ? { latitude: currentLocation.latitude, longitude: currentLocation.longitude }
         : DEFAULT_CENTER

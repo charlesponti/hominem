@@ -17,9 +17,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./button": "./src/components/ui/button.tsx",
-    "./server": "./src/server/index.ts",
     "./components/*": "./src/components/*",
-    "./lib/*": "./src/lib/*"
+    "./lib/*": "./src/lib/*",
+    "./server": "./src/server/index.ts",
+    "./supabase": "./src/supabase.ts"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",

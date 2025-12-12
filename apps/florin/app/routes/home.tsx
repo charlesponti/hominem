@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
@@ -15,7 +15,7 @@ export function meta() {
 }
 
 export default function Home() {
-  const { user, isLoading, signInWithGoogle } = useSupabaseAuth()
+  const { user, isLoading, supabase } = useSupabaseAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -23,6 +23,15 @@ export default function Home() {
       navigate('/finance', { replace: true })
     }
   }, [isLoading, user, navigate])
+
+  const handleSignIn = useCallback(async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
+      },
+    })
+  }, [supabase.auth])
 
   if (isLoading) {
     return (
@@ -56,7 +65,7 @@ export default function Home() {
           <div className="mb-16">
             <button
               type="button"
-              onClick={() => signInWithGoogle()}
+              onClick={handleSignIn}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               Get Started Free

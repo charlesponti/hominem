@@ -134,7 +134,6 @@ const SignInButton = () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Add query params directly to redirectTo URL (like notes app does)
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
       },
     })

@@ -2,9 +2,9 @@ import { Button } from '@hominem/ui/button'
 import { Label } from '@hominem/ui/components/ui/label'
 import { Sheet, SheetContent } from '@hominem/ui/components/ui/sheet'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
+import { useSupabaseAuth } from '@hominem/ui/supabase'
 import { Heart, Loader2, PlusCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { useRouteLoaderData } from 'react-router'
 import ListForm from '~/components/lists/list-form'
 import Loading from '~/components/loading'
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places'
@@ -22,8 +22,7 @@ const AddPlaceToList = ({ place, isOpen, onOpenChange }: AddPlaceToListProps) =>
   const [showCreateForm, setShowCreateForm] = useState(false)
   const { toast } = useToast()
   const [loadingListId, setLoadingListId] = useState<string | null>(null)
-  const layoutData = useRouteLoaderData('routes/layout') as { isAuthenticated: boolean } | undefined
-  const isAuthenticated = layoutData?.isAuthenticated ?? false
+  const { isAuthenticated } = useSupabaseAuth()
 
   const { isLoading, data: rawLists } = trpc.lists.getAll.useQuery()
 
