@@ -1,18 +1,17 @@
-import { type SyntheticEvent, useCallback, useId, useState } from 'react'
-import Alert from '~/components/alert'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
-
+import { type SyntheticEvent, useCallback, useId, useState } from 'react'
+import Alert from '~/components/alert'
 import { trpc } from '~/lib/trpc/client'
-import type { ListInvite } from '~/lib/types'
+import type { SentInvite } from '~/lib/types'
 
-type ListInviteFormProps = {
+type SentInviteFormProps = {
   listId: string
-  onCreate: (invite: ListInvite) => void
+  onCreate: (invite: SentInvite) => void
 }
 
-export default function ListInviteForm({ listId, onCreate }: ListInviteFormProps) {
+export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps) {
   const [email, setEmail] = useState('')
   const emailId = useId()
 

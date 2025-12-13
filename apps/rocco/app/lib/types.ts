@@ -5,11 +5,11 @@ type RouterOutputs = inferRouterOutputs<AppRouter>
 
 // Extract types from tRPC router outputs
 export type List = RouterOutputs['lists']['getAll'][number]
-export type ListInvite = RouterOutputs['invites']['getAll'][number]
+export type SentInvite = RouterOutputs['invites']['getByList'][number]
 export type Place = RouterOutputs['places']['getById']
 export type PlaceWithLists = RouterOutputs['places']['getDetailsById']
 export type Item = RouterOutputs['items']['getByListId'][number]
-export type InviteItem = RouterOutputs['invites']['getAll'][number]
+export type ReceivedInvite = RouterOutputs['invites']['getReceived'][number]
 
 // Additional types for the frontend
 export interface BaseModel {

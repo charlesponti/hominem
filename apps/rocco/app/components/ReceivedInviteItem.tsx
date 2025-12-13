@@ -2,14 +2,10 @@ import { Button } from '@hominem/ui/button'
 import { ArrowRight, ListCheck } from 'lucide-react'
 import { useCallback } from 'react'
 import { Link } from 'react-router'
-import type { inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '~/lib/trpc/router'
 import { trpc } from '~/lib/trpc/client'
+import type { ReceivedInvite } from '~/lib/types'
 
-type RouterOutput = inferRouterOutputs<AppRouter>
-type InviteItem = RouterOutput['invites']['getAll'][number]
-
-type InviteListItemProps =
+type ReceivedInviteItemProps =
   | {
       variant: 'preview'
       preview: {
@@ -22,12 +18,12 @@ type InviteListItemProps =
     }
   | {
       variant?: 'invite'
-      listInvite: InviteItem
+      listInvite: ReceivedInvite
       currentUserEmail?: string
       canAccept?: boolean
     }
 
-const InviteListItem = (props: InviteListItemProps) => {
+const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   const inviteProps = props.variant !== 'preview' ? props : null
   const previewProps = props.variant === 'preview' ? props : null
 
@@ -119,7 +115,7 @@ const InviteListItem = (props: InviteListItemProps) => {
         {accepted ? (
           <Link
             to={`/lists/${list?.id || listInvite.listId}`}
-            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-hover)] text-primary-foreground rounded-lg shadow-sm transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-primary-foreground rounded-lg shadow-sm transition-colors font-medium"
           >
             <span>View list</span>
             <ArrowRight size={18} />
@@ -140,7 +136,7 @@ const InviteListItem = (props: InviteListItemProps) => {
   )
 }
 
-export default InviteListItem
+export default ReceivedInviteItem
 
 const AcceptButton = ({
   status,

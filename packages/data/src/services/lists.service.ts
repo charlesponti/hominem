@@ -878,7 +878,7 @@ export async function getListInvites(listId: string) {
     return await db.query.listInvite.findMany({
       where: eq(listInvite.listId, listId),
       with: {
-        user_invitedUserId: true, // Include user data for accepted invites
+        user_invitedUserId: true,
       },
     })
   } catch (error) {

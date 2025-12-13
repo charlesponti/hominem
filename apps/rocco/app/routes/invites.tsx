@@ -2,14 +2,14 @@ import { useSupabaseAuth } from '@hominem/ui'
 import { Mail } from 'lucide-react'
 import { useCallback } from 'react'
 import { useLoaderData } from 'react-router'
-import InviteListItem from '~/components/InviteListItem'
+import ReceivedInviteItem from '~/components/ReceivedInviteItem'
 import Loading from '~/components/loading'
 import PageTitle from '~/components/page-title'
 import { env } from '~/lib/env'
 import { getAuthState } from '~/lib/services/auth-loader.service'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
 import { createCaller } from '~/lib/trpc/server'
-import type { InviteItem } from '~/lib/types'
+import type { ReceivedInvite } from '~/lib/types'
 import type { Route } from './+types/invites'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -32,7 +32,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // Authenticated flow: fetch invites via tRPC
   const trpcServer = createCaller(request)
-  const invites = (await trpcServer.invites.getAll(token ? { token } : undefined)) as InviteItem[]
+  const invites = (await trpcServer.invites.getReceived(
+    token ? { token } : undefined
+  )) as ReceivedInvite[]
 
   // Check if token belongs to another user
   const tokenMismatch = token
@@ -149,7 +151,7 @@ const Invites = () => {
       {!requiresAuth && invites && invites.length > 0 && (
         <ul className="space-y-4">
           {preview && (
-            <InviteListItem
+            <ReceivedInviteItem
               variant="preview"
               preview={{
                 listName: preview.listName,
@@ -160,8 +162,8 @@ const Invites = () => {
               }}
             />
           )}
-          {invites.map((listInvite: InviteItem) => (
-            <InviteListItem
+          {invites.map((listInvite: ReceivedInvite) => (
+            <ReceivedInviteItem
               key={`${listInvite.listId}-${listInvite.token}`}
               listInvite={listInvite}
               currentUserEmail={currentUserEmail}

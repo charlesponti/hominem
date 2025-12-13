@@ -53,7 +53,5 @@ export const itemsRouter = router({
 
   getByListId: publicProcedure
     .input(z.object({ listId: z.string().uuid() }))
-    .query(async ({ input }) => {
-      return await getItemsByListId(input.listId)
-    }),
+    .query(async ({ input }) => getItemsByListId(input.listId)),
 })

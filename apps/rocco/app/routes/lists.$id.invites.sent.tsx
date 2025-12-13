@@ -7,7 +7,7 @@ import { trpc } from '~/lib/trpc/client'
 
 const ListSentInvites = () => {
   const { userId } = useSupabaseAuth()
-  const { data, isLoading } = trpc.invites.getAllOutbound.useQuery()
+  const { data, isLoading } = trpc.invites.getSent.useQuery()
 
   if (!userId) {
     return <Navigate to="/" replace />

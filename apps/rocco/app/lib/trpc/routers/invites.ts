@@ -17,7 +17,7 @@ import { z } from 'zod'
 import { protectedProcedure, router } from '../context'
 
 export const invitesRouter = router({
-  getAll: protectedProcedure
+  getReceived: protectedProcedure
     .input(
       z
         .object({
@@ -78,7 +78,7 @@ export const invitesRouter = router({
     }),
 
   // Get invites sent by the current user (outbound)
-  getAllOutbound: protectedProcedure.query(async ({ ctx }) => {
+  getSent: protectedProcedure.query(async ({ ctx }) => {
     return await getOutboundInvites(ctx.user.id)
   }),
 
