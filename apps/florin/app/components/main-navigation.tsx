@@ -241,7 +241,7 @@ export function MainNavigation({ isAuthenticated }: { isAuthenticated?: boolean 
           )}
         >
           <div className="relative w-full h-full overflow-auto p-6 flex flex-col">
-            <h2 className="font-serif text-xl mb-8 opacity-0 animate-[menuSlideUp_0.4s_cubic-bezier(0.22,1,0.36,1)_0.1s_forwards]">
+            <h2 className="font-serif text-xl mb-8 opacity-0 animate-[menu-slide-up_0.4s_cubic-bezier(0.22,1,0.36,1)_0.1s_forwards]">
               Navigation
             </h2>
 
@@ -259,7 +259,7 @@ export function MainNavigation({ isAuthenticated }: { isAuthenticated?: boolean 
                   )}
                   style={{
                     opacity: 0,
-                    animation: `menuSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${0.1 + index * 0.05}s forwards`,
+                    animation: `menu-slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${0.1 + index * 0.05}s forwards`,
                   }}
                 >
                   <div className="w-10 flex items-center justify-center">
@@ -269,19 +269,6 @@ export function MainNavigation({ isAuthenticated }: { isAuthenticated?: boolean 
                 </RouteLink>
               ))}
             </nav>
-
-            <div
-              className="mt-auto opacity-0"
-              style={{
-                animation: 'menuSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards',
-              }}
-            >
-              <div className="border-t border-muted pt-4">
-                <p className="text-sm text-muted-foreground">
-                  © {new Date().getFullYear()} Hominem. All rights reserved.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       )}

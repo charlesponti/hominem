@@ -148,8 +148,8 @@ export function MainNavigation() {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="bg-purple-500 p-2 rounded-md">
-                <Sparkles className="size-4 text-white" />
+              <span className="bg-primary p-2 rounded-md">
+                <Sparkles className="size-4 text-primary-foreground" />
               </span>
               <span className="font-bold text-lg">Animus</span>
             </Link>
@@ -198,8 +198,8 @@ export function MainNavigation() {
         <div className="flex h-16 items-center px-4">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <span className="bg-purple-500 p-2 rounded-md">
-              <Sparkles className="size-4 text-white" />
+            <span className="bg-primary p-2 rounded-md">
+              <Sparkles className="size-4 text-primary-foreground" />
             </span>
             <span className="font-bold text-lg">Animus</span>
           </Link>

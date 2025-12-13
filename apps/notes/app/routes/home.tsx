@@ -22,7 +22,7 @@ export default function HomePage() {
       <div className="flex flex-col sm:flex-row gap-4">
         <Link
           to="/notes"
-          className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+          className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary transition-colors"
         >
           Open Animus
         </Link>

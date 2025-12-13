@@ -12,12 +12,12 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     <span
       className={`px-2 py-1 rounded ${
         goalStatus === 'completed'
-          ? 'bg-green-50 text-green-700'
+          ? 'bg-accent text-accent-foreground'
           : goalStatus === 'in_progress'
-            ? 'bg-blue-50 text-blue-700'
+            ? 'bg-secondary text-secondary-foreground'
             : goalStatus === 'archived'
-              ? 'bg-gray-50 text-gray-700'
-              : 'bg-yellow-50 text-yellow-700'
+              ? 'bg-muted text-muted-foreground'
+              : 'bg-accent text-accent-foreground'
       }`}
     >
       {goalStatus.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}

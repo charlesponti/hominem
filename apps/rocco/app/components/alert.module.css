@@ -8,7 +8,7 @@
   border-radius: 0.75rem;
   backdrop-filter: blur(8px);
   transition: all 0.2s ease;
-  animation: fadeIn 0.3s ease forwards;
+  animation: fade-in-alert 0.3s ease forwards;
 }
 
 /* Type-specific styles */
@@ -34,17 +34,6 @@
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.2);
   color: #3730a3;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .iconWrapper {
