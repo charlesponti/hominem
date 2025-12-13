@@ -79,22 +79,17 @@ export const pullCommand = new Command('pull')
       await displayResults(results as NotionResult[], queryOptions)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        // eslint-disable-next-line no-console
         console.error(chalk.red('❌ Configuration error:'))
         error.errors.forEach((err) => {
-          // eslint-disable-next-line no-console
           console.error(chalk.red(`  - ${err.path.join('.')}: ${err.message}`))
         })
-        // eslint-disable-next-line no-console
         console.error(
           chalk.yellow(
             '\n💡 Make sure to set NOTION_TOKEN and NOTION_DATABASE_ID environment variables'
           )
         )
-        // eslint-disable-next-line no-console
         console.error(chalk.yellow('   You can create a .env file or export them in your shell'))
       } else {
-        // eslint-disable-next-line no-console
         console.error(chalk.red('❌ Error fetching data from Notion:'), error)
       }
       process.exit(1)

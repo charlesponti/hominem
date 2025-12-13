@@ -58,7 +58,6 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
 
         {preview.coverPhoto ? (
           <div className="w-full h-40 bg-gray-100 rounded-md overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={preview.coverPhoto}
               alt={preview.listName}

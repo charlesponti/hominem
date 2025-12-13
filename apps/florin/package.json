@@ -12,13 +12,10 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@ai-sdk/google": "^1.1.10",
-    "@ai-sdk/openai": "^1.1.9",
     "@hominem/auth": "workspace:*",
     "@hominem/data": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
-    "@hookform/resolvers": "^5.0.1",
     "@react-router/node": "^7.5.2",
     "@react-router/serve": "^7.5.2",
     "@shadcn/ui": "^0.0.4",
@@ -36,8 +33,6 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "date-fns": "^3.6.0",
-    "eslint": "^9.0.0",
-    "eslint-plugin-react": "^7.37.4",
     "framer-motion": "^12.4.1",
     "isbot": "^5.1.17",
     "lucide-react": "^0.484.0",
@@ -82,7 +77,7 @@
     "postcss": "^8.5.1",
     "react-router-devtools": "^1.1.0",
     "typescript": "5.9.3",
-    "vite": "^5.4.11",
+    "vite": "6.3.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.1.2",
     "whatwg-fetch": "^3.6.20"

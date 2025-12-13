@@ -42,10 +42,8 @@ export const syncCommand = new Command('sync')
   .option('--tag-prefix <prefix>', 'Prefix for auto-generated tags', 'notion')
   .action(async (options) => {
     try {
-      // Check authentication
       const token = await getValidAccessToken()
       if (!token) {
-        // eslint-disable-next-line no-console
         console.error(chalk.red('❌ Authentication required. Please run `hominem auth` first.'))
         process.exit(1)
       }
@@ -78,8 +76,8 @@ export const syncCommand = new Command('sync')
         database_id: config.NOTION_DATABASE_ID,
         page_size: syncOptions.limit,
         start_cursor: syncOptions.startCursor,
-        filter: syncOptions.filter as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        sorts: syncOptions.sort as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        filter: syncOptions.filter as any,
+        sorts: syncOptions.sort as any,
       })
 
       const results = response.results as NotionResult[]
@@ -96,22 +94,17 @@ export const syncCommand = new Command('sync')
       await syncResults(results, syncOptions)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        // eslint-disable-next-line no-console
         console.error(chalk.red('❌ Configuration error:'))
         error.errors.forEach((err) => {
-          // eslint-disable-next-line no-console
           console.error(chalk.red(`  - ${err.path.join('.')}: ${err.message}`))
         })
-        // eslint-disable-next-line no-console
         console.error(
           chalk.yellow(
             '\n💡 Make sure to set NOTION_TOKEN and NOTION_DATABASE_ID environment variables'
           )
         )
-        // eslint-disable-next-line no-console
         console.error(chalk.yellow('   You can create a .env file or export them in your shell'))
       } else {
-        // eslint-disable-next-line no-console
         console.error(chalk.red('❌ Error syncing data:'), error)
       }
       process.exit(1)
@@ -144,7 +137,6 @@ async function syncResults(results: NotionResult[], options: SyncOptions) {
         errorCount++
         const errorMsg = `Failed to sync ${result.id}: ${error instanceof Error ? error.message : String(error)}`
         errors.push(errorMsg)
-        // eslint-disable-next-line no-console
         console.error(chalk.red(`  ❌ ${errorMsg}`))
       }
     }

@@ -12,6 +12,8 @@ html, body {
   padding: 0;
   box-sizing: border-box;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 @theme {
@@ -213,6 +215,10 @@ html, body {
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+      /* Reset problematic properties that may be injected by libraries or scripts */
+      overflow: visible !important;
+      position: static !important;
+      pointer-events: auto !important;
   }
   button {
     cursor: pointer;
@@ -221,7 +227,6 @@ html, body {
 
   /* Ensure Radix portals work correctly */
   [data-radix-portal] {
-    position: relative;
     z-index: 9999;
   }
 
