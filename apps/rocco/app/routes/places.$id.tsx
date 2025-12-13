@@ -1,6 +1,3 @@
-import { Button } from '@hominem/ui/button'
-import { ListPlus } from 'lucide-react'
-import { useCallback } from 'react'
 import z from 'zod'
 import PageTitle from '~/components/page-title'
 import AddPlaceToList from '~/components/places/AddPlaceToList'
@@ -12,7 +9,6 @@ import PlaceRating from '~/components/places/PlaceRating'
 import PlaceTypes from '~/components/places/PlaceTypes'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import SocialProofSection from '~/components/places/SocialProofSection'
-import { useModal } from '~/hooks/useModal'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceWithLists } from '~/lib/types'
 import type { Route } from './+types/places.$id'
@@ -41,11 +37,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
 export default function PlacePage({ loaderData }: Route.ComponentProps) {
   const { place } = loaderData
-  const { isOpen, open, setIsOpen } = useModal()
-
-  const onSaveClick = useCallback(() => {
-    open()
-  }, [open])
 
   return (
     <>
@@ -59,16 +50,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
             <PageTitle
               title={place.name}
               variant="serif"
-              actions={
-                <Button
-                  type="button"
-                  onClick={onSaveClick}
-                  className="flex items-center gap-2 transition-colors"
-                >
-                  <ListPlus size={20} />
-                  <span>Save</span>
-                </Button>
-              }
+              actions={<AddPlaceToList place={place} />}
             />
             <PlaceTypes types={place.types || []} />
           </div>
@@ -105,8 +87,6 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
           )}
         </div>
       </div>
-
-      <AddPlaceToList place={place} isOpen={isOpen} onOpenChange={setIsOpen} />
     </>
   )
 }

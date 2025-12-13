@@ -1,6 +1,7 @@
 import type { SentInvite } from '~/lib/types'
 import SentInviteItem from './sent-invite-item'
 import InvitesEmptyState from './invites-empty-state'
+import ListSurface from '../list-surface'
 
 type SentInvitesProps = {
   invites: SentInvite[]
@@ -14,7 +15,7 @@ export default function SentInvites({ invites, listId, onInviteDeleted }: SentIn
   }
 
   return (
-    <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <ListSurface>
       {invites.map((invite) => (
         <SentInviteItem
           key={invite.invitedUserEmail}
@@ -23,6 +24,6 @@ export default function SentInvites({ invites, listId, onInviteDeleted }: SentIn
           onDelete={onInviteDeleted}
         />
       ))}
-    </ul>
+    </ListSurface>
   )
 }

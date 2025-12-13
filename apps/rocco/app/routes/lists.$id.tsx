@@ -1,22 +1,21 @@
 import { useSupabaseAuth } from '@hominem/ui'
-import { Pencil, UserPlus } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { UserPlus } from 'lucide-react'
+import { useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
 import { Link, redirect, useParams } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists/list-menu'
-import ListTitleForm from '~/components/lists/list-title'
-import PageTitle from '~/components/page-title'
+import ListTitleEdit from '~/components/lists/list-title-edit'
 import ListVisibilityBadge from '~/components/lists/list-visibility-badge'
 import Loading, { LoadingScreen } from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
+import PageTitle from '~/components/page-title'
 import PlacesList from '~/components/places/places-list'
 import { MapInteractionProvider } from '~/contexts/map-interaction-context'
 import { useGeolocation } from '~/hooks/useGeolocation'
 import { trpc } from '~/lib/trpc/client'
 import type { PlaceLocation } from '~/lib/types'
-import { Button } from '@hominem/ui/button'
 
 export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
   if (!params.id) {
@@ -35,16 +34,9 @@ export function HydrateFallback() {
   )
 }
 
-// Default center (San Francisco) when no places or location available
-const DEFAULT_CENTER: PlaceLocation = {
-  latitude: 37.7749,
-  longitude: -122.4194,
-}
-
 export default function ListPage() {
   const { user } = useSupabaseAuth()
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
   const params = useParams<{ id: string }>()
   const { data: listData, isLoading } = trpc.lists.getById.useQuery({
     id: params.id || '',
@@ -55,18 +47,6 @@ export default function ListPage() {
   const handleDeleteError = () => {
     setDeleteError('Could not delete place. Please try again.')
   }
-
-  const handleStartEditing = useCallback(() => {
-    setIsEditing(true)
-  }, [])
-
-  const handleCancelEditing = useCallback(() => {
-    setIsEditing(false)
-  }, [])
-
-  const handleEditSuccess = useCallback(() => {
-    setIsEditing(false)
-  }, [])
 
   const isOwner = data?.userId === user?.id
   const hasAccess = data?.hasAccess ?? isOwner
@@ -80,17 +60,6 @@ export default function ListPage() {
       name: p.name,
       imageUrl: p.imageUrl,
     }))
-
-  const mapCenter = useMemo(() => {
-    return markers.length > 0
-      ? (markers[0] as PlaceLocation)
-      : currentLocation
-        ? ({
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
-          } as PlaceLocation)
-        : DEFAULT_CENTER
-  }, [markers, currentLocation])
 
   if (isLoading) {
     return <LoadingScreen />
@@ -109,48 +78,31 @@ export default function ListPage() {
       <div className="flex flex-col gap-4 w-full">
         <div className="flex-1 space-y-2">
           <div className="flex justify-between items-center">
-            {isEditing ? (
-              <ListTitleForm
-                listId={data.id}
-                currentName={data.name}
-                onSuccess={handleEditSuccess}
-                onCancel={handleCancelEditing}
-              />
-            ) : (
-              <>
-                <PageTitle title={data.name} variant="serif" />
-                {isOwner && (
-                  <>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={handleStartEditing}
-                      className="size-8 hover:text-indigo-600 focus-visible:bg-indigo-50"
-                    >
-                      <Pencil size={16} />
-                      <span className="sr-only">Edit list name</span>
-                    </Button>
-                    <Link to={`/lists/${data.id}/invites`} className="flex items-center gap-2">
-                      <UserPlus size={18} />
-                    </Link>
-                  </>
-                )}
-                <div className="flex items-center">
-                  <ListMenu list={data} isOwnList={isOwner} />
-                </div>
-              </>
+            <PageTitle title={data.name} variant="serif" />
+            {isOwner && (
+              <div className="flex items-center gap-2">
+                <ListTitleEdit listId={data.id} currentName={data.name} />
+                <Link to={`/lists/${data.id}/invites`} className="flex items-center gap-2">
+                  <UserPlus size={18} />
+                </Link>
+                <ListMenu list={data} isOwnList={isOwner} />
+              </div>
+            )}
+            {!isOwner && (
+              <div className="flex items-center">
+                <ListMenu list={data} isOwnList={isOwner} />
+              </div>
             )}
           </div>
           <ListVisibilityBadge isPublic={data.isPublic} />
         </div>
 
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+        <div className="size-full grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="overflow-y-auto space-y-4 pb-8">
             {data && (
               <PlacesList
                 places={data.places || []}
                 listId={data.id}
-                listName={data.name}
                 canAdd={hasAccess}
                 onError={handleDeleteError}
               />
@@ -162,7 +114,6 @@ export default function ListPage() {
               isLoadingCurrentLocation={isLoadingLocation}
               currentLocation={currentLocation}
               zoom={12}
-              center={mapCenter}
               markers={markers}
             />
           </div>

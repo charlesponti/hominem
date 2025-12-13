@@ -133,7 +133,7 @@ function PlacesAutocomplete({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
           data-testid="places-autocomplete-results"
         >
           {isLoading && <PlacesAutocompleteLoading show={!!value} />}

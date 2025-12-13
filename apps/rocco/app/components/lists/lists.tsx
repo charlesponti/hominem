@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { Link } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
 import Loading from '../loading'
+import ListSurface from '../list-surface'
 
 export default function Lists() {
   const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
@@ -39,7 +40,7 @@ export default function Lists() {
           <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
         </div>
       ) : (
-        <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <ListSurface>
           {lists.map((list) => (
             <li key={list.id}>
               <Link
@@ -58,7 +59,7 @@ export default function Lists() {
               </Link>
             </li>
           ))}
-        </ul>
+        </ListSurface>
       )}
     </div>
   )

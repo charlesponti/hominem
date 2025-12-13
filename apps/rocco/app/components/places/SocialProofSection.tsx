@@ -5,6 +5,7 @@ import { useSupabaseAuthContext } from '@hominem/ui'
 import { trpc } from '~/lib/trpc/client'
 import type { PlaceWithLists } from '~/lib/types'
 import { env } from '~/lib/env'
+import ListSurface from '~/components/list-surface'
 
 const buildImageUrl = (src?: string | null, width = 400, height = 300): string | null => {
   if (!src) return null
@@ -48,7 +49,7 @@ const SocialProofSection = ({ place }: Props) => {
         {listsContainingPlace.length === 1 ? 'list' : 'lists'}
       </h3>
 
-      <ul className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <ListSurface>
         {listsContainingPlace.map((list) => {
           const resolvedThumbnail = buildImageUrl(list.imageUrl, 80, 80)
 
@@ -84,7 +85,7 @@ const SocialProofSection = ({ place }: Props) => {
             </li>
           )
         })}
-      </ul>
+      </ListSurface>
     </div>
   )
 }

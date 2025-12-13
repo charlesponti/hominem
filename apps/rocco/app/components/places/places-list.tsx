@@ -2,25 +2,18 @@ import type { ListPlace } from '@hominem/data'
 import { MapPin } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { href, useNavigate } from 'react-router'
-
 import AddPlaceControl from '~/components/lists/add-place-control'
+import ListSurface from '../list-surface'
 import PlaceItem from './place-item'
 
 interface PlacesListProps {
   places: ListPlace[]
   listId: string
-  listName: string
   canAdd?: boolean
   onError?: () => void
 }
 
-export default function PlacesList({
-  places,
-  listId,
-  listName,
-  canAdd = true,
-  onError,
-}: PlacesListProps) {
+export default function PlacesList({ places, listId, canAdd = true, onError }: PlacesListProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const listRef = useRef<HTMLUListElement>(null)
   const navigate = useNavigate()
@@ -53,7 +46,7 @@ export default function PlacesList({
   )
 
   return (
-    <AddPlaceControl listId={listId} listName={listName} canAdd={canAdd}>
+    <AddPlaceControl listId={listId} canAdd={canAdd}>
       {({ isOpen }) => (
         <>
           {places.length === 0 && !isOpen ? (
@@ -70,9 +63,9 @@ export default function PlacesList({
 
           {places.length > 0 ? (
             <div onKeyDown={handleKeyDown}>
-              <ul
+              <ListSurface
                 ref={listRef}
-                className="list-none divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                className="divide-gray-200 bg-white rounded-xl shadow-sm border border-border"
                 aria-label="Places in list"
               >
                 {places.map((place, index) => (
@@ -84,7 +77,7 @@ export default function PlacesList({
                     isSelected={selectedIndex === index}
                   />
                 ))}
-              </ul>
+              </ListSurface>
             </div>
           ) : null}
         </>

@@ -79,7 +79,7 @@ const PlaceListItem = ({
                   <MoreVertical size={16} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white border border-gray-200 text-gray-900 shadow-lg">
+              <DropdownMenuContent className="bg-white border border-border text-gray-900 shadow-lg">
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault()

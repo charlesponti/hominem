@@ -45,7 +45,7 @@ export default function CreateListPage() {
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-border p-6">
         <ListForm
           onCreate={handleCreate}
           onCancel={handleCancel}

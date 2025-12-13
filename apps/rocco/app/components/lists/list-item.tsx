@@ -56,7 +56,7 @@ function ListItem({ list, isOwnList, 'aria-label': ariaLabel }: ListItemProps) {
             >
               <MoreVertical size={18} />
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-white border border-gray-200 text-gray-900 shadow-lg rounded-xl">
+            <DropdownMenuContent className="bg-white border border-border text-gray-900 shadow-lg rounded-xl">
               <DropdownMenuItem asChild>
                 <Link
                   to={`/lists/${list.id}/edit`}

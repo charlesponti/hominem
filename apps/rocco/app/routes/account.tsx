@@ -84,7 +84,7 @@ export default function Account() {
     <div className="h-full overflow-y-auto p-6">
       <div className="space-y-6">
         <PageTitle title="Account" variant="sans" />
-        <div className="border border-gray-200 rounded-lg shadow-md p-4 flex flex-col gap-4">
+        <div className="border border-border rounded-lg shadow-md p-4 flex flex-col gap-4">
           <div className="flex items-center gap-4">
             {user.user_metadata.image ||
             user.user_metadata.picture ||

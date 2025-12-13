@@ -9,7 +9,7 @@ import {
   useMap,
   useMapsLibrary,
 } from '@vis.gl/react-google-maps'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Alert from '~/components/alert'
 import Loading from '~/components/loading'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
@@ -17,12 +17,18 @@ import type { Place, PlaceLocation } from '~/lib/types'
 import { cn } from '~/lib/utils'
 import styles from './map.module.css'
 
+// Default center (San Francisco) when no places or location available
+const DEFAULT_CENTER: PlaceLocation = {
+  latitude: 37.7749,
+  longitude: -122.4194,
+}
+
 export type RoccoMapProps = {
   isLoadingCurrentLocation: boolean
   currentLocation?: PlaceLocation | null
   setSelected?: (place: Place | null) => void
   zoom: number
-  center: PlaceLocation
+  center?: PlaceLocation
   markers: PlaceLocation[]
   onMapClick?: (event: MapMouseEvent) => void
   onMarkerClick?: () => void
@@ -87,9 +93,26 @@ const RoccoMap = ({
   const markerLibrary = useMapsLibrary('marker')
   const hoverAnimation = markerLibrary?.Animation?.BOUNCE
 
+  // Calculate initial center: use provided center, or first marker, or current location, or default
+  const initialCenter = useMemo(() => {
+    if (center) {
+      return center
+    }
+    if (markers.length > 0) {
+      return markers[0] as PlaceLocation
+    }
+    if (currentLocation) {
+      return {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+      } as PlaceLocation
+    }
+    return DEFAULT_CENTER
+  }, [center, markers, currentLocation])
+
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({
-    lat: center.latitude,
-    lng: center.longitude,
+    lat: initialCenter.latitude,
+    lng: initialCenter.longitude,
   })
   const [mapZoom, setMapZoom] = useState(zoom)
 
@@ -155,13 +178,13 @@ const RoccoMap = ({
         ) : null}
         <GoogleMap
           defaultZoom={zoom}
-          defaultCenter={{ lat: center.latitude, lng: center.longitude }}
+          defaultCenter={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
           onClick={onClick}
           onIdle={handleMapIdle}
           className={cn('flex size-full', styles.map)}
         >
           <MapUpdater
-            center={{ lat: center.latitude, lng: center.longitude }}
+            center={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
             markers={markers}
             zoom={zoom}
           />

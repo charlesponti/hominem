@@ -4,7 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-html, body {
+html,
+body {
   width: 100%;
   min-height: 100vh;
   height: 100%;
@@ -137,7 +138,7 @@ html, body {
     --accent-foreground: oklch(0.25 0.08 85);
     --destructive: oklch(0.6 0.2 0);
     --destructive-foreground: oklch(0.98 0.005 85);
-    --border: oklch(0.82 0.01 85);
+    --border: var(--color-gray-200);
     --input: oklch(0.82 0.01 85);
     --ring: oklch(0.25 0.08 85);
     --chart-1: oklch(0.45 0.12 85);
@@ -215,10 +216,6 @@ html, body {
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
-      /* Reset problematic properties that may be injected by libraries or scripts */
-      overflow: visible !important;
-      position: static !important;
-      pointer-events: auto !important;
   }
   button {
     cursor: pointer;

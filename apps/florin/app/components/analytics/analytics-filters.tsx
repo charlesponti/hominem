@@ -1,20 +1,13 @@
+import { Button } from '@hominem/ui/button'
 import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/button'
 import { Card } from '@hominem/ui/components/ui/card'
 import { Label } from '@hominem/ui/components/ui/label'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@hominem/ui/components/ui/sheet'
 import { Skeleton } from '@hominem/ui/components/ui/skeleton'
 import { Switch } from '@hominem/ui/components/ui/switch'
+import * as Dialog from '@radix-ui/react-dialog'
 import { Filter, X } from 'lucide-react'
-import { type Dispatch, type SetStateAction, useId } from 'react'
+import { type Dispatch, type SetStateAction, useId, useState } from 'react'
 import { AccountSelect } from '~/components/account-select'
 import { CategorySelect } from '~/components/category-select'
 import { GroupBySelect } from '~/components/group-by-select'
@@ -202,89 +195,109 @@ export function AnalyticsFilters({
       }))
       .filter((cat) => cat.id && cat.name) || []
 
+  const [open, setOpen] = useState(false)
+
   return (
     <Card className="border-none shadow-none">
       <div className="px-4 py-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Filter Sheet Trigger */}
-          <Sheet>
-            <SheetTrigger asChild>
+          {/* Filter Dialog Trigger */}
+          <Dialog.Root open={open} onOpenChange={setOpen}>
+            <Dialog.Trigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
                 <Filter className="h-4 w-4" />
                 Filters
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Customize Filters</SheetTitle>
-                <SheetDescription>
-                  Refine your analytics view with these filter options
-                </SheetDescription>
-              </SheetHeader>
-              <div className="space-y-6 py-6">
-                {/* Date Range Filters */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={dateFromId}>From Date</Label>
-                    <DatePicker value={dateFrom} onSelect={setDateFrom} placeholder="Start date" />
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20 data-[state=open]:animate-fade-in" />
+              <Dialog.Content className="fixed right-0 top-0 z-50 h-full w-full sm:max-w-md overflow-y-auto bg-white shadow-lg focus:outline-none">
+                <div className="p-6">
+                  <div className="mb-6">
+                    <Dialog.Title className="text-lg font-bold">Customize Filters</Dialog.Title>
+                    <Dialog.Description className="text-sm text-muted-foreground">
+                      Refine your analytics view with these filter options
+                    </Dialog.Description>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={dateToId}>To Date</Label>
-                    <DatePicker value={dateTo} onSelect={setDateTo} placeholder="End date" />
-                  </div>
-                </div>
-
-                {/* Account and Category Filters */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <AccountSelect
-                    selectedAccount={selectedAccount}
-                    setSelectedAccount={setSelectedAccount}
-                    isLoading={isLoading}
-                    showLabel={true}
-                  />
-                  <CategorySelect
-                    selectedCategory={selectedCategory}
-                    onCategoryChange={setSelectedCategory}
-                    categories={safeCategories}
-                    isLoading={isLoading}
-                  />
-                </div>
-
-                {/* Group By Filter */}
-                <GroupBySelect groupBy={groupBy} onGroupByChange={setGroupBy} />
-
-                {/* Toggle Filters */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor={includeStatsId}>Include Statistics</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Show summary statistics with the data
-                      </p>
+                  <div className="space-y-6">
+                    {/* Date Range Filters */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={dateFromId}>From Date</Label>
+                        <DatePicker
+                          value={dateFrom}
+                          onSelect={setDateFrom}
+                          placeholder="Start date"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={dateToId}>To Date</Label>
+                        <DatePicker value={dateTo} onSelect={setDateTo} placeholder="End date" />
+                      </div>
                     </div>
-                    <Switch
-                      id={includeStatsId}
-                      checked={includeStats}
-                      onCheckedChange={setIncludeStats}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor={compareToPreviousId}>Compare to Previous Period</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Show trend information compared to the previous period
-                      </p>
+
+                    {/* Account and Category Filters */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <AccountSelect
+                        selectedAccount={selectedAccount}
+                        setSelectedAccount={setSelectedAccount}
+                        isLoading={isLoading}
+                        showLabel={true}
+                      />
+                      <CategorySelect
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={setSelectedCategory}
+                        categories={safeCategories}
+                        isLoading={isLoading}
+                      />
                     </div>
-                    <Switch
-                      id={compareToPreviousId}
-                      checked={compareToPrevious}
-                      onCheckedChange={setCompareToPrevious}
-                    />
+
+                    {/* Group By Filter */}
+                    <GroupBySelect groupBy={groupBy} onGroupByChange={setGroupBy} />
+
+                    {/* Toggle Filters */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor={includeStatsId}>Include Statistics</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Show summary statistics with the data
+                          </p>
+                        </div>
+                        <Switch
+                          id={includeStatsId}
+                          checked={includeStats}
+                          onCheckedChange={setIncludeStats}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor={compareToPreviousId}>Compare to Previous Period</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Show trend information compared to the previous period
+                          </p>
+                        </div>
+                        <Switch
+                          id={compareToPreviousId}
+                          checked={compareToPrevious}
+                          onCheckedChange={setCompareToPrevious}
+                        />
+                      </div>
+                    </div>
                   </div>
+                  <Dialog.Close asChild>
+                    <button
+                      type="button"
+                      className="absolute right-4 top-4 text-gray-400 hover:text-gray-700"
+                      aria-label="Close"
+                    >
+                      <span className="sr-only">Close</span>×
+                    </button>
+                  </Dialog.Close>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
 
           {/* Active Filters Display */}
           <div className="flex-1 min-w-0">

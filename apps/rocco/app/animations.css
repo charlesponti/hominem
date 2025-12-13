@@ -1,3 +1,14 @@
+ @keyframes fade-in-up {
+ 0% { opacity: 0; transform: translateY(24px) scale(0.98); }
+ 100% { opacity: 1; transform: translateY(0) scale(1); }
+ }
+ @keyframes fade-out-down {
+   0% { opacity: 1; transform: translateY(0) scale(1); }
+   100% { opacity: 0; transform: translateY(24px) scale(0.98); }
+ }
+ .animate-fade-in-up { animation: fade-in-up 0.35s cubic-bezier(.4,0,.2,1) both; }
+ .animate-fade-out-down { animation: fade-out-down 0.25s cubic-bezier(.4,0,.2,1) both; }
+ 
 @keyframes fadeInUp {
   from {
     opacity: 0;

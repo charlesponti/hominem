@@ -3,6 +3,7 @@ import { trpc } from '~/lib/trpc/client'
 import Loading from '../loading'
 import PlaceRow from './place-row'
 import { href } from 'react-router'
+import ListSurface from '../list-surface'
 
 type Props = {
   latitude: number
@@ -74,7 +75,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
         {/* <span className="text-sm font-light font-serif text-gray-500">Within {radiusKm}km</span> */}
       </div>
 
-      <ul className="list-none divide-y divide-gray-100 bg-white/30 rounded-xl shadow-sm border border-white/20 overflow-hidden">
+      <ListSurface>
         {places.map((place) => {
           return (
             <li key={place.id}>
@@ -100,7 +101,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
             </li>
           )
         })}
-      </ul>
+      </ListSurface>
     </div>
   )
 }

@@ -48,7 +48,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   if (previewProps) {
     const { preview } = previewProps
     return (
-      <li className="flex flex-col gap-3 p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+      <li className="flex flex-col gap-3 p-6 bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
             <ListCheck className="size-4 text-indigo-600" />
@@ -65,7 +65,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             />
           </div>
         ) : (
-          <div className="w-full h-40 rounded-md bg-linear-to-br from-indigo-50 to-purple-50 border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+          <div className="w-full h-40 rounded-md bg-linear-to-br from-indigo-50 to-purple-50 border border-dashed border-border flex items-center justify-center text-gray-400 text-sm">
             No photo yet
           </div>
         )}
@@ -103,7 +103,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   const { accepted, list } = listInvite
 
   return (
-    <li className="flex flex-col gap-3 p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+    <li className="flex flex-col gap-3 p-6 bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
