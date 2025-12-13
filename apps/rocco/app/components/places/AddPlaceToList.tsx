@@ -63,10 +63,7 @@ const AddPlaceToList = ({ place }: AddPlaceToListProps) => {
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Trigger asChild>
-        <Button
-          type="button"
-          className="flex items-center gap-2 transition-colors"
-        >
+        <Button type="button" className="flex items-center gap-2 transition-colors">
           <ListPlus size={20} />
           <span>Save</span>
         </Button>

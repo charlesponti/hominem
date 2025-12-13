@@ -232,13 +232,6 @@ const RoccoMap = ({
               }
             >
               <div className="flex flex-col gap-2 max-w-[200px]">
-                {selectedMarker.imageUrl && (
-                  <img
-                    src={selectedMarker.imageUrl}
-                    alt={selectedMarker.name}
-                    className="w-full h-24 object-cover rounded-md"
-                  />
-                )}
                 {selectedMarker.id && (
                   <a
                     href={`/places/${selectedMarker.id}`}

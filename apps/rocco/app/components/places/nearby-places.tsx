@@ -1,9 +1,9 @@
 import { MapPin } from 'lucide-react'
+import { href } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
+import ListSurface from '../list-surface'
 import Loading from '../loading'
 import PlaceRow from './place-row'
-import { href } from 'react-router'
-import ListSurface from '../list-surface'
 
 type Props = {
   latitude: number

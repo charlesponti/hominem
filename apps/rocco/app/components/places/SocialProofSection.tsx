@@ -1,11 +1,11 @@
-import { Link } from 'react-router'
-import { memo } from 'react'
-import { List } from 'lucide-react'
 import { useSupabaseAuthContext } from '@hominem/ui'
+import { List } from 'lucide-react'
+import { memo } from 'react'
+import { Link } from 'react-router'
+import ListSurface from '~/components/list-surface'
+import { env } from '~/lib/env'
 import { trpc } from '~/lib/trpc/client'
 import type { PlaceWithLists } from '~/lib/types'
-import { env } from '~/lib/env'
-import ListSurface from '~/components/list-surface'
 
 const buildImageUrl = (src?: string | null, width = 400, height = 300): string | null => {
   if (!src) return null

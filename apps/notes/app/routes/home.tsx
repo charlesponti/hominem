@@ -1,5 +1,4 @@
-import { type LoaderFunctionArgs, redirect } from 'react-router'
-import { Link } from 'react-router'
+import { Link, type LoaderFunctionArgs, redirect } from 'react-router'
 import { getServerSession } from '~/lib/supabase/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {

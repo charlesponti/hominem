@@ -1,4 +1,4 @@
-import type { GoalStatus } from '@hominem/utils/types'
+import type { GoalStatus } from '@hominem/data/types'
 
 interface StatusBadgeProps {
   status: string | GoalStatus

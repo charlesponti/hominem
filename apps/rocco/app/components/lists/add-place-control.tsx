@@ -9,7 +9,6 @@ import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places'
 
 interface AddPlaceControlProps {
   listId: string
-  listName: string
   canAdd?: boolean
   children?: (controls: { isOpen: boolean; open: () => void; close: () => void }) => ReactNode
 }
@@ -18,7 +17,6 @@ type AddStatus = 'idle' | 'selecting' | 'submitting' | 'success'
 
 export default function AddPlaceControl({
   listId,
-  listName,
   canAdd = true,
   children,
 }: AddPlaceControlProps) {
@@ -46,24 +44,13 @@ export default function AddPlaceControl({
     onSuccess: () => {
       clearSuccessTimer()
       setStatus('success')
-      toast({
-        title: 'Added!',
-        description: `Place added to ${listName}.`,
-      })
 
       successTimerRef.current = setTimeout(() => {
         setStatus('idle')
         setIsOpen(false)
       }, 2000)
     },
-    onError: (error) => {
-      setStatus('selecting')
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to add place to list.',
-        variant: 'destructive',
-      })
-    },
+    onError: () => setStatus('selecting')
   })
 
   const open = () => {

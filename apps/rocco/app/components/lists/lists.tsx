@@ -2,8 +2,8 @@ import { useSupabaseAuthContext } from '@hominem/ui'
 import { Plus } from 'lucide-react'
 import { Link } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
-import Loading from '../loading'
 import ListSurface from '../list-surface'
+import Loading from '../loading'
 
 export default function Lists() {
   const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
