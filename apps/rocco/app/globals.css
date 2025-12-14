@@ -2,6 +2,9 @@
 @import "../../../packages/ui/src/styles/animations.css";
 @plugin 'tailwindcss-animate';
 
+/* Tell Tailwind to scan the packages/ui directory for classes */
+@source "../../../packages/ui/src";
+
 /* Rocco-specific HTML/Body styles */
 html,
 body {

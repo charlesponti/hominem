@@ -34,5 +34,8 @@ export default [
     // Auth Routes
     route('/auth/google', 'routes/auth/google.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
+
+    // Catch-all 404 route
+    route('*', 'routes/$.tsx'),
   ]),
 ] as RouteConfig

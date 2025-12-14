@@ -26,5 +26,8 @@ export default [
     route('/auth/signin', 'routes/auth/signin.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
+
+    // Catch-all 404 route
+    route('*', 'routes/$.tsx'),
   ]),
 ] as RouteConfig

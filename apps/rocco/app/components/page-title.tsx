@@ -11,7 +11,7 @@ interface PageTitleProps {
 }
 
 const variantStyles = {
-  serif: 'font-serif font-semilight italic tracking-tighter text-4xl lg:text-5xl',
+  serif: 'heading-1',
   sans: 'text-2xl font-bold',
   large: 'text-3xl font-semilight',
 }

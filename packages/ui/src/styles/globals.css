@@ -478,6 +478,14 @@ body {
 
   /* Typography Design System */
 
+  /* Base Heading Style */
+  .heading {
+    font-family: var(--font-serif);
+    font-style: italic;
+    letter-spacing: -0.05em; /* tracking-tighter */
+    font-weight: 300; /* font-semilight */
+  }
+
   /* Heading & Display Styles */
   .display-1 {
     font-size: clamp(2.5rem, 4vw, 5rem);
@@ -488,19 +496,35 @@ body {
   }
 
   .heading-1 {
-    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 300; /* font-semilight */
+    font-size: clamp(2.25rem, 3vw, 3rem); /* text-4xl to text-5xl range */
+    letter-spacing: -0.06em; /* tighter for larger text */
   }
 
   .heading-2 {
-    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 300; /* font-semilight */
+    font-size: clamp(1.5rem, 2vw, 1.875rem); /* text-2xl range */
+    letter-spacing: -0.05em; /* tracking-tighter */
   }
 
   .heading-3 {
-    font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 300; /* font-semilight */
+    font-size: clamp(1.125rem, 1.5vw, 1.25rem); /* text-lg range */
+    letter-spacing: -0.04em; /* slightly less tight for smaller text */
   }
 
   .heading-4 {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 300; /* font-semilight */
     font-size: clamp(1rem, 1.25vw, 1.25rem);
+    letter-spacing: -0.03em; /* less tight for smaller text */
   }
 
   /* Body Styles */

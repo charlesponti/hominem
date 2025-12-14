@@ -73,9 +73,7 @@ const SocialProofSection = ({ place }: Props) => {
                         <List className="text-gray-400" size={20} />
                       )}
                     </div>
-                    <h3 className="font-serif italic tracking-tight font-semilight text-accent-foreground truncate text-lg">
-                      {list.name}
-                    </h3>
+                    <h3 className="heading-3 text-accent-foreground truncate">{list.name}</h3>
                   </div>
                   <span className="bg-accent text-accent-foreground text-sm rounded-full px-2.5 py-1 shrink-0">
                     {list.itemCount || 0}

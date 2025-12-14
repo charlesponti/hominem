@@ -19,6 +19,7 @@ import {
   searchPlaces as googleSearchPlaces,
 } from '~/lib/google-places.server'
 import {
+  extractPhotoReferences,
   mapGooglePlaceToPrediction,
   sanitizeStoredPhotos,
   transformGooglePlaceToPlaceInsert,
@@ -108,23 +109,84 @@ export const placesRouter = router({
 
       const { listIds, ...placeInput } = input
 
-      // Transform input to PlaceInsert format
+      // Fetch Google Place details if photos/imageUrl are missing
+      let fetchedPhotos: string[] | null = null
+      let fetchedImageUrl: string | null = null
+      let fetchedRating: number | null = null
+      let fetchedTypes: string[] | null = null
+      let fetchedAddress: string | null = null
+      let fetchedLatitude: number | null = null
+      let fetchedLongitude: number | null = null
+      let fetchedWebsiteUri: string | null = null
+      let fetchedPhoneNumber: string | null = null
+
+      const needsDetails =
+        !placeInput.photos ||
+        placeInput.photos.length === 0 ||
+        !placeInput.imageUrl ||
+        !placeInput.rating ||
+        !placeInput.types ||
+        placeInput.types.length === 0
+
+      if (needsDetails) {
+        try {
+          const googlePlace = await fetchGooglePlaceDetails({
+            placeId: placeInput.googleMapsId,
+            forceFresh: true,
+          })
+
+          if (googlePlace) {
+            // Extract photos
+            fetchedPhotos = extractPhotoReferences(googlePlace.photos)
+            fetchedImageUrl = fetchedPhotos.length > 0 && fetchedPhotos[0] ? fetchedPhotos[0] : null
+
+            // Use fetched data to fill in missing fields
+            fetchedRating = googlePlace.rating ?? null
+            fetchedTypes = googlePlace.types ?? null
+            fetchedAddress = googlePlace.formattedAddress ?? null
+            fetchedLatitude = googlePlace.location?.latitude ?? null
+            fetchedLongitude = googlePlace.location?.longitude ?? null
+            fetchedWebsiteUri = googlePlace.websiteUri ?? null
+            fetchedPhoneNumber = googlePlace.nationalPhoneNumber ?? null
+          }
+        } catch (error) {
+          logger.error('Failed to fetch Google Place details during create', {
+            error: error instanceof Error ? error.message : String(error),
+            googleMapsId: placeInput.googleMapsId,
+          })
+          // Continue with provided data if fetch fails
+        }
+      }
+
+      // Transform input to PlaceInsert format, using fetched data to fill gaps
       const placeData: PlaceInsert = {
         googleMapsId: placeInput.googleMapsId,
         name: placeInput.name,
-        address: placeInput.address ?? null,
-        latitude: placeInput.latitude ?? null,
-        longitude: placeInput.longitude ?? null,
+        address: placeInput.address ?? fetchedAddress ?? null,
+        latitude: placeInput.latitude ?? fetchedLatitude ?? null,
+        longitude: placeInput.longitude ?? fetchedLongitude ?? null,
         location:
           placeInput.latitude && placeInput.longitude
             ? [placeInput.longitude, placeInput.latitude]
-            : [0, 0],
-        types: placeInput.types ?? null,
-        rating: placeInput.rating ?? null,
-        websiteUri: placeInput.websiteUri ?? null,
-        phoneNumber: placeInput.phoneNumber ?? null,
-        photos: placeInput.photos ?? null,
-        imageUrl: placeInput.imageUrl ?? null,
+            : fetchedLatitude && fetchedLongitude
+              ? [fetchedLongitude, fetchedLatitude]
+              : [0, 0],
+        types:
+          placeInput.types && placeInput.types.length > 0
+            ? placeInput.types
+            : (fetchedTypes ?? null),
+        rating: placeInput.rating ?? fetchedRating ?? null,
+        websiteUri: placeInput.websiteUri ?? fetchedWebsiteUri ?? null,
+        phoneNumber: placeInput.phoneNumber ?? fetchedPhoneNumber ?? null,
+        photos:
+          placeInput.photos && placeInput.photos.length > 0
+            ? placeInput.photos
+            : (fetchedPhotos ?? null),
+        imageUrl:
+          placeInput.imageUrl ??
+          (placeInput.photos && placeInput.photos.length > 0
+            ? placeInput.photos[0]
+            : (fetchedImageUrl ?? null)),
       }
 
       const { place: createdPlace } = await addPlaceToLists(ctx.user.id, listIds ?? [], placeData)

@@ -5,13 +5,14 @@ import { useSupabaseAuth } from '@hominem/ui/supabase'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Heart, ListPlus, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useRevalidator } from 'react-router'
 import Loading from '~/components/loading'
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places'
 import { trpc } from '~/lib/trpc/client'
 import type { Place } from '~/lib/types'
 import { cn } from '~/lib/utils'
+import ListForm from '~/components/lists/list-form'
 import ListSurface from '../list-surface'
-import CreateListControls from './create-list-controls'
 
 interface AddPlaceToListProps {
   place: Place
@@ -22,6 +23,7 @@ const AddPlaceToList = ({ place }: AddPlaceToListProps) => {
   const { toast } = useToast()
   const [loadingListId, setLoadingListId] = useState<string | null>(null)
   const { isAuthenticated } = useSupabaseAuth()
+  const revalidator = useRevalidator()
 
   const { isLoading, data: rawLists } = trpc.lists.getAll.useQuery()
 
@@ -34,7 +36,10 @@ const AddPlaceToList = ({ place }: AddPlaceToListProps) => {
     }))
   }, [rawLists, place.googleMapsId])
   const { mutateAsync: removeFromList } = useRemoveListItem({
-    onSettled: () => setLoadingListId(null),
+    onSettled: () => {
+      setLoadingListId(null)
+      revalidator.revalidate()
+    },
   })
   const { mutate: addToList } = useAddPlaceToList({
     onSuccess: () => {
@@ -42,6 +47,7 @@ const AddPlaceToList = ({ place }: AddPlaceToListProps) => {
         title: 'Added to list!',
         variant: 'default',
       })
+      revalidator.revalidate()
     },
     onSettled: () => setLoadingListId(null),
   })
@@ -72,9 +78,7 @@ const AddPlaceToList = ({ place }: AddPlaceToListProps) => {
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-fade-in" />
         <Dialog.Content className="fixed left-1/2 bottom-0 z-50 w-full max-w-lg -translate-x-1/2 rounded-t-xl border border-border bg-slate-300/50 shadow-xl focus:outline-none pb-12">
           <div className="border-b border-border p-4">
-            <Dialog.Title className="text-2xl font-serif tracking-tighter italic font-semilight text-foreground">
-              Add to lists
-            </Dialog.Title>
+            <Dialog.Title className="heading-2 text-foreground">Add to lists</Dialog.Title>
             <Dialog.Description className="text-xs font-sans text-muted-foreground">
               Select lists to add this place to.
             </Dialog.Description>
@@ -85,10 +89,13 @@ const AddPlaceToList = ({ place }: AddPlaceToListProps) => {
             </div>
           ) : (
             <div className="flex flex-col gap-1 px-2 py-4">
-              <CreateListControls
-                isAuthenticated={isAuthenticated}
-                onCreate={(newList) => addToList({ listIds: [newList.id], place })}
-              />
+              <div className="w-full">
+                <ListForm
+                  isAuthenticated={isAuthenticated}
+                  onCreate={(newList) => addToList({ listIds: [newList.id], place })}
+                  onCancel={() => {}}
+                />
+              </div>
 
               {/* Existing lists */}
               <ListSurface>

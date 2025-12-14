@@ -15,11 +15,7 @@ interface AddPlaceControlProps {
 
 type AddStatus = 'idle' | 'selecting' | 'submitting' | 'success'
 
-export default function AddPlaceControl({
-  listId,
-  canAdd = true,
-  children,
-}: AddPlaceControlProps) {
+export default function AddPlaceControl({ listId, canAdd = true, children }: AddPlaceControlProps) {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [status, setStatus] = useState<AddStatus>('idle')
@@ -50,7 +46,7 @@ export default function AddPlaceControl({
         setIsOpen(false)
       }, 2000)
     },
-    onError: () => setStatus('selecting')
+    onError: () => setStatus('selecting'),
   })
 
   const open = () => {
@@ -90,26 +86,7 @@ export default function AddPlaceControl({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-end">
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            data-testid="add-to-list-button"
-            onClick={isOpen ? close : open}
-            disabled={!canAdd || status === 'submitting'}
-            className="flex items-center gap-2 disabled:bg-indigo-200"
-          >
-            {!isOpen ? (
-              <>
-                <PlusCircle size={18} />
-                <span>Add</span>
-              </>
-            ) : (
-              <XCircle size={18} />
-            )}
-          </Button>
-        </div>
-
+      <div className="flex gap-1">
         {showAutocomplete ? (
           <div className="relative w-full sm:max-w-md">
             <div
@@ -134,6 +111,25 @@ export default function AddPlaceControl({
             ) : null}
           </div>
         ) : null}
+
+        <div className="flex flex-1 justify-end">
+          <Button
+            type="button"
+            data-testid="add-to-list-button"
+            onClick={isOpen ? close : open}
+            disabled={!canAdd || status === 'submitting'}
+            className="flex items-center gap-2 disabled:bg-indigo-200"
+          >
+            {!isOpen ? (
+              <>
+                <PlusCircle size={18} />
+                <span>Add</span>
+              </>
+            ) : (
+              <XCircle size={18} />
+            )}
+          </Button>
+        </div>
       </div>
 
       {children ? children({ isOpen, open, close }) : null}

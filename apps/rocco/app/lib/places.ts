@@ -68,6 +68,10 @@ export const useRemoveListItem = (
       utils.lists.getById.invalidate({ id: variables.listId })
       utils.lists.getAll.invalidate()
       utils.places.getDetailsById.invalidate({ id: variables.placeId })
+      // Invalidate getContainingPlace query to update SocialProofSection
+      utils.lists.getContainingPlace.invalidate({
+        placeId: variables.placeId,
+      })
 
       options?.onSettled?.(data, error, variables, mutateResult, context)
     },
@@ -87,6 +91,7 @@ export const useAddPlaceToList = (
       if (!place.googleMapsId) {
         throw new Error('googleMapsId is required')
       }
+
       // Create the place and add to lists in one go
       const createdPlace = await createPlaceMutation.mutateAsync({
         name: place.name,
@@ -118,9 +123,17 @@ export const useAddPlaceToList = (
       // Invalidate place details to update "In these lists" section
       if (variables.place.googleMapsId) {
         utils.places.getDetailsByGoogleId.invalidate({ googleMapsId: variables.place.googleMapsId })
+        utils.lists.getContainingPlace.invalidate({
+          placeId: data?.id,
+          googleMapsId: variables.place.googleMapsId,
+        })
       }
       if (data?.id) {
         utils.places.getDetailsById.invalidate({ id: data.id })
+        utils.lists.getContainingPlace.invalidate({
+          placeId: data.id,
+          googleMapsId: variables.place.googleMapsId,
+        })
       }
 
       // @ts-expect-error - options.onSuccess signature mismatch in environment

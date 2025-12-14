@@ -91,9 +91,7 @@ function Header() {
       <div className="flex px-2 py-4 md:px-8 items-center justify-between">
         <Link to="/" className="flex items-center space-x-1">
           <img src="/favicons/favicon-96x96.png" alt={APP_NAME} className="size-6" />
-          <span className="font-serif italic tracking-tighter font-semilight text-2xl text-primary">
-            {APP_NAME}
-          </span>
+          <span className="heading-2 text-primary">{APP_NAME}</span>
         </Link>
         {!isLoading && (
           <div className="flex items-center space-x-2">

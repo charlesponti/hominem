@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/components/ui/input'
-import { Label } from '@hominem/ui/components/ui/label'
+import { PlusCircle, XCircle } from 'lucide-react'
 import { useCreateList } from '~/lib/trpc/api'
 import type { List } from '~/lib/types'
+import Loading from '~/components/loading'
 
 interface ListFormProps {
   onCreate: (list: List) => void
@@ -14,6 +15,8 @@ interface ListFormProps {
   isAuthenticated?: boolean
 }
 
+type FormStatus = 'idle' | 'open' | 'submitting' | 'success'
+
 export default function ListForm({
   onCreate,
   onCancel,
@@ -22,14 +25,21 @@ export default function ListForm({
 }: ListFormProps) {
   const STORAGE_KEY = useMemo(() => 'rocco:list-draft', [])
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
+  const [status, setStatus] = useState<FormStatus>('idle')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { mutate: createList, isPending } = useCreateList({
+  const { mutate: createList } = useCreateList({
     onSuccess: (newList) => {
       try {
         localStorage.removeItem(STORAGE_KEY)
       } catch {}
-      onCreate(newList)
+      setStatus('success')
+      successTimerRef.current = setTimeout(() => {
+        setName('')
+        setStatus('idle')
+        onCreate(newList)
+      }, 1500)
     },
   })
 
@@ -37,76 +47,123 @@ export default function ListForm({
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
-        const parsed = JSON.parse(raw) as { name?: string; description?: string }
-        if (parsed.name) setName(parsed.name)
-        if (parsed.description) setDescription(parsed.description)
+        const parsed = JSON.parse(raw) as { name?: string }
+        if (parsed.name) {
+          setName(parsed.name)
+          setStatus('open')
+        }
       }
     } catch {}
   }, [STORAGE_KEY])
 
+  useEffect(() => {
+    if (status === 'open' && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [status])
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) {
+        clearTimeout(successTimerRef.current)
+      }
+    }
+  }, [])
+
+  const handleOpen = () => {
+    setStatus('open')
+  }
+
+  const handleClose = () => {
+    setName('')
+    setStatus('idle')
+    onCancel()
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    // If unauthenticated and form submitted via Enter, do nothing (modal only on click)
-    if (!isAuthenticated) return
+
+    if (!isAuthenticated) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }))
+      } catch {}
+      onRequireAuth?.()
+      return
+    }
+
+    setStatus('submitting')
     createList({
       name: name.trim(),
-      description: description.trim() || 'No description',
+      description: 'No description',
     })
   }
 
+  const isOverlayVisible = status === 'submitting' || status === 'success'
+  const showInput = status === 'open' || status === 'submitting' || status === 'success'
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">New List</h3>
+    <div className="flex gap-1">
+      {showInput ? (
+        <div className="relative w-full sm:max-w-md">
+          <form onSubmit={handleSubmit}>
+            <div
+              className={`transition-opacity duration-200 ${
+                isOverlayVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <Input
+                ref={inputRef}
+                placeholder="Enter list name..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    handleClose()
+                  }
+                }}
+                required
+                className="w-full"
+              />
+            </div>
+          </form>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <fieldset className="flex flex-col gap-2">
-          <Label>List Name</Label>
-          <Input
-            placeholder="Enter list name..."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </fieldset>
+          {status === 'submitting' ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
+              <Loading size="sm" />
+              <span className="ml-2 text-sm text-gray-600">Creating...</span>
+            </div>
+          ) : null}
 
-        <fieldset className="flex flex-col gap-2">
-          <Label>Description (optional)</Label>
-          <Input
-            placeholder="Enter description..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </fieldset>
-        <div className="flex gap-3 pt-4">
-          <Button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={isPending || !name.trim()}
-            className="flex-1"
-            onClick={(e) => {
-              if (!isAuthenticated) {
-                e.preventDefault()
-                try {
-                  localStorage.setItem(
-                    STORAGE_KEY,
-                    JSON.stringify({ name: name.trim(), description: description.trim() })
-                  )
-                } catch {}
-                onRequireAuth?.()
-              }
-            }}
-          >
-            {isPending ? 'Creating...' : 'Create'}
-          </Button>
+          {status === 'success' ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 rounded-lg">
+              <span className="text-sm font-semibold text-green-700">Created!</span>
+            </div>
+          ) : null}
         </div>
-      </form>
+      ) : null}
+
+      <div className="flex flex-1 justify-end">
+        <Button
+          type="button"
+          onClick={
+            status === 'open' || status === 'submitting' || status === 'success'
+              ? handleClose
+              : handleOpen
+          }
+          disabled={status === 'submitting'}
+          className="flex items-center gap-2 disabled:bg-indigo-200"
+        >
+          {status === 'open' || status === 'submitting' || status === 'success' ? (
+            <XCircle size={18} />
+          ) : (
+            <>
+              <PlusCircle size={18} />
+              <span>New List</span>
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   )
 }
