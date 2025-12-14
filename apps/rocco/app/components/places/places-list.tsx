@@ -11,9 +11,16 @@ interface PlacesListProps {
   listId: string
   canAdd?: boolean
   onError?: () => void
+  showAvatars?: boolean
 }
 
-export default function PlacesList({ places, listId, canAdd = true, onError }: PlacesListProps) {
+export default function PlacesList({
+  places,
+  listId,
+  canAdd = true,
+  onError,
+  showAvatars = false,
+}: PlacesListProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const listRef = useRef<HTMLUListElement>(null)
   const navigate = useNavigate()
@@ -63,11 +70,7 @@ export default function PlacesList({ places, listId, canAdd = true, onError }: P
 
           {places.length > 0 ? (
             <div onKeyDown={handleKeyDown}>
-              <ListSurface
-                ref={listRef}
-                className="divide-gray-200 bg-white rounded-xl shadow-sm border border-border"
-                aria-label="Places in list"
-              >
+              <ListSurface ref={listRef} aria-label="Places in list">
                 {places.map((place, index) => (
                   <PlaceItem
                     key={place.id}
@@ -75,6 +78,7 @@ export default function PlacesList({ places, listId, canAdd = true, onError }: P
                     listId={listId}
                     onError={onError}
                     isSelected={selectedIndex === index}
+                    showAvatar={showAvatars}
                   />
                 ))}
               </ListSurface>

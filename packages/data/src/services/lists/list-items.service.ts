@@ -1,10 +1,10 @@
-import crypto from 'node:crypto'
 import { and, desc, eq, inArray, sql } from 'drizzle-orm'
+import crypto from 'node:crypto'
 import { db } from '../../db'
-import { type Item as ItemSelect, item, place } from '../../db/schema'
+import { type Item as ItemSelect, item, place, users } from '../../db/schema'
 import { logger } from '../../logger'
-import type { ListPlace } from './types'
 import { getListOwnedByUser } from './list-queries.service'
+import type { ListPlace } from './types'
 
 /**
  * Fetches all places associated with a specific list
@@ -31,12 +31,38 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
         longitude: place.longitude,
         rating: place.rating,
         address: place.address,
+        addedById: users.id,
+        addedByName: users.name,
+        addedByEmail: users.email,
+        addedByImage: users.image,
       })
       .from(item)
       .innerJoin(place, eq(item.itemId, place.id))
+      .innerJoin(users, eq(item.userId, users.id))
       .where(eq(item.listId, listId))
 
-    return listPlaces
+    return listPlaces.map((p) => ({
+      id: p.id,
+      itemId: p.itemId,
+      description: p.description,
+      itemAddedAt: p.itemAddedAt,
+      googleMapsId: p.googleMapsId,
+      name: p.name,
+      imageUrl: p.imageUrl,
+      photos: p.photos,
+      types: p.types,
+      type: p.type,
+      latitude: p.latitude,
+      longitude: p.longitude,
+      rating: p.rating,
+      address: p.address,
+      addedBy: {
+        id: p.addedById,
+        name: p.addedByName,
+        email: p.addedByEmail,
+        image: p.addedByImage,
+      },
+    }))
   } catch (error) {
     logger.error('Error fetching places for list', {
       listId,
@@ -106,9 +132,14 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
         longitude: place.longitude,
         rating: place.rating,
         address: place.address,
+        addedById: users.id,
+        addedByName: users.name,
+        addedByEmail: users.email,
+        addedByImage: users.image,
       })
       .from(item)
       .innerJoin(place, eq(item.itemId, place.id))
+      .innerJoin(users, eq(item.userId, users.id))
       .where(inArray(item.listId, listIds))
 
     for (const p of allPlaces) {
@@ -131,6 +162,12 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
         longitude: p.longitude,
         rating: p.rating,
         address: p.address,
+        addedBy: {
+          id: p.addedById,
+          name: p.addedByName,
+          email: p.addedByEmail,
+          image: p.addedByImage,
+        },
       }
       placesMap.get(p.listId)!.push(listPlace)
     }

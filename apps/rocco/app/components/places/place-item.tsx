@@ -29,6 +29,7 @@ interface PlaceItemProps {
   onRemove?: () => void
   onError?: () => void
   isSelected?: boolean
+  showAvatar?: boolean
 }
 
 const PlaceListItem = ({
@@ -37,6 +38,7 @@ const PlaceListItem = ({
   onRemove,
   onError,
   isSelected = false,
+  showAvatar = false,
 }: PlaceItemProps) => {
   const { setHoveredPlaceId } = useMapInteraction()
   const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal()
@@ -65,6 +67,7 @@ const PlaceListItem = ({
           isSelected={isSelected}
           onMouseEnter={() => setHoveredPlaceId(place.itemId)}
           onMouseLeave={() => setHoveredPlaceId(null)}
+          addedBy={showAvatar ? place.addedBy : null}
           accessory={
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

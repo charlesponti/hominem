@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
 import { Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
@@ -29,6 +30,12 @@ type PlaceRowProps = {
   onMouseEnter?: () => void
   onMouseLeave?: () => void
   className?: string
+  addedBy?: {
+    id: string
+    name: string | null
+    email: string
+    image: string | null
+  } | null
 }
 
 export default function PlaceRow({
@@ -43,6 +50,7 @@ export default function PlaceRow({
   onMouseEnter,
   onMouseLeave,
   className = '',
+  addedBy,
 }: PlaceRowProps) {
   const resolvedImage = buildImageUrl(photoUrl) ?? buildImageUrl(imageUrl) ?? null
 
@@ -76,7 +84,25 @@ export default function PlaceRow({
               <h3 className="flex-1 heading-3 text-accent-foreground truncate">{name}</h3>
               {meta ?? null}
             </div>
-            {subtitle ? <div className="text-xs text-gray-500 truncate">{subtitle}</div> : null}
+            <div className="flex items-center gap-2">
+              {subtitle ? <div className="text-xs text-gray-500 truncate">{subtitle}</div> : null}
+              {addedBy && (
+                <div className="flex items-center gap-1.5">
+                  <Avatar
+                    className="h-5 w-5 border border-border"
+                    title={addedBy.name || addedBy.email}
+                  >
+                    <AvatarImage
+                      src={addedBy.image || undefined}
+                      alt={addedBy.name || addedBy.email}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {(addedBy.name || addedBy.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Link>

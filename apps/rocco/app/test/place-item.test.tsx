@@ -34,6 +34,12 @@ describe('PlaceItem', () => {
       wifiInfo: mockPlace.wifiInfo,
       photos: mockPlace.photos,
       priceLevel: mockPlace.priceLevel,
+      addedBy: {
+        id: 'test-user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        image: null,
+      },
     }
 
     renderWithRouter({
@@ -77,6 +83,12 @@ describe('PlaceItem', () => {
       wifiInfo: mockPlace.wifiInfo,
       photos: mockPlace.photos,
       priceLevel: mockPlace.priceLevel,
+      addedBy: {
+        id: 'test-user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        image: null,
+      },
     }
 
     // Mock places lib before rendering
@@ -129,6 +141,12 @@ describe('PlaceItem', () => {
       wifiInfo: mockPlace.wifiInfo,
       photos: ['test-photo-url-1', 'test-photo-url-2'],
       priceLevel: mockPlace.priceLevel,
+      addedBy: {
+        id: 'test-user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        image: null,
+      },
     }
 
     renderWithRouter({

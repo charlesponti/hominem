@@ -8,7 +8,7 @@ import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists/list-menu'
 import ListTitleEdit from '~/components/lists/list-title-edit'
-import ListVisibilityBadge from '~/components/lists/list-visibility-badge'
+// import ListVisibilityBadge from '~/components/lists/list-visibility-badge'
 import Loading, { LoadingScreen } from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
 import PageTitle from '~/components/page-title'
@@ -96,7 +96,7 @@ export default function ListPage() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <ListVisibilityBadge isPublic={data.isPublic} />
+            {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
             {data.users && data.users.length > 0 && (
               <div className="flex items-center gap-1.5">
                 {data.users.slice(0, 5).map((collaborator) => (
@@ -132,6 +132,7 @@ export default function ListPage() {
                 listId={data.id}
                 canAdd={hasAccess}
                 onError={handleDeleteError}
+                showAvatars={(data.users?.length ?? 0) > 1}
               />
             )}
           </div>

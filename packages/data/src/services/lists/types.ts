@@ -45,4 +45,10 @@ export interface ListPlace {
   longitude: number | null
   rating: number | null
   address: string | null
+  addedBy: {
+    id: string
+    name: string | null
+    email: string
+    image: string | null
+  }
 }
