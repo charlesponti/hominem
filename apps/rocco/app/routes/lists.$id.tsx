@@ -1,4 +1,5 @@
 import { useSupabaseAuth } from '@hominem/ui'
+import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
 import { UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
@@ -94,7 +95,33 @@ export default function ListPage() {
               </div>
             )}
           </div>
-          <ListVisibilityBadge isPublic={data.isPublic} />
+          <div className="flex items-center gap-3">
+            <ListVisibilityBadge isPublic={data.isPublic} />
+            {data.users && data.users.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                {data.users.slice(0, 5).map((collaborator) => (
+                  <Avatar
+                    key={collaborator.id}
+                    className="h-6 w-6 border border-border"
+                    title={collaborator.name || collaborator.email}
+                  >
+                    <AvatarImage
+                      src={collaborator.image || undefined}
+                      alt={collaborator.name || collaborator.email}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {(collaborator.name || collaborator.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {data.users.length > 5 && (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
+                    +{data.users.length - 5}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="size-full grid grid-cols-1 lg:grid-cols-2 gap-4">

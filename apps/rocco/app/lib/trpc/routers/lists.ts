@@ -5,6 +5,7 @@ import {
   getAllUserListsWithPlaces,
   getListById,
   getListsContainingPlace,
+  removeUserFromList as removeUserFromListService,
   updateList as updateListService,
 } from '@hominem/data'
 import { TRPCError } from '@trpc/server'
@@ -177,5 +178,44 @@ export const listsRouter = router({
         'getContainingPlace lists',
         { userId: ctx.user?.id, placeId: input.placeId, googleMapsId: input.googleMapsId }
       )
+    }),
+
+  // Remove a collaborator from a list
+  removeCollaborator: protectedProcedure
+    .input(
+      z.object({
+        listId: z.string().uuid(),
+        userId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'User not found in context',
+        })
+      }
+
+      const result = await removeUserFromListService({
+        listId: input.listId,
+        userIdToRemove: input.userId,
+        ownerId: ctx.user.id,
+      })
+
+      if ('error' in result) {
+        throw new TRPCError({
+          code:
+            result.status === 403
+              ? 'FORBIDDEN'
+              : result.status === 404
+                ? 'NOT_FOUND'
+                : result.status === 400
+                  ? 'BAD_REQUEST'
+                  : 'INTERNAL_SERVER_ERROR',
+          message: result.error,
+        })
+      }
+
+      return { success: true }
     }),
 })

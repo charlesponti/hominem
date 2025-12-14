@@ -96,7 +96,6 @@ export default function ListInvites() {
       </div>
 
       <div className="space-y-2">
-        <h2 className="heading-3 text-gray-900">Collaborators</h2>
         <SentInviteForm listId={list.id} onCreate={handleInviteSuccess} />
         <SentInvites invites={invites} listId={list.id} onInviteDeleted={handleInviteDeleted} />
       </div>

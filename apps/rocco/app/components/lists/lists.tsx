@@ -48,8 +48,8 @@ export default function Lists() {
                 viewTransition
                 className="block px-4 py-3 hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <h3 className="heading-3 text-accent-foreground truncate">{list.name}</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="flex-1 heading-3 text-accent-foreground truncate">{list.name}</h3>
                   <span className="bg-accent text-accent-foreground text-sm rounded-full px-2.5 py-1">
                     {list.places.length || 0}
                   </span>

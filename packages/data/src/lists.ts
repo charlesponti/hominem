@@ -1,2 +1,2 @@
 export * from './db/schema/lists.schema'
-export * from './services/lists.service'
+export * from './services/lists'

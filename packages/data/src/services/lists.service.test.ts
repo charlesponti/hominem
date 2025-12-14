@@ -11,7 +11,7 @@ import {
   getUserListsWithItemCount,
   sendListInvite,
   deleteListInvite,
-} from './lists.service'
+} from './lists'
 import { and, eq } from 'drizzle-orm'
 import { createTestUser } from '../fixtures'
 import { listInvite } from '../db/schema/lists.schema'

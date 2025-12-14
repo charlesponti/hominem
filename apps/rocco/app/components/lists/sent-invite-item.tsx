@@ -1,10 +1,11 @@
 import { Button } from '@hominem/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
-import { Check, Link as LinkIcon, Mail, Trash2 } from 'lucide-react'
+import { Check, Link as LinkIcon, Mail } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { env } from '~/lib/env'
-import { trpc } from '~/lib/trpc/client'
 import type { SentInvite } from '~/lib/types'
+import DeleteInviteButton from './delete-invite-button'
+import RemoveCollaboratorButton from './remove-collaborator-button'
 
 type SentInviteItemProps = {
   invite: SentInvite
@@ -14,7 +15,6 @@ type SentInviteItemProps = {
 
 export default function SentInviteItem({ invite, listId, onDelete }: SentInviteItemProps) {
   const { accepted, invitedUserEmail, token, user_invitedUserId } = invite
-  const deleteInvite = trpc.invites.delete.useMutation()
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
 
   const getInviteUrl = useCallback(
@@ -39,16 +39,6 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
     [getInviteUrl]
   )
 
-  const handleDelete = useCallback(async () => {
-    const confirmed = window.confirm(`Remove invite for ${invitedUserEmail}?`)
-    if (!confirmed) return
-
-    // Optimistically remove immediately
-    onDelete(invitedUserEmail)
-    // Then sync with server
-    await deleteInvite.mutateAsync({ listId, invitedUserEmail })
-  }, [deleteInvite, listId, invitedUserEmail, onDelete])
-
   const isCopied = copiedToken === token
   const profilePhoto = user_invitedUserId?.photoUrl || user_invitedUserId?.image
   const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U'
@@ -72,9 +62,14 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
       </div>
       <div className="ml-0 md:ml-2 flex justify-end items-center gap-3 flex-wrap">
         {accepted ? (
-          <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-            Accepted
-          </span>
+          user_invitedUserId?.id && (
+            <RemoveCollaboratorButton
+              listId={listId}
+              userId={user_invitedUserId.id}
+              userName={user_invitedUserId.name || ''}
+              userEmail={invitedUserEmail}
+            />
+          )
         ) : (
           <>
             <Button
@@ -90,15 +85,11 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
                 <LinkIcon className="w-4 h-4" />
               )}
             </Button>
-            <Button
-              variant="destructive"
-              size="icon"
-              className="p-2"
-              onClick={handleDelete}
-              disabled={deleteInvite.isPending}
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            <DeleteInviteButton
+              listId={listId}
+              invitedUserEmail={invitedUserEmail}
+              onDelete={onDelete}
+            />
             <span className="px-3 py-1 text-sm font-medium text-amber-700 bg-amber-100 rounded-full">
               Pending
             </span>
