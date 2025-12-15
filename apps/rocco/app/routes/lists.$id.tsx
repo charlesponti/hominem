@@ -1,7 +1,7 @@
 import { useSupabaseAuth } from '@hominem/ui'
 import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
 import { UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
 import { Link, redirect, useParams } from 'react-router'
 import Alert from '~/components/alert'
@@ -45,22 +45,26 @@ export default function ListPage() {
   const data = listData || null
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
 
-  const handleDeleteError = () => {
+  const handleDeleteError = useCallback(() => {
     setDeleteError('Could not delete place. Please try again.')
-  }
+  }, [])
 
   const isOwner = data?.userId === user?.id
   const hasAccess = data?.hasAccess ?? isOwner
   // Convert places to map markers
-  const markers: PlaceLocation[] = (data?.places || [])
-    .filter((p) => Boolean(p.latitude && p.longitude))
-    .map((p) => ({
-      latitude: p.latitude as number,
-      longitude: p.longitude as number,
-      id: p.id,
-      name: p.name,
-      imageUrl: p.imageUrl,
-    }))
+  const markers: PlaceLocation[] = useMemo(
+    () =>
+      (data?.places || [])
+        .filter((p) => Boolean(p.latitude && p.longitude))
+        .map((p) => ({
+          latitude: p.latitude as number,
+          longitude: p.longitude as number,
+          id: p.id,
+          name: p.name,
+          imageUrl: p.imageUrl,
+        })),
+    [data?.places]
+  )
 
   if (isLoading) {
     return <LoadingScreen />
@@ -123,7 +127,7 @@ export default function ListPage() {
         </div>
       </div>
 
-      <div className="size-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="overflow-y-auto space-y-4 pb-8">
           {data && (
             <PlacesList

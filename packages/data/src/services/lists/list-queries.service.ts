@@ -1,10 +1,10 @@
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
 import { db } from '../../db'
-import { type ListSelect, list, item, place, userLists, users } from '../../db/schema'
+import { item, type ListSelect, list, place, userLists, users } from '../../db/schema'
 import { logger } from '../../logger'
-import type { ListWithSpreadOwner, List, ListUser } from './types'
-import { getListPlaces, getListPlacesMap } from './list-items.service'
 import { formatList } from './list-crud.service'
+import { getListPlaces, getListPlacesMap } from './list-items.service'
+import type { List, ListUser, ListWithSpreadOwner } from './types'
 
 /**
  * Get lists that the user is explicitly a member of (shared with them)
@@ -481,6 +481,7 @@ export async function getListById(id: string, userId?: string | null) {
       .innerJoin(users, eq(users.id, list.userId))
       .then((rows) => rows[0])
 
+    console.log('result', result)
     if (!result) {
       return null
     }
@@ -572,11 +573,6 @@ export async function getListOwnedByUser(
   return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) })
 }
 
-/**
- * Optimized function to get lists containing a specific place
- * Returns only essential fields: id, name, itemCount, imageUrl
- * Uses a highly optimized SQL query
- */
 export async function getListsContainingPlace(
   userId: string,
   placeId?: string,
@@ -669,3 +665,4 @@ export async function getListsContainingPlace(
     return []
   }
 }
+

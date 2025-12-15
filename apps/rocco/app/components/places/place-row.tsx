@@ -58,6 +58,7 @@ export default function PlaceRow({
   const selectedClasses = isSelected ? ' bg-indigo-50' : ''
   const rootClasses = `${baseClasses}${selectedClasses}${className ? ` ${className}` : ''}`
 
+  console.log('avatar', addedBy?.image)
   return (
     <div
       className={rootClasses}

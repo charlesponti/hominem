@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useState } from 'react'
+import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
 
 interface MapInteractionContextType {
   hoveredPlaceId: string | null
@@ -10,11 +10,9 @@ const MapInteractionContext = createContext<MapInteractionContextType | undefine
 export function MapInteractionProvider({ children }: { children: ReactNode }) {
   const [hoveredPlaceId, setHoveredPlaceId] = useState<string | null>(null)
 
-  return (
-    <MapInteractionContext.Provider value={{ hoveredPlaceId, setHoveredPlaceId }}>
-      {children}
-    </MapInteractionContext.Provider>
-  )
+  const value = useMemo(() => ({ hoveredPlaceId, setHoveredPlaceId }), [hoveredPlaceId])
+
+  return <MapInteractionContext.Provider value={value}>{children}</MapInteractionContext.Provider>
 }
 
 export function useMapInteraction() {
