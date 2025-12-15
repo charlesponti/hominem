@@ -76,75 +76,73 @@ export default function ListPage() {
 
   return (
     <MapInteractionProvider>
-      <div className="flex flex-col gap-4 w-full">
-        <div className="flex-1 space-y-2">
-          <div className="flex justify-between items-center">
-            <PageTitle title={data.name} variant="serif" />
-            {isOwner && (
-              <div className="flex items-center gap-2">
-                <ListTitleEdit listId={data.id} currentName={data.name} />
-                <Link to={`/lists/${data.id}/invites`} className="flex items-center gap-2">
-                  <UserPlus size={18} />
-                </Link>
-                <ListMenu list={data} isOwnList={isOwner} />
-              </div>
-            )}
-            {!isOwner && (
-              <div className="flex items-center">
-                <ListMenu list={data} isOwnList={isOwner} />
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
-            {data.users && data.users.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                {data.users.slice(0, 5).map((collaborator) => (
-                  <Avatar
-                    key={collaborator.id}
-                    className="h-6 w-6 border border-border"
-                    title={collaborator.name || collaborator.email}
-                  >
-                    <AvatarImage
-                      src={collaborator.image || undefined}
-                      alt={collaborator.name || collaborator.email}
-                    />
-                    <AvatarFallback className="text-xs">
-                      {(collaborator.name || collaborator.email || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-                {data.users.length > 5 && (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
-                    +{data.users.length - 5}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+      <div className="flex-1 space-y-2">
+        <div className="flex justify-between items-center">
+          <PageTitle title={data.name} variant="serif" />
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <ListTitleEdit listId={data.id} currentName={data.name} />
+              <Link to={`/lists/${data.id}/invites`} className="flex items-center gap-2">
+                <UserPlus size={18} />
+              </Link>
+              <ListMenu list={data} isOwnList={isOwner} />
+            </div>
+          )}
+          {!isOwner && (
+            <div className="flex items-center">
+              <ListMenu list={data} isOwnList={isOwner} />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
+          {data.users && data.users.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              {data.users.slice(0, 5).map((collaborator) => (
+                <Avatar
+                  key={collaborator.id}
+                  className="h-6 w-6 border border-border"
+                  title={collaborator.name || collaborator.email}
+                >
+                  <AvatarImage
+                    src={collaborator.image || undefined}
+                    alt={collaborator.name || collaborator.email}
+                  />
+                  <AvatarFallback className="text-xs">
+                    {(collaborator.name || collaborator.email || 'U').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+              {data.users.length > 5 && (
+                <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
+                  +{data.users.length - 5}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="size-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="overflow-y-auto space-y-4 pb-8">
+          {data && (
+            <PlacesList
+              places={data.places || []}
+              listId={data.id}
+              canAdd={hasAccess}
+              onError={handleDeleteError}
+              showAvatars={(data.users?.length ?? 0) > 1}
+            />
+          )}
         </div>
 
-        <div className="size-full grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="overflow-y-auto space-y-4 pb-8">
-            {data && (
-              <PlacesList
-                places={data.places || []}
-                listId={data.id}
-                canAdd={hasAccess}
-                onError={handleDeleteError}
-                showAvatars={(data.users?.length ?? 0) > 1}
-              />
-            )}
-          </div>
-
-          <div className="min-h-[300px] rounded-lg overflow-hidden">
-            <LazyMap
-              isLoadingCurrentLocation={isLoadingLocation}
-              currentLocation={currentLocation}
-              zoom={12}
-              markers={markers}
-            />
-          </div>
+        <div className="min-h-[300px] rounded-lg overflow-hidden">
+          <LazyMap
+            isLoadingCurrentLocation={isLoadingLocation}
+            currentLocation={currentLocation}
+            zoom={12}
+            markers={markers}
+          />
         </div>
       </div>
     </MapInteractionProvider>
