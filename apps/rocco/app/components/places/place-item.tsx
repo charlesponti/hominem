@@ -58,59 +58,57 @@ const PlaceListItem = ({
 
   return (
     <>
-      <li data-selected={isSelected}>
-        <PlaceRow
-          name={place.name}
-          href={href('/places/:id', { id: place.itemId })}
-          photoUrl={place.photos?.[0] ?? null}
-          imageUrl={place.imageUrl}
-          isSelected={isSelected}
-          onMouseEnter={() => setHoveredPlaceId(place.itemId)}
-          onMouseLeave={() => setHoveredPlaceId(null)}
-          addedBy={showAvatar ? place.addedBy : null}
-          accessory={
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}
-                  aria-label="More options"
-                >
-                  <MoreVertical size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white border border-border text-gray-900 shadow-lg">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault()
-                    window.open(
-                      `https://www.google.com/maps/search/${encodeURIComponent(place.name)}`,
-                      '_blank'
-                    )
-                  }}
-                  className="flex items-center gap-2 py-2"
-                >
-                  <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
-                  Open in Maps
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault()
-                    openDeleteModal()
-                  }}
-                  className="text-red-600 hover:underline underline-offset-4 hover:bg-red-50 py-2"
-                >
-                  <Trash size={16} className="text-red-600" />
-                  Remove from list
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          }
-        />
-      </li>
+      <PlaceRow
+        name={place.name}
+        href={href('/places/:id', { id: place.itemId })}
+        photoUrl={place.photos?.[0] ?? null}
+        imageUrl={place.imageUrl}
+        isSelected={isSelected}
+        onMouseEnter={() => setHoveredPlaceId(place.itemId)}
+        onMouseLeave={() => setHoveredPlaceId(null)}
+        addedBy={showAvatar ? place.addedBy : null}
+        accessory={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                onClick={(e: MouseEvent<HTMLButtonElement>) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+                aria-label="More options"
+              >
+                <MoreVertical size={16} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-white border border-border text-gray-900 shadow-lg">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault()
+                  window.open(
+                    `https://www.google.com/maps/search/${encodeURIComponent(place.name)}`,
+                    '_blank'
+                  )
+                }}
+                className="flex items-center gap-2 py-2"
+              >
+                <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
+                Open in Maps
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault()
+                  openDeleteModal()
+                }}
+                className="text-red-600 hover:underline underline-offset-4 hover:bg-red-50 py-2"
+              >
+                <Trash size={16} className="text-red-600" />
+                Remove from list
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
 
       <Dialog
         open={isDeleteModalOpen}

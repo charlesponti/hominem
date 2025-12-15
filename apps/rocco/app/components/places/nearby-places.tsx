@@ -78,27 +78,26 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
       <ListSurface>
         {places.map((place) => {
           return (
-            <li key={place.id}>
-              <PlaceRow
-                name={place.name}
-                href={href('/places/:id', { id: place.id })}
-                photoUrl={place.photos?.[0] ?? null}
-                imageUrl={place.imageUrl}
-                meta={
-                  <div className="flex items-center text-sm text-gray-400">
-                    <MapPin size={14} className="mr-1" />
-                    <span>{formatDistance(place.distance)}</span>
-                  </div>
-                }
-                subtitle={
-                  place.lists.length > 0
-                    ? place.lists.length === 1
-                      ? place.lists[0]!.name
-                      : `${place.lists.length} lists`
-                    : null
-                }
-              />
-            </li>
+            <PlaceRow
+              key={place.id}
+              name={place.name}
+              href={href('/places/:id', { id: place.id })}
+              photoUrl={place.photos?.[0] ?? null}
+              imageUrl={place.imageUrl}
+              meta={
+                <div className="flex items-center text-sm text-gray-400">
+                  <MapPin size={14} className="mr-1" />
+                  <span>{formatDistance(place.distance)}</span>
+                </div>
+              }
+              subtitle={
+                place.lists.length > 0
+                  ? place.lists.length === 1
+                    ? place.lists[0]!.name
+                    : `${place.lists.length} lists`
+                  : null
+              }
+            />
           )
         })}
       </ListSurface>

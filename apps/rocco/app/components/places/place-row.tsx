@@ -3,6 +3,7 @@ import { Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { env } from '~/lib/env'
+import { cn } from '~/lib/utils'
 
 const buildImageUrl = (src?: string | null, width = 400, height = 300): string | null => {
   if (!src) return null
@@ -29,7 +30,6 @@ type PlaceRowProps = {
   isSelected?: boolean
   onMouseEnter?: () => void
   onMouseLeave?: () => void
-  className?: string
   addedBy?: {
     id: string
     name: string | null
@@ -49,19 +49,15 @@ export default function PlaceRow({
   isSelected = false,
   onMouseEnter,
   onMouseLeave,
-  className = '',
   addedBy,
 }: PlaceRowProps) {
   const resolvedImage = buildImageUrl(photoUrl) ?? buildImageUrl(imageUrl) ?? null
 
-  const baseClasses = 'flex items-center gap-3 p-3 group hover:bg-gray-50 transition-colors'
-  const selectedClasses = isSelected ? ' bg-indigo-50' : ''
-  const rootClasses = `${baseClasses}${selectedClasses}${className ? ` ${className}` : ''}`
-
-  console.log('avatar', addedBy?.image)
   return (
-    <div
-      className={rootClasses}
+    <li
+      className={cn('flex items-center gap-3 p-3 group hover:bg-gray-50 transition-colors', {
+        'bg-indigo-50': isSelected,
+      })}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       data-selected={isSelected}
@@ -109,6 +105,6 @@ export default function PlaceRow({
       </Link>
 
       {accessory ? <div className="ml-2 flex items-center">{accessory}</div> : null}
-    </div>
+    </li>
   )
 }
