@@ -1,5 +1,7 @@
 import { SupabaseAuthProvider } from '@hominem/ui'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import { ServiceWorkerRegister } from './components/pwa/service-worker-register'
+import { UpdateNotification } from './components/pwa/update-notification'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
 import './globals.css'
@@ -10,6 +12,8 @@ if (process.env.NODE_ENV === 'production') {
 
 export const links = () => [
   { rel: 'icon', href: '/favicons/favicon.ico' },
+  { rel: 'manifest', href: '/manifest.json' },
+  { rel: 'apple-touch-icon', href: '/favicons/apple-touch-icon-152x152.png' },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
@@ -22,7 +26,15 @@ export const links = () => [
   },
 ]
 
-export const meta = () => [{ title: 'rocco' }, { name: 'description', content: 'rocco' }]
+export const meta = () => [
+  { title: 'rocco' },
+  { name: 'description', content: 'rocco' },
+  { name: 'theme-color', content: '#000000' },
+  { name: 'apple-mobile-web-app-capable', content: 'yes' },
+  { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+  { name: 'apple-mobile-web-app-title', content: 'Rocco' },
+  { name: 'mobile-web-app-capable', content: 'yes' },
+]
 
 export default function App() {
   return (
@@ -37,8 +49,10 @@ export default function App() {
         <SupabaseAuthProvider>
           <TRPCProvider>
             <Outlet />
+            <UpdateNotification onUpdate={() => window.location.reload()} />
           </TRPCProvider>
         </SupabaseAuthProvider>
+        <ServiceWorkerRegister />
         <ScrollRestoration />
         <Scripts />
       </body>
