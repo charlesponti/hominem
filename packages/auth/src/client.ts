@@ -32,7 +32,7 @@ export function getAuthConfig(): AuthConfig {
   // Try import.meta.env first (Vite/Client)
   // We use unknown cast first to avoid TS errors about ImportMeta not having env
   const meta = import.meta as unknown as { env?: ImportMetaEnv }
-  if (typeof meta !== 'undefined' && meta.env) {
+  if (typeof meta?.env !== 'undefined') {
     supabaseUrl = meta.env.VITE_SUPABASE_URL || meta.env.SUPABASE_URL
     supabaseAnonKey = meta.env.VITE_SUPABASE_ANON_KEY || meta.env.SUPABASE_ANON_KEY
   }
@@ -45,7 +45,6 @@ export function getAuthConfig(): AuthConfig {
   }
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.log('Missing Supabase environment variables', { supabaseUrl, supabaseAnonKey })
     throw new Error('Missing Supabase environment variables')
   }
 

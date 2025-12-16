@@ -366,7 +366,7 @@ export class SupabaseStorageService {
   /**
    * Get file extension from filename or mimetype
    */
-  private getFileExtension(filename: string, mimetype: string): string {
+  private getFileExtension(filename: string, mimetype: string) {
     // First try to get extension from filename
     const dotIndex = filename.lastIndexOf('.')
     if (dotIndex !== -1) {

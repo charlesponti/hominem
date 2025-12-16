@@ -11,6 +11,7 @@ import { buildInvitePreview } from '~/lib/services/invite-preview.service'
 import { createCaller } from '~/lib/trpc/server'
 import type { ReceivedInvite } from '~/lib/types'
 import type { Route } from './+types/invites'
+import ListSurface from '~/components/list-surface'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
@@ -123,7 +124,7 @@ const Invites = () => {
 
   return (
     <div className="space-y-8 pb-8">
-      <div className="sticky top-0 bg-white z-10">
+      <div className="sticky top-0 z-10">
         <PageTitle title="List Invites" variant="large" />
       </div>
 
@@ -147,9 +148,8 @@ const Invites = () => {
         </div>
       )}
 
-      {/* Invites List */}
-      {!requiresAuth && invites && invites.length > 0 && (
-        <ul className="space-y-4">
+      {!requiresAuth && Boolean(invites?.length) && (
+        <ListSurface>
           {preview && (
             <ReceivedInviteItem
               variant="preview"
@@ -162,7 +162,7 @@ const Invites = () => {
               }}
             />
           )}
-          {invites.map((listInvite: ReceivedInvite) => (
+          {invites.map((listInvite) => (
             <ReceivedInviteItem
               key={`${listInvite.listId}-${listInvite.token}`}
               listInvite={listInvite}
@@ -170,7 +170,7 @@ const Invites = () => {
               canAccept={isAuthenticated}
             />
           ))}
-        </ul>
+        </ListSurface>
       )}
     </div>
   )

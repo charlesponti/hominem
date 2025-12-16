@@ -99,7 +99,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 }
 
-function getFileExtension(mimeType: string): string {
+function getFileExtension(mimeType: string) {
   const mimeToExt: Record<string, string> = {
     'audio/webm': '.webm',
     'audio/mp4': '.mp4',

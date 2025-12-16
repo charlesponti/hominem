@@ -1,7 +1,7 @@
 import type { UserSelect } from '@hominem/data'
 import type { AuthAppMetadata, AuthUserMetadata, HominemUser, SupabaseAuthUser } from './types'
 
-function extractName(userMetadata: AuthUserMetadata): string | undefined {
+function extractName(userMetadata: AuthUserMetadata) {
   return (
     userMetadata.name ||
     userMetadata.full_name ||
@@ -11,7 +11,7 @@ function extractName(userMetadata: AuthUserMetadata): string | undefined {
   )
 }
 
-function extractImage(userMetadata: AuthUserMetadata): string | undefined {
+function extractImage(userMetadata: AuthUserMetadata) {
   return userMetadata.avatar_url || userMetadata.picture || userMetadata.image
 }
 

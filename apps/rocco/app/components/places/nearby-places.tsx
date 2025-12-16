@@ -12,7 +12,7 @@ type Props = {
   limit?: number
 }
 
-const formatDistance = (distanceInMeters: number): string => {
+const formatDistance = (distanceInMeters: number) => {
   if (distanceInMeters < 1000) {
     return `${Math.round(distanceInMeters)}m`
   }

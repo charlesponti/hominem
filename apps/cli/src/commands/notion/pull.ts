@@ -123,7 +123,7 @@ async function displayResults(results: NotionResult[], options: QueryOptions) {
   }
 }
 
-function convertToTable(results: NotionResult[]): string {
+function convertToTable(results: NotionResult[]) {
   if (results.length === 0) return ''
 
   // Get all unique property keys from all results
@@ -161,7 +161,7 @@ function convertToTable(results: NotionResult[]): string {
   return table.toString()
 }
 
-function convertToCSV(results: NotionResult[]): string {
+function convertToCSV(results: NotionResult[]) {
   if (results.length === 0) return ''
 
   // Get all unique property keys
@@ -197,12 +197,12 @@ function convertToCSV(results: NotionResult[]): string {
   return csvRows.join('\n')
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string) {
   if (!dateString) return ''
   return new Date(dateString).toLocaleString()
 }
 
-function formatPropertyValue(property: unknown): string {
+function formatPropertyValue(property: unknown) {
   if (!property || typeof property !== 'object') return ''
 
   const prop = property as Record<string, unknown>

@@ -14,8 +14,6 @@ export function ServiceWorkerRegister() {
           updateViaCache: 'none', // Always check for updates, don't cache the service worker file
         })
         .then((registration) => {
-          console.log('Service Worker registered:', registration.scope)
-
           // Check for updates immediately after registration
           registration.update()
 

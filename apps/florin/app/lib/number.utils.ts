@@ -3,7 +3,7 @@
  * @param amount - The decimal value to format (e.g., 0.156 becomes "15.6%")
  * @returns A formatted percentage string
  */
-export const formatPercent = (amount: number | string, fixed = 1): string => {
+export const formatPercent = (amount: number | string, fixed = 1) => {
   const parsedAmount = Number.parseFloat(amount as string)
 
   if (Number.isNaN(parsedAmount)) {
@@ -19,7 +19,7 @@ export const formatPercent = (amount: number | string, fixed = 1): string => {
 export const formatCurrency = (
   value: number | string | undefined | null,
   options?: Intl.NumberFormatOptions
-): string => {
+) => {
   const numericValue = typeof value === 'string' ? Number.parseFloat(value) : (value ?? 0)
 
   return numericValue.toLocaleString('en-US', {

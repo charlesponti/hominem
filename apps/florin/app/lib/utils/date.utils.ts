@@ -20,7 +20,7 @@ export function adjustDateRange(
   return { adjustedDateFrom: dateFrom, adjustedDateTo }
 }
 
-export function getLastMonthFromRange(_dateFrom?: Date, dateTo?: Date): string {
+export function getLastMonthFromRange(_dateFrom?: Date, dateTo?: Date) {
   if (!dateTo) {
     // If no dateTo, use current month
     const now = new Date()
@@ -32,7 +32,7 @@ export function getLastMonthFromRange(_dateFrom?: Date, dateTo?: Date): string {
 }
 
 // Helper function to format date based on whether it's this year
-export function formatChartDate(dateString: string): string {
+export function formatChartDate(dateString: string) {
   // Parse YYYY-MM format explicitly to avoid timezone issues
   const [yearStr, monthStr] = dateString.split('-')
   const year = Number.parseInt(yearStr, 10)

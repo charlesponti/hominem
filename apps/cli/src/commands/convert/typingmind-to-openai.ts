@@ -15,7 +15,7 @@ function generateId(prefix = '') {
 /**
  * Convert a date string to a timestamp
  */
-function dateToTimestamp(dateString: string): number {
+function dateToTimestamp(dateString: string) {
   return Math.floor(new Date(dateString).getTime() / 1000)
 }
 

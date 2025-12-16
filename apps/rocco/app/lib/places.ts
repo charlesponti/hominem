@@ -68,7 +68,7 @@ export const useRemoveListItem = (
       utils.lists.getById.invalidate({ id: variables.listId })
       utils.lists.getAll.invalidate()
       utils.places.getDetailsById.invalidate({ id: variables.placeId })
-      // Invalidate getContainingPlace query to update SocialProofSection
+      // Invalidate getContainingPlace query to update PlaceLists
       utils.lists.getContainingPlace.invalidate({
         placeId: variables.placeId,
       })

@@ -201,7 +201,7 @@ import { memo, useMemo } from 'react'
 /**
  * Proxies Google user content URLs through our API to avoid CORB/CORS issues
  */
-function getProxiedImageUrl(imageUrl: string | null | undefined): string | undefined {
+function getProxiedImageUrl(imageUrl: string | null | undefined) {
   if (!imageUrl) return undefined
   
   // Only proxy Google user content URLs

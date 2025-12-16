@@ -5,7 +5,7 @@ import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { formatCurrency } from '~/lib/number.utils'
 
 // Helper function to format month string (e.g., "2024-05" to "May 2024")
-function formatMonthDisplay(monthStr: string | undefined): string {
+function formatMonthDisplay(monthStr: string | undefined) {
   if (!monthStr) return ''
   const [year, month] = monthStr.split('-')
   const date = new Date(Number(year), Number(month) - 1)

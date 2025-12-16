@@ -14,7 +14,7 @@ export class AuthUtils {
   /**
    * Validate user ID
    */
-  static validateUserId(userId: string | undefined | null): string {
+  static validateUserId(userId: string | undefined | null) {
     if (!userId || userId === 'anonymous') {
       throw new ChatError('UNAUTHORIZED', 'User ID is required')
     }
@@ -24,7 +24,7 @@ export class AuthUtils {
   /**
    * Validate chat ownership
    */
-  static validateChatOwnership(chatUserId: string, requestingUserId: string): void {
+  static validateChatOwnership(chatUserId: string, requestingUserId: string) {
     if (chatUserId !== requestingUserId) {
       throw new ChatError('UNAUTHORIZED', 'Access denied to this chat')
     }
@@ -33,7 +33,7 @@ export class AuthUtils {
   /**
    * Validate message ownership
    */
-  static validateMessageOwnership(messageUserId: string, requestingUserId: string): void {
+  static validateMessageOwnership(messageUserId: string, requestingUserId: string) {
     if (messageUserId !== requestingUserId) {
       throw new ChatError('UNAUTHORIZED', 'Access denied to this message')
     }
@@ -49,7 +49,7 @@ export class AuthUtils {
   /**
    * Extract user ID from request headers
    */
-  static extractUserIdFromHeaders(headers: Record<string, string>): string | null {
+  static extractUserIdFromHeaders(headers: Record<string, string>) {
     // Check for test mode header
     if (process.env.NODE_ENV === 'test') {
       return headers['x-user-id'] || null

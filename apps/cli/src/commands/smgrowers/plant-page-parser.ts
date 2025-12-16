@@ -21,7 +21,7 @@ const writeStream = fs.createWriteStream(outputPath)
 writeStream.write('[\n')
 
 // Helper function to convert field names to standardized keys
-const createFieldKey = (fieldName: string): string => {
+const createFieldKey = (fieldName: string) => {
   return fieldName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_') // Replace non-alphanumeric with underscore
@@ -29,7 +29,7 @@ const createFieldKey = (fieldName: string): string => {
 }
 
 // Helper function to clean text content
-const cleanText = (text: string): string => {
+const cleanText = (text: string) => {
   return text
     .replace(/\s+/g, ' ') // Replace multiple spaces, tabs, newlines with single space
     .trim() // Remove leading/trailing whitespace

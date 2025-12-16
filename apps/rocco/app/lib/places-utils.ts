@@ -37,7 +37,7 @@ export const transformGooglePlaceToPlaceInsert = (
   }
 }
 
-export const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photos']): string[] => {
+export const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photos']) => {
   if (!photos) {
     return []
   }
@@ -47,7 +47,7 @@ export const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photo
     .filter((name): name is string => typeof name === 'string' && name.length > 0)
 }
 
-export const sanitizeStoredPhotos = (photos: string[] | null | undefined): string[] => {
+export const sanitizeStoredPhotos = (photos: string[] | null | undefined) => {
   if (!Array.isArray(photos)) {
     return []
   }
@@ -59,7 +59,7 @@ export const sanitizeStoredPhotos = (photos: string[] | null | undefined): strin
  * Converts Google Places API price level string to a numeric value.
  * Google returns strings like "PRICE_LEVEL_MODERATE", but we store integers in the database.
  */
-export const parsePriceLevel = (priceLevel: string | number | null | undefined): number | null => {
+export const parsePriceLevel = (priceLevel: string | number | null | undefined) => {
   if (priceLevel === null || priceLevel === undefined) {
     return null
   }

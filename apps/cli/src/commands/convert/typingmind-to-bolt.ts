@@ -169,7 +169,7 @@ export const command = new Command('convert-typingmind-to-bolt')
   })
 
 // Helper function to guess provider based on model name
-export function guessProvider(model: string): string {
+export function guessProvider(model: string) {
   if (!model) return 'Unknown'
 
   const modelLower = model.toLowerCase()
@@ -200,7 +200,7 @@ export function guessProvider(model: string): string {
 }
 
 // Helper function to assign custom model IDs based on model name
-export function getCustomModelId(model: string): number {
+export function getCustomModelId(model: string) {
   if (!model) return 0
 
   const modelLower = model.toLowerCase()

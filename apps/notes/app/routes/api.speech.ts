@@ -102,7 +102,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // Rough estimation of audio duration based on text length
 // Average speaking rate is about 150-160 words per minute
-function estimateAudioDuration(text: string): number {
+function estimateAudioDuration(text: string) {
   const words = text.split(/\s+/).length
   const wordsPerMinute = 150
   const durationMinutes = words / wordsPerMinute

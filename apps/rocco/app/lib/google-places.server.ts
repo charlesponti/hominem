@@ -91,7 +91,7 @@ const cache = new Map<string, CacheEntry<unknown>>()
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-const getGoogleApiKey = (): string => {
+const getGoogleApiKey = () => {
   const key = process.env.GOOGLE_API_KEY ?? process.env.VITE_GOOGLE_API_KEY
   if (!key) {
     throw new Error('Google Places API key is not configured')
@@ -99,7 +99,7 @@ const getGoogleApiKey = (): string => {
   return key
 }
 
-const buildCacheKey = (parts: Record<string, unknown>): string => {
+const buildCacheKey = (parts: Record<string, unknown>) => {
   return JSON.stringify(parts)
 }
 
@@ -278,7 +278,7 @@ export const buildPhotoMediaUrl = ({
   photoName: string
   maxWidthPx?: number
   maxHeightPx?: number
-}): string => {
+}) => {
   const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${photoName}/media`)
   url.searchParams.set('maxWidthPx', String(maxWidthPx))
   url.searchParams.set('maxHeightPx', String(maxHeightPx))
@@ -288,7 +288,7 @@ export const buildPhotoMediaUrl = ({
 
 export const getNeighborhoodFromAddressComponents = (
   addressComponents: GooglePlaceDetailsResponse['addressComponents']
-): string | null => {
+) => {
   if (!addressComponents) return null
   const neighborhood = addressComponents.find((component) =>
     component.types.includes('neighborhood')

@@ -10,7 +10,7 @@ type Props = {
   alt: string
 }
 
-const getImageSize = (photoUrl: string, width = 1200, height = 800): string => {
+const getImageSize = (photoUrl: string, width = 1200, height = 800) => {
   if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
     return `https://places.googleapis.com/v1/${photoUrl}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
   }

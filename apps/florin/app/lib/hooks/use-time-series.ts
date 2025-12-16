@@ -54,7 +54,7 @@ export function useTimeSeriesData({
   )
 
   // Helper to format date labels based on grouping
-  const formatDateLabel = (dateStr: string): string => {
+  const formatDateLabel = (dateStr: string) => {
     if (groupBy === 'month') {
       // Convert YYYY-MM to MMM YYYY
       const [year, month] = dateStr.split('-')

@@ -14,7 +14,7 @@ export function detectTask(text: string) {
   }
 }
 
-export function normalizeWhitespace(text: string): string {
+export function normalizeWhitespace(text: string) {
   return text.replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '')
 }
 

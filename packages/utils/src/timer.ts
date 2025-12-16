@@ -24,7 +24,7 @@ export class Timer {
     }
   }
 
-  stop(): number {
+  stop() {
     const duration = this.getDuration()
     if (this.onStop) {
       this.onStop(this.label, duration)
@@ -32,7 +32,7 @@ export class Timer {
     return duration
   }
 
-  getDuration(unit: QUnitType = 'milliseconds'): number {
+  getDuration(unit: QUnitType = 'milliseconds') {
     return dayjs().diff(this.startTime, unit)
   }
 

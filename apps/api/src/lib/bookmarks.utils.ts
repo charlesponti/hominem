@@ -134,7 +134,7 @@ class MemoryCache {
     return entry.data
   }
 
-  set(key: string, data: OpenGraphData, ttl: number): void {
+  set(key: string, data: OpenGraphData, ttl: number) {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -142,11 +142,11 @@ class MemoryCache {
     })
   }
 
-  clear(): void {
+  clear() {
     this.cache.clear()
   }
 
-  size(): number {
+  size() {
     return this.cache.size
   }
 }
@@ -178,7 +178,7 @@ class URLUtils {
   /**
    * Normalize and validate URL
    */
-  static normalizeUrl(url: string): string {
+  static normalizeUrl(url: string) {
     const trimmed = url.trim()
 
     // Add protocol if missing
@@ -192,7 +192,7 @@ class URLUtils {
   /**
    * Extract domain from URL using URL API
    */
-  static extractDomain(url: string): string {
+  static extractDomain(url: string) {
     try {
       const urlObj = new URL(url)
       return urlObj.hostname.replace(/^www\./, '')
@@ -218,7 +218,7 @@ class URLUtils {
   /**
    * Resolve relative URLs to absolute URLs
    */
-  static resolveUrl(baseUrl: string, relativeUrl: string): string {
+  static resolveUrl(baseUrl: string, relativeUrl: string) {
     try {
       return new URL(relativeUrl, baseUrl).href
     } catch {
@@ -229,7 +229,7 @@ class URLUtils {
   /**
    * Generate cache key for URL
    */
-  static generateCacheKey(url: string): string {
+  static generateCacheKey(url: string) {
     return `og:${Buffer.from(url).toString('base64')}`
   }
 }
@@ -257,7 +257,7 @@ class SiteDetector {
   /**
    * Get fallback site name
    */
-  static getFallbackSiteName(url: string): string {
+  static getFallbackSiteName(url: string) {
     const site = SiteDetector.detectSite(url)
     return site?.siteName || URLUtils.extractDomain(url)
   }
@@ -265,7 +265,7 @@ class SiteDetector {
   /**
    * Get fallback favicon URL
    */
-  static getFallbackFaviconUrl(url: string): string | undefined {
+  static getFallbackFaviconUrl(url: string) {
     const site = SiteDetector.detectSite(url)
     return site?.faviconUrl
   }
@@ -276,7 +276,7 @@ class OpenGraphProcessor {
   /**
    * Extract image URL from OpenGraph data
    */
-  static extractImageUrl(ogImage: OGImage[] | OGImage | undefined): string | undefined {
+  static extractImageUrl(ogImage: OGImage[] | OGImage | undefined) {
     if (!ogImage) return undefined
 
     if (typeof ogImage === 'string') {
@@ -322,7 +322,7 @@ class OpenGraphProcessor {
   /**
    * Process favicon URL
    */
-  static processFaviconUrl(faviconUrl: string | undefined, baseUrl: string): string | undefined {
+  static processFaviconUrl(faviconUrl: string | undefined, baseUrl: string) {
     if (!faviconUrl) return undefined
 
     // If already absolute, return as is
@@ -542,7 +542,7 @@ class BookmarkService {
   /**
    * Clear cache
    */
-  clearCache(): void {
+  clearCache() {
     this.cache.clear()
     logger.info('Cache cleared')
   }
@@ -550,7 +550,7 @@ class BookmarkService {
   /**
    * Update metrics
    */
-  private updateMetrics(success: boolean, responseTime: number): void {
+  private updateMetrics(success: boolean, responseTime: number) {
     if (success) {
       this.metrics.successfulRequests++
     } else {

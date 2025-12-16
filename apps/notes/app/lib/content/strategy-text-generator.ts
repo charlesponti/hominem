@@ -1,6 +1,6 @@
 import type { ContentStrategiesSelect } from '@hominem/data/schema'
 
-export function generateFullStrategyText(strategy: ContentStrategiesSelect): string {
+export function generateFullStrategyText(strategy: ContentStrategiesSelect) {
   const sections = [
     generateHeader(strategy),
     generateStrategyDetails(strategy),
@@ -13,11 +13,11 @@ export function generateFullStrategyText(strategy: ContentStrategiesSelect): str
   return sections.filter(Boolean).join('\n\n')
 }
 
-function generateHeader(strategy: ContentStrategiesSelect): string {
+function generateHeader(strategy: ContentStrategiesSelect) {
   return `# Content Strategy: ${strategy.title}`
 }
 
-function generateStrategyDetails(strategy: ContentStrategiesSelect): string {
+function generateStrategyDetails(strategy: ContentStrategiesSelect) {
   const createdDate = strategy.createdAt
     ? new Date(strategy.createdAt).toLocaleDateString()
     : 'Unknown date'
@@ -29,7 +29,7 @@ function generateStrategyDetails(strategy: ContentStrategiesSelect): string {
 - **Created:** ${createdDate}`
 }
 
-function generateKeyInsights(strategy: ContentStrategiesSelect): string | null {
+function generateKeyInsights(strategy: ContentStrategiesSelect) {
   if (!strategy.strategy.keyInsights || strategy.strategy.keyInsights.length === 0) {
     return null
   }
@@ -40,7 +40,7 @@ function generateKeyInsights(strategy: ContentStrategiesSelect): string | null {
 ${insights}`
 }
 
-function generateBlogContentPlan(strategy: ContentStrategiesSelect): string | null {
+function generateBlogContentPlan(strategy: ContentStrategiesSelect) {
   const blog = strategy.strategy.contentPlan?.blog
   if (!blog) {
     return null
@@ -62,7 +62,7 @@ ${outline}
 **Call to Action:** ${blog.callToAction || 'No CTA'}`
 }
 
-function generateMonetizationIdeas(strategy: ContentStrategiesSelect): string | null {
+function generateMonetizationIdeas(strategy: ContentStrategiesSelect) {
   if (!strategy.strategy.monetization || strategy.strategy.monetization.length === 0) {
     return null
   }
@@ -73,7 +73,7 @@ function generateMonetizationIdeas(strategy: ContentStrategiesSelect): string | 
 ${ideas}`
 }
 
-function generateCompetitiveAnalysis(strategy: ContentStrategiesSelect): string | null {
+function generateCompetitiveAnalysis(strategy: ContentStrategiesSelect) {
   const analysis = strategy.strategy.competitiveAnalysis
   if (!analysis) {
     return null
@@ -88,14 +88,14 @@ function generateCompetitiveAnalysis(strategy: ContentStrategiesSelect): string 
 **Opportunities:** ${opportunities || 'No opportunities identified'}`
 }
 
-export function generateKeyInsightsText(strategy: ContentStrategiesSelect): string {
+export function generateKeyInsightsText(strategy: ContentStrategiesSelect) {
   if (!strategy.strategy.keyInsights || strategy.strategy.keyInsights.length === 0) {
     return ''
   }
   return strategy.strategy.keyInsights.map((insight) => `• ${insight}`).join('\n')
 }
 
-export function generateBlogContentPlanText(strategy: ContentStrategiesSelect): string {
+export function generateBlogContentPlanText(strategy: ContentStrategiesSelect) {
   const blog = strategy.strategy.contentPlan?.blog
   if (!blog) return ''
 
@@ -113,14 +113,14 @@ export function generateBlogContentPlanText(strategy: ContentStrategiesSelect): 
   ].join('\n')
 }
 
-export function generateMonetizationIdeasText(strategy: ContentStrategiesSelect): string {
+export function generateMonetizationIdeasText(strategy: ContentStrategiesSelect) {
   if (!strategy.strategy.monetization || strategy.strategy.monetization.length === 0) {
     return ''
   }
   return strategy.strategy.monetization.map((idea) => `• ${idea}`).join('\n')
 }
 
-export function generateCompetitiveAnalysisText(strategy: ContentStrategiesSelect): string {
+export function generateCompetitiveAnalysisText(strategy: ContentStrategiesSelect) {
   const analysis = strategy.strategy.competitiveAnalysis
   if (!analysis) return ''
 

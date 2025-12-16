@@ -22,14 +22,14 @@ export class GenerationStatistics {
   /**
    * Stop timing and calculate total duration
    */
-  stop(): void {
+  stop() {
     this.endTime = performance.now()
   }
 
   /**
    * Get the total time spent in seconds
    */
-  get totalTime(): number {
+  get totalTime() {
     const end = this.endTime || performance.now()
     return (end - this.startTime) / 1000
   }
@@ -37,7 +37,7 @@ export class GenerationStatistics {
   /**
    * Calculate tokens per second for input
    */
-  get inputSpeed(): number {
+  get inputSpeed() {
     if (this.inputTime <= 0) return 0
     return this.inputTokens / this.inputTime
   }
@@ -45,7 +45,7 @@ export class GenerationStatistics {
   /**
    * Calculate tokens per second for output
    */
-  get outputSpeed(): number {
+  get outputSpeed() {
     if (this.outputTime <= 0) return 0
     return this.outputTokens / this.outputTime
   }
@@ -53,7 +53,7 @@ export class GenerationStatistics {
   /**
    * Calculate total tokens per second
    */
-  get totalSpeed(): number {
+  get totalSpeed() {
     const totalTokens = this.inputTokens + this.outputTokens
     if (this.totalTime <= 0) return 0
     return totalTokens / this.totalTime
@@ -62,7 +62,7 @@ export class GenerationStatistics {
   /**
    * Add statistics from another GenerationStatistics object
    */
-  add(other: GenerationStatistics): void {
+  add(other: GenerationStatistics) {
     this.inputTime += other.inputTime
     this.outputTime += other.outputTime
     this.queueTime += other.queueTime
@@ -101,7 +101,7 @@ export class GenerationStatistics {
   /**
    * Format statistics as a readable table
    */
-  toString(): string {
+  toString() {
     return `
 ## ${this.outputSpeed.toFixed(2)} T/s ⚡
 Round trip time: ${this.totalTime.toFixed(2)}s  Model: ${this.modelName}
@@ -161,14 +161,14 @@ export class PerformanceTimer {
   /**
    * Mark a specific point in time during execution
    */
-  mark(name: string): void {
+  mark(name: string) {
     this.markTimes[name] = performance.now()
   }
 
   /**
    * Get duration since the start or since a specific mark
    */
-  getDuration(fromMark?: string): number {
+  getDuration(fromMark?: string) {
     const now = performance.now()
     const startPoint = fromMark ? this.markTimes[fromMark] || this.startTime : this.startTime
     return (now - startPoint) / 1000 // Convert to seconds
@@ -177,7 +177,7 @@ export class PerformanceTimer {
   /**
    * Get duration between two marks
    */
-  getDurationBetween(fromMark: string, toMark: string): number {
+  getDurationBetween(fromMark: string, toMark: string) {
     if (!this.markTimes[fromMark] || !this.markTimes[toMark]) {
       return 0
     }
@@ -187,7 +187,7 @@ export class PerformanceTimer {
   /**
    * Stop the timer
    */
-  stop(): number {
+  stop() {
     this.endTime = performance.now()
     const duration = (this.endTime - this.startTime) / 1000
     return duration
@@ -196,7 +196,7 @@ export class PerformanceTimer {
   /**
    * Get total elapsed time
    */
-  get totalTime(): number {
+  get totalTime() {
     return this.endTime
       ? (this.endTime - this.startTime) / 1000
       : (performance.now() - this.startTime) / 1000
@@ -242,7 +242,7 @@ export class PerformanceService {
   /**
    * Stop a timer and return the duration
    */
-  stopTimer(name: string): number {
+  stopTimer(name: string) {
     const timer = this.timerRegistry[name]
     if (!timer) return 0
 
@@ -296,7 +296,7 @@ export class PerformanceService {
   /**
    * Log statistics for debugging or monitoring
    */
-  logStats(stats: GenerationStatistics): void {
+  logStats(stats: GenerationStatistics) {
     logger.debug(stats.toString())
   }
 }

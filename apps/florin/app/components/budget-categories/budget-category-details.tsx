@@ -14,7 +14,7 @@ function getBudgetStatus(percentageSpent: number): 'on-track' | 'warning' | 'ove
   return 'on-track'
 }
 
-function getStatusColor(status: 'on-track' | 'warning' | 'over-budget'): string {
+function getStatusColor(status: 'on-track' | 'warning' | 'over-budget') {
   switch (status) {
     case 'on-track':
       return '#10b981' // emerald-500
@@ -25,7 +25,7 @@ function getStatusColor(status: 'on-track' | 'warning' | 'over-budget'): string 
   }
 }
 
-function getChartColor(index: number): string {
+function getChartColor(index: number) {
   return CHART_COLORS[index % CHART_COLORS.length] || '#0088FE'
 }
 

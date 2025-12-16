@@ -390,7 +390,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 /**
  * Map Plaid account types to our schema's account types
  */
-function mapPlaidAccountType(plaidType: string): string {
+function mapPlaidAccountType(plaidType: string) {
   const typeMap: Record<string, string> = {
     depository: 'depository',
     credit: 'credit',
@@ -407,7 +407,7 @@ function mapPlaidAccountType(plaidType: string): string {
  * Determine transaction type based on amount
  * Plaid uses negative values for outflows, positive for inflows
  */
-function determineTransactionType(amount: number): string {
+function determineTransactionType(amount: number) {
   if (amount < 0) {
     return 'expense'
   }

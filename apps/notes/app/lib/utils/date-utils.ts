@@ -1,4 +1,4 @@
-export function formatChatDate(dateString: string): string {
+export function formatChatDate(dateString: string) {
   const date = new Date(dateString)
   const now = new Date()
 

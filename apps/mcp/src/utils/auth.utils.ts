@@ -45,7 +45,7 @@ The config file may be corrupted. Try running 'hominem auth' to re-authenticate.
  * @returns The token string or throws an error with helpful message.
  * @throws Error with user-friendly message if token cannot be retrieved.
  */
-export function getAuthTokenFromFile(): string {
+export function getAuthTokenFromFile() {
   try {
     if (!fs.existsSync(CONFIG_FILE_PATH)) {
       throw new Error(AUTH_ERROR_MESSAGES.NO_CONFIG_FILE)
@@ -73,7 +73,7 @@ export function getAuthTokenFromFile(): string {
  * Get the base API URL from environment variables or use default.
  * @returns The base API URL (e.g., 'http://localhost:4040')
  */
-export function getApiBaseUrl(): string {
+export function getApiBaseUrl() {
   const host = process.env.HOMINEM_API_HOST || 'localhost'
   const port = process.env.HOMINEM_API_PORT || '4040'
   return `http://${host}:${port}`

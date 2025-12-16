@@ -11,7 +11,7 @@ import { env } from '~/lib/env'
  * @returns Formatted absolute URL for Google Places photo
  * @throws Error if the input is not a valid Google Places photo reference
  */
-export function buildPlacePhotoUrl(photoReference: string, width = 600, height = 400): string {
+export function buildPlacePhotoUrl(photoReference: string, width = 600, height = 400) {
   // Handle Google Places API photo references (format: "places/.../photos/...")
   if (photoReference.includes('places/') && photoReference.includes('/photos/')) {
     return `https://places.googleapis.com/v1/${photoReference}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`

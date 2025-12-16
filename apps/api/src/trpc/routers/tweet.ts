@@ -40,7 +40,7 @@ export const tweetRouter = router({
         const TWEET_CHARACTER_LIMIT = 280
 
         // Helper function to get default strategy prompts
-        function getDefaultStrategyPrompt(strategy: string): string {
+        function getDefaultStrategyPrompt(strategy: string) {
           const defaultStrategies: Record<string, string> = {
             storytelling:
               'CONTENT STRATEGY: Storytelling - Create a narrative arc with beginning, middle, and end',

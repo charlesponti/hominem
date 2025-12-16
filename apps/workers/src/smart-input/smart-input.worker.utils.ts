@@ -9,7 +9,7 @@ const pdfParse = require('pdf-parse')
 
 const CHUNK_SIZE = 4096
 
-export function splitIntoChunks(content: string): string[] {
+export function splitIntoChunks(content: string) {
   const chunks: string[] = []
   for (let i = 0; i < content.length; i += CHUNK_SIZE) {
     chunks.push(content.slice(i, i + CHUNK_SIZE))

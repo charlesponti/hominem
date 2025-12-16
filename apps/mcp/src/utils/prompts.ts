@@ -8,10 +8,7 @@ import path from 'node:path'
  * @param variables - Object containing variables to substitute in the template
  * @returns Processed prompt string with variables substituted
  */
-export function loadPrompt(
-  name: string,
-  variables: Record<string, string | string[]> = {}
-): string {
+export function loadPrompt(name: string, variables: Record<string, string | string[]> = {}) {
   try {
     const promptsDir = path.join(__dirname, '..', 'prompts')
     const filePath = path.join(promptsDir, `${name}.md`)

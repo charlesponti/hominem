@@ -3,7 +3,7 @@ import { Slider } from '@hominem/ui/components/ui/slider'
 import { DollarSign, Music } from 'lucide-react'
 import { useState } from 'react'
 
-const calculateEarnings = (rate: number, streams: number): number => {
+const calculateEarnings = (rate: number, streams: number) => {
   return rate * streams
 }
 

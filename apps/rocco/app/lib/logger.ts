@@ -24,7 +24,7 @@ export interface LogEntry {
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development'
 
-  private formatMessage(entry: LogEntry): string {
+  private formatMessage(entry: LogEntry) {
     const { level, message, timestamp, context, error } = entry
 
     if (this.isDevelopment) {
@@ -73,12 +73,7 @@ class Logger {
     })
   }
 
-  private log(
-    level: LogLevel,
-    message: string,
-    context?: LogContext,
-    error?: Error | TRPCError
-  ): void {
+  private log(level: LogLevel, message: string, context?: LogContext, error?: Error | TRPCError) {
     const entry: LogEntry = {
       level,
       message,
@@ -121,28 +116,28 @@ class Logger {
     }
   }
 
-  debug(message: string, context?: LogContext): void {
+  debug(message: string, context?: LogContext) {
     this.log('debug', message, context)
   }
 
-  info(message: string, context?: LogContext): void {
+  info(message: string, context?: LogContext) {
     this.log('info', message, context)
   }
 
-  warn(message: string, context?: LogContext, error?: Error): void {
+  warn(message: string, context?: LogContext, error?: Error) {
     this.log('warn', message, context, error)
   }
 
-  error(message: string, context?: LogContext, error?: Error | TRPCError): void {
+  error(message: string, context?: LogContext, error?: Error | TRPCError) {
     this.log('error', message, context, error)
   }
 
-  fatal(message: string, context?: LogContext, error?: Error | TRPCError): void {
+  fatal(message: string, context?: LogContext, error?: Error | TRPCError) {
     this.log('fatal', message, context, error)
   }
 
   // Convenience method for tRPC errors
-  logTRPCError(error: TRPCError, context?: LogContext): void {
+  logTRPCError(error: TRPCError, context?: LogContext) {
     const level = this.getErrorLevel(error)
     this.log(level, `tRPC Error: ${error.message}`, context, error)
   }
@@ -169,7 +164,7 @@ class Logger {
   }
 
   // Method for logging API requests
-  logRequest(method: string, path: string, context?: LogContext): void {
+  logRequest(method: string, path: string, context?: LogContext) {
     this.info(`${method} ${path}`, context)
   }
 
@@ -180,7 +175,7 @@ class Logger {
     statusCode: number,
     duration: number,
     context?: LogContext
-  ): void {
+  ) {
     const level = statusCode >= 400 ? 'warn' : 'info'
     this.log(level, `${method} ${path} - ${statusCode} (${duration}ms)`, context)
   }

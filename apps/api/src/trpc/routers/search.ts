@@ -131,7 +131,7 @@ function getFallbackSearchResults(query: string): SearchResult[] {
   ]
 }
 
-function generateSearchSummary(results: SearchResult[]): string {
+function generateSearchSummary(results: SearchResult[]) {
   if (results.length === 0) {
     return 'No search results found.'
   }

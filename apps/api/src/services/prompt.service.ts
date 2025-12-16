@@ -64,7 +64,7 @@ export class PromptService {
   /**
    * Clear the cache to reload prompts from disk
    */
-  clearCache(): void {
+  clearCache() {
     this.cache.clear()
   }
 }

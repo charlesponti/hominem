@@ -35,7 +35,7 @@ export function serviceWorkerVersion(): Plugin {
       for (const swPath of possiblePaths) {
         if (existsSync(swPath)) {
           try {
-            let swContent = readFileSync(swPath, 'utf-8')
+            const swContent = readFileSync(swPath, 'utf-8')
 
             // Replace the VERSION constant with the build version
             // Matches: const VERSION = 'dev' or const VERSION = "1.0.0" or const VERSION = 'build-...'
@@ -46,14 +46,12 @@ export function serviceWorkerVersion(): Plugin {
 
             if (modifiedContent !== swContent) {
               writeFileSync(swPath, modifiedContent, 'utf-8')
+              // biome-ignore lint/suspicious/noConsole: logging
               console.log(`✓ Injected version ${version} into service worker at ${swPath}`)
               updated = true
               break // Found and updated, exit
-            } else {
-              console.warn(
-                `Service worker at ${swPath} already has version or pattern didn't match`
-              )
             }
+            console.warn(`Service worker at ${swPath} already has version or pattern didn't match`)
           } catch (error) {
             console.warn(`Failed to update service worker at ${swPath}:`, error)
           }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 // Helper function to format seconds into HH:MM:SS or MM:SS
-function formatTime(totalSeconds: number): string {
+function formatTime(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60

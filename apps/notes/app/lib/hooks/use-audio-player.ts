@@ -190,7 +190,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
 }
 
 // Utility function to format time in MM:SS format
-export function formatTime(seconds: number): string {
+export function formatTime(seconds: number) {
   if (!Number.isFinite(seconds)) return '0:00'
 
   const mins = Math.floor(seconds / 60)

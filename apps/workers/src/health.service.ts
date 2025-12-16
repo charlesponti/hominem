@@ -82,7 +82,7 @@ export class HealthService {
   /**
    * Get failure rate (0-1)
    */
-  private getFailureRate(): number {
+  private getFailureRate() {
     const total = this.metrics.totalJobsProcessed + this.metrics.totalJobsFailed
     return total > 0 ? this.metrics.totalJobsFailed / total : 0
   }
@@ -97,14 +97,14 @@ export class HealthService {
   /**
    * Get uptime in milliseconds
    */
-  getUptime(): number {
+  getUptime() {
     return Date.now() - this.metrics.startTime
   }
 
   /**
    * Format health status for logging
    */
-  getHealthSummary(): string {
+  getHealthSummary() {
     const uptime = Math.floor(this.getUptime() / 1000)
     const failureRate = (this.getFailureRate() * 100).toFixed(1)
 

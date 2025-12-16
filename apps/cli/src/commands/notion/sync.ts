@@ -185,7 +185,7 @@ async function convertNotionToContent(result: NotionResult, options: SyncOptions
   }
 }
 
-function extractTitle(properties?: Record<string, unknown>): string | undefined {
+function extractTitle(properties?: Record<string, unknown>) {
   if (!properties) return undefined
 
   // Look for common title properties
@@ -204,7 +204,7 @@ function extractTitle(properties?: Record<string, unknown>): string | undefined 
   return undefined
 }
 
-function extractContent(properties?: Record<string, unknown>): string {
+function extractContent(properties?: Record<string, unknown>) {
   if (!properties) return ''
 
   const contentParts: string[] = []

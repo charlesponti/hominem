@@ -5,7 +5,7 @@ import { env } from '~/lib/env'
 import { cn } from '~/lib/utils'
 import UserAvatar from '../user-avatar'
 
-const buildImageUrl = (src?: string | null, width = 400, height = 300): string | null => {
+const buildImageUrl = (src?: string | null, width = 400, height = 300) => {
   if (!src) return null
 
   if (src.includes('places/') && src.includes('/photos/')) {
