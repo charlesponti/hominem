@@ -1,15 +1,15 @@
 import {
+  AdvancedMarker,
   APIProvider,
   Map as GoogleMap,
   InfoWindow,
   type MapEvent,
   type MapMouseEvent,
-  Marker,
   useApiLoadingStatus,
   useMap,
   useMapsLibrary,
 } from '@vis.gl/react-google-maps'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import Alert from '~/components/alert'
 import Loading from '~/components/loading'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
@@ -32,22 +32,25 @@ export type RoccoMapProps = {
   markers: PlaceLocation[]
   onMapClick?: (event: MapMouseEvent) => void
   onMarkerClick?: () => void
+  mapId?: string
 }
 
 const MapUpdater = ({
   center,
   markers,
   zoom,
+  enabled,
 }: {
   center: { lat: number; lng: number }
   markers: PlaceLocation[]
   zoom: number
+  enabled: boolean
 }) => {
   const map = useMap()
   const coreLibrary = useMapsLibrary('core')
 
   useEffect(() => {
-    if (!map) return
+    if (!map || !enabled) return
 
     // If we have multiple markers, fit bounds
     if (markers.length > 1 && coreLibrary?.LatLngBounds) {
@@ -64,19 +67,75 @@ const MapUpdater = ({
       if (hasValidMarker) {
         map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 })
       }
-    } else if (markers.length === 1 && markers[0].latitude && markers[0].longitude) {
-      // If we have exactly one marker, center on it
-      map.setCenter({ lat: markers[0].latitude, lng: markers[0].longitude })
-      map.setZoom(zoom)
+    } else if (markers.length === 1) {
+      const singleMarker = markers[0]
+      if (singleMarker?.latitude && singleMarker?.longitude) {
+        // If we have exactly one marker, center on it
+        map.setCenter({ lat: singleMarker.latitude, lng: singleMarker.longitude })
+        map.setZoom(zoom)
+      }
     } else {
       // Otherwise use the provided center
       map.setCenter(center)
       map.setZoom(zoom)
     }
-  }, [map, coreLibrary, markers, center, zoom])
+  }, [map, coreLibrary, markers, center, zoom, enabled])
 
   return null
 }
+
+// Memoized marker component to prevent unnecessary re-renders
+const MapMarker = memo(
+  ({
+    marker,
+    isHovered,
+    isSelected,
+    onClick,
+  }: {
+    marker: PlaceLocation
+    isHovered: boolean
+    isSelected: boolean
+    onClick: () => void
+  }) => {
+    // Memoize position object to avoid recreation
+    const position = useMemo(
+      () => ({
+        lat: marker.latitude,
+        lng: marker.longitude,
+      }),
+      [marker.latitude, marker.longitude]
+    )
+
+    // Memoize style object based on hover/selected state
+    const markerStyle = useMemo(
+      () => ({
+        width: isHovered || isSelected ? '32px' : '24px',
+        height: isHovered || isSelected ? '32px' : '24px',
+        borderRadius: '50%',
+        backgroundColor: isHovered || isSelected ? '#EF4444' : '#DC2626',
+        border: '2px solid white',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+        transition: 'width 0.2s, height 0.2s, background-color 0.2s',
+        cursor: 'pointer' as const,
+      }),
+      [isHovered, isSelected]
+    )
+
+    return (
+      <AdvancedMarker
+        position={position}
+        onClick={onClick}
+        collisionBehavior={
+          isHovered || isSelected ? 'REQUIRED' : 'OPTIONAL_AND_HIDES_LOWER_PRIORITY'
+        }
+      >
+        <div style={markerStyle} />
+      </AdvancedMarker>
+    )
+  }
+)
+
+MapMarker.displayName = 'MapMarker'
 
 const RoccoMap = ({
   zoom,
@@ -86,12 +145,18 @@ const RoccoMap = ({
   onMapClick,
   setSelected,
   markers,
+  mapId,
 }: RoccoMapProps) => {
   const mapsLoadingState = useApiLoadingStatus()
   const { hoveredPlaceId } = useMapInteraction()
   const [selectedMarker, setSelectedMarker] = useState<PlaceLocation | null>(null)
-  const markerLibrary = useMapsLibrary('marker')
-  const hoverAnimation = markerLibrary?.Animation?.BOUNCE
+  const [hasUserInteracted, setHasUserInteracted] = useState(false)
+
+  // Get mapId from prop, env variable, or use default
+  const effectiveMapId = useMemo(
+    () => mapId || import.meta.env.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID',
+    [mapId]
+  )
 
   // Calculate initial center: use provided center, or first marker, or current location, or default
   const initialCenter = useMemo(() => {
@@ -116,9 +181,18 @@ const RoccoMap = ({
   })
   const [mapZoom, setMapZoom] = useState(zoom)
 
+  // Memoize marker click handler factory to avoid recreating functions
+  const handleMarkerClick = useCallback((marker: PlaceLocation) => {
+    setHasUserInteracted(true)
+    setSelectedMarker(marker)
+  }, [])
+
   const onClick = useCallback(
     (event: MapMouseEvent) => {
       const { placeId } = event.detail
+
+      // Mark that user has interacted with the map
+      setHasUserInteracted(true)
 
       // Remove currently selected marker
       setSelected?.(null)
@@ -135,9 +209,12 @@ const RoccoMap = ({
   )
 
   // Update center/zoom on user interaction
-  const handleMapIdle = (event: MapEvent<unknown>) => {
+  const handleMapIdle = useCallback((event: MapEvent<unknown>) => {
     const map = event.map
     if (map) {
+      // Mark that user has interacted with the map
+      setHasUserInteracted(true)
+
       const newCenter = map.getCenter()
       const newZoom = map.getZoom()
       if (newCenter && newZoom) {
@@ -148,7 +225,26 @@ const RoccoMap = ({
         setMapZoom(newZoom)
       }
     }
-  }
+  }, [])
+
+  const renderedMarkers = useMemo(
+    () =>
+      markers.map((marker, index) => {
+        const isHovered = hoveredPlaceId && marker.id === hoveredPlaceId
+        const isSelected = selectedMarker?.id === marker.id
+
+        return (
+          <MapMarker
+            key={marker.id || `${marker.latitude}-${marker.longitude}-${index}`}
+            marker={marker}
+            isHovered={!!isHovered}
+            isSelected={!!isSelected}
+            onClick={() => handleMarkerClick(marker)}
+          />
+        )
+      }),
+    [markers, hoveredPlaceId, selectedMarker?.id, handleMarkerClick]
+  )
 
   if (mapsLoadingState === 'FAILED') {
     return <Alert type="error">The Maps Library could not be loaded.</Alert>
@@ -163,7 +259,7 @@ const RoccoMap = ({
   }
 
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY}>
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} libraries={['marker']}>
       <div
         data-testid="rocco-map"
         data-zoom={mapZoom}
@@ -177,6 +273,7 @@ const RoccoMap = ({
           </div>
         ) : null}
         <GoogleMap
+          mapId={effectiveMapId}
           defaultZoom={zoom}
           defaultCenter={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
           onClick={onClick}
@@ -187,39 +284,28 @@ const RoccoMap = ({
             center={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
             markers={markers}
             zoom={zoom}
+            enabled={!hasUserInteracted}
           />
           {/* Current location blue dot - appears when location is loaded */}
           {currentLocation && !isLoadingCurrentLocation && (
-            <Marker
+            <AdvancedMarker
               position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
-              icon={{
-                url: 'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="%234285F4" stroke="%23FFFFFF" stroke-width="2"/></svg>',
-                scaledSize: { width: 20, height: 20 },
-                anchor: { x: 10, y: 10 },
-              }}
               title="Your Location"
-              zIndex={100}
-            />
-          )}
-          {markers.map((marker) => {
-            const isHovered = hoveredPlaceId && marker.id === hoveredPlaceId
-            const isSelected = selectedMarker?.id === marker.id
-
-            const animation = isHovered ? hoverAnimation : undefined
-
-            return (
-              <Marker
-                key={`${marker.latitude}-${marker.longitude}`}
-                position={{
-                  lat: marker.latitude,
-                  lng: marker.longitude,
+              collisionBehavior="REQUIRED"
+            >
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  backgroundColor: '#4285F4',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
                 }}
-                onClick={() => setSelectedMarker(marker)}
-                zIndex={isHovered || isSelected ? 50 : 1}
-                animation={animation}
               />
-            )
-          })}
+            </AdvancedMarker>
+          )}
+          {renderedMarkers}
           {selectedMarker && (
             <InfoWindow
               position={{
