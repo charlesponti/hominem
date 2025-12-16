@@ -2,7 +2,7 @@ import { useSupabaseAuth } from '@hominem/ui/supabase'
 import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate } from 'react-router'
 import Loading from '~/components/loading'
-import PageTitle from '~/components/page-title'
+import { PageTitle } from '@hominem/ui'
 import { trpc } from '~/lib/trpc/client'
 
 const ListSentInvites = () => {

@@ -58,6 +58,7 @@ const NavigationMenu = () => {
       >
         {navItems.map((item) => (
           <DropdownMenuItem key={item.title} asChild className="cursor-pointer py-2">
+            {/* @ts-ignore */}
             <Link to={href(item.url)} className="flex items-center space-x-2">
               {item.icon && <item.icon className="size-4" />}
               <span>{item.title}</span>
@@ -87,7 +88,7 @@ function Header() {
 
   return (
     <header
-      className="fixed top-0 left-0 z-50 w-full bg-background/95 backdrop-blur-md border-b border-border/50"
+      className="fixed top-0 left-0 z-50 w-full bg-background/10 backdrop-blur-md border-b border-border/50"
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
       <div className="flex px-2 py-4 md:px-8 items-center justify-between">

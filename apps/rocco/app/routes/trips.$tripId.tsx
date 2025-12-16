@@ -1,6 +1,6 @@
 import { useLoaderData } from 'react-router'
 import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal'
-import PageTitle from '~/components/page-title'
+import { PageTitle } from '@hominem/ui'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types/trips.$tripId'
 

@@ -1,5 +1,5 @@
 import z from 'zod'
-import PageTitle from '~/components/page-title'
+import { PageTitle } from '@hominem/ui'
 import AddPlaceToList from '~/components/places/AddPlaceToList'
 import PlaceAddress from '~/components/places/PlaceAddress'
 import PlaceMap from '~/components/places/PlaceMap'

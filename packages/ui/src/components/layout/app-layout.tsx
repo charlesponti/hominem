@@ -4,28 +4,20 @@ interface AppLayoutProps {
   children: React.ReactNode
   navigation?: React.ReactNode
   backgroundImage?: string
-  showNavigationProgress?: boolean
 }
 
-export function AppLayout({
-  children,
-  navigation,
-  backgroundImage,
-  showNavigationProgress = false,
-}: AppLayoutProps) {
+export function AppLayout({ children, navigation, backgroundImage }: AppLayoutProps) {
   const navigationState = useNavigation()
-  const isNavigating = showNavigationProgress && navigationState.state !== 'idle'
+  const isNavigating = navigationState.state !== 'idle'
 
   return (
     <>
-      {/* Progress indicator for navigation */}
-      {showNavigationProgress && isNavigating && (
+      {isNavigating && (
         <div className="fixed top-0 left-0 w-full z-50">
           <div className="h-1 bg-primary animate-pulse" />
         </div>
       )}
 
-      {/* Background image (optional) */}
       {backgroundImage && (
         <div
           className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"

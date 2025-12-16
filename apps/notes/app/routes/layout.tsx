@@ -33,7 +33,7 @@ export default function Layout() {
 
   return (
     <>
-      <AppLayout showNavigationProgress navigation={<Header />}>
+      <AppLayout navigation={<Header />}>
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>

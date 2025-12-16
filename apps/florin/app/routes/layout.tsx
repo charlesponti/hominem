@@ -13,7 +13,7 @@ export async function loader(_args: Route.LoaderArgs) {
 export default function Layout({ loaderData: _loaderData }: Route.ComponentProps) {
   return (
     <>
-      <AppLayout showNavigationProgress navigation={<Header />}>
+      <AppLayout navigation={<Header />}>
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>

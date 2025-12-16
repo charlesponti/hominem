@@ -25,11 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Layout() {
   return (
     <>
-      <AppLayout
-        showNavigationProgress
-        navigation={<Header />}
-        backgroundImage="/rocco-background-2.webp"
-      >
+      <AppLayout navigation={<Header />} backgroundImage="/rocco-background-2.webp">
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>

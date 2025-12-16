@@ -1,6 +1,6 @@
 import { Link, useLoaderData } from 'react-router'
 import { Button } from '@hominem/ui/button'
-import PageTitle from '~/components/page-title'
+import { PageTitle } from '@hominem/ui'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types'
 

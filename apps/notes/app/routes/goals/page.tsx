@@ -1,4 +1,5 @@
 import type { Goal } from '@hominem/data/types'
+import { PageTitle } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { Checkbox } from '@hominem/ui/components/ui/checkbox'
 import { Input } from '@hominem/ui/components/ui/input'
@@ -193,11 +194,8 @@ export default function GoalsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-12">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight mb-1">Goals</h1>
-          <p className="text-muted-foreground">Track and achieve your aspirations</p>
-        </div>
+      <div className="flex flex-col gap-4">
+        <PageTitle title="Goals" subtitle="Track and achieve your aspirations" />
         <div className="flex items-center gap-4">
           <Input
             placeholder="Filter by category..."

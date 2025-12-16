@@ -1,17 +1,16 @@
-import { useSupabaseAuth } from '@hominem/ui'
+import { PageTitle, useSupabaseAuth } from '@hominem/ui'
 import { Mail } from 'lucide-react'
 import { useCallback } from 'react'
 import { useLoaderData } from 'react-router'
 import ReceivedInviteItem from '~/components/ReceivedInviteItem'
+import ListSurface from '~/components/list-surface'
 import Loading from '~/components/loading'
-import PageTitle from '~/components/page-title'
 import { env } from '~/lib/env'
 import { getAuthState } from '~/lib/services/auth-loader.service'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
 import { createCaller } from '~/lib/trpc/server'
 import type { ReceivedInvite } from '~/lib/types'
 import type { Route } from './+types/invites'
-import ListSurface from '~/components/list-surface'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
