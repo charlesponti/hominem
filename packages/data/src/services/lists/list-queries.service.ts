@@ -481,7 +481,6 @@ export async function getListById(id: string, userId?: string | null) {
       .innerJoin(users, eq(users.id, list.userId))
       .then((rows) => rows[0])
 
-    console.log('result', result)
     if (!result) {
       return null
     }
@@ -665,5 +664,3 @@ export async function getListsContainingPlace(
     return []
   }
 }
-
-

@@ -43,7 +43,7 @@ export default function NotFoundPage() {
 
         {/* Main Message */}
         <motion.div variants={fadeIn} className="mb-4">
-          <PageTitle title="Page Not Found" variant="serif" className="justify-center" />
+          <PageTitle title="Page Not Found" />
         </motion.div>
 
         {/* Description */}
@@ -101,5 +101,3 @@ export default function NotFoundPage() {
     </div>
   )
 }
-
-

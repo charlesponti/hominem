@@ -45,7 +45,6 @@ export default function DeleteInviteButton({
       <Button
         variant="destructive"
         size="icon"
-        className="p-2"
         onClick={open}
         disabled={deleteInvite.isPending}
         title="Delete invite"

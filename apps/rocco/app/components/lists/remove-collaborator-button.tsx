@@ -82,9 +82,9 @@ export default function RemoveCollaboratorButton({
   return (
     <>
       <Button
+        data-testid="remove-collaborator-button"
         variant="destructive"
         size="icon"
-        className="p-2"
         onClick={open}
         disabled={removeCollaborator.isPending}
         title="Remove collaborator"

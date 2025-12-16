@@ -5,6 +5,7 @@
 /* Base HTML/Body styles - apps can override these */
 html,
 body {
+  font-family: var(--font-sans);
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
@@ -213,10 +214,6 @@ body {
 @layer base {
   * {
     @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-sans);
   }
   button {
     cursor: pointer;

@@ -1,3 +1,4 @@
+import { AppLayout } from '@hominem/ui/components/layout/app-layout'
 import { Toaster } from '@hominem/ui/components/ui/toaster'
 import { Suspense } from 'react'
 import { Outlet } from 'react-router'
@@ -24,18 +25,15 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Layout() {
   return (
     <>
-      <div
-        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/rocco-background-2.webp')" }}
-      />
-
-      <Header />
-
-      <div className="w-full max-w-3xl mx-auto flex-1 flex flex-col mt-24 px-2">
+      <AppLayout
+        navigation={<Header />}
+        backgroundImage="/rocco-background-2.webp"
+        containerClassName="mt-24 flex flex-col"
+      >
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>
-      </div>
+      </AppLayout>
 
       <Toaster />
     </>

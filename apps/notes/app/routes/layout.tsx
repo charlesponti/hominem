@@ -1,7 +1,8 @@
-import { Outlet, useLocation, useSearchParams } from 'react-router'
-import { useEffect } from 'react'
-import { MainNavigation } from '~/components/main-navigation'
+import { AppLayout } from '@hominem/ui/components/layout/app-layout'
 import { Toaster } from '@hominem/ui/components/ui/toaster'
+import { useEffect } from 'react'
+import { Outlet, useLocation, useSearchParams } from 'react-router'
+import { MainNavigation } from '~/components/main-navigation'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 
 export default function Layout() {
@@ -31,14 +32,11 @@ export default function Layout() {
   }, [searchParams, location.pathname, toast, setSearchParams])
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex min-h-screen flex-col">
-        <MainNavigation />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-      </div>
+    <>
+      <AppLayout navigation={<MainNavigation />}>
+        <Outlet />
+      </AppLayout>
       <Toaster />
-    </div>
+    </>
   )
 }

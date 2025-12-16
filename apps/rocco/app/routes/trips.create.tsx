@@ -36,14 +36,12 @@ export default function CreateTripPage() {
   // Redirect to the new trip page on successful creation
   if (actionData?.success && actionData.tripId) {
     return (
-      <div className="p-4">
-        <div className="text-center">
-          <PageTitle title="Trip Created Successfully!" variant="sans" className="mb-4" />
-          <p className="mb-4">Your trip has been created.</p>
-          <Link to={`/trips/${actionData.tripId}`}>
-            <Button>View Trip</Button>
-          </Link>
-        </div>
+      <div className="text-center">
+        <PageTitle title="Trip Created Successfully!" />
+        <p className="mb-4">Your trip has been created.</p>
+        <Link to={`/trips/${actionData.tripId}`}>
+          <Button>View Trip</Button>
+        </Link>
       </div>
     )
   }

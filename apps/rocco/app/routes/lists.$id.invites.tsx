@@ -83,7 +83,6 @@ export default function ListInvites() {
         <PageTitle
           title={list.name}
           subtitle="Invitations"
-          variant="serif"
           actions={
             <Link
               to={`/lists/${list.id}`}

@@ -1,10 +1,10 @@
 import { Button } from '@hominem/ui/button'
 import { Card, CardContent } from '@hominem/ui/components/ui/card'
+import { PageContainer } from '@hominem/ui/components/layout/page-container'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { Eye, FileText, Plus, Trash2 } from 'lucide-react'
 import { Link } from 'react-router'
 import { Loading } from '~/components/loading'
-import { PageContainer } from '~/components/page-container'
 import { useContentStrategies, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
 
 export default function SavedContentStrategiesPage() {

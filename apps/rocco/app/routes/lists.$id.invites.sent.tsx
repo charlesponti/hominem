@@ -21,7 +21,7 @@ const ListSentInvites = () => {
           Back to invites
         </Link>
       </div>
-      <PageTitle title="Sent Invites" variant="serif" />
+      <PageTitle title="Sent Invites" />
       <div>
         {isLoading && <Loading />}
         {data?.length === 0 && 'Your invites will appear here.'}

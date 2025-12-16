@@ -46,11 +46,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
       <div className="w-full space-y-6">
         <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
-          <PageTitle
-            title={place.name}
-            variant="serif"
-            actions={<AddPlaceToList place={place} />}
-          />
+          <PageTitle title={place.name} actions={<AddPlaceToList place={place} />} />
           <PlaceTypes types={place.types || []} />
         </div>
 

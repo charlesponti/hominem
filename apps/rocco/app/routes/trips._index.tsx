@@ -14,11 +14,10 @@ export default function TripsPage() {
   const { trips } = useLoaderData<typeof loader>()
 
   return (
-    <div className="p-4">
+    <div>
       <div className="flex justify-between items-center mb-6">
         <PageTitle
           title="Your Trips"
-          variant="serif"
           actions={
             <Link to="/trips/create">
               <Button>Create New Trip</Button>
