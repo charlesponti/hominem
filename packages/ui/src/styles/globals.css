@@ -25,7 +25,7 @@ body {
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
 
-  --color-primary: var(--primary);
+  --color-primary: white;
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover, oklch(var(--primary) / 0.85));
 
@@ -42,7 +42,7 @@ body {
   --color-destructive-foreground: var(--destructive-foreground);
 
   --color-border: var(--border);
-  --color-input: var(--input);
+  --color-input: var(--color-white);
   --color-ring: var(--ring);
 
   --color-chart-1: oklch(var(--chart-1));
@@ -401,10 +401,6 @@ body {
 
   .border-border {
     border-color: var(--border);
-  }
-
-  .bg-input {
-    background-color: var(--input);
   }
 
   .ring-ring {

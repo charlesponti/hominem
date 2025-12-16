@@ -26,9 +26,9 @@ export default function Layout() {
   return (
     <>
       <AppLayout
+        showNavigationProgress
         navigation={<Header />}
         backgroundImage="/rocco-background-2.webp"
-        containerClassName="mt-24 flex flex-col"
       >
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />

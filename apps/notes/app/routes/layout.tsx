@@ -1,12 +1,12 @@
 import { AppLayout } from '@hominem/ui/components/layout/app-layout'
 import { Toaster } from '@hominem/ui/components/ui/toaster'
-import { useEffect } from 'react'
-import { Outlet, useLocation, useSearchParams } from 'react-router'
-import { MainNavigation } from '~/components/main-navigation'
+import { Suspense, useEffect } from 'react'
+import { Outlet, useSearchParams } from 'react-router'
+import Header from '~/components/header'
+import { LoadingScreen } from '~/components/loading'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 
 export default function Layout() {
-  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { toast } = useToast()
 
@@ -29,12 +29,14 @@ export default function Layout() {
       newParams.delete('error_description')
       setSearchParams(newParams, { replace: true })
     }
-  }, [searchParams, location.pathname, toast, setSearchParams])
+  }, [searchParams, toast, setSearchParams])
 
   return (
     <>
-      <AppLayout navigation={<MainNavigation />}>
-        <Outlet />
+      <AppLayout showNavigationProgress navigation={<Header />}>
+        <Suspense fallback={<LoadingScreen />}>
+          <Outlet />
+        </Suspense>
       </AppLayout>
       <Toaster />
     </>

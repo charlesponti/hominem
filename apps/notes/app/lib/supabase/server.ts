@@ -34,16 +34,27 @@ export async function getServerSession(request: Request) {
   const { supabase } = createSupabaseServerClient(request)
 
   try {
+    // Verify user authentication first
     const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-    if (error || !session) {
+    if (userError || !user) {
       return { user: null, session: null }
     }
 
-    return { user: session.user, session }
+    // Get session for tokens after verifying user
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
+    if (sessionError || !session) {
+      return { user: null, session: null }
+    }
+
+    return { user, session }
   } catch (_error) {
     return { user: null, session: null }
   }

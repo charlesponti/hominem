@@ -4,16 +4,3 @@
 
 /* Tell Tailwind to scan the packages/ui directory for classes */
 @source "../../../packages/ui/src";
-
-/* Rocco-specific HTML/Body styles */
-html,
-body {
-  /* width: 100%; */
-  /* min-height: 100vh; */
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-}

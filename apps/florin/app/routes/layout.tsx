@@ -1,6 +1,9 @@
 import { AppLayout } from '@hominem/ui/components/layout/app-layout'
+import { Toaster } from '@hominem/ui/components/ui/toaster'
+import { Suspense } from 'react'
 import { Outlet } from 'react-router'
-import { MainNavigation } from '../components/main-navigation'
+import Header from '../components/header'
+import { LoadingScreen } from '../components/loading'
 import type { Route } from './+types/layout'
 
 export async function loader(_args: Route.LoaderArgs) {
@@ -9,14 +12,13 @@ export async function loader(_args: Route.LoaderArgs) {
 
 export default function Layout({ loaderData: _loaderData }: Route.ComponentProps) {
   return (
-    <AppLayout
-      navigation={<MainNavigation />}
-      showNavigationProgress
-      className="min-h-screen-dynamic"
-    >
-      <div className="pt-4">
-        <Outlet />
-      </div>
-    </AppLayout>
+    <>
+      <AppLayout showNavigationProgress navigation={<Header />}>
+        <Suspense fallback={<LoadingScreen />}>
+          <Outlet />
+        </Suspense>
+      </AppLayout>
+      <Toaster />
+    </>
   )
 }

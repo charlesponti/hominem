@@ -1,13 +1,10 @@
 import { useNavigation } from 'react-router'
-import { cn } from '../../lib/utils'
 
 interface AppLayoutProps {
   children: React.ReactNode
   navigation?: React.ReactNode
   backgroundImage?: string
   showNavigationProgress?: boolean
-  containerClassName?: string
-  className?: string
 }
 
 export function AppLayout({
@@ -15,8 +12,6 @@ export function AppLayout({
   navigation,
   backgroundImage,
   showNavigationProgress = false,
-  containerClassName,
-  className,
 }: AppLayoutProps) {
   const navigationState = useNavigation()
   const isNavigating = showNavigationProgress && navigationState.state !== 'idle'
@@ -38,13 +33,11 @@ export function AppLayout({
         />
       )}
 
-      <div className={cn('bg-background text-foreground min-h-screen flex flex-col', className)}>
+      <div className="flex flex-col">
         {navigation}
 
-        <main className="flex-1">
-          <div className={cn('w-full max-w-3xl mx-auto px-2 md:px-4', containerClassName)}>
-            {children}
-          </div>
+        <main className="flex-1 mt-24">
+          <div className="w-full max-w-3xl mx-auto px-2 md:px-0">{children}</div>
         </main>
       </div>
     </>
