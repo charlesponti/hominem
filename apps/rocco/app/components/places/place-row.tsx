@@ -1,9 +1,9 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
 import { Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { env } from '~/lib/env'
 import { cn } from '~/lib/utils'
+import UserAvatar from '../user-avatar'
 
 const buildImageUrl = (src?: string | null, width = 400, height = 300): string | null => {
   if (!src) return null
@@ -85,18 +85,12 @@ export default function PlaceRow({
               {subtitle ? <div className="text-xs text-gray-500 truncate">{subtitle}</div> : null}
               {addedBy && (
                 <div className="flex items-center gap-1.5">
-                  <Avatar
-                    className="h-5 w-5 border border-border"
-                    title={addedBy.name || addedBy.email}
-                  >
-                    <AvatarImage
-                      src={addedBy.image || undefined}
-                      alt={addedBy.name || addedBy.email}
-                    />
-                    <AvatarFallback className="text-xs">
-                      {(addedBy.name || addedBy.email || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    name={addedBy.name ?? undefined}
+                    email={addedBy.email}
+                    image={addedBy.image}
+                    size="sm"
+                  />
                 </div>
               )}
             </div>

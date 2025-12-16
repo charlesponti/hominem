@@ -1,9 +1,9 @@
 import { Button } from '@hominem/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
 import { Check, Link as LinkIcon, Mail } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { env } from '~/lib/env'
 import type { SentInvite } from '~/lib/types'
+import UserAvatar from '../user-avatar'
 import DeleteInviteButton from './delete-invite-button'
 import RemoveCollaboratorButton from './remove-collaborator-button'
 
@@ -47,12 +47,12 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
     <li className="flex flex-col md:flex-row md:items-center gap-3 p-3 group hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {accepted ? (
-          <Avatar className="size-10 shrink-0">
-            {profilePhoto && <AvatarImage src={profilePhoto} alt={userName} />}
-            <AvatarFallback className="bg-indigo-100 text-indigo-600 text-sm">
-              {userName.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            name={userName ?? undefined}
+            email={invitedUserEmail}
+            image={profilePhoto}
+            size="sm"
+          />
         ) : (
           <Mail className="text-gray-400 size-5 shrink-0" />
         )}

@@ -11,6 +11,7 @@ import { supabaseMiddleware } from './middleware/supabase.js'
 import { aiRoutes } from './routes/ai/index.js'
 import { componentsRoutes } from './routes/components/index.js'
 import { healthRoutes } from './routes/health.js'
+import { imagesRoutes } from './routes/images.js'
 import { invitesRoutes } from './routes/invites/index.js'
 import { oauthRoutes } from './routes/oauth/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
@@ -103,6 +104,7 @@ export function createServer() {
   app.route('/api/oauth', oauthRoutes)
   app.route('/api/possessions', possessionsRoutes)
   app.route('/api/invites', invitesRoutes)
+  app.route('/api/images', imagesRoutes)
   app.route('/components', componentsRoutes)
   app.route('/api/finance', financeRoutes)
   app.route('/api/finance/plaid', plaidRoutes)
