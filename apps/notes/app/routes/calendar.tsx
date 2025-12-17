@@ -1,6 +1,6 @@
+import { createSupabaseServerClient } from '@hominem/auth/server'
 import { data } from 'react-router'
 import { CalendarSync } from '~/components/calendar/calendar-sync'
-import { createSupabaseServerClient } from '~/lib/supabase/server'
 import type { Route } from './+types/calendar'
 
 export async function loader({ request }: { request: Request }) {

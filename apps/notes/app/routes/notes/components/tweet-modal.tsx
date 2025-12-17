@@ -1,5 +1,6 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -25,7 +26,6 @@ import { useContentStrategies } from '~/lib/content/use-content-strategies'
 import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
 import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
 import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 interface TweetModalProps {
   open: boolean
@@ -74,20 +74,12 @@ export function TweetModal({
   const [strategyType, setStrategyType] = useState<StrategyType>('default')
   const [strategy, setStrategy] = useState<string>('storytelling')
 
-  const { isAuthenticated } = useSupabaseAuth()
+  const { isAuthenticated } = useSupabaseAuthContext()
   const { strategies: customStrategies, isLoading: isLoadingStrategies } = useContentStrategies()
   const twitterIntegrationEnabled = useFeatureFlag('twitterIntegration')
 
-  const {
-    generateTweet,
-    regenerateTweet,
-    updateTweet,
-    resetTweet,
-    generatedTweet,
-    isEditing,
-    setIsEditing,
-    isGenerating,
-  } = useGenerateTweet()
+  const { generateTweet, regenerateTweet, updateTweet, resetTweet, generatedTweet, isGenerating } =
+    useGenerateTweet()
 
   const { data: twitterAccounts, isLoading: isLoadingAccounts } = useTwitterAccounts()
   const postTweet = useTwitterPost()
@@ -103,7 +95,7 @@ export function TweetModal({
     // Reset strategy selection when changing type
     if (newType === 'default') {
       setStrategy('storytelling')
-    } else if (customStrategies.length > 0) {
+    } else if (customStrategies[0]) {
       setStrategy(customStrategies[0].id)
     } else {
       setStrategy('')
@@ -400,10 +392,10 @@ export function TweetModal({
           ) : (
             <Button
               onClick={handlePost}
-              disabled={isOverLimit || postTweet.isLoading}
+              disabled={isOverLimit || postTweet.isPending}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              {postTweet.isLoading ? (
+              {postTweet.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Posting...

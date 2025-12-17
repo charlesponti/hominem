@@ -1,28 +1,28 @@
-import { createSupabaseServerClient } from '~/lib/supabase/server'
-import { jsonResponse } from '~/lib/utils'
+import { createSupabaseServerClient } from "@hominem/auth/server";
+import { jsonResponse } from "~/lib/utils";
 
 export async function loader({ request }: { request: Request }) {
-  const { supabase } = createSupabaseServerClient(request)
+  const { supabase } = createSupabaseServerClient(request);
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return jsonResponse({ error: 'Not authenticated' }, { status: 401 })
+    return jsonResponse({ error: "Not authenticated" }, { status: 401 });
   }
 
   // Get session for provider tokens after verifying user
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession();
 
-  const googleTokens: { access_token: string; refresh_token: string }[] = []
+  const googleTokens: { access_token: string; refresh_token: string }[] = [];
   if (session?.provider_token) {
     googleTokens.push({
       access_token: session.provider_token,
-      refresh_token: session.provider_refresh_token ?? '',
-    })
+      refresh_token: session.provider_refresh_token ?? "",
+    });
   }
 
-  return jsonResponse({ googleTokens })
+  return jsonResponse({ googleTokens });
 }

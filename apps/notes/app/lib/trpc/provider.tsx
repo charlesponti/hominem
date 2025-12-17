@@ -1,13 +1,13 @@
+import { getSupabase } from '@hominem/ui'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
 import type React from 'react'
 import { useState } from 'react'
-import { createClient } from '../supabase/client'
 import { trpc } from './client'
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
-  const supabase = createClient()
+  const supabase = getSupabase()
 
   const [trpcClient] = useState(() =>
     trpc.createClient({

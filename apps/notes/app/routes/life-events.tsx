@@ -1,6 +1,6 @@
+import { getServerSession } from '@hominem/auth/server'
 import { useEffect, useState } from 'react'
 import { data, useNavigate } from 'react-router'
-import { getServerSession } from '~/lib/supabase/server'
 import type { RouterInput } from '~/lib/trpc'
 import { createServerTRPCClient } from '~/lib/trpc/server'
 import EventForm from '../components/life-events/EventForm'

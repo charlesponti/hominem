@@ -1,5 +1,5 @@
+import { getServerSession } from '@hominem/auth/server'
 import { data, Link, type LoaderFunctionArgs, redirect } from 'react-router'
-import { getServerSession } from '~/lib/supabase/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerSession(request)

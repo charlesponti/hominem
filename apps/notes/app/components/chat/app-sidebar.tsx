@@ -3,7 +3,7 @@ import { Plus, User } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
 import { ChatList } from '~/components/chat/ChatList'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { cn } from '~/lib/utils'
 
 interface AppSidebarProps {
@@ -17,7 +17,7 @@ export function AppSidebar({ userId, onNewChat, isMobile = false, onClose }: App
   const location = useLocation()
   const pathname = location.pathname
   const navigate = useNavigate()
-  const { supabase } = useSupabaseAuth()
+  const { supabase } = useSupabaseAuthContext()
   const [isSigningIn, setIsSigningIn] = useState(false)
 
   const isLoggedIn = !!userId

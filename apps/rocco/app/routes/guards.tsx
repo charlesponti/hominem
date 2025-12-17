@@ -1,4 +1,4 @@
-import { createSupabaseClient } from '@hominem/auth/server'
+import { createSupabaseServerClient } from '@hominem/auth/server'
 import { data, type LoaderFunctionArgs, redirect } from 'react-router'
 
 /**
@@ -7,7 +7,7 @@ import { data, type LoaderFunctionArgs, redirect } from 'react-router'
  * @returns An object with authenticated user information
  */
 export async function requireAuth(loaderArgs: LoaderFunctionArgs) {
-  const { supabase } = createSupabaseClient(loaderArgs.request)
+  const { supabase } = createSupabaseServerClient(loaderArgs.request)
 
   const {
     data: { user },
@@ -37,7 +37,7 @@ export async function requireAuth(loaderArgs: LoaderFunctionArgs) {
  * @returns Redirects to home if user is already authenticated
  */
 export async function requireGuest(loaderArgs: LoaderFunctionArgs) {
-  const { supabase } = createSupabaseClient(loaderArgs.request)
+  const { supabase } = createSupabaseServerClient(loaderArgs.request)
 
   const {
     data: { user },

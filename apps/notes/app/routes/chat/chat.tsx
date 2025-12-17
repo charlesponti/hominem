@@ -1,5 +1,5 @@
+import { getServerSession } from '@hominem/auth/server'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
-import { getServerSession } from '~/lib/supabase/server'
 import { createServerTRPCClient } from '~/lib/trpc/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {

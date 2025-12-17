@@ -1,3 +1,5 @@
+import { getServerAuth } from '@hominem/auth/server'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import {
   Card,
@@ -7,9 +9,7 @@ import {
   CardTitle,
 } from '@hominem/ui/components/ui/card'
 import { useCallback, useState } from 'react'
-import { data, redirect, type LoaderFunctionArgs } from 'react-router'
-import { getServerAuth } from '~/lib/supabase/server'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { data, type LoaderFunctionArgs, redirect } from 'react-router'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerAuth(request)
@@ -22,7 +22,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function SignInPage() {
-  const { supabase, isLoading } = useSupabaseAuth()
+  const { supabase, isLoading } = useSupabaseAuthContext()
   const [error, setError] = useState('')
 
   const handleGoogleLogin = useCallback(async () => {

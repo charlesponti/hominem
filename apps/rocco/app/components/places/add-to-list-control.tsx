@@ -8,7 +8,7 @@ import {
   CommandList,
 } from '@hominem/ui/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
-import { useSupabaseAuth } from '@hominem/ui/supabase'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Check, ListPlus, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useRevalidator } from 'react-router'
@@ -25,7 +25,7 @@ interface AddToListControlProps {
 const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const [open, setOpen] = useState(false)
   const [loadingListId, setLoadingListId] = useState<string | null>(null)
-  const { isAuthenticated } = useSupabaseAuth()
+  const { isAuthenticated } = useSupabaseAuthContext()
   const revalidator = useRevalidator()
   const isUuid = z.uuid().safeParse(placeId).success
 

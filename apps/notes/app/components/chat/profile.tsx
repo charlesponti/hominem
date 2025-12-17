@@ -1,12 +1,12 @@
+import { useSupabaseAuthContext } from '@hominem/ui'
 import type { User } from '@supabase/supabase-js'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 interface ProfileProps {
   user: User
 }
 
 export function Profile({ user }: ProfileProps) {
-  const { supabase } = useSupabaseAuth()
+  const { supabase } = useSupabaseAuthContext()
 
   const handleLogout = async () => {
     try {

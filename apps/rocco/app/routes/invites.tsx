@@ -1,5 +1,5 @@
 import { getAuthState } from '@hominem/auth/server'
-import { PageTitle, useSupabaseAuth } from '@hominem/ui'
+import { PageTitle, useSupabaseAuthContext } from '@hominem/ui'
 import { Mail } from 'lucide-react'
 import { useCallback } from 'react'
 import { data, useLoaderData } from 'react-router'
@@ -109,7 +109,7 @@ export function HydrateFallback() {
 
 const Invites = () => {
   const { invites, tokenMismatch, requiresAuth, preview } = useLoaderData<typeof loader>()
-  const { isAuthenticated, user, supabase } = useSupabaseAuth()
+  const { isAuthenticated, user, supabase } = useSupabaseAuthContext()
   const currentUserEmail = user?.email?.toLowerCase()
 
   const onSignIn = useCallback(async () => {

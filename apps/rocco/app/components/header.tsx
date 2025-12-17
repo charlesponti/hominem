@@ -1,4 +1,4 @@
-import { useSupabaseAuth } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ const APP_NAME = 'Rocco'
 
 const NavigationMenu = () => {
   const navigate = useNavigate()
-  const { logout } = useSupabaseAuth()
+  const { logout } = useSupabaseAuthContext()
   const onLogoutClick = useCallback(async () => {
     await logout()
     navigate('/')
@@ -81,7 +81,7 @@ const NavigationMenu = () => {
 }
 
 function Header() {
-  const { isAuthenticated, isLoading } = useSupabaseAuth()
+  const { isAuthenticated, isLoading } = useSupabaseAuthContext()
 
   return (
     <header
@@ -106,7 +106,7 @@ function Header() {
 export default Header
 
 const SignInButton = () => {
-  const { supabase } = useSupabaseAuth()
+  const { supabase } = useSupabaseAuthContext()
 
   const onSignInClick = useCallback(async () => {
     await supabase.auth.signInWithOAuth({

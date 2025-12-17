@@ -1,7 +1,7 @@
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { ArrowRight } from 'lucide-react'
 import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export function meta() {
   return [
@@ -15,7 +15,7 @@ export function meta() {
 }
 
 export default function Home() {
-  const { user, isLoading, supabase } = useSupabaseAuth()
+  const { user, isLoading, supabase } = useSupabaseAuthContext()
   const navigate = useNavigate()
 
   useEffect(() => {

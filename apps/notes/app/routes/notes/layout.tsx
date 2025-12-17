@@ -1,8 +1,8 @@
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Navigate, Outlet } from 'react-router'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function NotesLayout() {
-  const { userId, isLoading } = useSupabaseAuth()
+  const { userId, isLoading } = useSupabaseAuthContext()
 
   if (isLoading) {
     return <div>Loading...</div>

@@ -11,10 +11,10 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
+import { useSupabaseAuthContext } from '@hominem/ui'
 
 export default function AccountPage() {
-  const { userId, isLoading, logout } = useSupabaseAuth()
+  const { userId, isLoading, logout } = useSupabaseAuthContext()
   const { toast } = useToast()
   const { refetch } = useTwitterOAuth()
 

@@ -1,4 +1,5 @@
-import { useApiClient } from '@hominem/ui'
+import { useApiClient, useSupabaseAuthContext } from '@hominem/ui'
+import { Button, buttonVariants } from '@hominem/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,7 +10,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@hominem/ui/components/ui/alert-dialog'
-import { Button, buttonVariants } from '@hominem/ui/button'
 import {
   Card,
   CardContent,
@@ -22,10 +22,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ExportTransactions } from '~/components/finance/export-transactions'
 import { RouteLink } from '~/components/route-link'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 
 export default function AccountPage() {
-  const { logout } = useSupabaseAuth()
+  const { logout } = useSupabaseAuthContext()
   const api = useApiClient()
   const queryClient = useQueryClient()
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)

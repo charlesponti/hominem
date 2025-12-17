@@ -1,12 +1,11 @@
-import { useSupabaseAuth } from '@hominem/ui/supabase'
+import { PageTitle, useSupabaseAuthContext } from '@hominem/ui'
 import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate } from 'react-router'
 import Loading from '~/components/loading'
-import { PageTitle } from '@hominem/ui'
 import { trpc } from '~/lib/trpc/client'
 
 const ListSentInvites = () => {
-  const { userId } = useSupabaseAuth()
+  const { userId } = useSupabaseAuthContext()
   const { data, isLoading } = trpc.invites.getSent.useQuery()
 
   if (!userId) {

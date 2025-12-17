@@ -1,5 +1,6 @@
-import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
 import {
   Card,
   CardContent,
@@ -12,7 +13,6 @@ import { AlertCircle, Building2, Link } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { type PlaidLinkOnExit, type PlaidLinkOnSuccess, usePlaidLink } from 'react-plaid-link'
 import { useCreateLinkToken, useExchangeToken } from '~/lib/hooks/use-plaid'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 
 interface PlaidLinkProps {
@@ -30,7 +30,7 @@ export function PlaidLink({
   variant = 'default',
   children,
 }: PlaidLinkProps) {
-  const { user } = useSupabaseAuth()
+  const { user } = useSupabaseAuthContext()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false)
 

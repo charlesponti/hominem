@@ -1,4 +1,4 @@
-import { useSupabaseAuth } from '@hominem/ui'
+import { PageTitle, useSupabaseAuthContext } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
@@ -7,10 +7,8 @@ import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists/list-menu'
 import ListTitleEdit from '~/components/lists/list-title-edit'
-// import ListVisibilityBadge from '~/components/lists/list-visibility-badge'
 import Loading, { LoadingScreen } from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
-import { PageTitle } from '@hominem/ui'
 import PlacesList from '~/components/places/places-list'
 import UserAvatar from '~/components/user-avatar'
 import { MapInteractionProvider } from '~/contexts/map-interaction-context'
@@ -36,7 +34,7 @@ export function HydrateFallback() {
 }
 
 export default function ListPage() {
-  const { user } = useSupabaseAuth()
+  const { user } = useSupabaseAuthContext()
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const params = useParams<{ id: string }>()
   const { data: listData, isLoading } = trpc.lists.getById.useQuery({

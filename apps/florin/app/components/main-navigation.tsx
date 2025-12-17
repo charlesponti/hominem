@@ -1,8 +1,8 @@
+import { useSupabaseAuthContext } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { useSupabaseAuth } from '~/lib/supabase/use-auth'
 import { cn } from '~/lib/utils'
 import { RouteLink } from './route-link'
 
@@ -27,7 +27,7 @@ const navItems = [
 export function MainNavigation({ isAuthenticated }: { isAuthenticated?: boolean }) {
   const location = useLocation()
   const pathname = location.pathname
-  const { user, isLoading } = useSupabaseAuth()
+  const { user, isLoading } = useSupabaseAuthContext()
   const navigate = useNavigate()
   // Use server state (isAuthenticated prop) for initial render to avoid flash
   // Use client state (isLoading && user) for updates

@@ -1,5 +1,5 @@
+import { createSupabaseServerClient } from '@hominem/auth/server'
 import { redirect } from 'react-router'
-import { createSupabaseServerClient } from '~/lib/supabase/server'
 
 export async function loader({ request }: { request: Request }) {
   const { supabase, headers } = createSupabaseServerClient(request)
