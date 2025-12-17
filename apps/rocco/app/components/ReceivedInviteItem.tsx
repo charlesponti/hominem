@@ -65,7 +65,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             />
           </div>
         ) : (
-          <div className="w-full h-40 rounded-md bg-linear-to-br from-indigo-50 to-purple-50 border border-dashed border-border flex items-center justify-center text-gray-400 text-sm">
+          <div className="w-full h-40 rounded-md bg-linear-to-br from-indigo-50 to-purple-50 border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
             No photo yet
           </div>
         )}

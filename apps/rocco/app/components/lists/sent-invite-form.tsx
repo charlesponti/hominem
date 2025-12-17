@@ -1,5 +1,5 @@
 import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import { type SyntheticEvent, useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'

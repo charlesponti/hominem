@@ -288,7 +288,7 @@ export function AnalyticsFilters({
                   <Dialog.Close asChild>
                     <button
                       type="button"
-                      className="absolute right-4 top-4 text-gray-400 hover:text-gray-700"
+                      className="absolute right-4 top-4 text-muted-foreground hover:text-gray-700"
                       aria-label="Close"
                     >
                       <span className="sr-only">Close</span>×

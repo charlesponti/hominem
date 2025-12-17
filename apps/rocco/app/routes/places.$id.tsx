@@ -1,6 +1,5 @@
 import z from 'zod'
 import { PageTitle } from '@hominem/ui'
-import AddPlaceToList from '~/components/places/AddPlaceToList'
 import PlaceAddress from '~/components/places/PlaceAddress'
 import PlaceMap from '~/components/places/PlaceMap'
 import PlacePhone from '~/components/places/PlacePhone'
@@ -9,6 +8,7 @@ import PlaceRating from '~/components/places/PlaceRating'
 import PlaceTypes from '~/components/places/PlaceTypes'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import PlaceLists from '~/components/places/PlaceLists'
+import PlacesNearby from '~/components/places/places-nearby'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceWithLists } from '~/lib/types'
 import type { Route } from './+types/places.$id'
@@ -46,12 +46,10 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
       <div className="w-full space-y-6">
         <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
-          <PageTitle title={place.name} actions={<AddPlaceToList place={place} />} />
-          <PlaceTypes types={place.types || []} />
-        </div>
-
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          <PageTitle title={place.name} />
           <div className="space-y-2">
+            <PlaceTypes types={place.types || []} />
+
             {place.address && (
               <PlaceAddress
                 address={place.address}
@@ -66,8 +64,21 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
             {place.rating && <PlaceRating rating={place.rating} />}
           </div>
+        </div>
 
-          <PlaceLists place={place} />
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          <PlaceLists placeId={place.id} />
+        </div>
+
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          {place.latitude !== null && place.longitude !== null && (
+            <PlacesNearby
+              latitude={place.latitude}
+              longitude={place.longitude}
+              radiusKm={5}
+              limit={4}
+            />
+          )}
         </div>
 
         {place.latitude !== null && place.longitude !== null && (
@@ -76,7 +87,7 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
               latitude={place.latitude}
               longitude={place.longitude}
               name={place.name}
-              googleMapsId={place.googleMapsId || undefined}
+              googleMapsId={place.googleMapsId}
             />
           </div>
         )}

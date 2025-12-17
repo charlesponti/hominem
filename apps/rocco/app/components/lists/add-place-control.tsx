@@ -1,5 +1,4 @@
 import { Button } from '@hominem/ui/button'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { PlusCircle, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Loading from '~/components/loading'
@@ -16,7 +15,6 @@ interface AddPlaceControlProps {
 type AddStatus = 'idle' | 'selecting' | 'submitting' | 'success'
 
 export default function AddPlaceControl({ listId, canAdd = true, children }: AddPlaceControlProps) {
-  const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [status, setStatus] = useState<AddStatus>('idle')
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -73,11 +71,6 @@ export default function AddPlaceControl({ listId, canAdd = true, children }: Add
     } catch (error) {
       console.error('Failed to process place selection:', error)
       setStatus('selecting')
-      toast({
-        title: 'Error',
-        description: 'Failed to process place selection.',
-        variant: 'destructive',
-      })
     }
   }
 

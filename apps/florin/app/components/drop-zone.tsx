@@ -142,7 +142,7 @@ export function DropZone({
           Drag and drop files here, or{' '}
           <span className="text-primary font-medium">click to browse</span>
         </p>
-        <p className="text-sm text-gray-400">Supported formats: CSV</p>
+        <p className="text-sm text-muted-foreground">Supported formats: CSV</p>
       </div>
     </button>
   )

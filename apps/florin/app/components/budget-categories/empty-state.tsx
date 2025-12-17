@@ -12,7 +12,7 @@ export function EmptyState({ transactionCategoriesCount, onAddCategory }: EmptyS
   return (
     <div className="text-center py-12">
       <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-gray-100">
-        <Plus className="h-6 w-6 text-gray-400" />
+        <Plus className="h-6 w-6 text-muted-foreground" />
       </div>
       <h3 className="mt-2 text-sm font-medium text-gray-900">No budget categories</h3>
       <p className="mt-1 text-sm text-gray-500">

@@ -14,7 +14,7 @@ export function BudgetTrackingEmptyState({
   if (type === 'no-categories') {
     return (
       <div className="text-center py-12">
-        <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">No Budget Categories</h3>
         <p className="text-gray-600 mb-4">
           Create budget categories to start tracking your spending.
@@ -31,7 +31,7 @@ export function BudgetTrackingEmptyState({
       <div className="space-y-6">
         <Card>
           <CardContent className="text-center py-8">
-            <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Spending Data</h3>
             <p className="text-gray-600">
               No transactions found for{' '}

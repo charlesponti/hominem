@@ -2,7 +2,7 @@ import { useId } from 'react'
 import { Form, Link, useActionData, useNavigation } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import { PageTitle } from '@hominem/ui'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { createCaller } from '~/lib/trpc/server'
 import type { Route } from './+types'
 

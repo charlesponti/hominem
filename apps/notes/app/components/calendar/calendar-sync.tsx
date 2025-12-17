@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,

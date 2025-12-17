@@ -125,6 +125,32 @@ export function createTestQueryClient() {
 }
 
 const mockTrpcClient = {
+  useUtils: vi.fn(() => ({
+    lists: {
+      getAll: {
+        invalidate: vi.fn(),
+        refetch: vi.fn(),
+        setData: vi.fn(),
+      },
+      getById: {
+        invalidate: vi.fn(),
+        refetch: vi.fn(),
+        setData: vi.fn(),
+      },
+    },
+    places: {
+      getAll: {
+        invalidate: vi.fn(),
+        refetch: vi.fn(),
+        setData: vi.fn(),
+      },
+      getNearbyFromLists: {
+        invalidate: vi.fn(),
+        refetch: vi.fn(),
+        setData: vi.fn(),
+      },
+    },
+  })),
   lists: {
     getAll: {
       useQuery: vi.fn(),
@@ -132,11 +158,32 @@ const mockTrpcClient = {
     getById: {
       useQuery: vi.fn(),
     },
+    create: {
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
+    },
     update: {
-      useMutation: vi.fn(),
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
     },
     delete: {
-      useMutation: vi.fn(),
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
     },
   },
   places: {
@@ -149,14 +196,35 @@ const mockTrpcClient = {
     getNearbyFromLists: {
       useQuery: vi.fn(),
     },
+    autocomplete: {
+      useQuery: vi.fn(),
+    },
     create: {
-      useMutation: vi.fn(),
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
     },
     update: {
-      useMutation: vi.fn(),
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
     },
     delete: {
-      useMutation: vi.fn(),
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
     },
   },
   items: {
@@ -164,10 +232,22 @@ const mockTrpcClient = {
       useQuery: vi.fn(),
     },
     addToList: {
-      useMutation: vi.fn(),
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
     },
     removeFromList: {
-      useMutation: vi.fn(),
+      useMutation: vi.fn(() => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(),
+        isLoading: false,
+        isSuccess: false,
+        isError: false,
+      })),
     },
   },
   invites: {
@@ -222,9 +302,9 @@ export function renderWithRouter(
   config: {
     routes: Array<{
       path: string
-      Component: React.ComponentType
-      loader?: () => unknown
-      ErrorBoundary?: React.ComponentType
+      Component: React.ComponentType<any>
+      loader?: (args: { request: Request }) => Promise<unknown> | unknown
+      ErrorBoundary?: React.ComponentType<any>
     }>
     isAuth?: boolean
     initialEntries?: string[]
@@ -235,7 +315,7 @@ export function renderWithRouter(
     queryClient?: QueryClient
   } = {}
 ) {
-  const router = createMemoryRouter(config.routes, {
+  const router = createMemoryRouter(config.routes as Parameters<typeof createMemoryRouter>[0], {
     initialEntries: config.initialEntries || ['/'],
   })
 

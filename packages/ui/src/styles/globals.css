@@ -253,12 +253,7 @@ body {
   .text-color-secondary {
     color: var(--secondary-foreground);
   }
-  .text-color-muted {
-    color: var(--muted-foreground);
-  }
-  .text-color-accent {
-    color: var(--accent-foreground);
-  }
+
   .text-color-destructive {
     color: var(--destructive);
   }

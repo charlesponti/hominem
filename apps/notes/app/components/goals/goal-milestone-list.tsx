@@ -1,7 +1,7 @@
 import type { GoalMilestone } from '@hominem/data/types'
 import { Plus, XCircle } from 'lucide-react'
 import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 
 interface GoalMilestoneListProps {
   milestones: GoalMilestone[]

@@ -64,7 +64,7 @@ export default function AccountPage() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
           Profile
         </h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage your account</p>
+        <p className="mt-1 text-sm text-gray-600 dark:text-muted-foreground">Manage your account</p>
       </header>
 
       <div className="space-y-8">

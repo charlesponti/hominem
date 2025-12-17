@@ -10,7 +10,7 @@ import {
 } from '@hominem/ui/components/ui/card'
 import { Dialog, DialogContent } from '@hominem/ui/components/ui/dialog'
 import { Drawer, DrawerContent } from '@hominem/ui/components/ui/drawer'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,

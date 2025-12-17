@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { PlusCircle, XCircle } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import Loading from '~/components/loading'
 import { useCreateList } from '~/lib/trpc/api'
 import type { List } from '~/lib/types'
-import Loading from '~/components/loading'
+import { cn } from '~/lib/utils'
 
 interface ListFormProps {
   onCreate: (list: List) => void
@@ -105,12 +106,13 @@ export default function ListForm({
   return (
     <div className="flex gap-1">
       {showInput ? (
-        <div className="relative w-full sm:max-w-md">
-          <form onSubmit={handleSubmit}>
+        <div className="relative w-full">
+          <form onSubmit={handleSubmit} className="w-full">
             <div
-              className={`transition-opacity duration-200 ${
-                isOverlayVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'
-              }`}
+              className={cn('transition-opacity duration-200', {
+                'opacity-0 pointer-events-none': isOverlayVisible,
+                'opacity-100': !isOverlayVisible,
+              })}
             >
               <Input
                 ref={inputRef}

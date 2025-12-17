@@ -1,15 +1,22 @@
 import { MapPin } from 'lucide-react'
 import { href } from 'react-router'
+import { useGeolocation } from '~/hooks/useGeolocation'
 import { trpc } from '~/lib/trpc/client'
 import ListSurface from '../list-surface'
 import Loading from '../loading'
 import PlaceRow from './place-row'
 
 type Props = {
-  latitude: number
-  longitude: number
+  latitude?: number
+  longitude?: number
   radiusKm?: number
   limit?: number
+}
+
+// Default location: San Francisco (fallback)
+const DEFAULT_LOCATION = {
+  latitude: 37.7749,
+  longitude: -122.4194,
 }
 
 const formatDistance = (distanceInMeters: number) => {
@@ -19,19 +26,37 @@ const formatDistance = (distanceInMeters: number) => {
   return `${(distanceInMeters / 1000).toFixed(1)}km`
 }
 
-export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit = 4 }: Props) {
+export default function PlacesNearby({
+  latitude: providedLatitude,
+  longitude: providedLongitude,
+  radiusKm = 5,
+  limit = 4,
+}: Props) {
+  // Get user's current location from cached hook (only if not provided via props)
+  const { currentLocation } = useGeolocation({
+    enabled: providedLatitude === undefined && providedLongitude === undefined,
+    enableHighAccuracy: false,
+    timeout: 5000,
+    maximumAge: 300000, // Cache location for 5 minutes
+  })
+
+  // Use provided coordinates, or user's geolocation, or fall back to default
+  const location =
+    providedLatitude !== undefined && providedLongitude !== undefined
+      ? { latitude: providedLatitude, longitude: providedLongitude }
+      : currentLocation || DEFAULT_LOCATION
   const {
     data: places = [],
     isLoading,
     error,
   } = trpc.places.getNearbyFromLists.useQuery({
-    latitude,
-    longitude,
+    latitude: location.latitude,
+    longitude: location.longitude,
     radiusKm,
     limit,
   })
+  const title = <h2 className="heading-2">Nearby</h2>
 
-  const title = <h2 className="text-2xl tracking-tight font-light text-gray-900">Nearby</h2>
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -59,7 +84,7 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
       <div className="space-y-4">
         {title}
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
-          <MapPin className="w-12 h-12 text-gray-400 mb-3" />
+          <MapPin className="w-12 h-12 text-muted-foreground mb-3" />
           <p className="text-gray-600">
             No places from your lists found within {radiusKm}km of this location
           </p>
@@ -69,11 +94,8 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
   }
 
   return (
-    <div className="space-y-2 w-full">
-      <div className="flex items-center justify-between">
-        {title}
-        {/* <span className="text-sm font-light font-serif text-gray-500">Within {radiusKm}km</span> */}
-      </div>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">{title}</div>
 
       <ListSurface>
         {places.map((place) => {
@@ -85,9 +107,9 @@ export default function NearbyPlaces({ latitude, longitude, radiusKm = 5, limit 
               photoUrl={place.photos?.[0] ?? null}
               imageUrl={place.imageUrl}
               meta={
-                <div className="flex items-center text-sm text-gray-400">
-                  <MapPin size={14} className="mr-1" />
+                <div className="flex gap-1 items-center text-xs text-muted-foreground">
                   <span>{formatDistance(place.distance)}</span>
+                  <MapPin size={10} />
                 </div>
               }
               subtitle={

@@ -54,7 +54,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
             size="sm"
           />
         ) : (
-          <Mail className="text-gray-400 size-5 shrink-0" />
+          <Mail className="text-muted-foreground size-5 shrink-0" />
         )}
         <div className="flex-1 min-w-0">
           <p className="font-light text-gray-600 truncate text-base">{invitedUserEmail}</p>

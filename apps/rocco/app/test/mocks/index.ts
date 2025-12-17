@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js'
-import type { Place } from '~/lib/types'
+import type { List, Place } from '~/lib/types'
 
 export * from './place'
 
@@ -34,6 +34,7 @@ export const TEST_USER: User = {
 
 export const getMockUser = () => ({
   id: USER_ID,
+  name: TEST_USER_NAME,
   email: TEST_USER_EMAIL,
   user_metadata: {
     name: TEST_USER_NAME,
@@ -102,7 +103,7 @@ export const getMockLists = () => [
   },
 ]
 
-export const MOCK_LIST = {
+export const MOCK_LIST: List = {
   id: 'list-1',
   name: 'Coffee Spots',
   description: 'Great places for coffee',
@@ -111,9 +112,10 @@ export const MOCK_LIST = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   places: [],
+  createdBy: getMockUser(),
 }
 
-export const MOCK_LISTS = [
+export const MOCK_LISTS: List[] = [
   MOCK_LIST,
   {
     id: 'list-2',
@@ -124,5 +126,6 @@ export const MOCK_LISTS = [
     places: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    createdBy: getMockUser(),
   },
 ]

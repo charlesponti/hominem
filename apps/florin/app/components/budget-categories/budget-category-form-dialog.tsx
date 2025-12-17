@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@hominem/ui/components/ui/dialog'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,

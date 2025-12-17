@@ -57,7 +57,7 @@ alwaysApply: false
 - Zod/Joi for schema validation
 
 ## Error Handling
-- Handle errors at function start
+- Handle errors early
 - Early returns for error conditions
 - Model errors as return values in Server Actions
 - User-friendly error messages

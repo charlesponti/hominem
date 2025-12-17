@@ -121,7 +121,7 @@ export function TransactionsList({
       <div className="p-8 text-center border border-gray-200 bg-gray-50 rounded-lg max-w-4xl mx-auto">
         <div className="flex flex-col items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-            <DollarSign className="h-6 w-6 text-gray-400" />
+            <DollarSign className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="text-gray-600 font-medium">No transactions found</div>
           <div className="text-sm text-gray-500">Try adjusting your filters or date range</div>

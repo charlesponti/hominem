@@ -1,7 +1,7 @@
 import type { ContentStrategy } from '@hominem/data/schema'
 import { Button } from '@hominem/ui/button'
 import { Checkbox } from '@hominem/ui/components/ui/checkbox'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@hominem/ui/components/ui/tabs'
 import { useToast } from '@hominem/ui/components/ui/use-toast'

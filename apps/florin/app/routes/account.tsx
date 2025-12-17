@@ -58,7 +58,7 @@ export default function AccountPage() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
           Finance Settings
         </h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-1 text-sm text-gray-600 dark:text-muted-foreground">
           Manage your financial data, export transactions, and other account settings.
         </p>
       </header>

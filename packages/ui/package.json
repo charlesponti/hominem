@@ -17,6 +17,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./button": "./src/components/ui/button.tsx",
+    "./input": "./src/components/ui/input.tsx",
     "./components/*": "./src/components/*",
     "./lib/*": "./src/lib/*",
     "./server": "./src/server/index.ts",

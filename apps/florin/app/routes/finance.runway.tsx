@@ -1,7 +1,7 @@
 import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import { AlertTriangle, Calendar, DollarSign, TrendingDown } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'

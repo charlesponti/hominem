@@ -30,7 +30,7 @@ function ListItem({ list, isOwnList, 'aria-label': ariaLabel }: ListItemProps) {
           </div>
           <h3 className="text-base font-medium text-gray-900 truncate">
             <span>{list.name}</span>
-            <span className="text-gray-400 text-sm flex items-center gap-1">
+            <span className="text-muted-foreground text-sm flex items-center gap-1">
               <BookmarkPlus size={15} />
               {list.itemCount || 0} {(list.itemCount || 0) === 1 ? 'place' : 'places'}
             </span>
@@ -40,7 +40,7 @@ function ListItem({ list, isOwnList, 'aria-label': ariaLabel }: ListItemProps) {
         <div className="flex items-center gap-6 text-gray-500 text-base mt-1">
           {list.isPublic && (
             <div className="flex items-center gap-2">
-              <Users size={15} className="text-gray-400" />
+              <Users size={15} className="text-muted-foreground" />
               <span>Public</span>
             </div>
           )}

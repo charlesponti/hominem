@@ -1,59 +1,22 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
-import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useCallback, useState } from 'react'
+import { useLoaderData, useNavigate } from 'react-router'
 import Lists from '~/components/lists/lists'
-import NearbyPlaces from '~/components/places/nearby-places'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
+import PlacesNearby from '~/components/places/places-nearby'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
+import { getAuthState } from '~/lib/services/auth-loader.service'
+import type { Route } from './+types'
 import AboutPage from './about'
-import { LoadingScreen } from '~/components/loading'
 
-// Default location: San Francisco (fallback)
-const DEFAULT_LOCATION = {
-  latitude: 37.7749,
-  longitude: -122.4194,
-}
-
-type Location = {
-  latitude: number
-  longitude: number
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { isAuthenticated } = await getAuthState(request)
+  return { isAuthenticated }
 }
 
 export default function Index() {
-  const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
+  const { isAuthenticated } = useLoaderData<typeof loader>()
   const navigate = useNavigate()
   const [, setSelectedPlace] = useState<GooglePlacePrediction | null>(null)
-  const [userLocation, setUserLocation] = useState<Location | null>(null)
-
-  // Get user's current location from browser geolocation API
-  useEffect(() => {
-    if (!isAuthenticated || authLoading) return
-
-    if (!navigator.geolocation) {
-      console.warn('Geolocation is not supported by your browser')
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        })
-      },
-      (error) => {
-        console.error('Error getting location:', error)
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 5000,
-        maximumAge: 300000, // Cache location for 5 minutes
-      }
-    )
-  }, [isAuthenticated, authLoading])
-
-  // Use user's geolocation if available, otherwise fall back to default
-  const defaultLocation = userLocation || DEFAULT_LOCATION
 
   const handlePlaceSelected = useCallback(
     (place: GooglePlacePrediction) => {
@@ -64,14 +27,6 @@ export default function Index() {
     [navigate]
   )
 
-  if (authLoading) {
-    return (
-      <div className="pt-40">
-        <LoadingScreen />
-      </div>
-    )
-  }
-
   if (!isAuthenticated) {
     return <AboutPage />
   }
@@ -80,12 +35,7 @@ export default function Index() {
     <div className="flex flex-col gap-8 min-w-full max-w-6xl mx-auto pb-8" data-testid="home-scene">
       <PlacesAutocomplete setSelected={handlePlaceSelected} />
 
-      <NearbyPlaces
-        latitude={defaultLocation.latitude}
-        longitude={defaultLocation.longitude}
-        radiusKm={5}
-        limit={4}
-      />
+      <PlacesNearby />
 
       <Lists />
     </div>

@@ -3,10 +3,35 @@ import { cleanup } from '@testing-library/react'
 import { afterEach, beforeAll, vi } from 'vitest'
 import './utils'
 
+// Polyfill Web APIs for React Router v7 compatibility
+// React Router v7 uses Request/Response internally and needs them
+// to be from a consistent implementation to avoid AbortSignal errors
+import { Headers, Request, Response, fetch } from '@remix-run/web-fetch'
+
+// @ts-expect-error - Polyfilling globals for test environment
+globalThis.fetch = fetch
+// @ts-expect-error - Polyfilling globals for test environment
+globalThis.Request = Request
+// @ts-expect-error - Polyfilling globals for test environment
+globalThis.Response = Response
+// @ts-expect-error - Polyfilling globals for test environment
+globalThis.Headers = Headers
+
 // Set NODE_ENV to test for environment variable defaults
 process.env.NODE_ENV = 'test'
 
 export const TEST_LIST_ID = 'list-id'
+
+// Polyfill IntersectionObserver for framer-motion
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  takeRecords() {
+    return []
+  }
+  unobserve() {}
+}
 
 // Ensure jsdom environment is fully initialized before tests run
 beforeAll(() => {

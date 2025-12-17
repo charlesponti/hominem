@@ -10,7 +10,7 @@ type Props = {
   alt: string
 }
 
-const getImageSize = (photoUrl: string, width = 1200, height = 800) => {
+const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
   if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
     return `https://places.googleapis.com/v1/${photoUrl}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
   }
@@ -104,7 +104,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
       {/* Main image */}
       {photo && (
         <img
-          src={getImageSize(photo, 1600, 1200)}
+          src={getGooglePlaceImgUrl(photo, 1600, 1200)}
           alt={`${alt} - ${activeIndex + 1}`}
           className="max-w-[90vw] max-h-[90vh] object-contain"
           onClick={(e) => e.stopPropagation()}

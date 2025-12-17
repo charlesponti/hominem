@@ -1,8 +1,8 @@
 import type { Note, NoteInsert, Priority, TaskMetadata } from '@hominem/data/types'
-import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/components/ui/input'
+import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Textarea } from '@hominem/ui/components/ui/textarea'
+import { Input } from '@hominem/ui/input'
 import { FileText, ListChecks, RefreshCw, Send, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { PrioritySelect } from '~/components/priority-select'
@@ -92,7 +92,7 @@ export function InlineCreateForm({
   const isTaskMode = inputMode === 'task'
   const trimmedTitle = inputTitle.trim()
   const trimmedContent = inputValue.trim()
-  const titleToSave = trimmedTitle || undefined
+  const titleToSave = trimmedTitle
   const contentToSave = trimmedContent
   const isSaving = isEditMode ? updateItem.isPending : createItem.isPending
   const isSaveDisabled =

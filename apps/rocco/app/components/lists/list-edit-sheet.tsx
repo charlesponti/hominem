@@ -1,7 +1,7 @@
 import { useCallback, useId, useState } from 'react'
 import Alert from '~/components/alert'
 import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/components/ui/input'
+import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useUpdateList } from '~/lib/trpc/api'
@@ -92,7 +92,7 @@ export default function ListEditSheet({ list }: { list: List }) {
           <Dialog.Close asChild>
             <button
               type="button"
-              className="absolute right-2 top-2 text-gray-400 hover:text-gray-700"
+              className="absolute right-2 top-2 text-muted-foreground hover:text-gray-700"
               aria-label="Close"
             >
               <span className="sr-only">Close</span>×
