@@ -23,7 +23,7 @@ import { useModal } from '~/hooks/useModal'
 import { useRemoveListItem } from '~/lib/places'
 import PlaceRow from './place-row'
 
-interface PlaceItemProps {
+interface PlacesListItemProps {
   place: ListPlace
   listId: string
   onRemove?: () => void
@@ -39,7 +39,7 @@ const PlaceListItem = ({
   onError,
   isSelected = false,
   showAvatar = false,
-}: PlaceItemProps) => {
+}: PlacesListItemProps) => {
   const { setHoveredPlaceId } = useMapInteraction()
   const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal()
   const { mutate: removeListItem } = useRemoveListItem({
@@ -53,18 +53,18 @@ const PlaceListItem = ({
   })
 
   const onDeleteClick = () => {
-    removeListItem({ listId, placeId: place.itemId })
+    removeListItem({ listId, placeId: place.placeId })
   }
 
   return (
     <>
       <PlaceRow
         name={place.name}
-        href={href('/places/:id', { id: place.itemId })}
+        href={href('/places/:id', { id: place.placeId })}
         photoUrl={place.photos?.[0] ?? null}
         imageUrl={place.imageUrl}
         isSelected={isSelected}
-        onMouseEnter={() => setHoveredPlaceId(place.itemId)}
+        onMouseEnter={() => setHoveredPlaceId(place.placeId)}
         onMouseLeave={() => setHoveredPlaceId(null)}
         addedBy={showAvatar ? place.addedBy : null}
         accessory={

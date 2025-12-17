@@ -80,7 +80,7 @@
     "pino": "^9.7.0",
     "postgres": "^3.4.5",
     "resend": "^4.0.1",
-    "zod": "^3.24.3"
+    "zod": "4.0.5"
   },
   "peerDependencies": {
     "drizzle-orm": "0.45.0"

@@ -1,10 +1,10 @@
-import { and, desc, eq, inArray, sql } from 'drizzle-orm'
-import crypto from 'node:crypto'
-import { db } from '../../db'
-import { type Item as ItemSelect, item, place, users } from '../../db/schema'
-import { logger } from '../../logger'
-import { getListOwnedByUser } from './list-queries.service'
-import type { ListPlace } from './types'
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import crypto from "node:crypto";
+import { db } from "../../db";
+import { type Item as ItemSelect, item, place, users } from "../../db/schema";
+import { logger } from "../../logger";
+import { getListOwnedByUser } from "./list-queries.service";
+import type { ListPlace } from "./types";
 
 /**
  * Fetches all places associated with a specific list
@@ -16,14 +16,14 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
     const listPlaces = await db
       .select({
         id: item.id,
-        itemId: item.itemId,
+        placeId: item.itemId, // Map item.itemId (which is place.id) to placeId for clarity
         description: place.description,
         itemAddedAt: item.createdAt,
         googleMapsId: place.googleMapsId,
         name: place.name,
-        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
-          'imageUrl'
-        ),
+        imageUrl: sql<
+          string | null
+        >`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as("imageUrl"),
         photos: place.photos,
         types: place.types,
         type: item.type,
@@ -39,11 +39,11 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
       .from(item)
       .innerJoin(place, eq(item.itemId, place.id))
       .innerJoin(users, eq(item.userId, users.id))
-      .where(eq(item.listId, listId))
+      .where(eq(item.listId, listId));
 
     return listPlaces.map((p) => ({
       id: p.id,
-      itemId: p.itemId,
+      placeId: p.placeId,
       description: p.description,
       itemAddedAt: p.itemAddedAt,
       googleMapsId: p.googleMapsId,
@@ -62,13 +62,13 @@ export async function getListPlaces(listId: string): Promise<ListPlace[]> {
         email: p.addedByEmail,
         image: p.addedByImage,
       },
-    }))
+    }));
   } catch (error) {
-    logger.error('Error fetching places for list', {
+    logger.error("Error fetching places for list", {
       listId,
       error: error instanceof Error ? error.message : String(error),
-    })
-    return []
+    });
+    return [];
   }
 }
 
@@ -90,13 +90,13 @@ export async function getPlaceListPreview(listId: string) {
       .innerJoin(place, eq(item.itemId, place.id))
       .where(eq(item.listId, listId))
       .limit(1)
-      .then((rows) => rows[0] ?? null)
+      .then((rows) => rows[0] ?? null);
   } catch (error) {
-    logger.error('Error fetching first place for preview', {
+    logger.error("Error fetching first place for preview", {
       listId,
       error: error instanceof Error ? error.message : String(error),
-    })
-    return null
+    });
+    return null;
   }
 }
 
@@ -105,26 +105,28 @@ export async function getPlaceListPreview(listId: string) {
  * @param listIds - Array of list IDs to fetch places for
  * @returns Map of list places by listId
  */
-export async function getListPlacesMap(listIds: string[]): Promise<Map<string, ListPlace[]>> {
-  const placesMap = new Map<string, ListPlace[]>()
+export async function getListPlacesMap(
+  listIds: string[]
+): Promise<Map<string, ListPlace[]>> {
+  const placesMap = new Map<string, ListPlace[]>();
 
   if (listIds.length === 0) {
-    return placesMap
+    return placesMap;
   }
 
   try {
     const allPlaces = await db
       .select({
         id: item.id,
-        itemId: item.itemId,
+        placeId: item.itemId, // Map item.itemId (which is place.id) to placeId for clarity
         listId: item.listId,
         description: place.description,
         itemAddedAt: item.createdAt,
         googleMapsId: place.googleMapsId,
         name: place.name,
-        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
-          'imageUrl'
-        ),
+        imageUrl: sql<
+          string | null
+        >`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as("imageUrl"),
         photos: place.photos,
         types: place.types,
         type: item.type,
@@ -140,16 +142,16 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
       .from(item)
       .innerJoin(place, eq(item.itemId, place.id))
       .innerJoin(users, eq(item.userId, users.id))
-      .where(inArray(item.listId, listIds))
+      .where(inArray(item.listId, listIds));
 
     for (const p of allPlaces) {
       if (!placesMap.has(p.listId)) {
-        placesMap.set(p.listId, [])
+        placesMap.set(p.listId, []);
       }
 
       const listPlace: ListPlace = {
         id: p.id,
-        itemId: p.itemId,
+        placeId: p.placeId,
         description: p.description,
         itemAddedAt: p.itemAddedAt,
         googleMapsId: p.googleMapsId,
@@ -168,14 +170,14 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
           email: p.addedByEmail,
           image: p.addedByImage,
         },
-      }
-      placesMap.get(p.listId)!.push(listPlace)
+      };
+      placesMap.get(p.listId)!.push(listPlace);
     }
 
-    return placesMap
+    return placesMap;
   } catch (error) {
-    console.error('Error building list places map:', error)
-    return placesMap
+    console.error("Error building list places map:", error);
+    return placesMap;
   }
 }
 
@@ -185,38 +187,43 @@ export async function getListPlacesMap(listIds: string[]): Promise<Map<string, L
  * @param itemId - The ID of the item to delete
  * @returns True if deletion was successful, false otherwise
  */
-export async function deleteListItem(listId: string, itemId: string): Promise<boolean> {
+export async function deleteListItem(
+  listId: string,
+  itemId: string
+): Promise<boolean> {
   try {
     const result = await db
       .delete(item)
       .where(and(eq(item.listId, listId), eq(item.itemId, itemId)))
-      .returning({ id: item.id })
-    return result.length > 0
+      .returning({ id: item.id });
+    return result.length > 0;
   } catch (error) {
-    console.error(`Error deleting item ${itemId} from list ${listId}:`, error)
-    return false
+    console.error(`Error deleting item ${itemId} from list ${listId}:`, error);
+    return false;
   }
 }
 
 export async function addItemToList(params: {
-  listId: string
-  itemId: string
-  itemType: 'FLIGHT' | 'PLACE'
-  userId: string
+  listId: string;
+  itemId: string;
+  itemType: "FLIGHT" | "PLACE";
+  userId: string;
 }) {
-  const { listId, itemId, itemType, userId } = params
+  const { listId, itemId, itemType, userId } = params;
 
-  const listItem = await getListOwnedByUser(listId, userId)
+  const listItem = await getListOwnedByUser(listId, userId);
   if (!listItem) {
-    throw new Error("List not found or you don't have permission to add items to it")
+    throw new Error(
+      "List not found or you don't have permission to add items to it"
+    );
   }
 
   const existingItem = await db.query.item.findFirst({
     where: and(eq(item.listId, listId), eq(item.itemId, itemId)),
-  })
+  });
 
   if (existingItem) {
-    throw new Error('Item is already in this list')
+    throw new Error("Item is already in this list");
   }
 
   const [newItem] = await db
@@ -229,34 +236,36 @@ export async function addItemToList(params: {
       userId,
       type: itemType,
     })
-    .returning()
+    .returning();
 
-  return newItem
+  return newItem;
 }
 
 export async function removeItemFromList(params: {
-  listId: string
-  itemId: string
-  userId: string
+  listId: string;
+  itemId: string;
+  userId: string;
 }): Promise<boolean> {
-  const { listId, itemId, userId } = params
+  const { listId, itemId, userId } = params;
 
-  const listItem = await getListOwnedByUser(listId, userId)
+  const listItem = await getListOwnedByUser(listId, userId);
   if (!listItem) {
-    throw new Error("List not found or you don't have permission to remove items from it")
+    throw new Error(
+      "List not found or you don't have permission to remove items from it"
+    );
   }
 
   const deletedItem = await db
     .delete(item)
     .where(and(eq(item.listId, listId), eq(item.itemId, itemId)))
-    .returning()
+    .returning();
 
-  return deletedItem.length > 0
+  return deletedItem.length > 0;
 }
 
 export async function getItemsByListId(listId: string): Promise<ItemSelect[]> {
   return db.query.item.findMany({
     where: eq(item.listId, listId),
     orderBy: [desc(item.createdAt)],
-  })
+  });
 }

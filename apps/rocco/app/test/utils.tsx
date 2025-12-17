@@ -94,23 +94,6 @@ vi.mock('@hominem/ui', async () => {
   }
 })
 
-// Mock React Router's useRouteLoaderData hook
-vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router')
-  return {
-    ...actual,
-    useRouteLoaderData: (routeId: string) => {
-      if (routeId === 'routes/layout') {
-        return {
-          user: mockSupabaseUser,
-          isAuthenticated: true,
-        }
-      }
-      return null
-    },
-  }
-})
-
 export function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {

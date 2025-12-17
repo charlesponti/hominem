@@ -23,8 +23,8 @@ process.env.NODE_ENV = 'test'
 export const TEST_LIST_ID = 'list-id'
 
 // Polyfill IntersectionObserver for framer-motion
+// @ts-expect-error - Polyfilling globals for test environment
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
   disconnect() {}
   observe() {}
   takeRecords() {

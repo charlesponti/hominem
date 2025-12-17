@@ -37,12 +37,12 @@ export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
               <h3 className="text-lg font-semibold mb-2">{list.name}</h3>
               <div className="space-y-2">
                 {list.places.map((place) => (
-                  <div key={place.itemId} className="flex justify-between items-center">
+                  <div key={place.id} className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold">{place.name}</p>
                       <p className="text-sm text-gray-500">{place.description}</p>
                     </div>
-                    <Button size="sm" onClick={() => handleAddPlace(place.itemId)}>
+                    <Button size="sm" onClick={() => handleAddPlace(place.id)}>
                       Add
                     </Button>
                   </div>

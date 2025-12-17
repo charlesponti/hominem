@@ -1,5 +1,5 @@
+import { createSupabaseServerClient, getServerAuthConfig } from '@hominem/auth/server'
 import { redirect } from 'react-router'
-import { createSupabaseServerClient } from '~/lib/supabase/server'
 
 export async function loader({ request }: { request: Request }) {
   const requestUrl = new URL(request.url)
@@ -8,7 +8,8 @@ export async function loader({ request }: { request: Request }) {
   const errorParam = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
 
-  const { supabase, headers } = createSupabaseServerClient(request)
+  const config = getServerAuthConfig()
+  const { supabase, headers } = createSupabaseServerClient(request, config)
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -45,5 +46,5 @@ export async function loader({ request }: { request: Request }) {
   }
 
   // If there's no code and no error param, it's an invalid callback
-  return redirect(getRedirectTarget('Authentication failed', 'No code provided'))
+  return redirect(getRedirectTarget('Authentication failed', 'No code provided'), { headers })
 }

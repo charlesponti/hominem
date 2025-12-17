@@ -1,16 +1,16 @@
 import { useCallback, useState } from 'react'
-import { useLoaderData, useNavigate } from 'react-router'
+import { data, useLoaderData, useNavigate } from 'react-router'
 import Lists from '~/components/lists/lists'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import PlacesNearby from '~/components/places/places-nearby'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
-import { getAuthState } from '~/lib/services/auth-loader.service'
+import { getAuthState } from '@hominem/auth/server'
 import type { Route } from './+types'
 import AboutPage from './about'
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const { isAuthenticated } = await getAuthState(request)
-  return { isAuthenticated }
+  const { isAuthenticated, headers } = await getAuthState(request)
+  return data({ isAuthenticated }, { headers })
 }
 
 export default function Index() {

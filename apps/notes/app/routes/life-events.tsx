@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { data, useNavigate } from 'react-router'
+import { getServerSession } from '~/lib/supabase/server'
 import type { RouterInput } from '~/lib/trpc'
 import { createServerTRPCClient } from '~/lib/trpc/server'
-import { getServerSession } from '~/lib/supabase/server'
 import EventForm from '../components/life-events/EventForm'
 import EventList from '../components/life-events/EventList'
 import FiltersSection from '../components/life-events/FiltersSection'
@@ -37,7 +37,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const sortBy: SortBy =
     sortParam === 'date-asc' || sortParam === 'summary' ? sortParam : 'date-desc'
 
-  const { session } = await getServerSession(request)
+  const { session, headers } = await getServerSession(request)
   const trpc = createServerTRPCClient(session?.access_token)
 
   const listInput: RouterInput['lifeEvents']['list'] = {
@@ -51,7 +51,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     trpc.lifeEvents.people.list.query(),
   ])
 
-  return { events, people }
+  return data({ events, people }, { headers })
 }
 
 export async function action({ request }: Route.ActionArgs) {

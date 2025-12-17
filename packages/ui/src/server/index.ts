@@ -1,8 +1,13 @@
-import {
-  createClient,
-  type SupabaseClient,
-  type Session as SupabaseSession,
-  type User as SupabaseUser,
+/**
+ * @deprecated This module is deprecated. Use '@hominem/auth/server' instead.
+ * All authentication logic has been consolidated into the @hominem/auth package.
+ */
+
+import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr'
+import type {
+  SupabaseClient,
+  Session as SupabaseSession,
+  User as SupabaseUser,
 } from '@supabase/supabase-js'
 
 export interface AuthConfig {
@@ -52,18 +57,49 @@ export function getServerAuthConfig(): AuthConfig {
 }
 
 /**
- * Create Supabase server client for SSR
+ * Create Supabase server client for SSR with proper cookie handling
  */
 export function createSupabaseServerClient(
   request: Request,
   config: AuthConfig
 ): { supabase: SupabaseClient; headers: Headers } {
   const headers = new Headers()
+  const proc = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process
+  const isProduction = proc?.env?.NODE_ENV === 'production'
+  const requestUrl = new URL(request.url)
+  const isSecure = requestUrl.protocol === 'https:'
 
-  const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: request.headers.get('Authorization') || '',
+  const supabase = createServerClient(config.supabaseUrl, config.supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return parseCookieHeader(request.headers.get('Cookie') ?? '') as {
+          name: string
+          value: string
+        }[]
+      },
+      setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        for (const { name, value, options = {} } of cookiesToSet) {
+          // Ensure cookies have proper attributes for persistence across deployments
+          const cookieOptions = {
+            // Preserve any existing options from Supabase (like maxAge, expires, etc.)
+            ...options,
+            // Override with required defaults to ensure cookies persist across deployments
+            path: typeof options.path === 'string' ? options.path : '/',
+            sameSite: (['lax', 'strict', 'none'].includes(String(options.sameSite))
+              ? options.sameSite
+              : 'lax') as 'lax' | 'strict' | 'none',
+            // Only set secure in production or when using HTTPS
+            secure: typeof options.secure === 'boolean' ? options.secure : isProduction || isSecure,
+          }
+          headers.append(
+            'Set-Cookie',
+            serializeCookieHeader(
+              name,
+              value,
+              cookieOptions as Parameters<typeof serializeCookieHeader>[2]
+            )
+          )
+        }
       },
     },
   })

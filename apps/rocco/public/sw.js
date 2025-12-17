@@ -9,8 +9,8 @@ const VERSION = 'dev' // This will be replaced during build
 const CACHE_NAME = `rocco-${VERSION}`
 const RUNTIME_CACHE = `rocco-runtime-${VERSION}`
 
-// Assets to cache on install
-const PRECACHE_ASSETS = ['/', '/favicons/favicon.ico', '/favicons/favicon-196x196.png']
+// Assets to cache on install (don't cache root document to avoid stale auth state)
+const PRECACHE_ASSETS = ['/favicons/favicon.ico', '/favicons/favicon-196x196.png']
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -57,7 +57,10 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
+      // Skip cache for HTML documents to avoid caching stale auth state
+      const isDocument = event.request.destination === 'document'
+
+      if (cachedResponse && !isDocument) {
         return cachedResponse
       }
 
@@ -65,6 +68,11 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           // Don't cache non-successful responses
           if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response
+          }
+
+          // Don't cache HTML documents to avoid stale auth state
+          if (isDocument) {
             return response
           }
 
@@ -79,9 +87,9 @@ self.addEventListener('fetch', (event) => {
           return response
         })
         .catch(() => {
-          // Return offline fallback if available
-          if (event.request.destination === 'document') {
-            return caches.match('/')
+          // Network failed - for documents, try fetching without cache
+          if (isDocument) {
+            return fetch(event.request, { cache: 'no-store' })
           }
         })
     })

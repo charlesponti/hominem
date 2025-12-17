@@ -4,13 +4,13 @@ import { createSupabaseServerClient } from '~/lib/supabase/server'
 import type { Route } from './+types/calendar'
 
 export async function loader({ request }: { request: Request }) {
-  const { supabase } = createSupabaseServerClient(request)
+  const { supabase, headers } = createSupabaseServerClient(request)
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return data({ googleTokens: [], userId: null })
+    return data({ googleTokens: [], userId: null }, { headers })
   }
 
   // Get session for provider tokens after verifying user
@@ -26,7 +26,7 @@ export async function loader({ request }: { request: Request }) {
     })
   }
 
-  return data({ googleTokens, userId: user.id })
+  return data({ googleTokens, userId: user.id }, { headers })
 }
 
 export default function CalendarPage({ loaderData }: Route.ComponentProps) {

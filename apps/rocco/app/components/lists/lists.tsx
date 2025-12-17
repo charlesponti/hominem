@@ -1,4 +1,3 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
 import { trpc } from '~/lib/trpc/client'
 import ListSurface from '../list-surface'
 import Loading from '../loading'
@@ -6,13 +5,7 @@ import ListForm from './list-form'
 import { ListRow } from './list-row'
 
 export default function Lists() {
-  const { isAuthenticated, isLoading: authLoading } = useSupabaseAuthContext()
-
-  const {
-    data: lists = [],
-    isLoading,
-    error,
-  } = trpc.lists.getAll.useQuery(undefined, { enabled: isAuthenticated && !authLoading })
+  const { data: lists = [], isLoading, error } = trpc.lists.getAll.useQuery()
 
   const title = <h2 className="heading-2">Lists</h2>
 
@@ -53,14 +46,13 @@ export default function Lists() {
   return (
     <div className="space-y-2">
       {title}
-      <div className="space-y-2">
-        <ListSurface>
-          {lists.map((list) => (
-            <ListRow key={list.id} id={list.id} name={list.name} count={list.places.length || 0} />
-          ))}
-        </ListSurface>
-        <ListForm onCreate={() => {}} onCancel={() => {}} />
-      </div>
+
+      <ListSurface>
+        {lists.map((list) => (
+          <ListRow key={list.id} id={list.id} name={list.name} count={list.places.length || 0} />
+        ))}
+      </ListSurface>
+      <ListForm onCreate={() => {}} onCancel={() => {}} />
     </div>
   )
 }

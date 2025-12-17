@@ -1,14 +1,14 @@
-import { Link, type LoaderFunctionArgs, redirect } from 'react-router'
+import { data, Link, type LoaderFunctionArgs, redirect } from 'react-router'
 import { getServerSession } from '~/lib/supabase/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user } = await getServerSession(request)
+  const { user, headers } = await getServerSession(request)
 
   if (user) {
-    return redirect('/notes')
+    return redirect('/notes', { headers })
   }
 
-  return {}
+  return data({}, { headers })
 }
 
 export default function HomePage() {

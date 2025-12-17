@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { List, PlaceLocation } from '~/lib/types'
 import Dashboard, { loader } from '~/routes/index'
-import { MOCK_LISTS } from '~/test/mocks/index'
+import { getMockUser, MOCK_LISTS } from '~/test/mocks/index'
 import { mockTrpcClient, renderWithRouter } from '~/test/utils'
 
 interface MockQueryResult<T> {
@@ -34,33 +34,20 @@ vi.mock('~/hooks/useGeolocation', () => ({
   useGeolocation: () => mockUseGeolocation(),
 }))
 
-let mockIsAuthenticated = true
-
 // Mock the auth service with a default implementation
-vi.mock('~/lib/services/auth-loader.service', () => ({
+vi.mock('@hominem/auth/server', () => ({
   getAuthState: vi.fn(async () => ({
-    user: {
-      id: 'test-user-id',
-      email: 'test@example.com',
-      user_metadata: {
-        name: 'Test User',
-        full_name: 'Test User',
-        first_name: 'Test',
-        last_name: 'User',
-        avatar_url: 'https://example.com/avatar.jpg',
-      },
-      app_metadata: {},
-      aud: 'authenticated',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
-    },
+    user: getMockUser(),
     isAuthenticated: true,
+    headers: new Headers(),
   })),
 }))
 
 // Import the mocked function after mocking
-const { getAuthState } = await import('~/lib/services/auth-loader.service')
-const mockGetAuthState = vi.mocked(getAuthState)
+const { getAuthState } = await import('@hominem/auth/server')
+const mockGetAuthState = getAuthState as typeof getAuthState & {
+  mockResolvedValue: (value: Awaited<ReturnType<typeof getAuthState>>) => void
+}
 
 // Mock heavy components
 vi.mock('~/components/map.lazy', () => ({
@@ -73,18 +60,30 @@ vi.mock('~/components/map.lazy', () => ({
 
 // Track navigation calls for testing
 const mockNavigate = vi.fn()
+// Mock useNavigate from react-router
+// For Bun compatibility, we import react-router directly instead of using vi.importActual
 vi.mock('react-router', async () => {
-  const actual = await vi.importActual('react-router')
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
+  try {
+    // Try to import the actual module
+    const routerModule = await import('react-router')
+    return {
+      ...routerModule,
+      useNavigate: () => mockNavigate,
+    }
+  } catch {
+    // Fallback if import fails - return minimal mock
+    return {
+      useNavigate: () => mockNavigate,
+      useLoaderData: vi.fn(),
+      data: vi.fn(),
+      Link: vi.fn(),
+    }
   }
 })
 
 describe('Dashboard Integration Tests', () => {
   beforeEach(() => {
     // Reset to default mock data before each test
-    mockIsAuthenticated = true
     vi.clearAllMocks() // Clear all mocks
 
     // Configure auth mock for authenticated state
@@ -105,6 +104,7 @@ describe('Dashboard Integration Tests', () => {
         updated_at: '2023-01-01T00:00:00Z',
       },
       isAuthenticated: true,
+      headers: new Headers(),
     })
 
     // Reset geolocation mock to default successful state
@@ -169,10 +169,10 @@ describe('Dashboard Integration Tests', () => {
 
   test('unauthenticated user sees about page', async () => {
     // Set auth state to unauthenticated
-    mockIsAuthenticated = false
     mockGetAuthState.mockResolvedValue({
       user: null,
       isAuthenticated: false,
+      headers: new Headers(),
     })
 
     // Loader will run, check auth, and return isAuthenticated: false

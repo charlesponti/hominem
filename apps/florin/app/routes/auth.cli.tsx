@@ -1,10 +1,14 @@
-import { createSupabaseServerClient, getServerAuth, getServerAuthConfig } from '@hominem/ui/server'
+import {
+  createSupabaseServerClient,
+  getServerAuth,
+  getServerAuthConfig,
+} from '@hominem/auth/server'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const config = getServerAuthConfig()
   const { user } = await getServerAuth(request, config)
-  const { supabase } = createSupabaseServerClient(request, config)
+  const { supabase, headers } = createSupabaseServerClient(request, config)
 
   const url = new URL(request.url)
   const redirectUri = url.searchParams.get('redirect_uri')
@@ -20,7 +24,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     } = await supabase.auth.getSession()
     if (session?.access_token) {
       return redirect(
-        `${redirectUri}?token=${session.access_token}&refresh_token=${session.refresh_token}`
+        `${redirectUri}?token=${session.access_token}&refresh_token=${session.refresh_token}`,
+        { headers }
       )
     }
   }
@@ -39,7 +44,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   // Redirect to Google's OAuth page
-  return redirect(data.url)
+  return redirect(data.url, { headers })
 }
 
 export default function AuthRoute() {

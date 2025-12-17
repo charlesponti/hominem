@@ -1,10 +1,10 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 const envSchema = z.object({
   VITE_APP_BASE_URL: z.string(),
   VITE_SUPABASE_URL: z.string(),
   VITE_SUPABASE_ANON_KEY: z.string(),
   VITE_GOOGLE_API_KEY: z.string(),
-})
+});
 
-export const env = envSchema.parse(import.meta.env)
+export const env = envSchema.parse(import.meta.env);

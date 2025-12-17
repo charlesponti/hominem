@@ -1,2 +1,7 @@
 export { createClient } from './client'
-export { getServerSession, requireAuth } from './server'
+export {
+  createSupabaseServerClient,
+  getServerAuth,
+  getServerAuthConfig,
+  requireAuth,
+} from './server'

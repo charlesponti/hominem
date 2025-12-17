@@ -3,9 +3,9 @@ import { getServerSession } from '~/lib/supabase/server'
 import { createServerTRPCClient } from '~/lib/trpc/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user, session } = await getServerSession(request)
+  const { user, session, headers } = await getServerSession(request)
   if (!user || !session) {
-    return redirect('/')
+    return redirect('/', { headers })
   }
 
   const trpcClient = createServerTRPCClient(session.access_token)
@@ -15,12 +15,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   })
 
   if (firstChat) {
-    return redirect(`/chat/${firstChat.id}`)
+    return redirect(`/chat/${firstChat.id}`, { headers })
   }
 
   const newChat = await trpcClient.chats.createChat.mutate({
     title: 'New Chat',
   })
 
-  return redirect(`/chat/${newChat.chat.id}`)
+  return redirect(`/chat/${newChat.chat.id}`, { headers })
 }

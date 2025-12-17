@@ -1,5 +1,3 @@
-import { useCallback, useState } from 'react'
-import { redirect, type LoaderFunctionArgs } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import {
   Card,
@@ -8,17 +6,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card'
+import { useCallback, useState } from 'react'
+import { data, redirect, type LoaderFunctionArgs } from 'react-router'
+import { getServerAuth } from '~/lib/supabase/server'
 import { useSupabaseAuth } from '~/lib/supabase/use-auth'
-import { getServerSession } from '~/lib/supabase/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user } = await getServerSession(request)
+  const { user, headers } = await getServerAuth(request)
 
   if (!user) {
-    return redirect('/')
+    return redirect('/', { headers })
   }
 
-  return { user }
+  return data({ user }, { headers })
 }
 
 export default function SignInPage() {

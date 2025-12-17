@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,53 +12,53 @@ body {
 }
 
 @theme {
-  --font-mono: "Geist Mono", ui-monospace, monospace;
-  --font-serif: "EB Garamound", ui-serif, serif;
-  --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-serif: 'EB Garamound', ui-serif, serif;
+  --font-sans: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-white);
+  --color-foreground: var(--color-gray-900);
 
-  --color-card: oklch(var(--card));
-  --color-card-foreground: oklch(var(--card-foreground));
+  --color-card: var(--color-gray-50);
+  --color-card-foreground: var(--color-gray-900);
 
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--color-gray-50);
+  --color-popover-foreground: var(--color-gray-900);
 
-  --color-primary: white;
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary-hover: var(--primary-hover, oklch(var(--primary) / 0.85));
+  --color-primary: var(--color-violet-600);
+  --color-primary-foreground: var(--color-white);
+  --color-primary-hover: var(--color-violet-700);
 
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--color-gray-100);
+  --color-secondary-foreground: var(--color-gray-700);
 
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--color-gray-200);
+  --color-muted-foreground: var(--color-gray-500);
 
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--color-gray-300);
+  --color-accent-foreground: var(--color-gray-700);
 
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive: var(--color-red-500);
+  --color-destructive-foreground: var(--color-white);
 
-  --color-border: var(--border);
+  --color-border: var(--color-gray-200);
   --color-input: var(--color-white);
-  --color-ring: var(--ring);
+  --color-ring: var(--color-gray-700);
 
-  --color-chart-1: oklch(var(--chart-1));
-  --color-chart-2: oklch(var(--chart-2));
-  --color-chart-3: oklch(var(--chart-3));
-  --color-chart-4: oklch(var(--chart-4));
-  --color-chart-5: oklch(var(--chart-5));
+  --color-chart-1: var(--color-gray-500);
+  --color-chart-2: var(--color-green-500);
+  --color-chart-3: var(--color-blue-500);
+  --color-chart-4: var(--color-indigo-500);
+  --color-chart-5: var(--color-yellow-500);
 
-  --color-sidebar: oklch(var(--sidebar-background));
-  --color-sidebar-foreground: oklch(var(--sidebar-foreground));
-  --color-sidebar-primary: oklch(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: oklch(var(--sidebar-primary-foreground));
-  --color-sidebar-accent: oklch(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: oklch(var(--sidebar-accent-foreground));
-  --color-sidebar-border: oklch(var(--sidebar-border));
-  --color-sidebar-ring: oklch(var(--sidebar-ring));
+  --color-sidebar: var(--color-gray-800);
+  --color-sidebar-foreground: var(--color-gray-50);
+  --color-sidebar-primary: var(--color-gray-50);
+  --color-sidebar-primary-foreground: var(--color-gray-800);
+  --color-sidebar-accent: var(--color-gray-700);
+  --color-sidebar-accent-foreground: var(--color-gray-50);
+  --color-sidebar-border: var(--color-gray-700);
+  --color-sidebar-ring: var(--color-gray-50);
 }
 
 @utility min-h-screen {
@@ -214,11 +214,7 @@ body {
   }
 
   .text-gradient {
-    background: linear-gradient(
-      135deg,
-      var(--primary-gradient-start),
-      var(--primary-gradient-end)
-    );
+    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
     background-clip: text;
   }
 
@@ -346,10 +342,6 @@ body {
 
   .bg-muted {
     background-color: var(--muted);
-  }
-
-  .text-muted-foreground {
-    color: var(--muted-foreground);
   }
 
   .bg-accent {

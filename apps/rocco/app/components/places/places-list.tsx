@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react'
 import { href, useNavigate } from 'react-router'
 import AddPlaceControl from '~/components/lists/add-place-control'
 import ListSurface from '../list-surface'
-import PlaceItem from './place-item'
+import PlacesListItem from './places-list-item'
 
 interface PlacesListProps {
   places: ListPlace[]
@@ -41,7 +41,7 @@ export default function PlacesList({
         case 'Enter':
           e.preventDefault()
           if (selectedIndex >= 0 && places[selectedIndex]) {
-            navigate(href('/places/:id', { id: places[selectedIndex].itemId }))
+            navigate(href('/places/:id', { id: places[selectedIndex].placeId }))
           }
           break
         case 'Escape':
@@ -72,7 +72,7 @@ export default function PlacesList({
             <div onKeyDown={handleKeyDown}>
               <ListSurface ref={listRef} aria-label="Places in list">
                 {places.map((place, index) => (
-                  <PlaceItem
+                  <PlacesListItem
                     key={place.id}
                     place={place}
                     listId={listId}

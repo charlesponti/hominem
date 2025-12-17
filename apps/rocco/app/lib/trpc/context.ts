@@ -1,6 +1,6 @@
+import { createSupabaseClient } from '@hominem/auth/server'
 import { UserAuthService, type UserSelect } from '@hominem/data'
 import { initTRPC, TRPCError } from '@trpc/server'
-import { createClient } from '../../lib/supabase/server'
 import { logger } from '../logger'
 
 export interface Context {
@@ -19,7 +19,7 @@ function extractBearerToken(request: Request) {
 // Validate token directly via Supabase (no Redis caching) to mirror Notes behavior
 async function validateToken(request: Request) {
   const token = extractBearerToken(request)
-  const { supabase } = createClient(request)
+  const { supabase } = createSupabaseClient(request)
 
   try {
     if (token) {

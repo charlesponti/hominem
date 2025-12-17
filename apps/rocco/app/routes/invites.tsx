@@ -1,12 +1,12 @@
+import { getAuthState } from '@hominem/auth/server'
 import { PageTitle, useSupabaseAuth } from '@hominem/ui'
 import { Mail } from 'lucide-react'
 import { useCallback } from 'react'
-import { useLoaderData } from 'react-router'
+import { data, useLoaderData } from 'react-router'
 import ReceivedInviteItem from '~/components/ReceivedInviteItem'
 import ListSurface from '~/components/list-surface'
 import Loading from '~/components/loading'
 import { env } from '~/lib/env'
-import { getAuthState } from '~/lib/services/auth-loader.service'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
 import { createCaller } from '~/lib/trpc/server'
 import type { ReceivedInvite } from '~/lib/types'
@@ -16,18 +16,21 @@ export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const token = url.searchParams.get('token') || undefined
 
-  const { isAuthenticated } = await getAuthState(request)
+  const { isAuthenticated, headers } = await getAuthState(request)
 
   // If not authenticated, allow viewing the page and return preview data when possible
   if (!isAuthenticated) {
     const preview = token ? await buildInvitePreview(token) : null
 
-    return {
-      invites: [],
-      tokenMismatch: false,
-      requiresAuth: true,
-      preview,
-    }
+    return data(
+      {
+        invites: [],
+        tokenMismatch: false,
+        requiresAuth: true,
+        preview,
+      },
+      { headers }
+    )
   }
 
   // Authenticated flow: fetch invites via tRPC
@@ -41,7 +44,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     ? Boolean(invites.find((invite) => invite.token === token)?.belongsToAnotherUser)
     : false
 
-  return { invites, tokenMismatch, requiresAuth: false, preview: null }
+  return data({ invites, tokenMismatch, requiresAuth: false, preview: null }, { headers })
 }
 
 export function meta(args: Route.MetaArgs) {
