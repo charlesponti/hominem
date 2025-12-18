@@ -1,4 +1,4 @@
-import { createSupabaseServerClient, getServerAuthConfig } from '@hominem/auth/server'
+import { createSupabaseServerClient } from '@hominem/auth/server'
 import { redirect } from 'react-router'
 
 export async function loader({ request }: { request: Request }) {
@@ -7,8 +7,7 @@ export async function loader({ request }: { request: Request }) {
   const next = requestUrl.searchParams.get('next') ?? '/'
 
   if (code) {
-    const config = getServerAuthConfig()
-    const { supabase, headers } = createSupabaseServerClient(request, config)
+    const { supabase, headers } = createSupabaseServerClient(request)
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 

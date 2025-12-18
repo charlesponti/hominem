@@ -1,4 +1,4 @@
-import { createSupabaseServerClient, getServerAuthConfig } from '@hominem/auth/server'
+import { createSupabaseServerClient } from '@hominem/auth/server'
 import { redirect } from 'react-router'
 
 export async function loader({ request }: { request: Request }) {
@@ -8,8 +8,7 @@ export async function loader({ request }: { request: Request }) {
   const errorParam = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
 
-  const config = getServerAuthConfig()
-  const { supabase, headers } = createSupabaseServerClient(request, config)
+  const { supabase, headers } = createSupabaseServerClient(request)
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -22,9 +21,11 @@ export async function loader({ request }: { request: Request }) {
     }
 
     const sep = target.includes('?') ? '&' : '?'
-    return `${target}${sep}error=${encodeURIComponent(error)}&description=${encodeURIComponent(
-      description
-    )}`
+    const params = new URLSearchParams({
+      error: encodeURIComponent(error),
+      description: encodeURIComponent(description),
+    })
+    return `${target}${sep}${params.toString()}`
   }
 
   // Handle errors from the provider
