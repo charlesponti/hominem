@@ -3,8 +3,6 @@
   "display": "Workspace Shared",
   "extends": "./base.json",
   "compilerOptions": {
-    "declaration": false,
-    "declarationMap": false,
     "paths": {
       "@hominem/ui": ["../../packages/ui/src/index.ts"],
       "@hominem/ui/*": ["../../packages/ui/src/*"],

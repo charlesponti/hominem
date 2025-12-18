@@ -1,18 +1,28 @@
-import { and, eq, inArray } from 'drizzle-orm'
-import { db } from '../../db'
-import { type UserListsSelect, list, listInvite, userLists } from '../../db/schema'
+import { and, eq, inArray } from "drizzle-orm";
+import { db } from "../../db";
+import {
+  list,
+  listInvite,
+  type UserListsSelect,
+  userLists,
+} from "../../db/schema";
 
-export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
+export async function isUserMemberOfList(
+  listId: string,
+  userId: string
+): Promise<boolean> {
   const membership = await db.query.userLists.findFirst({
     where: and(eq(userLists.listId, listId), eq(userLists.userId, userId)),
-  })
-  return Boolean(membership)
+  });
+  return Boolean(membership);
 }
 
-export async function getUserListLinks(listIds: string[]): Promise<UserListsSelect[]> {
+export async function getUserListLinks(
+  listIds: string[]
+): Promise<UserListsSelect[]> {
   return db.query.userLists.findMany({
     where: inArray(userLists.listId, listIds),
-  })
+  });
 }
 
 /**
@@ -27,29 +37,35 @@ export async function removeUserFromList({
   userIdToRemove,
   ownerId,
 }: {
-  listId: string
-  userIdToRemove: string
-  ownerId: string
+  listId: string;
+  userIdToRemove: string;
+  ownerId: string;
 }) {
   try {
     // Ensure the requester owns the list
     const listRecord = await db.query.list.findFirst({
       where: and(eq(list.id, listId), eq(list.userId, ownerId)),
-    })
+    });
 
     if (!listRecord) {
-      return { error: 'List not found or you do not own this list.', status: 403 }
+      return {
+        error: "List not found or you do not own this list.",
+        status: 403,
+      };
     }
 
     // Prevent removing the owner
     if (userIdToRemove === ownerId) {
-      return { error: 'Cannot remove the list owner.', status: 400 }
+      return { error: "Cannot remove the list owner.", status: 400 };
     }
 
     // Check if the user is actually a collaborator (has user_lists record)
     const userListRecord = await db.query.userLists.findFirst({
-      where: and(eq(userLists.listId, listId), eq(userLists.userId, userIdToRemove)),
-    })
+      where: and(
+        eq(userLists.listId, listId),
+        eq(userLists.userId, userIdToRemove)
+      ),
+    });
 
     // Check if there's an accepted invite for this user (even if no user_lists record exists)
     const acceptedInvite = await db.query.listInvite.findFirst({
@@ -58,18 +74,23 @@ export async function removeUserFromList({
         eq(listInvite.invitedUserId, userIdToRemove),
         eq(listInvite.accepted, true)
       ),
-    })
+    });
 
     // If neither exists, the user is not a collaborator
     if (!userListRecord && !acceptedInvite) {
-      return { error: 'User is not a collaborator on this list.', status: 404 }
+      return { error: "User is not a collaborator on this list.", status: 404 };
     }
 
     // Remove the user from the list (if user_lists record exists)
     if (userListRecord) {
       await db
         .delete(userLists)
-        .where(and(eq(userLists.listId, listId), eq(userLists.userId, userIdToRemove)))
+        .where(
+          and(
+            eq(userLists.listId, listId),
+            eq(userLists.userId, userIdToRemove)
+          )
+        );
     }
 
     // Also delete or update the accepted invite if it exists
@@ -83,20 +104,15 @@ export async function removeUserFromList({
             eq(listInvite.invitedUserId, userIdToRemove),
             eq(listInvite.accepted, true)
           )
-        )
+        );
     }
 
-    return { success: true }
+    return { success: true };
   } catch (error) {
     console.error(
       `Error removing user ${userIdToRemove} from list ${listId} by owner ${ownerId}:`,
       error
-    )
-    return { error: 'Failed to remove user from list.', status: 500 }
+    );
+    return { error: "Failed to remove user from list.", status: 500 };
   }
 }
-
-
-
-
-

@@ -24,8 +24,6 @@
       "@hominem/auth": ["../../packages/auth/src/index.ts"],
       "@hominem/auth/*": ["../../packages/auth/src/*"]
     },
-    "composite": false,
-    "declaration": false,
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,

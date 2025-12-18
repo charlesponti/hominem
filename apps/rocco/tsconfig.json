@@ -4,6 +4,7 @@
   "exclude": ["node_modules", "build"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "composite": false,
     "types": ["node", "vite/client"],
     "target": "ES2022",
     "module": "ES2022",

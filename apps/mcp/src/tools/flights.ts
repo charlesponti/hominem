@@ -6,21 +6,28 @@ import { z } from "zod";
 import { lmstudio } from "../utils/llm.js";
 
 export function registerFlightsTool(server: McpServer) {
-  server.tool(
+  server.registerTool(
     "get_flight_prices",
     {
-      input: z.object({
+      inputSchema: z.object({
         query: z
           .string()
           .describe(
             'Natural language query describing the flight route (e.g., "from New York to London")'
           ),
       }),
+      outputSchema: z.object({
+        originCode: z.string(),
+        destinationCode: z.string(),
+      }),
     },
-    async ({ input }) => {
+    async ({ query }) => {
       try {
         // Convert natural language to airport codes
-        const response = await generateObject({
+        const response = await generateObject<{
+          originCode: string;
+          destinationCode: string;
+        }>({
           model: lmstudio("qwen/qwen3-4b-thinking-2507"),
           prompt: `
             Based on the user input, return the primary airport codes for the origin and destination cities.: 
@@ -30,7 +37,7 @@ export function registerFlightsTool(server: McpServer) {
             If you cannot find the airport code, return "unknown".
             If you are unsure, return "unknown".
             
-            User input: ${input.query}
+            User input: ${query}
           `,
           schema: z.object({
             originCode: z.string(),

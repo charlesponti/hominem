@@ -36,6 +36,10 @@
       "dependsOn": [],
       "outputs": []
     },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
     "format": {
       "outputs": []
     },

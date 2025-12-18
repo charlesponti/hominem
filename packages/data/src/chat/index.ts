@@ -1,6 +1,3 @@
-// Services
-
-// Types
 export type {
   ChatStats,
   CreateChatParams,
@@ -14,6 +11,4 @@ export type {
 } from "./service/message.service";
 export { MessageService } from "./service/message.service";
 
-// Utilities
 export { AuthUtils } from "./utils/auth.utils";
-

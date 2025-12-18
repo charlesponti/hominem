@@ -22,7 +22,9 @@
       "@hominem/data": ["../../packages/data/src/index.ts"],
       "@hominem/data/*": ["../../packages/data/src/*"],
       "@hominem/ai": ["../../packages/ai/src/index.ts"],
-      "@hominem/ai/*": ["../../packages/ai/src/*"]
+      "@hominem/ai/*": ["../../packages/ai/src/*"],
+      "@hominem/auth": ["../../packages/auth/src/index.ts"],
+      "@hominem/auth/*": ["../../packages/auth/src/*"]
     }
   },
   "references": [

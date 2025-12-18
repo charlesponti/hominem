@@ -1,9 +1,9 @@
-import { db } from '@hominem/data/db'
-import { account } from '@hominem/data/schema'
-import { and, eq } from 'drizzle-orm'
+import { db } from "@hominem/data/db";
+import { account } from "@hominem/data/schema";
+import { and, eq } from "drizzle-orm";
 
-export type AccountRecord = typeof account.$inferSelect
-export type AccountInsert = typeof account.$inferInsert
+export type AccountRecord = typeof account.$inferSelect;
+export type AccountInsert = typeof account.$inferInsert;
 
 export async function listAccountsByProvider(userId: string, provider: string) {
   return db
@@ -14,7 +14,7 @@ export async function listAccountsByProvider(userId: string, provider: string) {
       expiresAt: account.expiresAt,
     })
     .from(account)
-    .where(and(eq(account.userId, userId), eq(account.provider, provider)))
+    .where(and(eq(account.userId, userId), eq(account.provider, provider)));
 }
 
 export async function getAccountByUserAndProvider(
@@ -25,9 +25,9 @@ export async function getAccountByUserAndProvider(
     .select()
     .from(account)
     .where(and(eq(account.userId, userId), eq(account.provider, provider)))
-    .limit(1)
+    .limit(1);
 
-  return result ?? null
+  return result ?? null;
 }
 
 export async function getAccountByProviderAccountId(
@@ -37,23 +37,34 @@ export async function getAccountByProviderAccountId(
   const [result] = await db
     .select()
     .from(account)
-    .where(and(eq(account.provider, provider), eq(account.providerAccountId, providerAccountId)))
-    .limit(1)
+    .where(
+      and(
+        eq(account.provider, provider),
+        eq(account.providerAccountId, providerAccountId)
+      )
+    )
+    .limit(1);
 
-  return result ?? null
+  return result ?? null;
 }
 
-export async function createAccount(data: AccountInsert): Promise<AccountRecord> {
-  const [created] = await db.insert(account).values(data).returning()
-  return created
+export async function createAccount(
+  data: AccountInsert
+): Promise<AccountRecord | null> {
+  const [created] = await db.insert(account).values(data).returning();
+  return created ?? null;
 }
 
 export async function updateAccount(
   id: string,
   updates: Partial<AccountInsert>
 ): Promise<AccountRecord | null> {
-  const [updated] = await db.update(account).set(updates).where(eq(account.id, id)).returning()
-  return updated ?? null
+  const [updated] = await db
+    .update(account)
+    .set(updates)
+    .where(eq(account.id, id))
+    .returning();
+  return updated ?? null;
 }
 
 export async function deleteAccountForUser(
@@ -63,8 +74,14 @@ export async function deleteAccountForUser(
 ): Promise<boolean> {
   const result = await db
     .delete(account)
-    .where(and(eq(account.id, id), eq(account.userId, userId), eq(account.provider, provider)))
-    .returning()
+    .where(
+      and(
+        eq(account.id, id),
+        eq(account.userId, userId),
+        eq(account.provider, provider)
+      )
+    )
+    .returning();
 
-  return result.length > 0
+  return result.length > 0;
 }
