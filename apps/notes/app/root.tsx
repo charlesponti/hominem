@@ -83,25 +83,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-function AppProviders({ children }: { children: React.ReactNode }) {
-  // Get feature flags from environment variables
-  const featureFlags = {
-    twitterIntegration: import.meta.env.VITE_FEATURE_TWITTER_INTEGRATION === 'true',
-  }
-
-  return (
-    <TRPCProvider>
-      <FeatureFlagsProvider flags={featureFlags}>{children}</FeatureFlagsProvider>
-    </TRPCProvider>
-  )
-}
-
 export default function App() {
   return (
     <SupabaseAuthProvider>
-      <AppProviders>
-        <Outlet />
-      </AppProviders>
+      <TRPCProvider>
+        <FeatureFlagsProvider>
+          <Outlet />
+        </FeatureFlagsProvider>
+      </TRPCProvider>
     </SupabaseAuthProvider>
   )
 }
