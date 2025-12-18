@@ -5,58 +5,19 @@
   "sideEffects": false,
   "description": "Database schemas and utilities",
   "exports": {
-    ".": {
-      "import": "./src/index.ts",
-      "require": "./dist/index.cjs"
-    },
-    "./db": {
-      "import": "./src/db/index.ts",
-      "require": "./dist/db/index.cjs"
-    },
-    "./files": {
-      "import": "./src/files.ts",
-      "require": "./dist/files.cjs"
-    },
-    "./finance": {
-      "import": "./src/finance/index.ts",
-      "require": "./dist/finance/index.cjs"
-    },
-    "./fixtures": {
-      "import": "./src/fixtures.ts",
-      "require": "./dist/fixtures.cjs"
-    },
-    "./lists": {
-      "import": "./src/lists.ts",
-      "require": "./dist/lists.cjs"
-    },
-    "./places": {
-      "import": "./src/places.ts",
-      "require": "./dist/places.cjs"
-    },
-    "./schema": {
-      "import": "./src/db/schema/index.ts",
-      "require": "./dist/db/schema/index.cjs"
-    },
-    "./services": {
-      "import": "./src/services/index.ts",
-      "require": "./dist/services/index.cjs"
-    },
-    "./tools": {
-      "import": "./src/tools/index.ts",
-      "require": "./dist/tools/index.cjs"
-    },
-    "./types": {
-      "import": "./src/types.ts",
-      "require": "./dist/types.cjs"
-    },
-    "./vector": {
-      "import": "./src/vector.ts",
-      "require": "./dist/vector.cjs"
-    },
-    "./chat": {
-      "import": "./src/chat/index.ts",
-      "require": "./dist/chat/index.cjs"
-    }
+    ".": "./src/index.ts",
+    "./db": "./src/db/index.ts",
+    "./files": "./src/files.ts",
+    "./finance": "./src/finance/index.ts",
+    "./fixtures": "./src/fixtures.ts",
+    "./lists": "./src/lists.ts",
+    "./places": "./src/places.ts",
+    "./schema": "./src/db/schema/index.ts",
+    "./services": "./src/services/index.ts",
+    "./tools": "./src/tools/index.ts",
+    "./types": "./src/types.ts",
+    "./vector": "./src/vector.ts",
+    "./chat": "./src/chat/index.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
@@ -65,10 +26,8 @@
     "db:update": "drizzle-kit generate && drizzle-kit migrate",
     "lint": "biome lint ./src --fix",
     "test": "vitest run --passWithNoTests",
-    "build": "node esbuild.config.js",
     "test:watch": "vitest",
-    "format": "biome format ./src --fix",
-    "clean": "rm -rf build tsconfig.tsbuildinfo"
+    "format": "biome format ./src --fix"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",
@@ -87,17 +46,12 @@
     "uuid": "^11.1.0",
     "zod": "4.0.5"
   },
-  "peerDependencies": {
-    "drizzle-orm": "0.45.0"
-  },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "@supabase/supabase-js": "2.88.0",
     "@types/uuid": "^10.0.0",
-    "drizzle-orm": "0.45.0",
-    "esbuild": "^0.21.5",
-    "esbuild-node-externals": "^1.18.0",
+    "drizzle-orm": "0.45.1",
     "typescript": "5.9.3",
-    "vitest": "^3.0.6"
+    "vitest": "4.0.16"
   }
 }

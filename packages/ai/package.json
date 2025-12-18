@@ -7,13 +7,9 @@
     ".": "./src/index.ts"
   },
   "main": "./src/index.ts",
-  "types": "./build/index.d.ts",
   "scripts": {
     "format": "biome format ./src --fix",
-    "lint": "biome lint ./src --fix",
-    "build": "tsc -p tsconfig.build.json",
-    "dev": "tsc -p tsconfig.json --watch",
-    "clean": "rm -rf build tsconfig.tsbuildinfo"
+    "lint": "biome lint ./src --fix"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",

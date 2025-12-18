@@ -21,14 +21,14 @@
   "description": "hominem",
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
-    "@turbo/gen": "^1.9.7",
+    "@turbo/gen": "2.6.3",
     "@types/node": "^22.15.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "drizzle-kit": "^0.31.4",
     "husky": "^9.1.7",
     "lefthook": "^2.0.2",
-    "turbo": "^2.6.0",
+    "turbo": "2.6.3",
     "typescript": "5.9.3"
   },
   "homepage": "https://github.com/charlesponti/hominem#readme",
@@ -50,7 +50,7 @@
     "prepush": "bun run test",
     "prerelease": "bun run test",
     "start:dev": "bun apps/api/src/index.ts",
-    "start:prod": "node apps/api/dist/index.js",
+    "start:prod": "bun apps/api/src/index.ts",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },

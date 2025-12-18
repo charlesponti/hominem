@@ -1,20 +1,11 @@
-import tsconfigPaths from 'vite-tsconfig-paths'
-import { defineConfig } from 'vitest/config'
+// import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  // @ts-expect-error type mismatch vite 5 vs 6
-  plugins: [tsconfigPaths()],
+  // plugins: [tsconfigPaths()],
   test: {
     globals: true,
-    environment: 'node',
+    environment: "node",
     clearMocks: true,
-    coverage: {
-      provider: 'v8',
-      clean: true,
-      enabled: true,
-      exclude: ['src/**/*.spec.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-      reporter: ['lcov'],
-      reportsDirectory: 'coverage',
-    },
   },
-})
+});

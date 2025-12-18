@@ -16,3 +16,4 @@ export { MessageService } from "./service/message.service";
 
 // Utilities
 export { AuthUtils } from "./utils/auth.utils";
+

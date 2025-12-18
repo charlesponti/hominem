@@ -9,14 +9,10 @@
     "lint": "biome lint ./src --fix",
     "format": "biome format ./src --fix",
     "start": "bun src/index.ts | pino-pretty",
-    "build": "node esbuild.config.js",
-    "start:prod": "node dist/index.js",
     "test": "NODE_ENV=test vitest run --coverage --passWithNoTests",
     "test:coverage": "NODE_ENV=test vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "test:watch": "NODE_ENV=test vitest",
-    "clean": "rm -rf dist",
-    "prebuild": "bun run clean"
+    "test:watch": "NODE_ENV=test vitest"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",
@@ -76,12 +72,9 @@
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^3.1.1",
-    "esbuild": "^0.25.0",
-    "esbuild-node-externals": "^1.18.0",
-    "esbuild-plugin-copy": "^2.1.1",
+    "@vitest/coverage-v8": "4.0.16",
     "vite": "7.3.0",
     "vite-tsconfig-paths": "6.0.3",
-    "vitest": "^3.1.1"
+    "vitest": "4.0.16"
   }
 }
