@@ -14,8 +14,6 @@
       "@hominem/utils/*": ["../utils/src/*"],
       "@hominem/data": ["./src/index.ts"],
       "@hominem/data/*": ["./src/*"],
-      "@hominem/chat": ["../chat/src/index.ts"],
-      "@hominem/chat/*": ["../chat/src/*"],
       "@hominem/ai": ["../ai/src/index.ts"],
       "@hominem/ai/*": ["../ai/src/*"],
       "@hominem/auth": ["../auth/src/index.ts"],

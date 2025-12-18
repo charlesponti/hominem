@@ -1,6 +1,6 @@
-import { MessageService } from '@hominem/chat-service'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../procedures.js'
+import { MessageService } from "@hominem/data/chat";
+import { z } from "zod";
+import { protectedProcedure, router } from "../procedures.js";
 
 export const messagesRouter = router({
   getMessageById: protectedProcedure
@@ -10,17 +10,17 @@ export const messagesRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const { messageId } = input
-      const { user } = ctx
+      const { messageId } = input;
+      const { user } = ctx;
 
-      const messageService = new MessageService()
+      const messageService = new MessageService();
 
       try {
-        const message = await messageService.getMessageById(messageId, user.id)
-        return { message }
+        const message = await messageService.getMessageById(messageId, user.id);
+        return { message };
       } catch (error) {
-        console.error('Failed to get message:', error)
-        throw new Error('Failed to load message')
+        console.error("Failed to get message:", error);
+        throw new Error("Failed to load message");
       }
     }),
 
@@ -32,21 +32,21 @@ export const messagesRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { messageId } = input
-      const { user } = ctx
+      const { messageId } = input;
+      const { user } = ctx;
 
       if (!messageId) {
-        throw new Error('Message ID is required')
+        throw new Error("Message ID is required");
       }
 
-      const messageService = new MessageService()
+      const messageService = new MessageService();
 
       try {
-        const success = await messageService.deleteMessage(messageId, user.id)
-        return { success }
+        const success = await messageService.deleteMessage(messageId, user.id);
+        return { success };
       } catch (error) {
-        console.error('Failed to delete message:', error)
-        throw new Error('Failed to delete message')
+        console.error("Failed to delete message:", error);
+        throw new Error("Failed to delete message");
       }
     }),
-})
+});

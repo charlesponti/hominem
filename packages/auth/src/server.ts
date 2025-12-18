@@ -1,6 +1,7 @@
 import { UserAuthService } from "@hominem/data";
 import { logger } from "@hominem/data/logger";
 import {
+  type CookieMethodsServer,
   createServerClient,
   parseCookieHeader,
   serializeCookieHeader,
@@ -17,58 +18,35 @@ export function createSupabaseServerClient(
   config: AuthConfig = getServerAuthConfig()
 ): { supabase: SupabaseClient; headers: Headers } {
   const headers = new Headers();
-  const isProduction =
-    typeof process !== "undefined" && process.env?.NODE_ENV === "production";
-  const requestUrl = new URL(request.url);
-  const isSecure = requestUrl.protocol === "https:";
+
+  const cookies: CookieMethodsServer = {
+    getAll() {
+      return parseCookieHeader(request.headers.get("Cookie") ?? "").filter(
+        (cookie): cookie is { name: string; value: string } =>
+          cookie.value !== undefined
+      );
+    },
+    setAll(
+      cookiesToSet: Array<{
+        name: string;
+        value: string;
+        options?: Parameters<typeof serializeCookieHeader>[2];
+      }>
+    ) {
+      cookiesToSet.forEach(({ name, value, options }) => {
+        headers.append(
+          "Set-Cookie",
+          serializeCookieHeader(name, value, options ?? {})
+        );
+      });
+    },
+  };
 
   const supabase = createServerClient(
     config.supabaseUrl,
     config.supabaseAnonKey,
     {
-      cookies: {
-        getAll() {
-          return parseCookieHeader(request.headers.get("Cookie") ?? "") as {
-            name: string;
-            value: string;
-          }[];
-        },
-        setAll(
-          cookiesToSet: {
-            name: string;
-            value: string;
-            options?: Record<string, unknown>;
-          }[]
-        ) {
-          for (const { name, value, options = {} } of cookiesToSet) {
-            // Ensure cookies have proper attributes for persistence across deployments
-            const cookieOptions = {
-              // Preserve any existing options from Supabase (like maxAge, expires, etc.)
-              ...options,
-              // Override with required defaults to ensure cookies persist across deployments
-              path: typeof options.path === "string" ? options.path : "/",
-              sameSite: (["lax", "strict", "none"].includes(
-                String(options.sameSite)
-              )
-                ? options.sameSite
-                : "lax") as "lax" | "strict" | "none",
-              // Only set secure in production or when using HTTPS
-              secure:
-                typeof options.secure === "boolean"
-                  ? options.secure
-                  : isProduction || isSecure,
-            };
-            headers.append(
-              "Set-Cookie",
-              serializeCookieHeader(
-                name,
-                value,
-                cookieOptions as Parameters<typeof serializeCookieHeader>[2]
-              )
-            );
-          }
-        },
-      },
+      cookies,
     }
   );
 
@@ -147,16 +125,12 @@ export function getServerAuthConfig(): AuthConfig {
   // Try import.meta.env first (Vite/Client/Edge) - use static property access
   // Vite requires static property access like import.meta.env.SUPABASE_URL
   // Access each property directly without storing import.meta in a variable
-  // @ts-expect-error - import.meta.env may not be defined in TypeScript but exists at runtime in Vite
   if (typeof import.meta !== "undefined" && import.meta.env) {
     // Access properties directly - Vite needs to see import.meta.env.PROPERTY in source
     supabaseUrl =
-      // @ts-expect-error - TypeScript doesn't know about these properties
       import.meta.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
     supabaseAnonKey =
-      // @ts-expect-error - TypeScript doesn't know about these properties
       import.meta.env.SUPABASE_ANON_KEY ||
-      // @ts-expect-error - TypeScript doesn't know about these properties
       import.meta.env.VITE_SUPABASE_ANON_KEY;
   }
 

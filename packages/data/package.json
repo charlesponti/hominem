@@ -52,6 +52,10 @@
     "./vector": {
       "import": "./src/vector.ts",
       "require": "./dist/vector.cjs"
+    },
+    "./chat": {
+      "import": "./src/chat/index.ts",
+      "require": "./dist/chat/index.cjs"
     }
   },
   "scripts": {
@@ -80,6 +84,7 @@
     "pino": "^9.7.0",
     "postgres": "^3.4.5",
     "resend": "^4.0.1",
+    "uuid": "^11.1.0",
     "zod": "4.0.5"
   },
   "peerDependencies": {
@@ -87,7 +92,8 @@
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
-    "@supabase/supabase-js": "^2.77.0",
+    "@supabase/supabase-js": "2.88.0",
+    "@types/uuid": "^10.0.0",
     "drizzle-orm": "0.45.0",
     "esbuild": "^0.21.5",
     "esbuild-node-externals": "^1.18.0",
