@@ -7,7 +7,6 @@
     "hominem": "src/index.ts"
   },
   "scripts": {
-    "test": "NODE_ENV=test vitest run --coverage",
     "format": "biome format ./src --fix",
     "scrape": "npx playwright test",
     "scrape:headed": "npx playwright test --headed",
