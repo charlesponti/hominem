@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { Button } from '@hominem/ui/button'
 import { ChartLine, CircleDollarSignIcon, Landmark, Menu, User, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'

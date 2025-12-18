@@ -1,5 +1,5 @@
+import { getSupabase } from '@hominem/auth'
 import { useCallback, useMemo, useState } from 'react'
-import { getSupabase } from './use-supabase-auth'
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL
 

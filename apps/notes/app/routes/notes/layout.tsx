@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { Navigate, Outlet } from 'react-router'
 
 export default function NotesLayout() {

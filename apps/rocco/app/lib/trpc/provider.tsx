@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
 import { useMemo, useState } from 'react'

@@ -1,5 +1,5 @@
 import { getServerAuth } from '@hominem/auth/server'
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { Button } from '@hominem/ui/button'
 import {
   Card,

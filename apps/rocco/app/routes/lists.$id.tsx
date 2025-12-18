@@ -1,4 +1,5 @@
-import { PageTitle, useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
+import { PageTitle } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'

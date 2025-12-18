@@ -1,10 +1,9 @@
-export * from './contexts/supabase-auth-context'
 export * from './hooks/use-api-client'
 export * from './hooks/use-debounce'
 export * from './hooks/use-local-data'
 export * from './hooks/use-media-query'
 export * from './hooks/use-mobile'
-export * from './hooks/use-supabase-auth'
+
 export * from './components/ui'
 export * from './components/location-select'
 export * from './components/layout'

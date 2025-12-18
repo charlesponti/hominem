@@ -1,6 +1,7 @@
 "use client";
 
-import { useApiClient, useSupabaseAuthContext } from "@hominem/ui";
+import { useSupabaseAuthContext } from "@hominem/auth";
+import { useApiClient } from "@hominem/ui";
 import { useQuery } from "@tanstack/react-query";
 
 // Define query keys

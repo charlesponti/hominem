@@ -46,51 +46,46 @@ vi.mock('~/lib/supabase', () => ({
   },
 }))
 
+const mockSupabaseClient = {
+  auth: {
+    getSession: vi.fn().mockResolvedValue({ data: { session: mockSession } }),
+    getUser: vi.fn().mockResolvedValue({ data: { user: mockSupabaseUser } }),
+    signInWithPassword: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    signInWithOAuth: vi.fn(),
+    onAuthStateChange: vi.fn().mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    }),
+  },
+}
+
+const mockAuthContextValue = {
+  user: mockSupabaseUser,
+  session: mockSession,
+  isAuthenticated: true,
+  isLoading: false,
+  supabase: mockSupabaseClient,
+  logout: vi.fn(),
+  signInWithGoogle: vi.fn(),
+  getUser: vi.fn().mockResolvedValue(mockSupabaseUser),
+  userId: USER_ID,
+}
+
+vi.mock('@hominem/auth', () => ({
+  SupabaseAuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+  useSupabaseAuth: () => mockAuthContextValue,
+  useSupabaseAuthContext: () => mockAuthContextValue,
+  getSupabase: () => mockSupabaseClient,
+}))
+
 vi.mock('@hominem/ui', async () => {
   const actual = await vi.importActual<typeof import('@hominem/ui')>('@hominem/ui')
   return {
     ...actual,
     SupabaseAuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
-    useSupabaseAuth: () => ({
-      user: mockSupabaseUser,
-      isAuthenticated: true,
-      isLoading: false,
-      supabase: {
-        auth: {
-          signInWithPassword: vi.fn(),
-          signUp: vi.fn(),
-          signOut: vi.fn(),
-          signInWithOAuth: vi.fn(),
-        },
-      },
-      login: vi.fn(),
-      signup: vi.fn(),
-      logout: vi.fn(),
-      resetPassword: vi.fn(),
-      signInWithGitHub: vi.fn(),
-      getUser: vi.fn(),
-      userId: USER_ID,
-    }),
-    useSupabaseAuthContext: () => ({
-      user: mockSupabaseUser,
-      isAuthenticated: true,
-      isLoading: false,
-      supabase: {
-        auth: {
-          signInWithPassword: vi.fn(),
-          signUp: vi.fn(),
-          signOut: vi.fn(),
-          signInWithOAuth: vi.fn(),
-        },
-      },
-      login: vi.fn(),
-      signup: vi.fn(),
-      logout: vi.fn(),
-      resetPassword: vi.fn(),
-      signInWithGitHub: vi.fn(),
-      getUser: vi.fn(),
-      userId: USER_ID,
-    }),
+    useSupabaseAuth: () => mockAuthContextValue,
+    useSupabaseAuthContext: () => mockAuthContextValue,
   }
 })
 

@@ -1,4 +1,4 @@
-import { SupabaseAuthProvider } from '@hominem/ui'
+import { SupabaseAuthProvider } from '@hominem/auth'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { ServiceWorkerRegister } from './components/pwa/service-worker-register'
 import { UpdateNotification } from './components/pwa/update-notification'

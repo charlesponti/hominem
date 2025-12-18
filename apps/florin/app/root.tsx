@@ -1,4 +1,4 @@
-import { SupabaseAuthProvider } from '@hominem/ui'
+import { SupabaseAuthProvider } from '@hominem/auth'
 import type React from 'react'
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import type { Route } from './+types/root'

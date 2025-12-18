@@ -8,7 +8,7 @@ import {
 import { Bot, Calendar, Lightbulb, LogOut, MenuIcon, Settings, Sparkles } from 'lucide-react'
 import { useCallback } from 'react'
 import { href, Link, useNavigate } from 'react-router'
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 
 const APP_NAME = 'Animus'
 

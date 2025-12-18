@@ -8,7 +8,7 @@ import {
   CommandList,
 } from '@hominem/ui/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { Check, ListPlus, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useRevalidator } from 'react-router'

@@ -1,16 +1,16 @@
+import { PageTitle } from '@hominem/ui'
+import { Button } from '@hominem/ui/button'
 import { UserCircle } from 'lucide-react'
 import { useCallback } from 'react'
 import { useLoaderData, useNavigate } from 'react-router'
 import Alert from '~/components/alert'
 import { LoadingScreen } from '~/components/loading'
-import { Button } from '@hominem/ui/button'
-import { PageTitle } from '@hominem/ui'
+import { requireAuth } from '~/lib/guards'
 import { trpc } from '~/lib/trpc/client'
-import { requireAuth } from '~/routes/guards'
 import type { Route } from './+types/account'
 
 export async function loader(args: Route.LoaderArgs) {
-  const authResult = await requireAuth(args)
+  const authResult = await requireAuth(args.request)
 
   if (authResult instanceof Response) {
     return authResult

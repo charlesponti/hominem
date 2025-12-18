@@ -1,4 +1,5 @@
-import { useApiClient, useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
+import { useApiClient } from '@hominem/ui'
 import { Button, buttonVariants } from '@hominem/ui/button'
 import {
   AlertDialog,

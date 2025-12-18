@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { ArrowRight } from 'lucide-react'
 import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router'

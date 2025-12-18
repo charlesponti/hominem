@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { memo } from 'react'
 import z from 'zod'
 import ListSurface from '~/components/list-surface'

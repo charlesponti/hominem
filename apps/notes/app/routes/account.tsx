@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 
 export default function AccountPage() {
   const { userId, isLoading, logout } = useSupabaseAuthContext()

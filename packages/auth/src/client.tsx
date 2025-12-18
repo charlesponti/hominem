@@ -1,6 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
-import { useCallback, useEffect, useState } from 'react'
+import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -97,4 +97,26 @@ export function useSupabaseAuth() {
     getUser,
     userId: user?.id,
   }
+}
+
+type SupabaseAuthContextType = ReturnType<typeof useSupabaseAuth>
+
+const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined)
+
+interface SupabaseAuthProviderProps {
+  children: ReactNode
+}
+
+export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
+  const auth = useSupabaseAuth()
+
+  return <SupabaseAuthContext.Provider value={auth}>{children}</SupabaseAuthContext.Provider>
+}
+
+export function useSupabaseAuthContext() {
+  const context = useContext(SupabaseAuthContext)
+  if (context === undefined) {
+    throw new Error('useSupabaseAuthContext must be used within a SupabaseAuthProvider')
+  }
+  return context
 }

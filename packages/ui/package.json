@@ -21,11 +21,12 @@
     "./components/*": "./src/components/*",
     "./lib/*": "./src/lib/*",
     "./server": "./src/server/index.ts",
-    "./supabase": "./src/supabase.ts",
+
     "./styles/globals.css": "./src/styles/globals.css",
     "./styles/animations.css": "./src/styles/animations.css"
   },
   "dependencies": {
+    "@hominem/auth": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.6",

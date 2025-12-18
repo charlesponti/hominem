@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import type { User } from '@supabase/supabase-js'
 
 interface ProfileProps {

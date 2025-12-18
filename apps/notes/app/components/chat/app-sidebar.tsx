@@ -3,7 +3,7 @@ import { Plus, User } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
 import { ChatList } from '~/components/chat/ChatList'
-import { useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { cn } from '~/lib/utils'
 
 interface AppSidebarProps {

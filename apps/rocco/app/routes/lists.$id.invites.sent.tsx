@@ -1,4 +1,5 @@
-import { PageTitle, useSupabaseAuthContext } from '@hominem/ui'
+import { useSupabaseAuthContext } from '@hominem/auth'
+import { PageTitle } from '@hominem/ui'
 import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate } from 'react-router'
 import Loading from '~/components/loading'
