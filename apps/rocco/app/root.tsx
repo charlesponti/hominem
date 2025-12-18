@@ -1,6 +1,6 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-import { ServiceWorkerRegister } from './components/pwa/service-worker-register'
+
 import { UpdateNotification } from './components/pwa/update-notification'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
@@ -52,7 +52,7 @@ export default function App() {
             <UpdateNotification onUpdate={() => window.location.reload()} />
           </TRPCProvider>
         </SupabaseAuthProvider>
-        <ServiceWorkerRegister />
+
         <ScrollRestoration />
         <Scripts />
       </body>

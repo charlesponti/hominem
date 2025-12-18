@@ -4,7 +4,7 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import type { ConfigEnv, PluginOption, UserConfig } from 'vite'
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import { serviceWorkerVersion } from './vite-plugins/service-worker-version'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd = mode === 'production'
@@ -15,8 +15,17 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       tailwindcss(),
       reactRouter(),
       tsconfigPaths(),
-      // Automatically inject build version into service worker
-      serviceWorkerVersion(),
+      VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'app',
+        filename: 'service-worker.ts',
+        registerType: 'autoUpdate',
+        manifest: false, // We'll manage the manifest manually in public/manifest.json
+        devOptions: {
+          enabled: true,
+          type: 'module',
+        },
+      }),
       // Add bundle analyzer when ANALYZE flag is set
       isAnalyze &&
         visualizer({
