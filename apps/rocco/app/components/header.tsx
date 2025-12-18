@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu'
-import { Globe2Icon, List, LogOut, MapPin, MenuIcon, Settings, UserPlus } from 'lucide-react'
+import { Globe2Icon, List, LogOut, MapPin, MoreHorizontal, Settings, UserPlus } from 'lucide-react'
 import { useCallback } from 'react'
 import { href, Link, useNavigate } from 'react-router'
 
@@ -23,12 +23,8 @@ const NavigationMenu = () => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="cursor-pointer px-2 text-primary focus-visible:ring-2 ring-primary focus-visible:ring-offset-0 rounded-md"
-        >
-          <MenuIcon className="size-5" />
+        <Button variant="ghost" size="icon" className="p-0.5">
+          <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -88,10 +84,10 @@ function Header() {
       className="fixed top-0 left-0 z-50 w-full bg-background/10 backdrop-blur-md border-b border-border/50"
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
-      <div className="flex px-2 py-4 md:px-8 items-center justify-between">
+      <div className="flex px-4 py-2 items-center justify-between">
         <Link to="/" className="flex items-center space-x-1">
-          <img src="/favicons/favicon-96x96.png" alt={APP_NAME} className="size-6" />
-          <span className="heading-2 text-primary">{APP_NAME}</span>
+          <img src="/favicons/favicon-96x96.png" alt={APP_NAME} className="size-4 mt-1" />
+          <span className="heading-3 lowercase text-primary">{APP_NAME}</span>
         </Link>
         {!isLoading && (
           <div className="flex items-center space-x-2">
