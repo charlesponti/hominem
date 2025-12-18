@@ -11,8 +11,8 @@
     "build"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --outdir build --target=node --format=cjs --sourcemap=external --external=@colors/colors --external=logform --external=utils --external=@modelcontextprotocol/sdk --external='node:*' --external=playwright --external=playwright-chromium --external=chromium-bidi --external=electron",
-    "dev": "tsup src/index.ts --target=node18 --outDir build --external electron --external chromium-bidi --watch",
+    "build": "bun build src/index.ts --outdir build --target=node --format=cjs --external=@colors/colors --external=logform --external=utils --external=@modelcontextprotocol/sdk --external='node:*' --external=playwright --external=playwright-chromium --external=chromium-bidi --external=electron",
+    "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
     "format": "biome format ./src --fix"
@@ -34,7 +34,6 @@
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "@vitest/ui": "^4.0.3",
-    "tsup": "^8.4.0",
     "vitest": "4.0.16"
   }
 }

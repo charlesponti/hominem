@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.22",
-    "@aws-sdk/client-s3": "^3.782.0",
     "@hominem/data": "workspace:*",
     "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",
@@ -37,7 +36,6 @@
     "@hominem/tsconfigs": "workspace:*",
     "@types/mailparser": "^3.4.5",
     "@types/pdf-parse": "^1.1.5",
-    "tsup": "^8.4.0",
     "vitest": "4.0.16"
   }
 }

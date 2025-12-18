@@ -8,7 +8,6 @@
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "react": "^19.2.0",
-    "tsup": "^8.0.2",
     "typescript": "5.9.3"
   },
   "peerDependencies": {

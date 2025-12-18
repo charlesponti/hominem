@@ -22,7 +22,6 @@
     "@hominem/tsconfigs": "workspace:*",
     "@types/node": "^22.18.13",
     "@types/react": "^19.2.2",
-    "tsup": "^8.5.0",
     "typescript": "5.9.3"
   },
   "peerDependencies": {
