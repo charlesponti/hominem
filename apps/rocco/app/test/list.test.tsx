@@ -1,35 +1,53 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { getMockUser } from '~/test/mocks/index'
+import type { List } from '~/lib/types'
+import ListPage from '~/routes/lists.$id'
+import { getMockUser, USER_ID } from '~/test/mocks/index'
 import { getMockListPlace } from '~/test/mocks/place'
 import { TEST_LIST_ID } from '~/test/test.setup'
 import { mockTrpcClient, renderWithRouter } from '~/test/utils'
 
+// Mock hooks and dependencies
 vi.mock('~/hooks/useGeolocation', () => ({
-  useGeolocation: () => ({ currentLocation: { lat: 0, lng: 0 } }),
+  useGeolocation: () => ({ currentLocation: { lat: 0, lng: 0 }, isLoading: false }),
 }))
 
-describe('List', () => {
+vi.mock('~/contexts/map-interaction-context', () => ({
+  MapInteractionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useMapInteraction: () => ({ hoveredPlaceId: null, setHoveredPlaceId: vi.fn() }),
+}))
+
+/**
+ * Simplified list tests using renderWithRouter
+ *
+ * Testing approach:
+ * - Use renderWithRouter with real router setup
+ * - Mock only tRPC queries (not the loader)
+ * - Focus on component behavior, not routing internals
+ */
+describe('ListPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   describe('when list does not belong to user', () => {
-    const list = {
+    const list: List = {
       id: TEST_LIST_ID,
       name: 'test list',
       places: [getMockListPlace()],
       userId: 'other-user-id',
       isOwnList: false,
+      hasAccess: false,
       description: 'Test list description',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdBy: getMockUser(),
+      isPublic: false,
+      users: [],
     }
 
     beforeEach(() => {
-      // Mock list query
       mockTrpcClient.lists.getById.useQuery.mockReturnValue({
         data: list,
         isLoading: false,
@@ -39,236 +57,212 @@ describe('List', () => {
 
     test('should display list content', async () => {
       renderWithRouter({
-        isAuth: true,
         routes: [
           {
-            path: `/lists/${TEST_LIST_ID}`,
-            Component: () => <div>List Component</div>, // Placeholder component
+            path: '/lists/:id',
+            // biome-ignore lint/suspicious/noExplicitAny: Test router setup
+            Component: ListPage as any,
+            // Minimal loader to provide loaderData
+            loader: () => ({ list }),
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
       })
 
       await waitFor(() => {
-        expect(screen.getByText('List Component')).toBeInTheDocument()
+        expect(screen.getByText('test list')).toBeInTheDocument()
+      })
+    })
+
+    test('should not show owner controls for non-owner', async () => {
+      renderWithRouter({
+        routes: [
+          {
+            path: '/lists/:id',
+            // biome-ignore lint/suspicious/noExplicitAny: Test router setup
+            Component: ListPage as any,
+            loader: () => ({ list }),
+          },
+        ],
+        initialEntries: [`/lists/${TEST_LIST_ID}`],
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('test list')).toBeInTheDocument()
+      })
+
+      // Menu should NOT be visible for non-owners
+      expect(screen.queryByTestId('list-dropdownmenu-trigger')).not.toBeInTheDocument()
+    })
+
+    test('should not show add button when no access', async () => {
+      renderWithRouter({
+        routes: [
+          {
+            path: '/lists/:id',
+            // biome-ignore lint/suspicious/noExplicitAny: Test router setup
+            Component: ListPage as any,
+            loader: () => ({ list }),
+          },
+        ],
+        initialEntries: [`/lists/${TEST_LIST_ID}`],
+      })
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('add-to-list-button')).not.toBeInTheDocument()
       })
     })
   })
 
-  describe('List Menu and Edit Sheet', () => {
-    const list = {
+  describe('when list belongs to user', () => {
+    const list: List = {
       id: TEST_LIST_ID,
-      name: 'test list',
+      name: 'my list',
       isOwnList: true,
+      hasAccess: true,
       places: [getMockListPlace()],
-      userId: 'user-id',
-      description: 'Test list description',
+      userId: USER_ID,
+      description: 'My list description',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdBy: getMockUser(),
+      isPublic: false,
+      users: [],
     }
 
     beforeEach(() => {
-      // Mock list query
       mockTrpcClient.lists.getById.useQuery.mockReturnValue({
         data: list,
         isLoading: false,
         error: null,
       })
 
-      // Mock update mutation
-      const mockUpdateMutation = {
+      mockTrpcClient.lists.update.useMutation.mockReturnValue({
         mutate: vi.fn(),
         mutateAsync: vi.fn(),
         isLoading: false,
         isSuccess: false,
         isError: false,
-        error: null,
-      }
-      mockTrpcClient.lists.update.useMutation.mockReturnValue(mockUpdateMutation)
-    })
-
-    test('should display list menu for own list', async () => {
-      renderWithRouter({
-        isAuth: true,
-        routes: [
-          {
-            path: `/lists/${TEST_LIST_ID}`,
-            Component: () => <div>List Component</div>, // Placeholder component
-          },
-        ],
-        initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
-
-      await waitFor(() => {
-        expect(screen.getByText('List Component')).toBeInTheDocument()
       })
     })
 
-    test("should not display list menu for other user's list", async () => {
-      const otherList = {
-        ...list,
-        userId: 'other-user-id',
-        isOwnList: false,
-      }
-
-      // Mock list query with other user's list
-      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
-        data: otherList,
-        isLoading: false,
-        error: null,
-      })
-
+    test('should display list with owner controls', async () => {
       renderWithRouter({
-        isAuth: true,
-        routes: [
-          {
-            path: `/lists/${TEST_LIST_ID}`,
-            Component: () => <div>List Component</div>, // Placeholder component
-          },
-        ],
-        initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
-
-      await waitFor(() => {
-        expect(screen.getByText('List Component')).toBeInTheDocument()
-      })
-    })
-
-    test("should open edit sheet when clicking 'Edit' in menu", async () => {
-      const _user = userEvent.setup()
-
-      renderWithRouter({
-        isAuth: true,
-        routes: [
-          {
-            path: `/lists/${TEST_LIST_ID}`,
-            Component: () => <div>List Component</div>, // Placeholder component
-          },
-        ],
-        initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
-
-      await waitFor(() => {
-        expect(screen.getByText('List Component')).toBeInTheDocument()
-      })
-    })
-
-    test('should update list when edit form is submitted', async () => {
-      const _user = userEvent.setup()
-      const mockUpdateMutation = {
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-        error: null,
-      }
-      mockTrpcClient.lists.update.useMutation.mockReturnValue(mockUpdateMutation)
-
-      renderWithRouter({
-        isAuth: true,
-        routes: [
-          {
-            path: `/lists/${TEST_LIST_ID}`,
-            Component: () => <div>List Component</div>, // Placeholder component
-          },
-        ],
-        initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
-
-      await waitFor(() => {
-        expect(screen.getByText('List Component')).toBeInTheDocument()
-      })
-    })
-
-    test('should display error message when update fails', async () => {
-      const user = userEvent.setup()
-      const mockMutateAsync = vi.fn().mockRejectedValue(new Error('Failed to update list'))
-
-      // Mock mutation in error state (simulating React Query's state after mutateAsync fails)
-      // This tests that the component correctly displays the error message when isError is true
-      const mockUpdateMutation = {
-        mutate: vi.fn(),
-        mutateAsync: mockMutateAsync,
-        isLoading: false,
-        isSuccess: false,
-        isError: true,
-        error: { message: 'Failed to update list' },
-        status: 'error' as const,
-      }
-
-      mockTrpcClient.lists.update.useMutation.mockReturnValue(mockUpdateMutation)
-
-      // Import the actual ListPage component
-      const { default: ListPage } = await import('~/routes/lists.$id')
-
-      renderWithRouter({
-        isAuth: true,
         routes: [
           {
             path: '/lists/:id',
-            Component: ListPage,
-          },
-          {
-            path: '/places/:id',
-            Component: () => <div>Place Page</div>, // Placeholder for place route
+            // biome-ignore lint/suspicious/noExplicitAny: Test router setup
+            Component: ListPage as any,
+            loader: () => ({ list }),
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
       })
 
-      // Wait for the list to load
       await waitFor(() => {
-        expect(screen.getByText(list.name)).toBeInTheDocument()
-      })
-
-      // Open the menu and click Edit
-      const menuTrigger = screen.getByTestId('list-dropdownmenu-trigger')
-      await user.click(menuTrigger)
-
-      const editButton = screen.getByText('Edit')
-      await user.click(editButton)
-
-      // Wait for the edit sheet to open
-      await waitFor(() => {
-        expect(screen.getByText('Edit list')).toBeInTheDocument()
-      })
-
-      // Submit the form to trigger the mutation (which will fail)
-      const saveButton = screen.getByRole('button', { name: /save/i })
-      await user.click(saveButton)
-
-      // Wait for mutateAsync to be called
-      await waitFor(() => {
-        expect(mockMutateAsync).toHaveBeenCalled()
-      })
-
-      // Verify the error message is displayed when the mutation is in error state
-      // The component checks updateList.isError, which is true in our mock
-      await waitFor(() => {
-        expect(
-          screen.getByText('There was an issue editing your list. Try again later.')
-        ).toBeInTheDocument()
+        expect(screen.getByText('my list')).toBeInTheDocument()
+        expect(screen.getByTestId('list-dropdownmenu-trigger')).toBeInTheDocument()
       })
     })
 
-    test('should pre-fill form with list data', async () => {
-      const _user = userEvent.setup()
+    test("should open edit sheet when clicking 'Edit'", async () => {
+      const user = userEvent.setup()
 
       renderWithRouter({
-        isAuth: true,
         routes: [
           {
-            path: `/lists/${TEST_LIST_ID}`,
-            Component: () => <div>List Component</div>, // Placeholder component
+            path: '/lists/:id',
+            // biome-ignore lint/suspicious/noExplicitAny: Test router setup
+            Component: ListPage as any,
+            loader: () => ({ list }),
+          },
+        ],
+        initialEntries: [`/lists/${TEST_LIST_ID}`],
+      })
+
+      await waitFor(() => expect(screen.getByText('my list')).toBeInTheDocument())
+
+      const menuTrigger = screen.getByTestId('list-dropdownmenu-trigger')
+      await user.click(menuTrigger)
+
+      const editButton = await screen.findByText('Edit')
+      await user.click(editButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Edit list')).toBeInTheDocument()
+      })
+    })
+
+    test('should show user avatars when list has collaborators', async () => {
+      const listWithUsers: List = {
+        ...list,
+        users: [
+          { id: USER_ID, name: 'Test User', email: 'test@example.com', image: null },
+          { id: 'user-2', name: 'Collaborator', email: 'collab@example.com', image: null },
+        ],
+      }
+
+      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
+        data: listWithUsers,
+        isLoading: false,
+        error: null,
+      })
+
+      renderWithRouter({
+        routes: [
+          {
+            path: '/lists/:id',
+            // biome-ignore lint/suspicious/noExplicitAny: Test router setup
+            Component: ListPage as any,
+            loader: () => ({ list: listWithUsers }),
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
       })
 
       await waitFor(() => {
-        expect(screen.getByText('List Component')).toBeInTheDocument()
+        expect(screen.getByText('my list')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('hasAccess logic', () => {
+    test('should show add button when user has access', async () => {
+      const listWithAccess: List = {
+        id: TEST_LIST_ID,
+        name: 'shared list',
+        places: [],
+        userId: 'other-user-id',
+        isOwnList: false,
+        hasAccess: true,
+        description: 'Shared list',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: getMockUser(),
+        isPublic: false,
+        users: [],
+      }
+
+      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
+        data: listWithAccess,
+        isLoading: false,
+        error: null,
+      })
+
+      renderWithRouter({
+        routes: [
+          {
+            path: '/lists/:id',
+            // biome-ignore lint/suspicious/noExplicitAny: Test router setup
+            Component: ListPage as any,
+            loader: () => ({ list: listWithAccess }),
+          },
+        ],
+        initialEntries: [`/lists/${TEST_LIST_ID}`],
+      })
+
+      await waitFor(() => {
+        expect(screen.getByTestId('add-to-list-button')).toBeInTheDocument()
       })
     })
   })

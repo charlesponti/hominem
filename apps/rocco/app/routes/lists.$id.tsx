@@ -3,19 +3,21 @@ import { PageTitle } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
-import { Link, redirect, useParams } from 'react-router'
+import { Link, redirect } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists/list-menu'
 import ListTitleEdit from '~/components/lists/list-title-edit'
-import Loading, { LoadingScreen } from '~/components/loading'
+import Loading from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
 import PlacesList from '~/components/places/places-list'
 import UserAvatar from '~/components/user-avatar'
 import { MapInteractionProvider } from '~/contexts/map-interaction-context'
 import { useGeolocation } from '~/hooks/useGeolocation'
 import { trpc } from '~/lib/trpc/client'
+import { createCaller } from '~/lib/trpc/server'
 import type { PlaceLocation } from '~/lib/types'
+import type { Route } from './+types/lists.$id'
 
 export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
   if (!params.id) {
@@ -34,26 +36,41 @@ export function HydrateFallback() {
   )
 }
 
-export default function ListPage() {
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const { id } = params
+  if (!id) {
+    throw new Response('List ID is required', { status: 400 })
+  }
+
+  const trpcServer = createCaller(request)
+  const list = await trpcServer.lists.getById({ id })
+  if (!list) {
+    return redirect('/404')
+  }
+
+  return { list }
+}
+
+export default function ListPage({ loaderData }: Route.ComponentProps) {
   const { user } = useSupabaseAuthContext()
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const params = useParams<{ id: string }>()
-  const { data: listData, isLoading } = trpc.lists.getById.useQuery({
-    id: params.id || '',
-  })
-  const data = listData || null
+  const listId = loaderData?.list?.id ?? ''
+  const { data: list } = trpc.lists.getById.useQuery(
+    { id: listId },
+    { initialData: loaderData?.list ?? undefined, enabled: !!listId }
+  )
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
 
   const handleDeleteError = useCallback(() => {
     setDeleteError('Could not delete place. Please try again.')
   }, [])
 
-  const isOwner = data?.userId === user?.id
-  const hasAccess = data?.hasAccess ?? isOwner
+  const isOwner = list?.userId === user?.id
+  const hasAccess = list?.hasAccess ?? isOwner
   // Convert places to map markers
   const markers: PlaceLocation[] = useMemo(
     () =>
-      (data?.places || [])
+      (list?.places || [])
         .filter((p) => Boolean(p.latitude && p.longitude))
         .map((p) => ({
           latitude: p.latitude as number,
@@ -62,15 +79,11 @@ export default function ListPage() {
           name: p.name,
           imageUrl: p.imageUrl,
         })),
-    [data?.places]
+    [list?.places]
   )
 
-  if (isLoading) {
-    return <LoadingScreen />
-  }
-
-  if (!data) {
-    return <Alert type="error">We could not find this list.</Alert>
+  if (!list) {
+    return redirect('/404')
   }
 
   if (deleteError) {
@@ -81,27 +94,27 @@ export default function ListPage() {
     <MapInteractionProvider>
       <div className="flex-1 space-y-2">
         <div className="flex justify-between items-center">
-          <PageTitle title={data.name} variant="serif" />
+          <PageTitle title={list.name} variant="serif" />
           {isOwner && (
             <div className="flex items-center gap-2">
-              <ListTitleEdit listId={data.id} currentName={data.name} />
-              <Link to={`/lists/${data.id}/invites`} className="flex items-center gap-2">
+              <ListTitleEdit listId={list.id} currentName={list.name} />
+              <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
                 <UserPlus size={18} />
               </Link>
-              <ListMenu list={data} isOwnList={isOwner} />
+              <ListMenu list={list} isOwnList={isOwner} />
             </div>
           )}
           {!isOwner && (
             <div className="flex items-center">
-              <ListMenu list={data} isOwnList={isOwner} />
+              <ListMenu list={list} isOwnList={isOwner} />
             </div>
           )}
         </div>
         <div className="flex items-center gap-3">
           {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
-          {data.users && data.users.length > 0 && (
+          {list.users && list.users.length > 0 && (
             <div className="flex items-center gap-1.5">
-              {data.users.slice(0, 5).map((collaborator) => (
+              {list.users.slice(0, 5).map((collaborator) => (
                 <UserAvatar
                   key={collaborator.id}
                   id={collaborator.id}
@@ -111,9 +124,9 @@ export default function ListPage() {
                   size="sm"
                 />
               ))}
-              {data.users.length > 5 && (
+              {list.users.length > 5 && (
                 <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
-                  +{data.users.length - 5}
+                  +{list.users.length - 5}
                 </div>
               )}
             </div>
@@ -123,15 +136,13 @@ export default function ListPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="overflow-y-auto space-y-4 pb-8">
-          {data && (
-            <PlacesList
-              places={data.places || []}
-              listId={data.id}
-              canAdd={hasAccess}
-              onError={handleDeleteError}
-              showAvatars={(data.users?.length ?? 0) > 1}
-            />
-          )}
+          <PlacesList
+            places={list.places || []}
+            listId={list.id}
+            canAdd={hasAccess}
+            onError={handleDeleteError}
+            showAvatars={(list.users?.length ?? 0) > 1}
+          />
         </div>
 
         <div className="min-h-[300px] rounded-lg overflow-hidden">

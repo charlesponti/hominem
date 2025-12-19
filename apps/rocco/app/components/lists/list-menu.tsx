@@ -3,7 +3,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui/components/ui/dropdown-menu'
+} from '@hominem/ui/components/ui/dropdown-menu.js'
 import { MoreVertical } from 'lucide-react'
 import React, { type PropsWithChildren } from 'react'
 import { useModal } from '~/hooks/useModal'
