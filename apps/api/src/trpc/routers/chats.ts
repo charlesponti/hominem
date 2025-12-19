@@ -6,7 +6,7 @@ import { TRPCError } from "@trpc/server";
 import type { Tool, ToolExecutionOptions, ToolSet } from "ai";
 import { generateText, streamText } from "ai";
 import { z } from "zod";
-import { protectedProcedure, router } from "../procedures.js";
+import { protectedProcedure, router } from "../procedures";
 
 const chatService = new ChatService();
 const messageService = new MessageService();

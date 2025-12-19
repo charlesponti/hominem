@@ -3,7 +3,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { lmstudio } from "../utils/llm.js";
+import { lmstudio } from "../utils/llm";
 
 export function registerFlightsTool(server: McpServer) {
   server.registerTool(

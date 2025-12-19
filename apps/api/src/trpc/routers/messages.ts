@@ -1,6 +1,6 @@
 import { MessageService } from "@hominem/data/chat";
 import { z } from "zod";
-import { protectedProcedure, router } from "../procedures.js";
+import { protectedProcedure, router } from "../procedures";
 
 export const messagesRouter = router({
   getMessageById: protectedProcedure

@@ -5,7 +5,7 @@ import {
   assertSuccessResponse,
   makeAuthenticatedRequest,
   useApiTestLifecycle,
-} from "../../../../test/api-test-utils.js";
+} from "../../../../test/api-test-utils";
 
 // Mock dependencies
 vi.mock("@hominem/utils/imports", () => ({

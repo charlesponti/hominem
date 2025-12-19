@@ -6,7 +6,7 @@ import {
   assertSuccessResponse,
   makeAuthenticatedRequest,
   useApiTestLifecycle,
-} from "../../../../../test/api-test-utils.js";
+} from "../../../../../test/api-test-utils";
 
 // Mock BullMQ Queue
 const { mockQueueAdd, mockQueueClose } = vi.hoisted(() => {
