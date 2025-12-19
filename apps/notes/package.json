@@ -14,6 +14,7 @@
   "dependencies": {
     "@ai-sdk/react": "^1.2.12",
     "@hominem/ai": "workspace:*",
+    "@hominem/auth": "workspace:*",
     "@hominem/data": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",

@@ -9,17 +9,7 @@
     "emitDeclarationOnly": true,
     "outDir": "./build",
     "paths": {
-      "@/*": ["./src/*"],
-      "@hominem/ui": ["../ui/src/index.ts"],
-      "@hominem/ui/*": ["../ui/src/*"],
-      "@hominem/utils": ["../utils/src/index.ts"],
-      "@hominem/utils/*": ["../utils/src/*"],
-      "@hominem/data": ["../data/src/index.ts"],
-      "@hominem/data/*": ["../data/src/*"],
-      "@hominem/ai": ["./src/index.ts"],
-      "@hominem/ai/*": ["./src/*"],
-      "@hominem/auth": ["../auth/src/index.ts"],
-      "@hominem/auth/*": ["../auth/src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],

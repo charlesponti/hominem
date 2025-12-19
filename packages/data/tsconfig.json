@@ -7,17 +7,7 @@
     "outDir": "./build",
     "rootDir": "./src",
     "paths": {
-      "@/*": ["./src/*"],
-      "@hominem/ui": ["../ui/src/index.ts"],
-      "@hominem/ui/*": ["../ui/src/*"],
-      "@hominem/utils": ["../utils/src/index.ts"],
-      "@hominem/utils/*": ["../utils/src/*"],
-      "@hominem/data": ["./src/index.ts"],
-      "@hominem/data/*": ["./src/*"],
-      "@hominem/ai": ["../ai/src/index.ts"],
-      "@hominem/ai/*": ["../ai/src/*"],
-      "@hominem/auth": ["../auth/src/index.ts"],
-      "@hominem/auth/*": ["../auth/src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],

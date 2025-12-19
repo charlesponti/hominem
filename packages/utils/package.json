@@ -34,7 +34,6 @@
     "@ai-sdk/google": "^1.1.10",
     "@ai-sdk/openai": "^1.1.9",
     "@hominem/ai": "workspace:*",
-    "@hominem/data": "workspace:*",
     "@supabase/supabase-js": "2.88.0",
     "ai": "^4.3.16",
     "cheerio": "^1.0.0",

@@ -9,17 +9,7 @@
     "module": "ES2022",
     "paths": {
       "@/*": ["./src/*"],
-      "test": ["./test/*"],
-      "@hominem/ui": ["../ui/src/index.ts"],
-      "@hominem/ui/*": ["../ui/src/*"],
-      "@hominem/utils": ["./src/index.ts"],
-      "@hominem/utils/*": ["./src/*"],
-      "@hominem/data": ["../data/src/index.ts"],
-      "@hominem/data/*": ["../data/src/*"],
-      "@hominem/ai": ["../ai/src/index.ts"],
-      "@hominem/ai/*": ["../ai/src/*"],
-      "@hominem/auth": ["../auth/src/index.ts"],
-      "@hominem/auth/*": ["../auth/src/*"]
+      "test": ["./test/*"]
     }
   },
   "references": [

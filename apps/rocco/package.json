@@ -27,6 +27,7 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@headlessui/react": "^2.1.10",
+    "@hominem/auth": "workspace:*",
     "@hominem/data": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
@@ -88,16 +89,9 @@
     "terser": "^5.44.0",
     "typescript": "5.9.3",
     "vite": "7.3.0",
-    "vite-plugin-pwa": "^1.2.0",
+
     "vite-tsconfig-paths": "6.0.3",
-    "vitest": "4.0.16",
-    "workbox-cacheable-response": "^7.4.0",
-    "workbox-core": "^7.4.0",
-    "workbox-expiration": "^7.4.0",
-    "workbox-precaching": "^7.4.0",
-    "workbox-routing": "^7.4.0",
-    "workbox-strategies": "^7.4.0",
-    "workbox-window": "^7.4.0"
+    "vitest": "4.0.16"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.24.0"

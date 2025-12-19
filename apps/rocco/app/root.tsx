@@ -1,7 +1,7 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
-// import { UpdateNotification } from './components/pwa/update-notification'
+
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
 import './globals.css'
@@ -49,7 +49,7 @@ export default function App() {
         <SupabaseAuthProvider>
           <TRPCProvider>
             <Outlet />
-            {/* <UpdateNotification onUpdate={() => window.location.reload()} /> */}
+
           </TRPCProvider>
         </SupabaseAuthProvider>
 

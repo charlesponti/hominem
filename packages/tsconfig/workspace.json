@@ -3,17 +3,6 @@
   "display": "Workspace Shared",
   "extends": "./base.json",
   "compilerOptions": {
-    "paths": {
-      "@hominem/ui": ["../../packages/ui/src/index.ts"],
-      "@hominem/ui/*": ["../../packages/ui/src/*"],
-      "@hominem/utils": ["../../packages/utils/src/index.ts"],
-      "@hominem/utils/*": ["../../packages/utils/src/*"],
-      "@hominem/data": ["../../packages/data/src/index.ts"],
-      "@hominem/data/*": ["../../packages/data/src/*"],
-      "@hominem/ai": ["../../packages/ai/src/index.ts"],
-      "@hominem/ai/*": ["../../packages/ai/src/*"],
-      "@hominem/auth": ["../../packages/auth/src/index.ts"],
-      "@hominem/auth/*": ["../../packages/auth/src/*"]
-    }
+    "moduleResolution": "bundler"
   }
 }

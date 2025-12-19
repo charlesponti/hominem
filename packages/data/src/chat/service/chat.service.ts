@@ -44,7 +44,7 @@ export class ChatError extends Error {
 }
 
 export class ChatService {
-  async createChat(params: CreateChatParams): Promise<Chat> {
+  async createChat(params: CreateChatParams) {
     try {
       const chatId = uuidv4();
       const now = new Date().toISOString();
@@ -203,7 +203,7 @@ export class ChatService {
   async updateChatTitleFromConversation(
     chatId: string,
     messages: ChatMessageSelect[]
-  ): Promise<Chat | null> {
+  ) {
     try {
       // Only update if there are a few messages and the title is still default
       const currentChat = await db
