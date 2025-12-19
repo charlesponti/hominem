@@ -1,9 +1,9 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { PageTitle } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ClientLoaderFunctionArgs } from 'react-router'
-import { Link, redirect } from 'react-router'
+import { Link, redirect, useNavigate, useParams } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists/list-menu'
@@ -53,21 +53,34 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export default function ListPage({ loaderData }: Route.ComponentProps) {
   const { user } = useSupabaseAuthContext()
+  const navigate = useNavigate()
+  const params = useParams()
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const listId = loaderData?.list?.id ?? ''
-  const { data: list } = trpc.lists.getById.useQuery(
+  // Get listId from params instead of loaderData to work during client-side navigation
+  const listId = params.id ?? ''
+  const {
+    data: list,
+    isLoading,
+    error,
+  } = trpc.lists.getById.useQuery(
     { id: listId },
     { initialData: loaderData?.list ?? undefined, enabled: !!listId }
   )
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
 
+  // Handle redirect when list is not found (after query completes)
+  useEffect(() => {
+    if (!isLoading && !list && !error && listId) {
+      // Query completed but no list found, redirect to 404
+      navigate('/404', { replace: true })
+    }
+  }, [isLoading, list, error, listId, navigate])
+
   const handleDeleteError = useCallback(() => {
     setDeleteError('Could not delete place. Please try again.')
   }, [])
 
-  const isOwner = list?.userId === user?.id
-  const hasAccess = list?.hasAccess ?? isOwner
-  // Convert places to map markers
+  // Convert places to map markers (must be called before conditional returns)
   const markers: PlaceLocation[] = useMemo(
     () =>
       (list?.places || [])
@@ -82,9 +95,31 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     [list?.places]
   )
 
-  if (!list) {
-    return redirect('/404')
+  // Show loading state while fetching
+  if (isLoading || !listId) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <Loading size="lg" />
+      </div>
+    )
   }
+
+  // Show error state
+  if (error) {
+    return <Alert type="error">Error loading list: {error.message}</Alert>
+  }
+
+  // If no list found, show loading (redirect will happen in useEffect)
+  if (!list) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <Loading size="lg" />
+      </div>
+    )
+  }
+
+  const isOwner = list.userId === user?.id
+  const hasAccess = list.hasAccess ?? isOwner
 
   if (deleteError) {
     return <Alert type="error">{deleteError}</Alert>

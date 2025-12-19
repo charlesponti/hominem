@@ -6,6 +6,13 @@ interface ErrorBoundaryProps {
 }
 
 export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
+  // Log error for debugging (even in production, but only to console)
+  if (error instanceof Error) {
+    console.error('ErrorBoundary caught an error:', error)
+  } else {
+    console.error('ErrorBoundary caught an error:', error)
+  }
+
   let message = 'Oops!'
   let details = 'An unexpected error occurred.'
   let stack: string | undefined
@@ -21,6 +28,9 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
   } else if (import.meta.env.DEV && error instanceof Error) {
     details = error.message
     stack = error.stack
+  } else if (error instanceof Error) {
+    // In production, still show the error message but not the stack
+    details = error.message
   }
 
   return (
