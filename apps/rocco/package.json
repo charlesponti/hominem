@@ -48,7 +48,7 @@
     "framer-motion": "^12.9.4",
     "ioredis": "^5.6.1",
     "isbot": "^5.1.27",
-    "lucide-react": "^0.534.0",
+    "lucide-react": "0.562.0",
     "posthog-node": "^3.1.8",
     "prop-types": "^15.8.1",
     "react": "^19.1.0",
@@ -75,7 +75,7 @@
     "@vitejs/plugin-react": "5.1.2",
     "@vitest/coverage-v8": "4.0.16",
     "autoprefixer": "^10.4.20",
-    "dotenv": "^16.4.5",
+    "dotenv": "17.2.3",
     "drizzle-kit": "^0.31.4",
     "jsdom": "^25.0.1",
     "msw": "^2.4.9",
@@ -89,7 +89,6 @@
     "terser": "^5.44.0",
     "typescript": "5.9.3",
     "vite": "7.3.0",
-
     "vite-tsconfig-paths": "6.0.3",
     "vitest": "4.0.16"
   },
