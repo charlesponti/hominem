@@ -46,7 +46,7 @@
     "postgres": "^3.4.5",
     "resend": "^4.0.1",
     "uuid": "^11.1.0",
-    "zod": "4.0.5"
+    "zod": "4.2.1"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",

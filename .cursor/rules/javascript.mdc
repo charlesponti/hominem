@@ -4,6 +4,9 @@ globs: *.tsx. *.ts, *.jsx. *.js
 alwaysApply: false
 ---
 
+Package manager: Bun
+
+
 # JavaScript/TypeScript Development Rules
 
 ## Core Principles

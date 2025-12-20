@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type RenderOptions, render, screen } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
-import { createMemoryRouter, RouterProvider } from 'react-router'
+import { createRoutesStub } from 'react-router'
 import { vi } from 'vitest'
 import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './mocks'
 
@@ -102,6 +102,17 @@ export function createTestQueryClient() {
   })
 }
 
+function createUseMigrationQuery() {
+  return vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    data: null,
+    isLoading: false,
+    isSuccess: false,
+    isError: false,
+  }))
+}
+
 const mockTrpcClient = {
   useUtils: vi.fn(() => ({
     lists: {
@@ -137,31 +148,13 @@ const mockTrpcClient = {
       useQuery: vi.fn(),
     },
     create: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
     update: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
     delete: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
   },
   places: {
@@ -178,31 +171,13 @@ const mockTrpcClient = {
       useQuery: vi.fn(),
     },
     create: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
     update: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
     delete: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
   },
   items: {
@@ -210,22 +185,10 @@ const mockTrpcClient = {
       useQuery: vi.fn(),
     },
     addToList: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
     removeFromList: {
-      useMutation: vi.fn(() => ({
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(),
-        isLoading: false,
-        isSuccess: false,
-        isError: false,
-      })),
+      useMutation: createUseMigrationQuery(),
     },
   },
   invites: {
@@ -278,12 +241,7 @@ export function renderWithProviders(
 
 export function renderWithRouter(
   config: {
-    routes: Array<{
-      path: string
-      Component: React.ComponentType<any>
-      loader?: (args: { request: Request }) => Promise<unknown> | unknown
-      ErrorBoundary?: React.ComponentType<any>
-    }>
+    routes: Parameters<typeof createRoutesStub>[0]
     isAuth?: boolean
     initialEntries?: string[]
   },
@@ -293,23 +251,17 @@ export function renderWithRouter(
     queryClient?: QueryClient
   } = {}
 ) {
-  const router = createMemoryRouter(config.routes as Parameters<typeof createMemoryRouter>[0], {
-    initialEntries: config.initialEntries || ['/'],
-  })
+  const Stub = createRoutesStub(config.routes)
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <Stub initialEntries={config.initialEntries || ['/']} />
     </QueryClientProvider>
   )
 }
 
 export function waitForLoadingToFinish() {
   return screen.findByTestId('app-main')
-}
-
-export function getByTestId(testId: string) {
-  return screen.getByTestId(testId)
 }
 
 export function queryByTestId(testId: string) {
