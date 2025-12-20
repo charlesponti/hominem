@@ -1,6 +1,8 @@
 import { Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import z from 'zod'
+import { trpc } from '~/lib/trpc/client'
 import { env } from '~/lib/env'
 import { cn } from '~/lib/utils'
 import UserAvatar from '../user-avatar'
@@ -52,6 +54,18 @@ export default function PlaceRow({
   addedBy,
 }: PlaceRowProps) {
   const resolvedImage = buildImageUrl(photoUrl) ?? buildImageUrl(imageUrl) ?? null
+  const utils = trpc.useUtils()
+
+  const handlePrefetch = () => {
+    const id = href.split('/').pop()
+    if (!id) return
+
+    if (z.uuid().safeParse(id).success) {
+      utils.places.getDetailsById.prefetch({ id })
+    } else {
+      utils.places.getDetailsByGoogleId.prefetch({ googleMapsId: id })
+    }
+  }
 
   return (
     <li
@@ -62,13 +76,19 @@ export default function PlaceRow({
       onMouseLeave={onMouseLeave}
       data-selected={isSelected}
     >
-      <Link to={href} className="flex-1 min-w-0 focus:outline-none">
+      <Link
+        to={href}
+        viewTransition
+        onMouseEnter={handlePrefetch}
+        className="flex-1 min-w-0 focus:outline-none"
+      >
         <div className="flex items-center gap-4">
           <div className="size-16 rounded overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
             {resolvedImage ? (
               <img
                 src={resolvedImage}
                 alt={name}
+                style={{ viewTransitionName: `place-row-image-${href.split('/').pop()}` }}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             ) : (

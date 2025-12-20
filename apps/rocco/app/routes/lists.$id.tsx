@@ -130,66 +130,71 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <MapInteractionProvider>
-      <div className="flex-1 space-y-2">
-        <div className="flex justify-between items-center">
-          <PageTitle title={list.name} variant="serif" />
-          {isOwner && (
-            <div className="flex items-center gap-2">
-              <ListTitleEdit listId={list.id} currentName={list.name} />
-              <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
-                <UserPlus size={18} />
-              </Link>
-              <ListMenu list={list} isOwnList={isOwner} />
-            </div>
-          )}
-          {!isOwner && (
-            <div className="flex items-center">
-              <ListMenu list={list} isOwnList={isOwner} />
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
-          {list.users && list.users.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              {list.users.slice(0, 5).map((collaborator) => (
-                <UserAvatar
-                  key={collaborator.id}
-                  id={collaborator.id}
-                  name={collaborator.name}
-                  email={collaborator.email}
-                  image={collaborator.image}
-                  size="sm"
-                />
-              ))}
-              {list.users.length > 5 && (
-                <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
-                  +{list.users.length - 5}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="overflow-y-auto space-y-4 pb-8">
-          <PlacesList
-            places={list.places || []}
-            listId={list.id}
-            canAdd={hasAccess}
-            onError={handleDeleteError}
-            showAvatars={(list.users?.length ?? 0) > 1}
-          />
+      <div className="space-y-4">
+        <div className="flex-1 space-y-2">
+          <div
+            className="flex justify-between items-center"
+            style={{ viewTransitionName: `list-title-${list.id}` }}
+          >
+            <PageTitle title={list.name} variant="serif" />
+            {isOwner && (
+              <div className="flex items-center gap-2">
+                <ListTitleEdit listId={list.id} currentName={list.name} />
+                <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
+                  <UserPlus size={18} />
+                </Link>
+                <ListMenu list={list} isOwnList={isOwner} />
+              </div>
+            )}
+            {!isOwner && (
+              <div className="flex items-center">
+                <ListMenu list={list} isOwnList={isOwner} />
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
+            {list.users && list.users.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                {list.users.slice(0, 5).map((collaborator) => (
+                  <UserAvatar
+                    key={collaborator.id}
+                    id={collaborator.id}
+                    name={collaborator.name}
+                    email={collaborator.email}
+                    image={collaborator.image}
+                    size="sm"
+                  />
+                ))}
+                {list.users.length > 5 && (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
+                    +{list.users.length - 5}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="min-h-[300px] rounded-lg overflow-hidden">
-          <LazyMap
-            isLoadingCurrentLocation={isLoadingLocation}
-            currentLocation={currentLocation}
-            zoom={12}
-            markers={markers}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="overflow-y-auto space-y-4 pb-8">
+            <PlacesList
+              places={list.places || []}
+              listId={list.id}
+              canAdd={hasAccess}
+              onError={handleDeleteError}
+              showAvatars={(list.users?.length ?? 0) > 1}
+            />
+          </div>
+
+          <div className="min-h-[300px] rounded-lg overflow-hidden">
+            <LazyMap
+              isLoadingCurrentLocation={isLoadingLocation}
+              currentLocation={currentLocation}
+              zoom={12}
+              markers={markers}
+            />
+          </div>
         </div>
       </div>
     </MapInteractionProvider>

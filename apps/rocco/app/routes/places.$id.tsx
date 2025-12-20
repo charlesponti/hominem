@@ -40,12 +40,18 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div data-testid="place-page" className="flex flex-col items-start gap-4 pb-20">
-      <div className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700">
-        <PlacePhotos alt={place.name} photos={place.photos} />
+      <div
+        className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700"
+        style={{ viewTransitionName: `place-photos-${place.id}` }}
+      >
+        <PlacePhotos alt={place.name} photos={place.photos} placeId={place.id} />
       </div>
 
       <div className="w-full space-y-6">
-        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100">
+        <div
+          className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100"
+          style={{ viewTransitionName: `place-header-${place.id}` }}
+        >
           <PageTitle title={place.name} />
           <div className="space-y-2">
             <PlaceTypes types={place.types || []} />

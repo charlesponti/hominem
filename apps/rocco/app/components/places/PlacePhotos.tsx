@@ -7,9 +7,10 @@ import PlacePhotoLightbox from './PlacePhotoLightbox'
 type Props = {
   alt: string
   photos: string[] | null | undefined
+  placeId?: string
 }
 
-const PlacePhotos = ({ alt, photos }: Props) => {
+const PlacePhotos = ({ alt, photos, placeId }: Props) => {
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set())
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
@@ -69,6 +70,11 @@ const PlacePhotos = ({ alt, photos }: Props) => {
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
                   sizes="(max-width: 768px) 90vw, 350px"
+                  style={
+                    index === 0 && placeId
+                      ? { viewTransitionName: `place-photo-image-${placeId}` }
+                      : undefined
+                  }
                   className={cn(
                     'object-cover w-full h-full transition-all duration-300 group-hover:scale-105'
                   )}

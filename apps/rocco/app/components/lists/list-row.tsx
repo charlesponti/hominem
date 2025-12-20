@@ -1,5 +1,6 @@
 import { List } from 'lucide-react'
 import { Link } from 'react-router'
+import { trpc } from '~/lib/trpc/client'
 
 type ListRowProps = {
   id: string
@@ -10,11 +11,16 @@ type ListRowProps = {
 }
 
 export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
+  const utils = trpc.useUtils()
+
   return (
     <li>
       <Link
         to={`/lists/${id}`}
         viewTransition
+        onMouseEnter={() => {
+          utils.lists.getById.prefetch({ id })
+        }}
         className="block px-4 py-3 hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center justify-between gap-3">
@@ -26,15 +32,26 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
                     src={imageUrl}
                     alt={imageAlt || name}
                     className="w-full h-full object-cover"
+                    style={{ viewTransitionName: `list-image-${id}` }}
                   />
                 ) : (
                   <List className="text-muted-foreground" size={20} />
                 )}
               </div>
-              <h3 className="flex-1 heading-3 truncate">{name}</h3>
+              <h3
+                className="flex-1 heading-3 truncate"
+                style={{ viewTransitionName: `list-title-${id}` }}
+              >
+                {name}
+              </h3>
             </div>
           ) : (
-            <h3 className="flex-1 heading-3 text-accent-foreground truncate">{name}</h3>
+            <h3
+              className="flex-1 heading-3 text-accent-foreground truncate"
+              style={{ viewTransitionName: `list-title-${id}` }}
+            >
+              {name}
+            </h3>
           )}
           <span
             className={`text-xs ${imageUrl !== undefined ? 'text-muted-foreground' : 'text-accent-foreground'}`}

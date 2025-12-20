@@ -39,6 +39,11 @@ export const links = () => [
     crossOrigin: 'anonymous',
   },
   {
+    rel: 'preload',
+    as: 'style',
+    href: 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Geist+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
+  },
+  {
     rel: 'stylesheet',
     href: 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Geist+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
   },
@@ -52,6 +57,10 @@ export const meta = () => [
   { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
   { name: 'apple-mobile-web-app-title', content: 'Rocco' },
   { name: 'mobile-web-app-capable', content: 'yes' },
+  { property: 'og:title', content: 'rocco' },
+  { property: 'og:description', content: 'Your personal place list' },
+  { property: 'og:type', content: 'website' },
+  { name: 'twitter:card', content: 'summary_large_image' },
 ]
 
 export default function App({ loaderData }: Route.ComponentProps) {
