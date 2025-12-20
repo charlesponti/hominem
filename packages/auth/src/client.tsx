@@ -1,12 +1,25 @@
 import { createBrowserClient } from '@supabase/ssr'
-import type { Session } from '@supabase/supabase-js'
+import type { AuthChangeEvent, Session, SupabaseClient } from '@supabase/supabase-js'
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from 'react'
 
+// Registry to ensure only one Supabase instance exists per unique config
+const clientRegistry = new Map<string, SupabaseClient>()
+
 export function getSupabase(config: { url: string; anonKey: string }) {
-  return createBrowserClient(config.url, config.anonKey)
+  const key = `${config.url}:${config.anonKey}`
+  const existing = clientRegistry.get(key)
+  if (existing) return existing
+
+  const client = createBrowserClient(config.url, config.anonKey)
+  clientRegistry.set(key, client)
+  return client
 }
 
-function useSupabaseAuth(initialSession: Session | null, config: { url: string; anonKey: string }) {
+function useSupabaseAuth(
+  initialSession: Session | null,
+  config: { url: string; anonKey: string },
+  onAuthEvent?: (event: AuthChangeEvent, session: Session | null) => void
+) {
   const [supabaseClient] = useState(() => getSupabase(config))
   const [session, setSession] = useState<Session | null>(initialSession)
   const [isLoading, setIsLoading] = useState(!initialSession)
@@ -20,13 +33,14 @@ function useSupabaseAuth(initialSession: Session | null, config: { url: string; 
     // Listen for auth changes - Supabase manages session state internally
     const {
       data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((_event, newSession) => {
+    } = supabaseClient.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession)
       setIsLoading(false)
+      onAuthEvent?.(event, newSession)
     })
 
     return () => subscription.unsubscribe()
-  }, [supabaseClient, initialSession, isLoading])
+  }, [supabaseClient, initialSession, isLoading, onAuthEvent])
 
   const getUser = useCallback(async () => {
     const {
@@ -66,14 +80,16 @@ interface SupabaseAuthProviderProps {
   children: ReactNode
   initialSession?: Session | null
   config: { url: string; anonKey: string }
+  onAuthEvent?: (event: AuthChangeEvent, session: Session | null) => void
 }
 
 export function SupabaseAuthProvider({
   children,
   initialSession = null,
   config,
+  onAuthEvent,
 }: SupabaseAuthProviderProps) {
-  const auth = useSupabaseAuth(initialSession, config)
+  const auth = useSupabaseAuth(initialSession, config, onAuthEvent)
 
   return <SupabaseAuthContext.Provider value={auth}>{children}</SupabaseAuthContext.Provider>
 }

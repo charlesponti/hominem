@@ -1,8 +1,9 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
+import type { AuthChangeEvent } from '@supabase/supabase-js'
+import { useCallback } from 'react'
 import { getServerSession } from './lib/auth.server'
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, data } from 'react-router'
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, data, useRevalidator } from 'react-router'
 import type { Route } from './+types/root'
-import { AuthRevalidator } from './components/auth-revalidator'
 import './globals.css'
 import { env } from './lib/env'
 import { initProductionLogging } from './lib/trpc/logger'
@@ -55,6 +56,16 @@ export const meta = () => [
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const { session, supabaseEnv } = loaderData
+  const revalidator = useRevalidator()
+
+  const handleAuthEvent = useCallback(
+    (event: AuthChangeEvent) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        revalidator.revalidate()
+      }
+    },
+    [revalidator]
+  )
 
   return (
     <html lang="en">
@@ -65,8 +76,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        <SupabaseAuthProvider initialSession={session} config={supabaseEnv}>
-          <AuthRevalidator />
+        <SupabaseAuthProvider
+          initialSession={session}
+          config={supabaseEnv}
+          onAuthEvent={handleAuthEvent}
+        >
           <TRPCProvider>
             <Outlet />
           </TRPCProvider>

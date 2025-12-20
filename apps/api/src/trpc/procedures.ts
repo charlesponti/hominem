@@ -1,4 +1,4 @@
-import type { HominemUser } from '@hominem/auth'
+import type { HominemUser } from '@hominem/auth/server'
 import { UserAuthService } from '@hominem/data'
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { Queue } from 'bullmq'

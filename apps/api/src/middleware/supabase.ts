@@ -1,5 +1,5 @@
-import type { HominemUser, SupabaseAuthUser } from "@hominem/auth";
-import { toHominemUser } from "@hominem/auth";
+import { toHominemUser } from "@hominem/auth/server";
+import type { HominemUser, SupabaseAuthUser } from "@hominem/auth/server";
 import { UserAuthService } from "@hominem/data";
 import {
   type CookieMethodsServer,
@@ -10,7 +10,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 import type { Context, MiddlewareHandler } from "hono";
 import { setCookie } from "hono/cookie";
-import { env as appEnv } from "../lib/env";
+import { authConfig } from "../lib/auth";
 
 declare module "hono" {
   interface ContextVariableMap {
@@ -31,8 +31,8 @@ export const getUserId = (c: Context) => {
 
 // Service role client for admin operations
 export const supabaseClient = createClient(
-  appEnv.SUPABASE_URL,
-  appEnv.SUPABASE_SERVICE_ROLE_KEY,
+  authConfig.supabaseUrl,
+  authConfig.supabaseServiceRoleKey,
   {
     auth: {
       autoRefreshToken: false,
@@ -103,9 +103,6 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
       }
     }
 
-    const supabaseUrl = appEnv.SUPABASE_URL;
-    const supabaseAnonKey = appEnv.SUPABASE_ANON_KEY;
-
     const cookieMethods: CookieMethodsServer = {
       getAll() {
         const cookieHeader = c.req.header("Cookie") ?? "";
@@ -124,10 +121,14 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
       },
     };
 
-    // Create SSR client for cookie-based auth (web apps)
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: cookieMethods,
-    });
+    // Create cookie-based auth client
+    const supabase = createServerClient(
+      authConfig.supabaseUrl,
+      authConfig.supabaseAnonKey,
+      {
+        cookies: cookieMethods,
+      }
+    );
 
     c.set("supabase", supabase);
 

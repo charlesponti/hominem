@@ -1,4 +1,6 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
+import type { AuthChangeEvent } from '@supabase/supabase-js'
+import { useCallback } from 'react'
 import { getServerSession, authConfig } from './lib/auth.server'
 import type React from 'react'
 import {
@@ -9,12 +11,12 @@ import {
   Scripts,
   ScrollRestoration,
   data,
+  useRevalidator,
 } from 'react-router'
 
 import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
 import type { Route } from './+types/root'
 import './globals.css'
-import { AuthRevalidator } from './components/auth-revalidator'
 import { TRPCProvider } from './lib/trpc'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -106,10 +108,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const { session, supabaseEnv } = loaderData
+  const revalidator = useRevalidator()
+
+  const handleAuthEvent = useCallback(
+    (event: AuthChangeEvent) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        revalidator.revalidate()
+      }
+    },
+    [revalidator]
+  )
 
   return (
-    <SupabaseAuthProvider initialSession={session} config={supabaseEnv}>
-      <AuthRevalidator />
+    <SupabaseAuthProvider
+      initialSession={session}
+      config={supabaseEnv}
+      onAuthEvent={handleAuthEvent}
+    >
       <TRPCProvider>
         <FeatureFlagsProvider>
           <Outlet />
