@@ -1,4 +1,5 @@
-import { useRouteLoaderData } from 'react-router'
+import { useSupabaseAuthContext } from '@hominem/auth'
+import { useCallback } from 'react'
 import { trpc } from '~/lib/trpc/client'
 import ListSurface from '../list-surface'
 import Loading from '../loading'
@@ -7,10 +8,17 @@ import { ListRow } from './list-row'
 
 export default function Lists() {
   const { data: lists = [], isLoading, error } = trpc.lists.getAll.useQuery()
-  const layoutData = useRouteLoaderData('routes/layout') as
-    | { isAuthenticated?: boolean }
-    | undefined
-  const isAuthenticated = layoutData?.isAuthenticated ?? false
+  const { supabase, isAuthenticated } = useSupabaseAuthContext()
+
+  const onRequireAuth = useCallback(async () => {
+    const redirectPath = window.location.pathname + window.location.search
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+      },
+    })
+  }, [supabase])
 
   const title = <h2 className="heading-2">Lists</h2>
 
@@ -44,7 +52,12 @@ export default function Lists() {
           <h3 className="text-lg font-semibold text-gray-900">No lists yet</h3>
           <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
         </div>
-        <ListForm onCreate={() => {}} onCancel={() => {}} isAuthenticated={isAuthenticated} />
+        <ListForm
+          onCreate={() => {}}
+          onCancel={() => {}}
+          isAuthenticated={isAuthenticated}
+          onRequireAuth={onRequireAuth}
+        />
       </div>
     )
   }
@@ -58,7 +71,12 @@ export default function Lists() {
           <ListRow key={list.id} id={list.id} name={list.name} count={list.places.length || 0} />
         ))}
       </ListSurface>
-      <ListForm onCreate={() => {}} onCancel={() => {}} isAuthenticated={isAuthenticated} />
+      <ListForm
+        onCreate={() => {}}
+        onCancel={() => {}}
+        isAuthenticated={isAuthenticated}
+        onRequireAuth={onRequireAuth}
+      />
     </div>
   )
 }

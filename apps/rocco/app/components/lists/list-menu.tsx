@@ -2,12 +2,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu.js'
-import { MoreVertical } from 'lucide-react'
+import { MoreVertical, Trash2 } from 'lucide-react'
 import React, { type PropsWithChildren } from 'react'
 import { useModal } from '~/hooks/useModal'
 import type { List } from '~/lib/types'
+import ListDeleteDialog from './list-delete-dialog'
 import ListEditSheet from './list-edit-sheet'
 
 const ListMenuContext = React.createContext<{
@@ -50,7 +52,7 @@ type ListMenuProps = {
   isOwnList: boolean
 }
 export function ListMenu({ list, isOwnList }: ListMenuProps) {
-  const { setIsEditSheetOpen } = useListMenu()
+  const { setIsEditSheetOpen, isDeleteSheetOpen, setIsDeleteSheetOpen } = useListMenu()
 
   if (!isOwnList) {
     return null
@@ -66,9 +68,23 @@ export function ListMenu({ list, isOwnList }: ListMenuProps) {
           <DropdownMenuItem className="p-2" onClick={() => setIsEditSheetOpen(true)}>
             Edit
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="p-2 text-destructive focus:text-destructive"
+            onClick={() => setIsDeleteSheetOpen(true)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ListEditSheet list={list} />
+      <ListDeleteDialog
+        listId={list.id}
+        listName={list.name}
+        isOpen={isDeleteSheetOpen}
+        onOpenChange={setIsDeleteSheetOpen}
+      />
     </>
   )
 }
