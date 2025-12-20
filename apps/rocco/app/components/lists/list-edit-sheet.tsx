@@ -4,7 +4,7 @@ import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import * as Dialog from '@radix-ui/react-dialog'
-import { useUpdateList } from '~/lib/trpc/api'
+import { useUpdateList } from '~/lib/lists'
 import type { List } from '~/lib/types'
 import { useListMenu } from './list-menu'
 

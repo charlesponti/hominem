@@ -1,10 +1,4 @@
 import type { List } from "@hominem/data";
-import {
-  type QueryClient,
-  type UseMutationOptions,
-  useMutation,
-} from "@tanstack/react-query";
-import type { AxiosError } from "axios";
 import type { GooglePlacePrediction } from "~/hooks/useGooglePlacesAutocomplete";
 import { trpc } from "./trpc/client";
 import type { Place, PlaceLocation } from "./types";
@@ -14,32 +8,34 @@ type AddPlaceToListOptions = {
   place: Place;
 };
 
-export const useRemoveListItem = (
-  options: UseMutationOptions<
-    unknown,
-    AxiosError,
-    { listId: string; placeId: string },
-    { previousList: List | undefined | null }
-  >
-) => {
+export const useRemoveListItem = (options?: {
+  onMutate?: (variables: {
+    listId: string;
+    placeId: string;
+  }) =>
+    | Promise<{ previousList: List | undefined | null }>
+    | { previousList: List | undefined | null };
+  onError?: (
+    error: unknown,
+    variables: { listId: string; placeId: string },
+    context?: { previousList: List | undefined | null }
+  ) => void;
+  onSuccess?: (
+    data: unknown,
+    variables: { listId: string; placeId: string },
+    context?: { previousList: List | undefined | null }
+  ) => void;
+  onSettled?: (
+    data: unknown | undefined,
+    error: unknown | null,
+    variables: { listId: string; placeId: string },
+    context?: { previousList: List | undefined | null }
+  ) => void;
+}) => {
   const utils = trpc.useUtils();
-  const removeFromListMutation = trpc.items.removeFromList.useMutation();
 
-  return useMutation<
-    unknown,
-    AxiosError,
-    { listId: string; placeId: string },
-    { previousList: List | undefined | null }
-  >({
-    ...options,
-    mutationKey: ["deleteListItem"],
-    mutationFn: ({ listId, placeId }) => {
-      return removeFromListMutation.mutateAsync({
-        listId,
-        itemId: placeId,
-      });
-    },
-    onMutate: async ({ listId, placeId }) => {
+  return trpc.items.removeFromList.useMutation({
+    onMutate: async ({ listId, itemId: placeId }) => {
       // Cancel any outgoing refetches
       await utils.lists.getById.cancel({ id: listId });
 
@@ -58,68 +54,74 @@ export const useRemoveListItem = (
       }
 
       // Return context with the snapshot
-      return { previousList };
+      const context = { previousList };
+      const customContext = await options?.onMutate?.({ listId, placeId });
+      return customContext ?? context;
     },
     // If the mutation fails, use the context returned from onMutate to roll back
-    onError: (error, variables, mutateResult, context) => {
-      if (mutateResult?.previousList) {
+    onError: (error, variables, context) => {
+      if (context?.previousList) {
         utils.lists.getById.setData(
           { id: variables.listId },
-          mutateResult.previousList
+          context.previousList
         );
       }
-      options?.onError?.(error, variables, mutateResult, context);
+      options?.onError?.(
+        error,
+        { listId: variables.listId, placeId: variables.itemId },
+        context
+      );
     },
     // Always refetch after error or success
-    onSettled: (data, error, variables, mutateResult, context) => {
+    onSettled: (data, error, variables, context) => {
       utils.lists.getById.invalidate({ id: variables.listId });
       utils.lists.getAll.invalidate();
-      utils.places.getDetailsById.invalidate({ id: variables.placeId });
+      utils.places.getDetailsById.invalidate({ id: variables.itemId });
       // Invalidate getContainingPlace query to update PlaceLists
       utils.lists.getContainingPlace.invalidate({
-        placeId: variables.placeId,
+        placeId: variables.itemId,
       });
 
-      options?.onSettled?.(data, error, variables, mutateResult, context);
+      options?.onSettled?.(
+        data,
+        error,
+        { listId: variables.listId, placeId: variables.itemId },
+        context
+      );
+    },
+    onSuccess: (data, variables, context) => {
+      options?.onSuccess?.(
+        data,
+        { listId: variables.listId, placeId: variables.itemId },
+        context
+      );
     },
   });
 };
 
-export const useAddPlaceToList = (
-  options: UseMutationOptions<Place, AxiosError, AddPlaceToListOptions>
-) => {
+export const useAddPlaceToList = (options?: {
+  onSuccess?: (
+    data: Place,
+    variables: AddPlaceToListOptions,
+    context?: unknown
+  ) => void;
+  onError?: (
+    error: unknown,
+    variables: AddPlaceToListOptions,
+    context?: unknown
+  ) => void;
+  onSettled?: (
+    data: Place | undefined,
+    error: unknown | null,
+    variables: AddPlaceToListOptions,
+    context?: unknown
+  ) => void;
+}) => {
   const utils = trpc.useUtils();
-  const createPlaceMutation = trpc.places.create.useMutation();
-
-  return useMutation<Place, AxiosError, AddPlaceToListOptions>({
-    ...options,
-    mutationKey: ["addPlaceToList"],
-    mutationFn: async ({ listIds, place }) => {
-      if (!place.googleMapsId) {
-        throw new Error("googleMapsId is required");
-      }
-
-      // Create the place and add to lists in one go
-      const createdPlace = await createPlaceMutation.mutateAsync({
-        name: place.name,
-        address: place.address || undefined,
-        latitude: place.latitude || undefined,
-        longitude: place.longitude || undefined,
-        imageUrl: place.imageUrl || undefined,
-        googleMapsId: place.googleMapsId,
-        rating: place.rating || undefined,
-        types: place.types || undefined,
-        websiteUri: place.websiteUri || undefined,
-        phoneNumber: place.phoneNumber || undefined,
-        photos: place.photos || undefined,
-        listIds,
-      });
-
-      return createdPlace;
-    },
+  const createPlaceMutation = trpc.places.create.useMutation({
     // Prefetch related data after successful mutation
-    onSuccess: (data, variables, context) => {
-      const { listIds } = variables;
+    onSuccess: (data, tRPCVariables, context) => {
+      const listIds = tRPCVariables.listIds || [];
       // Invalidate lists and place queries that are affected
       for (const listId of listIds) {
         utils.lists.getById.invalidate({ id: listId });
@@ -128,27 +130,180 @@ export const useAddPlaceToList = (
       utils.lists.getAll.invalidate();
 
       // Invalidate place details to update "In these lists" section
-      if (variables.place.googleMapsId) {
+      if (tRPCVariables.googleMapsId) {
         utils.places.getDetailsByGoogleId.invalidate({
-          googleMapsId: variables.place.googleMapsId,
+          googleMapsId: tRPCVariables.googleMapsId,
         });
         utils.lists.getContainingPlace.invalidate({
           placeId: data?.id,
-          googleMapsId: variables.place.googleMapsId,
+          googleMapsId: tRPCVariables.googleMapsId,
         });
       }
       if (data?.id) {
         utils.places.getDetailsById.invalidate({ id: data.id });
         utils.lists.getContainingPlace.invalidate({
           placeId: data.id,
-          googleMapsId: variables.place.googleMapsId,
+          googleMapsId: tRPCVariables.googleMapsId,
         });
       }
 
-      // @ts-expect-error - options.onSuccess signature mismatch in environment
-      options?.onSuccess?.(data, variables, context);
+      // Reconstruct AddPlaceToListOptions for callback
+      const reconstructedVariables: AddPlaceToListOptions = {
+        listIds,
+        place: {
+          id: data.id,
+          name: data.name,
+          address: data.address ?? null,
+          description: data.description ?? null,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          itemId: data.itemId ?? null,
+          googleMapsId: data.googleMapsId ?? "",
+          types: data.types ?? null,
+          imageUrl: data.imageUrl ?? null,
+          phoneNumber: data.phoneNumber ?? null,
+          rating: data.rating ?? null,
+          websiteUri: data.websiteUri ?? null,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
+          location: data.location ?? [0, 0],
+          bestFor: data.bestFor ?? null,
+          isPublic: data.isPublic ?? false,
+          wifiInfo: data.wifiInfo ?? null,
+          photos: data.photos ?? [],
+          priceLevel: data.priceLevel ?? null,
+        },
+      };
+      options?.onSuccess?.(data, reconstructedVariables, context);
+    },
+    onError: (error, tRPCVariables, context) => {
+      // Reconstruct AddPlaceToListOptions for callback
+      const reconstructedVariables: AddPlaceToListOptions = {
+        listIds: tRPCVariables.listIds || [],
+        place: {
+          id: "",
+          name: tRPCVariables.name,
+          address: tRPCVariables.address ?? null,
+          description: null,
+          createdAt: "",
+          updatedAt: "",
+          itemId: null,
+          googleMapsId: tRPCVariables.googleMapsId ?? "",
+          types: tRPCVariables.types ?? null,
+          imageUrl: tRPCVariables.imageUrl ?? null,
+          phoneNumber: tRPCVariables.phoneNumber ?? null,
+          rating: tRPCVariables.rating ?? null,
+          websiteUri: tRPCVariables.websiteUri ?? null,
+          latitude: tRPCVariables.latitude ?? null,
+          longitude: tRPCVariables.longitude ?? null,
+          location:
+            tRPCVariables.latitude && tRPCVariables.longitude
+              ? [tRPCVariables.latitude, tRPCVariables.longitude]
+              : [0, 0],
+          bestFor: null,
+          isPublic: false,
+          wifiInfo: null,
+          photos: tRPCVariables.photos ?? [],
+          priceLevel: null,
+        },
+      };
+      options?.onError?.(error, reconstructedVariables, context);
+    },
+    onSettled: (data, error, tRPCVariables, context) => {
+      // Reconstruct AddPlaceToListOptions for callback
+      const reconstructedVariables: AddPlaceToListOptions = {
+        listIds: tRPCVariables.listIds || [],
+        place: {
+          id: data?.id ?? "",
+          name: tRPCVariables.name,
+          address: tRPCVariables.address ?? null,
+          description: data?.description ?? null,
+          createdAt: data?.createdAt ?? "",
+          updatedAt: data?.updatedAt ?? "",
+          itemId: data?.itemId ?? null,
+          googleMapsId: tRPCVariables.googleMapsId ?? "",
+          types: tRPCVariables.types ?? null,
+          imageUrl: tRPCVariables.imageUrl ?? null,
+          phoneNumber: tRPCVariables.phoneNumber ?? null,
+          rating: tRPCVariables.rating ?? null,
+          websiteUri: tRPCVariables.websiteUri ?? null,
+          latitude: tRPCVariables.latitude ?? null,
+          longitude: tRPCVariables.longitude ?? null,
+          location:
+            tRPCVariables.latitude && tRPCVariables.longitude
+              ? [tRPCVariables.latitude, tRPCVariables.longitude]
+              : [0, 0],
+          bestFor: data?.bestFor ?? null,
+          isPublic: data?.isPublic ?? false,
+          wifiInfo: data?.wifiInfo ?? null,
+          photos: tRPCVariables.photos ?? [],
+          priceLevel: data?.priceLevel ?? null,
+        },
+      };
+      options?.onSettled?.(data, error, reconstructedVariables, context);
     },
   });
+
+  // Create wrapper functions that transform AddPlaceToListOptions to tRPC input format
+  const mutate = (
+    variables: AddPlaceToListOptions,
+    mutateOptions?: Parameters<typeof createPlaceMutation.mutate>[1]
+  ) => {
+    if (!variables.place.googleMapsId) {
+      throw new Error("googleMapsId is required");
+    }
+
+    createPlaceMutation.mutate(
+      {
+        name: variables.place.name,
+        address: variables.place.address || undefined,
+        latitude: variables.place.latitude || undefined,
+        longitude: variables.place.longitude || undefined,
+        imageUrl: variables.place.imageUrl || undefined,
+        googleMapsId: variables.place.googleMapsId,
+        rating: variables.place.rating || undefined,
+        types: variables.place.types || undefined,
+        websiteUri: variables.place.websiteUri || undefined,
+        phoneNumber: variables.place.phoneNumber || undefined,
+        photos: variables.place.photos || undefined,
+        listIds: variables.listIds,
+      },
+      mutateOptions
+    );
+  };
+
+  const mutateAsync = async (
+    variables: AddPlaceToListOptions,
+    mutateOptions?: Parameters<typeof createPlaceMutation.mutateAsync>[1]
+  ) => {
+    if (!variables.place.googleMapsId) {
+      throw new Error("googleMapsId is required");
+    }
+
+    return createPlaceMutation.mutateAsync(
+      {
+        name: variables.place.name,
+        address: variables.place.address || undefined,
+        latitude: variables.place.latitude || undefined,
+        longitude: variables.place.longitude || undefined,
+        imageUrl: variables.place.imageUrl || undefined,
+        googleMapsId: variables.place.googleMapsId,
+        rating: variables.place.rating || undefined,
+        types: variables.place.types || undefined,
+        websiteUri: variables.place.websiteUri || undefined,
+        phoneNumber: variables.place.phoneNumber || undefined,
+        photos: variables.place.photos || undefined,
+        listIds: variables.listIds,
+      },
+      mutateOptions
+    );
+  };
+
+  return {
+    ...createPlaceMutation,
+    mutate,
+    mutateAsync,
+  };
 };
 
 export const useGetPlace = (id: string) => {
@@ -169,19 +324,6 @@ export const useGetPlaceLists = () => {
     data: [],
     isLoading: false,
   };
-};
-
-// Add a prefetching function for places
-export const prefetchPlace = async (queryClient: QueryClient, id: string) => {
-  return queryClient.prefetchQuery({
-    queryKey: ["places", id],
-    queryFn: async () => {
-      // This would need to be implemented with tRPC client
-      // For now, we'll use the hook approach
-      return null;
-    },
-    staleTime: 2 * 60 * 1000,
-  });
 };
 
 export async function createPlaceFromPrediction(

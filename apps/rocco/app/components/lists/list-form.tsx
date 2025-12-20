@@ -3,7 +3,7 @@ import { Input } from '@hominem/ui/input'
 import { PlusCircle, XCircle } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Loading from '~/components/loading'
-import { useCreateList } from '~/lib/trpc/api'
+import { useCreateList } from '~/lib/lists'
 import type { List } from '~/lib/types'
 import { cn } from '~/lib/utils'
 
