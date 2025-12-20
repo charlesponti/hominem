@@ -1,4 +1,3 @@
-import { useLoaderData } from 'react-router'
 import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal'
 import { PageTitle } from '@hominem/ui'
 import { createCaller } from '~/lib/trpc/server'
@@ -13,8 +12,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { trip }
 }
 
-export default function TripPage() {
-  const { trip } = useLoaderData<typeof loader>()
+export default function TripPage({ loaderData }: Route.ComponentProps) {
+  const { trip } = loaderData
 
   return (
     <div className="p-4">

@@ -1,9 +1,9 @@
 import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
+import { Input } from '@hominem/ui/input'
 import { Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { trpc } from '~/lib/trpc/client'
+import { useFetcher } from 'react-router'
 
 interface ListTitleFormProps {
   listId: string
@@ -13,37 +13,39 @@ interface ListTitleFormProps {
 }
 
 export default function ListTitleForm({
-  listId,
   currentName,
   onSuccess,
   onCancel,
-}: ListTitleFormProps) {
+}: Omit<ListTitleFormProps, 'listId'>) {
   const [editedName, setEditedName] = useState(currentName)
   const { toast } = useToast()
-  const utils = trpc.useUtils()
+  const fetcher = useFetcher()
+
+  const isPending = fetcher.state !== 'idle'
 
   // Sync editedName when currentName changes
   useEffect(() => {
     setEditedName(currentName)
   }, [currentName])
 
-  const updateList = trpc.lists.update.useMutation({
-    onSuccess: () => {
-      utils.lists.getById.invalidate({ id: listId })
-      toast({
-        title: 'Success',
-        description: 'List name updated successfully.',
-      })
-      onSuccess?.()
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update list name.',
-        variant: 'destructive',
-      })
-    },
-  })
+  // Handle fetcher success/error
+  useEffect(() => {
+    if (fetcher.state === 'idle' && fetcher.data) {
+      if (fetcher.data.success) {
+        toast({
+          title: 'Success',
+          description: 'List name updated successfully.',
+        })
+        onSuccess?.()
+      } else if (fetcher.data.error) {
+        toast({
+          title: 'Error',
+          description: fetcher.data.error || 'Failed to update list name.',
+          variant: 'destructive',
+        })
+      }
+    }
+  }, [fetcher.state, fetcher.data, toast, onSuccess])
 
   const handleSave = () => {
     if (!editedName.trim()) {
@@ -60,10 +62,7 @@ export default function ListTitleForm({
       return
     }
 
-    updateList.mutate({
-      id: listId,
-      name: editedName.trim(),
-    })
+    fetcher.submit({ intent: 'update-name', name: editedName.trim() }, { method: 'post' })
   }
 
   const handleCancel = () => {
@@ -95,7 +94,7 @@ export default function ListTitleForm({
           size="icon"
           variant="ghost"
           onClick={handleSave}
-          disabled={updateList.isPending}
+          disabled={isPending}
           className="h-10 w-10 text-green-600 hover:text-green-700 hover:bg-green-50"
         >
           <Check size={20} />
@@ -105,7 +104,7 @@ export default function ListTitleForm({
           size="icon"
           variant="ghost"
           onClick={handleCancel}
-          disabled={updateList.isPending}
+          disabled={isPending}
           className="h-10 w-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
         >
           <X size={20} />

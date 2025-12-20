@@ -2,7 +2,7 @@ import { PageTitle } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { UserCircle } from 'lucide-react'
 import { useCallback } from 'react'
-import { useLoaderData, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import Alert from '~/components/alert'
 import { LoadingScreen } from '~/components/loading'
 import { requireAuth } from '~/lib/guards'
@@ -70,8 +70,7 @@ function DeleteAccount() {
   )
 }
 
-export default function Account() {
-  const loaderData = useLoaderData<typeof loader>()
+export default function Account({ loaderData }: Route.ComponentProps) {
   // Add a check to handle the case when loaderData might be undefined (in tests)
   const user = loaderData?.user
 

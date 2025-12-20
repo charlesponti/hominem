@@ -1,9 +1,8 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { PageTitle } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { ClientLoaderFunctionArgs } from 'react-router'
-import { Link, redirect, useNavigate, useParams } from 'react-router'
+import { useCallback, useMemo, useState } from 'react'
+import { Link, redirect, data } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListMenu from '~/components/lists/list-menu'
@@ -19,27 +18,36 @@ import { createCaller } from '~/lib/trpc/server'
 import type { PlaceLocation } from '~/lib/types'
 import type { Route } from './+types/lists.$id'
 
-export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
-  if (!params.id) {
-    return redirect('/404')
+export async function action({ request, params }: Route.ActionArgs) {
+  const formData = await request.formData()
+  const intent = formData.get('intent')
+
+  if (intent === 'update-name') {
+    const name = formData.get('name') as string
+    const id = params.id
+    if (!id || !name) {
+      return data({ error: 'ID and name are required' }, { status: 400 })
+    }
+
+    const trpcServer = createCaller(request)
+    try {
+      await trpcServer.lists.update({ id, name })
+      return { success: true }
+    } catch (error) {
+      return data(
+        { error: error instanceof Error ? error.message : 'Update failed' },
+        { status: 500 }
+      )
+    }
   }
 
-  // For now, return empty data and let the client fetch with tRPC
-  return { list: null }
-}
-
-export function HydrateFallback() {
-  return (
-    <div className="flex items-center justify-center h-32">
-      <Loading size="lg" />
-    </div>
-  )
+  return null
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { id } = params
   if (!id) {
-    throw new Response('List ID is required', { status: 400 })
+    return redirect('/404')
   }
 
   const trpcServer = createCaller(request)
@@ -53,28 +61,23 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export default function ListPage({ loaderData }: Route.ComponentProps) {
   const { user } = useSupabaseAuthContext()
-  const navigate = useNavigate()
-  const params = useParams()
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  // Get listId from params instead of loaderData to work during client-side navigation
-  const listId = params.id ?? ''
+
+  const listId = loaderData.list.id
+
   const {
     data: list,
     isLoading,
     error,
   } = trpc.lists.getById.useQuery(
     { id: listId },
-    { initialData: loaderData?.list ?? undefined, enabled: !!listId }
+    {
+      initialData: loaderData.list,
+      enabled: !!listId,
+      staleTime: 1000 * 60,
+    }
   )
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
-
-  // Handle redirect when list is not found (after query completes)
-  useEffect(() => {
-    if (!isLoading && !list && !error && listId) {
-      // Query completed but no list found, redirect to 404
-      navigate('/404', { replace: true })
-    }
-  }, [isLoading, list, error, listId, navigate])
 
   const handleDeleteError = useCallback(() => {
     setDeleteError('Could not delete place. Please try again.')

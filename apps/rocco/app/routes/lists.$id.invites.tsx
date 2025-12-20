@@ -1,5 +1,4 @@
-import type { LoaderFunctionArgs } from 'react-router'
-import { Link, useLoaderData, useRevalidator } from 'react-router'
+import { Link, useRevalidator } from 'react-router'
 import { useEffect, useMemo, useState } from 'react'
 import Alert from '~/components/alert'
 import SentInvites from '~/components/lists/sent-invites'
@@ -9,11 +8,12 @@ import { createCaller } from '~/lib/trpc/server'
 import type { SentInvite } from '~/lib/types'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '~/lib/trpc/router'
+import type { Route } from './+types/lists.$id.invites'
 
 type RouterOutput = inferRouterOutputs<AppRouter>
 type ListInviteFromLoader = RouterOutput['invites']['getByList'][number]
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
   const listId = params.id
   if (!listId) {
     throw new Response('List ID is required', { status: 400 })
@@ -28,8 +28,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return { list, invites }
 }
 
-export default function ListInvites() {
-  const { list, invites: initialInvites } = useLoaderData<typeof loader>()
+export default function ListInvites({ loaderData }: Route.ComponentProps) {
+  const { list, invites: initialInvites } = loaderData
   const revalidator = useRevalidator()
   const [optimisticInvites, setOptimisticInvites] = useState<ListInviteFromLoader[] | null>(null)
 

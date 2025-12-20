@@ -61,7 +61,8 @@ describe('Account', () => {
       routes: [
         {
           path: '/account',
-          Component: Account,
+          Component: Account as any,
+          loader: () => mockLoaderData,
         },
       ],
       isAuth: true,
@@ -114,7 +115,8 @@ describe('Account', () => {
       routes: [
         {
           path: '/account',
-          Component: Account,
+          Component: Account as any,
+          loader: () => mockLoaderData,
         },
       ],
       isAuth: true,
@@ -151,7 +153,8 @@ describe('Account', () => {
       routes: [
         {
           path: '/account',
-          Component: Account,
+          Component: Account as any,
+          loader: () => mockLoaderData,
         },
       ],
       isAuth: true,

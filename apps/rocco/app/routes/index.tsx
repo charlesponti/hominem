@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { data, useLoaderData, useNavigate } from 'react-router'
+import { data, useNavigate } from 'react-router'
 import Lists from '~/components/lists/lists'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import PlacesNearby from '~/components/places/places-nearby'
@@ -13,8 +13,8 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   return data({ isAuthenticated }, { headers })
 }
 
-export default function Index() {
-  const { isAuthenticated } = useLoaderData<typeof loader>()
+export default function Index({ loaderData }: Route.ComponentProps) {
+  const { isAuthenticated } = loaderData
   const navigate = useNavigate()
   const [, setSelectedPlace] = useState<GooglePlacePrediction | null>(null)
 

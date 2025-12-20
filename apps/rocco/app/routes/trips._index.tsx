@@ -1,4 +1,4 @@
-import { Link, useLoaderData } from 'react-router'
+import { Link } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import { PageTitle } from '@hominem/ui'
 import { createCaller } from '~/lib/trpc/server'
@@ -10,8 +10,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { trips }
 }
 
-export default function TripsPage() {
-  const { trips } = useLoaderData<typeof loader>()
+export default function TripsPage({ loaderData }: Route.ComponentProps) {
+  const { trips } = loaderData
 
   return (
     <div>

@@ -4,14 +4,15 @@ import { createContext } from '../../lib/trpc/context'
 import { appRouter } from '../../lib/trpc/router'
 import type { Route } from './+types/trpc'
 
-export const loader = ({ request }: Route.LoaderArgs) => {
+export const loader = async ({ request }: Route.LoaderArgs) => {
   const startTime = Date.now()
+  const ctx = await createContext(request)
 
-  return fetchRequestHandler({
+  const response = await fetchRequestHandler({
     endpoint: '/api/trpc',
     req: request,
     router: appRouter,
-    createContext: async (opts) => createContext(opts.req),
+    createContext: async () => ctx,
     onError: ({ path, error, type, ctx }) => {
       const duration = Date.now() - startTime
       const context = {
@@ -26,16 +27,24 @@ export const loader = ({ request }: Route.LoaderArgs) => {
       logger.logTRPCError(error, context)
     },
   })
+
+  // Merge headers from context into response
+  ctx.responseHeaders.forEach((value, key) => {
+    response.headers.append(key, value)
+  })
+
+  return response
 }
 
-export const action = ({ request }: Route.ActionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {
   const startTime = Date.now()
+  const ctx = await createContext(request)
 
-  return fetchRequestHandler({
+  const response = await fetchRequestHandler({
     endpoint: '/api/trpc',
     req: request,
     router: appRouter,
-    createContext: async (opts) => createContext(opts.req),
+    createContext: async () => ctx,
     onError: ({ path, error, type, ctx }) => {
       const duration = Date.now() - startTime
       const context = {
@@ -50,4 +59,11 @@ export const action = ({ request }: Route.ActionArgs) => {
       logger.logTRPCError(error, context)
     },
   })
+
+  // Merge headers from context into response
+  ctx.responseHeaders.forEach((value, key) => {
+    response.headers.append(key, value)
+  })
+
+  return response
 }

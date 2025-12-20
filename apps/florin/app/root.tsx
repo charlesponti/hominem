@@ -1,12 +1,33 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
+import { getServerSession } from '@hominem/auth/server'
 import type React from 'react'
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import {
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  data,
+} from 'react-router'
 import type { Route } from './+types/root'
+import { AuthRevalidator } from './components/auth-revalidator'
 import { TRPCProvider } from './lib/trpc'
 import './globals.css'
 
-export async function loader(_args: Route.LoaderArgs) {
-  return {}
+export async function loader({ request }: Route.LoaderArgs) {
+  const { session, headers } = await getServerSession(request)
+
+  return data(
+    {
+      session,
+      supabaseEnv: {
+        url: import.meta.env.VITE_SUPABASE_URL,
+        anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+    },
+    { headers }
+  )
 }
 
 export const meta: Route.MetaFunction = () => {
@@ -78,9 +99,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
+  const { session, supabaseEnv } = loaderData
+
   return (
-    <SupabaseAuthProvider>
+    <SupabaseAuthProvider initialSession={session} config={supabaseEnv}>
+      <AuthRevalidator />
       <TRPCProvider>
         <Outlet />
       </TRPCProvider>

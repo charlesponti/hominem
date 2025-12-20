@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { Form, Link, useActionData, useNavigation } from 'react-router'
+import { Form, Link, useNavigation } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import { PageTitle } from '@hominem/ui'
 import { Input } from '@hominem/ui/input'
@@ -25,8 +25,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export default function CreateTripPage() {
-  const actionData = useActionData<typeof action>()
+export default function CreateTripPage({ actionData }: Route.ComponentProps) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
   const nameId = useId()

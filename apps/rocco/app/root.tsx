@@ -1,13 +1,30 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-
-
+import { getServerSession } from '@hominem/auth/server'
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, data } from 'react-router'
+import type { Route } from './+types/root'
+import { AuthRevalidator } from './components/auth-revalidator'
+import './globals.css'
+import { env } from './lib/env'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
-import './globals.css'
 
 if (process.env.NODE_ENV === 'production') {
   initProductionLogging()
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const { session, headers } = await getServerSession(request)
+
+  return data(
+    {
+      session,
+      supabaseEnv: {
+        url: env.VITE_SUPABASE_URL,
+        anonKey: env.VITE_SUPABASE_ANON_KEY,
+      },
+    },
+    { headers }
+  )
 }
 
 export const links = () => [
@@ -36,7 +53,9 @@ export const meta = () => [
   { name: 'mobile-web-app-capable', content: 'yes' },
 ]
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
+  const { session, supabaseEnv } = loaderData
+
   return (
     <html lang="en">
       <head>
@@ -46,10 +65,10 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <SupabaseAuthProvider>
+        <SupabaseAuthProvider initialSession={session} config={supabaseEnv}>
+          <AuthRevalidator />
           <TRPCProvider>
             <Outlet />
-
           </TRPCProvider>
         </SupabaseAuthProvider>
 

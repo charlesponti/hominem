@@ -5,6 +5,7 @@ import { logger } from "../logger";
 
 export interface Context {
   user?: UserSelect | null;
+  responseHeaders: Headers;
 }
 
 function extractBearerToken(request: Request) {
@@ -19,7 +20,7 @@ function extractBearerToken(request: Request) {
 // Validate token directly via Supabase (no Redis caching) to mirror Notes behavior
 async function validateToken(request: Request) {
   const token = extractBearerToken(request);
-  const { supabase } = createSupabaseServerClient(request);
+  const { supabase, headers } = createSupabaseServerClient(request);
 
   try {
     if (token) {
@@ -29,10 +30,10 @@ async function validateToken(request: Request) {
       } = await supabase.auth.getUser(token);
 
       if (error || !user) {
-        return null;
+        return { user: null, headers };
       }
 
-      return user;
+      return { user, headers };
     }
 
     const {
@@ -41,19 +42,21 @@ async function validateToken(request: Request) {
     } = await supabase.auth.getUser();
 
     if (error || !user) {
-      return null;
+      return { user: null, headers };
     }
 
-    return user;
+    return { user, headers };
   } catch (error) {
     logger.error("Error validating token", { error: error as Error });
-    return null;
+    return { user: null, headers };
   }
 }
 
 export const createContext = async (request?: Request): Promise<Context> => {
+  const responseHeaders = new Headers();
+
   if (!request) {
-    return { user: null };
+    return { user: null, responseHeaders };
   }
 
   try {
@@ -63,29 +66,36 @@ export const createContext = async (request?: Request): Promise<Context> => {
         const localUser = await UserAuthService.findByIdOrEmail({
           id: testUserId,
         });
-        return { user: localUser ?? null };
+        return { user: localUser ?? null, responseHeaders };
       }
     }
 
-    const supabaseUser = await validateToken(request);
+    const { user: supabaseUser, headers: authHeaders } = await validateToken(
+      request
+    );
+
+    // Copy auth headers (cookies) to response headers
+    authHeaders.forEach((value, key) => {
+      responseHeaders.append(key, value);
+    });
 
     if (!supabaseUser) {
-      return { user: null };
+      return { user: null, responseHeaders };
     }
 
     try {
       const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser);
-      return { user: userAuthData ?? null };
+      return { user: userAuthData ?? null, responseHeaders };
     } catch (dbError) {
       logger.error("Failed to find or create user in local DB", {
         error: dbError as Error,
         supabaseId: supabaseUser.id,
       });
-      return { user: null };
+      return { user: null, responseHeaders };
     }
   } catch (error) {
     logger.error("Error verifying auth token", { error: error as Error });
-    return { user: null };
+    return { user: null, responseHeaders };
   }
 };
 

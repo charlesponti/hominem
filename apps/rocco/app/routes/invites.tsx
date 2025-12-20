@@ -3,7 +3,7 @@ import { getAuthState } from '@hominem/auth/server'
 import { PageTitle } from '@hominem/ui'
 import { Mail } from 'lucide-react'
 import { useCallback } from 'react'
-import { data, useLoaderData } from 'react-router'
+import { data } from 'react-router'
 import ReceivedInviteItem from '~/components/ReceivedInviteItem'
 import ListSurface from '~/components/list-surface'
 import Loading from '~/components/loading'
@@ -108,8 +108,8 @@ export function HydrateFallback() {
   )
 }
 
-const Invites = () => {
-  const { invites, tokenMismatch, requiresAuth, preview } = useLoaderData<typeof loader>()
+export default function Invites({ loaderData }: Route.ComponentProps) {
+  const { invites, tokenMismatch, requiresAuth, preview } = loaderData
   const { isAuthenticated, user, supabase } = useSupabaseAuthContext()
   const currentUserEmail = user?.email?.toLowerCase()
 
@@ -178,8 +178,6 @@ const Invites = () => {
     </div>
   )
 }
-
-export default Invites
 
 export function ErrorBoundary({ error }: { error: unknown }) {
   console.error(error)

@@ -2,40 +2,45 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const getSupabaseUrl = () => import.meta.env.VITE_SUPABASE_URL
+const getSupabaseAnonKey = () => import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Lazy load the default client to avoid multiple instances
 let defaultSupabase: SupabaseClient | undefined
 
-export function getSupabase() {
+export function getSupabase(config?: { url: string; anonKey: string }) {
+  if (config) {
+    return createBrowserClient(config.url, config.anonKey)
+  }
+
   if (defaultSupabase) return defaultSupabase
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const url = getSupabaseUrl()
+  const anonKey = getSupabaseAnonKey()
+
+  if (!url || !anonKey) {
     throw new Error(
       'Missing required Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
     )
   }
 
-  defaultSupabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  defaultSupabase = createBrowserClient(url, anonKey)
   return defaultSupabase
 }
 
-export function useSupabaseAuth() {
-  const supabaseClient = getSupabase()
-  const [session, setSession] = useState<Session | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  const getInitialSession = useCallback(async () => {
-    const {
-      data: { session: initialSession },
-    } = await supabaseClient.auth.getSession()
-    setSession(initialSession)
-    setIsLoading(false)
-  }, [supabaseClient])
+export function useSupabaseAuth(
+  initialSession: Session | null = null,
+  config?: { url: string; anonKey: string }
+) {
+  const [supabaseClient] = useState(() => getSupabase(config))
+  const [session, setSession] = useState<Session | null>(initialSession)
+  const [isLoading, setIsLoading] = useState(!initialSession)
 
   useEffect(() => {
-    getInitialSession()
+    // If we have an initial session, we're not loading
+    if (initialSession && isLoading) {
+      setIsLoading(false)
+    }
 
     // Listen for auth changes - Supabase manages session state internally
     const {
@@ -46,7 +51,7 @@ export function useSupabaseAuth() {
     })
 
     return () => subscription.unsubscribe()
-  }, [getInitialSession, supabaseClient])
+  }, [supabaseClient, initialSession, isLoading])
 
   const getUser = useCallback(async () => {
     const {
@@ -105,10 +110,16 @@ const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(u
 
 interface SupabaseAuthProviderProps {
   children: ReactNode
+  initialSession?: Session | null
+  config?: { url: string; anonKey: string }
 }
 
-export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
-  const auth = useSupabaseAuth()
+export function SupabaseAuthProvider({
+  children,
+  initialSession = null,
+  config,
+}: SupabaseAuthProviderProps) {
+  const auth = useSupabaseAuth(initialSession, config)
 
   return <SupabaseAuthContext.Provider value={auth}>{children}</SupabaseAuthContext.Provider>
 }
