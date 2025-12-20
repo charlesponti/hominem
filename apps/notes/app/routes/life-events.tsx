@@ -1,4 +1,4 @@
-import { getServerSession } from '@hominem/auth/server'
+import { getServerSession } from '~/lib/auth.server'
 import { useEffect, useState } from 'react'
 import { data, useNavigate } from 'react-router'
 import type { RouterInput } from '~/lib/trpc'

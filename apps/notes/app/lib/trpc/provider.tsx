@@ -16,23 +16,14 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
           url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
           async headers() {
             const {
-              data: { user },
-            } = await supabase.auth.getUser()
-
-            if (!user) {
-              return {}
-            }
-
-            // Get session for access token after verifying user
-            const {
               data: { session },
             } = await supabase.auth.getSession()
 
-            if (!session?.access_token) {
-              return {}
+            if (session?.access_token) {
+              return { authorization: `Bearer ${session.access_token}` }
             }
 
-            return { authorization: `Bearer ${session.access_token}` }
+            return {}
           },
         }),
       ],

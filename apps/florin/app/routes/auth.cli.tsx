@@ -1,14 +1,9 @@
-import {
-  createSupabaseServerClient,
-  getServerAuth,
-  getServerAuthConfig,
-} from '@hominem/auth/server'
+import { createSupabaseServerClient, getServerAuth } from '~/lib/auth.server'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const config = getServerAuthConfig()
-  const { user } = await getServerAuth(request, config)
-  const { supabase, headers } = createSupabaseServerClient(request, config)
+  const { user } = await getServerAuth(request)
+  const { supabase, headers } = createSupabaseServerClient(request)
 
   const url = new URL(request.url)
   const redirectUri = url.searchParams.get('redirect_uri')

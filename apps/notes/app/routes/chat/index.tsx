@@ -1,4 +1,4 @@
-import { getServerSession } from '@hominem/auth/server'
+import { getServerSession } from '~/lib/auth.server'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { createServerTRPCClient } from '~/lib/trpc/server'
 

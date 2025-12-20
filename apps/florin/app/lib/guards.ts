@@ -1,4 +1,4 @@
-import { getServerAuth } from "@hominem/auth/server";
+import { getServerAuth } from "./auth.server";
 
 /**
  * Require authentication - throws 401 if not authenticated

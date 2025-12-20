@@ -100,10 +100,6 @@ body {
     border-color: var(--color-gray-200, currentColor);
   }
 
-  * {
-    @apply border-border;
-  }
-
   button {
     cursor: pointer;
     font-family: inherit;
@@ -361,7 +357,7 @@ body {
   }
 
   .border-border {
-    border-color: var(--border);
+    border-color: var(--color-gray-200);
   }
 
   .ring-ring {

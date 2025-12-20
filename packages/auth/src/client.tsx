@@ -1,37 +1,12 @@
 import { createBrowserClient } from '@supabase/ssr'
-import type { Session, SupabaseClient } from '@supabase/supabase-js'
+import type { Session } from '@supabase/supabase-js'
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-const getSupabaseUrl = () => import.meta.env.VITE_SUPABASE_URL
-const getSupabaseAnonKey = () => import.meta.env.VITE_SUPABASE_ANON_KEY
-
-// Lazy load the default client to avoid multiple instances
-let defaultSupabase: SupabaseClient | undefined
-
-export function getSupabase(config?: { url: string; anonKey: string }) {
-  if (config) {
-    return createBrowserClient(config.url, config.anonKey)
-  }
-
-  if (defaultSupabase) return defaultSupabase
-
-  const url = getSupabaseUrl()
-  const anonKey = getSupabaseAnonKey()
-
-  if (!url || !anonKey) {
-    throw new Error(
-      'Missing required Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
-    )
-  }
-
-  defaultSupabase = createBrowserClient(url, anonKey)
-  return defaultSupabase
+export function getSupabase(config: { url: string; anonKey: string }) {
+  return createBrowserClient(config.url, config.anonKey)
 }
 
-export function useSupabaseAuth(
-  initialSession: Session | null = null,
-  config?: { url: string; anonKey: string }
-) {
+function useSupabaseAuth(initialSession: Session | null, config: { url: string; anonKey: string }) {
   const [supabaseClient] = useState(() => getSupabase(config))
   const [session, setSession] = useState<Session | null>(initialSession)
   const [isLoading, setIsLoading] = useState(!initialSession)
@@ -67,26 +42,6 @@ export function useSupabaseAuth(
     if (error) throw error
   }, [supabaseClient])
 
-  const signInWithGoogle = useCallback(
-    async ({
-      redirectToPath,
-      queryParams,
-    }: {
-      redirectToPath?: string
-      queryParams?: Record<string, string>
-    } = {}) => {
-      const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectToPath,
-          ...(queryParams && { queryParams }),
-        },
-      })
-      if (error) throw error
-    },
-    [supabaseClient]
-  )
-
   // Derive user and isAuthenticated from session (single source of truth)
   const user = session?.user ?? null
   const isAuthenticated = !!session?.user
@@ -98,7 +53,6 @@ export function useSupabaseAuth(
     isLoading,
     supabase: supabaseClient,
     logout,
-    signInWithGoogle,
     getUser,
     userId: user?.id,
   }
@@ -111,7 +65,7 @@ const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(u
 interface SupabaseAuthProviderProps {
   children: ReactNode
   initialSession?: Session | null
-  config?: { url: string; anonKey: string }
+  config: { url: string; anonKey: string }
 }
 
 export function SupabaseAuthProvider({

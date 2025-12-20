@@ -4,7 +4,7 @@ import Lists from '~/components/lists/lists'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import PlacesNearby from '~/components/places/places-nearby'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
-import { getAuthState } from '@hominem/auth/server'
+import { getAuthState } from '~/lib/auth.server'
 import type { Route } from './+types'
 import AboutPage from './about'
 

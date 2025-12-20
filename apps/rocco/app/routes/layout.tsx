@@ -1,4 +1,4 @@
-import { getAuthState } from '@hominem/auth/server'
+import { getAuthState } from '~/lib/auth.server'
 import { AppLayout } from '@hominem/ui/components/layout/app-layout'
 import { Toaster } from '@hominem/ui/components/ui/toaster'
 import { Suspense } from 'react'

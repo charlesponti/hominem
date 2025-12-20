@@ -10,12 +10,159 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AuthConfig, ServerAuthResult, SupabaseAuthUser } from "./types";
 import { toHominemUser } from "./user";
 
+// Internal type for the cached auth context
+type AuthContextCacheValue = {
+  user: SupabaseAuthUser | null;
+  session: Awaited<ReturnType<SupabaseClient["auth"]["getSession"]>>["data"]["session"] | null;
+  supabase: SupabaseClient | null;
+  headers: Headers;
+};
+
+// Request-scoped cache for auth results
+// Used to prevent redundant Supabase/DB calls when multiple loaders run in parallel
+const authContextCache = new WeakMap<Request, Promise<AuthContextCacheValue>>();
+
+/**
+ * Shared internal helper to get auth context for the current request
+ */
+async function getRequestAuthContext(
+  request: Request,
+  config: AuthConfig
+): Promise<AuthContextCacheValue> {
+  const existing = authContextCache.get(request);
+  if (existing) return existing;
+
+  const promise = (async (): Promise<AuthContextCacheValue> => {
+    const { supabase, headers } = createSupabaseServerClient(request, config);
+
+    try {
+      // Security: use getUser() to verify the session is still valid with Supabase
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        return { user: null, session: null, supabase, headers };
+      }
+
+      // After user is verified, get the full session object
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      return {
+        user: user as SupabaseAuthUser,
+        session,
+        supabase,
+        headers,
+      };
+    } catch (error) {
+      logger.error("[getRequestAuthContext]:", { error });
+      const { headers } = createSupabaseServerClient(request, config);
+      return { user: null, session: null, supabase: null, headers };
+    }
+  })();
+
+  authContextCache.set(request, promise);
+  return promise;
+}
+
+/**
+ * Get server-side authentication result with Hominem user
+ * Returns headers that MUST be included in the response
+ */
+export async function getServerAuth(
+  request: Request,
+  config: AuthConfig
+): Promise<ServerAuthResult & { headers: Headers }> {
+  const { user, session, headers } = await getRequestAuthContext(request, config);
+
+  if (!user || !session) {
+    return {
+      user: null,
+      supabaseUser: null,
+      session: null,
+      isAuthenticated: false,
+      headers,
+    };
+  }
+
+  const supabaseUser = user as SupabaseAuthUser;
+
+  // Get or create Hominem user
+  const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser);
+  if (!userAuthData) {
+    return {
+      user: null,
+      supabaseUser: null,
+      session: null,
+      isAuthenticated: false,
+      headers,
+    };
+  }
+
+  return {
+    user: toHominemUser(userAuthData),
+    supabaseUser,
+    session,
+    isAuthenticated: true,
+    headers,
+  };
+}
+
+/**
+ * Simple auth state check - returns user and isAuthenticated flag
+ */
+export async function getAuthState(
+  request: Request,
+  config: AuthConfig
+): Promise<{
+  user: SupabaseAuthUser | null;
+  isAuthenticated: boolean;
+  headers: Headers;
+}> {
+  const { user, headers } = await getRequestAuthContext(request, config);
+
+  return {
+    user: user ?? null,
+    isAuthenticated: Boolean(user),
+    headers,
+  };
+}
+
+/**
+ * Get server session with user and session objects
+ */
+export async function getServerSession(
+  request: Request,
+  config: AuthConfig
+): Promise<{
+  user: SupabaseAuthUser | null;
+  session:
+    | Awaited<
+        ReturnType<SupabaseClient["auth"]["getSession"]>
+      >["data"]["session"]
+    | null;
+  headers: Headers;
+}> {
+  const { user, session, headers } = await getRequestAuthContext(request, config);
+
+  return {
+    user: user ?? null,
+    session,
+    headers,
+  };
+}
+
+
+
 /**
  * Create Supabase server client for SSR with proper cookie handling
  */
 export function createSupabaseServerClient(
   request: Request,
-  config: AuthConfig = getServerAuthConfig()
+  config: AuthConfig
 ): { supabase: SupabaseClient; headers: Headers } {
   const headers = new Headers();
 
@@ -51,191 +198,6 @@ export function createSupabaseServerClient(
   );
 
   return { supabase, headers };
-}
-
-/**
- * Get server-side authentication result with Hominem user
- * Returns headers that MUST be included in the response
- *
- * @param request - The incoming request object
- * @param config - Optional AuthConfig. If not provided, will auto-read from environment variables
- */
-export async function getServerAuth(
-  request: Request,
-  config?: AuthConfig
-): Promise<ServerAuthResult & { headers: Headers }> {
-  const authConfig = config ?? getServerAuthConfig();
-  const { supabase, headers } = createSupabaseServerClient(request, authConfig);
-
-  try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error || !session?.user) {
-      return {
-        user: null,
-        supabaseUser: null,
-        session: null,
-        isAuthenticated: false,
-        headers,
-      };
-    }
-
-    const supabaseUser = session.user as SupabaseAuthUser;
-
-    // Get or create Hominem user
-    const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser);
-    if (!userAuthData) {
-      return {
-        user: null,
-        supabaseUser: null,
-        session: null,
-        isAuthenticated: false,
-        headers,
-      };
-    }
-
-    const hominemUser = toHominemUser(userAuthData);
-
-    return {
-      user: hominemUser,
-      supabaseUser,
-      session,
-      isAuthenticated: true,
-      headers,
-    };
-  } catch (error) {
-    console.error("Error in getServerAuth:", error);
-    return {
-      user: null,
-      supabaseUser: null,
-      session: null,
-      isAuthenticated: false,
-      headers,
-    };
-  }
-}
-
-export function getServerAuthConfig(): AuthConfig {
-  let supabaseUrl: string | undefined;
-  let supabaseAnonKey: string | undefined;
-
-  // Try import.meta.env first (Vite/Client/Edge) - use static property access
-  // Vite requires static property access like import.meta.env.SUPABASE_URL
-  // Access each property directly without storing import.meta in a variable
-  if (typeof import.meta !== "undefined" && import.meta.env) {
-    // Access properties directly - Vite needs to see import.meta.env.PROPERTY in source
-    supabaseUrl =
-      import.meta.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
-    supabaseAnonKey =
-      import.meta.env.SUPABASE_ANON_KEY ||
-      import.meta.env.VITE_SUPABASE_ANON_KEY;
-  }
-
-  // Fallback to process.env (Node/Server)
-  if (
-    (!supabaseUrl || !supabaseAnonKey) &&
-    typeof process.env !== "undefined"
-  ) {
-    supabaseUrl =
-      supabaseUrl || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    supabaseAnonKey =
-      supabaseAnonKey ||
-      process.env.SUPABASE_ANON_KEY ||
-      process.env.VITE_SUPABASE_ANON_KEY;
-  }
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables");
-  }
-
-  return {
-    supabaseUrl,
-    supabaseAnonKey,
-  };
-}
-
-/**
- * Simple auth state check - returns user and isAuthenticated flag
- * Use this when you only need to know if a user is authenticated
- * Returns headers that MUST be included in the response
- */
-export async function getAuthState(request: Request): Promise<{
-  user: SupabaseAuthUser | null;
-  isAuthenticated: boolean;
-  headers: Headers;
-}> {
-  const { supabase, headers } = createSupabaseServerClient(request);
-
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError) {
-      console.error("Error fetching user in auth loader:", userError);
-    }
-
-    return {
-      user: user ?? null,
-      isAuthenticated: Boolean(user),
-      headers,
-    };
-  } catch (error) {
-    console.error("Error in getAuthState:", error);
-    return {
-      user: null,
-      isAuthenticated: false,
-      headers,
-    };
-  }
-}
-
-/**
- * Get server session with user and session objects
- * Use this when you need the session for API tokens or full user/session data
- * Returns headers that MUST be included in the response
- */
-export async function getServerSession(request: Request): Promise<{
-  user: SupabaseAuthUser | null;
-  session:
-    | Awaited<
-        ReturnType<SupabaseClient["auth"]["getSession"]>
-      >["data"]["session"]
-    | null;
-  headers: Headers;
-}> {
-  const { supabase, headers } = createSupabaseServerClient(request);
-
-  try {
-    // Verify user authentication first
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return { user: null, session: null, headers };
-    }
-
-    // Get session for tokens after verifying user
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-      return { user: null, session: null, headers };
-    }
-
-    return { user, session, headers };
-  } catch (error) {
-    logger.error("[getServerSession]:", { error });
-    return { user: null, session: null, headers };
-  }
 }
 
 // Re-export for consumers importing from '@hominem/auth/server'

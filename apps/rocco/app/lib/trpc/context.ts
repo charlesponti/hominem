@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@hominem/auth/server";
+import { createSupabaseServerClient } from "../auth.server";
 import { UserAuthService, type UserSelect } from "@hominem/data";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { logger } from "../logger";

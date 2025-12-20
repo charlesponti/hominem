@@ -1,5 +1,5 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
-import { getServerSession } from '@hominem/auth/server'
+import { getServerSession, authConfig } from './lib/auth.server'
 import type React from 'react'
 import {
   isRouteErrorResponse,
@@ -24,8 +24,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     {
       session,
       supabaseEnv: {
-        url: import.meta.env.VITE_SUPABASE_URL,
-        anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        url: authConfig.supabaseUrl,
+        anonKey: authConfig.supabaseAnonKey,
       },
     },
     { headers }

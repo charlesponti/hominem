@@ -1,5 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
-import { getAuthState } from '@hominem/auth/server'
+import { getAuthState } from '~/lib/auth.server'
 import { PageTitle } from '@hominem/ui'
 import { Mail } from 'lucide-react'
 import { useCallback } from 'react'

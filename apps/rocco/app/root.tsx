@@ -1,5 +1,5 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
-import { getServerSession } from '@hominem/auth/server'
+import { getServerSession } from './lib/auth.server'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, data } from 'react-router'
 import type { Route } from './+types/root'
 import { AuthRevalidator } from './components/auth-revalidator'

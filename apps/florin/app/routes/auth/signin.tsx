@@ -1,4 +1,4 @@
-import { getServerAuth } from '@hominem/auth/server'
+import { getServerAuth } from '~/lib/auth.server'
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { Button } from '@hominem/ui/button'
 import {

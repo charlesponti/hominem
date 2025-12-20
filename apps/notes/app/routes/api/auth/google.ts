@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@hominem/auth/server";
+import { createSupabaseServerClient } from "../../../lib/auth.server";
 import { jsonResponse } from "~/lib/utils";
 
 export async function loader({ request }: { request: Request }) {

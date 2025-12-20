@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@hominem/auth/server";
+import { createSupabaseServerClient } from "../lib/auth.server";
 import { FileProcessorService } from "@hominem/data/files";
 import { indexProcessedFile } from "@hominem/data/vector";
 import { fileStorageService } from "@hominem/utils/supabase";
