@@ -91,8 +91,8 @@ describe('ListPage', () => {
         expect(screen.getByText('test list')).toBeInTheDocument()
       })
 
-      // Menu should NOT be visible for non-owners
-      expect(screen.queryByTestId('list-dropdownmenu-trigger')).not.toBeInTheDocument()
+      // Edit button should NOT be visible for non-owners
+      expect(screen.queryByLabelText('Edit list')).not.toBeInTheDocument()
     })
 
     test('should not show add button when no access', async () => {
@@ -138,6 +138,7 @@ describe('ListPage', () => {
       })
 
       mockTrpcClient.lists.update.useMutation.mockReturnValue({
+        data: null,
         mutate: vi.fn(),
         mutateAsync: vi.fn(),
         isLoading: false,
@@ -161,11 +162,11 @@ describe('ListPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('my list')).toBeInTheDocument()
-        expect(screen.getByTestId('list-dropdownmenu-trigger')).toBeInTheDocument()
+        expect(screen.getByLabelText('Edit list')).toBeInTheDocument()
       })
     })
 
-    test("should open edit sheet when clicking 'Edit'", async () => {
+    test('should open edit sheet when clicking edit icon', async () => {
       const user = userEvent.setup()
 
       renderWithRouter({
@@ -182,14 +183,11 @@ describe('ListPage', () => {
 
       await waitFor(() => expect(screen.getByText('my list')).toBeInTheDocument())
 
-      const menuTrigger = screen.getByTestId('list-dropdownmenu-trigger')
-      await user.click(menuTrigger)
-
-      const editButton = await screen.findByText('Edit')
+      const editButton = screen.getByLabelText('Edit list')
       await user.click(editButton)
 
       await waitFor(() => {
-        expect(screen.getByText('Edit list')).toBeInTheDocument()
+        expect(screen.getByTestId('list-edit-sheet')).toBeInTheDocument()
       })
     })
 

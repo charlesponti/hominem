@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui'
 import { memo, useMemo } from 'react'
 import { cn } from '~/lib/utils'
 

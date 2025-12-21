@@ -78,16 +78,6 @@ vi.mock('@hominem/auth', () => ({
   getSupabase: () => mockSupabaseClient,
 }))
 
-vi.mock('@hominem/ui', async () => {
-  const actual = await vi.importActual<typeof import('@hominem/ui')>('@hominem/ui')
-  return {
-    ...actual,
-    SupabaseAuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
-    useSupabaseAuth: () => mockAuthContextValue,
-    useSupabaseAuthContext: () => mockAuthContextValue,
-  }
-})
-
 export function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {

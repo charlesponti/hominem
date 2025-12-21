@@ -102,31 +102,43 @@ export default function ListForm({
 
   const isOverlayVisible = status === 'submitting' || status === 'success'
   const showInput = status === 'open' || status === 'submitting' || status === 'success'
+  const canSubmit = name.trim().length > 0 && status === 'open'
 
   return (
     <div className="flex gap-1">
       {showInput ? (
         <div className="relative w-full">
           <form onSubmit={handleSubmit} className="w-full">
-            <div
-              className={cn('transition-opacity duration-200', {
-                'opacity-0 pointer-events-none': isOverlayVisible,
-                'opacity-100': !isOverlayVisible,
-              })}
-            >
-              <Input
-                ref={inputRef}
-                placeholder="Enter list name..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    handleClose()
-                  }
-                }}
-                required
-                className="w-full"
-              />
+            <div className="flex gap-1">
+              <div
+                className={cn('transition-opacity duration-200 flex-1', {
+                  'opacity-0 pointer-events-none': isOverlayVisible,
+                  'opacity-100': !isOverlayVisible,
+                })}
+              >
+                <Input
+                  ref={inputRef}
+                  placeholder="Enter list name..."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      handleClose()
+                    }
+                  }}
+                  required
+                  className="w-full"
+                />
+              </div>
+              {status === 'open' && (
+                <Button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="flex items-center gap-2"
+                >
+                  Create
+                </Button>
+              )}
             </div>
           </form>
 

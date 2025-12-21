@@ -1,12 +1,12 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
+import { Button } from '@hominem/ui/button'
 import { PageTitle } from '@hominem/ui'
-import { UserPlus } from 'lucide-react'
+import { Pencil, UserPlus } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
-import { Link, redirect, data } from 'react-router'
+import { Link, redirect } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
-import ListMenu from '~/components/lists/list-menu'
-import ListTitleEdit from '~/components/lists/list-title-edit'
+import ListEditSheet from '~/components/lists/list-edit-sheet'
 import Loading from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
 import PlacesList from '~/components/places/places-list'
@@ -17,32 +17,6 @@ import { trpc } from '~/lib/trpc/client'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceLocation } from '~/lib/types'
 import type { Route } from './+types/lists.$id'
-
-export async function action({ request, params }: Route.ActionArgs) {
-  const formData = await request.formData()
-  const intent = formData.get('intent')
-
-  if (intent === 'update-name') {
-    const name = formData.get('name') as string
-    const id = params.id
-    if (!id || !name) {
-      return data({ error: 'ID and name are required' }, { status: 400 })
-    }
-
-    const trpcServer = createCaller(request)
-    try {
-      await trpcServer.lists.update({ id, name })
-      return { success: true }
-    } catch (error) {
-      return data(
-        { error: error instanceof Error ? error.message : 'Update failed' },
-        { status: 500 }
-      )
-    }
-  }
-
-  return null
-}
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { id } = params
@@ -62,6 +36,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export default function ListPage({ loaderData }: Route.ComponentProps) {
   const { user } = useSupabaseAuthContext()
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const listId = loaderData.list.id
 
@@ -139,16 +114,19 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
             <PageTitle title={list.name} variant="serif" />
             {isOwner && (
               <div className="flex items-center gap-2">
-                <ListTitleEdit listId={list.id} currentName={list.name} />
                 <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
                   <UserPlus size={18} />
                 </Link>
-                <ListMenu list={list} isOwnList={isOwner} />
-              </div>
-            )}
-            {!isOwner && (
-              <div className="flex items-center">
-                <ListMenu list={list} isOwnList={isOwner} />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="size-8 hover:text-indigo-600 focus-visible:bg-indigo-50"
+                  onClick={() => setIsEditDialogOpen(true)}
+                  aria-label="Edit list"
+                >
+                  <Pencil size={16} />
+                  <span className="sr-only">Edit list</span>
+                </Button>
               </div>
             )}
           </div>
@@ -197,6 +175,9 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </div>
+      {isOwner && (
+        <ListEditSheet list={list} isOpen={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} />
+      )}
     </MapInteractionProvider>
   )
 }

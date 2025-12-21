@@ -8,13 +8,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/components/ui/dialog'
+} from '@hominem/ui'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui/components/ui/dropdown-menu'
+} from '@hominem/ui'
 import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import { href } from 'react-router'
