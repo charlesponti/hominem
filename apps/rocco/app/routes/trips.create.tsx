@@ -4,6 +4,7 @@ import { Button } from '@hominem/ui/button'
 import { PageTitle } from '@hominem/ui'
 import { Input } from '@hominem/ui/input'
 import { createCaller } from '~/lib/trpc/server'
+import ErrorBoundary from '~/components/ErrorBoundary'
 import type { Route } from './+types'
 
 export async function action({ request }: Route.ActionArgs) {
@@ -104,3 +105,5 @@ export default function CreateTripPage({ actionData }: Route.ComponentProps) {
     </div>
   )
 }
+
+export { ErrorBoundary }

@@ -538,6 +538,7 @@
         "@hominem/tsconfigs": "workspace:*",
         "react": "^19.2.0",
         "typescript": "5.9.3",
+        "vite": "7.3.0",
       },
       "peerDependencies": {
         "react": "^19.2.0",

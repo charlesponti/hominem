@@ -3,24 +3,42 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "lint": "biome lint ./src --fix"
+    "lint": "biome lint ./src --fix",
+    "build": "tsc -b",
+    "dev": "bunx tsc -b -w",
+    "prepare": "bun run build"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "react": "^19.2.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vite": "7.3.0"
   },
   "peerDependencies": {
     "react": "^19.2.0"
   },
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./button": "./src/components/ui/button.tsx",
-    "./input": "./src/components/ui/input.tsx",
-    "./components/*": "./src/components/*",
-    "./lib/*": "./src/lib/*",
-    "./server": "./src/server/index.ts",
-
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./components/*": {
+      "import": "./dist/components/*",
+      "types": "./dist/components/*"
+    },
+    "./lib/*": {
+      "import": "./dist/lib/*",
+      "types": "./dist/lib/*"
+    },
+    "./button": {
+      "import": "./dist/components/ui/button.js",
+      "types": "./dist/components/ui/button.d.ts"
+    },
+    "./input": {
+      "import": "./dist/components/ui/input.js",
+      "types": "./dist/components/ui/input.d.ts"
+    },
     "./styles/globals.css": "./src/styles/globals.css",
     "./styles/animations.css": "./src/styles/animations.css"
   },

@@ -10,6 +10,7 @@ import PlaceWebsite from '~/components/places/PlaceWebsite'
 import PlaceLists from '~/components/places/PlaceLists'
 import PlacesNearby from '~/components/places/places-nearby'
 import { createCaller } from '~/lib/trpc/server'
+import ErrorBoundary from '~/components/ErrorBoundary'
 import type { PlaceWithLists } from '~/lib/types'
 import type { Route } from './+types/places.$id'
 
@@ -101,3 +102,5 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
+
+export { ErrorBoundary }

@@ -3,6 +3,7 @@ import { db } from '../db'
 import { contacts, eventsUsers } from '../db/schema'
 
 export interface PersonInput {
+  userId: string
   firstName?: string
   lastName?: string
   email?: string
@@ -37,9 +38,10 @@ export async function getPeopleForLifeEvents(eventIds: string[]) {
 
   const map = new Map<
     string,
-    Array<{ id: string; firstName: string | null; lastName: string | null }>
+    Array<{ id: string; firstName: string; lastName: string | null }>
   >()
   for (const row of rows) {
+    if (!row.eventId) continue
     if (!map.has(row.eventId)) {
       map.set(row.eventId, [])
     }
@@ -77,10 +79,14 @@ export async function getPersonById(id: string) {
 }
 
 export async function createPerson(person: PersonInput) {
+  if (!person.firstName) {
+    throw new Error('firstName is required')
+  }
   const result = await db
     .insert(contacts)
     .values({
-      firstName: person.firstName || null,
+      userId: person.userId,
+      firstName: person.firstName,
       lastName: person.lastName || null,
       email: person.email || null,
       phone: person.phone || null,

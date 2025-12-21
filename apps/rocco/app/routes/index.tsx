@@ -7,6 +7,7 @@ import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { getAuthState } from '~/lib/auth.server'
 import type { Route } from './+types'
 import AboutPage from './about'
+import ErrorBoundary from '~/components/ErrorBoundary'
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { isAuthenticated, headers } = await getAuthState(request)
@@ -41,3 +42,5 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
+
+export { ErrorBoundary }

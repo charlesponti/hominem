@@ -41,6 +41,7 @@ export async function getTagsForLifeEvents(eventIds: string[]) {
     Array<{ id: string; name: string; color: string | null; description: string | null }>
   >()
   for (const row of rows) {
+    if (!row.eventId) continue
     if (!map.has(row.eventId)) {
       map.set(row.eventId, [])
     }
@@ -102,9 +103,11 @@ export async function getTagByName(name: string) {
 }
 
 export async function createTag(tag: TagInput) {
+  const { randomUUID } = await import('node:crypto')
   const result = await db
     .insert(tags)
     .values({
+      id: randomUUID(),
       name: tag.name,
       color: tag.color || null,
       description: tag.description || null,

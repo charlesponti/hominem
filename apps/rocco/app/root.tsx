@@ -1,10 +1,11 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
 import type { AuthChangeEvent } from '@supabase/supabase-js'
 import { useCallback } from 'react'
-import { getServerSession } from './lib/auth.server'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, data, useRevalidator } from 'react-router'
 import type { Route } from './+types/root'
+import ErrorBoundary from './components/ErrorBoundary'
 import './globals.css'
+import { getServerSession } from './lib/auth.server'
 import { env } from './lib/env'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
@@ -101,3 +102,5 @@ export default function App({ loaderData }: Route.ComponentProps) {
     </html>
   )
 }
+
+export { ErrorBoundary }

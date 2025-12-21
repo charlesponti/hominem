@@ -61,7 +61,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   // Convert places to map markers (must be called before conditional returns)
   const markers: PlaceLocation[] = useMemo(
     () =>
-      (list?.places || [])
+      list.places
         .filter((p) => Boolean(p.latitude && p.longitude))
         .map((p) => ({
           latitude: p.latitude as number,
@@ -70,25 +70,11 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
           name: p.name,
           imageUrl: p.imageUrl,
         })),
-    [list?.places]
+    [list.places]
   )
 
-  // Show loading state while fetching
-  if (isLoading || !listId) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <Loading size="lg" />
-      </div>
-    )
-  }
-
-  // Show error state
-  if (error) {
-    return <Alert type="error">Error loading list: {error.message}</Alert>
-  }
-
-  // If no list found, show loading (redirect will happen in useEffect)
-  if (!list) {
+  // Show loading state only on initial load
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
         <Loading size="lg" />
@@ -99,14 +85,15 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const isOwner = list.userId === user?.id
   const hasAccess = list.hasAccess ?? isOwner
 
-  if (deleteError) {
-    return <Alert type="error">{deleteError}</Alert>
-  }
-
   return (
     <MapInteractionProvider>
       <div className="space-y-4">
         <div className="flex-1 space-y-2">
+          {error && (
+            <Alert type="error" dismissible>
+              Error loading list updates: {error.message}
+            </Alert>
+          )}
           <div
             className="flex justify-between items-center"
             style={{ viewTransitionName: `list-title-${list.id}` }}
@@ -133,7 +120,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
           <div className="flex items-center gap-3">
             {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
             {list.users && list.users.length > 0 && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center -space-x-2">
                 {list.users.slice(0, 5).map((collaborator) => (
                   <UserAvatar
                     key={collaborator.id}
@@ -145,7 +132,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
                   />
                 ))}
                 {list.users.length > 5 && (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
+                  <div className="flex size-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
                     +{list.users.length - 5}
                   </div>
                 )}
@@ -156,8 +143,13 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="overflow-y-auto space-y-4 pb-8">
+            {deleteError && (
+              <Alert type="error" dismissible onDismiss={() => setDeleteError(null)}>
+                {deleteError}
+              </Alert>
+            )}
             <PlacesList
-              places={list.places || []}
+              places={list.places}
               listId={list.id}
               canAdd={hasAccess}
               onError={handleDeleteError}

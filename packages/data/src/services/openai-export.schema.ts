@@ -4,7 +4,7 @@ import { z } from 'zod'
 const authorSchema = z.object({
   role: z.enum(['system', 'user', 'assistant', 'tool']),
   name: z.null(),
-  metadata: z.record(z.any()).default({}),
+  metadata: z.record(z.string(), z.any()).default({}),
 })
 
 // Content schema
@@ -23,7 +23,7 @@ const messageSchema = z.object({
   status: z.enum(['finished_successfully']),
   end_turn: z.boolean().nullable(),
   weight: z.number(),
-  metadata: z.record(z.any()),
+  metadata: z.record(z.string(), z.any()),
   recipient: z.string(),
   channel: z.null(),
 })

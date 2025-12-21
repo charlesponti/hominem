@@ -1,6 +1,7 @@
 import { motion, type Variants } from 'framer-motion'
 import { BookmarkCheck, MapPin, Share2, Sparkles } from 'lucide-react'
 import { Link } from 'react-router'
+import ErrorBoundary from '~/components/ErrorBoundary'
 
 const fadeIn: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -159,3 +160,5 @@ export default function AboutPage() {
     </div>
   )
 }
+
+export { ErrorBoundary }

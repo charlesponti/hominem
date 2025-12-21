@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Button } from '@hominem/ui/button'
 import { PageTitle } from '@hominem/ui'
 import { createCaller } from '~/lib/trpc/server'
+import ErrorBoundary from '~/components/ErrorBoundary'
 import type { Route } from './+types'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -49,3 +50,5 @@ export default function TripsPage({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
+
+export { ErrorBoundary }

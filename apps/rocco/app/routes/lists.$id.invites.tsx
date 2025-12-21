@@ -5,6 +5,7 @@ import SentInvites from '~/components/lists/sent-invites'
 import SentInviteForm from '~/components/lists/sent-invite-form'
 import { PageTitle } from '@hominem/ui'
 import { createCaller } from '~/lib/trpc/server'
+import ErrorBoundary from '~/components/ErrorBoundary'
 import type { SentInvite } from '~/lib/types'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '~/lib/trpc/router'
@@ -101,3 +102,5 @@ export default function ListInvites({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
+
+export { ErrorBoundary }

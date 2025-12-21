@@ -1,6 +1,7 @@
 import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal'
 import { PageTitle } from '@hominem/ui'
 import { createCaller } from '~/lib/trpc/server'
+import ErrorBoundary from '~/components/ErrorBoundary'
 import type { Route } from './+types/trips.$tripId'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -41,3 +42,5 @@ export default function TripPage({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
+
+export { ErrorBoundary }

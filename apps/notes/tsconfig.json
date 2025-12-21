@@ -12,7 +12,9 @@
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
@@ -25,4 +27,8 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   }
+  ,
+  "references": [
+    { "path": "../../packages/ui" }
+  ]
 }

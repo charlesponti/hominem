@@ -3,6 +3,10 @@
   "display": "Workspace Shared",
   "extends": "./base.json",
   "compilerOptions": {
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "paths": {
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"]
+    }
   }
 }

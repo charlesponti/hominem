@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate } from 'react-router'
 import Loading from '~/components/loading'
 import { trpc } from '~/lib/trpc/client'
+import ErrorBoundary from '~/components/ErrorBoundary'
 
 export default function ListSentInvites(props: Route.ComponentProps) {
   const { userId } = useSupabaseAuthContext()
@@ -50,3 +51,5 @@ export default function ListSentInvites(props: Route.ComponentProps) {
     </>
   )
 }
+
+export { ErrorBoundary }

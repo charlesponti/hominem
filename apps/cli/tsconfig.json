@@ -14,16 +14,15 @@
     "noImplicitAny": false,
     "lib": ["dom"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"]
     }
   },
   "references": [
-    {
-      "path": "../../packages/utils"
-    },
-    {
-      "path": "../../packages/ai"
-    }
+    { "path": "../../packages/utils" },
+    { "path": "../../packages/ai" },
+    { "path": "../../packages/ui" }
   ],
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "build", "**/*.test.ts"]

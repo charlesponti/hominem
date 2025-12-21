@@ -7,7 +7,9 @@
     "outDir": "./build",
     "rootDir": "./src",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@hominem/ui/*": ["../ui/src/*"],
+      "@hominem/ui": ["../ui/src/index.ts"]
     }
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],

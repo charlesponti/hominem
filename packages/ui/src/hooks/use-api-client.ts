@@ -1,4 +1,4 @@
-import { getSupabase } from '@hominem/auth'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { useCallback, useMemo, useState } from 'react'
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL
@@ -19,7 +19,7 @@ type ApiState = {
  * React hook for API client that handles fetch requests with authentication
  */
 export function useApiClient() {
-  const supabase = getSupabase()
+  const { supabase } = useSupabaseAuthContext()
   const [state, setState] = useState<ApiState>({
     isLoading: false,
     error: null,

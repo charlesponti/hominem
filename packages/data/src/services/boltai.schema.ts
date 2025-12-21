@@ -75,7 +75,12 @@ export const BoltExportSchema = z.object({
       networkTimeoutInterval: z.number().default(600),
     })
     .passthrough()
-    .default({}),
+    .default(() => ({
+      setappAIPlan: 'free',
+      autoCollapseLongPrompt: true,
+      hideDockIcon: false,
+      networkTimeoutInterval: 600,
+    })),
   commands: z.array(z.any()).default([]),
   memories: z.array(z.any()).default([]),
   services: z

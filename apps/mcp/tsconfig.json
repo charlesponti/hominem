@@ -12,7 +12,9 @@
     "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

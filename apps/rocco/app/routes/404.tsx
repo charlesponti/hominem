@@ -3,6 +3,7 @@ import { motion, type Variants } from 'framer-motion'
 import { Home, MapPin, Search } from 'lucide-react'
 import { Link } from 'react-router'
 import { PageTitle } from '@hominem/ui'
+import ErrorBoundary from '~/components/ErrorBoundary'
 
 const fadeIn: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -101,3 +102,5 @@ export default function NotFoundPage() {
     </div>
   )
 }
+
+export { ErrorBoundary }

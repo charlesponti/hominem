@@ -34,7 +34,7 @@ export const useRemoveListItem = (options?: {
 }) => {
   const utils = trpc.useUtils();
 
-  return trpc.items.removeFromList.useMutation({
+  const mutation = trpc.items.removeFromList.useMutation({
     onMutate: async ({ listId, itemId: placeId }) => {
       // Cancel any outgoing refetches
       await utils.lists.getById.cancel({ id: listId });
@@ -97,6 +97,33 @@ export const useRemoveListItem = (options?: {
       );
     },
   });
+
+  // Wrap mutate and mutateAsync to transform placeId to itemId
+  const mutate = (
+    variables: { listId: string; placeId: string },
+    mutateOptions?: Parameters<typeof mutation.mutate>[1]
+  ) => {
+    mutation.mutate(
+      { listId: variables.listId, itemId: variables.placeId },
+      mutateOptions
+    );
+  };
+
+  const mutateAsync = async (
+    variables: { listId: string; placeId: string },
+    mutateOptions?: Parameters<typeof mutation.mutateAsync>[1]
+  ) => {
+    return mutation.mutateAsync(
+      { listId: variables.listId, itemId: variables.placeId },
+      mutateOptions
+    );
+  };
+
+  return {
+    ...mutation,
+    mutate,
+    mutateAsync,
+  };
 };
 
 export const useAddPlaceToList = (options?: {

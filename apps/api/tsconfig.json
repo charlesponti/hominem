@@ -11,7 +11,9 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@hominem/ui/*": ["../../packages/ui/src/*"],
+      "@hominem/ui": ["../../packages/ui/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
