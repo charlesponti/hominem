@@ -40,8 +40,8 @@ WORKDIR /app
 # Copy the pruned lockfile and package.json files
 COPY --from=pruner /app/out/json/ .
 
-# Install only production dependencies
-RUN bun install --production --frozen-lockfile
+# Install only production dependencies (skip prepare scripts since source files aren't copied yet)
+RUN bun install --production --frozen-lockfile --ignore-scripts
 
 # Production stage
 FROM oven/bun:1.1.38-debian AS release
