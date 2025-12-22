@@ -5,7 +5,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui/dialog'
+} from '@hominem/ui/dropdown'
 import { Globe2Icon, List, LogOut, MoreHorizontal, Settings, UserPlus } from 'lucide-react'
 import { useCallback } from 'react'
 import { href, Link, useNavigate } from 'react-router'
