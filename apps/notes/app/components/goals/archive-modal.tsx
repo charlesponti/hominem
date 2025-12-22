@@ -1,11 +1,5 @@
 import { Button } from '@hominem/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@hominem/ui/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog'
 
 interface ArchiveModalProps {
   open: boolean

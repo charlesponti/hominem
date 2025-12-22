@@ -166,7 +166,7 @@ describe('ListPage', () => {
       })
     })
 
-    test('should open edit sheet when clicking edit icon', async () => {
+    test('should open edit dialog when clicking edit icon', async () => {
       const user = userEvent.setup()
 
       renderWithRouter({
@@ -187,7 +187,7 @@ describe('ListPage', () => {
       await user.click(editButton)
 
       await waitFor(() => {
-        expect(screen.getByTestId('list-edit-sheet')).toBeInTheDocument()
+        expect(screen.getByTestId('list-edit-dialog')).toBeInTheDocument()
       })
     })
 

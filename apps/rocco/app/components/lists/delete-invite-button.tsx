@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/components/ui/dialog'
+} from '@hominem/ui/dialog'
 import { Trash2 } from 'lucide-react'
 import { useCallback } from 'react'
 import { useModal } from '~/hooks/useModal'

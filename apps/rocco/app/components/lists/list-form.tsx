@@ -131,11 +131,7 @@ export default function ListForm({
                 />
               </div>
               {status === 'open' && (
-                <Button
-                  type="submit"
-                  disabled={!canSubmit}
-                  className="flex items-center gap-2"
-                >
+                <Button type="submit" disabled={!canSubmit} className="flex items-center gap-2">
                   Create
                 </Button>
               )}

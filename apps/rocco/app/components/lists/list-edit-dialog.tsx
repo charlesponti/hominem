@@ -9,13 +9,13 @@ import { useNavigate } from 'react-router'
 import { useDeleteList, useUpdateList } from '~/lib/lists'
 import type { List } from '~/lib/types'
 
-type ListEditSheetProps = {
+type ListEditDialogProps = {
   list: List
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export default function ListEditSheet({ list, isOpen, onOpenChange }: ListEditSheetProps) {
+export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditDialogProps) {
   const navigate = useNavigate()
   const [name, setName] = useState(list.name)
   const [description, setDescription] = useState(list.description || '')
@@ -88,9 +88,10 @@ export default function ListEditSheet({ list, isOpen, onOpenChange }: ListEditSh
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20 data-[state=open]:animate-fade-in" />
-        <Dialog.Content 
-          data-testid="list-edit-sheet"
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg focus:outline-none">
+        <Dialog.Content
+          data-testid="list-edit-dialog"
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg focus:outline-none"
+        >
           {!showDeleteConfirmation ? (
             <>
               <Dialog.Title>Edit list</Dialog.Title>
@@ -189,3 +190,4 @@ export default function ListEditSheet({ list, isOpen, onOpenChange }: ListEditSh
     </Dialog.Root>
   )
 }
+

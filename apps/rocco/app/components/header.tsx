@@ -5,8 +5,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui'
-import { Globe2Icon, List, LogOut, MapPin, MoreHorizontal, Settings, UserPlus } from 'lucide-react'
+} from '@hominem/ui/dialog'
+import { Globe2Icon, List, LogOut, MoreHorizontal, Settings, UserPlus } from 'lucide-react'
 import { useCallback } from 'react'
 import { href, Link, useNavigate } from 'react-router'
 
@@ -52,12 +52,12 @@ const NavigationMenu = () => {
             <span>Invites</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer py-2">
+        {/* <DropdownMenuItem asChild className="cursor-pointer py-2">
           <Link to={href('/trips')} className="flex items-center space-x-2">
             <MapPin className="size-4" />
             <span>Trips</span>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuItem asChild className="cursor-pointer py-2">
           <Link to={href('/account')} className="flex items-center space-x-2">
             <Settings className="size-4" />

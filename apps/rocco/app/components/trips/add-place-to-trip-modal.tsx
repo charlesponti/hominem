@@ -1,12 +1,6 @@
-import { useRevalidator } from 'react-router'
 import { Button } from '@hominem/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@hominem/ui/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@hominem/ui/dialog'
+import { useRevalidator } from 'react-router'
 import { useModal } from '~/hooks/useModal'
 import { trpc } from '~/lib/trpc/client'
 

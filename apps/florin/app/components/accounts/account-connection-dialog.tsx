@@ -1,12 +1,5 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@hominem/ui/components/ui/dialog'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -14,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@hominem/ui/dialog'
 import { LinkIcon, UnlinkIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useFinancialInstitutions } from '~/lib/hooks/use-finance-data'

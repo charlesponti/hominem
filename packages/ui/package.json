@@ -23,21 +23,25 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./components/*": {
-      "import": "./dist/components/*",
-      "types": "./dist/components/*"
-    },
-    "./lib/*": {
-      "import": "./dist/lib/*",
-      "types": "./dist/lib/*"
-    },
     "./button": {
       "import": "./dist/components/ui/button.js",
       "types": "./dist/components/ui/button.d.ts"
     },
+    "./components/*": {
+      "import": "./dist/components/*",
+      "types": "./dist/components/*"
+    },
+    "./dialog": {
+      "import": "./dist/components/ui/dialog.js",
+      "types": "./dist/components/ui/dialog.d.ts"
+    },
     "./input": {
       "import": "./dist/components/ui/input.js",
       "types": "./dist/components/ui/input.d.ts"
+    },
+    "./lib/*": {
+      "import": "./dist/lib/*",
+      "types": "./dist/lib/*"
     },
     "./styles/globals.css": "./src/styles/globals.css",
     "./styles/animations.css": "./src/styles/animations.css"

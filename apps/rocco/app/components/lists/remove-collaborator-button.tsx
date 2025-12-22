@@ -7,11 +7,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/components/ui/dialog'
+} from '@hominem/ui/dialog'
 import { Trash2 } from 'lucide-react'
 import { useCallback } from 'react'
-import { trpc } from '~/lib/trpc/client'
 import { useModal } from '~/hooks/useModal'
+import { trpc } from '~/lib/trpc/client'
 
 type RemoveCollaboratorButtonProps = {
   listId: string
@@ -83,13 +83,13 @@ export default function RemoveCollaboratorButton({
     <>
       <Button
         data-testid="remove-collaborator-button"
-        variant="destructive"
+        variant="ghost"
         size="icon"
         onClick={open}
         disabled={removeCollaborator.isPending}
         title="Remove collaborator"
       >
-        <Trash2 className="size-4" />
+        <Trash2 className="size-4 text-red-700" />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={(shouldOpen) => (shouldOpen ? open() : close())}>

@@ -1,12 +1,11 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
-import { Button } from '@hominem/ui/button'
 import { PageTitle } from '@hominem/ui'
-import { Pencil, UserPlus } from 'lucide-react'
+import { UserPlus } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { Link, redirect } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
-import ListEditSheet from '~/components/lists/list-edit-sheet'
+import ListEditButton from '~/components/lists/list-edit-button'
 import Loading from '~/components/loading'
 import LazyMap from '~/components/map.lazy'
 import PlacesList from '~/components/places/places-list'
@@ -36,7 +35,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export default function ListPage({ loaderData }: Route.ComponentProps) {
   const { user } = useSupabaseAuthContext()
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const listId = loaderData.list.id
 
@@ -104,16 +102,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
                 <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
                   <UserPlus size={18} />
                 </Link>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="size-8 hover:text-indigo-600 focus-visible:bg-indigo-50"
-                  onClick={() => setIsEditDialogOpen(true)}
-                  aria-label="Edit list"
-                >
-                  <Pencil size={16} />
-                  <span className="sr-only">Edit list</span>
-                </Button>
+                <ListEditButton list={list} />
               </div>
             )}
           </div>
@@ -167,9 +156,6 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </div>
-      {isOwner && (
-        <ListEditSheet list={list} isOpen={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} />
-      )}
     </MapInteractionProvider>
   )
 }

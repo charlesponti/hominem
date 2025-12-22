@@ -1,14 +1,6 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { Button } from '@hominem/ui/button'
 import { Badge } from '@hominem/ui/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@hominem/ui/components/ui/dialog'
 import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
@@ -19,6 +11,14 @@ import {
 } from '@hominem/ui/components/ui/select'
 import { Textarea } from '@hominem/ui/components/ui/textarea'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@hominem/ui/dialog'
 import { Loader2, RefreshCw, Twitter } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'

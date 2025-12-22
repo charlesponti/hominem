@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card'
-import { Dialog, DialogContent } from '@hominem/ui/components/ui/dialog'
+import { Dialog, DialogContent } from '@hominem/ui/dialog'
 import { Drawer, DrawerContent } from '@hominem/ui/components/ui/drawer'
 import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
