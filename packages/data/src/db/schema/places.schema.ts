@@ -57,6 +57,16 @@ export const place = pgTable(
      */
     isPublic: boolean('is_public').notNull().default(false),
     wifiInfo: text('wifi_info'),
+
+    /**
+     * Google Places business status (e.g., OPERATIONAL, CLOSED_PERMANENTLY, CLOSED_TEMPORARILY)
+     */
+    businessStatus: text('business_status'),
+
+    /**
+     * Opening hours for the place, stored as JSON string (Google Places API format)
+     */
+    openingHours: text('opening_hours'),
   },
   (table) => [
     foreignKey({

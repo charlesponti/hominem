@@ -9,6 +9,7 @@ import PlacePhotos from '~/components/places/PlacePhotos'
 import PlaceRating from '~/components/places/PlaceRating'
 import PlacesNearby from '~/components/places/places-nearby'
 import PlaceTypes from '~/components/places/PlaceTypes'
+import PlaceStatus from '~/components/places/PlaceStatus'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceWithLists } from '~/lib/types'
@@ -54,6 +55,11 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
           style={{ viewTransitionName: `place-header-${place.id}` }}
         >
           <PageTitle title={place.name} />
+          <PlaceStatus
+            businessStatus={place.businessStatus}
+            openingHours={place.openingHours}
+            className="mt-1"
+          />
           <div className="space-y-2">
             <PlaceTypes types={place.types || []} />
 

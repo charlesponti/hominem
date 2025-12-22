@@ -9,6 +9,7 @@ const DATABASE_URL =
 
 assert(DATABASE_URL, 'Missing DATABASE_URL')
 
+console.log('Using DATABASE_URL:', DATABASE_URL)
 export default defineConfig({
   schema: './src/db/schema/index.ts',
   out: './src/db/migrations',
