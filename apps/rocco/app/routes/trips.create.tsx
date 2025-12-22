@@ -1,11 +1,11 @@
+import { PageTitle } from '@hominem/ui'
+import { Button } from '@hominem/ui/button'
+import { Input } from '@hominem/ui/input'
 import { useId } from 'react'
 import { Form, Link, useNavigation } from 'react-router'
-import { Button } from '@hominem/ui/button'
-import { PageTitle } from '@hominem/ui'
-import { Input } from '@hominem/ui/input'
-import { createCaller } from '~/lib/trpc/server'
 import ErrorBoundary from '~/components/ErrorBoundary'
-import type { Route } from './+types'
+import { createCaller } from '~/lib/trpc/server'
+import type { Route } from './+types/trips.create'
 
 export async function action({ request }: Route.ActionArgs) {
   const trpcServer = createCaller(request)

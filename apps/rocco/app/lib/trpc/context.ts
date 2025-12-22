@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "../auth.server";
+import { createSupabaseServerClient } from "@hominem/auth/server";
 import { UserAuthService, type UserSelect } from "@hominem/data";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { logger } from "../logger";
@@ -17,10 +17,12 @@ function extractBearerToken(request: Request) {
   return token.length ? token : null;
 }
 
-// Validate token directly via Supabase (no Redis caching) to mirror Notes behavior
 async function validateToken(request: Request) {
   const token = extractBearerToken(request);
-  const { supabase, headers } = createSupabaseServerClient(request);
+  const { supabase, headers } = createSupabaseServerClient(request, {
+    supabaseUrl: process.env.VITE_SUPABASE_URL!,
+    supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY!,
+  });
 
   try {
     if (token) {

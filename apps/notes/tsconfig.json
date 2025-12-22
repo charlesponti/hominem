@@ -26,9 +26,6 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
-  }
-  ,
-  "references": [
-    { "path": "../../packages/ui" }
-  ]
+  },
+  "references": [{ "path": "../../packages/ui" }]
 }

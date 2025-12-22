@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react'
 import { data, useNavigate } from 'react-router'
+import ErrorBoundary from '~/components/ErrorBoundary'
 import Lists from '~/components/lists/lists'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import PlacesNearby from '~/components/places/places-nearby'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { getAuthState } from '~/lib/auth.server'
-import type { Route } from './+types'
+import type { Route } from './+types/index'
 import AboutPage from './about'
-import ErrorBoundary from '~/components/ErrorBoundary'
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { isAuthenticated, headers } = await getAuthState(request)

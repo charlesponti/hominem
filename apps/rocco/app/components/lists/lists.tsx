@@ -71,6 +71,7 @@ export default function Lists() {
           <ListRow key={list.id} id={list.id} name={list.name} count={list.places.length || 0} />
         ))}
       </ListSurface>
+
       <ListForm
         onCreate={() => {}}
         onCancel={() => {}}

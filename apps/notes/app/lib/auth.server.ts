@@ -1,9 +1,4 @@
-import {
-  getServerSession as sharedGetServerSession,
-  getAuthState as sharedGetAuthState,
-  getServerAuth as sharedGetServerAuth,
-  createSupabaseServerClient as sharedCreateSupabaseServerClient,
-} from '@hominem/auth/server'
+import * as sharded from '@hominem/auth/server'
 import { env } from './env'
 
 export const authConfig = {
@@ -12,13 +7,13 @@ export const authConfig = {
 }
 
 export const getServerSession = (request: Request) =>
-  sharedGetServerSession(request, authConfig)
+  sharded.getServerSession(request, authConfig)
 
 export const getAuthState = (request: Request) =>
-  sharedGetAuthState(request, authConfig)
-
+  sharded.getAuthState(request, authConfig)
 export const getServerAuth = (request: Request) =>
-  sharedGetServerAuth(request, authConfig)
+  sharded.getServerAuth(request, authConfig)
 
 export const createSupabaseServerClient = (request: Request) =>
-  sharedCreateSupabaseServerClient(request, authConfig)
+  sharded.createSupabaseServerClient(request, authConfig)
+

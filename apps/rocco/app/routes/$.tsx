@@ -1,8 +1,8 @@
+import { PageTitle } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { motion, type Variants } from 'framer-motion'
 import { Home, MapPin, Search } from 'lucide-react'
 import { Link } from 'react-router'
-import { PageTitle } from '@hominem/ui'
 import ErrorBoundary from '~/components/ErrorBoundary'
 
 const fadeIn: Variants = {

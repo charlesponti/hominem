@@ -10,28 +10,13 @@
     "outDir": "dist",
     "allowImportingTsExtensions": false
   },
-  "files": [],
   "references": [
-    {
-      "path": "./apps/api"
-    },
-    {
-      "path": "./apps/cli"
-    },
-    {
-      "path": "./apps/mcp"
-    },
-    {
-      "path": "./apps/florin"
-    },
-    {
-      "path": "./packages/ai"
-    },
-    {
-      "path": "./packages/ui"
-    },
-    {
-      "path": "./packages/utils"
-    }
+    { "path": "./apps/api" },
+    { "path": "./apps/cli" },
+    { "path": "./apps/mcp" },
+    { "path": "./apps/florin" },
+    { "path": "./packages/ai" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/utils" }
   ]
 }

@@ -22,9 +22,6 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true
-  }
-  ,
-  "references": [
-    { "path": "../../packages/ui" }
-  ]
+  },
+  "references": [{ "path": "../../packages/ui" }]
 }

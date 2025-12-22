@@ -1,5 +1,4 @@
 import { AppLayout } from '@hominem/ui/components/layout/app-layout'
-import { Toaster } from '@hominem/ui/components/ui/toaster'
 import { Suspense } from 'react'
 import { data, Outlet } from 'react-router'
 import ErrorBoundary from '~/components/ErrorBoundary'
@@ -32,15 +31,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Layout() {
   return (
-    <>
-      <AppLayout navigation={<Header />} backgroundImage="/rocco-background-2.webp">
-        <Suspense fallback={<LoadingScreen />}>
-          <Outlet />
-        </Suspense>
-      </AppLayout>
-
-      <Toaster />
-    </>
+    <AppLayout navigation={<Header />} backgroundImage="/rocco-background-2.webp">
+      <Suspense fallback={<LoadingScreen />}>
+        <Outlet />
+      </Suspense>
+    </AppLayout>
   )
 }
 

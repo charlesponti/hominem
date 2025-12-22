@@ -1,13 +1,12 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
-import type { Route } from './+types/lists.$id.invites.sent'
 import { PageTitle } from '@hominem/ui'
 import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate } from 'react-router'
+import ErrorBoundary from '~/components/ErrorBoundary'
 import Loading from '~/components/loading'
 import { trpc } from '~/lib/trpc/client'
-import ErrorBoundary from '~/components/ErrorBoundary'
 
-export default function ListSentInvites(props: Route.ComponentProps) {
+export default function ListSentInvites() {
   const { userId } = useSupabaseAuthContext()
   const { data, isLoading } = trpc.invites.getSent.useQuery()
 

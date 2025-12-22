@@ -18,6 +18,13 @@ type AuthContextCacheValue = {
   headers: Headers;
 };
 
+// Request-scoped cache for Supabase client and headers
+type SupabaseClientCacheValue = {
+  supabase: SupabaseClient;
+  headers: Headers;
+};
+const supabaseClientCache = new WeakMap<Request, SupabaseClientCacheValue>();
+
 // Request-scoped cache for auth results
 // Used to prevent redundant Supabase/DB calls when multiple loaders run in parallel
 const authContextCache = new WeakMap<Request, Promise<AuthContextCacheValue>>();
@@ -33,7 +40,12 @@ async function getRequestAuthContext(
   if (existing) return existing;
 
   const promise = (async (): Promise<AuthContextCacheValue> => {
-    const { supabase, headers } = createSupabaseServerClient(request, config);
+    let cached = supabaseClientCache.get(request);
+    if (!cached) {
+      cached = createSupabaseServerClient(request, config);
+      supabaseClientCache.set(request, cached);
+    }
+    const { supabase, headers } = cached;
 
     try {
       // Security: use getUser() to verify the session is still valid with Supabase
@@ -59,7 +71,13 @@ async function getRequestAuthContext(
       };
     } catch (error) {
       logger.error("[getRequestAuthContext]:", { error });
-      const { headers } = createSupabaseServerClient(request, config);
+      // Always use the same headers object for this request
+      let cached = supabaseClientCache.get(request);
+      if (!cached) {
+        cached = createSupabaseServerClient(request, config);
+        supabaseClientCache.set(request, cached);
+      }
+      const { headers } = cached;
       return { user: null, session: null, supabase: null, headers };
     }
   })();
@@ -164,7 +182,8 @@ export function createSupabaseServerClient(
   request: Request,
   config: AuthConfig
 ): { supabase: SupabaseClient; headers: Headers } {
-  const headers = new Headers();
+  let headers = supabaseClientCache.get(request)?.headers;
+  if (!headers) headers = new Headers();
 
   const cookies: CookieMethodsServer = {
     getAll() {
@@ -181,9 +200,10 @@ export function createSupabaseServerClient(
       }>
     ) {
       cookiesToSet.forEach(({ name, value, options }) => {
+        const opts = { ...(options ?? {}), path: '/' };
         headers.append(
           "Set-Cookie",
-          serializeCookieHeader(name, value, options ?? {})
+          serializeCookieHeader(name, value, opts)
         );
       });
     },
