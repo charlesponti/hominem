@@ -1,8 +1,8 @@
 import { Button } from '@hominem/ui/button'
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
-import ListEditDialog from './list-edit-dialog'
 import type { List } from '~/lib/types'
+import ListEditDialog from './list-edit-dialog'
 
 interface ListEditButtonProps {
   list: List
