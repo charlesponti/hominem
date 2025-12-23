@@ -1,38 +1,25 @@
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
 import { PlusCircle } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Loading from '~/components/loading'
 import { useCreateList } from '~/lib/lists'
-import type { List } from '~/lib/types'
 import { cn } from '~/lib/utils'
-
-interface ListFormProps {
-  onCreate: (list: List) => void
-  onCancel: () => void
-  /** If provided, will be called when a save is attempted while unauthenticated */
-  onRequireAuth?: () => void
-  /** Authentication state from parent route; defaults to false */
-  isAuthenticated?: boolean
-}
 
 type FormStatus = 'idle' | 'open' | 'submitting' | 'success'
 
 const STORAGE_KEY = 'rocco:list-draft'
 
-export default function ListForm({
-  onCreate,
-  onCancel,
-  onRequireAuth,
-  isAuthenticated = false,
-}: ListFormProps) {
+export default function ListForm() {
   const [name, setName] = useState('')
   const [status, setStatus] = useState<FormStatus>('idle')
   const inputRef = useRef<HTMLInputElement>(null)
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { supabase, isAuthenticated } = useSupabaseAuthContext()
 
   const { mutate: createList } = useCreateList({
-    onSuccess: (newList) => {
+    onSuccess: () => {
       try {
         localStorage.removeItem(STORAGE_KEY)
       } catch {}
@@ -40,7 +27,6 @@ export default function ListForm({
       successTimerRef.current = setTimeout(() => {
         setName('')
         setStatus('idle')
-        onCreate(newList)
       }, 1500)
     },
   })
@@ -82,11 +68,10 @@ export default function ListForm({
       localStorage.removeItem(STORAGE_KEY)
     } catch {}
     setStatus('idle')
-    onCancel()
   }
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault()
       if (!name.trim()) return
 
@@ -94,7 +79,14 @@ export default function ListForm({
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }))
         } catch {}
-        onRequireAuth?.()
+
+        await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/lists')}`,
+          },
+        })
+
         return
       }
 
@@ -104,7 +96,7 @@ export default function ListForm({
         description: 'No description',
       })
     },
-    [name, isAuthenticated, onRequireAuth, createList]
+    [name, isAuthenticated, supabase, createList]
   )
 
   const isOverlayVisible = status === 'submitting' || status === 'success'
