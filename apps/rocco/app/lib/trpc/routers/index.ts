@@ -1,6 +1,0 @@
-export { invitesRouter } from './invites'
-export { itemsRouter } from './items'
-export { listsRouter } from './lists'
-export { placesRouter } from './places'
-export { tripsRouter } from './trips'
-export { userRouter } from './user'
