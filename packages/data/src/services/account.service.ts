@@ -1,6 +1,6 @@
-import { db } from "@hominem/data/db";
-import { account } from "@hominem/data/schema";
 import { and, eq } from "drizzle-orm";
+import { db } from "../db";
+import { account } from "../db/schema";
 
 export type AccountRecord = typeof account.$inferSelect;
 export type AccountInsert = typeof account.$inferInsert;
