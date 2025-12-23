@@ -19,7 +19,7 @@ import {
   type TwitterTweetResponse,
   type TwitterTweetsResponse,
 } from '../../lib/oauth.twitter.utils'
-import { protectedProcedure, router } from '../procedures.js'
+import { protectedProcedure, router } from '../procedures'
 
 export const twitterRouter = router({
   // Get connected Twitter accounts

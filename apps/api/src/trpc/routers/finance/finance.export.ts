@@ -1,6 +1,6 @@
 import type { FinanceTransaction } from '@hominem/data/schema'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../../procedures.js'
+import { protectedProcedure, router } from '../../procedures'
 
 // Export tRPC router
 export const exportRouter = router({

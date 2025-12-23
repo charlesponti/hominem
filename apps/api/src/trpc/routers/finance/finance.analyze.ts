@@ -7,7 +7,7 @@ import {
   summarizeByCategory,
 } from '@hominem/data/finance'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../../procedures.js'
+import { protectedProcedure, router } from '../../procedures'
 
 // Analytics tRPC router
 export const analyzeRouter = router({

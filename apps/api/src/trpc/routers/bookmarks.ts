@@ -6,7 +6,7 @@ import {
 } from '@hominem/data'
 import { z } from 'zod'
 import { convertOGContentToBookmark, getOpenGraphData } from '../../lib/bookmarks.utils.js'
-import { protectedProcedure, router } from '../procedures.js'
+import { protectedProcedure, router } from '../procedures'
 
 export const bookmarksRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {

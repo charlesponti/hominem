@@ -1,6 +1,6 @@
 import { formatGeocodeFeatures, type Geocoding, LAYERS } from '@hominem/utils/location'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../procedures.js'
+import { protectedProcedure, router } from '../procedures'
 
 export const locationRouter = router({
   geocode: protectedProcedure

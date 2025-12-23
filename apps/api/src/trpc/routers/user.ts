@@ -1,7 +1,7 @@
 import type { SupabaseAuthUser } from '@hominem/auth/server'
 import { UserAuthService } from '@hominem/data'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../procedures.js'
+import { protectedProcedure, router } from '../procedures'
 
 export const userRouter = router({
   updateProfile: protectedProcedure

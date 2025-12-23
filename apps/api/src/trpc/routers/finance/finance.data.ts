@@ -1,5 +1,5 @@
 import { deleteAllFinanceData } from '@hominem/data/finance'
-import { protectedProcedure, router } from '../../procedures.js'
+import { protectedProcedure, router } from '../../procedures'
 
 // Data management tRPC router
 export const dataRouter = router({

@@ -1,6 +1,7 @@
-import { type Context, protectedProcedure, publicProcedure, router } from './procedures'
+import { router } from './procedures'
 import { bookmarksRouter } from './routers/bookmarks'
 import { chatsRouter } from './routers/chats'
+import { contentRouter } from './routers/content'
 import { contentStrategiesRouter } from './routers/content-strategies'
 import { filesRouter } from './routers/files'
 import { financeRouter } from './routers/finance/finance.trpc'
@@ -9,7 +10,6 @@ import { lifeEventsRouter } from './routers/life-events'
 import { locationRouter } from './routers/location'
 import { messagesRouter } from './routers/messages'
 import { notesRouter } from './routers/notes'
-import { contentRouter } from './routers/content'
 import { performanceRouter } from './routers/performance'
 import { searchRouter } from './routers/search'
 import { tweetRouter } from './routers/tweet'
@@ -17,10 +17,6 @@ import { twitterRouter } from './routers/twitter'
 import { userRouter } from './routers/user'
 import { vectorRouter } from './routers/vector'
 
-// Re-export procedures for external use
-export { router, publicProcedure, protectedProcedure, type Context }
-
-// Create the main app router
 export const appRouter = router({
   user: userRouter,
   vector: vectorRouter,

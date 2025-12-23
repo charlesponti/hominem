@@ -4,7 +4,7 @@ import { content_generator } from '@hominem/data/tools'
 import { generateText } from 'ai'
 import { z } from 'zod'
 import { ContentStrategiesService } from '../../services/content-strategies.service.js'
-import { protectedProcedure, router } from '../procedures.js'
+import { protectedProcedure, router } from '../procedures'
 
 export const contentStrategiesRouter = router({
   create: protectedProcedure

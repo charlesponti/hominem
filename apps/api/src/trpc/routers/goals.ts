@@ -1,6 +1,6 @@
 import { archiveGoal, createGoal, deleteGoal, getGoal, listGoals, updateGoal } from '@hominem/data'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../procedures.js'
+import { protectedProcedure, router } from '../procedures'
 
 export const goalsRouter = router({
   list: protectedProcedure

@@ -6,7 +6,7 @@ import {
   updateTransaction,
 } from '@hominem/data/finance'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../../procedures.js'
+import { protectedProcedure, router } from '../../procedures'
 
 // Transactions tRPC router
 export const transactionsRouter = router({
