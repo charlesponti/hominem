@@ -1,6 +1,6 @@
-import { createSupabaseServerClient } from "@hominem/auth/server";
 import { UserAuthService, type UserSelect } from "@hominem/data";
 import { initTRPC, TRPCError } from "@trpc/server";
+import { createSupabaseServerClient } from "../auth.server";
 import { logger } from "../logger";
 
 export interface Context {
@@ -8,48 +8,33 @@ export interface Context {
   responseHeaders: Headers;
 }
 
-function extractBearerToken(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.toLowerCase().startsWith("Bearer ")) {
-    return null;
-  }
-  const token = authHeader.substring(7).trim();
-  return token.length ? token : null;
-}
-
-async function validateToken(request: Request) {
-  const token = extractBearerToken(request);
-  const { supabase, headers } = createSupabaseServerClient(request, {
-    supabaseUrl: process.env.VITE_SUPABASE_URL!,
-    supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY!,
-  });
+async function validateSession(request: Request) {
+  const { supabase, headers } = createSupabaseServerClient(request);
 
   try {
-    if (token) {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser(token);
-
-      if (error || !user) {
-        return { user: null, headers };
-      }
-
-      return { user, headers };
-    }
-
     const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-    if (error || !user) {
-      return { user: null, headers };
+    if (session?.user) {
+      logger.debug("User authenticated", {
+        userId: session.user.id,
+        expiresAt: session.expires_at,
+      });
+      return { user: session.user, headers };
     }
 
-    return { user, headers };
+    if (sessionError) {
+      logger.warn("Session validation failed", {
+        error: sessionError.message,
+      });
+    }
+
+    logger.debug("No valid session found");
+    return { user: null, headers };
   } catch (error) {
-    logger.error("Error validating token", { error: error as Error });
+    logger.error("Critical error during session validation", { error });
     return { user: null, headers };
   }
 }
@@ -72,7 +57,7 @@ export const createContext = async (request?: Request): Promise<Context> => {
       }
     }
 
-    const { user: supabaseUser, headers: authHeaders } = await validateToken(
+    const { user: supabaseUser, headers: authHeaders } = await validateSession(
       request
     );
 
@@ -92,6 +77,7 @@ export const createContext = async (request?: Request): Promise<Context> => {
       logger.error("Failed to find or create user in local DB", {
         error: dbError as Error,
         supabaseId: supabaseUser.id,
+        errorMessage: dbError instanceof Error ? dbError.message : String(dbError),
       });
       return { user: null, responseHeaders };
     }
