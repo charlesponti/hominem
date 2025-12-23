@@ -64,7 +64,6 @@ export async function getHominemUser(
       supabaseUser = tokenOrUser;
     }
 
-    // Use standardized service to find or create user
     const userAuthData = await UserAuthService.findOrCreateUser(supabaseUser);
     if (!userAuthData) {
       return null;
