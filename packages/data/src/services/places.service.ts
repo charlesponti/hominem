@@ -1,13 +1,13 @@
-import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import crypto from "node:crypto";
+import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   type Item as ItemSelect,
+  item,
   type ListSelect,
+  list,
   type PlaceInsert,
   type Place as PlaceSelect,
-  item,
-  list,
   place,
 } from "../db/schema";
 
@@ -583,4 +583,39 @@ export async function listPlacesMissingPhotos(): Promise<PlaceSelect[]> {
   return db.query.place.findMany({
     where: and(isNotNull(place.googleMapsId), isNull(place.photos)),
   });
+}
+
+export async function refreshAllPlaces() {
+  // Find all places missing photos (or other stale data)
+  const places = await listPlacesMissingPhotos()
+  let updatedCount = 0
+  const errors: string[] = []
+
+  for (const place of places) {
+    try {
+      // Fetch latest data from Google Maps API (stub: replace with actual API call)
+      // Example: const googleData = await fetchGoogleMapsData(place.googleMapsId)
+      const googleData = {
+        googleMapsId: place.googleMapsId,
+        name: place.name,
+        address: place.address,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        types: place.types,
+        rating: place.rating,
+        websiteUri: place.websiteUri,
+        phoneNumber: place.phoneNumber,
+        priceLevel: place.priceLevel,
+        photos: place.photos ?? [],
+        imageUrl: place.imageUrl ?? null,
+        location: [place.longitude ?? 0, place.latitude ?? 0] as [number, number],
+      }
+      await ensurePlaceFromGoogleData(googleData)
+      updatedCount++
+    } catch (err) {
+      errors.push(`Failed for ${place.id}: ${String(err)}`)
+    }
+  }
+
+  return { updatedCount, errors }
 }

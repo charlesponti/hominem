@@ -1,4 +1,7 @@
-import * as sharded from '@hominem/auth/server'
+import {
+  createSupabaseServerClient as sharedCreateSupabaseServerClient,
+  getServerAuth as sharedGetServerAuth,
+} from '@hominem/auth/server'
 import { env } from './env'
 
 export const authConfig = {
@@ -6,14 +9,20 @@ export const authConfig = {
   supabaseAnonKey: env.VITE_SUPABASE_ANON_KEY,
 }
 
-export const getServerSession = (request: Request) =>
-  sharded.getServerSession(request, authConfig)
-
-export const getAuthState = (request: Request) =>
-  sharded.getAuthState(request, authConfig)
 export const getServerAuth = (request: Request) =>
-  sharded.getServerAuth(request, authConfig)
+  sharedGetServerAuth(request, authConfig)
 
 export const createSupabaseServerClient = (request: Request) =>
-  sharded.createSupabaseServerClient(request, authConfig)
+  sharedCreateSupabaseServerClient(request, authConfig)
+
+// Convenience wrappers - clients can use getServerAuth directly and destructure what they need
+export const getServerSession = async (request: Request) => {
+  const { user, session, headers } = await getServerAuth(request)
+  return { user, session, headers }
+}
+
+export const getAuthState = async (request: Request) => {
+  const { isAuthenticated, headers } = await getServerAuth(request)
+  return { isAuthenticated, headers }
+}
 

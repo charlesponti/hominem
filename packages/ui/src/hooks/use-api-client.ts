@@ -42,12 +42,18 @@ export function useApiClient() {
           defaultHeaders['Content-Type'] = 'application/json'
         }
 
-        // Get token from Supabase
+        // Verify user with Supabase Auth server before trusting session data
         const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        if (session?.access_token) {
-          defaultHeaders.Authorization = `Bearer ${session.access_token}`
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+          if (session?.access_token) {
+            defaultHeaders.Authorization = `Bearer ${session.access_token}`
+          }
         }
 
         const res = await fetch(`${API_URL}${endpoint}`, {

@@ -77,7 +77,6 @@ export interface AuthConfig {
 
 export interface ServerAuthResult {
   user: HominemUser | null
-  supabaseUser: SupabaseAuthUser | null
   session: SupabaseAuthSession | null
   isAuthenticated: boolean
 }

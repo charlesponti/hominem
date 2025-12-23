@@ -51,3 +51,29 @@ export async function sendInviteEmail({
     html,
   })
 }
+
+export async function sendAdminNotification({
+  action,
+  adminUser,
+  updatedCount,
+  duration,
+  errors,
+}: {
+  action: string
+  adminUser: string
+  updatedCount: number
+  duration: number
+  errors?: any
+}) {
+  const resend = new Resend(getApiKey())
+  const subject = `[Admin Action Completed] ${action}`
+  const body = `Action: ${action}\nTriggered by: ${adminUser}\nUpdated count: ${updatedCount}\nDuration: ${duration}ms\nErrors: ${errors ? JSON.stringify(errors) : 'None'}\nTimestamp: ${new Date().toISOString()}`
+  const email = formatFrom(getFromEmail())
+  
+  await resend.emails.send({
+    from: email,
+    to: email,
+    subject,
+    text: body,
+  })
+}

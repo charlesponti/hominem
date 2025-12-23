@@ -28,7 +28,8 @@
     "husky": "^9.1.7",
     "lefthook": "^2.0.2",
     "turbo": "2.6.3",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.0.16"
   },
   "homepage": "https://github.com/charlesponti/hominem#readme",
   "keywords": [],

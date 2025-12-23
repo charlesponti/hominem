@@ -39,6 +39,7 @@ posttest
 prepush
 qrcode
 rabbitmq
+revalidator
 rgba
 sendgrid
 serp

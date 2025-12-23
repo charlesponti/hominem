@@ -40,6 +40,8 @@ export default [
     // Places section with dynamic routes
     route("places/:id", "./routes/places.$id.tsx"),
 
+    route("admin", "./routes/admin.tsx"),
+    
     // 404 page
     route("404", "./routes/404.tsx"),
 

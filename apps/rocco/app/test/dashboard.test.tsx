@@ -36,17 +36,18 @@ vi.mock('~/hooks/useGeolocation', () => ({
 
 // Mock the auth service with a default implementation
 vi.mock('@hominem/auth/server', () => ({
-  getAuthState: vi.fn(async () => ({
+  getServerAuth: vi.fn(async () => ({
     user: getMockUser(),
+    session: null,
     isAuthenticated: true,
     headers: new Headers(),
   })),
 }))
 
 // Import the mocked function after mocking
-const { getAuthState } = await import('@hominem/auth/server')
-const mockGetAuthState = getAuthState as typeof getAuthState & {
-  mockResolvedValue: (value: Awaited<ReturnType<typeof getAuthState>>) => void
+const { getServerAuth } = await import('@hominem/auth/server')
+const mockGetServerAuth = getServerAuth as typeof getServerAuth & {
+  mockResolvedValue: (value: Awaited<ReturnType<typeof getServerAuth>>) => void
 }
 
 // Mock heavy components
@@ -87,22 +88,9 @@ describe('Dashboard Integration Tests', () => {
     vi.clearAllMocks() // Clear all mocks
 
     // Configure auth mock for authenticated state
-    mockGetAuthState.mockResolvedValue({
-      user: {
-        id: 'test-user-id',
-        email: 'test@example.com',
-        user_metadata: {
-          name: 'Test User',
-          full_name: 'Test User',
-          first_name: 'Test',
-          last_name: 'User',
-          avatar_url: 'https://example.com/avatar.jpg',
-        },
-        app_metadata: {},
-        aud: 'authenticated',
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      },
+    mockGetServerAuth.mockResolvedValue({
+      user: getMockUser(),
+      session: null,
       isAuthenticated: true,
       headers: new Headers(),
     })
@@ -169,8 +157,9 @@ describe('Dashboard Integration Tests', () => {
 
   test('unauthenticated user sees about page', async () => {
     // Set auth state to unauthenticated
-    mockGetAuthState.mockResolvedValue({
+    mockGetServerAuth.mockResolvedValue({
       user: null,
+      session: null,
       isAuthenticated: false,
       headers: new Headers(),
     })

@@ -23,12 +23,28 @@ function useSupabaseAuth(
   const [supabaseClient] = useState(() => getSupabase(config))
   const [session, setSession] = useState<Session | null>(initialSession)
   const [isLoading, setIsLoading] = useState(!initialSession)
+  // Explicitly maintain a verified user state fetched from Supabase Auth server
+  const [authUser, setAuthUser] = useState<Awaited<ReturnType<typeof supabaseClient.auth.getUser>>['data']['user'] | null>(null)
 
   useEffect(() => {
     // If we have an initial session, we're not loading
     if (initialSession && isLoading) {
       setIsLoading(false)
     }
+
+    // Get current verified user
+    const init = async () => {
+      try {
+        const {
+          data: { user: currentUser },
+        } = await supabaseClient.auth.getUser()
+        setAuthUser(currentUser ?? null)
+      } catch {
+        setAuthUser(null)
+      }
+    }
+
+    init()
 
     // Listen for auth changes - Supabase manages session state internally
     const {
@@ -37,6 +53,18 @@ function useSupabaseAuth(
       setSession(newSession)
       setIsLoading(false)
       onAuthEvent?.(event, newSession)
+
+      // Re-verify user when auth state changes
+      ;(async () => {
+        try {
+          const {
+            data: { user: currentUser },
+          } = await supabaseClient.auth.getUser()
+          setAuthUser(currentUser ?? null)
+        } catch {
+          setAuthUser(null)
+        }
+      })()
     })
 
     return () => subscription.unsubscribe()
@@ -56,9 +84,9 @@ function useSupabaseAuth(
     if (error) throw error
   }, [supabaseClient])
 
-  // Derive user and isAuthenticated from session (single source of truth)
-  const user = session?.user ?? null
-  const isAuthenticated = !!session?.user
+  // Derive user and isAuthenticated from verified authUser
+  const user = authUser ?? null
+  const isAuthenticated = !!authUser
 
   return {
     user,

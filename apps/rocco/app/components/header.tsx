@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@hominem/ui/dropdown'
 import { Globe2Icon, List, LogOut, MoreHorizontal, Settings, UserPlus } from 'lucide-react'
-import { memo, useCallback } from 'react'
+import { useCallback } from 'react'
 import { href, Link, useNavigate } from 'react-router'
 
 const APP_NAME = 'Rocco'
@@ -77,7 +77,7 @@ const NavigationMenu = () => {
 }
 
 function Header() {
-  const { isAuthenticated, isLoading } = useSupabaseAuthContext()
+  const { isAuthenticated, isLoading, supabase } = useSupabaseAuthContext()
 
   return (
     <header
@@ -91,7 +91,22 @@ function Header() {
         </Link>
         {!isLoading && (
           <div className="flex items-center space-x-2">
-            {isAuthenticated ? <NavigationMenu /> : <SignInButton />}
+            {isAuthenticated ? (
+              <NavigationMenu />
+            ) : (
+              <Button
+                onClick={() =>
+                  supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
+                    },
+                  })
+                }
+              >
+                Sign in
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -100,22 +115,3 @@ function Header() {
 }
 
 export default Header
-
-const SignInButton = memo(() => {
-  const { supabase } = useSupabaseAuthContext()
-
-  return (
-    <Button
-      onClick={() =>
-        supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
-          },
-        })
-      }
-    >
-      Sign in
-    </Button>
-  )
-})
