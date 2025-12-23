@@ -1,7 +1,5 @@
 # @hominem/ui
 
-Shared shadcn components extracted from the Rocco app so every app can import the same primitives.
-
 ## Usage
 - Import directly from the package:
   - `import { Button, Toaster, useToast } from '@hominem/ui'`
