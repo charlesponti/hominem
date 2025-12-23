@@ -1,7 +1,7 @@
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
-import { PlusCircle, XCircle } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { PlusCircle } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Loading from '~/components/loading'
 import { useCreateList } from '~/lib/lists'
 import type { List } from '~/lib/types'
@@ -18,13 +18,14 @@ interface ListFormProps {
 
 type FormStatus = 'idle' | 'open' | 'submitting' | 'success'
 
+const STORAGE_KEY = 'rocco:list-draft'
+
 export default function ListForm({
   onCreate,
   onCancel,
   onRequireAuth,
   isAuthenticated = false,
 }: ListFormProps) {
-  const STORAGE_KEY = useMemo(() => 'rocco:list-draft', [])
   const [name, setName] = useState('')
   const [status, setStatus] = useState<FormStatus>('idle')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -55,7 +56,7 @@ export default function ListForm({
         }
       }
     } catch {}
-  }, [STORAGE_KEY])
+  }, [])
 
   useEffect(() => {
     if (status === 'open' && inputRef.current) {
@@ -77,28 +78,34 @@ export default function ListForm({
 
   const handleClose = () => {
     setName('')
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {}
     setStatus('idle')
     onCancel()
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!name.trim()) return
 
-    if (!isAuthenticated) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }))
-      } catch {}
-      onRequireAuth?.()
-      return
-    }
+      if (!isAuthenticated) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }))
+        } catch {}
+        onRequireAuth?.()
+        return
+      }
 
-    setStatus('submitting')
-    createList({
-      name: name.trim(),
-      description: 'No description',
-    })
-  }
+      setStatus('submitting')
+      createList({
+        name: name.trim(),
+        description: 'No description',
+      })
+    },
+    [name, isAuthenticated, onRequireAuth, createList]
+  )
 
   const isOverlayVisible = status === 'submitting' || status === 'success'
   const showInput = status === 'open' || status === 'submitting' || status === 'success'
@@ -156,16 +163,13 @@ export default function ListForm({
       <div className="flex flex-1 justify-end">
         <Button
           type="button"
-          onClick={
-            status === 'open' || status === 'submitting' || status === 'success'
-              ? handleClose
-              : handleOpen
-          }
+          onClick={status === 'idle' ? handleOpen : handleClose}
           disabled={status === 'submitting'}
+          variant={status !== 'idle' ? 'secondary' : 'default'}
           className="flex items-center gap-2 disabled:bg-indigo-200"
         >
-          {status === 'open' || status === 'submitting' || status === 'success' ? (
-            <XCircle size={18} />
+          {status !== 'idle' ? (
+            <span> Cancel </span>
           ) : (
             <>
               <PlusCircle size={18} />
