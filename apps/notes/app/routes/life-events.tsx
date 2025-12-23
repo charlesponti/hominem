@@ -1,6 +1,6 @@
-import { getServerSession } from '~/lib/auth.server'
 import { useEffect, useState } from 'react'
 import { data, useNavigate } from 'react-router'
+import { getServerSession } from '~/lib/auth.server'
 import type { RouterInput } from '~/lib/trpc'
 import { createServerTRPCClient } from '~/lib/trpc/server'
 import EventForm from '../components/life-events/EventForm'
@@ -26,8 +26,6 @@ interface LifeEventActivity {
   tags?: string[]
 }
 
-type LoaderData = Awaited<ReturnType<typeof loader>>
-
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const type = url.searchParams.get('type') || undefined
@@ -40,14 +38,12 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { session, headers } = await getServerSession(request)
   const trpc = createServerTRPCClient(session?.access_token)
 
-  const listInput: RouterInput['lifeEvents']['list'] = {
-    tagNames: type ? [type] : undefined,
-    companion: companion || undefined,
-    sortBy,
-  }
-
   const [events, people] = await Promise.all([
-    trpc.lifeEvents.list.query(listInput),
+    trpc.lifeEvents.list.query({
+      tagNames: type ? [type] : undefined,
+      companion: companion || undefined,
+      sortBy,
+    }),
     trpc.lifeEvents.people.list.query(),
   ])
 
@@ -82,7 +78,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   const { session } = await getServerSession(request)
   const trpc = createServerTRPCClient(session?.access_token)
-  const createInput: RouterInput['lifeEvents']['create'] = {
+  const createInput = {
     title: eventData.title ?? '',
     description: eventData.description,
     date: eventData.date,
@@ -94,9 +90,7 @@ export async function action({ request }: Route.ActionArgs) {
   return { success: true, event }
 }
 
-export default function LifeEventsPage({
-  loaderData,
-}: Route.ComponentProps & { loaderData: LoaderData }) {
+export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
   const [filterType, setFilterType] = useState('')
   const [filterCompanion, setFilterCompanion] = useState('')
@@ -104,7 +98,7 @@ export default function LifeEventsPage({
   const [showAddForm, setShowAddForm] = useState(false)
   const [companions, setCompanions] = useState<string[]>([])
 
-  const activities = ((loaderData?.events ?? []) as LifeEventActivity[]).map((activity) => ({
+  const activities = ((loaderData.events ?? []) as LifeEventActivity[]).map((activity) => ({
     ...activity,
     description: activity.description ?? undefined,
     people: activity.people?.map((person) => ({
@@ -113,7 +107,7 @@ export default function LifeEventsPage({
       lastName: person.lastName ?? undefined,
     })),
   }))
-  const people = ((loaderData?.people ?? []) as LifeEventPerson[]).map((person) => ({
+  const people = ((loaderData.people ?? []) as LifeEventPerson[]).map((person) => ({
     ...person,
     firstName: person.firstName ?? undefined,
     lastName: person.lastName ?? undefined,
@@ -259,7 +253,6 @@ export default function LifeEventsPage({
           </div>
         </div>
 
-        {/* Events List - Cleaner header */}
         <div>
           <div className="flex items-baseline justify-between mb-5 px-1">
             <h2
