@@ -29,8 +29,8 @@ const navItems = [
     url: '/content-strategy',
   },
   {
-    title: 'Life Events',
-    url: '/life-events',
+    title: 'Events',
+    url: '/events',
   },
   {
     title: 'Goals',

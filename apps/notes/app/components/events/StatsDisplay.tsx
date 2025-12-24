@@ -107,3 +107,4 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
 }
 
 export default StatsDisplay
+

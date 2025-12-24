@@ -5,7 +5,7 @@ export * from "./content-strategies.service";
 export * from "./content.service";
 export * from "./goals.service";
 export * from "./health.service";
-export * from "./life-events.service";
+export * from "./events.service";
 export * from "./lists";
 export * from "./notes.service";
 export * from "./openai-export.schema";

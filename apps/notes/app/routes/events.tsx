@@ -3,26 +3,26 @@ import { data, useNavigate } from 'react-router'
 import { getServerSession } from '~/lib/auth.server'
 import type { RouterInput } from '~/lib/trpc'
 import { createServerTRPCClient } from '~/lib/trpc/server'
-import EventForm from '../components/life-events/EventForm'
-import EventList from '../components/life-events/EventList'
-import FiltersSection from '../components/life-events/FiltersSection'
-import StatsDisplay from '../components/life-events/StatsDisplay'
-import type { Route } from './+types/life-events'
+import EventForm from '../components/events/EventForm'
+import EventList from '../components/events/EventList'
+import FiltersSection from '../components/events/FiltersSection'
+import StatsDisplay from '../components/events/StatsDisplay'
+import type { Route } from './+types/events'
 
-interface LifeEventPerson {
+interface EventPerson {
   id: string
   firstName?: string
   lastName?: string
 }
 
-interface LifeEventActivity {
+interface EventActivity {
   id: string
   date?: string
   time?: string
   title: string
   description?: string
   location?: string
-  people?: LifeEventPerson[]
+  people?: EventPerson[]
   tags?: string[]
 }
 
@@ -39,12 +39,12 @@ export async function loader({ request }: Route.LoaderArgs) {
   const trpc = createServerTRPCClient(session?.access_token)
 
   const [events, people] = await Promise.all([
-    trpc.lifeEvents.list.query({
+    trpc.events.list.query({
       tagNames: type ? [type] : undefined,
       companion: companion || undefined,
       sortBy,
     }),
-    trpc.lifeEvents.people.list.query(),
+    trpc.events.people.list.query(),
   ])
 
   return data({ events, people }, { headers })
@@ -52,7 +52,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData()
-  const eventData: Partial<RouterInput['lifeEvents']['create']> = {}
+  const eventData: Partial<RouterInput['events']['create']> = {}
 
   for (const [key, value] of formData.entries()) {
     if (key === 'people') {
@@ -86,11 +86,11 @@ export async function action({ request }: Route.ActionArgs) {
     tags: eventData.tags,
     people: eventData.people,
   }
-  const event = await trpc.lifeEvents.create.mutate(createInput)
+  const event = await trpc.events.create.mutate(createInput)
   return { success: true, event }
 }
 
-export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
+export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
   const [filterType, setFilterType] = useState('')
   const [filterCompanion, setFilterCompanion] = useState('')
@@ -98,7 +98,7 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [companions, setCompanions] = useState<string[]>([])
 
-  const activities = ((loaderData.events ?? []) as LifeEventActivity[]).map((activity) => ({
+  const activities = ((loaderData.events ?? []) as EventActivity[]).map((activity) => ({
     ...activity,
     description: activity.description ?? undefined,
     people: activity.people?.map((person) => ({
@@ -107,7 +107,7 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
       lastName: person.lastName ?? undefined,
     })),
   }))
-  const people = ((loaderData.people ?? []) as LifeEventPerson[]).map((person) => ({
+  const people = ((loaderData.people ?? []) as EventPerson[]).map((person) => ({
     ...person,
     firstName: person.firstName ?? undefined,
     lastName: person.lastName ?? undefined,
@@ -131,15 +131,15 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
     if (filterCompanion) params.set('companion', filterCompanion)
     if (sortBy) params.set('sortBy', sortBy)
 
-    navigate(`/life-events?${params.toString()}`)
+    navigate(`/events?${params.toString()}`)
   }
 
   const handleToggleEventForm = () => {
     setShowAddForm(!showAddForm)
   }
 
-  const editEvent = (activity: LifeEventActivity) => {
-    navigate(`/life-events/edit/${activity.id}`)
+  const editEvent = (activity: EventActivity) => {
+    navigate(`/events/edit/${activity.id}`)
   }
 
   return (
@@ -159,7 +159,7 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
                 className="text-5xl font-bold tracking-tight mb-3"
                 style={{ color: 'var(--color-notion-text)' }}
               >
-                Life Events
+                Events
               </h1>
               <p className="text-lg" style={{ color: 'var(--color-notion-text-secondary)' }}>
                 Track and organize your life's memorable moments
@@ -231,7 +231,7 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
             {/* Secondary action - less prominent */}
             <button
               type="button"
-              onClick={() => navigate('/life-events/people')}
+              onClick={() => navigate('/events/people')}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap"
               style={{
                 backgroundColor: 'var(--color-notion-bg-secondary)',
@@ -275,3 +275,4 @@ export default function LifeEventsPage({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
+

@@ -13,7 +13,11 @@ interface EventFormProps {
   onToggleForm: () => void
 }
 
-const EventForm: React.FC<EventFormProps> = ({ showAddForm, people, onToggleForm }) => {
+const EventForm: React.FC<EventFormProps> = ({
+  showAddForm,
+  people,
+  onToggleForm: _onToggleForm,
+}) => {
   const [_selectedPeople, setSelectedPeople] = useState<Person[]>([])
 
   const handlePeopleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

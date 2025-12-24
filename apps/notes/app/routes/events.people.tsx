@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { useNavigate } from 'react-router'
-import type { Route } from './+types/life-events.people'
+import type { Route } from './+types/events.people'
 
 interface Person {
   id: string
@@ -13,7 +13,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const baseUrl = `${url.protocol}//${url.host}`
 
-    const response = await fetch(`${baseUrl}/api/life-events/people`)
+    const response = await fetch(`${baseUrl}/api/events/people`)
     if (!response.ok) {
       throw new Response('Failed to fetch people', { status: response.status })
     }
@@ -31,7 +31,7 @@ export async function action({ request }: Route.ActionArgs) {
 
     const url = new URL(request.url)
     const baseUrl = `${url.protocol}//${url.host}`
-    const response = await fetch(`${baseUrl}/api/life-events/people`, {
+    const response = await fetch(`${baseUrl}/api/events/people`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
     }
 
     try {
-      const response = await fetch(`/api/life-events/people/${id}`, {
+      const response = await fetch(`/api/events/people/${id}`, {
         method: 'DELETE',
       })
 
@@ -99,12 +99,12 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-light text-black mb-2">People</h1>
-              <p className="text-gray-600">Manage the people in your life events</p>
+              <p className="text-gray-600">Manage the people in your events</p>
             </div>
             <button
               type="button"
               className="btn bg-blue-600 text-white hover:bg-blue-700 border-0"
-              onClick={() => navigate('/life-events')}
+              onClick={() => navigate('/events')}
             >
               ← Back to Events
             </button>
@@ -288,3 +288,4 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
+

@@ -9,9 +9,25 @@ type PlaceStatusProps = WrapProps & {
   openingHours: Place['openingHours']
 }
 
+type GooglePlaceOpeningHours = {
+  weekday_text: string[]
+  periods: {
+    open: {
+      day: number
+      hours: number
+      minutes: number
+    }
+    close: {
+      day: number
+      hours: number
+      minutes: number
+    }
+  }[]
+}
+
 const PlaceStatus = ({ businessStatus, openingHours, ...props }: PlaceStatusProps) => {
   // Parse openingHours JSON string (Google Places API format)
-  let openingHoursObj: any = null
+  let openingHoursObj: GooglePlaceOpeningHours | null = null
   try {
     openingHoursObj = openingHours ? JSON.parse(openingHours) : null
   } catch {
@@ -25,8 +41,8 @@ const PlaceStatus = ({ businessStatus, openingHours, ...props }: PlaceStatusProp
   let isOpen: boolean | undefined
   if (openingHoursObj?.periods) {
     const now = new Date()
-    const todayPeriods = openingHoursObj.periods.filter((p: any) => p.open?.day === todayIdx)
-    isOpen = todayPeriods.some((p: any) => {
+    const todayPeriods = openingHoursObj.periods.filter((p) => p.open?.day === todayIdx)
+    isOpen = todayPeriods.some((p) => {
       if (!p.open || !p.close) return false
       const openHour = p.open.hours
       const openMin = p.open.minutes || 0
@@ -40,7 +56,7 @@ const PlaceStatus = ({ businessStatus, openingHours, ...props }: PlaceStatusProp
   }
 
   if (!businessStatus) {
-    return <></>
+    return null
   }
 
   if (businessStatus === 'OPERATIONAL') {
@@ -54,9 +70,11 @@ const PlaceStatus = ({ businessStatus, openingHours, ...props }: PlaceStatusProp
         </Wrap>
       )
     }
+
     // Find next open day
-    let nextDayIdx = (todayIdx + 1) % 7
-    let nextDayText = weekdayText[nextDayIdx]?.replace(/: /, ' at ').replace(/–/g, ' to ')
+    const nextDayIdx = (todayIdx + 1) % 7
+    const nextDayText = weekdayText[nextDayIdx]?.replace(/: /, ' at ').replace(/–/g, ' to ')
+
     return (
       <Wrap {...props}>
         <span className="text-red-500 font-semibold">Closed</span>{' '}

@@ -146,7 +146,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
                 .map((p) => `${p.firstName || ''} ${p.lastName || ''}`.trim())
                 .join(', ')}
             >
-              {activity.people.length === 1
+              {activity.people.length === 1 && activity.people[0]
                 ? `${activity.people[0].firstName || ''} ${activity.people[0].lastName || ''}`.trim()
                 : `${activity.people.length} people`}
             </span>
