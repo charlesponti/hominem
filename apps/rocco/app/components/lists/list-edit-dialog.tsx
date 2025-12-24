@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useId, useState } from 'react'
-import Alert from '~/components/alert'
+import { Label } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { useNavigate } from 'react-router'
+import Alert from '~/components/alert'
 import { useDeleteList, useUpdateList } from '~/lib/lists'
 import type { List } from '~/lib/types'
 
@@ -190,5 +190,3 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
     </Dialog.Root>
   )
 }
-
-

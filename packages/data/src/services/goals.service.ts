@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, ilike, ne } from "drizzle-orm";
 import { db } from "../db";
-import { goals, type GoalInsert } from "../db/schema";
+import { type GoalInsert, goals } from "../db/schema";
 
 export async function listGoals(params: {
   userId: string;

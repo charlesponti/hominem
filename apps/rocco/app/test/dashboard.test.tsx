@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { List, PlaceLocation } from '~/lib/types'
 import Dashboard, { loader } from '~/routes/index'
-import { getMockUser, MOCK_LISTS } from '~/test/mocks/index'
+import { MOCK_LISTS } from '~/test/mocks/index'
 import { mockTrpcClient, renderWithRouter } from '~/test/utils'
 
 interface MockQueryResult<T> {
@@ -35,20 +35,10 @@ vi.mock('~/hooks/useGeolocation', () => ({
 }))
 
 // Mock the auth service with a default implementation
-vi.mock('@hominem/auth/server', () => ({
-  getServerAuth: vi.fn(async () => ({
-    user: getMockUser(),
-    session: null,
-    isAuthenticated: true,
-    headers: new Headers(),
-  })),
+const mockGetAuthState = vi.hoisted(() => vi.fn())
+vi.mock('~/lib/auth.server', () => ({
+  getAuthState: mockGetAuthState,
 }))
-
-// Import the mocked function after mocking
-const { getServerAuth } = await import('@hominem/auth/server')
-const mockGetServerAuth = getServerAuth as typeof getServerAuth & {
-  mockResolvedValue: (value: Awaited<ReturnType<typeof getServerAuth>>) => void
-}
 
 // Mock heavy components
 vi.mock('~/components/map.lazy', () => ({
@@ -88,9 +78,7 @@ describe('Dashboard Integration Tests', () => {
     vi.clearAllMocks() // Clear all mocks
 
     // Configure auth mock for authenticated state
-    mockGetServerAuth.mockResolvedValue({
-      user: getMockUser(),
-      session: null,
+    mockGetAuthState.mockResolvedValue({
       isAuthenticated: true,
       headers: new Headers(),
     })
@@ -157,9 +145,7 @@ describe('Dashboard Integration Tests', () => {
 
   test('unauthenticated user sees about page', async () => {
     // Set auth state to unauthenticated
-    mockGetServerAuth.mockResolvedValue({
-      user: null,
-      session: null,
+    mockGetAuthState.mockResolvedValue({
       isAuthenticated: false,
       headers: new Headers(),
     })

@@ -3,50 +3,24 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "lint": "biome lint ./src --fix",
-    "build": "tsc -b",
-    "dev": "bunx tsc -b -w",
-    "prepare": "bun run build"
+    "lint": "biome lint ./src --fix"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
     "react": "^19.2.0",
-    "typescript": "5.9.3",
-    "vite": "7.3.0"
+    "typescript": "5.9.3"
   },
   "peerDependencies": {
     "react": "^19.2.0"
   },
-  "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./button": {
-      "import": "./dist/components/ui/button.js",
-      "types": "./dist/components/ui/button.d.ts"
-    },
-    "./components/*": {
-      "import": "./dist/components/*",
-      "types": "./dist/components/*"
-    },
-    "./dialog": {
-      "import": "./dist/components/ui/dialog.js",
-      "types": "./dist/components/ui/dialog.d.ts"
-    },
-    "./dropdown": {
-      "import": "./dist/components/ui/dropdown-menu.js",
-      "types": "./dist/components/ui/dropdown-menu.d.ts"
-    },
-    "./input": {
-      "import": "./dist/components/ui/input.js",
-      "types": "./dist/components/ui/input.d.ts"
-    },
-    "./lib/*": {
-      "import": "./dist/lib/*",
-      "types": "./dist/lib/*"
-    },
+    ".": "./src/index.ts",
+    "./button": "./src/components/ui/button.tsx",
+    "./components/*": "./src/components/*",
+    "./dialog": "./src/components/ui/dialog.tsx",
+    "./dropdown": "./src/components/ui/dropdown-menu.tsx",
+    "./input": "./src/components/ui/input.tsx",
+    "./lib/*": "./src/lib/*",
     "./styles/globals.css": "./src/styles/globals.css",
     "./styles/animations.css": "./src/styles/animations.css"
   },

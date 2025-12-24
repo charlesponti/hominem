@@ -5,7 +5,7 @@ alwaysApply: false
 ---
 
 Package manager: Bun
-
+Testrunner: Vitest (Use `bun run test`)
 
 # JavaScript/TypeScript Development Rules
 

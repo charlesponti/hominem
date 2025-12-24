@@ -1,5 +1,4 @@
 import type { ListPlace } from '@hominem/data'
-import { MapPin } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { href, useNavigate } from 'react-router'
 import AddPlaceControl from '~/components/lists/add-place-control'
@@ -57,14 +56,13 @@ export default function PlacesList({
       {({ isOpen }) => (
         <>
           {places.length === 0 && !isOpen ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white p-6 md:p-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
-                <MapPin className="w-8 h-8 text-indigo-600" />
+            <div className="flex flex-col gap-2 items-center justify-center rounded-2xl bg-white/30 p-6">
+              <div className="flex flex-col items-center">
+                <h3 className="heading-2">No places yet</h3>
+                <p className="body-3 text-muted-foreground max-w-md">
+                  Start building your list by adding places to see them on the map.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No places yet</h3>
-              <p className="text-gray-600 mb-6 max-w-md">
-                Start building your list by adding places to see them on the map.
-              </p>
             </div>
           ) : null}
 
