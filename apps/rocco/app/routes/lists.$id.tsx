@@ -1,7 +1,7 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { PageTitle } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link, redirect } from 'react-router'
 import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
@@ -34,7 +34,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export default function ListPage({ loaderData }: Route.ComponentProps) {
   const { user } = useSupabaseAuthContext()
-  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const listId = loaderData.list.id
 
@@ -52,11 +51,6 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   )
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
 
-  const handleDeleteError = useCallback(() => {
-    setDeleteError('Could not delete place. Please try again.')
-  }, [])
-
-  // Convert places to map markers (must be called before conditional returns)
   const markers: PlaceLocation[] = useMemo(
     () =>
       list.places
@@ -132,21 +126,15 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="overflow-y-auto space-y-4 pb-8">
-            {deleteError && (
-              <Alert type="error" dismissible onDismiss={() => setDeleteError(null)}>
-                {deleteError}
-              </Alert>
-            )}
             <PlacesList
               places={list.places}
               listId={list.id}
               canAdd={hasAccess}
-              onError={handleDeleteError}
               showAvatars={(list.users?.length ?? 0) > 1}
             />
           </div>
 
-          <div className="min-h-[300px] rounded-lg overflow-hidden">
+          <div className="min-h-[300px] overflow-hidden">
             <LazyMap
               isLoadingCurrentLocation={isLoadingLocation}
               currentLocation={currentLocation}

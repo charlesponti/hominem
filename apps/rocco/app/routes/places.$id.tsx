@@ -41,7 +41,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
   const { place } = loaderData
 
   return (
-    <div data-testid="place-page" className="flex flex-col items-start gap-4 pb-20">
+    <div data-testid="place" className="flex flex-col items-start gap-4">
       <div
         className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700"
         style={{ viewTransitionName: `place-photos-${place.id}` }}

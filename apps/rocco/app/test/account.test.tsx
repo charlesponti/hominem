@@ -32,16 +32,19 @@ vi.mock('react-router', async () => {
 describe('Account', () => {
   test('renders account page with user information', async () => {
     // For this specific test, create a mock user with no avatar
-    const userWithoutAvatar = {
-      ...MOCK_USER,
-      user_metadata: {
-        ...MOCK_USER.user_metadata,
-        avatar_url: '',
+    // The component expects a transformed HominemUser structure
+    mockLoaderData = {
+      user: {
+        id: MOCK_USER.id,
+        email: MOCK_USER.email || '',
+        name: MOCK_USER.user_metadata?.name || MOCK_USER.user_metadata?.full_name,
+        image: undefined, // No avatar
+        supabaseId: MOCK_USER.id,
+        isAdmin: false,
+        createdAt: MOCK_USER.created_at || new Date().toISOString(),
+        updatedAt: MOCK_USER.updated_at || MOCK_USER.created_at || new Date().toISOString(),
       },
     }
-
-    // Update loader data to use user without avatar
-    mockLoaderData.user = userWithoutAvatar
 
     // Mock delete account mutation
     const mockDeleteMutation = {
@@ -87,13 +90,17 @@ describe('Account', () => {
 
   test('shows avatar when user has one', async () => {
     // Ensure mockLoaderData has an avatar for this test
+    // The component expects a transformed HominemUser with image property
     mockLoaderData = {
       user: {
-        ...MOCK_USER,
-        user_metadata: {
-          ...MOCK_USER.user_metadata,
-          avatar_url: 'https://example.com/avatar.jpg',
-        },
+        id: MOCK_USER.id,
+        email: MOCK_USER.email || '',
+        name: MOCK_USER.user_metadata?.name || MOCK_USER.user_metadata?.full_name,
+        image: 'https://example.com/avatar.jpg',
+        supabaseId: MOCK_USER.id,
+        isAdmin: false,
+        createdAt: MOCK_USER.created_at || new Date().toISOString(),
+        updatedAt: MOCK_USER.updated_at || MOCK_USER.created_at || new Date().toISOString(),
       },
     }
 

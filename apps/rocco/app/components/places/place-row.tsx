@@ -2,10 +2,9 @@ import { Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import z from 'zod'
-import { trpc } from '~/lib/trpc/client'
 import { env } from '~/lib/env'
+import { trpc } from '~/lib/trpc/client'
 import { cn } from '~/lib/utils'
-import UserAvatar from '../user-avatar'
 
 const buildImageUrl = (src?: string | null, width = 400, height = 300) => {
   if (!src) return null
@@ -107,12 +106,11 @@ export default function PlaceRow({
               ) : null}
               {addedBy && (
                 <div className="flex items-center gap-1.5">
-                  <UserAvatar
-                    name={addedBy.name ?? undefined}
-                    email={addedBy.email}
-                    image={addedBy.image}
-                    size="sm"
-                  />
+                  {addedBy.name ? (
+                    <span className="text-[0.65rem] text-muted-foreground/60 truncate">
+                      {addedBy.name.split(' ')[0]}
+                    </span>
+                  ) : null}
                 </div>
               )}
             </div>

@@ -1,26 +1,7 @@
 import type { ListPlace } from '@hominem/data'
-import { Button } from '@hominem/ui/button'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@hominem/ui'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@hominem/ui'
-import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
-import type { MouseEvent } from 'react'
 import { href } from 'react-router'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
-import { useModal } from '~/hooks/useModal'
-import { useRemoveListItem } from '~/lib/places'
+import PlaceListItemActions from './place-list-item-actions'
 import PlaceRow from './place-row'
 
 interface PlacesListItemProps {
@@ -41,110 +22,27 @@ const PlaceListItem = ({
   showAvatar = false,
 }: PlacesListItemProps) => {
   const { setHoveredPlaceId } = useMapInteraction()
-  const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal()
-  const { mutate: removeListItem } = useRemoveListItem({
-    onSuccess: () => {
-      closeDeleteModal()
-      onRemove?.()
-    },
-    onError: () => {
-      onError?.()
-    },
-  })
-
-  const onDeleteClick = () => {
-    removeListItem({ listId, placeId: place.placeId })
-  }
 
   return (
-    <>
-      <PlaceRow
-        name={place.name}
-        href={href('/places/:id', { id: place.placeId })}
-        photoUrl={place.photos?.[0] ?? null}
-        imageUrl={place.imageUrl}
-        isSelected={isSelected}
-        onMouseEnter={() => setHoveredPlaceId(place.placeId)}
-        onMouseLeave={() => setHoveredPlaceId(null)}
-        addedBy={showAvatar ? place.addedBy : null}
-        accessory={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
-                aria-label="More options"
-              >
-                <MoreVertical size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-white border border-border text-gray-900 shadow-lg">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault()
-                  window.open(
-                    `https://www.google.com/maps/search/${encodeURIComponent(place.name)}`,
-                    '_blank'
-                  )
-                }}
-                className="flex items-center gap-2 py-2"
-              >
-                <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
-                Open in Maps
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.preventDefault()
-                  openDeleteModal()
-                }}
-                className="text-red-600 hover:underline underline-offset-4 hover:bg-red-50 py-2"
-              >
-                <Trash size={16} className="text-red-600" />
-                Remove from list
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        }
-      />
-
-      <Dialog
-        open={isDeleteModalOpen}
-        onOpenChange={(open) => (open ? openDeleteModal() : closeDeleteModal())}
-      >
-        <DialogContent
-          data-testid="place-delete-modal"
-          className="sm:max-w-lg"
-          aria-label="Delete place confirmation"
-          showCloseButton
-        >
-          <DialogHeader>
-            <DialogTitle>Delete place</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete{' '}
-              <span className="font-semibold text-foreground">{place.name}</span> from your list?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-2">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button
-              type="button"
-              variant="destructive"
-              data-testid="place-delete-confirm-button"
-              onClick={onDeleteClick}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <PlaceRow
+      name={place.name}
+      href={href('/places/:id', { id: place.placeId })}
+      photoUrl={place.photos?.[0] ?? null}
+      imageUrl={place.imageUrl}
+      isSelected={isSelected}
+      onMouseEnter={() => setHoveredPlaceId(place.placeId)}
+      onMouseLeave={() => setHoveredPlaceId(null)}
+      addedBy={showAvatar ? place.addedBy : null}
+      accessory={
+        <PlaceListItemActions
+          placeName={place.name}
+          placeId={place.placeId}
+          listId={listId}
+          onRemove={onRemove}
+          onError={onError}
+        />
+      }
+    />
   )
 }
 

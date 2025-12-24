@@ -1,6 +1,7 @@
 import type { ListPlace } from '@hominem/data'
 import { useCallback, useRef, useState } from 'react'
 import { href, useNavigate } from 'react-router'
+import Alert from '~/components/alert'
 import AddPlaceControl from '~/components/lists/add-place-control'
 import ListSurface from '../list-surface'
 import PlacesListItem from './places-list-item'
@@ -9,7 +10,6 @@ interface PlacesListProps {
   places: ListPlace[]
   listId: string
   canAdd?: boolean
-  onError?: () => void
   showAvatars?: boolean
 }
 
@@ -17,12 +17,16 @@ export default function PlacesList({
   places,
   listId,
   canAdd = true,
-  onError,
   showAvatars = false,
 }: PlacesListProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const navigate = useNavigate()
+
+  const handleDeleteError = useCallback(() => {
+    setDeleteError('Could not delete place. Please try again.')
+  }, [])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -55,6 +59,11 @@ export default function PlacesList({
     <AddPlaceControl listId={listId} canAdd={canAdd}>
       {({ isOpen }) => (
         <>
+          {deleteError && (
+            <Alert type="error" dismissible onDismiss={() => setDeleteError(null)}>
+              {deleteError}
+            </Alert>
+          )}
           {places.length === 0 && !isOpen ? (
             <div className="flex flex-col gap-2 items-center justify-center rounded-2xl bg-white/30 p-6">
               <div className="flex flex-col items-center">
@@ -74,7 +83,7 @@ export default function PlacesList({
                     key={place.id}
                     place={place}
                     listId={listId}
-                    onError={onError}
+                    onError={handleDeleteError}
                     isSelected={selectedIndex === index}
                     showAvatar={showAvatars}
                   />
