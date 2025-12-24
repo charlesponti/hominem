@@ -1,12 +1,11 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
 import type { AuthChangeEvent } from '@supabase/supabase-js'
 import { useCallback } from 'react'
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, data, useRevalidator } from 'react-router'
+import { data, Links, Meta, Outlet, Scripts, ScrollRestoration, useRevalidator } from 'react-router'
 import type { Route } from './+types/root'
 import ErrorBoundary from './components/ErrorBoundary'
 import './globals.css'
 import { getServerSession } from './lib/auth.server'
-import { env } from './lib/env'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
 
@@ -20,10 +19,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   return data(
     {
       session,
-      supabaseEnv: {
-        url: env.VITE_SUPABASE_URL,
-        anonKey: env.VITE_SUPABASE_ANON_KEY,
-      },
     },
     { headers }
   )
@@ -65,7 +60,7 @@ export const meta = () => [
 ]
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, supabaseEnv } = loaderData
+  const { session } = loaderData
   const revalidator = useRevalidator()
 
   const handleAuthEvent = useCallback(
@@ -76,6 +71,20 @@ export default function App({ loaderData }: Route.ComponentProps) {
     },
     [revalidator]
   )
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      'Missing required Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
+    )
+  }
+
+  const supabaseConfig = {
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  }
 
   return (
     <html lang="en">
@@ -88,7 +97,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <body>
         <SupabaseAuthProvider
           initialSession={session}
-          config={supabaseEnv}
+          config={supabaseConfig}
           onAuthEvent={handleAuthEvent}
         >
           <TRPCProvider>

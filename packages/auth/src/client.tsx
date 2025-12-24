@@ -1,6 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr'
-import type { AuthChangeEvent, Session, SupabaseClient } from '@supabase/supabase-js'
-import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from 'react'
+import type { AuthChangeEvent, Session, SupabaseClient, User } from '@supabase/supabase-js'
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 
 // Registry to ensure only one Supabase instance exists per unique config
 const clientRegistry = new Map<string, SupabaseClient>()
@@ -23,8 +23,7 @@ function useSupabaseAuth(
   const [supabaseClient] = useState(() => getSupabase(config))
   const [session, setSession] = useState<Session | null>(initialSession)
   const [isLoading, setIsLoading] = useState(!initialSession)
-  // Explicitly maintain a verified user state fetched from Supabase Auth server
-  const [authUser, setAuthUser] = useState<Awaited<ReturnType<typeof supabaseClient.auth.getUser>>['data']['user'] | null>(null)
+  const [authUser, setAuthUser] = useState<User | null>(initialSession?.user ?? null)
 
   useEffect(() => {
     // If we have an initial session, we're not loading
@@ -32,56 +31,25 @@ function useSupabaseAuth(
       setIsLoading(false)
     }
 
-    // Get current verified user
-    const init = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabaseClient.auth.getUser()
-        setAuthUser(currentUser ?? null)
-      } catch {
-        setAuthUser(null)
-      }
-    }
-
-    init()
-
     // Listen for auth changes - Supabase manages session state internally
-    const {
-      data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((event, newSession) => {
+    const authState = supabaseClient.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession)
+      setAuthUser(newSession?.user ?? null)
       setIsLoading(false)
       onAuthEvent?.(event, newSession)
-
-      // Re-verify user when auth state changes
-      ;(async () => {
-        try {
-          const {
-            data: { user: currentUser },
-          } = await supabaseClient.auth.getUser()
-          setAuthUser(currentUser ?? null)
-        } catch {
-          setAuthUser(null)
-        }
-      })()
     })
 
-    return () => subscription.unsubscribe()
+    return () => authState.data.subscription.unsubscribe()
   }, [supabaseClient, initialSession, isLoading, onAuthEvent])
 
   const getUser = useCallback(async () => {
-    const {
-      data: { user: currentUser },
-      error,
-    } = await supabaseClient.auth.getUser()
-    if (error) throw error
-    return currentUser ?? null
+    const response = await supabaseClient.auth.getUser()
+    return response.data.user ?? null
   }, [supabaseClient])
 
   const logout = useCallback(async () => {
-    const { error } = await supabaseClient.auth.signOut()
-    if (error) throw error
+    const response = await supabaseClient.auth.signOut()
+    if (response.error) throw response.error
   }, [supabaseClient])
 
   // Derive user and isAuthenticated from verified authUser
