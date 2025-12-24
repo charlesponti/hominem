@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import { renderWithProviders } from '~/test/utils'
-import PlaceTypes from '../components/places/PlaceTypes'
+import PlaceTypes from '../components/places/place-types'
 
 describe('PlaceTypes', () => {
   test('should render types', () => {

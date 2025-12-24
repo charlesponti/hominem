@@ -59,4 +59,3 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
 }
 
 export default EventList
-

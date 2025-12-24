@@ -12,10 +12,12 @@ body {
 }
 
 @theme {
+  /* Typography */
   --font-mono: 'Geist Mono', ui-monospace, monospace;
   --font-serif: 'EB Garamound', ui-serif, serif;
   --font-sans: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
 
+  /* Base Colors - Light Mode */
   --color-background: var(--color-white);
   --color-foreground: var(--color-gray-900);
 
@@ -25,9 +27,9 @@ body {
   --color-popover: var(--color-gray-50);
   --color-popover-foreground: var(--color-gray-900);
 
-  --color-primary: var(--color-violet-600);
+  --color-primary: var(--color-gray-900);
   --color-primary-foreground: var(--color-white);
-  --color-primary-hover: var(--color-violet-700);
+  --color-primary-hover: var(--color-gray-950);
 
   --color-secondary: var(--color-gray-100);
   --color-secondary-foreground: var(--color-gray-700);
@@ -59,6 +61,23 @@ body {
   --color-sidebar-accent-foreground: var(--color-gray-50);
   --color-sidebar-border: var(--color-gray-700);
   --color-sidebar-ring: var(--color-gray-50);
+
+  /* Design System Tokens */
+  --color-success: var(--color-emerald-600);
+  --color-warning: var(--color-amber-500);
+  --radius: 0.5rem;
+  --radius-lg: 1rem;
+
+  /* Gradients */
+  --color-primary-gradient-start: var(--color-gray-500);
+  --color-primary-gradient-end: var(--color-gray-900);
+  --color-destructive-gradient-start: var(--color-red-500);
+  --color-destructive-gradient-end: var(--color-red-600);
+
+  /* Glass Effects */
+  --color-glass-background: var(--color-white) / 50%;
+  --color-glass-border: var(--color-black) / 10%;
+  --glass-blur: 12px;
 }
 
 @utility min-h-screen {
@@ -121,92 +140,95 @@ body {
   }
 
   :root {
-    --background: var(--color-white);
-    --foreground: var(--color-gray-900);
-    --card: var(--color-gray-50);
-    --card-foreground: var(--color-gray-900);
-    --popover: var(--color-gray-50);
-    --popover-foreground: var(--color-gray-900);
-    --primary: var(--color-violet-600);
-    --primary-foreground: var(--color-white);
-    --primary-hover: var(--color-violet-700);
-    --secondary: var(--color-gray-100);
-    --secondary-foreground: var(--color-gray-700);
-    --muted: var(--color-gray-200);
-    --muted-foreground: var(--color-gray-500);
-    --accent: var(--color-gray-300);
-    --accent-foreground: var(--color-gray-700);
-    --destructive: var(--color-red-500);
-    --destructive-foreground: var(--color-white);
-    --border: var(--color-gray-200);
-    --input: var(--color-gray-400);
-    --ring: var(--color-gray-700);
-    --chart-1: var(--color-gray-500);
-    --chart-2: var(--color-green-500);
-    --chart-3: var(--color-blue-500);
-    --chart-4: var(--color-indigo-500);
-    --chart-5: var(--color-yellow-500);
-    --sidebar-background: var(--color-gray-800);
-    --sidebar-foreground: var(--color-gray-50);
-    --sidebar-primary: var(--color-gray-50);
-    --sidebar-primary-foreground: var(--color-gray-800);
-    --sidebar-accent: var(--color-gray-700);
-    --sidebar-accent-foreground: var(--color-gray-50);
-    --sidebar-border: var(--color-gray-700);
-    --sidebar-ring: var(--color-gray-50);
+    /* Semantic aliases referencing @theme variables */
+    --background: var(--color-background);
+    --foreground: var(--color-foreground);
+    --card: var(--color-card);
+    --card-foreground: var(--color-card-foreground);
+    --popover: var(--color-popover);
+    --popover-foreground: var(--color-popover-foreground);
+    --primary: var(--color-primary);
+    --primary-foreground: var(--color-primary-foreground);
+    --primary-hover: var(--color-primary-hover);
+    --secondary: var(--color-secondary);
+    --secondary-foreground: var(--color-secondary-foreground);
+    --muted: var(--color-muted);
+    --muted-foreground: var(--color-muted-foreground);
+    --accent: var(--color-accent);
+    --accent-foreground: var(--color-accent-foreground);
+    --destructive: var(--color-destructive);
+    --destructive-foreground: var(--color-destructive-foreground);
+    --border: var(--color-border);
+    --input: var(--color-input);
+    --ring: var(--color-ring);
+    --chart-1: var(--color-chart-1);
+    --chart-2: var(--color-chart-2);
+    --chart-3: var(--color-chart-3);
+    --chart-4: var(--color-chart-4);
+    --chart-5: var(--color-chart-5);
+    --sidebar-background: var(--color-sidebar);
+    --sidebar-foreground: var(--color-sidebar-foreground);
+    --sidebar-primary: var(--color-sidebar-primary);
+    --sidebar-primary-foreground: var(--color-sidebar-primary-foreground);
+    --sidebar-accent: var(--color-sidebar-accent);
+    --sidebar-accent-foreground: var(--color-sidebar-accent-foreground);
+    --sidebar-border: var(--color-sidebar-border);
+    --sidebar-ring: var(--color-sidebar-ring);
 
     /* Design System Variables */
-    --primary-gradient-start: var(--color-gray-500);
-    --primary-gradient-end: var(--color-violet-500);
-    --destructive-gradient-start: var(--color-red-500);
-    --destructive-gradient-end: var(--color-red-600);
-    --success: var(--color-emerald-600);
-    --warning: var(--color-amber-500);
-    --radius: 0.5rem;
-    --radius-lg: 1rem;
-    --color-primary: var(--primary);
+    --primary-gradient-start: var(--color-primary-gradient-start);
+    --primary-gradient-end: var(--color-primary-gradient-end);
+    --destructive-gradient-start: var(--color-destructive-gradient-start);
+    --destructive-gradient-end: var(--color-destructive-gradient-end);
+    --success: var(--color-success);
+    --warning: var(--color-warning);
     --input-background: var(--input);
-    --glass-background: var(--color-white) / 50%;
-    --glass-border: var(--color-black) / 10%;
-    --glass-blur: 12px;
+    --glass-background: var(--color-glass-background);
+    --glass-border: var(--color-glass-border);
+    --glass-blur: var(--glass-blur);
     --input-background-focus: var(--primary);
     --input-text-focus: var(--primary-foreground);
   }
 
   .dark {
-    --background: var(--color-gray-900);
-    --foreground: var(--color-gray-50);
-    --card: var(--color-gray-800);
-    --card-foreground: var(--color-gray-50);
-    --popover: var(--color-gray-800);
-    --popover-foreground: var(--color-gray-50);
-    --primary: var(--color-violet-500);
-    --primary-foreground: var(--color-white);
-    --primary-hover: var(--color-violet-600);
-    --secondary: var(--color-gray-700);
-    --secondary-foreground: var(--color-gray-50);
-    --muted: var(--color-gray-800);
-    --muted-foreground: var(--color-gray-400);
-    --accent: var(--color-gray-700);
-    --accent-foreground: var(--color-gray-50);
-    --destructive: var(--color-red-600);
-    --destructive-foreground: var(--color-gray-50);
-    --border: var(--color-gray-700);
-    --input: var(--color-gray-700);
-    --ring: var(--color-gray-400);
-    --chart-1: var(--color-gray-400);
-    --chart-2: var(--color-green-400);
-    --chart-3: var(--color-blue-400);
-    --chart-4: var(--color-indigo-400);
-    --chart-5: var(--color-yellow-400);
-    --sidebar-background: var(--color-gray-950);
-    --sidebar-foreground: var(--color-gray-50);
-    --sidebar-primary: var(--color-gray-300);
-    --sidebar-primary-foreground: var(--color-gray-950);
-    --sidebar-accent: var(--color-gray-800);
-    --sidebar-accent-foreground: var(--color-gray-50);
-    --sidebar-border: var(--color-gray-800);
-    --sidebar-ring: var(--color-gray-300);
+    /* Override @theme variables for dark mode - Tailwind utilities will pick these up */
+    --color-background: var(--color-gray-900);
+    --color-foreground: var(--color-gray-50);
+    --color-card: var(--color-gray-800);
+    --color-card-foreground: var(--color-gray-50);
+    --color-popover: var(--color-gray-800);
+    --color-popover-foreground: var(--color-gray-50);
+    --color-primary: var(--color-gray-50);
+    --color-primary-foreground: var(--color-gray-900);
+    --color-primary-hover: var(--color-gray-100);
+    --color-secondary: var(--color-gray-700);
+    --color-secondary-foreground: var(--color-gray-50);
+    --color-muted: var(--color-gray-800);
+    --color-muted-foreground: var(--color-gray-400);
+    --color-accent: var(--color-gray-700);
+    --color-accent-foreground: var(--color-gray-50);
+    --color-destructive: var(--color-red-600);
+    --color-destructive-foreground: var(--color-gray-50);
+    --color-border: var(--color-gray-700);
+    --color-input: var(--color-gray-700);
+    --color-ring: var(--color-gray-400);
+    --color-chart-1: var(--color-gray-400);
+    --color-chart-2: var(--color-green-400);
+    --color-chart-3: var(--color-blue-400);
+    --color-chart-4: var(--color-indigo-400);
+    --color-chart-5: var(--color-yellow-400);
+    --color-sidebar: var(--color-gray-950);
+    --color-sidebar-foreground: var(--color-gray-50);
+    --color-sidebar-primary: var(--color-gray-300);
+    --color-sidebar-primary-foreground: var(--color-gray-950);
+    --color-sidebar-accent: var(--color-gray-800);
+    --color-sidebar-accent-foreground: var(--color-gray-50);
+    --color-sidebar-border: var(--color-gray-800);
+    --color-sidebar-ring: var(--color-gray-300);
+
+    /* Override glass effects for dark mode */
+    --color-glass-background: var(--color-gray-900) / 50%;
+    --color-glass-border: var(--color-white) / 10%;
   }
 
   .text-gradient {
@@ -229,7 +251,7 @@ body {
   }
 
   .text-primary {
-    color: var(--color-primary);
+    color: var(--primary);
   }
 
   .input {
@@ -357,7 +379,7 @@ body {
   }
 
   .border-border {
-    border-color: var(--color-gray-200);
+    border-color: var(--border);
   }
 
   .ring-ring {

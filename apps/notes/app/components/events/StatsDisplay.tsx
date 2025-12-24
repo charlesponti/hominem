@@ -90,7 +90,10 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xl opacity-80">{stat.icon}</span>
-            <span className="text-3xl font-bold tracking-tight" style={{ color: 'var(--color-notion-text)' }}>
+            <span
+              className="text-3xl font-bold tracking-tight"
+              style={{ color: 'var(--color-notion-text)' }}
+            >
               {stat.value}
             </span>
           </div>
@@ -107,4 +110,3 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
 }
 
 export default StatsDisplay
-

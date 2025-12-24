@@ -1,12 +1,12 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { memo } from 'react'
-import z from 'zod'
 import ListSurface from '~/components/list-surface'
 import { ListRow } from '~/components/lists/list-row'
 import Loading from '~/components/loading'
 import AddPlaceToList from '~/components/places/add-to-list-control'
 import { env } from '~/lib/env'
 import { trpc } from '~/lib/trpc/client'
+import type { PlaceWithLists } from '~/lib/types'
 
 const buildImageUrl = (src?: string | null, width = 400, height = 300) => {
   if (!src) return null
@@ -23,31 +23,14 @@ const buildImageUrl = (src?: string | null, width = 400, height = 300) => {
 }
 
 type Props = {
-  placeId: string
+  place: PlaceWithLists
 }
 
-const PlaceLists = ({ placeId }: Props) => {
+const PlaceLists = ({ place }: Props) => {
   const { isAuthenticated } = useSupabaseAuthContext()
-  const isUuid = z.uuid().safeParse(placeId).success
 
-  // Fetch place details to get googleMapsId if needed
-  const { data: placeDetails } = trpc.places.getDetailsById.useQuery(
-    { id: placeId },
-    {
-      enabled: isAuthenticated && isUuid,
-    }
-  )
-
-  const { data: placeDetailsByGoogleId } = trpc.places.getDetailsByGoogleId.useQuery(
-    { googleMapsId: placeId },
-    {
-      enabled: isAuthenticated && !isUuid,
-    }
-  )
-
-  const place = placeDetails || placeDetailsByGoogleId
-  const resolvedPlaceId = isUuid ? placeId : place?.id
-  const googleMapsId = isUuid ? place?.googleMapsId : placeId
+  const resolvedPlaceId = place.id
+  const googleMapsId = place.googleMapsId
 
   const { data: listsContainingPlace = [], isLoading } = trpc.lists.getContainingPlace.useQuery(
     {
@@ -64,10 +47,10 @@ const PlaceLists = ({ placeId }: Props) => {
   }
 
   return (
-    <div data-testid="place-lists" className="space-y-1 pb-10">
+    <div data-testid="place-lists" className="space-y-1">
       <div className="flex items-center justify-between">
         <h3 className="heading-2 font-light">Lists</h3>
-        {place && <AddPlaceToList placeId={placeId} />}
+        <AddPlaceToList placeId={place.id} />
       </div>
 
       {listsContainingPlace.length > 0 && (

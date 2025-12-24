@@ -8,8 +8,8 @@ import PlacePhone from '~/components/places/PlacePhone'
 import PlacePhotos from '~/components/places/PlacePhotos'
 import PlaceRating from '~/components/places/PlaceRating'
 import PlacesNearby from '~/components/places/places-nearby'
-import PlaceTypes from '~/components/places/PlaceTypes'
 import PlaceStatus from '~/components/places/PlaceStatus'
+import PlaceTypes from '~/components/places/place-types'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceWithLists } from '~/lib/types'
@@ -37,7 +37,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   return { place: data }
 }
 
-export default function PlacePage({ loaderData }: Route.ComponentProps) {
+export default function Place({ loaderData }: Route.ComponentProps) {
   const { place } = loaderData
 
   return (
@@ -49,17 +49,15 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
         <PlacePhotos alt={place.name} photos={place.photos} placeId={place.id} />
       </div>
 
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-12">
         <div
           className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100"
           style={{ viewTransitionName: `place-header-${place.id}` }}
         >
           <PageTitle title={place.name} />
-          <PlaceStatus
-            businessStatus={place.businessStatus}
-            openingHours={place.openingHours}
-            className="mt-1"
-          />
+
+          <PlaceStatus businessStatus={place.businessStatus} openingHours={place.openingHours} />
+
           <div className="space-y-2">
             <PlaceTypes types={place.types || []} />
 
@@ -80,19 +78,19 @@ export default function PlacePage({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-          <PlaceLists placeId={place.id} />
+          <PlaceLists place={place} />
         </div>
 
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-          {place.latitude !== null && place.longitude !== null && (
+        {place.latitude !== null && place.longitude !== null && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             <PlacesNearby
               latitude={place.latitude}
               longitude={place.longitude}
               radiusKm={5}
               limit={4}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         {place.latitude !== null && place.longitude !== null && (
           <div className="animate-in fade-in slide-in-from-right duration-700 delay-500">

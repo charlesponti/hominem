@@ -47,16 +47,10 @@ export default function CreateTripPage({ actionData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="p-4">
-      <div className="mb-6">
-        <Link to="/trips" className="text-blue-600 hover:text-blue-800">
-          ← Back to Trips
-        </Link>
-      </div>
+    <div className="p-4 flex flex-col gap-4">
+      <PageTitle title="Create a New Trip" />
 
-      <PageTitle title="Create a New Trip" variant="sans" className="mb-6" />
-
-      <Form method="post" className="max-w-2xl">
+      <Form method="post">
         <div className="space-y-6">
           <div>
             <label htmlFor={nameId} className="block text-sm font-medium text-gray-700 mb-2">

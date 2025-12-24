@@ -7,7 +7,7 @@ import PlacePhotoLightbox from './PlacePhotoLightbox'
 type Props = {
   alt: string
   photos: string[] | null | undefined
-  placeId?: string
+  placeId: string
 }
 
 const PlacePhotos = ({ alt, photos, placeId }: Props) => {
@@ -71,9 +71,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
                   decoding="async"
                   sizes="(max-width: 768px) 90vw, 350px"
                   style={
-                    index === 0 && placeId
-                      ? { viewTransitionName: `place-photo-image-${placeId}` }
-                      : undefined
+                    index === 0 ? { viewTransitionName: `place-photo-image-${placeId}` } : undefined
                   }
                   className={cn(
                     'object-cover w-full h-full transition-all duration-300 group-hover:scale-105'

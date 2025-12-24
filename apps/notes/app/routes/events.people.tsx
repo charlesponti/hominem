@@ -288,4 +288,3 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
     </div>
   )
 }
-

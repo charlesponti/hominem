@@ -96,7 +96,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
             className="flex justify-between items-center"
             style={{ viewTransitionName: `list-title-${list.id}` }}
           >
-            <PageTitle title={list.name} variant="serif" />
+            <PageTitle title={list.name} />
             {isOwner && (
               <div className="flex items-center gap-2">
                 <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">

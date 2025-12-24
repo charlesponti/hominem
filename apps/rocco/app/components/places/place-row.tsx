@@ -69,7 +69,7 @@ export default function PlaceRow({
 
   return (
     <li
-      className={cn('flex items-center gap-3 p-3 group hover:bg-gray-50 transition-colors', {
+      className={cn('flex items-center gap-3 px-2 py-1 group hover:bg-gray-50 transition-colors', {
         'bg-indigo-50': isSelected,
       })}
       onMouseEnter={onMouseEnter}
@@ -83,7 +83,7 @@ export default function PlaceRow({
         className="flex-1 min-w-0 focus:outline-none"
       >
         <div className="flex items-center gap-4">
-          <div className="size-16 rounded overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+          <div className="size-8 rounded-sm overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
             {resolvedImage ? (
               <img
                 src={resolvedImage}
@@ -96,13 +96,15 @@ export default function PlaceRow({
             )}
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="flex-1 heading-3 text-accent-foreground truncate">{name}</h3>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <p className="flex-1 text-sm text-accent-foreground truncate">{name}</p>
               {meta ?? null}
             </div>
             <div className="flex items-center gap-2">
-              {subtitle ? <div className="text-xs text-gray-500 truncate">{subtitle}</div> : null}
+              {subtitle ? (
+                <p className="text-xs text-muted-foreground/60 truncate">{subtitle}</p>
+              ) : null}
               {addedBy && (
                 <div className="flex items-center gap-1.5">
                   <UserAvatar

@@ -82,19 +82,12 @@ export default function Account({ loaderData }: Route.ComponentProps) {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="space-y-6">
-        <PageTitle title="Account" variant="sans" />
+        <PageTitle title="Account" />
         <div className="border border-border rounded-lg shadow-md p-4 flex flex-col gap-4">
           <div className="flex items-center gap-4">
-            {user.user_metadata.image ||
-            user.user_metadata.picture ||
-            user.user_metadata.avatar_url ? (
+            {user.image ? (
               <img
-                src={
-                  user.user_metadata.image ||
-                  user.user_metadata.picture ||
-                  user.user_metadata.avatar_url ||
-                  ''
-                }
+                src={user.image}
                 alt="user avatar"
                 className="w-16 h-16 rounded-full object-cover"
               />
@@ -102,10 +95,10 @@ export default function Account({ loaderData }: Route.ComponentProps) {
               <UserCircle data-testid="user-circle-icon" size={64} />
             )}
             <div className="flex flex-col">
-              <p className="text-lg font-medium">{user.user_metadata.name}</p>
+              <p className="text-lg font-medium">{user.name}</p>
               <p className="text-sm text-gray-600">{user.email}</p>
               <p className="text-sm text-gray-500">
-                <MemberSince createdAt={user.created_at} />
+                <MemberSince createdAt={user.createdAt} />
               </p>
             </div>
           </div>

@@ -35,20 +35,27 @@ export default function Lists() {
     <div data-testid="lists">
       {title}
 
-      {lists.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-          <h3 className="text-lg font-semibold text-gray-900">No lists yet</h3>
-          <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
-        </div>
-      ) : (
-        <ListSurface>
-          {lists.map((list) => (
-            <ListRow key={list.id} id={list.id} name={list.name} count={list.places.length || 0} />
-          ))}
-        </ListSurface>
-      )}
+      <div className="space-y-1">
+        {lists.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <h3 className="text-lg font-semibold text-gray-900">No lists yet</h3>
+            <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
+          </div>
+        ) : (
+          <ListSurface>
+            {lists.map((list) => (
+              <ListRow
+                key={list.id}
+                id={list.id}
+                name={list.name}
+                count={list.places.length || 0}
+              />
+            ))}
+          </ListSurface>
+        )}
 
-      <ListForm />
+        <ListForm />
+      </div>
     </div>
   )
 }

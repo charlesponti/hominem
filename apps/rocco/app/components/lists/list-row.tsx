@@ -14,50 +14,55 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
   const utils = trpc.useUtils()
 
   return (
-    <li>
+    <li className="flex items-center gap-3 p-2 group hover:bg-gray-50 transition-colors">
       <Link
         to={`/lists/${id}`}
         viewTransition
         onMouseEnter={() => {
           utils.lists.getById.prefetch({ id })
         }}
-        className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+        className="flex-1 min-w-0 focus:outline-none"
       >
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
           {imageUrl !== undefined ? (
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="size-12 rounded overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+            <>
+              <div className="size-8 rounded-sm overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
                 {imageUrl ? (
                   <img
                     src={imageUrl}
                     alt={imageAlt || name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     style={{ viewTransitionName: `list-image-${id}` }}
                   />
                 ) : (
-                  <List className="text-muted-foreground" size={20} />
+                  <List className="text-indigo-400" size={28} />
                 )}
               </div>
-              <h3
-                className="flex-1 heading-3 truncate"
-                style={{ viewTransitionName: `list-title-${id}` }}
-              >
-                {name}
-              </h3>
-            </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <p
+                    className="flex-1 text-sm text-accent-foreground truncate"
+                    style={{ viewTransitionName: `list-title-${id}` }}
+                  >
+                    {name}
+                  </p>
+                  <span className="text-xs text-muted-foreground">{count}</span>
+                </div>
+              </div>
+            </>
           ) : (
-            <h3
-              className="flex-1 heading-3 text-accent-foreground truncate"
-              style={{ viewTransitionName: `list-title-${id}` }}
-            >
-              {name}
-            </h3>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <p
+                  className="flex-1 text-sm text-accent-foreground truncate"
+                  style={{ viewTransitionName: `list-title-${id}` }}
+                >
+                  {name}
+                </p>
+                <span className="text-xs text-accent-foreground">{count}</span>
+              </div>
+            </div>
           )}
-          <span
-            className={`text-xs ${imageUrl !== undefined ? 'text-muted-foreground' : 'text-accent-foreground'}`}
-          >
-            {count}
-          </span>
         </div>
       </Link>
     </li>
