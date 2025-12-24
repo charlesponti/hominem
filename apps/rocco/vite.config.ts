@@ -58,7 +58,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       rollupOptions: {
         external: ["node:perf_hooks", "perf_hooks"],
       },
-      sourcemap: Boolean(isProd),
+      sourcemap: true,
     },
   };
 });
