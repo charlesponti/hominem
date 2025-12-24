@@ -7,15 +7,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui'
+} from '@hominem/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui'
+} from '@hominem/ui/dropdown'
 import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
-import { useCallback, useMemo, type MouseEvent } from 'react'
+import { type MouseEvent, useCallback, useMemo } from 'react'
 import { useModal } from '~/hooks/useModal'
 import { useRemoveListItem } from '~/lib/places'
 
@@ -138,4 +138,3 @@ const PlaceListItemActions = ({
 }
 
 export default PlaceListItemActions
-
