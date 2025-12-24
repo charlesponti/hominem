@@ -2,17 +2,14 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { AuthChangeEvent, Session, SupabaseClient, User } from '@supabase/supabase-js'
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 
-// Registry to ensure only one Supabase instance exists per unique config
-const clientRegistry = new Map<string, SupabaseClient>()
+// Singleton to ensure only one Supabase instance exists
+let supabaseClient: SupabaseClient | null = null
 
 export function getSupabase(config: { url: string; anonKey: string }) {
-  const key = `${config.url}:${config.anonKey}`
-  const existing = clientRegistry.get(key)
-  if (existing) return existing
+  if (supabaseClient) return supabaseClient
 
-  const client = createBrowserClient(config.url, config.anonKey)
-  clientRegistry.set(key, client)
-  return client
+  supabaseClient = createBrowserClient(config.url, config.anonKey)
+  return supabaseClient
 }
 
 function useSupabaseAuth(
@@ -42,13 +39,18 @@ function useSupabaseAuth(
     return () => authState.data.subscription.unsubscribe()
   }, [supabaseClient, initialSession, isLoading, onAuthEvent])
 
-  const getUser = useCallback(async () => {
-    const response = await supabaseClient.auth.getUser()
-    return response.data.user ?? null
-  }, [supabaseClient])
-
   const logout = useCallback(async () => {
     const response = await supabaseClient.auth.signOut()
+    if (response.error) throw response.error
+  }, [supabaseClient])
+
+  const signIn = useCallback(async () => {
+    const response = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
     if (response.error) throw response.error
   }, [supabaseClient])
 
@@ -63,7 +65,7 @@ function useSupabaseAuth(
     isLoading,
     supabase: supabaseClient,
     logout,
-    getUser,
+    signIn,
     userId: user?.id,
   }
 }

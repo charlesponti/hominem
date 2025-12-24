@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
 import { ChatList } from '~/components/chat/ChatList'
 import { Button } from '@hominem/ui/button'
-import { useUser } from '~/lib/hooks/use-user'
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { cn } from '~/lib/utils'
 
 interface ChatSidebarProps {
@@ -17,7 +17,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
   const location = useLocation()
   const pathname = location.pathname
   const navigate = useNavigate()
-  const { signIn } = useUser()
+  const { signIn } = useSupabaseAuthContext()
   const [isSigningIn, setIsSigningIn] = useState(false)
 
   const isLoggedIn = !!userId

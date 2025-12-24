@@ -67,7 +67,7 @@ const mockAuthContextValue = {
   isLoading: false,
   supabase: mockSupabaseClient,
   logout: vi.fn(),
-  getUser: vi.fn().mockResolvedValue(mockSupabaseUser),
+  signIn: vi.fn(),
   userId: USER_ID,
 }
 
