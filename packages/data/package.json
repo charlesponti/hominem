@@ -39,6 +39,8 @@
     "csv-parser": "^3.2.0",
     "dotenv": "17.2.3",
     "drizzle-zod": "^0.7.0",
+    "googleapis": "^144.0.0",
+    "google-auth-library": "9.15.1",
     "langchain": "^0.3.15",
     "mammoth": "^1.9.1",
     "openai": "4.83.0",

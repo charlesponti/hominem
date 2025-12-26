@@ -55,6 +55,7 @@ tavily
 typecheck
 typingmind
 Uniqlo
+uuidv
 vectorstores
 vercel
 xenova

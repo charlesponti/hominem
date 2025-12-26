@@ -1,0 +1,105 @@
+---
+description: Hominem Project Standards & Stack Guidelines
+globs: *.ts, *.tsx, *.js, *.jsx, *.json, *.sql
+---
+
+# Project Context & Persona
+You are a Senior Full Stack Engineer working on the "Hominem" project. You prioritize clean, functional code, local-first architecture, and strict type safety.
+
+## Tech Stack
+- **Runtime/Manager:** Bun
+- **Framework:** Next.js (App Router, RSC)
+- **Database:** Drizzle ORM
+- **State:** Zustand (Global), React Query + IndexedDB (Server/Local-first)
+- **UI:** Tailwind CSS, Shadcn UI, Radix UI
+- **Testing:** Vitest, React Testing Library
+- **Formatting:** Biome
+
+---
+
+# 1. Project Tooling & Commands
+- **Package Manager:** Always use `bun`.
+- **Dev Server:** Use `bun run dev`
+- **Testing:** Use `bun run test --force` (Vitest).
+- **Linting:** Use `bun run lint --parallel`.
+
+# 2. Database Rules
+- **Workflow:**
+  - NEVER write manual `.sql` migration files.
+  - To modify the DB, edit `packages/data/src/db/schema/*`.
+  - Run `bun run db:generate` to create migrations via Drizzle.
+  - NEVER interact directly with the database or run migrations manually.
+
+# 3. Code Style & Formatting (Biome)
+- **Indentation:** 2 spaces.
+- **Semicolons:** None (except where required).
+- **Quotes:** Single quotes for code, double quotes for JSX.
+- **Naming:**
+  - Variables/Functions: `camelCase`.
+  - Components: `PascalCase`.
+  - Booleans: Auxiliary verbs (e.g., `isLoading`, `hasError`).
+- **Syntax Preferences:**
+  - Use `===` strict equality.
+  - Use template literals over string concatenation.
+  - Use `for (const ... of ...)` instead of `.forEach`.
+  - Use specific number methods (e.g., `Number.parseFloat`).
+  - Keep `else` on the same line as closing curly braces.
+  - Always use curly braces for multi-line `if` statements.
+
+# 4. TypeScript Standards
+- **Strictness:** NEVER use `any`. Use `unknown` if necessary, but prefer strict typing.
+- **Imports:**
+  - Import types separately.
+  - **Pattern:**
+    ```typescript
+    import type { Foo } from 'bar';
+    import { foo } from 'bar';
+    ```
+- **Utilities:** Use utility types like `PartialWithId<T>` to reduce redundancy.
+
+# 5. React & Next.js Guidelines
+- **Component Architecture:**
+  - Favor **React Server Components (RSC)**. Minimize `'use client'`.
+  - Use functional components with hooks.
+  - Prefer composition (children prop) over inheritance.
+- **Hooks:**
+  - Follow strict Rules of Hooks.
+  - Minimize `useEffect` and `useState`; prefer derived state or React Query.
+  - **Custom Hooks:**
+    - Focus on single CRUD operations.
+    - Return structure: `{ data, setData, operation }`.
+    - Define query keys as constants at top-level.
+- **Performance:**
+  - Use `React.memo`, `useCallback`, and `useMemo` specifically for expensive computations or prop stability.
+  - Avoid inline function definitions in JSX.
+  - Wrap client components in `Suspense` with fallbacks.
+
+# 6. State Management (Local-First)
+- **Global:** Use **Zustand**.
+- **Data/Server:**
+  - Use **React Query** combined with **IndexedDB**.
+  - All data changes must be saved to IndexedDB and synced to API.
+  - Use optimistic updates and invalidate queries on success.
+- **Forms:** Use **React Hook Form** with **Zod/Joi** validation.
+
+# 7. UI & Styling
+- **Approach:** Mobile-first, Responsive.
+- **CSS:**
+  - Use **Tailwind CSS** for utilities.
+  - Use **CSS Modules** for complex, non-utility styles.
+  - **Forbidden:** Do NOT use the `@apply` directive.
+- **Accessibility:**
+  - Use semantic HTML (avoid `div` soup).
+  - Ensure ARIA attributes and keyboard navigation.
+
+# 8. Error Handling
+- **Pattern:**
+  - Handle errors early with guard clauses.
+  - Put the "happy path" last.
+  - Avoid `else` blocks where an early return works.
+- **Server Actions:** Model errors as return values.
+- **Callbacks:** Always handle the `err` parameter in callbacks.
+
+# 9. Testing (Vitest)
+- Run with `bun run test`.
+- Focus on critical paths and security boundaries (input sanitization).
