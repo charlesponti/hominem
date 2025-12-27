@@ -282,24 +282,23 @@ export async function deleteEvent(id: string) {
 }
 
 export async function getEventById(id: string) {
-  const result = await db
+  const [result] = await db
     .select()
     .from(events)
     .where(eq(events.id, id))
     .limit(1);
 
-  if (result.length === 0) {
+  if (!result) {
     return null;
   }
 
-  const event = result[0];
   const [people, tagsList] = await Promise.all([
     getPeopleForEvent(id),
     getTagsForEvent(id),
   ]);
 
   return {
-    ...event,
+    ...result,
     tags: tagsList,
     people,
   };
@@ -309,7 +308,7 @@ export async function getEventByExternalId(
   externalId: string,
   calendarId: string
 ) {
-  const result = await db
+  const [result] = await db
     .select()
     .from(events)
     .where(
@@ -317,18 +316,17 @@ export async function getEventByExternalId(
     )
     .limit(1);
 
-  if (result.length === 0) {
+  if (!result) {
     return null;
   }
 
-  const event = result[0];
   const [people, tagsList] = await Promise.all([
-    getPeopleForEvent(event.id),
-    getTagsForEvent(event.id),
+    getPeopleForEvent(result.id),
+    getTagsForEvent(result.id),
   ]);
 
   return {
-    ...event,
+    ...result,
     tags: tagsList,
     people,
   };
@@ -462,7 +460,7 @@ export async function getVisitStatsByPlace(
     .orderBy(desc(events.date));
 
   const visitCount = visits.length;
-  const lastVisitDate = visits.length > 0 ? visits[0].date : null;
+  const lastVisitDate = visits[0]?.date || null;
 
   const ratings = visits
     .map((v) => v.visitRating)
