@@ -362,6 +362,10 @@ body {
     background-color: var(--muted);
   }
 
+  .text-muted-foreground {
+    color: var(--muted-foreground);
+  }
+
   .bg-accent {
     background-color: var(--accent);
   }

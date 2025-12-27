@@ -14,7 +14,7 @@ export const QUEUE_NAMES = {
    * - apps/api/src/routes/finance.router.ts (adding jobs)
    * - apps/workers/src/transaction-import-worker.ts (processing jobs)
    */
-  IMPORT_TRANSACTIONS: 'import-transaction',
+  IMPORT_TRANSACTIONS: "import-transaction",
 
   /**
    * Queue for Plaid synchronization jobs
@@ -22,14 +22,21 @@ export const QUEUE_NAMES = {
    * - apps/api/src/routes/plaid.router.ts (adding jobs)
    * - apps/workers/src/plaid-worker.ts (processing jobs)
    */
-  PLAID_SYNC: 'plaid-sync',
+  PLAID_SYNC: "plaid-sync",
   /**
    * Queue for processing smart input emails and attachments
    * Used by:
    * - apps/workers/src/smart-input/smart-input.worker.ts (processing jobs)
    */
-  SMART_INPUT: 'smart-input',
-} as const
+  SMART_INPUT: "smart-input",
+  /**
+   * Queue for Google Calendar synchronization jobs
+   * Used by:
+   * - apps/api/src/trpc/routers/events.ts (adding jobs)
+   * - apps/workers/src/google-calendar-sync-worker.ts (processing jobs)
+   */
+  GOOGLE_CALENDAR_SYNC: "google-calendar-sync",
+} as const;
 
 /**
  * Redis Channel Names
@@ -42,7 +49,7 @@ export const REDIS_CHANNELS = {
    * - apps/workers/src/job-status.service.ts (publishing)
    * - apps/api/src/websocket/index.ts (subscribing)
    */
-  IMPORT_PROGRESS: 'import:progress',
-  SUBSCRIBE: 'import:subscribe',
-  SUBSCRIBED: 'import:subscribed',
-} as const
+  IMPORT_PROGRESS: "import:progress",
+  SUBSCRIBE: "import:subscribe",
+  SUBSCRIBED: "import:subscribed",
+} as const;

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "../db";
 import { eventsTags, tags } from "../db/schema";
@@ -153,15 +154,33 @@ export async function deleteTag(id: string) {
 }
 
 export async function findOrCreateTagsByNames(tagNames: string[]) {
-  const tagList = [];
-
-  for (const name of tagNames) {
-    let tag = await getTagByName(name);
-    if (!tag) {
-      tag = await createTag({ name });
-    }
-    tagList.push(tag);
+  if (tagNames.length === 0) {
+    return [];
   }
 
-  return tagList;
+  // Try to insert all tags - existing ones will be ignored due to onConflictDoNothing
+
+  const tagValues = tagNames.map((name) => ({
+    id: randomUUID(),
+    name,
+    color: null,
+    description: null,
+    userId: null,
+  }));
+
+  await db
+    .insert(tags)
+    .values(tagValues)
+    .onConflictDoNothing({ target: tags.name });
+
+  // Query all tags by names to get their IDs (including the ones we just created)
+  const allTags = await db
+    .select()
+    .from(tags)
+    .where(inArray(tags.name, tagNames));
+
+  // Create a map for O(1) lookup and maintain order
+  const tagMap = new Map(allTags.map((tag) => [tag.name, tag] as const));
+
+  return tagNames.map((name) => tagMap.get(name)!);
 }

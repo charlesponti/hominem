@@ -1,11 +1,24 @@
-import { and, asc, desc, eq, inArray, like, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  like,
+  lte,
+  or,
+} from "drizzle-orm";
 import { db } from "../db";
 import {
   contacts,
+  type EventTypeEnum,
   events,
   eventsTags,
   eventsUsers,
-  type EventTypeEnum,
+  place,
   tags,
 } from "../db/schema";
 import {
@@ -15,6 +28,7 @@ import {
 } from "./people.service";
 import {
   addTagsToEvent,
+  findOrCreateTagsByNames,
   getTagsForEvent,
   getTagsForEvents,
   removeTagsFromEvent,
@@ -135,6 +149,11 @@ export interface EventInput {
   type?: string;
   tags?: string[];
   people?: string[];
+  placeId?: string;
+  visitNotes?: string;
+  visitRating?: number;
+  visitReview?: string;
+  visitPeople?: string;
 }
 
 export async function createEvent(event: EventInput) {
@@ -146,6 +165,11 @@ export async function createEvent(event: EventInput) {
       description: event.description || null,
       date: event.date,
       type: (event.type || "Events") as EventTypeEnum,
+      placeId: event.placeId || null,
+      visitNotes: event.visitNotes || null,
+      visitRating: event.visitRating || null,
+      visitReview: event.visitReview || null,
+      visitPeople: event.visitPeople || null,
     })
     .returning();
 
@@ -158,7 +182,9 @@ export async function createEvent(event: EventInput) {
   }
 
   if (event.tags && event.tags.length > 0) {
-    await addTagsToEvent(result.id, event.tags);
+    const tagObjects = await findOrCreateTagsByNames(event.tags);
+    const tagIds = tagObjects.map((tag) => tag.id);
+    await addTagsToEvent(result.id, tagIds);
   }
 
   const [people, tagsList] = await Promise.all([
@@ -180,16 +206,35 @@ export interface UpdateEventInput {
   type?: string;
   tags?: string[];
   people?: string[];
+  dateStart?: Date;
+  dateEnd?: Date;
+  placeId?: string;
+  visitNotes?: string;
+  visitRating?: number;
+  visitReview?: string;
+  visitPeople?: string;
 }
 
 export async function updateEvent(id: string, event: UpdateEventInput) {
-  const updateData: Record<string, unknown> = {};
+  const updateData: Record<string, unknown> = {
+    updatedAt: new Date(),
+  };
 
   if (event.title !== undefined) updateData.title = event.title;
   if (event.description !== undefined)
     updateData.description = event.description;
   if (event.date !== undefined) updateData.date = event.date;
   if (event.type !== undefined) updateData.type = event.type;
+  if (event.dateStart !== undefined) updateData.dateStart = event.dateStart;
+  if (event.dateEnd !== undefined) updateData.dateEnd = event.dateEnd;
+  if (event.placeId !== undefined) updateData.placeId = event.placeId;
+  if (event.visitNotes !== undefined) updateData.visitNotes = event.visitNotes;
+  if (event.visitRating !== undefined)
+    updateData.visitRating = event.visitRating;
+  if (event.visitReview !== undefined)
+    updateData.visitReview = event.visitReview;
+  if (event.visitPeople !== undefined)
+    updateData.visitPeople = event.visitPeople;
 
   const result = await db
     .update(events)
@@ -208,7 +253,9 @@ export async function updateEvent(id: string, event: UpdateEventInput) {
   }
 
   if (event.tags !== undefined) {
-    await syncTagsForEvent(id, event.tags);
+    const tagObjects = await findOrCreateTagsByNames(event.tags);
+    const tagIds = tagObjects.map((tag) => tag.id);
+    await syncTagsForEvent(id, tagIds);
   }
 
   const [people, tagsList] = await Promise.all([
@@ -232,4 +279,202 @@ export async function deleteEvent(id: string) {
   const result = await db.delete(events).where(eq(events.id, id)).returning();
 
   return result.length > 0;
+}
+
+export async function getEventById(id: string) {
+  const result = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, id))
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  const event = result[0];
+  const [people, tagsList] = await Promise.all([
+    getPeopleForEvent(id),
+    getTagsForEvent(id),
+  ]);
+
+  return {
+    ...event,
+    tags: tagsList,
+    people,
+  };
+}
+
+export async function getEventByExternalId(
+  externalId: string,
+  calendarId: string
+) {
+  const result = await db
+    .select()
+    .from(events)
+    .where(
+      and(eq(events.externalId, externalId), eq(events.calendarId, calendarId))
+    )
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  const event = result[0];
+  const [people, tagsList] = await Promise.all([
+    getPeopleForEvent(event.id),
+    getTagsForEvent(event.id),
+  ]);
+
+  return {
+    ...event,
+    tags: tagsList,
+    people,
+  };
+}
+
+export interface SyncStatus {
+  lastSyncedAt: Date | null;
+  syncError: string | null;
+  eventCount: number;
+}
+
+export async function getSyncStatus(userId: string): Promise<SyncStatus> {
+  const syncedEvents = await db
+    .select()
+    .from(events)
+    .where(and(eq(events.userId, userId), eq(events.source, "google_calendar")))
+    .orderBy(events.lastSyncedAt);
+
+  const lastEvent = syncedEvents[syncedEvents.length - 1];
+
+  return {
+    lastSyncedAt: lastEvent?.lastSyncedAt || null,
+    syncError: lastEvent?.syncError || null,
+    eventCount: syncedEvents.length,
+  };
+}
+
+export interface VisitFilters {
+  placeId?: string;
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export async function getVisitsByUser(userId: string, filters?: VisitFilters) {
+  const conditions = [
+    eq(events.userId, userId),
+    isNull(events.deletedAt),
+    isNotNull(events.placeId), // Only events with a placeId (visits)
+  ];
+
+  if (filters?.placeId) {
+    conditions.push(eq(events.placeId, filters.placeId));
+  }
+
+  if (filters?.startDate) {
+    conditions.push(gte(events.date, filters.startDate));
+  }
+
+  if (filters?.endDate) {
+    conditions.push(lte(events.date, filters.endDate));
+  }
+
+  const visits = await db
+    .select({
+      event: events,
+      place: place,
+    })
+    .from(events)
+    .leftJoin(place, eq(events.placeId, place.id))
+    .where(and(...conditions))
+    .orderBy(desc(events.date));
+
+  const eventIds = visits.map((v) => v.event.id);
+  const [peopleMap, tagsMap] = await Promise.all([
+    getPeopleForEvents(eventIds),
+    getTagsForEvents(eventIds),
+  ]);
+
+  return visits.map((row) => ({
+    ...row.event,
+    place: row.place,
+    tags: tagsMap.get(row.event.id) || [],
+    people: peopleMap.get(row.event.id) || [],
+  }));
+}
+
+export async function getVisitsByPlace(placeId: string, userId?: string) {
+  const conditions = [eq(events.placeId, placeId), isNull(events.deletedAt)];
+
+  if (userId) {
+    conditions.push(eq(events.userId, userId));
+  }
+
+  const visits = await db
+    .select({
+      event: events,
+      place: place,
+    })
+    .from(events)
+    .leftJoin(place, eq(events.placeId, place.id))
+    .where(and(...conditions))
+    .orderBy(desc(events.date));
+
+  const eventIds = visits.map((v) => v.event.id);
+  const [peopleMap, tagsMap] = await Promise.all([
+    getPeopleForEvents(eventIds),
+    getTagsForEvents(eventIds),
+  ]);
+
+  return visits.map((row) => ({
+    ...row.event,
+    place: row.place,
+    tags: tagsMap.get(row.event.id) || [],
+    people: peopleMap.get(row.event.id) || [],
+  }));
+}
+
+export interface VisitStats {
+  visitCount: number;
+  lastVisitDate: Date | null;
+  averageRating: number | null;
+}
+
+export async function getVisitStatsByPlace(
+  placeId: string,
+  userId: string
+): Promise<VisitStats> {
+  const visits = await db
+    .select({
+      date: events.date,
+      visitRating: events.visitRating,
+    })
+    .from(events)
+    .where(
+      and(
+        eq(events.placeId, placeId),
+        eq(events.userId, userId),
+        isNull(events.deletedAt)
+      )
+    )
+    .orderBy(desc(events.date));
+
+  const visitCount = visits.length;
+  const lastVisitDate = visits.length > 0 ? visits[0].date : null;
+
+  const ratings = visits
+    .map((v) => v.visitRating)
+    .filter((r): r is number => r !== null && r !== undefined);
+  const averageRating =
+    ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+      : null;
+
+  return {
+    visitCount,
+    lastVisitDate,
+    averageRating,
+  };
 }

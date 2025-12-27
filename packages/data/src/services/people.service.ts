@@ -71,8 +71,12 @@ export async function replacePeopleForEvent(
   await db.insert(eventsUsers).values(relationships);
 }
 
-export async function getPeople() {
-  return db.select().from(contacts).orderBy(asc(contacts.firstName));
+export async function getPeople({ userId }: { userId: string }) {
+  return db
+    .select()
+    .from(contacts)
+    .where(eq(contacts.userId, userId))
+    .orderBy(asc(contacts.firstName));
 }
 
 export async function getPersonById(id: string) {
@@ -89,7 +93,8 @@ export async function createPerson(person: PersonInput) {
   if (!person.firstName) {
     throw new Error("firstName is required");
   }
-  const result = await db
+
+  const [result] = await db
     .insert(contacts)
     .values({
       userId: person.userId,
@@ -100,7 +105,11 @@ export async function createPerson(person: PersonInput) {
     })
     .returning();
 
-  return result[0];
+  if (!result) {
+    throw new Error("Failed to create person");
+  }
+
+  return result;
 }
 
 export async function updatePerson(id: string, person: PersonInput) {

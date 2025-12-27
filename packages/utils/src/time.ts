@@ -50,3 +50,35 @@ export const formatTime = (seconds: number) => {
   const secs = seconds % 60
   return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
+
+/**
+ * Calculates and formats the time difference between a given date and now.
+ * Returns a human-readable string like "5 minutes ago", "2 hours ago", etc.
+ *
+ * @param date - The date to calculate the time difference from
+ * @param fallback - Optional fallback text when date is null/undefined (default: "Unknown")
+ * @returns A formatted string representing the time ago
+ */
+export function getTimeAgo(date: Date | string | null | undefined, fallback = 'Unknown'): string {
+  if (!date) {
+    return fallback
+  }
+
+  const now = new Date()
+  const targetDate = typeof date === 'string' ? new Date(date) : date
+  const diffMs = now.getTime() - targetDate.getTime()
+  const diffMins = Math.floor(diffMs / TIME_UNITS.MINUTE)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMins < 1) {
+    return 'Just now'
+  }
+  if (diffMins < 60) {
+    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`
+  }
+  if (diffHours < 24) {
+    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+  }
+  return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+}

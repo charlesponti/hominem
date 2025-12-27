@@ -4,6 +4,7 @@ export * from "./bookmarks.service";
 export * from "./content-strategies.service";
 export * from "./content.service";
 export * from "./goals.service";
+export * from "./google-calendar.service";
 export * from "./health.service";
 export * from "./events.service";
 export * from "./lists";
