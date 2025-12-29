@@ -1,6 +1,7 @@
 import { List } from 'lucide-react'
 import { Link } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
+import { buildImageUrl } from '~/lib/utils'
 
 type ListRowProps = {
   id: string
@@ -12,6 +13,7 @@ type ListRowProps = {
 
 export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
   const utils = trpc.useUtils()
+  const thumbnailUrl = buildImageUrl(imageUrl, 80, 80)
 
   return (
     <li className="flex items-center gap-3 p-2 group hover:bg-gray-50 transition-colors">
@@ -29,7 +31,7 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
               <div className="size-8 rounded-sm overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
                 {imageUrl ? (
                   <img
-                    src={imageUrl}
+                    src={thumbnailUrl}
                     alt={imageAlt || name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     style={{ viewTransitionName: `list-image-${id}` }}
