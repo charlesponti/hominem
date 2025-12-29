@@ -7,6 +7,9 @@ import EventForm from '../components/events/EventForm'
 import EventList from '../components/events/EventList'
 import FiltersSection from '../components/events/FiltersSection'
 import StatsDisplay from '../components/events/StatsDisplay'
+import SyncButton from '../components/events/SyncButton'
+import SyncStatus from '../components/events/SyncStatus'
+import { useGoogleCalendarSync } from '../hooks/useGoogleCalendarSync'
 import type { Route } from './+types/events'
 
 interface EventPerson {
@@ -94,9 +97,12 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
   const [filterType, setFilterType] = useState('')
   const [filterCompanion, setFilterCompanion] = useState('')
+  const [filterSource, setFilterSource] = useState('')
   const [sortBy, setSortBy] = useState('date-desc')
   const [showAddForm, setShowAddForm] = useState(false)
   const [companions, setCompanions] = useState<string[]>([])
+
+  const { sync, syncStatus, isSyncing } = useGoogleCalendarSync()
 
   const activities = ((loaderData.events ?? []) as EventActivity[]).map((activity) => ({
     ...activity,
@@ -129,9 +135,14 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
     const params = new URLSearchParams()
     if (filterType) params.set('type', filterType)
     if (filterCompanion) params.set('companion', filterCompanion)
+    if (filterSource) params.set('source', filterSource)
     if (sortBy) params.set('sortBy', sortBy)
 
     navigate(`/events?${params.toString()}`)
+  }
+
+  const handleSync = async () => {
+    await sync()
   }
 
   const handleToggleEventForm = () => {
@@ -143,48 +154,51 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-notion-bg-secondary)' }}>
+    <div className="min-h-screen bg-muted">
       {/* Header - Cleaner, more spacious */}
-      <div
-        className="pt-12 pb-8 relative"
-        style={{
-          backgroundColor: 'var(--color-notion-bg)',
-        }}
-      >
+      <div className="pt-12 pb-8 relative bg-card">
         <div className="max-w-6xl mx-auto px-8">
           {/* Title and Actions Row */}
           <div className="flex items-start justify-between mb-10">
             <div>
-              <h1
-                className="text-5xl font-bold tracking-tight mb-3"
-                style={{ color: 'var(--color-notion-text)' }}
-              >
+              <h1 className="text-5xl font-bold tracking-tight mb-3 text-foreground">
                 Events
               </h1>
-              <p className="text-lg" style={{ color: 'var(--color-notion-text-secondary)' }}>
+              <p className="text-lg text-muted-foreground">
                 Track and organize your life's memorable moments
               </p>
             </div>
 
-            {/* Primary Action - Prominent placement */}
-            <button
-              type="button"
-              onClick={handleToggleEventForm}
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
-              style={{
-                backgroundColor: 'var(--color-notion-text)',
-                color: 'var(--color-notion-bg)',
-              }}
-            >
-              <span className="text-lg">+</span>
-              <span>{showAddForm ? 'Cancel' : 'Add Event'}</span>
-            </button>
+            {/* Primary Actions - Prominent placement */}
+            <div className="flex items-center gap-3">
+              <SyncButton onSync={handleSync} disabled={isSyncing} />
+              <button
+                type="button"
+                onClick={handleToggleEventForm}
+                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 bg-primary text-primary-foreground"
+              >
+                <span className="text-lg">+</span>
+                <span>{showAddForm ? 'Cancel' : 'Add Event'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Stats - More compact and integrated */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatsDisplay activities={activities} loading={false} />
           </div>
+
+          {/* Sync Status */}
+          {syncStatus && (
+            <div className="mt-4">
+              <SyncStatus
+                lastSyncedAt={syncStatus.lastSyncedAt}
+                syncError={syncStatus.syncError}
+                eventCount={syncStatus.eventCount}
+                connected={syncStatus.connected}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -193,13 +207,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         {/* Event Form - Show/hide with smooth transition */}
         {showAddForm && (
           <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
-            <div
-              className="rounded-xl p-6 shadow-sm"
-              style={{
-                backgroundColor: 'var(--color-notion-bg)',
-                border: '1px solid var(--color-notion-border)',
-              }}
-            >
+            <div className="rounded-xl p-6 shadow-sm bg-card border border-border">
               <EventForm
                 showAddForm={showAddForm}
                 people={people}
@@ -210,20 +218,17 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         )}
 
         {/* Filters and Secondary Actions */}
-        <div
-          className="mb-8 p-5 rounded-xl"
-          style={{
-            backgroundColor: 'var(--color-notion-bg)',
-          }}
-        >
+        <div className="mb-8 p-5 rounded-xl bg-card">
           <div className="flex items-end gap-4">
             <FiltersSection
               filterType={filterType}
               filterCompanion={filterCompanion}
+              filterSource={filterSource}
               sortBy={sortBy}
               companions={companions}
               onFilterTypeChange={setFilterType}
               onFilterCompanionChange={setFilterCompanion}
+              onFilterSourceChange={setFilterSource}
               onSortByChange={setSortBy}
               onFilterChange={handleFilterChange}
             />
@@ -232,19 +237,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
             <button
               type="button"
               onClick={() => navigate('/events/people')}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap"
-              style={{
-                backgroundColor: 'var(--color-notion-bg-secondary)',
-                color: 'var(--color-notion-text-secondary)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-notion-hover)'
-                e.currentTarget.style.color = 'var(--color-notion-text)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-notion-bg-secondary)'
-                e.currentTarget.style.color = 'var(--color-notion-text-secondary)'
-              }}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <span>👥</span>
               <span>Manage People</span>
@@ -255,16 +248,10 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
         <div>
           <div className="flex items-baseline justify-between mb-5 px-1">
-            <h2
-              className="text-2xl font-semibold tracking-tight"
-              style={{ color: 'var(--color-notion-text)' }}
-            >
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
               Your Events
             </h2>
-            <div
-              className="text-sm font-medium"
-              style={{ color: 'var(--color-notion-text-tertiary)' }}
-            >
+            <div className="text-sm font-medium text-muted-foreground">
               {activities.length} {activities.length === 1 ? 'event' : 'events'}
             </div>
           </div>

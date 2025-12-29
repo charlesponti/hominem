@@ -53,9 +53,13 @@ export default function PlaceRow({
 
   return (
     <li
-      className={cn('flex items-center gap-3 px-2 py-1 group hover:bg-gray-50 transition-colors', {
-        'bg-indigo-50': isSelected,
-      })}
+      className={cn(
+        'flex items-center gap-3 px-2 py-1 group hover:bg-gray-50 transition-colors',
+        'focus-within:bg-indigo-50 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2',
+        {
+          'bg-indigo-50': isSelected,
+        }
+      )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       data-selected={isSelected}

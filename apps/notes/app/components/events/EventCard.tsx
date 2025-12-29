@@ -1,4 +1,5 @@
 import type React from 'react'
+import SourceBadge from './SourceBadge'
 
 interface Person {
   id: string
@@ -15,6 +16,7 @@ interface Activity {
   location?: string
   people?: Person[]
   tags?: string[]
+  source?: 'manual' | 'google_calendar'
 }
 
 interface EventCardProps {
@@ -39,11 +41,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
 
   return (
     <div
-      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group cursor-pointer transition-all duration-150 hover:bg-gray-50 animate-fade-in"
-      style={{
-        backgroundColor: 'var(--color-notion-bg)',
-        borderColor: 'var(--color-notion-border)',
-      }}
+      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group cursor-pointer transition-all duration-150 hover:bg-gray-50 animate-fade-in bg-card border-border"
       onClick={handleEditEvent}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -55,11 +53,11 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
       {/* Date Column */}
       <div className="event-table-cell event-col-date">
         <div className="flex flex-col">
-          <span className="text-sm font-medium" style={{ color: 'var(--color-notion-text)' }}>
+          <span className="text-sm font-medium text-foreground">
             {formatDate(activity.date)}
           </span>
           {activity.time && (
-            <span className="text-xs" style={{ color: 'var(--color-notion-text-tertiary)' }}>
+            <span className="text-xs text-muted-foreground">
               {activity.time}
             </span>
           )}
@@ -76,16 +74,17 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
       {/* Event Title Column */}
       <div className="event-table-cell event-col-title">
         <div className="flex flex-col">
-          <h3
-            className="text-sm font-semibold leading-snug"
-            style={{ color: 'var(--color-notion-text)' }}
-          >
-            {activity.title}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3
+              className="text-sm font-semibold leading-snug text-foreground"
+            >
+              {activity.title}
+            </h3>
+            {activity.source && <SourceBadge source={activity.source} />}
+          </div>
           {activity.description && activity.description !== activity.title && (
             <p
-              className="text-xs leading-relaxed mt-1 line-clamp-2"
-              style={{ color: 'var(--color-notion-text-secondary)' }}
+              className="text-xs leading-relaxed mt-1 line-clamp-2 text-muted-foreground"
             >
               {activity.description}
             </p>
@@ -99,17 +98,13 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
                 .map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium"
-                    style={{
-                      backgroundColor: 'var(--color-notion-gray-bg)',
-                      color: 'var(--color-notion-text-secondary)',
-                    }}
+                    className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground"
                   >
                     {tag}
                   </span>
                 ))}
               {activity.tags.filter((tag) => tag.trim()).length > 3 && (
-                <span className="text-xs" style={{ color: 'var(--color-notion-text-tertiary)' }}>
+                <span className="text-xs text-muted-foreground">
                   +{activity.tags.filter((tag) => tag.trim()).length - 3}
                 </span>
               )}
@@ -124,8 +119,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
           <div className="flex items-center gap-1">
             <span className="text-xs">📍</span>
             <span
-              className="text-xs truncate"
-              style={{ color: 'var(--color-notion-text-secondary)' }}
+              className="text-xs truncate text-muted-foreground"
               title={activity.location}
             >
               {activity.location}
@@ -140,8 +134,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
           <div className="flex items-center gap-1">
             <span className="text-xs">👥</span>
             <span
-              className="text-xs truncate"
-              style={{ color: 'var(--color-notion-text-secondary)' }}
+              className="text-xs truncate text-muted-foreground"
               title={activity.people
                 .map((p) => `${p.firstName || ''} ${p.lastName || ''}`.trim())
                 .join(', ')}
@@ -158,21 +151,12 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
       <div className="event-table-cell event-col-actions">
         <button
           type="button"
-          className="p-1 rounded opacity-0 group-hover:opacity-100 transition-all duration-150 hover:bg-gray-100"
+          className="p-1 rounded opacity-0 group-hover:opacity-100 transition-all duration-150 hover:bg-gray-100 text-muted-foreground hover:bg-accent hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation()
             handleEditEvent()
           }}
           aria-label="Edit event"
-          style={{ color: 'var(--color-notion-text-secondary)' }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-notion-hover)'
-            e.currentTarget.style.color = 'var(--color-notion-text)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent'
-            e.currentTarget.style.color = 'var(--color-notion-text-secondary)'
-          }}
         >
           <svg
             width="16"

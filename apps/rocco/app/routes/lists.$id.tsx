@@ -1,9 +1,8 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
-import { PageTitle } from '@hominem/ui'
+import { Alert, PageTitle } from '@hominem/ui'
 import { UserPlus } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, redirect } from 'react-router'
-import Alert from '~/components/alert'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import ListEditButton from '~/components/lists/list-edit-button'
 import Loading from '~/components/loading'
@@ -126,12 +125,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="overflow-y-auto space-y-4 pb-8">
-            <PlacesList
-              places={list.places}
-              listId={list.id}
-              canAdd={hasAccess}
-              showAvatars={(list.users?.length ?? 0) > 1}
-            />
+            <PlacesList places={list.places} listId={list.id} canAdd={hasAccess} />
           </div>
 
           <div className="min-h-[300px] overflow-hidden">

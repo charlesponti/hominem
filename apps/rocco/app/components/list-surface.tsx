@@ -1,10 +1,16 @@
 import { forwardRef, type HTMLAttributes } from 'react'
+import Loading from '~/components/loading'
 import { cn } from '~/lib/utils'
 
-type ListSurfaceProps = HTMLAttributes<HTMLUListElement>
+type LoadingSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
+
+type ListSurfaceProps = HTMLAttributes<HTMLUListElement> & {
+  isLoading?: boolean
+  loadingSize?: LoadingSize
+}
 
 const ListSurface = forwardRef<HTMLUListElement, ListSurfaceProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, isLoading, loadingSize = 'md', children, ...props }, ref) => {
     return (
       <ul
         ref={ref}
@@ -13,7 +19,15 @@ const ListSurface = forwardRef<HTMLUListElement, ListSurfaceProps>(
           className
         )}
         {...props}
-      />
+      >
+        {isLoading ? (
+          <li className="flex items-center justify-center py-8">
+            <Loading size={loadingSize} />
+          </li>
+        ) : (
+          children
+        )}
+      </ul>
     )
   }
 )

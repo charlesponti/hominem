@@ -16,6 +16,7 @@ interface Activity {
   location?: string
   people?: Person[]
   tags?: string[]
+  source?: 'manual' | 'google_calendar'
 }
 
 interface EventListProps {
@@ -31,8 +32,7 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className="h-16 bg-gray-200 animate-pulse rounded"
-            style={{ backgroundColor: 'var(--color-notion-gray-bg)' }}
+            className="h-16 bg-muted animate-pulse rounded"
           />
         ))}
       </div>
@@ -41,7 +41,7 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
 
   if (activities.length === 0) {
     return (
-      <div className="text-center py-12" style={{ color: 'var(--color-notion-text-secondary)' }}>
+      <div className="text-center py-12 text-muted-foreground">
         <div className="text-4xl mb-4">📅</div>
         <h3 className="text-lg font-medium mb-2">No events yet</h3>
         <p className="text-sm">Start adding events to track your life's memorable moments!</p>

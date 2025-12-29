@@ -24,7 +24,7 @@ export interface SyncResult {
   errors: string[];
 }
 
-export interface SyncStatus {
+export interface GoogleCalendarSyncStatus {
   lastSyncedAt: Date | null;
   syncError: string | null;
   eventCount: number;
@@ -334,7 +334,7 @@ export class GoogleCalendarService {
   /**
    * Get sync status for user
    */
-  async getSyncStatus(): Promise<SyncStatus> {
+  async getSyncStatus(): Promise<GoogleCalendarSyncStatus> {
     const syncedEvents = await db
       .select()
       .from(events)

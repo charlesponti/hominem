@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useState } from 'react'
+import { Textarea } from '@hominem/ui/components/ui/textarea'
 
 interface Person {
   id: string
@@ -30,7 +31,7 @@ const EventForm: React.FC<EventFormProps> = ({
     <>
       {showAddForm && (
         <div>
-          <h3 className="text-xl font-semibold mb-6" style={{ color: 'var(--color-notion-text)' }}>
+          <h3 className="text-xl font-semibold mb-6 text-foreground">
             Add New Event
           </h3>
           <form method="post">
@@ -38,8 +39,7 @@ const EventForm: React.FC<EventFormProps> = ({
               <div>
                 <label
                   htmlFor="date"
-                  className="block text-xs font-medium uppercase tracking-wide mb-1.5"
-                  style={{ color: 'var(--color-notion-text-secondary)' }}
+                  className="block text-xs font-medium uppercase tracking-wide mb-1.5 text-muted-foreground"
                 >
                   Date
                 </label>
@@ -49,27 +49,13 @@ const EventForm: React.FC<EventFormProps> = ({
                   name="date"
                   defaultValue={new Date().toISOString().split('T')[0]}
                   required
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px"
-                  style={{
-                    backgroundColor: 'var(--color-notion-bg)',
-                    color: 'var(--color-notion-text)',
-                    borderColor: 'var(--color-notion-border)',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-blue)'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(35, 131, 226, 0.1)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-border)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
                 <label
                   htmlFor="time"
-                  className="block text-xs font-medium uppercase tracking-wide mb-1.5"
-                  style={{ color: 'var(--color-notion-text-secondary)' }}
+                  className="block text-xs font-medium uppercase tracking-wide mb-1.5 text-muted-foreground"
                 >
                   Time
                 </label>
@@ -77,20 +63,7 @@ const EventForm: React.FC<EventFormProps> = ({
                   type="time"
                   id="time"
                   name="time"
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px"
-                  style={{
-                    backgroundColor: 'var(--color-notion-bg)',
-                    color: 'var(--color-notion-text)',
-                    borderColor: 'var(--color-notion-border)',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-blue)'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(35, 131, 226, 0.1)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-border)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -98,8 +71,7 @@ const EventForm: React.FC<EventFormProps> = ({
               <div>
                 <label
                   htmlFor="title"
-                  className="block text-xs font-medium uppercase tracking-wide mb-1.5"
-                  style={{ color: 'var(--color-notion-text-secondary)' }}
+                  className="block text-xs font-medium uppercase tracking-wide mb-1.5 text-muted-foreground"
                 >
                   Title
                 </label>
@@ -109,27 +81,13 @@ const EventForm: React.FC<EventFormProps> = ({
                   name="title"
                   placeholder="e.g., Movie Night"
                   required
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px"
-                  style={{
-                    backgroundColor: 'var(--color-notion-bg)',
-                    color: 'var(--color-notion-text)',
-                    borderColor: 'var(--color-notion-border)',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-blue)'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(35, 131, 226, 0.1)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-border)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
                 <label
                   htmlFor="location"
-                  className="block text-xs font-medium uppercase tracking-wide mb-1.5"
-                  style={{ color: 'var(--color-notion-text-secondary)' }}
+                  className="block text-xs font-medium uppercase tracking-wide mb-1.5 text-muted-foreground"
                 >
                   Location
                 </label>
@@ -138,20 +96,7 @@ const EventForm: React.FC<EventFormProps> = ({
                   id="location"
                   name="location"
                   placeholder="e.g., AMC Theater"
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px"
-                  style={{
-                    backgroundColor: 'var(--color-notion-bg)',
-                    color: 'var(--color-notion-text)',
-                    borderColor: 'var(--color-notion-border)',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-blue)'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(35, 131, 226, 0.1)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-border)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -159,8 +104,7 @@ const EventForm: React.FC<EventFormProps> = ({
               <div>
                 <label
                   htmlFor="people"
-                  className="block text-xs font-medium uppercase tracking-wide mb-1.5"
-                  style={{ color: 'var(--color-notion-text-secondary)' }}
+                  className="block text-xs font-medium uppercase tracking-wide mb-1.5 text-muted-foreground"
                 >
                   People
                 </label>
@@ -169,21 +113,7 @@ const EventForm: React.FC<EventFormProps> = ({
                   name="people"
                   multiple
                   onChange={handlePeopleChange}
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px"
-                  style={{
-                    backgroundColor: 'var(--color-notion-bg)',
-                    color: 'var(--color-notion-text)',
-                    borderColor: 'var(--color-notion-border)',
-                    minHeight: '100px',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-blue)'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(35, 131, 226, 0.1)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-border)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[100px]"
                 >
                   {people.map((person) => (
                     <option key={person.id} value={person.id}>
@@ -191,18 +121,14 @@ const EventForm: React.FC<EventFormProps> = ({
                     </option>
                   ))}
                 </select>
-                <div
-                  className="text-xs mt-1"
-                  style={{ color: 'var(--color-notion-text-tertiary)' }}
-                >
+                <div className="text-xs mt-1 text-muted-foreground">
                   Hold Ctrl/Cmd to select multiple people
                 </div>
               </div>
               <div>
                 <label
                   htmlFor="tags"
-                  className="block text-xs font-medium uppercase tracking-wide mb-1.5"
-                  style={{ color: 'var(--color-notion-text-secondary)' }}
+                  className="block text-xs font-medium uppercase tracking-wide mb-1.5 text-muted-foreground"
                 >
                   Tags
                 </label>
@@ -211,60 +137,29 @@ const EventForm: React.FC<EventFormProps> = ({
                   id="tags"
                   name="tags"
                   placeholder="Comma-separated tags"
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px"
-                  style={{
-                    backgroundColor: 'var(--color-notion-bg)',
-                    color: 'var(--color-notion-text)',
-                    borderColor: 'var(--color-notion-border)',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-blue)'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(35, 131, 226, 0.1)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-notion-border)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
             <div className="mb-4">
               <label
                 htmlFor="description"
-                className="block text-xs font-medium uppercase tracking-wide mb-1.5"
-                style={{ color: 'var(--color-notion-text-secondary)' }}
+                className="block text-xs font-medium uppercase tracking-wide mb-1.5 text-muted-foreground"
               >
                 Description
               </label>
-              <textarea
+              <Textarea
                 id="description"
                 name="description"
                 placeholder="Optional detailed description"
                 rows={3}
-                className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 resize-none focus:-translate-y-px"
-                style={{
-                  backgroundColor: 'var(--color-notion-bg)',
-                  color: 'var(--color-notion-text)',
-                  borderColor: 'var(--color-notion-border)',
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--color-notion-blue)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(35, 131, 226, 0.1)'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--color-notion-border)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+                className="resize-none"
               />
             </div>
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5"
-                style={{
-                  backgroundColor: 'var(--color-notion-text)',
-                  color: 'var(--color-notion-bg)',
-                }}
+                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 bg-primary text-primary-foreground"
               >
                 Create Event
               </button>

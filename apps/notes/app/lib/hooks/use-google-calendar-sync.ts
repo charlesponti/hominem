@@ -1,108 +1,80 @@
-import { useState } from 'react'
+import { useState } from "react";
+import { trpc } from "~/lib/trpc";
 
 export interface CalendarSyncOptions {
-  accessToken: string
-  refreshToken?: string
-  userId: string
-  calendarId?: string
-  timeMin?: string
-  timeMax?: string
+  accessToken: string;
+  refreshToken?: string;
+  userId: string;
+  calendarId?: string;
+  timeMin?: string;
+  timeMax?: string;
 }
 
 export interface CalendarSyncResult {
-  success: boolean
-  syncedEvents: number
-  totalEvents: number
-  events: unknown[]
-  error?: string
+  success: boolean;
+  syncedEvents: number;
+  totalEvents: number;
+  events: unknown[];
+  error?: string;
 }
 
 export function useGoogleCalendarSync() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<CalendarSyncResult | null>(null)
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<CalendarSyncResult | null>(null);
+
+  const syncMutation = trpc.events.syncGoogleCalendar.useMutation();
 
   const syncCalendar = async (options: CalendarSyncOptions) => {
-    setIsLoading(true)
-    setResult(null)
-
-    const formData = new FormData()
-    formData.append('accessToken', options.accessToken)
-    if (options.refreshToken) {
-      formData.append('refreshToken', options.refreshToken)
-    }
-    formData.append('userId', options.userId)
-    if (options.calendarId) {
-      formData.append('calendarId', options.calendarId)
-    }
-    if (options.timeMin) {
-      formData.append('timeMin', options.timeMin)
-    }
-    if (options.timeMax) {
-      formData.append('timeMax', options.timeMax)
-    }
+    setIsLoading(true);
+    setResult(null);
 
     try {
-      const response = await fetch('/api/calendar/sync', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setResult({
-          success: true,
-          syncedEvents: data.syncedEvents,
-          totalEvents: data.totalEvents,
-          events: data.events,
-        })
-      }
+      const syncResult = await syncMutation.mutateAsync({
+        calendarId: options.calendarId,
+        timeMin: options.timeMin,
+        timeMax: options.timeMax,
+        accessToken: options.accessToken,
+        refreshToken: options.refreshToken,
+      });
 
       setResult({
-        success: false,
-        syncedEvents: 0,
-        totalEvents: 0,
+        success: syncResult.success,
+        syncedEvents: syncResult.created + syncResult.updated,
+        totalEvents:
+          syncResult.created + syncResult.updated + syncResult.deleted,
         events: [],
-        error: data.error || 'Sync failed',
-      })
+        error:
+          syncResult.errors.length > 0
+            ? syncResult.errors.join(", ")
+            : undefined,
+      });
     } catch (error) {
       setResult({
         success: false,
         syncedEvents: 0,
         totalEvents: 0,
         events: [],
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  const utils = trpc.useUtils();
 
   const getCalendars = async (accessToken: string, refreshToken?: string) => {
-    const params = new URLSearchParams({ accessToken })
-    if (refreshToken) {
-      params.append('refreshToken', refreshToken)
-    }
-
-    try {
-      const response = await fetch(`/api/calendar/sync?${params}`)
-      const data = await response.json()
-
-      if (response.ok) {
-        return data.calendars
-      }
-
-      throw new Error(data.error || 'Failed to fetch calendars')
-    } catch (error) {
-      console.error('Error fetching calendars:', error)
-      throw error
-    }
-  }
+    const calendars = await utils.events.getGoogleCalendars.fetch({
+      accessToken,
+      refreshToken,
+    });
+    return calendars;
+  };
 
   return {
     syncCalendar,
     getCalendars,
-    isLoading,
+    isLoading: isLoading || syncMutation.isPending,
     result,
-  }
+  };
 }

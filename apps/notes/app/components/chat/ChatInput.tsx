@@ -1,4 +1,5 @@
 import { Button } from '@hominem/ui/button'
+import { Textarea } from '@hominem/ui/components/ui/textarea'
 import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { useMatches } from 'react-router'
@@ -126,13 +127,13 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
 
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <textarea
+            <Textarea
               ref={textareaRef}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              className="w-full resize-none rounded-lg border border-border px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation"
+              className="resize-none pr-12 touch-manipulation"
               rows={1}
               disabled={isSubmitting}
             />

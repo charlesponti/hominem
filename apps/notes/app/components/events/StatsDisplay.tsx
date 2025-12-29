@@ -29,8 +29,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
         {['total', 'month', 'people', 'tags'].map((type) => (
           <div
             key={`skeleton-${type}`}
-            className="h-20 bg-gray-200 animate-pulse rounded"
-            style={{ backgroundColor: 'var(--color-notion-gray-bg)' }}
+            className="h-20 bg-muted animate-pulse rounded"
           />
         ))}
       </div>
@@ -82,25 +81,15 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="p-5 rounded-lg border backdrop-blur-sm"
-          style={{
-            backgroundColor: 'var(--color-notion-bg)',
-            borderColor: 'var(--color-notion-border)',
-          }}
+          className="p-5 rounded-lg border backdrop-blur-sm bg-card border-border"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xl opacity-80">{stat.icon}</span>
-            <span
-              className="text-3xl font-bold tracking-tight"
-              style={{ color: 'var(--color-notion-text)' }}
-            >
+            <span className="text-3xl font-bold tracking-tight text-foreground">
               {stat.value}
             </span>
           </div>
-          <div
-            className="text-xs font-medium uppercase tracking-wide"
-            style={{ color: 'var(--color-notion-text-secondary)' }}
-          >
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {stat.label}
           </div>
         </div>

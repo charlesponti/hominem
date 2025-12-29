@@ -1,11 +1,11 @@
-import { Label } from '@hominem/ui'
+import { Alert, Label } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
+import { Textarea } from '@hominem/ui/components/ui/textarea'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useId, useState } from 'react'
 import { useNavigate } from 'react-router'
-import Alert from '~/components/alert'
 import { useDeleteList, useUpdateList } from '~/lib/lists'
 import type { List } from '~/lib/types'
 
@@ -115,10 +115,9 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={descriptionId}>Description</Label>
-                  <textarea
+                  <Textarea
                     id={descriptionId}
                     placeholder="Enter list description"
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                     value={description || ''}
                     onChange={(e) => setDescription(e.target.value)}
                   />

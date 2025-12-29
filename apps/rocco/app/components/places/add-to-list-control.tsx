@@ -1,3 +1,4 @@
+import { useSupabaseAuthContext } from '@hominem/auth'
 import { Button } from '@hominem/ui/button'
 import {
   Command,
@@ -8,7 +9,6 @@ import {
   CommandList,
 } from '@hominem/ui/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
-import { useSupabaseAuthContext } from '@hominem/auth'
 import { Check, ListPlus, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useRevalidator } from 'react-router'
@@ -101,7 +101,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
         <PopoverTrigger asChild>
           <Button size="sm" className="flex items-center gap-2">
             <ListPlus size={8} />
-            <span className="text-xs font-semilight">Add to lists</span>
+            Add to lists
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0" align="start">

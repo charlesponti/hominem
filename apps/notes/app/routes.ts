@@ -11,7 +11,6 @@ export default [
   route("api/events/events/:id", "routes/api/events/events.$id.ts"),
   route("api/events/people", "routes/api/events/people.ts"),
   route("api/events/tags", "routes/api/events/tags.ts"),
-  route("api/calendar/sync", "routes/api/calendar/sync.ts"),
   route("api/upload", "routes/api.upload.ts"),
   route("api/transcribe", "routes/api.transcribe.ts"),
   route("api/speech", "routes/api.speech.ts"),

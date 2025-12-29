@@ -1,7 +1,7 @@
 import type { ListPlace } from '@hominem/data'
+import { Alert } from '@hominem/ui'
 import { useCallback, useState } from 'react'
 import { href } from 'react-router'
-import Alert from '~/components/alert'
 import AddPlaceControl from '~/components/lists/add-place-control'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
 import ListSurface from '../list-surface'

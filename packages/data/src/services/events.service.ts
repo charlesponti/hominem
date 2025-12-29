@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm";
 import { db } from "../db";
 import {
+  type CalendarEventInsert,
   contacts,
   type EventTypeEnum,
   events,
@@ -142,21 +143,12 @@ export async function getEvents(filters: EventFilters = {}) {
   }));
 }
 
-export interface EventInput {
-  title: string;
-  description?: string;
-  date: Date;
-  type?: string;
-  tags?: string[];
-  people?: string[];
-  placeId?: string;
-  visitNotes?: string;
-  visitRating?: number;
-  visitReview?: string;
-  visitPeople?: string;
-}
-
-export async function createEvent(event: EventInput) {
+export async function createEvent(
+  event: Omit<CalendarEventInsert, "id"> & {
+    tags?: string[];
+    people?: string[];
+  }
+) {
   const [result] = await db
     .insert(events)
     .values({
@@ -166,6 +158,7 @@ export async function createEvent(event: EventInput) {
       date: event.date,
       type: (event.type || "Events") as EventTypeEnum,
       placeId: event.placeId || null,
+      userId: event.userId,
       visitNotes: event.visitNotes || null,
       visitRating: event.visitRating || null,
       visitReview: event.visitReview || null,
@@ -177,11 +170,11 @@ export async function createEvent(event: EventInput) {
     throw new Error("Failed to create event");
   }
 
-  if (event.people && event.people.length > 0) {
+  if (event.people) {
     await replacePeopleForEvent(result.id, event.people);
   }
 
-  if (event.tags && event.tags.length > 0) {
+  if (event.tags) {
     const tagObjects = await findOrCreateTagsByNames(event.tags);
     const tagIds = tagObjects.map((tag) => tag.id);
     await addTagsToEvent(result.id, tagIds);
@@ -209,10 +202,10 @@ export interface UpdateEventInput {
   dateStart?: Date;
   dateEnd?: Date;
   placeId?: string;
-  visitNotes?: string;
-  visitRating?: number;
-  visitReview?: string;
-  visitPeople?: string;
+  visitNotes?: string | null;
+  visitRating?: number | null;
+  visitReview?: string | null;
+  visitPeople?: string | null;
 }
 
 export async function updateEvent(id: string, event: UpdateEventInput) {

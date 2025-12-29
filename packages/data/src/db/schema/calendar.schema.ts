@@ -50,7 +50,9 @@ export const events = pgTable(
     dateEnd: timestamp("date_end"),
     dateTime: timestamp("date_time"),
     type: eventTypeEnum("type").notNull(),
-    userId: uuid("user_id").references(() => users.id),
+    userId: uuid("user_id")
+      .references(() => users.id)
+      .notNull(),
     source: eventSourceEnum("source").default("manual").notNull(),
     externalId: text("external_id"),
     calendarId: text("calendar_id"),

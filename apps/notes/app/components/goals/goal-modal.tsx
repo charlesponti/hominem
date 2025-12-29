@@ -4,6 +4,7 @@ import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Label } from '@hominem/ui/components/ui/label'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog'
 import { Input } from '@hominem/ui/input'
+import { Textarea } from '@hominem/ui/components/ui/textarea'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -110,10 +111,10 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
             <Label htmlFor="description" className="text-base font-semibold">
               Description
             </Label>
-            <textarea
+            <Textarea
               id="description"
               {...register('description')}
-              className="w-full h-24 px-3 py-2 text-base rounded-md border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              className="resize-none"
               placeholder="Add more details about your goal..."
             />
           </div>

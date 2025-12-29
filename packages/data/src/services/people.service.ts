@@ -59,6 +59,7 @@ export async function replacePeopleForEvent(
   people?: string[]
 ) {
   if (people === undefined) return;
+  if (people.length === 0) return;
 
   await db.delete(eventsUsers).where(eq(eventsUsers.eventId, eventId));
 

@@ -154,11 +154,7 @@ export async function deleteTag(id: string) {
 }
 
 export async function findOrCreateTagsByNames(tagNames: string[]) {
-  if (tagNames.length === 0) {
-    return [];
-  }
-
-  // Try to insert all tags - existing ones will be ignored due to onConflictDoNothing
+  if (tagNames.length === 0) return [];
 
   const tagValues = tagNames.map((name) => ({
     id: randomUUID(),

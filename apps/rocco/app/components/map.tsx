@@ -1,3 +1,4 @@
+import { Alert } from '@hominem/ui'
 import {
   AdvancedMarker,
   APIProvider,
@@ -10,7 +11,6 @@ import {
   useMapsLibrary,
 } from '@vis.gl/react-google-maps'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import Alert from '~/components/alert'
 import Loading from '~/components/loading'
 import { useMapInteraction } from '~/contexts/map-interaction-context'
 import type { Place, PlaceLocation } from '~/lib/types'

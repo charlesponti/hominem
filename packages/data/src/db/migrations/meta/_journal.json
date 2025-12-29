@@ -337,6 +337,13 @@
       "when": 1766783810175,
       "tag": "0047_purple_arclight",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1766825612798,
+      "tag": "0048_furry_wind_dancer",
+      "breakpoints": true
     }
   ]
 }
