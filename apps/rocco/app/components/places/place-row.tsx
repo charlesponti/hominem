@@ -2,23 +2,8 @@ import { Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import z from 'zod'
-import { env } from '~/lib/env'
 import { trpc } from '~/lib/trpc/client'
-import { cn } from '~/lib/utils'
-
-const buildImageUrl = (src?: string | null, width = 400, height = 300) => {
-  if (!src) return null
-
-  if (src.includes('places/') && src.includes('/photos/')) {
-    return `https://places.googleapis.com/v1/${src}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
-  }
-
-  if (src.includes('googleusercontent')) {
-    return `${src}=w${width}-h${height}-c`
-  }
-
-  return src
-}
+import { buildImageUrl, cn } from '~/lib/utils'
 
 type PlaceRowProps = {
   name: string
