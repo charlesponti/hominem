@@ -1,4 +1,7 @@
+import { Button } from '@hominem/ui/components/ui/button'
+import { MapPinIcon, PencilIcon, UsersIcon } from 'lucide-react'
 import type React from 'react'
+import { useMemo } from 'react'
 import SourceBadge from './SourceBadge'
 
 interface Person {
@@ -25,6 +28,20 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
+  const peopleNames = useMemo(
+    () =>
+      activity.people
+        ?.map((p) => `${p.firstName} ${p.lastName}`)
+        .join(', ')
+        .trim(),
+    [activity.people]
+  )
+  const tags = useMemo(
+    () => activity.tags?.filter((tag) => tag.trim()).slice(0, 3),
+    [activity.tags]
+  )
+  const tagCount = useMemo(() => tags?.length ?? 0, [tags])
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return ''
     const date = new Date(dateStr)
@@ -53,14 +70,8 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
       {/* Date Column */}
       <div className="event-table-cell event-col-date">
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-foreground">
-            {formatDate(activity.date)}
-          </span>
-          {activity.time && (
-            <span className="text-xs text-muted-foreground">
-              {activity.time}
-            </span>
-          )}
+          <span className="text-sm font-medium text-foreground">{formatDate(activity.date)}</span>
+          {activity.time && <span className="text-xs text-muted-foreground">{activity.time}</span>}
         </div>
       </div>
 
@@ -75,73 +86,54 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
       <div className="event-table-cell event-col-title">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <h3
-              className="text-sm font-semibold leading-snug text-foreground"
-            >
-              {activity.title}
-            </h3>
+            <h3 className="text-sm font-semibold leading-snug text-foreground">{activity.title}</h3>
             {activity.source && <SourceBadge source={activity.source} />}
           </div>
-          {activity.description && activity.description !== activity.title && (
-            <p
-              className="text-xs leading-relaxed mt-1 line-clamp-2 text-muted-foreground"
-            >
+
+          {activity.description ? (
+            <p className="text-xs leading-relaxed mt-1 line-clamp-2 text-muted-foreground">
               {activity.description}
             </p>
-          )}
+          ) : null}
+
           {/* Tags */}
-          {activity.tags && activity.tags.length > 0 && (
+          {tagCount > 0 && tags ? (
             <div className="flex flex-wrap gap-1 mt-1">
-              {activity.tags
-                .filter((tag) => tag.trim())
-                .slice(0, 3)
-                .map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              {activity.tags.filter((tag) => tag.trim()).length > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{activity.tags.filter((tag) => tag.trim()).length - 3}
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground"
+                >
+                  {tag}
                 </span>
+              )) || null}
+              {tagCount > 3 && (
+                <span className="text-xs text-muted-foreground">+{tagCount - 3}</span>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Location Column */}
       <div className="event-table-cell event-col-location hidden md:flex">
         {activity.location && (
-          <div className="flex items-center gap-1">
-            <span className="text-xs">📍</span>
-            <span
-              className="text-xs truncate text-muted-foreground"
-              title={activity.location}
-            >
+          <p className="flex items-center gap-1">
+            <MapPinIcon className="size-4" />
+            <span className="text-xs truncate text-muted-foreground" title={activity.location}>
               {activity.location}
             </span>
-          </div>
+          </p>
         )}
       </div>
 
       {/* People Column */}
       <div className="event-table-cell event-col-people hidden md:flex">
-        {activity.people && activity.people.length > 0 && (
+        {peopleNames && (
           <div className="flex items-center gap-1">
-            <span className="text-xs">👥</span>
-            <span
-              className="text-xs truncate text-muted-foreground"
-              title={activity.people
-                .map((p) => `${p.firstName || ''} ${p.lastName || ''}`.trim())
-                .join(', ')}
-            >
-              {activity.people.length === 1 && activity.people[0]
-                ? `${activity.people[0].firstName || ''} ${activity.people[0].lastName || ''}`.trim()
-                : `${activity.people.length} people`}
+            <UsersIcon className="size-4" />
+            <span className="text-xs truncate" title={peopleNames}>
+              {peopleNames}
             </span>
           </div>
         )}
@@ -149,31 +141,9 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
 
       {/* Actions Column */}
       <div className="event-table-cell event-col-actions">
-        <button
-          type="button"
-          className="p-1 rounded opacity-0 group-hover:opacity-100 transition-all duration-150 hover:bg-gray-100 text-muted-foreground hover:bg-accent hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleEditEvent()
-          }}
-          aria-label="Edit event"
-        >
-          <svg
-            width="16"
-            height="16"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
-          </svg>
-        </button>
+        <Button variant="ghost" size="icon" onClick={handleEditEvent} aria-label="Edit event">
+          <PencilIcon className="size-4 text-muted-foreground" />
+        </Button>
       </div>
     </div>
   )
