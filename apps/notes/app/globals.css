@@ -1,29 +1,5 @@
-@import "../../../packages/ui/src/styles/globals.css";
-@import "../../../packages/ui/src/styles/animations.css";
+@import '../../../packages/ui/src/styles/globals.css';
+@import '../../../packages/ui/src/styles/animations.css';
 
 /* Tell Tailwind to scan the packages/ui directory for classes */
-@source "../../../packages/ui/src";
-
-/* Semantic color variables for events UI */
-@layer base {
-  :root {
-    /* Surface colors */
-    --color-surface: var(--color-card);
-    --color-surface-secondary: var(--color-muted);
-    --color-surface-muted: var(--color-muted);
-    --color-surface-hover: var(--color-accent);
-    
-    /* Text colors */
-    --color-text: var(--color-foreground);
-    --color-text-secondary: var(--color-muted-foreground);
-    --color-text-tertiary: var(--color-muted-foreground);
-    
-    /* Accent colors */
-    --color-accent-primary: var(--color-primary);
-  }
-  
-  .dark {
-    /* Override for dark mode if needed */
-    --color-text-tertiary: var(--color-muted-foreground);
-  }
-}
+@source '../../../packages/ui/src';

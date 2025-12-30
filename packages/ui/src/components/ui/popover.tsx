@@ -1,3 +1,5 @@
+import './popover.css'
+
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { cn } from '../../lib/utils'
 import type * as React from 'react'

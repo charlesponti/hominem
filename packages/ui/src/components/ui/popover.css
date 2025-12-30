@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Popover Colors - Light Mode */
+  --color-popover: var(--color-gray-50);
+  --color-popover-foreground: var(--color-gray-900);
+}
+
+@layer base {
+  :root {
+    /* Popover CSS Variables */
+    --popover: var(--color-popover);
+    --popover-foreground: var(--color-popover-foreground);
+  }
+
+  .dark {
+    /* Popover Colors - Dark Mode */
+    --color-popover: var(--color-gray-800);
+    --color-popover-foreground: var(--color-gray-50);
+  }
+}
+
+@layer utilities {
+  .bg-popover {
+    background-color: var(--popover);
+  }
+
+  .text-popover-foreground {
+    color: var(--popover-foreground);
+  }
+}
+
