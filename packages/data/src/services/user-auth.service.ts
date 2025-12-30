@@ -1,7 +1,13 @@
 import type { User as SupabaseUser } from "@supabase/supabase-js";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { db } from "../db";
-import { bookmark, type UserSelect, users } from "../db/schema";
+import {
+  bookmark,
+  events,
+  eventsTags,
+  type UserSelect,
+  users,
+} from "../db/schema";
 
 type AuthUserMetadata = {
   avatar_url?: string;
@@ -198,7 +204,15 @@ export class UserAuthService {
   }
 
   static async deleteUser(userId: string): Promise<void> {
-    await db.delete(bookmark).where(eq(bookmark.userId, userId));
-    await db.delete(users).where(eq(users.id, userId));
+    await db.transaction(async (tx) => {
+      await tx.delete(bookmark).where(eq(bookmark.userId, userId));
+      await tx
+        .delete(eventsTags)
+        .where(
+          sql`${eventsTags.eventId} IN (SELECT ${events.id} FROM ${events} WHERE ${events.userId} = ${userId})`
+        );
+      await tx.delete(events).where(eq(events.userId, userId));
+      await tx.delete(users).where(eq(users.id, userId));
+    });
   }
 }

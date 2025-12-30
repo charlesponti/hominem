@@ -1,13 +1,20 @@
-import { archiveGoal, createGoal, deleteGoal, getGoal, listGoals, updateGoal } from '@hominem/data'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../procedures'
+import {
+  archiveGoal,
+  createGoal,
+  deleteGoal,
+  getGoal,
+  listGoals,
+  updateGoal,
+} from "@hominem/data";
+import { z } from "zod";
+import { protectedProcedure, router } from "../procedures";
 
 export const goalsRouter = router({
   list: protectedProcedure
     .input(
       z.object({
         showArchived: z.boolean().optional().default(false),
-        sortBy: z.string().optional().default('priority'),
+        sortBy: z.string().optional().default("priority"),
         category: z.string().optional(),
       })
     )
@@ -15,14 +22,14 @@ export const goalsRouter = router({
       return listGoals({
         userId: ctx.userId,
         showArchived: input.showArchived,
-        sortBy: input.sortBy as 'priority' | 'dueDate' | 'createdAt',
+        sortBy: input.sortBy as "priority" | "dueDate" | "createdAt",
         category: input.category,
-      })
+      });
     }),
   get: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .query(async ({ input, ctx }) => {
-      return getGoal(input.id, ctx.userId)
+      return getGoal(input.id, ctx.userId);
     }),
   create: protectedProcedure
     .input(
@@ -30,7 +37,9 @@ export const goalsRouter = router({
         title: z.string(),
         description: z.string().optional(),
         goalCategory: z.string().optional(),
-        status: z.enum(['todo', 'in_progress', 'completed', 'archived']).default('todo'),
+        status: z
+          .enum(["todo", "in_progress", "completed", "archived"])
+          .default("todo"),
         priority: z.number().optional(),
         startDate: z.string().optional(),
         dueDate: z.string().optional(),
@@ -45,16 +54,18 @@ export const goalsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      return createGoal({ ...input, userId: ctx.userId })
+      return createGoal({ ...input, userId: ctx.userId });
     }),
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
+        id: z.uuid(),
         title: z.string().optional(),
         description: z.string().optional(),
         goalCategory: z.string().optional(),
-        status: z.enum(['todo', 'in_progress', 'completed', 'archived']).optional(),
+        status: z
+          .enum(["todo", "in_progress", "completed", "archived"])
+          .optional(),
         priority: z.number().optional(),
         startDate: z.string().optional(),
         dueDate: z.string().optional(),
@@ -69,17 +80,17 @@ export const goalsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, ...data } = input
-      return updateGoal(id, ctx.userId, data)
+      const { id, ...data } = input;
+      return updateGoal(id, ctx.userId, data);
     }),
   archive: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ input, ctx }) => {
-      return archiveGoal(input.id, ctx.userId)
+      return archiveGoal(input.id, ctx.userId);
     }),
   delete: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ input, ctx }) => {
-      return deleteGoal(input.id, ctx.userId)
+      return deleteGoal(input.id, ctx.userId);
     }),
-})
+});

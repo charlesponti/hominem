@@ -192,42 +192,15 @@ export async function createEvent(
   };
 }
 
-export interface UpdateEventInput {
-  title?: string;
-  description?: string;
-  date?: Date;
-  type?: string;
+export type UpdateEventInput = typeof events.$inferInsert & {
   tags?: string[];
   people?: string[];
-  dateStart?: Date;
-  dateEnd?: Date;
-  placeId?: string;
-  visitNotes?: string | null;
-  visitRating?: number | null;
-  visitReview?: string | null;
-  visitPeople?: string | null;
-}
+};
 
 export async function updateEvent(id: string, event: UpdateEventInput) {
-  const updateData: Record<string, unknown> = {
-    updatedAt: new Date(),
-  };
+  const updateData: Partial<typeof events.$inferInsert> = {};
 
-  if (event.title !== undefined) updateData.title = event.title;
-  if (event.description !== undefined)
-    updateData.description = event.description;
-  if (event.date !== undefined) updateData.date = event.date;
-  if (event.type !== undefined) updateData.type = event.type;
-  if (event.dateStart !== undefined) updateData.dateStart = event.dateStart;
-  if (event.dateEnd !== undefined) updateData.dateEnd = event.dateEnd;
-  if (event.placeId !== undefined) updateData.placeId = event.placeId;
-  if (event.visitNotes !== undefined) updateData.visitNotes = event.visitNotes;
-  if (event.visitRating !== undefined)
-    updateData.visitRating = event.visitRating;
-  if (event.visitReview !== undefined)
-    updateData.visitReview = event.visitReview;
-  if (event.visitPeople !== undefined)
-    updateData.visitPeople = event.visitPeople;
+  Object.assign(updateData, { ...event, updatedAt: new Date() });
 
   const result = await db
     .update(events)
