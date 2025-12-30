@@ -84,15 +84,26 @@ export const eventsRouter = router({
     .mutation(async ({ input }) => {
       const { id, ...updateData } = input;
 
-      // Convert string dates to Date objects
-      const eventData = {
-        ...updateData,
-        date: updateData.date ? new Date(updateData.date) : undefined,
-        dateStart: updateData.dateStart
-          ? new Date(updateData.dateStart)
-          : undefined,
-        dateEnd: updateData.dateEnd ? new Date(updateData.dateEnd) : undefined,
-      };
+      // Convert string dates to Date objects and build update object
+      const eventData: Parameters<typeof updateEvent>[1] = Object.assign(
+        {},
+        updateData.title !== undefined && { title: updateData.title },
+        updateData.description !== undefined && {
+          description: updateData.description,
+        },
+        updateData.date !== undefined && { date: new Date(updateData.date) },
+        updateData.dateStart !== undefined && {
+          dateStart: new Date(updateData.dateStart),
+        },
+        updateData.dateEnd !== undefined && {
+          dateEnd: new Date(updateData.dateEnd),
+        },
+        updateData.type !== undefined && {
+          type: updateData.type as EventTypeEnum,
+        },
+        updateData.tags !== undefined && { tags: updateData.tags },
+        updateData.people !== undefined && { people: updateData.people }
+      );
 
       const updated = await updateEvent(id, eventData);
 
@@ -110,21 +121,29 @@ export const eventsRouter = router({
       return deleteEvent(input.id);
     }),
 
-  getGoogleCalendars: protectedProcedure
-    .input(
-      z.object({
-        accessToken: z.string(),
-        refreshToken: z.string().optional(),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const googleService = new GoogleCalendarService(ctx.userId, {
-        accessToken: input.accessToken,
-        refreshToken: input.refreshToken,
-      });
+  getGoogleCalendars: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.supabase) {
+      throw new Error("Supabase client not available");
+    }
 
-      return googleService.getCalendarList();
-    }),
+    // Get session to retrieve Google provider tokens
+    const {
+      data: { session },
+    } = await ctx.supabase.auth.getSession();
+
+    if (!session?.provider_token) {
+      throw new Error(
+        "Google Calendar access token not found in session. Please reconnect your Google account."
+      );
+    }
+
+    const googleService = new GoogleCalendarService(ctx.userId, {
+      accessToken: session.provider_token,
+      refreshToken: session.provider_refresh_token || undefined,
+    });
+
+    return googleService.getCalendarList();
+  }),
 
   syncGoogleCalendar: protectedProcedure
     .input(
@@ -132,20 +151,27 @@ export const eventsRouter = router({
         calendarId: z.string().optional().default("primary"),
         timeMin: z.string().optional(),
         timeMax: z.string().optional(),
-        accessToken: z.string().optional(),
-        refreshToken: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // For now, tokens need to be passed from frontend
-      // In the future, we can retrieve them from Supabase session server-side
-      if (!input.accessToken) {
-        throw new Error("Google Calendar access token required");
+      if (!ctx.supabase) {
+        throw new Error("Supabase client not available");
+      }
+
+      // Get session to retrieve Google provider tokens
+      const {
+        data: { session },
+      } = await ctx.supabase.auth.getSession();
+
+      if (!session?.provider_token) {
+        throw new Error(
+          "Google Calendar access token not found in session. Please reconnect your Google account."
+        );
       }
 
       const googleService = new GoogleCalendarService(ctx.userId, {
-        accessToken: input.accessToken,
-        refreshToken: input.refreshToken,
+        accessToken: session.provider_token,
+        refreshToken: session.provider_refresh_token || undefined,
       });
 
       return googleService.syncGoogleCalendarEvents(

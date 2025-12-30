@@ -1,5 +1,5 @@
-import { toHominemUser } from "@hominem/auth/server";
 import type { HominemUser, SupabaseAuthUser } from "@hominem/auth/server";
+import { toHominemUser } from "@hominem/auth/server";
 import { UserAuthService } from "@hominem/data";
 import {
   type CookieMethodsServer,
