@@ -1,14 +1,14 @@
-import { reactRouter } from "@react-router/dev/vite";
-import tailwindcss from "@tailwindcss/vite";
-import { visualizer } from "rollup-plugin-visualizer";
-import type { ConfigEnv, PluginOption, UserConfig } from "vite";
-import { defineConfig } from "vite";
+import { reactRouter } from '@react-router/dev/vite'
+import tailwindcss from '@tailwindcss/vite'
+import { visualizer } from 'rollup-plugin-visualizer'
+import type { ConfigEnv, PluginOption, UserConfig } from 'vite'
+import { defineConfig } from 'vite'
 
-import tsconfigPaths from "vite-tsconfig-paths";
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
-  const isProd = mode === "production";
-  const isAnalyze = process.env.ANALYZE === "true";
+  const isProd = mode === 'production'
+  const isAnalyze = process.env.ANALYZE === 'true'
 
   return {
     plugins: [
@@ -20,7 +20,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       isAnalyze &&
         visualizer({
           open: true,
-          filename: "dist/stats.html",
+          filename: 'dist/stats.html',
           gzipSize: true,
           brotliSize: true,
         }),
@@ -30,7 +30,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     css: {
       // Enable CSS modules
       modules: {
-        localsConvention: "camelCaseOnly" as const,
+        localsConvention: 'camelCaseOnly' as const,
       },
       // Optimize in production
       devSourcemap: !isProd,
@@ -48,7 +48,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
     build: {
       cssCodeSplit: true,
-      minify: isProd ? "terser" : false,
+      minify: isProd ? 'terser' : false,
       terserOptions: {
         compress: {
           drop_console: isProd,
@@ -56,9 +56,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
       },
       rollupOptions: {
-        external: ["node:perf_hooks", "perf_hooks"],
+        external: ['node:perf_hooks', 'perf_hooks'],
       },
       sourcemap: true,
     },
-  };
-});
+  }
+})

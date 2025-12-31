@@ -39,7 +39,23 @@
       "recommended": true,
       "complexity": {
         "noUselessSwitchCase": "off",
-        "noStaticOnlyClass": "off"
+        "noStaticOnlyClass": "off",
+        "noBannedTypes": "warn",
+        "noForEach": "off",
+        "noUselessFragments": "error",
+        "noUselessLabel": "error",
+        "noUselessRename": "error",
+        "noUselessTypeConstraint": "error",
+        "useArrowFunction": "warn",
+        "useSimplifiedLogicExpression": "warn"
+      },
+      "performance": {
+        "noAccumulatingSpread": "warn",
+        "noDelete": "error"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "warn",
+        "noGlobalEval": "error"
       },
       "suspicious": {
         "noConsole": {
@@ -49,10 +65,21 @@
           }
         },
         "noArrayIndexKey": "off",
-        "useIterableCallbackReturn": "warn"
+        "useIterableCallbackReturn": "warn",
+        "noExplicitAny": "error",
+        "noMisleadingCharacterClass": "error",
+        "noPrototypeBuiltins": "error",
+        "noRedeclare": "error",
+        "noShadowRestrictedNames": "error"
       },
       "correctness": {
-        "noUnusedImports": "error"
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "noUnusedPrivateClassMembers": "error",
+        "noUnusedLabels": "error",
+        "noUnusedFunctionParameters": "warn",
+        "useExhaustiveDependencies": "warn",
+        "useHookAtTopLevel": "error"
       },
       "style": {
         "noParameterAssign": "error",
@@ -65,7 +92,14 @@
         "useNumberNamespace": "error",
         "noInferrableTypes": "error",
         "noUselessElse": "error",
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "useConst": "error",
+        "useExportType": "error",
+        "useImportType": "error",
+        "useNodejsImportProtocol": "error",
+        "useTemplate": "error",
+        "useBlockStatements": "error",
+        "useCollapsedElseIf": "warn"
       },
       "a11y": {
         "useMediaCaption": "off",

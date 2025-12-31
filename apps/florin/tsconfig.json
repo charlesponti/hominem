@@ -16,7 +16,10 @@
       "@hominem/ui/*": ["../../packages/ui/src/*"],
       "@hominem/ui": ["../../packages/ui/src/index.ts"]
     },
-    "composite": false,
+    "composite": true,
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,

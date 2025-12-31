@@ -3,12 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "lint": "biome lint ./src --fix"
+    "lint": "biome lint ./src --fix",
+    "test": "vitest run --passWithNoTests",
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "5.1.2",
     "react": "^19.2.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vite": "7.3.0",
+    "vite-tsconfig-paths": "6.0.3",
+    "vitest": "4.0.16"
   },
   "peerDependencies": {
     "react": "^19.2.0"
