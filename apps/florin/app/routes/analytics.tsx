@@ -8,7 +8,7 @@ import { TopCategories } from '~/components/analytics/top-categories'
 import { TopMerchants } from '~/components/analytics/top-merchants'
 import { BudgetHistoryChart } from '~/components/budget-categories'
 import { BudgetOverview } from '~/components/budget-overview'
-import { getLastMonthFromRange } from '~/lib/utils/date.utils'
+import { getLastMonthFromRange } from '@hominem/utils/dates'
 
 export default function FinanceAnalyticsPage() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(subMonths(new Date(), 6))

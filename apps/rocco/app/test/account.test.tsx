@@ -83,7 +83,7 @@ describe('Account', () => {
       expect(screen.getByTestId('user-circle-icon')).toBeInTheDocument()
 
       // Check for delete account button
-      expect(screen.getByText('Delete account')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Delete account' })).toBeInTheDocument()
       expect(screen.getByTestId('delete-account-form')).toBeInTheDocument()
     })
   })

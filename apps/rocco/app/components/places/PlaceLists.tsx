@@ -1,6 +1,6 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
+import { List } from '@hominem/ui/list'
 import { memo } from 'react'
-import ListSurface from '~/components/list-surface'
 import { ListRow } from '~/components/lists/list-row'
 import AddPlaceToList from '~/components/places/add-to-list-control'
 import { trpc } from '~/lib/trpc/client'
@@ -38,7 +38,7 @@ const PlaceLists = ({ place }: Props) => {
       </div>
 
       {(isLoading || listsContainingPlace.length > 0) && (
-        <ListSurface isLoading={isLoading} loadingSize="md">
+        <List isLoading={isLoading} loadingSize="md">
           {listsContainingPlace.map((list) => (
             <ListRow
               key={list.id}
@@ -49,7 +49,7 @@ const PlaceLists = ({ place }: Props) => {
               imageAlt={list.name}
             />
           ))}
-        </ListSurface>
+        </List>
       )}
     </div>
   )

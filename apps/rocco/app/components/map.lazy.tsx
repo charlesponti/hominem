@@ -1,5 +1,5 @@
+import { Loading } from '@hominem/ui/loading'
 import { lazy, Suspense } from 'react'
-import Loading from '~/components/loading'
 import type { RoccoMapProps } from './map'
 
 const MapPlaceholder = () => (

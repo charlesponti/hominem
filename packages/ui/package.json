@@ -22,7 +22,7 @@
     "./card": "./src/components/ui/card.tsx",
     "./input": "./src/components/ui/input.tsx",
     "./label": "./src/components/ui/label.tsx",
-    "./list": "./src/components/list-surface.tsx",
+    "./list": "./src/components/list.tsx",
     "./loading": "./src/components/ui/loading.tsx",
     "./textarea": "./src/components/ui/textarea.tsx",
     "./lib/*": "./src/lib/*",

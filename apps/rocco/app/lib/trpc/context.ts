@@ -104,12 +104,7 @@ const isAdmin = t.middleware(({ ctx, next }) => {
       message: "You must be an admin to access this resource",
     });
   }
-  return next({
-    ctx: {
-      ...ctx,
-      user: ctx.user,
-    },
-  });
+  return next({ ctx });
 });
 
 export const protectedProcedure = t.procedure.use(isAuthed);

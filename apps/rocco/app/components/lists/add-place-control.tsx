@@ -1,7 +1,9 @@
+import { Alert } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
-import { PlusCircle, XCircle } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import Loading from '~/components/loading'
+import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
+import { Loading } from '@hominem/ui/loading'
+import { CheckCircle2, PlusCircle } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import PlacesAutocomplete from '~/components/places/places-autocomplete'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places'
@@ -9,14 +11,14 @@ import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places'
 interface AddPlaceControlProps {
   listId: string
   canAdd?: boolean
-  children?: (controls: { isOpen: boolean; open: () => void; close: () => void }) => ReactNode
 }
 
-type AddStatus = 'idle' | 'selecting' | 'submitting' | 'success'
+type Status = 'idle' | 'submitting' | 'success' | 'error'
 
-export default function AddPlaceControl({ listId, canAdd = true, children }: AddPlaceControlProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [status, setStatus] = useState<AddStatus>('idle')
+export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceControlProps) {
+  const [open, setOpen] = useState(false)
+  const [status, setStatus] = useState<Status>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearSuccessTimer = () => {
@@ -36,32 +38,29 @@ export default function AddPlaceControl({ listId, canAdd = true, children }: Add
 
   const addPlaceToList = useAddPlaceToList({
     onSuccess: () => {
-      clearSuccessTimer()
       setStatus('success')
-
+      clearSuccessTimer()
       successTimerRef.current = setTimeout(() => {
+        setOpen(false)
         setStatus('idle')
-        setIsOpen(false)
-      }, 2000)
+        setErrorMessage(null)
+      }, 1500)
     },
-    onError: () => setStatus('selecting'),
+    onError: (error) => {
+      setStatus('error')
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'Failed to add place. Please try again.'
+      setErrorMessage(message)
+    },
   })
-
-  const open = () => {
-    if (!canAdd) return
-    clearSuccessTimer()
-    setIsOpen(true)
-    setStatus('selecting')
-  }
-
-  const close = () => {
-    clearSuccessTimer()
-    setIsOpen(false)
-    setStatus('idle')
-  }
 
   const handlePlaceSelect = async (prediction: GooglePlacePrediction) => {
     setStatus('submitting')
+    setErrorMessage(null)
     try {
       const place = await createPlaceFromPrediction(prediction)
       addPlaceToList.mutate({
@@ -69,63 +68,99 @@ export default function AddPlaceControl({ listId, canAdd = true, children }: Add
         place,
       })
     } catch (error) {
-      console.error('Failed to process place selection:', error)
-      setStatus('selecting')
+      setStatus('error')
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'Failed to process place selection. Please try again.'
+      setErrorMessage(message)
     }
   }
 
-  const isOverlayVisible = status === 'submitting' || status === 'success'
-  const showAutocomplete = isOpen
+  const handleOpenChange = (newOpen: boolean) => {
+    if (status === 'submitting') {
+      return
+    }
+    if (!newOpen) {
+      clearSuccessTimer()
+      setStatus('idle')
+      setErrorMessage(null)
+    }
+    setOpen(newOpen)
+  }
+
+  const handleRetry = () => {
+    setStatus('idle')
+    setErrorMessage(null)
+  }
+
+  const getErrorMessage = () => {
+    if (addPlaceToList.error) {
+      const error = addPlaceToList.error
+      if (error instanceof Error) {
+        return error.message
+      }
+      if (typeof error === 'string') {
+        return error
+      }
+      if (error && typeof error === 'object' && 'message' in error) {
+        return String(error.message)
+      }
+    }
+    return errorMessage
+  }
+
+  const displayError = getErrorMessage()
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-1">
-        {showAutocomplete ? (
-          <div className="relative w-full sm:max-w-md">
-            <div
-              className={`transition-opacity duration-200 ${
-                isOverlayVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'
-              }`}
-            >
-              <PlacesAutocomplete setSelected={handlePlaceSelect} />
-            </div>
-
-            {status === 'submitting' ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
-                <Loading size="sm" />
-                <span className="mt-2 text-sm text-gray-600">Adding place...</span>
-              </div>
-            ) : null}
-
-            {status === 'success' ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 rounded-lg">
-                <span className="text-sm font-semibold text-green-700">Added!</span>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        <div className="flex flex-1 justify-end">
-          <Button
-            type="button"
-            data-testid="add-to-list-button"
-            onClick={isOpen ? close : open}
-            disabled={!canAdd || status === 'submitting'}
-            className="flex items-center gap-2 disabled:bg-indigo-200"
-          >
-            {!isOpen ? (
-              <>
-                <PlusCircle size={18} />
-                <span>Add</span>
-              </>
-            ) : (
-              <XCircle size={18} />
-            )}
-          </Button>
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          data-testid="add-to-list-button"
+          disabled={!canAdd || status === 'submitting'}
+          className="flex items-center gap-2 disabled:bg-indigo-200"
+          aria-label={!canAdd ? 'Cannot add places to this list' : 'Add place to list'}
+        >
+          <PlusCircle size={18} />
+          <span>Add</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[90vw] max-w-[400px] p-4"
+        align="start"
+        aria-label="Add place to list"
+        aria-busy={status === 'submitting'}
+      >
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {status === 'submitting' && 'Adding place...'}
+          {status === 'success' && 'Place added successfully'}
+          {status === 'error' && `Error: ${displayError || 'Failed to add place'}`}
         </div>
-      </div>
 
-      {children ? children({ isOpen, open, close }) : null}
-    </div>
+        {status === 'submitting' ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loading size="md" />
+            <span className="mt-2 text-sm text-gray-600">Adding place...</span>
+          </div>
+        ) : status === 'success' ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <CheckCircle2 className="h-8 w-8 text-green-600 mb-2" />
+            <span className="text-sm font-semibold text-green-700">Added!</span>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {displayError && (
+              <Alert type="error" dismissible onDismiss={handleRetry}>
+                {displayError}
+              </Alert>
+            )}
+            <PlacesAutocomplete setSelected={handlePlaceSelect} />
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
   )
 }

@@ -1,21 +1,21 @@
 import { forwardRef, type HTMLAttributes } from 'react'
-import Loading from '~/components/loading'
-import { cn } from '~/lib/utils'
+import { cn } from '../lib/utils'
+import { Loading } from './ui/loading'
 
 type LoadingSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
 
-type ListSurfaceProps = HTMLAttributes<HTMLUListElement> & {
+type ListProps = HTMLAttributes<HTMLUListElement> & {
   isLoading?: boolean
   loadingSize?: LoadingSize
 }
 
-const ListSurface = forwardRef<HTMLUListElement, ListSurfaceProps>(
+const List = forwardRef<HTMLUListElement, ListProps>(
   ({ className, isLoading, loadingSize = 'md', children, ...props }, ref) => {
     return (
       <ul
         ref={ref}
         className={cn(
-          'list-none bg-white/50 divide-y divide-border rounded-md border overflow-hidden',
+          'list-none bg-white/50 divide-y divide-border rounded-md border border-border overflow-hidden',
           className
         )}
         {...props}
@@ -32,6 +32,6 @@ const ListSurface = forwardRef<HTMLUListElement, ListSurfaceProps>(
   }
 )
 
-ListSurface.displayName = 'ListSurface'
+List.displayName = 'List'
 
-export default ListSurface
+export { List }

@@ -1,9 +1,9 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
+import { Loading } from '@hominem/ui/loading'
 import { PlusCircle } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Loading from '~/components/loading'
 import { useCreateList } from '~/lib/lists'
 import { cn } from '~/lib/utils'
 

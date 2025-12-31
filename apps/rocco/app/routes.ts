@@ -31,6 +31,9 @@ export default [
     // Invites section
     route("invites", "./routes/invites.tsx"),
 
+    // Visits section
+    route("visits", "./routes/visits.tsx"),
+
     // Lists
     route("lists", "./routes/lists._index.tsx"),
     route("lists/:id", "./routes/lists.$id.tsx"),

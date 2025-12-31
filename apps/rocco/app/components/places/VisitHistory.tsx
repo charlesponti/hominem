@@ -1,0 +1,226 @@
+import { Button } from '@hominem/ui/button'
+import { List } from '@hominem/ui/list'
+import { AnimatePresence, motion, type Variants } from 'framer-motion'
+import { Edit2, Star, Trash2 } from 'lucide-react'
+import { useCallback } from 'react'
+import { trpc } from '~/lib/trpc/client'
+import { LogVisit } from './LogVisit'
+
+interface VisitHistoryProps {
+  placeId: string
+  placeName: string
+}
+
+interface VisitItemProps {
+  visit: {
+    id: string
+    title: string
+    date: Date | string
+    description: string | null
+    visitNotes: string | null
+    visitReview: string | null
+    visitPeople: string | null
+    visitRating: number | null
+    people?: Array<{ id: string }>
+  }
+  placeId: string
+  placeName: string
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.2,
+      ease: 'easeOut',
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    transition: {
+      duration: 0.15,
+      ease: 'easeIn',
+    },
+  },
+}
+
+function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
+  const utils = trpc.useUtils()
+  const deleteVisit = trpc.places.deleteVisit.useMutation({
+    onSuccess: () => {
+      utils.places.getPlaceVisits.invalidate({ placeId })
+      utils.places.getVisitStats.invalidate({ placeId })
+    },
+  })
+
+  const handleDelete = useCallback(async () => {
+    if (confirm('Are you sure you want to delete this visit?')) {
+      await deleteVisit.mutateAsync({ visitId: visit.id })
+    }
+  }, [visit.id, deleteVisit])
+
+  return (
+    <motion.li variants={itemVariants} layout className="group">
+      <div className="flex items-center gap-3 p-2 hover:bg-gray-50 transition-colors">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="flex-1 text-sm text-accent-foreground truncate font-medium">
+              {visit.title}
+            </p>
+            {visit.visitRating && (
+              <div className="flex items-center gap-1 shrink-0">
+                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs text-muted-foreground">{visit.visitRating}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-2 mt-0.5">
+            <span className="text-xs text-muted-foreground">
+              {new Date(visit.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </span>
+            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <LogVisit
+                placeId={placeId}
+                placeName={placeName}
+                visit={visit}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 h-6 w-6"
+                    aria-label="Edit visit"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </Button>
+                }
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-6 h-6 w-6 text-destructive hover:text-destructive"
+                onClick={handleDelete}
+                disabled={deleteVisit.isPending}
+                aria-label="Delete visit"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+          {(visit.description || visit.visitNotes || visit.visitReview || visit.visitPeople) && (
+            <div className="mt-1 space-y-0.5">
+              {visit.description && (
+                <p className="text-xs text-muted-foreground line-clamp-1">{visit.description}</p>
+              )}
+              {visit.visitNotes && (
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  <span className="font-medium">Notes:</span> {visit.visitNotes}
+                </p>
+              )}
+              {visit.visitReview && (
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  <span className="font-medium">Review:</span> {visit.visitReview}
+                </p>
+              )}
+              {visit.visitPeople && (
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">With:</span> {visit.visitPeople}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.li>
+  )
+}
+
+function VisitStatsSummary({
+  stats,
+}: {
+  stats: { visitCount: number; lastVisitDate: Date | string | null; averageRating: number | null }
+}) {
+  const lastVisitDate = stats.lastVisitDate
+    ? new Date(stats.lastVisitDate).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className="flex items-center gap-4 text-sm text-muted-foreground pb-2"
+    >
+      <span>
+        You&apos;ve visited here{' '}
+        <span className="font-semibold text-foreground">{stats.visitCount}</span>{' '}
+        {stats.visitCount === 1 ? 'time' : 'times'}
+      </span>
+      {lastVisitDate && (
+        <>
+          <span className="text-muted-foreground/50">•</span>
+          <span>
+            Last visit: <span className="font-semibold text-foreground">{lastVisitDate}</span>
+          </span>
+        </>
+      )}
+      {stats.averageRating && (
+        <>
+          <span className="text-muted-foreground/50">•</span>
+          <span>
+            Avg rating:{' '}
+            <span className="font-semibold text-foreground">{stats.averageRating.toFixed(1)}</span>
+          </span>
+        </>
+      )}
+    </motion.div>
+  )
+}
+
+export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
+  const { data: visits, isLoading: visitsLoading } = trpc.places.getPlaceVisits.useQuery({
+    placeId,
+  })
+  const { data: stats, isLoading: statsLoading } = trpc.places.getVisitStats.useQuery({ placeId })
+
+  const showStats = !statsLoading && stats && stats.visitCount > 0
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <h3 className="heading-2 font-light">Visit History</h3>
+        <LogVisit placeId={placeId} placeName={placeName} />
+      </div>
+
+      {showStats && <VisitStatsSummary stats={stats} />}
+
+      {!visitsLoading && (!visits || visits.length === 0) ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-sm text-muted-foreground py-4"
+        >
+          No visits recorded yet.
+        </motion.div>
+      ) : (
+        <List isLoading={visitsLoading} loadingSize="md">
+          <AnimatePresence mode="popLayout">
+            {visits?.map((visit) => (
+              <VisitItem key={visit.id} visit={visit} placeId={placeId} placeName={placeName} />
+            ))}
+          </AnimatePresence>
+        </List>
+      )}
+    </div>
+  )
+}

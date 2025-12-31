@@ -1,7 +1,7 @@
 import { Alert } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/components/ui/label'
+import { Label } from '@hominem/ui/label'
 import { type SyntheticEvent, useCallback, useId, useState } from 'react'
 import { trpc } from '~/lib/trpc/client'
 import type { SentInvite } from '~/lib/types'

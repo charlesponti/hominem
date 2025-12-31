@@ -1,5 +1,5 @@
+import { List } from '@hominem/ui/list'
 import { trpc } from '~/lib/trpc/client'
-import ListSurface from '../list-surface'
 import ListForm from './list-form'
 import { ListRow } from './list-row'
 
@@ -30,7 +30,7 @@ export default function Lists() {
             <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
           </div>
         ) : (
-          <ListSurface isLoading={isLoading} loadingSize="lg">
+          <List isLoading={isLoading} loadingSize="lg">
             {lists.map((list) => (
               <ListRow
                 key={list.id}
@@ -39,7 +39,7 @@ export default function Lists() {
                 count={list.places.length || 0}
               />
             ))}
-          </ListSurface>
+          </List>
         )}
 
         <ListForm />

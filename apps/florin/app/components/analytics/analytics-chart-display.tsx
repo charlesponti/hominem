@@ -17,7 +17,7 @@ import {
 } from 'recharts'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
 import { formatCurrency } from '~/lib/number.utils'
-import { adjustDateRange, formatChartDate } from '~/lib/utils/date.utils'
+import { adjustDateRange, formatChartDate } from '@hominem/utils/dates'
 
 const INCOME_COLOR = '#ABF4B6'
 const EXPENSES_COLOR = '#ef4444'

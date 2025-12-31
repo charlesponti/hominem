@@ -1,4 +1,4 @@
-import { ListSurface } from '@hominem/ui/list'
+import { List } from '@hominem/ui/list'
 import type React from 'react'
 import EventCard from './EventCard'
 
@@ -38,13 +38,13 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
   }
 
   return (
-    <ListSurface isLoading={loading} loadingSize="lg">
+    <List isLoading={loading} loadingSize="lg">
       {activities.map((activity) => (
         <li key={activity.id} className="px-2">
           <EventCard activity={activity} onEditEvent={onEditEvent} />
         </li>
       ))}
-    </ListSurface>
+    </List>
   )
 }
 

@@ -134,10 +134,10 @@ describe('Dashboard Integration Tests', () => {
       expect(screen.getByPlaceholderText('Search for places...')).toBeInTheDocument()
 
       // Nearby places section renders
-      expect(screen.getByText('Nearby')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Nearby' })).toBeInTheDocument()
 
       // Lists section renders with data
-      expect(screen.getByText('Lists')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Lists' })).toBeInTheDocument()
       expect(screen.getByText(MOCK_LISTS[0]!.name)).toBeInTheDocument()
       expect(screen.getByText(MOCK_LISTS[1]!.name)).toBeInTheDocument()
     })
@@ -214,11 +214,11 @@ describe('Dashboard Integration Tests', () => {
     // Wait for autocomplete results
     await waitFor(() => {
       expect(screen.getByTestId('places-autocomplete-results')).toBeInTheDocument()
-      expect(screen.getByText('Blue Bottle Coffee')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Blue Bottle Coffee/ })).toBeInTheDocument()
     })
 
     // User clicks on result
-    const option = screen.getByText('Blue Bottle Coffee')
+    const option = screen.getByRole('button', { name: /Blue Bottle Coffee/ })
     await user.click(option)
 
     // Verify navigation happened
@@ -249,7 +249,7 @@ describe('Dashboard Integration Tests', () => {
 
     // Verify empty state renders
     await waitFor(() => {
-      expect(screen.getByText('No lists yet')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'No lists yet' })).toBeInTheDocument()
       expect(screen.getByText('Get started by creating your first list.')).toBeInTheDocument()
     })
   })
@@ -278,7 +278,7 @@ describe('Dashboard Integration Tests', () => {
     await waitFor(() => {
       expect(screen.getByTestId('home-scene')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Search for places...')).toBeInTheDocument()
-      expect(screen.getByText('Lists')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Lists' })).toBeInTheDocument()
       expect(screen.getByText(MOCK_LISTS[0]!.name)).toBeInTheDocument()
     })
   })
@@ -306,7 +306,7 @@ describe('Dashboard Integration Tests', () => {
     // Verify loading state renders
     await waitFor(() => {
       expect(screen.getByTestId('home-scene')).toBeInTheDocument()
-      expect(screen.getByText('Lists')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Lists' })).toBeInTheDocument()
       // The Lists component shows its own loading state
     })
   })

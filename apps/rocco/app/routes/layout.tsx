@@ -1,9 +1,9 @@
 import { AppLayout } from '@hominem/ui/components/layout/app-layout'
+import { LoadingScreen } from '@hominem/ui/loading'
 import { Suspense } from 'react'
 import { data, Outlet } from 'react-router'
 import ErrorBoundary from '~/components/ErrorBoundary'
 import Header from '~/components/header'
-import { LoadingScreen } from '~/components/loading'
 import { getAuthState } from '~/lib/auth.server'
 import type { Route } from './+types/layout'
 

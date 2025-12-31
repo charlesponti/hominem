@@ -1,6 +1,7 @@
 import { PageTitle } from '@hominem/ui'
 import z from 'zod'
 import ErrorBoundary from '~/components/ErrorBoundary'
+import PlaceTypes from '~/components/places/place-types'
 import PlaceAddress from '~/components/places/PlaceAddress'
 import PlaceLists from '~/components/places/PlaceLists'
 import PlaceMap from '~/components/places/PlaceMap'
@@ -9,8 +10,8 @@ import PlacePhotos from '~/components/places/PlacePhotos'
 import PlaceRating from '~/components/places/PlaceRating'
 import PlacesNearby from '~/components/places/places-nearby'
 import PlaceStatus from '~/components/places/PlaceStatus'
-import PlaceTypes from '~/components/places/place-types'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
+import { VisitHistory } from '~/components/places/VisitHistory'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceWithLists } from '~/lib/types'
 import type { Route } from './+types/places.$id'
@@ -79,6 +80,10 @@ export default function Place({ loaderData }: Route.ComponentProps) {
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
           <PlaceLists place={place} />
+        </div>
+
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <VisitHistory placeId={place.id} placeName={place.name} />
         </div>
 
         {place.latitude !== null && place.longitude !== null && (

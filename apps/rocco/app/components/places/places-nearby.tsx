@@ -1,9 +1,9 @@
+import { List } from '@hominem/ui/list'
+import { Loading } from '@hominem/ui/loading'
 import { MapPin } from 'lucide-react'
 import { href } from 'react-router'
 import { useGeolocation } from '~/hooks/useGeolocation'
 import { trpc } from '~/lib/trpc/client'
-import ListSurface from '../list-surface'
-import Loading from '../loading'
 import PlaceRow from './place-row'
 
 type Props = {
@@ -97,7 +97,7 @@ export default function PlacesNearby({
     <div className="space-y-1">
       <div className="flex items-center justify-between">{title}</div>
 
-      <ListSurface>
+      <List>
         {places.map((place) => {
           return (
             <PlaceRow
@@ -122,7 +122,7 @@ export default function PlacesNearby({
             />
           )
         })}
-      </ListSurface>
+      </List>
     </div>
   )
 }

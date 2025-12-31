@@ -9,11 +9,11 @@ import {
   CommandList,
 } from '@hominem/ui/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
+import { Loading } from '@hominem/ui/loading'
 import { Check, ListPlus, Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useRevalidator } from 'react-router'
 import z from 'zod'
-import Loading from '~/components/loading'
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places'
 import { trpc } from '~/lib/trpc/client'
 import { cn } from '~/lib/utils'

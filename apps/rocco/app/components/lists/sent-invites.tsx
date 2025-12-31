@@ -1,7 +1,7 @@
+import { List } from '@hominem/ui/list'
 import type { SentInvite } from '~/lib/types'
-import SentInviteItem from './sent-invite-item'
 import InvitesEmptyState from './invites-empty-state'
-import ListSurface from '../list-surface'
+import SentInviteItem from './sent-invite-item'
 
 type SentInvitesProps = {
   invites: SentInvite[]
@@ -15,7 +15,7 @@ export default function SentInvites({ invites, listId, onInviteDeleted }: SentIn
   }
 
   return (
-    <ListSurface>
+    <List>
       {invites.map((invite) => (
         <SentInviteItem
           key={invite.invitedUserEmail}
@@ -24,6 +24,6 @@ export default function SentInvites({ invites, listId, onInviteDeleted }: SentIn
           onDelete={onInviteDeleted}
         />
       ))}
-    </ListSurface>
+    </List>
   )
 }

@@ -70,7 +70,7 @@ describe('ListPage', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText('test list')).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'test list' })).toBeInTheDocument()
       })
     })
 
@@ -88,7 +88,7 @@ describe('ListPage', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText('test list')).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'test list' })).toBeInTheDocument()
       })
 
       // Edit button should NOT be visible for non-owners
@@ -161,7 +161,7 @@ describe('ListPage', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText('my list')).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument()
         expect(screen.getByLabelText('Edit list')).toBeInTheDocument()
       })
     })
@@ -181,7 +181,9 @@ describe('ListPage', () => {
         initialEntries: [`/lists/${TEST_LIST_ID}`],
       })
 
-      await waitFor(() => expect(screen.getByText('my list')).toBeInTheDocument())
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument()
+      )
 
       const editButton = screen.getByLabelText('Edit list')
       await user.click(editButton)
@@ -219,7 +221,7 @@ describe('ListPage', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText('my list')).toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument()
       })
     })
   })

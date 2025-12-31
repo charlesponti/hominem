@@ -1,27 +1,31 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { PageTitle } from '@hominem/ui'
-import { ArrowLeft } from 'lucide-react'
-import { Link, Navigate } from 'react-router'
+import { Loading } from '@hominem/ui/loading'
+import { redirect } from 'react-router'
 import ErrorBoundary from '~/components/ErrorBoundary'
-import Loading from '~/components/loading'
 import { trpc } from '~/lib/trpc/client'
+import { createCaller } from '~/lib/trpc/server'
+import type { Route } from './+types/lists.$id.invites.sent'
 
-export default function ListSentInvites() {
+export async function loader({ request }: Route.LoaderArgs) {
+  const trpcServer = createCaller(request)
   const { userId } = useSupabaseAuthContext()
-  const { data, isLoading } = trpc.invites.getSent.useQuery()
+  const data = await trpcServer.invites.getSent()
 
   if (!userId) {
-    return <Navigate to="/" replace />
+    return redirect('/')
   }
+
+  return { invites: data }
+}
+
+export default function ListSentInvites({ loaderData }: Route.ComponentProps) {
+  const { data, isLoading } = trpc.invites.getSent.useQuery(undefined, {
+    initialData: loaderData.invites,
+  })
 
   return (
     <>
-      <div className="my-4">
-        <Link to="/lists/invites" className="flex items-center gap-2">
-          <ArrowLeft className="size-4" />
-          Back to invites
-        </Link>
-      </div>
       <PageTitle title="Sent Invites" />
       <div>
         {isLoading && <Loading />}

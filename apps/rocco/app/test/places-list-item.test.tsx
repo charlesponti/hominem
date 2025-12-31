@@ -53,8 +53,8 @@ describe('PlacesList', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Place 1')).toBeInTheDocument()
-      expect(screen.getByText('Place 2')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Place 1/ })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Place 2/ })).toBeInTheDocument()
     })
   })
 
@@ -65,7 +65,7 @@ describe('PlacesList', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('No places yet')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'No places yet' })).toBeInTheDocument()
       expect(
         screen.getByText('Start building your list by adding places to see them on the map.')
       ).toBeInTheDocument()
@@ -86,10 +86,10 @@ describe('PlacesList', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Place 1')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Place 1/ })).toBeInTheDocument()
     })
 
-    // Find the ListSurface element (now handles keyboard events directly)
+    // Find the List element (now handles keyboard events directly)
     const listContainer = container.querySelector('[aria-label="Places in list"]') as HTMLElement
     expect(listContainer).toBeInTheDocument()
 
@@ -113,7 +113,7 @@ describe('PlacesList', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Place 1')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Place 1/ })).toBeInTheDocument()
     })
 
     const listContainer = container.querySelector('[aria-label="Places in list"]') as HTMLElement
@@ -134,7 +134,7 @@ describe('PlacesList', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Place 1')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Place 1/ })).toBeInTheDocument()
     })
 
     const listContainer = container.querySelector('[aria-label="Places in list"]') as HTMLElement
@@ -155,7 +155,7 @@ describe('PlacesList', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Place 1')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Place 1/ })).toBeInTheDocument()
     })
 
     const listContainer = container.querySelector('[aria-label="Places in list"]') as HTMLElement

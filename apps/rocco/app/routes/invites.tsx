@@ -1,12 +1,12 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
-import { getAuthState } from '~/lib/auth.server'
 import { PageTitle } from '@hominem/ui'
+import { List } from '@hominem/ui/list'
+import { Loading } from '@hominem/ui/loading'
 import { Mail } from 'lucide-react'
 import { useCallback } from 'react'
 import { data } from 'react-router'
 import ReceivedInviteItem from '~/components/ReceivedInviteItem'
-import ListSurface from '~/components/list-surface'
-import Loading from '~/components/loading'
+import { getAuthState } from '~/lib/auth.server'
 import { env } from '~/lib/env'
 import { buildInvitePreview } from '~/lib/services/invite-preview.service'
 import { createCaller } from '~/lib/trpc/server'
@@ -152,7 +152,7 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
       )}
 
       {!requiresAuth && Boolean(invites?.length) && (
-        <ListSurface>
+        <List>
           {preview && (
             <ReceivedInviteItem
               variant="preview"
@@ -173,7 +173,7 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
               canAccept={isAuthenticated}
             />
           ))}
-        </ListSurface>
+        </List>
       )}
     </div>
   )

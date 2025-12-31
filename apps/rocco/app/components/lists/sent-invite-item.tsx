@@ -80,9 +80,9 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
               title="Copy invite URL"
             >
               {isCopied ? (
-                <Check className="w-4 h-4 text-green-600" />
+                <Check className="size-4 text-green-600" />
               ) : (
-                <LinkIcon className="w-4 h-4" />
+                <LinkIcon className="size-4" />
               )}
             </Button>
             <DeleteInviteButton

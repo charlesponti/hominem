@@ -1,9 +1,9 @@
 import { Alert, PageTitle } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
+import { LoadingScreen } from '@hominem/ui/loading'
 import { UserCircle } from 'lucide-react'
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router'
-import { LoadingScreen } from '~/components/loading'
 import { requireAuth } from '~/lib/guards'
 import { trpc } from '~/lib/trpc/client'
 import type { Route } from './+types/account'
@@ -70,13 +70,7 @@ function DeleteAccount() {
 }
 
 export default function Account({ loaderData }: Route.ComponentProps) {
-  // Add a check to handle the case when loaderData might be undefined (in tests)
-  const user = loaderData?.user
-
-  // If no user is available, show a loading state
-  if (!user) {
-    return <LoadingScreen />
-  }
+  const user = loaderData.user
 
   return (
     <div className="h-full overflow-y-auto p-6">

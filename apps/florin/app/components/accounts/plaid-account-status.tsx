@@ -98,16 +98,16 @@ export function PlaidAccountStatus({
           disabled={syncItemMutation.isLoading || account.plaidItemStatus === 'revoked'}
         >
           {syncItemMutation.isLoading ? (
-            <RefreshCcw className="w-4 h-4 mr-2 animate-spin" />
+            <RefreshCcw className="size-4 mr-2 animate-spin" />
           ) : (
-            <RefreshCcw className="w-4 h-4 mr-2" />
+            <RefreshCcw className="size-4 mr-2" />
           )}
           Sync Now
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="sm" disabled={removeConnectionMutation.isLoading}>
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="size-4 mr-2" />
               Remove Connection
             </Button>
           </AlertDialogTrigger>
