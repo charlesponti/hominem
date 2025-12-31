@@ -1,6 +1,6 @@
-import crypto from "node:crypto";
-import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
-import { db } from "../db";
+import crypto from 'node:crypto'
+import { and, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm'
+import { db } from '../db'
 import {
   type Item as ItemSelect,
   item,
@@ -9,97 +9,93 @@ import {
   type PlaceInsert,
   type Place as PlaceSelect,
   place,
-} from "../db/schema";
+} from '../db/schema'
 
-export type ListSummary = { id: string; name: string };
+export type ListSummary = { id: string; name: string }
 
 /**
  * Computes imageUrl from place database values.
  * Returns imageUrl if set, otherwise falls back to first photo.
  */
-export function getPlaceImageUrl(
-  place: Pick<PlaceSelect, "imageUrl" | "photos">
-): string | null {
-  return place.imageUrl ?? place.photos?.[0] ?? null;
+export function getPlaceImageUrl(place: Pick<PlaceSelect, 'imageUrl' | 'photos'>): string | null {
+  return place.imageUrl ?? place.photos?.[0] ?? null
 }
 
 // In-memory cache for place lookups
 type CacheEntry<T> = {
-  data: T;
-  expiresAt: number;
-};
+  data: T
+  expiresAt: number
+}
 
 class PlaceCache {
-  private cache = new Map<string, CacheEntry<PlaceSelect>>();
-  readonly TTL_MS = 5 * 60 * 1000; // 5 minutes for googleMapsId lookups
-  readonly TTL_SHORT_MS = 2 * 60 * 1000; // 2 minutes for id lookups
+  private cache = new Map<string, CacheEntry<PlaceSelect>>()
+  readonly TTL_MS = 5 * 60 * 1000 // 5 minutes for googleMapsId lookups
+  readonly TTL_SHORT_MS = 2 * 60 * 1000 // 2 minutes for id lookups
 
   get(key: string): PlaceSelect | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
+    const entry = this.cache.get(key)
+    if (!entry) return null
 
     if (Date.now() > entry.expiresAt) {
-      this.cache.delete(key);
-      return null;
+      this.cache.delete(key)
+      return null
     }
 
-    return entry.data;
+    return entry.data
   }
 
   set(key: string, data: PlaceSelect, ttl: number = this.TTL_MS): void {
     this.cache.set(key, {
       data,
       expiresAt: Date.now() + ttl,
-    });
+    })
   }
 
   delete(key: string): void {
-    this.cache.delete(key);
+    this.cache.delete(key)
   }
 
   clear(): void {
-    this.cache.clear();
+    this.cache.clear()
   }
 
   // Clean up expired entries (call periodically)
   cleanup(): void {
-    const now = Date.now();
+    const now = Date.now()
     for (const [key, entry] of this.cache.entries()) {
       if (now > entry.expiresAt) {
-        this.cache.delete(key);
+        this.cache.delete(key)
       }
     }
   }
 }
 
-const placeCache = new PlaceCache();
+const placeCache = new PlaceCache()
 
 // Cleanup expired entries every 10 minutes
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    placeCache.cleanup();
-  }, 10 * 60 * 1000);
+if (typeof setInterval !== 'undefined') {
+  setInterval(
+    () => {
+      placeCache.cleanup()
+    },
+    10 * 60 * 1000
+  )
 }
 
-function toLocationTuple(
-  latitude?: number | null,
-  longitude?: number | null
-): [number, number] {
-  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0];
+function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
+  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0]
 }
 
 function extractListSummaries(
-  records: Array<{ list: Pick<ListSelect, "id" | "name"> | null }>
+  records: Array<{ list: Pick<ListSelect, 'id' | 'name'> | null }>
 ): ListSummary[] {
   return records
     .map((record) => record.list)
     .filter((list): list is { id: string; name: string } => Boolean(list))
-    .map((list) => ({ id: list.id, name: list.name }));
+    .map((list) => ({ id: list.id, name: list.name }))
 }
 
-export async function getPlacePhotoById(
-  id: string
-): Promise<string | undefined> {
+export async function getPlacePhotoById(id: string): Promise<string | undefined> {
   return db
     .select({
       photos: place.photos,
@@ -107,68 +103,60 @@ export async function getPlacePhotoById(
     .from(place)
     .where(eq(place.id, id))
     .limit(1)
-    .then((results) => results[0]?.photos?.[0]);
+    .then((results) => results[0]?.photos?.[0])
 }
 
-export async function getPlaceById(
-  id: string
-): Promise<PlaceSelect | undefined> {
-  const cacheKey = `place:id:${id}`;
-  const cached = placeCache.get(cacheKey);
+export async function getPlaceById(id: string): Promise<PlaceSelect | undefined> {
+  const cacheKey = `place:id:${id}`
+  const cached = placeCache.get(cacheKey)
   if (cached) {
-    return cached;
+    return cached
   }
 
-  const result = await db.query.place.findFirst({ where: eq(place.id, id) });
+  const result = await db.query.place.findFirst({ where: eq(place.id, id) })
   if (result) {
-    placeCache.set(cacheKey, result, placeCache.TTL_SHORT_MS);
+    placeCache.set(cacheKey, result, placeCache.TTL_SHORT_MS)
   }
-  return result;
+  return result
 }
 
 export async function getPlaceByGoogleMapsId(
   googleMapsId: string
 ): Promise<PlaceSelect | undefined> {
-  const cacheKey = `place:googleMapsId:${googleMapsId}`;
-  const cached = placeCache.get(cacheKey);
+  const cacheKey = `place:googleMapsId:${googleMapsId}`
+  const cached = placeCache.get(cacheKey)
   if (cached) {
-    return cached;
+    return cached
   }
 
   const result = await db.query.place.findFirst({
     where: eq(place.googleMapsId, googleMapsId),
-  });
+  })
   if (result) {
-    placeCache.set(cacheKey, result);
+    placeCache.set(cacheKey, result)
   }
-  return result;
+  return result
 }
 
 export async function getPlacesByIds(ids: string[]): Promise<PlaceSelect[]> {
   if (ids.length === 0) {
-    return [];
+    return []
   }
-  return db.query.place.findMany({ where: inArray(place.id, ids) });
+  return db.query.place.findMany({ where: inArray(place.id, ids) })
 }
 
-export async function getPlacesByGoogleMapsIds(
-  googleMapsIds: string[]
-): Promise<PlaceSelect[]> {
+export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise<PlaceSelect[]> {
   if (googleMapsIds.length === 0) {
-    return [];
+    return []
   }
   return db.query.place.findMany({
     where: inArray(place.googleMapsId, googleMapsIds),
-  });
+  })
 }
 
-export async function ensurePlaceFromGoogleData(
-  data: PlaceInsert
-): Promise<PlaceSelect> {
+export async function ensurePlaceFromGoogleData(data: PlaceInsert): Promise<PlaceSelect> {
   // Set imageUrl from photos if not provided
-  const imageUrl =
-    data.imageUrl ??
-    (data.photos && data.photos.length > 0 ? data.photos[0] : null);
+  const imageUrl = data.imageUrl ?? (data.photos && data.photos.length > 0 ? data.photos[0] : null)
 
   const insertValues = {
     id: crypto.randomUUID(),
@@ -185,7 +173,7 @@ export async function ensurePlaceFromGoogleData(
     priceLevel: data.priceLevel ?? null,
     photos: data.photos ?? null,
     imageUrl,
-  };
+  }
 
   const [result] = await db
     .insert(place)
@@ -218,33 +206,32 @@ export async function ensurePlaceFromGoogleData(
         updatedAt: new Date().toISOString(),
       },
     })
-    .returning();
+    .returning()
 
   if (!result) {
-    throw new Error("Failed to ensure place");
+    throw new Error('Failed to ensure place')
   }
 
   // Invalidate cache for this place
-  placeCache.delete(`place:id:${result.id}`);
-  placeCache.delete(`place:googleMapsId:${result.googleMapsId}`);
+  placeCache.delete(`place:id:${result.id}`)
+  placeCache.delete(`place:googleMapsId:${result.googleMapsId}`)
   // Update cache with new data
-  placeCache.set(`place:id:${result.id}`, result, placeCache.TTL_SHORT_MS);
-  placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result);
+  placeCache.set(`place:id:${result.id}`, result, placeCache.TTL_SHORT_MS)
+  placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result)
 
-  return result;
+  return result
 }
 
 export async function ensurePlacesFromGoogleData(
   placesData: PlaceInsert[]
 ): Promise<PlaceSelect[]> {
   if (placesData.length === 0) {
-    return [];
+    return []
   }
 
   const insertValues = placesData.map((data) => {
     const imageUrl =
-      data.imageUrl ??
-      (data.photos && data.photos.length > 0 ? data.photos[0] : null);
+      data.imageUrl ?? (data.photos && data.photos.length > 0 ? data.photos[0] : null)
     return {
       id: crypto.randomUUID(),
       googleMapsId: data.googleMapsId,
@@ -260,8 +247,8 @@ export async function ensurePlacesFromGoogleData(
       priceLevel: data.priceLevel ?? null,
       photos: data.photos ?? null,
       imageUrl,
-    };
-  });
+    }
+  })
 
   const results = await db
     .insert(place)
@@ -284,9 +271,9 @@ export async function ensurePlacesFromGoogleData(
         updatedAt: new Date().toISOString(),
       },
     })
-    .returning();
+    .returning()
 
-  return results;
+  return results
 }
 
 export async function createOrUpdatePlace(
@@ -294,18 +281,18 @@ export async function createOrUpdatePlace(
   updates: Partial<
     Pick<
       PlaceSelect,
-      | "name"
-      | "description"
-      | "address"
-      | "latitude"
-      | "longitude"
-      | "imageUrl"
-      | "rating"
-      | "types"
-      | "websiteUri"
-      | "phoneNumber"
-      | "priceLevel"
-      | "photos"
+      | 'name'
+      | 'description'
+      | 'address'
+      | 'latitude'
+      | 'longitude'
+      | 'imageUrl'
+      | 'rating'
+      | 'types'
+      | 'websiteUri'
+      | 'phoneNumber'
+      | 'priceLevel'
+      | 'photos'
     >
   > & { location?: [number, number] }
 ): Promise<PlaceSelect | undefined> {
@@ -316,43 +303,36 @@ export async function createOrUpdatePlace(
       updatedAt: new Date().toISOString(),
     })
     .where(eq(place.id, id))
-    .returning();
+    .returning()
 
   if (updated) {
     // Invalidate and update cache
-    placeCache.delete(`place:id:${id}`);
-    placeCache.delete(`place:googleMapsId:${updated.googleMapsId}`);
-    placeCache.set(`place:id:${id}`, updated, placeCache.TTL_SHORT_MS);
-    placeCache.set(`place:googleMapsId:${updated.googleMapsId}`, updated);
+    placeCache.delete(`place:id:${id}`)
+    placeCache.delete(`place:googleMapsId:${updated.googleMapsId}`)
+    placeCache.set(`place:id:${id}`, updated, placeCache.TTL_SHORT_MS)
+    placeCache.set(`place:googleMapsId:${updated.googleMapsId}`, updated)
   }
 
-  return updated;
+  return updated
 }
 
 export async function deletePlaceById(id: string): Promise<boolean> {
-  const result = await db
-    .delete(place)
-    .where(eq(place.id, id))
-    .returning({ id: place.id });
-  return result.length > 0;
+  const result = await db.delete(place).where(eq(place.id, id)).returning({ id: place.id })
+  return result.length > 0
 }
 
-export async function addPlaceToLists(
-  userId: string,
-  listIds: string[],
-  placeData: PlaceInsert
-) {
+export async function addPlaceToLists(userId: string, listIds: string[], placeData: PlaceInsert) {
   return db.transaction(async (tx) => {
-    const placeRecord = await ensurePlaceFromGoogleData(placeData);
+    const placeRecord = await ensurePlaceFromGoogleData(placeData)
 
     const itemInsertValues = listIds.map((listId) => ({
       listId,
       itemId: placeRecord.id,
       userId,
-      type: "PLACE" as const,
-      itemType: "PLACE" as const,
+      type: 'PLACE' as const,
+      itemType: 'PLACE' as const,
       id: crypto.randomUUID(),
-    }));
+    }))
 
     if (itemInsertValues.length > 0) {
       // Use RETURNING to get inserted items directly, avoiding extra query
@@ -364,75 +344,72 @@ export async function addPlaceToLists(
           id: item.id,
           listId: item.listId,
           itemId: item.itemId,
-        });
+        })
 
       // Fetch list details for the inserted items
       if (insertedItems.length > 0) {
-        const insertedListIds = insertedItems.map((i) => i.listId);
+        const insertedListIds = insertedItems.map((i) => i.listId)
         const listsData = await tx.query.list.findMany({
           where: inArray(list.id, insertedListIds),
           columns: { id: true, name: true },
-        });
+        })
 
         const affectedLists = listsData.map((l) => ({
           id: l.id,
           name: l.name,
-        }));
-        return { place: placeRecord, lists: affectedLists };
+        }))
+        return { place: placeRecord, lists: affectedLists }
       }
     }
 
     // If no items were inserted (all conflicts), fetch existing items
     const itemsInLists = await tx.query.item.findMany({
-      where: and(eq(item.itemId, placeRecord.id), eq(item.itemType, "PLACE")),
+      where: and(eq(item.itemId, placeRecord.id), eq(item.itemType, 'PLACE')),
       with: {
         list: { columns: { id: true, name: true } },
       },
-    });
+    })
 
-    const affectedLists = extractListSummaries(itemsInLists);
+    const affectedLists = extractListSummaries(itemsInLists)
 
-    return { place: placeRecord, lists: affectedLists };
-  });
+    return { place: placeRecord, lists: affectedLists }
+  })
 }
 
 export async function getPlaceLists(placeId: string): Promise<ListSummary[]> {
   const itemsInLists = await db.query.item.findMany({
-    where: and(eq(item.itemId, placeId), eq(item.itemType, "PLACE")),
+    where: and(eq(item.itemId, placeId), eq(item.itemType, 'PLACE')),
     with: {
       list: {
         columns: { id: true, name: true },
       },
     },
-  });
+  })
 
-  return extractListSummaries(itemsInLists);
+  return extractListSummaries(itemsInLists)
 }
 
 export async function removePlaceFromList(params: {
-  listId: string;
-  placeIdentifier: string;
-  userId: string;
+  listId: string
+  placeIdentifier: string
+  userId: string
 }): Promise<boolean> {
-  const { listId, placeIdentifier, userId } = params;
+  const { listId, placeIdentifier, userId } = params
 
   const listAuthCheck = await db.query.list.findFirst({
     where: and(eq(list.id, listId), eq(list.userId, userId)),
-  });
+  })
   if (!listAuthCheck) {
-    throw new Error("Forbidden: You do not own this list.");
+    throw new Error('Forbidden: You do not own this list.')
   }
 
   const placeToDelete = await db.query.place.findFirst({
-    where: or(
-      eq(place.id, placeIdentifier),
-      eq(place.googleMapsId, placeIdentifier)
-    ),
+    where: or(eq(place.id, placeIdentifier), eq(place.googleMapsId, placeIdentifier)),
     columns: { id: true },
-  });
+  })
 
   if (!placeToDelete) {
-    throw new Error("Place not found in database.");
+    throw new Error('Place not found in database.')
   }
 
   const deletedItems = await db
@@ -441,23 +418,23 @@ export async function removePlaceFromList(params: {
       and(
         eq(item.listId, listId),
         eq(item.itemId, placeToDelete.id),
-        eq(item.itemType, "PLACE"),
+        eq(item.itemType, 'PLACE'),
         eq(item.userId, userId)
       )
     )
-    .returning({ id: item.id });
+    .returning({ id: item.id })
 
-  return deletedItems.length > 0;
+  return deletedItems.length > 0
 }
 
 export async function getNearbyPlacesFromLists(params: {
-  userId: string;
-  latitude: number;
-  longitude: number;
-  radiusKm: number;
-  limit: number;
+  userId: string
+  latitude: number
+  longitude: number
+  radiusKm: number
+  limit: number
 }) {
-  const { userId, latitude, longitude, radiusKm, limit: resultLimit } = params;
+  const { userId, latitude, longitude, radiusKm, limit: resultLimit } = params
 
   const nearbyPlaces = await db
     .select({
@@ -468,9 +445,7 @@ export async function getNearbyPlacesFromLists(params: {
       longitude: place.longitude,
       googleMapsId: place.googleMapsId,
       types: place.types,
-      imageUrl: sql<
-        string | null
-      >`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as("imageUrl"),
+      imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as('imageUrl'),
       rating: place.rating,
       photos: place.photos,
       websiteUri: place.websiteUri,
@@ -481,14 +456,14 @@ export async function getNearbyPlacesFromLists(params: {
       distance: sql<number>`ST_Distance(
               ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
               ${place.location}::geography
-            )`.as("distance"),
+            )`.as('distance'),
     })
     .from(place)
     .innerJoin(item, eq(item.itemId, place.id))
     .innerJoin(list, eq(list.id, item.listId))
     .where(
       and(
-        eq(item.itemType, "PLACE"),
+        eq(item.itemType, 'PLACE'),
         or(eq(list.userId, userId), eq(item.userId, userId)),
         sql`ST_DWithin(
                 ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
@@ -498,34 +473,34 @@ export async function getNearbyPlacesFromLists(params: {
       )
     )
     .orderBy(sql`distance ASC`)
-    .limit(resultLimit);
+    .limit(resultLimit)
 
   const placesMap = new Map<
     string,
     {
-      id: string;
-      name: string;
-      address: string | null;
-      latitude: number | null;
-      longitude: number | null;
-      googleMapsId: string;
-      types: string[] | null;
-      imageUrl: string | null;
-      rating: number | null;
-      photos: string[] | null;
-      websiteUri: string | null;
-      phoneNumber: string | null;
-      priceLevel: number | null;
-      distance: number;
-      lists: Array<{ id: string; name: string }>;
+      id: string
+      name: string
+      address: string | null
+      latitude: number | null
+      longitude: number | null
+      googleMapsId: string
+      types: string[] | null
+      imageUrl: string | null
+      rating: number | null
+      photos: string[] | null
+      websiteUri: string | null
+      phoneNumber: string | null
+      priceLevel: number | null
+      distance: number
+      lists: Array<{ id: string; name: string }>
     }
-  >();
+  >()
 
   for (const row of nearbyPlaces) {
-    const existing = placesMap.get(row.id);
+    const existing = placesMap.get(row.id)
     if (existing) {
       if (!existing.lists.some((l) => l.id === row.listId)) {
-        existing.lists.push({ id: row.listId, name: row.listName });
+        existing.lists.push({ id: row.listId, name: row.listName })
       }
     } else {
       placesMap.set(row.id, {
@@ -544,45 +519,40 @@ export async function getNearbyPlacesFromLists(params: {
         priceLevel: row.priceLevel,
         distance: row.distance,
         lists: [{ id: row.listId, name: row.listName }],
-      });
+      })
     }
   }
 
-  return Array.from(placesMap.values());
+  return Array.from(placesMap.values())
 }
 
 export async function getItemsForPlace(
   placeId: string
-): Promise<
-  Array<ItemSelect & { list: Pick<ListSelect, "id" | "name"> | null }>
-> {
+): Promise<Array<ItemSelect & { list: Pick<ListSelect, 'id' | 'name'> | null }>> {
   return db.query.item.findMany({
-    where: and(eq(item.itemId, placeId), eq(item.itemType, "PLACE")),
+    where: and(eq(item.itemId, placeId), eq(item.itemType, 'PLACE')),
     with: {
       list: {
         columns: { id: true, name: true },
       },
     },
-  });
+  })
 }
 
-export async function updatePlacePhotos(
-  placeId: string,
-  photos: string[]
-): Promise<void> {
+export async function updatePlacePhotos(placeId: string, photos: string[]): Promise<void> {
   await db
     .update(place)
     .set({
       photos,
       updatedAt: new Date().toISOString(),
     })
-    .where(eq(place.id, placeId));
+    .where(eq(place.id, placeId))
 }
 
 export async function listPlacesMissingPhotos(): Promise<PlaceSelect[]> {
   return db.query.place.findMany({
     where: and(isNotNull(place.googleMapsId), isNull(place.photos)),
-  });
+  })
 }
 
 export async function refreshAllPlaces() {

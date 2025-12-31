@@ -1,21 +1,18 @@
-import type {
-  Session as SupabaseSession,
-  User as SupabaseUser,
-} from "@supabase/supabase-js";
+import type { Session as SupabaseSession, User as SupabaseUser } from '@supabase/supabase-js'
 
 /**
  * Canonical user profile stored/used in Hominem apps.
  * All apps should treat this as the source-of-truth shape.
  */
 export interface HominemUser {
-  id: string;
-  email: string;
-  name?: string;
-  image?: string;
-  supabaseId: string;
-  isAdmin: boolean;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  email: string
+  name?: string
+  image?: string
+  supabaseId: string
+  isAdmin: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -23,65 +20,63 @@ export interface HominemUser {
  * Optional by design; helpers will normalize missing fields.
  */
 export type AuthUserMetadata = {
-  avatar_url?: string;
-  full_name?: string;
-  display_name?: string;
-  name?: string;
-  picture?: string;
-  image?: string;
-  first_name?: string;
-  last_name?: string;
-  isAdmin?: boolean;
-  is_admin?: boolean;
-};
+  avatar_url?: string
+  full_name?: string
+  display_name?: string
+  name?: string
+  picture?: string
+  image?: string
+  first_name?: string
+  last_name?: string
+  isAdmin?: boolean
+  is_admin?: boolean
+}
 
 export type AuthAppMetadata = {
-  isAdmin?: boolean;
-  is_admin?: boolean;
-};
+  isAdmin?: boolean
+  is_admin?: boolean
+}
 
 /**
  * Supabase user shape annotated with normalized metadata typing.
  * Use this instead of the raw SupabaseUser when working with auth flows.
  */
 export type SupabaseAuthUser = SupabaseUser & {
-  user_metadata: AuthUserMetadata;
-  app_metadata: AuthAppMetadata;
-};
+  user_metadata: AuthUserMetadata
+  app_metadata: AuthAppMetadata
+}
 
 export type SupabaseAuthSession = SupabaseSession & {
-  user: SupabaseAuthUser;
-};
+  user: SupabaseAuthUser
+}
 
 export interface AuthContextType {
   // User state
-  user: HominemUser | null;
-  supabaseUser: SupabaseAuthUser | null;
-  session: SupabaseAuthSession | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
+  user: HominemUser | null
+  supabaseUser: SupabaseAuthUser | null
+  session: SupabaseAuthSession | null
+  isLoading: boolean
+  isAuthenticated: boolean
 
   // Auth methods
-  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
-  signUp: (email: string, password: string) => Promise<{ error?: Error }>;
-  signInWithOAuth: (
-    provider: "google" | "github" | "discord"
-  ) => Promise<{ error?: Error }>;
-  signOut: () => Promise<{ error?: Error }>;
-  resetPassword: (email: string) => Promise<{ error?: Error }>;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>
+  signUp: (email: string, password: string) => Promise<{ error?: Error }>
+  signInWithOAuth: (provider: 'google' | 'github' | 'discord') => Promise<{ error?: Error }>
+  signOut: () => Promise<{ error?: Error }>
+  resetPassword: (email: string) => Promise<{ error?: Error }>
 
   // Utility methods
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<void>
 }
 
 export interface AuthConfig {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  redirectTo?: string;
+  supabaseUrl: string
+  supabaseAnonKey: string
+  redirectTo?: string
 }
 
 export interface ServerAuthResult {
-  user: HominemUser | null;
-  session: SupabaseAuthSession | null;
-  isAuthenticated: boolean;
+  user: HominemUser | null
+  session: SupabaseAuthSession | null
+  isAuthenticated: boolean
 }

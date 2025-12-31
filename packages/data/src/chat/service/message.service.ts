@@ -1,7 +1,7 @@
 import { db } from '@hominem/data'
 import { type ChatMessageSelect, chat, chatMessage } from '@hominem/data/schema'
 import { logger } from '@hominem/utils/logger'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, gt } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { ChatError } from './chat.service'
 
@@ -65,6 +65,10 @@ export class MessageService {
           parentMessageId: params.parentMessageId,
         })
         .returning()
+
+      if (!newMessage) {
+        throw new ChatError('DATABASE_ERROR', 'Failed to create message - no record returned')
+      }
 
       await db
         .update(chat)
@@ -154,6 +158,43 @@ export class MessageService {
     } catch (error) {
       logger.error(`Failed to delete message: ${error}`)
       return false
+    }
+  }
+
+  /**
+   * Delete all messages in a chat created after a given timestamp
+   */
+  async deleteMessagesAfter(
+    chatId: string,
+    afterTimestamp: string,
+    userId: string
+  ): Promise<number> {
+    try {
+      // Verify chat ownership first
+      const [chatData] = await db
+        .select()
+        .from(chat)
+        .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
+        .limit(1)
+
+      if (!chatData) {
+        throw new ChatError('AUTH_ERROR', 'Chat not found or access denied')
+      }
+
+      // Delete all messages created after the timestamp
+      const deletedMessages = await db
+        .delete(chatMessage)
+        .where(and(eq(chatMessage.chatId, chatId), gt(chatMessage.createdAt, afterTimestamp)))
+        .returning()
+
+      const deletedCount = deletedMessages.length
+      return deletedCount
+    } catch (error) {
+      logger.error(`Failed to delete messages after timestamp: ${error}`)
+      if (error instanceof ChatError) {
+        throw error
+      }
+      throw new ChatError('DATABASE_ERROR', 'Failed to delete subsequent messages')
     }
   }
 

@@ -1,61 +1,53 @@
-import { UserAuthService } from "@hominem/data";
-import { logger } from "@hominem/data/logger";
+import { UserAuthService } from '@hominem/data'
+import { logger } from '@hominem/data/logger'
 import {
   type CookieMethodsServer,
   createServerClient,
   parseCookieHeader,
   serializeCookieHeader,
-} from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AuthConfig, ServerAuthResult, SupabaseAuthUser } from "./types";
-import { toHominemUser } from "./user";
+} from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { AuthConfig, ServerAuthResult, SupabaseAuthUser } from './types'
+import { toHominemUser } from './user'
 
 /**
  * Creates cookie handling utilities for server-side Supabase client.
  * Returns headers and cookie methods that work together.
  */
 function createCookieHandlers(request: Request): {
-  headers: Headers;
-  cookies: CookieMethodsServer;
+  headers: Headers
+  cookies: CookieMethodsServer
 } {
-  const headers = new Headers();
+  const headers = new Headers()
   const cookies: CookieMethodsServer = {
     getAll() {
-      return parseCookieHeader(request.headers.get("Cookie") ?? "").filter(
-        (cookie): cookie is { name: string; value: string } =>
-          cookie.value !== undefined
-      );
+      return parseCookieHeader(request.headers.get('Cookie') ?? '').filter(
+        (cookie): cookie is { name: string; value: string } => cookie.value !== undefined
+      )
     },
     setAll(cookiesToSet) {
       cookiesToSet.forEach(({ name, value, options = {} }) => {
-        headers.append(
-          "Set-Cookie",
-          serializeCookieHeader(name, value, { ...options, path: "/" })
-        );
-      });
+        headers.append('Set-Cookie', serializeCookieHeader(name, value, { ...options, path: '/' }))
+      })
     },
-  };
-  return { headers, cookies };
+  }
+  return { headers, cookies }
 }
 
 export async function getServerAuth(
   request: Request,
   config: AuthConfig
 ): Promise<ServerAuthResult & { headers: Headers }> {
-  const { headers, cookies } = createCookieHandlers(request);
+  const { headers, cookies } = createCookieHandlers(request)
 
-  const supabase = createServerClient(
-    config.supabaseUrl,
-    config.supabaseAnonKey,
-    { cookies }
-  );
+  const supabase = createServerClient(config.supabaseUrl, config.supabaseAnonKey, { cookies })
 
   try {
     // Always verify user with Supabase Auth server
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
       return {
@@ -63,25 +55,23 @@ export async function getServerAuth(
         session: null,
         isAuthenticated: false,
         headers,
-      };
+      }
     }
 
     // Fetch session for access token if needed
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+    } = await supabase.auth.getSession()
 
     // Get or create Hominem user
-    const userAuthData = await UserAuthService.findOrCreateUser(
-      user as SupabaseAuthUser
-    );
+    const userAuthData = await UserAuthService.findOrCreateUser(user as SupabaseAuthUser)
     if (!userAuthData) {
       return {
         user: null,
         session: null,
         isAuthenticated: false,
         headers,
-      };
+      }
     }
 
     return {
@@ -89,15 +79,15 @@ export async function getServerAuth(
       session,
       isAuthenticated: true,
       headers,
-    };
+    }
   } catch (error) {
-    logger.error("[getServerAuth]:", { error });
+    logger.error('[getServerAuth]:', { error })
     return {
       user: null,
       session: null,
       isAuthenticated: false,
       headers,
-    };
+    }
   }
 }
 
@@ -109,16 +99,12 @@ export function createSupabaseServerClient(
   request: Request,
   config: AuthConfig
 ): { supabase: SupabaseClient; headers: Headers } {
-  const { headers, cookies } = createCookieHandlers(request);
+  const { headers, cookies } = createCookieHandlers(request)
 
-  const supabase = createServerClient(
-    config.supabaseUrl,
-    config.supabaseAnonKey,
-    { cookies }
-  );
+  const supabase = createServerClient(config.supabaseUrl, config.supabaseAnonKey, { cookies })
 
-  return { supabase, headers };
+  return { supabase, headers }
 }
 
 // Re-export for consumers importing from '@hominem/auth/server'
-export { toHominemUser };
+export { toHominemUser }

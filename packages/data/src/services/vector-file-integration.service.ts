@@ -8,7 +8,7 @@ export async function indexProcessedFile(
   try {
     const vectorIds: string[] = []
 
-    if (!processedFile.textContent && !processedFile.content) {
+    if (!(processedFile.textContent || processedFile.content)) {
       return { success: true, vectorIds: [] }
     }
 

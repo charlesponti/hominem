@@ -1,10 +1,10 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 // Define schemas for nested objects first
 const ModelInfoSchema = z.object({
   title: z.string(),
   id: z.string(),
-});
+})
 
 const ChatParamsSchema = z.object({
   temperature: z.number().nullable(),
@@ -23,27 +23,27 @@ const ChatParamsSchema = z.object({
   outputFormat: z.string(),
   showOutputSettings: z.union([z.boolean(), z.string()]).optional(),
   systemMessage: z.string(),
-});
+})
 
 const UsageSchema = z.object({
   completion_tokens: z.number(),
   prompt_tokens: z.number(),
   total_tokens: z.number(),
-});
+})
 
 const ContentItemSchema = z.union([
   z.object({
-    type: z.literal("text"),
+    type: z.literal('text'),
     text: z.string(),
   }),
   z.object({
-    type: z.enum(["image_url", "tm_image_file", "tm_text_file"]),
+    type: z.enum(['image_url', 'tm_image_file', 'tm_text_file']),
     image_url: z.any(), // Could be more specific if needed
   }),
-]);
+])
 
 const MessageSchema = z.object({
-  role: z.enum(["user", "assistant", "system", "tool"]),
+  role: z.enum(['user', 'assistant', 'system', 'tool']),
   content: z.union([z.string(), z.array(ContentItemSchema)]),
   createdAt: z.string().datetime().optional(),
   uuid: z.uuid().optional(),
@@ -54,7 +54,7 @@ const MessageSchema = z.object({
   model: z.string().optional(),
   titleUsage: UsageSchema.optional(),
   keywords: z.array(z.string()).optional(),
-});
+})
 
 // Main chat entry schema
 const ChatEntrySchema = z.object({
@@ -70,13 +70,13 @@ const ChatEntrySchema = z.object({
   chatID: z.string(),
   messages: z.array(MessageSchema),
   chatTitle: z.string(),
-});
+})
 
 // Define basic types
-const IdSchema = z.string();
+const IdSchema = z.string()
 const DateSchema = z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-  message: "Invalid date format",
-});
+  message: 'Invalid date format',
+})
 
 // Folder schema
 const FolderSchema = z.object({
@@ -88,10 +88,10 @@ const FolderSchema = z.object({
   updatedAt: DateSchema,
   syncedAt: DateSchema.nullable(),
   order: z.number(),
-});
+})
 
 // User prompt schema (appears to be an empty array in your data)
-const UserPromptSchema = z.object({}).passthrough();
+const UserPromptSchema = z.object({}).passthrough()
 
 // User character schema
 const UserCharacterSchema = z.object({
@@ -121,7 +121,7 @@ const UserCharacterSchema = z.object({
   createdAt: DateSchema,
   lastUsedAt: DateSchema,
   syncedAt: DateSchema.nullable(),
-});
+})
 
 // Keyboard shortcuts schema
 const KeyboardShortcutsSchema = z.object({
@@ -134,7 +134,7 @@ const KeyboardShortcutsSchema = z.object({
   clearContext: z.string(),
   togglePlugins: z.string(),
   copyLastMessage: z.string(),
-});
+})
 
 // The root schema is an array of chat entries
 const TypingMindExportSchema = z.object({
@@ -170,8 +170,8 @@ const TypingMindExportSchema = z.object({
     keyboardShortcuts: KeyboardShortcutsSchema,
     customModels: z.array(z.unknown()),
   }),
-});
+})
 
 // Export the schema
-export type TypingMindConfig = z.infer<typeof TypingMindExportSchema>;
-export { TypingMindExportSchema };
+export type TypingMindConfig = z.infer<typeof TypingMindExportSchema>
+export { TypingMindExportSchema }

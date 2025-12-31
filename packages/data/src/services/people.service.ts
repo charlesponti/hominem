@@ -1,13 +1,13 @@
-import { asc, eq, inArray } from "drizzle-orm";
-import { db } from "../db";
-import { contacts, eventsUsers } from "../db/schema";
+import { asc, eq, inArray } from 'drizzle-orm'
+import { db } from '../db'
+import { contacts, eventsUsers } from '../db/schema'
 
 export interface PersonInput {
-  userId: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
+  userId: string
+  firstName?: string
+  lastName?: string
+  email?: string
+  phone?: string
 }
 
 export async function getPeopleForEvent(eventId: string) {
@@ -19,11 +19,11 @@ export async function getPeopleForEvent(eventId: string) {
     })
     .from(eventsUsers)
     .innerJoin(contacts, eq(eventsUsers.personId, contacts.id))
-    .where(eq(eventsUsers.eventId, eventId));
+    .where(eq(eventsUsers.eventId, eventId))
 }
 
 export async function getPeopleForEvents(eventIds: string[]) {
-  if (eventIds.length === 0) return new Map();
+  if (eventIds.length === 0) return new Map()
 
   const rows = await db
     .select({
@@ -34,42 +34,36 @@ export async function getPeopleForEvents(eventIds: string[]) {
     })
     .from(eventsUsers)
     .innerJoin(contacts, eq(eventsUsers.personId, contacts.id))
-    .where(inArray(eventsUsers.eventId, eventIds));
+    .where(inArray(eventsUsers.eventId, eventIds))
 
-  const map = new Map<
-    string,
-    Array<{ id: string; firstName: string; lastName: string | null }>
-  >();
+  const map = new Map<string, Array<{ id: string; firstName: string; lastName: string | null }>>()
   for (const row of rows) {
-    if (!row.eventId) continue;
+    if (!row.eventId) continue
     if (!map.has(row.eventId)) {
-      map.set(row.eventId, []);
+      map.set(row.eventId, [])
     }
     map.get(row.eventId)!.push({
       id: row.id,
       firstName: row.firstName,
       lastName: row.lastName,
-    });
+    })
   }
-  return map;
+  return map
 }
 
-export async function replacePeopleForEvent(
-  eventId: string,
-  people?: string[]
-) {
-  if (people === undefined) return;
-  if (people.length === 0) return;
+export async function replacePeopleForEvent(eventId: string, people?: string[]) {
+  if (people === undefined) return
+  if (people.length === 0) return
 
-  await db.delete(eventsUsers).where(eq(eventsUsers.eventId, eventId));
+  await db.delete(eventsUsers).where(eq(eventsUsers.eventId, eventId))
 
-  if (people.length === 0) return;
+  if (people.length === 0) return
 
   const relationships = people.map((personId) => ({
     eventId,
     personId,
-  }));
-  await db.insert(eventsUsers).values(relationships);
+  }))
+  await db.insert(eventsUsers).values(relationships)
 }
 
 export async function getPeople({ userId }: { userId: string }) {
@@ -77,22 +71,18 @@ export async function getPeople({ userId }: { userId: string }) {
     .select()
     .from(contacts)
     .where(eq(contacts.userId, userId))
-    .orderBy(asc(contacts.firstName));
+    .orderBy(asc(contacts.firstName))
 }
 
 export async function getPersonById(id: string) {
-  const result = await db
-    .select()
-    .from(contacts)
-    .where(eq(contacts.id, id))
-    .limit(1);
+  const result = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1)
 
-  return result.length > 0 ? result[0] : null;
+  return result.length > 0 ? result[0] : null
 }
 
 export async function createPerson(person: PersonInput) {
   if (!person.firstName) {
-    throw new Error("firstName is required");
+    throw new Error('firstName is required')
   }
 
   const [result] = await db
@@ -104,39 +94,32 @@ export async function createPerson(person: PersonInput) {
       email: person.email || null,
       phone: person.phone || null,
     })
-    .returning();
+    .returning()
 
   if (!result) {
-    throw new Error("Failed to create person");
+    throw new Error('Failed to create person')
   }
 
-  return result;
+  return result
 }
 
 export async function updatePerson(id: string, person: PersonInput) {
-  const updateData: Record<string, unknown> = {};
+  const updateData: Record<string, unknown> = {}
 
-  if (person.firstName !== undefined) updateData.firstName = person.firstName;
-  if (person.lastName !== undefined) updateData.lastName = person.lastName;
-  if (person.email !== undefined) updateData.email = person.email;
-  if (person.phone !== undefined) updateData.phone = person.phone;
+  if (person.firstName !== undefined) updateData.firstName = person.firstName
+  if (person.lastName !== undefined) updateData.lastName = person.lastName
+  if (person.email !== undefined) updateData.email = person.email
+  if (person.phone !== undefined) updateData.phone = person.phone
 
-  const result = await db
-    .update(contacts)
-    .set(updateData)
-    .where(eq(contacts.id, id))
-    .returning();
+  const result = await db.update(contacts).set(updateData).where(eq(contacts.id, id)).returning()
 
-  return result.length > 0 ? result[0] : null;
+  return result.length > 0 ? result[0] : null
 }
 
 export async function deletePerson(id: string) {
-  await db.delete(eventsUsers).where(eq(eventsUsers.personId, id));
+  await db.delete(eventsUsers).where(eq(eventsUsers.personId, id))
 
-  const result = await db
-    .delete(contacts)
-    .where(eq(contacts.id, id))
-    .returning();
+  const result = await db.delete(contacts).where(eq(contacts.id, id)).returning()
 
-  return result.length > 0;
+  return result.length > 0
 }

@@ -283,9 +283,3 @@ export async function deleteListInvite({
     return { error: 'Failed to delete invite.', status: 500 }
   }
 }
-
-
-
-
-
-
