@@ -29,7 +29,7 @@ export function AppLayout({ children, navigation, backgroundImage }: AppLayoutPr
         {navigation}
 
         <main className="flex-1 mt-24">
-          <div className="w-full px-2 pb-12 md:px-0">{children}</div>
+          <div className="w-full px-2 pb-12">{children}</div>
         </main>
       </div>
     </>
