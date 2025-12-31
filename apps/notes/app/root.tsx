@@ -1,22 +1,22 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
 import type { AuthChangeEvent } from '@supabase/supabase-js'
-import { useCallback } from 'react'
-import { getServerSession, authConfig } from './lib/auth.server'
 import type React from 'react'
+import { useCallback } from 'react'
 import {
+  data,
   isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  data,
   useRevalidator,
 } from 'react-router'
-
 import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
 import type { Route } from './+types/root'
 import './globals.css'
+import { authConfig, getServerSession } from './lib/auth.server'
+import './lib/i18n'
 import { TRPCProvider } from './lib/trpc'
 
 export async function loader({ request }: Route.LoaderArgs) {

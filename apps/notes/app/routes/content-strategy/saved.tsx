@@ -1,11 +1,12 @@
 import { Button } from '@hominem/ui/button'
-import { Card, CardContent } from '@hominem/ui/components/ui/card'
+import { Card, CardContent } from '@hominem/ui/card'
 import { PageContainer } from '@hominem/ui/components/layout/page-container'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import { Eye, FileText, Plus, Trash2 } from 'lucide-react'
 import { Link } from 'react-router'
 import { Loading } from '~/components/loading'
 import { useContentStrategies, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
+import i18n from '~/lib/i18n'
 
 export default function SavedContentStrategiesPage() {
   const { toast } = useToast()
@@ -94,7 +95,11 @@ export default function SavedContentStrategiesPage() {
                   </p>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Created {new Date(strategy.createdAt).toLocaleDateString()}</span>
-                    <span>{strategy.strategy.platforms?.length || 0} platforms</span>
+                    <span>
+                      {i18n.t('platform', {
+                        count: strategy.strategy.platforms?.length || 0,
+                      })}
+                    </span>
                   </div>
                 </CardContent>
               </Card>

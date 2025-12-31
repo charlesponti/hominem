@@ -1,118 +1,235 @@
-import type { RouterOutput } from '~/lib/trpc-client.js'
+import { Button } from '@hominem/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@hominem/ui/dropdown'
+import { Textarea } from '@hominem/ui/textarea'
+import { formatMessageTimestamp } from '@hominem/utils/dates'
+import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react'
+import { memo, useState } from 'react'
+import { useMessageEdit } from '~/lib/hooks/use-message-edit'
+import type { ExtendedMessage } from '~/lib/types/chat-message'
 import { cn } from '~/lib/utils'
-
-// Get the inferred type from the tRPC query using RouterOutput
-type MessageFromQuery = RouterOutput['chats']['getMessages'][0]
-
-// Extend the inferred message type with client-side properties
-type ExtendedMessage = MessageFromQuery & {
-  isStreaming?: boolean
-}
-
-// Component for text parts
-function _TextPart({
-  text,
-  index,
-  isStreaming,
-}: {
-  text: string
-  index: number
-  isStreaming?: boolean
-}) {
-  return (
-    <div key={`text-${text.slice(0, 20)}-${index}`} className="whitespace-pre-wrap">
-      {text}
-      {isStreaming && <span className="inline-block w-2 h-4 bg-foreground animate-pulse ml-1" />}
-    </div>
-  )
-}
-
-// Component for tool invocation parts
-function _ToolInvocationPart({
-  toolInvocation,
-}: {
-  toolInvocation: {
-    toolName: string
-    toolCallId: string
-    state: string
-    args?: unknown
-    result?: unknown
-  }
-  index: number
-}) {
-  const { toolName, toolCallId, state } = toolInvocation
-
-  if (state === 'call') {
-    return (
-      <div key={toolCallId} className="bg-background/50 p-3 rounded border">
-        <div className="font-medium text-sm flex items-center gap-2">🔧 Calling {toolName}...</div>
-        <div className="text-xs opacity-70 mt-1">
-          {JSON.stringify(toolInvocation.args, null, 2)}
-        </div>
-      </div>
-    )
-  }
-
-  if (state === 'result') {
-    return (
-      <div key={toolCallId} className="bg-background/50 p-3 rounded border">
-        <div className="font-medium text-sm flex items-center gap-2">✅ {toolName} result:</div>
-        <pre className="text-xs opacity-70 mt-1 whitespace-pre-wrap">
-          {JSON.stringify(toolInvocation.result, null, 2)}
-        </pre>
-      </div>
-    )
-  }
-
-  return null
-}
-
-// Component for reasoning parts
-function _ReasoningPart({ reasoning, index }: { reasoning: string; index: number }) {
-  return (
-    <div
-      key={`reasoning-${reasoning.slice(0, 20)}-${index}`}
-      className="bg-muted/50 p-3 rounded border"
-    >
-      <div className="font-medium text-sm flex items-center gap-2">🤔 Reasoning:</div>
-      <div className="text-xs opacity-70 mt-1 whitespace-pre-wrap">{reasoning}</div>
-    </div>
-  )
-}
-
-// Component for fallback content
-function FallbackContent({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
-  return (
-    <div className="whitespace-pre-wrap">
-      {content}
-      {isStreaming && <span className="inline-block w-2 h-4 bg-foreground animate-pulse ml-1" />}
-    </div>
-  )
-}
+import { copyToClipboard } from '~/lib/utils/clipboard'
+import { MarkdownContent } from './MarkdownContent'
+import { ReasoningPart } from './ReasoningPart'
+import { ToolInvocationPart } from './ToolInvocationPart'
 
 interface ChatMessageProps {
   message: ExtendedMessage
   isStreaming?: boolean
+  onRegenerate?: () => void
+  onEdit?: (messageId: string, newContent: string) => void
+  onDelete?: () => void
 }
 
-export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) {
+export const ChatMessage = memo(function ChatMessage({
+  message,
+  isStreaming = false,
+  onRegenerate,
+  onEdit,
+  onDelete,
+}: ChatMessageProps) {
   const isUser = message.role === 'user'
+  const hasContent = message.content && message.content.trim().length > 0
+  const hasToolCalls =
+    message.toolCalls && Array.isArray(message.toolCalls) && message.toolCalls.length > 0
+  const hasReasoning = message.reasoning && message.reasoning.trim().length > 0
+  const [copied, setCopied] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+
+  const handleCopyMessage = async () => {
+    const success = await copyToClipboard(message.content)
+    if (success) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const { isEditing, editContent, setEditContent, startEdit, cancelEdit, saveEdit, canSave } =
+    useMessageEdit({
+      initialContent: message.content,
+      onSave: onEdit ? (newContent) => onEdit(message.id, newContent) : undefined,
+    })
+
+  const timestamp = message.createdAt ? formatMessageTimestamp(message.createdAt) : ''
+
   return (
-    <div
-      className={cn('p-4 rounded-lg flex flex-col gap-2', {
+    <article
+      className={cn('group relative p-4 rounded-lg flex flex-col gap-3', {
         'bg-primary text-primary-foreground ml-12': isUser,
         'bg-muted mr-12': !isUser,
       })}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      aria-label={`${isUser ? 'Your' : 'AI Assistant'} message${timestamp ? ` from ${timestamp}` : ''}`}
     >
-      <FallbackContent content={message.content} isStreaming={isStreaming} />
+      {/* Message actions menu */}
+      {isHovered && !isStreaming && (
+        <div
+          className={cn('absolute top-2', {
+            'right-2': isUser,
+            'left-2': !isUser,
+          })}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 opacity-70 hover:opacity-100"
+                aria-label="Message actions menu"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <MoreVertical className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={isUser ? 'end' : 'start'} role="menu">
+              <DropdownMenuItem
+                onClick={handleCopyMessage}
+                role="menuitem"
+                aria-label={copied ? 'Message copied to clipboard' : 'Copy message to clipboard'}
+              >
+                {copied ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Copy
+                  </>
+                )}
+              </DropdownMenuItem>
+              {isUser && onEdit && (
+                <DropdownMenuItem onClick={startEdit} role="menuitem" aria-label="Edit message">
+                  <Edit2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {!isUser && onRegenerate && (
+                <DropdownMenuItem
+                  onClick={onRegenerate}
+                  role="menuitem"
+                  aria-label="Regenerate response"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Regenerate
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <>
+                  <DropdownMenuSeparator role="separator" />
+                  <DropdownMenuItem
+                    onClick={onDelete}
+                    className="text-destructive"
+                    role="menuitem"
+                    aria-label="Delete message"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      {/* Reasoning section (shown first for assistant messages) */}
+      {!isUser && hasReasoning && <ReasoningPart reasoning={message.reasoning!} index={0} />}
+
+      {/* Tool calls section */}
+      {hasToolCalls && (
+        <div className="flex flex-col gap-2">
+          {message.toolCalls!.map((toolCall, index) => (
+            <ToolInvocationPart
+              key={toolCall.toolCallId || `tool-${index}`}
+              toolInvocation={toolCall}
+              index={index}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Main content with markdown rendering or edit mode */}
+      {isEditing && isUser ? (
+        <form
+          className="flex flex-col gap-2"
+          aria-label="Edit message"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveEdit()
+          }}
+        >
+          <Textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="min-h-[100px] resize-none"
+            autoFocus
+            aria-label="Message content"
+            aria-describedby="edit-instructions"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                cancelEdit()
+              } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                saveEdit()
+              }
+            }}
+          />
+          <span id="edit-instructions" className="sr-only">
+            Press Escape to cancel, or Ctrl+Enter to save
+          </span>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
+              <X className="mr-2 h-4 w-4" aria-hidden="true" />
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={saveEdit}
+              disabled={!canSave}
+              aria-label="Save edited message"
+            >
+              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+              Save
+            </Button>
+          </div>
+        </form>
+      ) : (
+        hasContent && (
+          <div>
+            <MarkdownContent
+              content={message.content}
+              isStreaming={isStreaming}
+              className={isUser ? 'prose-invert' : ''}
+            />
+          </div>
+        )
+      )}
+
+      {/* Message metadata */}
       <div
-        className={cn('flex text-xs opacity-70', {
+        className={cn('flex items-center gap-2 text-xs opacity-70 mt-1', {
           'justify-end': isUser,
           'justify-start': !isUser,
         })}
       >
-        {isUser ? 'You' : 'AI Assistant'}
+        <span>{isUser ? 'You' : 'AI Assistant'}</span>
+        {timestamp && (
+          <>
+            <span>·</span>
+            <span className="opacity-60" title={message.createdAt}>
+              {timestamp}
+            </span>
+          </>
+        )}
       </div>
-    </div>
+    </article>
   )
-}
+})

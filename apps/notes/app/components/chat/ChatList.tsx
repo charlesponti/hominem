@@ -5,7 +5,7 @@ import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
 import { useDeleteChat } from '~/lib/hooks/use-delete-chat'
 import { trpc } from '~/lib/trpc-client'
-import { formatChatDate } from '~/lib/utils/date-utils'
+import { formatChatDate } from '@hominem/utils/dates'
 
 interface ChatListProps {
   userId: string

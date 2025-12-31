@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
 import { getTimeAgo } from '@hominem/utils/time'
 import { AlertCircle, CheckCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import i18n from '~/lib/i18n'
 
 interface SyncStatusProps {
-  lastSyncedAt: Date | null
+  lastSyncedAt: string | Date | null
   syncError: string | null
   eventCount: number
   connected: boolean
@@ -51,9 +52,7 @@ export default function SyncStatus({
         <>
           <CheckCircle className="size-4 text-success" />
           <div className="flex-1">
-            <div className="text-foreground">
-              {eventCount} Google Calendar event{eventCount === 1 ? '' : 's'}
-            </div>
+            <div className="text-foreground">{i18n.t('event_count', { count: eventCount })}</div>
             <div className="text-xs text-muted-foreground">Last synced: {timeAgo}</div>
           </div>
         </>

@@ -21,7 +21,7 @@ export function GoalMilestoneList({
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Milestones</h3>
         <Button variant="outline" size="sm" onClick={onAdd} className="text-sm hover:bg-primary/5">
-          <Plus className="w-4 h-4 mr-2" /> Add
+          <Plus className="size-4 mr-2" /> Add
         </Button>
       </div>
       {milestones?.map((milestone, index) => (

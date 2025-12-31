@@ -33,7 +33,7 @@ export function ChatActions({
         disabled={!hasInput || isSearching}
         title="Search the web"
       >
-        {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+        {isSearching ? <Loader2 className="size-4 animate-spin" /> : <Globe className="size-4" />}
       </Button>
 
       <Button
@@ -43,7 +43,7 @@ export function ChatActions({
         disabled={isLoading}
         title="Attach files"
       >
-        <Paperclip className="w-4 h-4" />
+        <Paperclip className="size-4" />
       </Button>
 
       <Button
@@ -52,7 +52,7 @@ export function ChatActions({
         onClick={onToggleVoiceMode}
         title="Toggle voice mode"
       >
-        <Volume2 className="w-4 h-4" />
+        <Volume2 className="size-4" />
       </Button>
 
       <Button
@@ -62,7 +62,7 @@ export function ChatActions({
         disabled={isLoading}
         title="Record audio"
       >
-        <Mic className="w-4 h-4" />
+        <Mic className="size-4" />
       </Button>
 
       <Button

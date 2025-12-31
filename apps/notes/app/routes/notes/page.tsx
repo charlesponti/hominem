@@ -196,7 +196,7 @@ export default function NotesPage() {
             {/* Search bar */}
             <div className="col-span-1 flex justify-center">
               <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400" />
                 <Input
                   placeholder="Search notes and tasks..."
                   value={searchQuery}
@@ -212,7 +212,7 @@ export default function NotesPage() {
                 onClick={handleCreateNewItem}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="size-4 mr-2" />
                 Create
               </Button>
             </div>
@@ -269,7 +269,7 @@ export default function NotesPage() {
                     onClick={handleCreateNewItem}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="size-4 mr-2" />
                     Create your first item
                   </Button>
                 )}

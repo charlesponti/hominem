@@ -19,6 +19,7 @@ export class HealthService {
   private metrics: HealthMetrics
   private worker: Worker
   private workerName: string
+  private isStopped: boolean = false
 
   constructor(worker: Worker, workerName: string) {
     this.worker = worker
@@ -131,5 +132,18 @@ export class HealthService {
         failureRate: this.getFailureRate(),
       },
     }
+  }
+
+  /**
+   * Stop the health service and log final health summary
+   * Event listeners will be cleaned up automatically when the worker is closed
+   */
+  async stop(): Promise<void> {
+    if (this.isStopped) {
+      return
+    }
+
+    this.isStopped = true
+    logger.info(this.getHealthSummary())
   }
 }

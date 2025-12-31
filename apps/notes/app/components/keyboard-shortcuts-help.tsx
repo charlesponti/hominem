@@ -102,7 +102,7 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
         aria-label="Show keyboard shortcuts help"
         title="Keyboard shortcuts (Press ? for quick access)"
       >
-        <Keyboard className="w-4 h-4 mr-2" />
+        <Keyboard className="size-4 mr-2" />
         Help
       </Button>
 
@@ -137,7 +137,7 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
                   onClick={() => setIsOpen(false)}
                   aria-label="Close help dialog"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="size-4" />
                 </Button>
               </div>
             </CardHeader>

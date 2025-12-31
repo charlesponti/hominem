@@ -3,8 +3,6 @@ import { trpc } from "~/lib/trpc";
 interface SyncOptions {
   calendarId?: string;
   timeMin?: string;
-  accessToken?: string;
-  refreshToken?: string;
 }
 
 export function useGoogleCalendarSync() {
@@ -24,8 +22,6 @@ export function useGoogleCalendarSync() {
     await syncMutation.mutateAsync({
       calendarId: options.calendarId,
       timeMin: options.timeMin,
-      accessToken: options.accessToken,
-      refreshToken: options.refreshToken,
     });
   };
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cn } from '~/lib/utils'
 
 interface SyncButtonProps {
   onSync: () => Promise<void>
@@ -24,11 +25,13 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
       type="button"
       onClick={handleSync}
       disabled={disabled || isSyncing}
-      className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 border border-border ${
-        disabled || isSyncing
-          ? 'bg-muted text-muted-foreground cursor-not-allowed'
-          : 'bg-card text-foreground cursor-pointer hover:bg-accent'
-      }`}
+      className={cn(
+        'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 border border-border',
+        {
+          'bg-muted text-muted-foreground cursor-not-allowed': disabled || isSyncing,
+          'bg-card text-foreground cursor-pointer hover:bg-accent': !disabled && !isSyncing,
+        }
+      )}
     >
       <svg
         width="16"
@@ -38,6 +41,7 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
         xmlns="http://www.w3.org/2000/svg"
         className={isSyncing ? 'animate-spin' : ''}
       >
+        <title>Sync Google Calendar</title>
         <path
           d="M21.5 2V8M21.5 8H15.5M21.5 8L18.5 5C16.5 3 13.5 2 10.5 2C5 2 0.5 6.5 0.5 12C0.5 17.5 5 22 10.5 22C15.5 22 19.5 18.5 20.5 14"
           stroke="currentColor"

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { data, useNavigate } from 'react-router'
 import { getServerSession } from '~/lib/auth.server'
+import i18n from '~/lib/i18n'
 import type { RouterInput } from '~/lib/trpc'
 import { createServerTRPCClient } from '~/lib/trpc/server'
 import EventForm from '../components/events/EventForm'
@@ -47,7 +48,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       companion: companion || undefined,
       sortBy,
     }),
-    trpc.events.people.list.query(),
+    trpc.people.list.query(),
   ])
 
   return data({ events, people }, { headers })
@@ -100,27 +101,34 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const [filterSource, setFilterSource] = useState('')
   const [sortBy, setSortBy] = useState('date-desc')
   const [showAddForm, setShowAddForm] = useState(false)
-  const [companions, setCompanions] = useState<string[]>([])
 
   const { sync, syncStatus, isSyncing } = useGoogleCalendarSync()
 
-  const activities = ((loaderData.events ?? []) as EventActivity[]).map((activity) => ({
-    ...activity,
-    description: activity.description ?? undefined,
-    people: activity.people?.map((person) => ({
-      ...person,
-      firstName: person.firstName ?? undefined,
-      lastName: person.lastName ?? undefined,
-    })),
-  }))
-  const people = ((loaderData.people ?? []) as EventPerson[]).map((person) => ({
-    ...person,
-    firstName: person.firstName ?? undefined,
-    lastName: person.lastName ?? undefined,
-  }))
+  const activities = useMemo(
+    () =>
+      ((loaderData.events ?? []) as EventActivity[]).map((activity) => ({
+        ...activity,
+        description: activity.description ?? undefined,
+        people: activity.people?.map((person) => ({
+          ...person,
+          firstName: person.firstName ?? undefined,
+          lastName: person.lastName ?? undefined,
+        })),
+      })),
+    [loaderData.events]
+  )
 
-  useEffect(() => {
-    // Update companions list from activities data
+  const people = useMemo(
+    () =>
+      ((loaderData.people ?? []) as EventPerson[]).map((person) => ({
+        ...person,
+        firstName: person.firstName ?? undefined,
+        lastName: person.lastName ?? undefined,
+      })),
+    [loaderData.people]
+  )
+
+  const companions = useMemo(() => {
     const allCompanions = new Set<string>()
     activities.forEach((activity) => {
       activity.people?.forEach((person) => {
@@ -128,7 +136,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         if (name) allCompanions.add(name)
       })
     })
-    setCompanions(Array.from(allCompanions).sort())
+    return Array.from(allCompanions).sort()
   }, [activities])
 
   const handleFilterChange = () => {
@@ -142,7 +150,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   }
 
   const handleSync = async () => {
-    await sync()
+    await sync({})
   }
 
   const handleToggleEventForm = () => {
@@ -155,17 +163,14 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="min-h-screen bg-muted">
-      {/* Header - Cleaner, more spacious */}
       <div className="pt-12 pb-8 relative bg-card">
         <div className="max-w-6xl mx-auto px-8">
           {/* Title and Actions Row */}
           <div className="flex items-start justify-between mb-10">
-            <div>
-              <h1 className="text-5xl font-bold tracking-tight mb-3 text-foreground">
-                Events
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Track and organize your life's memorable moments
+            <div className="space-y-2">
+              <h1 className="heading-1 text-foreground">Events</h1>
+              <p className="body-1 text-muted-foreground">
+                Track and organize your life&apos;s memorable moments
               </p>
             </div>
 
@@ -248,11 +253,9 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
         <div>
           <div className="flex items-baseline justify-between mb-5 px-1">
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Your Events
-            </h2>
-            <div className="text-sm font-medium text-muted-foreground">
-              {activities.length} {activities.length === 1 ? 'event' : 'events'}
+            <h2 className="heading-2 text-foreground">Your Events</h2>
+            <div className="body-1 text-muted-foreground">
+              {i18n.t('event_count', { count: activities.length })}
             </div>
           </div>
 

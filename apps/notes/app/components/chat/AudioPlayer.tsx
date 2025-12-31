@@ -115,7 +115,7 @@ export function AudioPlayer({
 
           {/* Progress handle */}
           <div
-            className="absolute top-1/2 w-4 h-4 bg-primary rounded-full shadow-md transform -translate-y-1/2 -translate-x-1/2 opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 size-4 bg-primary rounded-full shadow-md transform -translate-y-1/2 -translate-x-1/2 opacity-0 hover:opacity-100 transition-opacity"
             style={{ left: `${progressPercent}%` }}
           />
         </div>

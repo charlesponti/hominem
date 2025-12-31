@@ -1,10 +1,7 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { trpc } from "~/lib/trpc";
 
 export interface CalendarSyncOptions {
-  accessToken: string;
-  refreshToken?: string;
-  userId: string;
   calendarId?: string;
   timeMin?: string;
   timeMax?: string;
@@ -33,8 +30,6 @@ export function useGoogleCalendarSync() {
         calendarId: options.calendarId,
         timeMin: options.timeMin,
         timeMax: options.timeMax,
-        accessToken: options.accessToken,
-        refreshToken: options.refreshToken,
       });
 
       setResult({
@@ -63,13 +58,10 @@ export function useGoogleCalendarSync() {
 
   const utils = trpc.useUtils();
 
-  const getCalendars = async (accessToken: string, refreshToken?: string) => {
-    const calendars = await utils.events.getGoogleCalendars.fetch({
-      accessToken,
-      refreshToken,
-    });
+  const getCalendars = useCallback(async () => {
+    const calendars = await utils.events.getGoogleCalendars.fetch();
     return calendars;
-  };
+  }, [utils]);
 
   return {
     syncCalendar,

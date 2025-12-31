@@ -1,10 +1,10 @@
 import type { Goal, GoalMilestone, GoalStatus } from '@hominem/data/types'
 import { Button } from '@hominem/ui/button'
 import { DatePicker } from '@hominem/ui/components/date-picker'
-import { Label } from '@hominem/ui/components/ui/label'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog'
 import { Input } from '@hominem/ui/input'
-import { Textarea } from '@hominem/ui/components/ui/textarea'
+import { Label } from '@hominem/ui/label'
+import { Textarea } from '@hominem/ui/textarea'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -35,7 +35,8 @@ interface GoalModalProps {
 
 export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: GoalModalProps) {
   const form = useForm<GoalFormData>({
-    resolver: zodResolver(GoalFormSchema),
+    // @ts-expect-error - zodResolver v5 expects Zod v3 types, but we're using Zod v4 which is runtime compatible
+    resolver: zodResolver(GoalFormSchema as never),
     defaultValues: {
       title: goal?.title ?? '',
       description: goal?.description ?? '',

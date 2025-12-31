@@ -1,11 +1,11 @@
 import { Button } from '@hominem/ui/button'
-import { Textarea } from '@hominem/ui/components/ui/textarea'
+import { Textarea } from '@hominem/ui/textarea'
 import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { useMatches } from 'react-router'
-import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
-import { useSendMessage } from '~/lib/hooks/use-send-message.js'
-import { ChatModals } from './ChatModals.js'
+import { useFileUpload } from '~/lib/hooks/use-file-upload'
+import { useSendMessage } from '~/lib/hooks/use-send-message'
+import { ChatModals } from './ChatModals'
 
 const MAX_MESSAGE_LENGTH = 10000
 
@@ -17,11 +17,17 @@ interface ChatInputProps {
   ) => void
 }
 
-export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
+export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatInput(
+  { chatId, onStatusChange },
+  ref
+) {
   const [inputValue, setInputValue] = useState('')
   const [showFileUploader, setShowFileUploader] = useState(false)
   const [showAudioRecorder, setShowAudioRecorder] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Expose textarea ref to parent
+  useImperativeHandle(ref, () => textareaRef.current!, [])
 
   // Get userId from root loader data
   const matches = useMatches()
@@ -47,7 +53,7 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
 
     const trimmedValue = inputValue.trim()
     try {
-      onStatusChange?.('submitted')
+      onStatusChange?.('streaming')
       setInputValue('') // Clear input immediately for better UX
       clearAll()
 
@@ -92,13 +98,18 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
     setShowAudioRecorder(true)
   }, [])
 
+  const handleFilesUploaded = useCallback((_files: unknown[]) => {
+    // Files are already uploaded by the FileUploader component
+    // The useFileUpload hook manages the state internally
+  }, [])
+
   const handleAudioRecorded = useCallback(
     async (_audioBlob: Blob, transcript?: string) => {
       setShowAudioRecorder(false)
 
       if (transcript?.trim()) {
         try {
-          onStatusChange?.('submitted')
+          onStatusChange?.('streaming')
           await sendMessage.mutateAsync({
             message: transcript.trim(),
             chatId,
@@ -157,7 +168,7 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
           </Button>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <Button
             variant="outline"
             size="sm"
@@ -180,14 +191,15 @@ export function ChatInput({ chatId, onStatusChange }: ChatInputProps) {
         </div>
       </div>
 
+      {/* File Upload and Audio Recording Modals */}
       <ChatModals
         showFileUploader={showFileUploader}
         showAudioRecorder={showAudioRecorder}
         onCloseFileUploader={() => setShowFileUploader(false)}
         onCloseAudioRecorder={() => setShowAudioRecorder(false)}
-        onFilesUploaded={() => {}}
+        onFilesUploaded={handleFilesUploaded}
         onAudioRecorded={handleAudioRecorded}
       />
     </>
   )
-}
+})

@@ -1,6 +1,7 @@
 import { getServerSession } from '~/lib/auth.server'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { createServerTRPCClient } from '~/lib/trpc/server'
+import { getOrCreateChat } from '~/lib/utils/chat-loader-utils'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, session, headers } = await getServerSession(request)
@@ -9,18 +10,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const trpcClient = createServerTRPCClient(session.access_token)
+  const { chatId } = await getOrCreateChat(trpcClient)
 
-  const [chat] = await trpcClient.chats.getUserChats.query({
-    limit: 1,
-  })
-
-  if (chat) {
-    return redirect(`/chat/${chat.id}`, { headers })
-  }
-
-  const newChat = await trpcClient.chats.createChat.mutate({
-    title: 'New Chat',
-  })
-
-  return redirect(`/chat/${newChat.chat.id}`, { headers })
+  return redirect(`/chat/${chatId}`, { headers })
 }

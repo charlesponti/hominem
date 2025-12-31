@@ -16,19 +16,15 @@ import {
   SelectValue,
 } from '@hominem/ui/components/ui/select'
 import { AlertCircle, Calendar, CheckCircle, Loader2 } from 'lucide-react'
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync'
 
 interface CalendarSyncProps {
   userId: string
-  googleTokens?: { access_token: string; refresh_token: string }[]
+  hasGoogleAccount: boolean
 }
 
-export function CalendarSync({ userId, googleTokens }: CalendarSyncProps) {
-  const googleToken = googleTokens?.[0]
-  const accessToken = googleToken?.access_token || ''
-  const refreshToken = googleToken?.refresh_token || ''
-
+export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
   const [selectedCalendar, setSelectedCalendar] = useState('primary')
   const [calendars, setCalendars] = useState<Array<{ id: string; summary: string }>>([])
   const [timeRange, setTimeRange] = useState({
@@ -37,34 +33,43 @@ export function CalendarSync({ userId, googleTokens }: CalendarSyncProps) {
   })
   const startDateId = useId()
   const endDateId = useId()
+  const hasLoadedCalendars = useRef(false)
 
   const { syncCalendar, getCalendars, isLoading, result } = useGoogleCalendarSync()
 
   const loadCalendars = useCallback(async () => {
+    if (hasLoadedCalendars.current) {
+      return
+    }
     try {
-      const calendarList = await getCalendars(accessToken, refreshToken)
+      hasLoadedCalendars.current = true
+      const calendarList = await getCalendars()
       setCalendars(calendarList)
     } catch (error) {
       console.error('Error loading calendars:', error)
+      hasLoadedCalendars.current = false
     }
-  }, [accessToken, refreshToken, getCalendars])
+  }, [getCalendars])
 
-  // Load available calendars when access token is available
+  // Load available calendars when component mounts or when Google account is connected
   useEffect(() => {
-    if (accessToken) {
-      loadCalendars()
+    if (hasGoogleAccount) {
+      if (!hasLoadedCalendars.current) {
+        loadCalendars()
+      }
+    } else {
+      // Reset when Google account is disconnected
+      hasLoadedCalendars.current = false
+      setCalendars([])
     }
-  }, [accessToken, loadCalendars])
+  }, [hasGoogleAccount, loadCalendars])
 
   const handleSync = async () => {
-    if (!accessToken || !userId) {
+    if (!hasGoogleAccount || !userId) {
       return
     }
 
     await syncCalendar({
-      accessToken,
-      refreshToken,
-      userId,
       calendarId: selectedCalendar,
       timeMin: timeRange.start || undefined,
       timeMax: timeRange.end || undefined,
@@ -77,8 +82,8 @@ export function CalendarSync({ userId, googleTokens }: CalendarSyncProps) {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
     setTimeRange({
-      start: startOfMonth.toISOString().split('T')[0],
-      end: endOfMonth.toISOString().split('T')[0],
+      start: startOfMonth.toISOString().split('T')[0] ?? '',
+      end: endOfMonth.toISOString().split('T')[0] ?? '',
     })
   }
 
@@ -94,7 +99,7 @@ export function CalendarSync({ userId, googleTokens }: CalendarSyncProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!accessToken ? (
+        {!hasGoogleAccount ? (
           <div className="text-center py-8">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">

@@ -58,7 +58,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
 
   return (
     <div
-      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group cursor-pointer transition-all duration-150 hover:bg-gray-50 animate-fade-in bg-card border-border"
+      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group cursor-pointer hover:bg-gray-50"
       onClick={handleEditEvent}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

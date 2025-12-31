@@ -24,6 +24,49 @@ export const messagesRouter = router({
       }
     }),
 
+  // Update message
+  updateMessage: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.string(),
+        content: z.string().min(1, "Message content cannot be empty"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { messageId, content } = input;
+      const { user } = ctx;
+
+      if (!messageId) {
+        throw new Error("Message ID is required");
+      }
+
+      const messageService = new MessageService();
+
+      try {
+        // Verify message belongs to user
+        const message = await messageService.getMessageById(messageId, user.id);
+        if (!message) {
+          throw new Error("Message not found or not authorized");
+        }
+
+        // Only allow editing user messages
+        if (message.role !== "user") {
+          throw new Error("Only user messages can be edited");
+        }
+
+        const updatedMessage = await messageService.updateMessage(
+          messageId,
+          content
+        );
+        return { message: updatedMessage };
+      } catch (error) {
+        console.error("Failed to update message:", error);
+        throw new Error(
+          error instanceof Error ? error.message : "Failed to update message"
+        );
+      }
+    }),
+
   // Delete message
   deleteMessage: protectedProcedure
     .input(

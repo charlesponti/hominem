@@ -22,11 +22,10 @@
 
 @layer utilities {
   .bg-popover {
-    background-color: var(--popover);
+    background-color: white;
   }
 
   .text-popover-foreground {
     color: var(--popover-foreground);
   }
 }
-

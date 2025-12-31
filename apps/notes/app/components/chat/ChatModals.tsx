@@ -30,7 +30,7 @@ export function ChatModals({
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Upload Files</h3>
               <Button variant="ghost" size="sm" onClick={onCloseFileUploader}>
-                <X className="w-4 h-4" />
+                <X className="size-4" />
               </Button>
             </div>
             <FileUploader onFilesUploaded={onFilesUploaded} maxFiles={5} />
@@ -45,7 +45,7 @@ export function ChatModals({
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Record Audio</h3>
               <Button variant="ghost" size="sm" onClick={onCloseAudioRecorder}>
-                <X className="w-4 h-4" />
+                <X className="size-4" />
               </Button>
             </div>
             <AudioRecorder onRecordingComplete={onAudioRecorded} />

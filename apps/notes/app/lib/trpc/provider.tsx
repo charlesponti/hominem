@@ -14,6 +14,12 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       links: [
         httpBatchLink({
           url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
+          fetch(url, options) {
+            return fetch(url, {
+              ...options,
+              credentials: 'include',
+            })
+          },
           async headers() {
             const {
               data: { session },

@@ -192,7 +192,9 @@ export async function createEvent(
   };
 }
 
-export type UpdateEventInput = typeof events.$inferInsert & {
+export type UpdateEventInput = Partial<
+  Omit<typeof events.$inferInsert, "id" | "userId" | "createdAt" | "updatedAt">
+> & {
   tags?: string[];
   people?: string[];
 };

@@ -1,3 +1,4 @@
+import { ListSurface } from '@hominem/ui/list'
 import type React from 'react'
 import EventCard from './EventCard'
 
@@ -26,20 +27,7 @@ interface EventListProps {
 }
 
 const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent }) => {
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className="h-16 bg-muted animate-pulse rounded"
-          />
-        ))}
-      </div>
-    )
-  }
-
-  if (activities.length === 0) {
+  if (activities.length === 0 && !loading) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <div className="text-4xl mb-4">📅</div>
@@ -50,11 +38,13 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
   }
 
   return (
-    <div className="space-y-3">
+    <ListSurface isLoading={loading} loadingSize="lg">
       {activities.map((activity) => (
-        <EventCard key={activity.id} activity={activity} onEditEvent={onEditEvent} />
+        <li key={activity.id} className="px-2">
+          <EventCard activity={activity} onEditEvent={onEditEvent} />
+        </li>
       ))}
-    </div>
+    </ListSurface>
   )
 }
 

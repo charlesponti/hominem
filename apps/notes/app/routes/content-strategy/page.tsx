@@ -458,7 +458,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                           )
                         }
                       >
-                        <Copy className="w-4 h-4 mr-1" />
+                        <Copy className="size-4 mr-1" />
                         Copy
                       </Button>
                     </div>
@@ -496,7 +496,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                             )
                           }
                         >
-                          <Copy className="w-4 h-4 mr-1" />
+                          <Copy className="size-4 mr-1" />
                           Copy
                         </Button>
                       </div>
@@ -578,7 +578,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                             )
                           }
                         >
-                          <Copy className="w-4 h-4 mr-1" />
+                          <Copy className="size-4 mr-1" />
                           Copy
                         </Button>
                       </div>
@@ -647,7 +647,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                             )
                           }
                         >
-                          <Copy className="w-4 h-4 mr-1" />
+                          <Copy className="size-4 mr-1" />
                           Copy
                         </Button>
                       </div>
@@ -715,7 +715,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                           )
                         }
                       >
-                        <Copy className="w-4 h-4 mr-1" />
+                        <Copy className="size-4 mr-1" />
                         Copy
                       </Button>
                     </div>
@@ -743,7 +743,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                           )
                         }
                       >
-                        <Copy className="w-4 h-4 mr-1" />
+                        <Copy className="size-4 mr-1" />
                         Copy
                       </Button>
                     </div>
@@ -774,11 +774,11 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                     className="w-full"
                     disabled={loading || isSaving}
                   >
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="size-4 mr-2" />
                     {isSaving ? 'Saving Strategy...' : 'Save Strategy'}
                   </Button>
                   <Button onClick={copyFullStrategy} variant="outline" className="w-full">
-                    <Copy className="w-4 h-4 mr-2" />
+                    <Copy className="size-4 mr-2" />
                     Copy Full Strategy
                   </Button>
                   <Button
@@ -787,7 +787,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                     className="w-full"
                     disabled={loading}
                   >
-                    <FileText className="w-4 h-4 mr-2" />
+                    <FileText className="size-4 mr-2" />
                     Convert to Notes
                   </Button>
                 </div>

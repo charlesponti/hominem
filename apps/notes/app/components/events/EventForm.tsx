@@ -1,6 +1,6 @@
+import { Textarea } from '@hominem/ui/components/ui/textarea'
 import type React from 'react'
 import { useState } from 'react'
-import { Textarea } from '@hominem/ui/components/ui/textarea'
 
 interface Person {
   id: string
@@ -31,9 +31,7 @@ const EventForm: React.FC<EventFormProps> = ({
     <>
       {showAddForm && (
         <div>
-          <h3 className="text-xl font-semibold mb-6 text-foreground">
-            Add New Event
-          </h3>
+          <h3 className="text-xl font-semibold mb-6 text-foreground">Add New Event</h3>
           <form method="post">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>

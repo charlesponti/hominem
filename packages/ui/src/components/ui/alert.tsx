@@ -13,7 +13,7 @@ const alertVariants = cva(
       variant: {
         default: 'bg-background text-foreground',
         destructive:
-          'text-destructive border-destructive/50 dark:border-destructive [&>svg]:text-destructive text-destructive',
+          'text-destructive border-destructive/50 dark:border-destructive [&>svg]:text-destructive',
         success:
           'bg-green-50/50 border-green-200/50 text-green-900 dark:bg-green-950/50 dark:border-green-800/50 dark:text-green-100',
         warning:
@@ -102,12 +102,12 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         {...props}
       >
         <div className="flex items-start gap-3">
-          {icon && <div className={cn('flex-shrink-0', iconColor)}>{icon}</div>}
+          {icon && <div className={cn('shrink-0', iconColor)}>{icon}</div>}
           <div className="flex-1 text-sm leading-relaxed">{children}</div>
           {dismissible && (
             <button
               type="button"
-              className="flex-shrink-0 rounded p-1 opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="shrink-0 rounded p-1 opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
               onClick={handleDismiss}
               aria-label="Dismiss alert"
             >

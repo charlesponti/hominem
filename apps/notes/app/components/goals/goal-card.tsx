@@ -27,10 +27,10 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         </div>
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button variant="ghost" size="sm" onClick={() => onEdit(goal)}>
-            <Edit className="w-4 h-4 text-muted-foreground" />
+            <Edit className="size-4 text-muted-foreground" />
           </Button>
           <Button variant="ghost" size="sm" onClick={() => onDelete(goal)}>
-            <Trash2 className="w-4 h-4 text-red-500" />
+            <Trash2 className="size-4 text-red-500" />
           </Button>
         </div>
       </div>
@@ -42,7 +42,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             {goal.milestones.map((milestone, idx) => (
               <div key={`${goal.id}-milestone-${idx}`} className="flex items-start gap-2 text-sm">
                 <div
-                  className={`mt-1 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                  className={`mt-1 size-4 rounded-full border-2 flex items-center justify-center ${
                     milestone.completed ? 'bg-green-500 border-green-500' : 'border-muted'
                   }`}
                 >

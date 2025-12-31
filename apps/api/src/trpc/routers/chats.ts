@@ -1,10 +1,9 @@
 import { openai } from "@ai-sdk/openai";
 import { ChatService, MessageService } from "@hominem/data/chat";
-import type { ChatMessageSelect } from "@hominem/data/schema";
 import { allTools } from "@hominem/data/tools";
 import { TRPCError } from "@trpc/server";
 import type { Tool, ToolExecutionOptions, ToolSet } from "ai";
-import { generateText, streamText } from "ai";
+import { streamText } from "ai";
 import { z } from "zod";
 import { protectedProcedure, router } from "../procedures";
 
@@ -29,6 +28,61 @@ const withUserContextTools = (tools: ToolSet, userId: string): ToolSet =>
       return [name, wrappedTool];
     })
   );
+
+// Helper function to ensure user is authorized and chat exists
+const ensureChatAndUser = async (
+  userId: string | undefined,
+  chatId: string | undefined
+) => {
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const currentChat = await chatService.getOrCreateActiveChat(userId, chatId);
+
+  if (!currentChat) {
+    throw new Error("Failed to get or create chat");
+  }
+
+  return currentChat;
+};
+
+// Helper function to handle streaming errors
+const handleStreamError = (error: unknown, defaultMessage: string): never => {
+  console.error(defaultMessage, error);
+  if (error instanceof TRPCError) {
+    throw error;
+  }
+  throw new TRPCError({
+    code: "INTERNAL_SERVER_ERROR",
+    message: defaultMessage,
+    cause: error,
+  });
+};
+
+// Helper function for consistent error handling across endpoints
+const handleEndpointError = (
+  error: unknown,
+  defaultMessage: string,
+  operation: string
+): never => {
+  console.error(`Failed to ${operation}:`, error);
+  if (error instanceof TRPCError) {
+    throw error;
+  }
+  if (error instanceof Error) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: error.message || defaultMessage,
+      cause: error,
+    });
+  }
+  throw new TRPCError({
+    code: "INTERNAL_SERVER_ERROR",
+    message: defaultMessage,
+    cause: error,
+  });
+};
 
 export const chatsRouter = router({
   getUserChats: protectedProcedure
@@ -64,13 +118,15 @@ export const chatsRouter = router({
         ]);
 
         if (!chat) {
-          throw new Error("Chat not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Chat not found",
+          });
         }
 
         return { ...chat, messages };
       } catch (error) {
-        console.error("Failed to get chat:", error);
-        throw new Error("Failed to load chat");
+        return handleEndpointError(error, "Failed to load chat", "get chat");
       }
     }),
 
@@ -96,8 +152,11 @@ export const chatsRouter = router({
         const chat = await chatService.createChat({ title, userId });
         return { chat };
       } catch (error) {
-        console.error("Failed to create chat:", error);
-        throw new Error("Failed to create chat");
+        return handleEndpointError(
+          error,
+          "Failed to create chat",
+          "create chat"
+        );
       }
     }),
 
@@ -123,8 +182,11 @@ export const chatsRouter = router({
         const success = await chatService.deleteChat(chatId, userId);
         return { success };
       } catch (error) {
-        console.error("Failed to delete chat:", error);
-        throw new Error("Failed to delete chat");
+        return handleEndpointError(
+          error,
+          "Failed to delete chat",
+          "delete chat"
+        );
       }
     }),
 
@@ -151,8 +213,11 @@ export const chatsRouter = router({
         const chat = await chatService.updateChatTitle(chatId, title, userId);
         return { success: !!chat };
       } catch (error) {
-        console.error("Failed to update chat title:", error);
-        throw new Error("Failed to update chat title");
+        return handleEndpointError(
+          error,
+          "Failed to update chat title",
+          "update chat title"
+        );
       }
     }),
 
@@ -180,15 +245,21 @@ export const chatsRouter = router({
         const chats = await chatService.searchChats({ userId, query, limit });
         return { chats };
       } catch (error) {
-        console.error("Failed to search chats:", error);
-        throw new Error("Failed to search chats");
+        return handleEndpointError(
+          error,
+          "Failed to search chats",
+          "search chats"
+        );
       }
     }),
 
   generate: protectedProcedure
     .input(
       z.object({
-        message: z.string(),
+        message: z
+          .string()
+          .min(1, "Message cannot be empty")
+          .max(10000, "Message is too long (max 10000 characters)"),
         chatId: z.string().optional(),
       })
     )
@@ -196,135 +267,18 @@ export const chatsRouter = router({
       const { userId } = ctx;
       const { message, chatId } = input;
 
-      if (!userId) {
-        throw new Error("Unauthorized");
-      }
-
-      // Get or create chat
-      const currentChat = await chatService.getOrCreateActiveChat(
-        userId,
-        chatId
-      );
-
-      if (!currentChat) {
-        throw new Error("Failed to get or create chat");
-      }
-
       try {
+        const currentChat = await ensureChatAndUser(userId, chatId);
         const startTime = Date.now();
 
         const userContextTools = withUserContextTools(allTools, userId);
 
-        // Generate AI response using messages format with tools
-        const response = await generateText({
-          model: openai("gpt-4.1"),
-          tools: userContextTools,
-          messages: [
-            {
-              role: "user",
-              content: message,
-            },
-          ],
-        });
-
-        let userMessage: ChatMessageSelect | null = null;
-        let assistantMessage: ChatMessageSelect | null = null;
-
-        try {
-          // Save the conversation using MessageService
-          userMessage = await messageService.addMessage({
-            chatId: currentChat.id,
-            userId,
-            role: "user",
-            content: message,
-          });
-          assistantMessage = await messageService.addMessage({
-            chatId: currentChat.id,
-            userId,
-            role: "assistant",
-            content: response.text || "",
-          });
-        } catch (saveError) {
-          console.error("Error saving conversation:", saveError);
-          // Continue even if saving fails, but log the error
-        }
-
-        // If there's no text and no tool calls, something went wrong.
-        if (!response.text && response.toolCalls.length === 0) {
-          console.error("No text or tool calls in AI response");
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "No response text or tool calls generated",
-            cause: "AI model returned empty response",
-          });
-        }
-
-        return {
-          // Core response data
-          response: response.text,
-          toolCalls: response.toolCalls || [],
-
-          // Chat context
-          chatId: currentChat.id,
-          chatTitle: currentChat.title,
-
-          // Saved messages with proper typing
-          messages: {
-            user: userMessage,
-            assistant: assistantMessage,
-          },
-
-          // Metadata for UI state management
-          metadata: {
-            hasToolCalls: response.toolCalls.length > 0,
-            responseLength: response.text?.length || 0,
-            timestamp: new Date().toISOString(),
-            model: "gpt-4.1",
-            processingTime: Date.now() - startTime,
-          },
-        };
-      } catch (error) {
-        console.error("Error generating chat response:", error);
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to generate response",
-          cause: error,
-        });
-      }
-    }),
-
-  generateStreaming: protectedProcedure
-    .input(
-      z.object({
-        message: z.string(),
-        chatId: z.string().optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
-      const { message, chatId } = input;
-
-      if (!userId) {
-        throw new Error("Unauthorized");
-      }
-
-      // Get or create chat
-      const currentChat = await chatService.getOrCreateActiveChat(
-        userId,
-        chatId
-      );
-
-      if (!currentChat) {
-        throw new Error("Failed to get or create chat");
-      }
-
-      try {
-        const startTime = Date.now();
-
-        const userContextTools = withUserContextTools(allTools, userId);
+        // Load conversation history for context (last 20 messages)
+        const historyMessages = await messageService.getChatMessages(
+          currentChat.id,
+          { limit: 20, orderBy: "asc" }
+        );
+        const aiContextMessages = MessageService.toAIContext(historyMessages);
 
         // Save the user message first
         const userMessage = await messageService.addMessage({
@@ -334,16 +288,20 @@ export const chatsRouter = router({
           content: message,
         });
 
-        // Create a streaming response
+        // Add the new user message to context
+        const messagesWithNewUser = [
+          ...aiContextMessages,
+          {
+            role: "user" as const,
+            content: message,
+          },
+        ];
+
+        // Create a streaming response with full conversation context
         const stream = await streamText({
           model: openai("gpt-4.1"),
           tools: userContextTools,
-          messages: [
-            {
-              role: "user",
-              content: message,
-            },
-          ],
+          messages: messagesWithNewUser,
         });
 
         // Create a placeholder for the assistant message
@@ -354,7 +312,144 @@ export const chatsRouter = router({
           content: "", // Will be updated as we stream
         });
 
-        // Return the initial response with streaming info
+        // Consume the stream server-side and update the message incrementally
+        // This runs in the background after the response is returned
+        let accumulatedContent = "";
+        let lastUpdateTime = Date.now();
+        let lastUpdateLength = 0;
+        const BATCH_UPDATE_INTERVAL = 500; // Update every 500ms
+        const BATCH_UPDATE_CHARS = 50; // Or every 50 characters
+
+        (async () => {
+          const MAX_UPDATE_RETRIES = 3;
+          let updateRetryCount = 0;
+
+          try {
+            for await (const chunk of stream.textStream) {
+              accumulatedContent += chunk;
+              const timeSinceLastUpdate = Date.now() - lastUpdateTime;
+              const charsSinceLastUpdate =
+                accumulatedContent.length - lastUpdateLength;
+
+              // Batch updates: update every 500ms OR every 50 characters
+              if (
+                timeSinceLastUpdate >= BATCH_UPDATE_INTERVAL ||
+                charsSinceLastUpdate >= BATCH_UPDATE_CHARS
+              ) {
+                let updateSuccess = false;
+                updateRetryCount = 0;
+
+                // Retry logic for database updates
+                while (
+                  !updateSuccess &&
+                  updateRetryCount < MAX_UPDATE_RETRIES
+                ) {
+                  try {
+                    await messageService.updateMessage(
+                      assistantMessage.id,
+                      accumulatedContent
+                    );
+                    lastUpdateTime = Date.now();
+                    lastUpdateLength = accumulatedContent.length;
+                    updateSuccess = true;
+                    updateRetryCount = 0; // Reset on success
+                  } catch (updateError) {
+                    updateRetryCount++;
+                    console.error(
+                      `Error updating message during stream (retry ${updateRetryCount}/${MAX_UPDATE_RETRIES}):`,
+                      updateError
+                    );
+                    if (updateRetryCount < MAX_UPDATE_RETRIES) {
+                      // Exponential backoff before retry
+                      await new Promise((resolve) =>
+                        setTimeout(resolve, 1000 * updateRetryCount)
+                      );
+                    } else {
+                      // Max retries exceeded, log but continue streaming
+                      console.error(
+                        "Max retries exceeded for message update, continuing stream"
+                      );
+                    }
+                  }
+                }
+              }
+            }
+
+            // Final update with any remaining content and tool calls
+            const result = await stream;
+            const resultText = await result.text;
+            const finalContent = resultText || accumulatedContent;
+
+            // Get tool calls from the result and convert to message format
+            // Note: toolCalls may be a Promise or direct array depending on AI SDK version
+            const toolCallsRaw = result.toolCalls;
+            const toolCallsArray =
+              toolCallsRaw instanceof Promise
+                ? await toolCallsRaw
+                : Array.isArray(toolCallsRaw)
+                ? toolCallsRaw
+                : [];
+            const formattedToolCalls =
+              toolCallsArray.length > 0
+                ? toolCallsArray.map(
+                    (tc: {
+                      toolName: string;
+                      toolCallId: string;
+                      args: Record<string, unknown>;
+                    }) => ({
+                      type: "tool-call" as const,
+                      toolName: tc.toolName,
+                      toolCallId: tc.toolCallId,
+                      args: tc.args as Record<string, unknown>,
+                    })
+                  )
+                : undefined;
+
+            // Final update with content
+            await messageService.updateMessage(
+              assistantMessage.id,
+              finalContent
+            );
+
+            // Update tool calls by re-adding message with tool calls
+            // This is a workaround since updateMessage doesn't support toolCalls
+            // TODO: Extend MessageService.updateMessage to support toolCalls
+            if (formattedToolCalls && formattedToolCalls.length > 0) {
+              // Get current message to preserve fields
+              const currentMessages = await messageService.getChatMessages(
+                currentChat.id,
+                { limit: 100, orderBy: "desc" }
+              );
+              const currentMessage = currentMessages.find(
+                (m) => m.id === assistantMessage.id
+              );
+              if (currentMessage) {
+                // Delete and re-add with tool calls (temporary solution)
+                // In production, extend updateMessage to handle toolCalls
+                await messageService.deleteMessage(
+                  assistantMessage.id,
+                  userId || ""
+                );
+                await messageService.addMessage({
+                  chatId: currentChat.id,
+                  userId: "",
+                  role: "assistant",
+                  content: finalContent,
+                  toolCalls: formattedToolCalls,
+                });
+              }
+            }
+          } catch (streamError) {
+            console.error("Error consuming stream:", streamError);
+            // Update message with error indicator if needed
+            await messageService.updateMessage(
+              assistantMessage.id,
+              accumulatedContent || "[Error: Stream processing failed]"
+            );
+          }
+        })();
+
+        // Return the initial response immediately
         return {
           // Streaming context
           streamId: assistantMessage.id,
@@ -373,65 +468,12 @@ export const chatsRouter = router({
             startTime: startTime,
             timestamp: new Date().toISOString(),
           },
-
-          // Stream object for client to consume
-          stream,
         };
       } catch (error) {
-        console.error("Error generating streaming chat response:", error);
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to generate streaming response",
-          cause: error,
-        });
-      }
-    }),
-
-  updateStreamingMessage: protectedProcedure
-    .input(
-      z.object({
-        messageId: z.string(),
-        content: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
-      const { messageId, content } = input;
-
-      if (!userId) {
-        throw new Error("Unauthorized");
-      }
-
-      try {
-        const updatedMessage = await messageService.updateMessage(
-          messageId,
-          content
+        return handleStreamError(
+          error,
+          "Failed to generate streaming response"
         );
-
-        if (!updatedMessage) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Message not found or could not be updated",
-          });
-        }
-
-        return {
-          message: updatedMessage,
-          success: true,
-        };
-      } catch (error) {
-        console.error("Error updating streaming message:", error);
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update streaming message",
-          cause: error,
-        });
       }
     }),
 

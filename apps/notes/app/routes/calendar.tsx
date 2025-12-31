@@ -1,32 +1,15 @@
-import { createSupabaseServerClient } from '~/lib/auth.server'
-import { data } from 'react-router'
+import { data, type LoaderFunctionArgs } from 'react-router'
 import { CalendarSync } from '~/components/calendar/calendar-sync'
+import { requireAuth } from '~/lib/guards'
 import type { Route } from './+types/calendar'
 
-export async function loader({ request }: { request: Request }) {
-  const { supabase, headers } = createSupabaseServerClient(request)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { user, session, headers } = await requireAuth(request)
 
-  if (!user) {
-    return data({ googleTokens: [], userId: null }, { headers })
-  }
+  // Check if user has Google account connected (without exposing tokens)
+  const hasGoogleAccount = Boolean(session.provider_token)
 
-  // Get session for provider tokens after verifying user
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  const googleTokens: { access_token: string; refresh_token: string }[] = []
-  if (session?.provider_token) {
-    googleTokens.push({
-      access_token: session.provider_token,
-      refresh_token: session.provider_refresh_token ?? '',
-    })
-  }
-
-  return data({ googleTokens, userId: user.id }, { headers })
+  return data({ hasGoogleAccount, userId: user.id }, { headers })
 }
 
 export default function CalendarPage({ loaderData }: Route.ComponentProps) {
@@ -42,7 +25,10 @@ export default function CalendarPage({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="flex justify-center">
-          <CalendarSync userId={loaderData?.userId ?? ''} googleTokens={loaderData?.googleTokens} />
+          <CalendarSync
+            userId={loaderData?.userId ?? ''}
+            hasGoogleAccount={loaderData?.hasGoogleAccount ?? false}
+          />
         </div>
 
         <div className="mt-8 text-center">
