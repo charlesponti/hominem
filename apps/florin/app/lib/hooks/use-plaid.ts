@@ -1,116 +1,111 @@
-"use client";
+'use client'
 
-import { useSupabaseAuthContext } from "@hominem/auth";
-import { useApiClient } from "@hominem/ui";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useSupabaseAuthContext } from '@hominem/auth'
+import { useApiClient } from '@hominem/ui'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 // Define query keys at the top of the file as constants
-const PLAID_CONNECTIONS_KEY = [["plaid", "connections"]];
-const PLAID_ACCOUNTS_KEY = [["plaid", "accounts"]];
+const PLAID_CONNECTIONS_KEY = [['plaid', 'connections']]
+const PLAID_ACCOUNTS_KEY = [['plaid', 'accounts']]
 
 // Type definitions
 interface CreateLinkTokenResponse {
-  success: boolean;
-  linkToken: string;
-  expiration: string;
+  success: boolean
+  linkToken: string
+  expiration: string
 }
 
 interface ExchangeTokenRequest {
-  publicToken: string;
-  institutionId: string;
-  institutionName: string;
+  publicToken: string
+  institutionId: string
+  institutionName: string
 }
 
 interface ExchangeTokenResponse {
-  success: boolean;
-  message: string;
-  institutionName: string;
+  success: boolean
+  message: string
+  institutionName: string
 }
 
 interface PlaidConnection {
-  id: string;
-  itemId: string;
-  institutionId: string;
-  institutionName: string;
-  status: "active" | "error" | "pending_expiration" | "revoked";
-  lastSyncedAt: string | null;
-  error: string | null;
-  createdAt: string;
+  id: string
+  itemId: string
+  institutionId: string
+  institutionName: string
+  status: 'active' | 'error' | 'pending_expiration' | 'revoked'
+  lastSyncedAt: string | null
+  error: string | null
+  createdAt: string
 }
 
 interface PlaidAccount {
-  id: string;
-  name: string;
-  type: string;
-  balance: string;
-  mask: string | null;
-  subtype: string | null;
-  institutionId: string;
-  plaidItemId: string;
-  institutionName: string;
-  institutionLogo: string | null;
+  id: string
+  name: string
+  type: string
+  balance: string
+  mask: string | null
+  subtype: string | null
+  institutionId: string
+  plaidItemId: string
+  institutionName: string
+  institutionLogo: string | null
 }
 
 interface SyncJobResponse {
-  success: boolean;
-  message: string;
+  success: boolean
+  message: string
 }
 
 interface FinanceAccountResponse {
-  id: string;
-  name: string;
-  type: string;
-  balance: string;
-  institutionId: string | null;
-  plaidItemId: string | null;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
+  id: string
+  name: string
+  type: string
+  balance: string
+  institutionId: string | null
+  plaidItemId: string | null
+  createdAt: string
+  updatedAt: string
+  userId: string
 }
 
 interface LinkAccountResponse {
-  success: boolean;
-  message: string;
-  account: FinanceAccountResponse;
+  success: boolean
+  message: string
+  account: FinanceAccountResponse
 }
 
 interface UnlinkAccountResponse {
-  success: boolean;
-  message: string;
-  account: FinanceAccountResponse;
+  success: boolean
+  message: string
+  account: FinanceAccountResponse
 }
 
 /**
  * Hook for creating a Plaid link token
  */
 export function useCreateLinkToken() {
-  const apiClient = useApiClient();
-  const [error, setError] = useState<Error | null>(null);
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
 
   const createLinkToken = useMutation({
     mutationFn: async (): Promise<CreateLinkTokenResponse> => {
       try {
-        const response = await apiClient.post<
-          Record<string, never>,
-          CreateLinkTokenResponse
-        >(
-          "/api/plaid/create-link-token",
+        const response = await apiClient.post<Record<string, never>, CreateLinkTokenResponse>(
+          '/api/plaid/create-link-token',
           {},
-          { headers: { "Content-Type": "application/json" } }
-        );
-        return response;
+          { headers: { 'Content-Type': 'application/json' } }
+        )
+        return response
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to create link token")
-        );
-        throw err;
+        setError(err instanceof Error ? err : new Error('Failed to create link token'))
+        throw err
       }
     },
     onSuccess: () => {
-      setError(null);
+      setError(null)
     },
-  });
+  })
 
   return {
     createLinkToken,
@@ -118,42 +113,38 @@ export function useCreateLinkToken() {
     isError: createLinkToken.isError,
     error: createLinkToken.error || error,
     data: createLinkToken.data,
-  };
+  }
 }
 
 /**
  * Hook for exchanging a public token for an access token
  */
 export function useExchangeToken() {
-  const queryClient = useQueryClient();
-  const apiClient = useApiClient();
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient()
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
 
   const exchangeToken = useMutation({
-    mutationFn: async (
-      tokenData: ExchangeTokenRequest
-    ): Promise<ExchangeTokenResponse> => {
+    mutationFn: async (tokenData: ExchangeTokenRequest): Promise<ExchangeTokenResponse> => {
       try {
-        const response = await apiClient.post<
-          ExchangeTokenRequest,
-          ExchangeTokenResponse
-        >("/api/plaid/exchange-token", tokenData);
-        return response;
+        const response = await apiClient.post<ExchangeTokenRequest, ExchangeTokenResponse>(
+          '/api/plaid/exchange-token',
+          tokenData
+        )
+        return response
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to exchange token")
-        );
-        throw err;
+        setError(err instanceof Error ? err : new Error('Failed to exchange token'))
+        throw err
       }
     },
     onSuccess: () => {
       // Invalidate related queries to refresh connections and accounts
-      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
-      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      queryClient.invalidateQueries({ queryKey: ["finance", "accounts"] });
-      setError(null);
+      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY })
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY })
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] })
+      setError(null)
     },
-  });
+  })
 
   return {
     exchangeToken,
@@ -161,7 +152,7 @@ export function useExchangeToken() {
     isError: exchangeToken.isError,
     error: exchangeToken.error || error,
     data: exchangeToken.data,
-  };
+  }
 }
 
 /**
@@ -169,13 +160,13 @@ export function useExchangeToken() {
  * @deprecated Use useAllAccounts() instead for unified account and connection data
  */
 export function usePlaidConnections(options = {}) {
-  const { userId } = useSupabaseAuthContext();
-  const apiClient = useApiClient();
+  const { userId } = useSupabaseAuthContext()
+  const apiClient = useApiClient()
 
   const defaultOptions = {
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
-  };
+  }
 
   const query = useQuery<{ connections: PlaidConnection[] }>({
     queryKey: PLAID_CONNECTIONS_KEY,
@@ -185,26 +176,26 @@ export function usePlaidConnections(options = {}) {
         null,
         {
           accounts: Array<{
-            id: string;
-            name: string;
-            type: string;
-            balance: string;
-            mask: string | null;
-            subtype: string | null;
-            institutionId?: string;
-            plaidItemId?: string;
-            institutionName?: string;
-            institutionLogo?: string | null;
-            isPlaidConnected?: boolean;
-          }>;
-          connections: PlaidConnection[];
+            id: string
+            name: string
+            type: string
+            balance: string
+            mask: string | null
+            subtype: string | null
+            institutionId?: string
+            plaidItemId?: string
+            institutionName?: string
+            institutionLogo?: string | null
+            isPlaidConnected?: boolean
+          }>
+          connections: PlaidConnection[]
         }
-      >("/api/finance/accounts/all");
-      return { connections: response.connections };
+      >('/api/finance/accounts/all')
+      return { connections: response.connections }
     },
     ...defaultOptions,
     ...options,
-  });
+  })
 
   return {
     connections: query.data?.connections || [],
@@ -212,7 +203,7 @@ export function usePlaidConnections(options = {}) {
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
-  };
+  }
 }
 
 /**
@@ -220,13 +211,13 @@ export function usePlaidConnections(options = {}) {
  * @deprecated Use useAllAccounts() instead for unified account data
  */
 export function usePlaidAccounts(options = {}) {
-  const { userId } = useSupabaseAuthContext();
-  const apiClient = useApiClient();
+  const { userId } = useSupabaseAuthContext()
+  const apiClient = useApiClient()
 
   const defaultOptions = {
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
-  };
+  }
 
   const query = useQuery<{ accounts: PlaidAccount[] }>({
     queryKey: PLAID_ACCOUNTS_KEY,
@@ -236,20 +227,20 @@ export function usePlaidAccounts(options = {}) {
         null,
         {
           accounts: Array<{
-            id: string;
-            name: string;
-            type: string;
-            balance: string;
-            mask: string | null;
-            subtype: string | null;
-            institutionId?: string;
-            plaidItemId?: string;
-            institutionName?: string;
-            institutionLogo?: string | null;
-            isPlaidConnected?: boolean;
-          }>;
+            id: string
+            name: string
+            type: string
+            balance: string
+            mask: string | null
+            subtype: string | null
+            institutionId?: string
+            plaidItemId?: string
+            institutionName?: string
+            institutionLogo?: string | null
+            isPlaidConnected?: boolean
+          }>
         }
-      >("/api/finance/accounts/all");
+      >('/api/finance/accounts/all')
 
       const plaidAccounts = response.accounts
         .filter((account) => account.isPlaidConnected)
@@ -260,16 +251,16 @@ export function usePlaidAccounts(options = {}) {
           balance: account.balance,
           mask: account.mask,
           subtype: account.subtype,
-          institutionId: account.institutionId || "",
-          plaidItemId: account.plaidItemId || "",
-          institutionName: account.institutionName || "",
+          institutionId: account.institutionId || '',
+          plaidItemId: account.plaidItemId || '',
+          institutionName: account.institutionName || '',
           institutionLogo: account.institutionLogo || null,
-        }));
-      return { accounts: plaidAccounts };
+        }))
+      return { accounts: plaidAccounts }
     },
     ...defaultOptions,
     ...options,
-  });
+  })
 
   return {
     accounts: query.data?.accounts || [],
@@ -277,39 +268,39 @@ export function usePlaidAccounts(options = {}) {
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
-  };
+  }
 }
 
 /**
  * Hook for manually syncing a Plaid item
  */
 export function useSyncPlaidItem() {
-  const queryClient = useQueryClient();
-  const apiClient = useApiClient();
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient()
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
 
   const syncItem = useMutation({
     mutationFn: async (itemId: string): Promise<SyncJobResponse> => {
       try {
-        const response = await apiClient.post<
-          Record<string, unknown>,
-          SyncJobResponse
-        >(`/api/plaid/sync/${itemId}`, {});
-        return response;
+        const response = await apiClient.post<Record<string, unknown>, SyncJobResponse>(
+          `/api/plaid/sync/${itemId}`,
+          {}
+        )
+        return response
       } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to sync item"));
-        throw err;
+        setError(err instanceof Error ? err : new Error('Failed to sync item'))
+        throw err
       }
     },
     onSuccess: () => {
       // Invalidate connections to update status
-      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
-      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      queryClient.invalidateQueries({ queryKey: ["finance", "accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["finance", "transactions"] });
-      setError(null);
+      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY })
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY })
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['finance', 'transactions'] })
+      setError(null)
     },
-  });
+  })
 
   return {
     syncItem,
@@ -317,42 +308,37 @@ export function useSyncPlaidItem() {
     isError: syncItem.isError,
     error: syncItem.error || error,
     data: syncItem.data,
-  };
+  }
 }
 
 /**
  * Hook for removing a Plaid connection
  */
 export function useRemovePlaidConnection() {
-  const queryClient = useQueryClient();
-  const apiClient = useApiClient();
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient()
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
 
   const removeConnection = useMutation({
-    mutationFn: async (
-      itemId: string
-    ): Promise<{ success: boolean; message: string }> => {
+    mutationFn: async (itemId: string): Promise<{ success: boolean; message: string }> => {
       try {
-        const response = await apiClient.delete<
-          null,
-          { success: boolean; message: string }
-        >(`/api/plaid/connections/${itemId}`);
-        return response;
+        const response = await apiClient.delete<null, { success: boolean; message: string }>(
+          `/api/plaid/connections/${itemId}`
+        )
+        return response
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to remove connection")
-        );
-        throw err;
+        setError(err instanceof Error ? err : new Error('Failed to remove connection'))
+        throw err
       }
     },
     onSuccess: () => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
-      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      queryClient.invalidateQueries({ queryKey: ["finance", "accounts"] });
-      setError(null);
+      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY })
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY })
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] })
+      setError(null)
     },
-  });
+  })
 
   return {
     removeConnection,
@@ -360,16 +346,16 @@ export function useRemovePlaidConnection() {
     isError: removeConnection.isError,
     error: removeConnection.error || error,
     data: removeConnection.data,
-  };
+  }
 }
 
 /**
  * Hook for linking an account to a Plaid institution
  */
 export function useLinkAccountToInstitution() {
-  const queryClient = useQueryClient();
-  const apiClient = useApiClient();
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient()
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
 
   const linkAccount = useMutation({
     mutationFn: async ({
@@ -377,9 +363,9 @@ export function useLinkAccountToInstitution() {
       institutionId,
       plaidItemId,
     }: {
-      accountId: string;
-      institutionId: string;
-      plaidItemId?: string;
+      accountId: string
+      institutionId: string
+      plaidItemId?: string
     }): Promise<LinkAccountResponse> => {
       try {
         const response = await apiClient.post<
@@ -388,23 +374,21 @@ export function useLinkAccountToInstitution() {
         >(`/api/finance/accounts/${accountId}/link-institution`, {
           institutionId,
           plaidItemId,
-        });
-        return response;
+        })
+        return response
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to link account")
-        );
-        throw err;
+        setError(err instanceof Error ? err : new Error('Failed to link account'))
+        throw err
       }
     },
     onSuccess: () => {
       // Invalidate related queries to refresh account data
-      queryClient.invalidateQueries({ queryKey: ["finance", "accounts"] });
-      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
-      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      setError(null);
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] })
+      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY })
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY })
+      setError(null)
     },
-  });
+  })
 
   return {
     linkAccount,
@@ -412,40 +396,38 @@ export function useLinkAccountToInstitution() {
     isError: linkAccount.isError,
     error: linkAccount.error || error,
     data: linkAccount.data,
-  };
+  }
 }
 
 /**
  * Hook for unlinking an account from its institution
  */
 export function useUnlinkAccountFromInstitution() {
-  const queryClient = useQueryClient();
-  const apiClient = useApiClient();
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient()
+  const apiClient = useApiClient()
+  const [error, setError] = useState<Error | null>(null)
 
   const unlinkAccount = useMutation({
     mutationFn: async (accountId: string): Promise<UnlinkAccountResponse> => {
       try {
-        const response = await apiClient.post<
-          Record<string, never>,
-          UnlinkAccountResponse
-        >(`/api/finance/accounts/${accountId}/unlink-institution`, {});
-        return response;
+        const response = await apiClient.post<Record<string, never>, UnlinkAccountResponse>(
+          `/api/finance/accounts/${accountId}/unlink-institution`,
+          {}
+        )
+        return response
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to unlink account")
-        );
-        throw err;
+        setError(err instanceof Error ? err : new Error('Failed to unlink account'))
+        throw err
       }
     },
     onSuccess: () => {
       // Invalidate related queries to refresh account data
-      queryClient.invalidateQueries({ queryKey: ["finance", "accounts"] });
-      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
-      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      setError(null);
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] })
+      queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY })
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY })
+      setError(null)
     },
-  });
+  })
 
   return {
     unlinkAccount,
@@ -453,5 +435,5 @@ export function useUnlinkAccountFromInstitution() {
     isError: unlinkAccount.isError,
     error: unlinkAccount.error || error,
     data: unlinkAccount.data,
-  };
+  }
 }

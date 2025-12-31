@@ -27,10 +27,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {['total', 'month', 'people', 'tags'].map((type) => (
-          <div
-            key={`skeleton-${type}`}
-            className="h-20 bg-muted animate-pulse rounded"
-          />
+          <div key={`skeleton-${type}`} className="h-20 bg-muted animate-pulse rounded" />
         ))}
       </div>
     )
@@ -85,9 +82,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xl opacity-80">{stat.icon}</span>
-            <span className="text-3xl font-bold tracking-tight text-foreground">
-              {stat.value}
-            </span>
+            <span className="text-3xl font-bold tracking-tight text-foreground">{stat.value}</span>
           </div>
           <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {stat.label}

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
-import { isMac } from '~/lib/utils/platform'
-import { filterMessagesByQuery } from '~/lib/utils/message'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ExtendedMessage } from '~/lib/types/chat-message'
+import { filterMessagesByQuery } from '~/lib/utils/message'
+import { isMac } from '~/lib/utils/platform'
 
 interface UseMessageSearchOptions {
   messages: ExtendedMessage[]
@@ -49,5 +49,3 @@ export function useMessageSearch({ messages, enabled = true }: UseMessageSearchO
     searchInputRef,
   }
 }
-
-

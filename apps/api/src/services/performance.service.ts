@@ -178,7 +178,7 @@ export class PerformanceTimer {
    * Get duration between two marks
    */
   getDurationBetween(fromMark: string, toMark: string) {
-    if (!this.markTimes[fromMark] || !this.markTimes[toMark]) {
+    if (!(this.markTimes[fromMark] && this.markTimes[toMark])) {
       return 0
     }
     return (this.markTimes[toMark] - this.markTimes[fromMark]) / 1000

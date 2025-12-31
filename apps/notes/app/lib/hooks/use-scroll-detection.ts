@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Virtualizer } from '@tanstack/react-virtual'
 import { getScrollDistanceFromBottom } from '~/lib/utils/scroll'
 
 interface UseScrollDetectionOptions {
@@ -49,4 +48,3 @@ export function useScrollDetection({
     userScrolledUp: userScrolledUpRef,
   }
 }
-

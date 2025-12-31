@@ -1,5 +1,5 @@
-import i18n from "i18next";
-import enTranslations from "../locales/en.json";
+import i18n from 'i18next'
+import enTranslations from '../locales/en.json'
 
 i18n.init({
   resources: {
@@ -7,12 +7,12 @@ i18n.init({
       translation: enTranslations,
     },
   },
-  lng: "en",
-  fallbackLng: "en",
+  lng: 'en',
+  fallbackLng: 'en',
   debug: false,
   interpolation: {
     escapeValue: false,
   },
-});
+})
 
-export default i18n;
+export default i18n

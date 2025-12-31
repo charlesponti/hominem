@@ -3,9 +3,6 @@ interface ReasoningPartProps {
   index: number
 }
 
-/**
- * Component for reasoning parts
- */
 export function ReasoningPart({ reasoning, index }: ReasoningPartProps) {
   return (
     <div
@@ -20,5 +17,3 @@ export function ReasoningPart({ reasoning, index }: ReasoningPartProps) {
     </div>
   )
 }
-
-

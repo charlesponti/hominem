@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 interface UseMessageEditOptions {
   initialContent: string
@@ -42,5 +42,3 @@ export function useMessageEdit({ initialContent, onSave }: UseMessageEditOptions
     canSave,
   }
 }
-
-

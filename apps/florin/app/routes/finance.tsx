@@ -1,3 +1,4 @@
+import { useSort } from '@hominem/ui/hooks/use-sort'
 import { useEffect, useState } from 'react'
 import { PaginationControls } from '~/components/finance/pagination-controls'
 import { TransactionFilters } from '~/components/finance/transaction-filters'
@@ -8,7 +9,6 @@ import {
   useFinanceTransactions,
 } from '~/lib/hooks/use-finance-data'
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
-import { useSort } from '~/lib/hooks/use-sort'
 
 export default function TransactionsPage() {
   const { selectedAccount } = useSelectedAccount()
@@ -17,8 +17,9 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(0)
   const [limit] = useState(25)
 
-  const { sortOptions, setSortOptions, addSortOption, updateSortOption, removeSortOption } =
-    useSort([{ field: 'date', direction: 'desc' }])
+  const { sortOptions, addSortOption, updateSortOption, removeSortOption } = useSort({
+    initialSortOptions: [{ field: 'date', direction: 'desc' }],
+  })
 
   useEffect(() => {
     setCurrentFilters((prev: FilterArgs) => ({

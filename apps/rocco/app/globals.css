@@ -1,6 +1,6 @@
-@import "../../../packages/ui/src/styles/globals.css";
-@import "../../../packages/ui/src/styles/animations.css";
+@import '../../../packages/ui/src/styles/globals.css';
+@import '../../../packages/ui/src/styles/animations.css';
 @plugin 'tailwindcss-animate';
 
 /* Tell Tailwind to scan the packages/ui directory for classes */
-@source "../../../packages/ui/src";
+@source '../../../packages/ui/src';

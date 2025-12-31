@@ -1,47 +1,40 @@
-import {
-  addItemToTrip,
-  createTrip,
-  getAllTrips,
-  getTripById,
-} from "@hominem/data/services";
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
-import { safeAsync } from "../../errors";
-import { logger } from "../../logger";
-import { protectedProcedure, router } from "../context";
+import { addItemToTrip, createTrip, getAllTrips, getTripById } from '@hominem/data/services'
+import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
+import { safeAsync } from '../../errors'
+import { logger } from '../../logger'
+import { protectedProcedure, router } from '../context'
 
 export const tripsRouter = router({
   getAll: protectedProcedure.query(async ({ ctx }) => {
     return safeAsync(
       async () => {
-        const trips = await getAllTrips(ctx.user.id);
-        return trips;
+        const trips = await getAllTrips(ctx.user.id)
+        return trips
       },
-      "getAll trips",
+      'getAll trips',
       { userId: ctx.user?.id }
-    );
+    )
   }),
 
-  getById: protectedProcedure
-    .input(z.object({ id: z.uuid() }))
-    .query(async ({ ctx, input }) => {
-      return safeAsync(
-        async () => {
-          const trip = await getTripById(input.id, ctx.user.id);
+  getById: protectedProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
+    return safeAsync(
+      async () => {
+        const trip = await getTripById(input.id, ctx.user.id)
 
-          if (!trip) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Trip not found",
-            });
-          }
+        if (!trip) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Trip not found',
+          })
+        }
 
-          return trip;
-        },
-        "trip.getById",
-        { tripId: input.id, userId: ctx.user?.id }
-      );
-    }),
+        return trip
+      },
+      'trip.getById',
+      { tripId: input.id, userId: ctx.user?.id }
+    )
+  }),
 
   create: protectedProcedure
     .input(
@@ -58,16 +51,16 @@ export const tripsRouter = router({
           userId: ctx.user.id,
           startDate: input.startDate,
           endDate: input.endDate,
-        });
+        })
 
         if (!newTrip) {
-          throw new Error("Failed to create trip");
+          throw new Error('Failed to create trip')
         }
 
-        return newTrip;
+        return newTrip
       } catch (error) {
-        logger.error("Error creating trip", { error });
-        throw new Error("Failed to create trip");
+        logger.error('Error creating trip', { error })
+        throw new Error('Failed to create trip')
       }
     }),
 
@@ -82,12 +75,12 @@ export const tripsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const newTripItem = await addItemToTrip(input);
+        const newTripItem = await addItemToTrip(input)
 
-        return newTripItem;
+        return newTripItem
       } catch (error) {
-        logger.error("[trip.addItem]", { error });
-        throw new Error("Failed to add item to trip");
+        logger.error('[trip.addItem]', { error })
+        throw new Error('Failed to add item to trip')
       }
     }),
-});
+})

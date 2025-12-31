@@ -1,29 +1,29 @@
-import type { HominemUser } from "@hominem/auth/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { initTRPC, TRPCError } from "@trpc/server";
-import type { Queue } from "bullmq";
-import type { HonoRequest } from "hono";
+import type { HominemUser } from '@hominem/auth/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { initTRPC, TRPCError } from '@trpc/server'
+import type { Queue } from 'bullmq'
+import type { HonoRequest } from 'hono'
 
 export interface Context {
-  req: HonoRequest;
+  req: HonoRequest
   queues: {
-    plaidSync: Queue;
-    importTransactions: Queue;
-  };
-  user?: HominemUser;
-  userId?: string;
-  supabaseId: string;
-  supabase?: SupabaseClient;
+    plaidSync: Queue
+    importTransactions: Queue
+  }
+  user?: HominemUser
+  userId?: string
+  supabaseId: string
+  supabase?: SupabaseClient
 }
 
-const t = initTRPC.context<Context>().create();
+const t = initTRPC.context<Context>().create()
 
 const authMiddleware = t.middleware(async ({ ctx, next }) => {
-  if (!ctx.user || !ctx.userId) {
+  if (!(ctx.user && ctx.userId)) {
     throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Authentication required",
-    });
+      code: 'UNAUTHORIZED',
+      message: 'Authentication required',
+    })
   }
 
   return next({
@@ -33,9 +33,9 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
       userId: ctx.userId,
       supabaseId: ctx.supabaseId,
     },
-  });
-});
+  })
+})
 
-export const router = t.router;
-export const publicProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(authMiddleware);
+export const router = t.router
+export const publicProcedure = t.procedure
+export const protectedProcedure = t.procedure.use(authMiddleware)

@@ -53,7 +53,7 @@ export function verifyPlaidWebhookSignature(
     const receivedSignature = signatureMap.t
     const givenSignature = signatureMap.v1
 
-    if (!receivedSignature || !givenSignature) {
+    if (!(receivedSignature && givenSignature)) {
       console.warn('Missing required signature components')
       return false
     }

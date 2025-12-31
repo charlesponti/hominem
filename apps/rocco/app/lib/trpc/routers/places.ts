@@ -17,53 +17,46 @@ import {
   removePlaceFromList,
   updateEvent,
   updatePlacePhotos,
-} from "@hominem/data";
-import { z } from "zod";
+} from '@hominem/data'
+import { z } from 'zod'
 import {
   getPlaceDetails as fetchGooglePlaceDetails,
   getPlacePhotos as fetchGooglePlacePhotos,
   searchPlaces as googleSearchPlaces,
-} from "~/lib/google-places.server";
+} from '~/lib/google-places.server'
 import {
   extractPhotoReferences,
   mapGooglePlaceToPrediction,
   sanitizeStoredPhotos,
   transformGooglePlaceToPlaceInsert,
-} from "~/lib/places-utils";
-import { logger } from "../../logger";
-import {
-  type Context,
-  protectedProcedure,
-  publicProcedure,
-  router,
-} from "../context";
+} from '~/lib/places-utils'
+import { logger } from '../../logger'
+import { type Context, protectedProcedure, publicProcedure, router } from '../context'
 
 type ListSummary = {
-  id: string;
-  name: string;
-};
+  id: string
+  name: string
+}
 
 const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: PlaceSelect) => {
-  const itemsLinkingToThisPlace = await getItemsForPlace(dbPlace.id);
+  const itemsLinkingToThisPlace = await getItemsForPlace(dbPlace.id)
 
   const associatedLists = itemsLinkingToThisPlace
     .map((itemRecord) => itemRecord.list)
-    .filter((listRecord): listRecord is { id: string; name: string } =>
-      Boolean(listRecord)
-    )
-    .map((listRecord) => ({ id: listRecord.id, name: listRecord.name }));
+    .filter((listRecord): listRecord is { id: string; name: string } => Boolean(listRecord))
+    .map((listRecord) => ({ id: listRecord.id, name: listRecord.name }))
 
-  let placePhotos = sanitizeStoredPhotos(dbPlace.photos);
+  let placePhotos = sanitizeStoredPhotos(dbPlace.photos)
 
   if (placePhotos.length === 0 && dbPlace.googleMapsId) {
     const fetchedPhotos = await fetchGooglePlacePhotos({
       placeId: dbPlace.googleMapsId,
       forceFresh: true,
-    });
+    })
 
     if (fetchedPhotos.length > 0) {
-      placePhotos = fetchedPhotos;
-      await updatePlacePhotos(dbPlace.id, fetchedPhotos);
+      placePhotos = fetchedPhotos
+      await updatePlacePhotos(dbPlace.id, fetchedPhotos)
     }
   }
 
@@ -71,32 +64,30 @@ const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: PlaceSelect) => {
     ...dbPlace,
     associatedLists,
     photos: placePhotos,
-  };
-};
+  }
+}
 
 export const placesRouter = router({
-  getById: publicProcedure
-    .input(z.object({ id: z.uuid() }))
-    .query(async ({ input }) => {
-      const foundPlace = await getPlaceById(input.id);
+  getById: publicProcedure.input(z.object({ id: z.uuid() })).query(async ({ input }) => {
+    const foundPlace = await getPlaceById(input.id)
 
-      if (!foundPlace) {
-        throw new Error("Place not found");
-      }
+    if (!foundPlace) {
+      throw new Error('Place not found')
+    }
 
-      return foundPlace;
-    }),
+    return foundPlace
+  }),
 
   getByGoogleMapsId: publicProcedure
     .input(z.object({ googleMapsId: z.string() }))
     .query(async ({ input }) => {
-      const foundPlace = await getPlaceByGoogleMapsId(input.googleMapsId);
+      const foundPlace = await getPlaceByGoogleMapsId(input.googleMapsId)
 
       if (!foundPlace) {
-        throw new Error("Place not found");
+        throw new Error('Place not found')
       }
 
-      return foundPlace;
+      return foundPlace
     }),
 
   create: protectedProcedure
@@ -118,18 +109,18 @@ export const placesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { listIds, ...placeInput } = input;
+      const { listIds, ...placeInput } = input
 
       // Fetch Google Place details if photos/imageUrl are missing
-      let fetchedPhotos: string[] | null = null;
-      let fetchedImageUrl: string | null = null;
-      let fetchedRating: number | null = null;
-      let fetchedTypes: string[] | null = null;
-      let fetchedAddress: string | null = null;
-      let fetchedLatitude: number | null = null;
-      let fetchedLongitude: number | null = null;
-      let fetchedWebsiteUri: string | null = null;
-      let fetchedPhoneNumber: string | null = null;
+      let fetchedPhotos: string[] | null = null
+      let fetchedImageUrl: string | null = null
+      let fetchedRating: number | null = null
+      let fetchedTypes: string[] | null = null
+      let fetchedAddress: string | null = null
+      let fetchedLatitude: number | null = null
+      let fetchedLongitude: number | null = null
+      let fetchedWebsiteUri: string | null = null
+      let fetchedPhoneNumber: string | null = null
 
       const needsDetails =
         !placeInput.photos ||
@@ -137,37 +128,34 @@ export const placesRouter = router({
         !placeInput.imageUrl ||
         !placeInput.rating ||
         !placeInput.types ||
-        placeInput.types.length === 0;
+        placeInput.types.length === 0
 
       if (needsDetails) {
         try {
           const googlePlace = await fetchGooglePlaceDetails({
             placeId: placeInput.googleMapsId,
             forceFresh: true,
-          });
+          })
 
           if (googlePlace) {
             // Extract photos
-            fetchedPhotos = extractPhotoReferences(googlePlace.photos);
-            fetchedImageUrl =
-              fetchedPhotos.length > 0 && fetchedPhotos[0]
-                ? fetchedPhotos[0]
-                : null;
+            fetchedPhotos = extractPhotoReferences(googlePlace.photos)
+            fetchedImageUrl = fetchedPhotos.length > 0 && fetchedPhotos[0] ? fetchedPhotos[0] : null
 
             // Use fetched data to fill in missing fields
-            fetchedRating = googlePlace.rating ?? null;
-            fetchedTypes = googlePlace.types ?? null;
-            fetchedAddress = googlePlace.formattedAddress ?? null;
-            fetchedLatitude = googlePlace.location?.latitude ?? null;
-            fetchedLongitude = googlePlace.location?.longitude ?? null;
-            fetchedWebsiteUri = googlePlace.websiteUri ?? null;
-            fetchedPhoneNumber = googlePlace.nationalPhoneNumber ?? null;
+            fetchedRating = googlePlace.rating ?? null
+            fetchedTypes = googlePlace.types ?? null
+            fetchedAddress = googlePlace.formattedAddress ?? null
+            fetchedLatitude = googlePlace.location?.latitude ?? null
+            fetchedLongitude = googlePlace.location?.longitude ?? null
+            fetchedWebsiteUri = googlePlace.websiteUri ?? null
+            fetchedPhoneNumber = googlePlace.nationalPhoneNumber ?? null
           }
         } catch (error) {
-          logger.error("Failed to fetch Google Place details during create", {
+          logger.error('Failed to fetch Google Place details during create', {
             error: error instanceof Error ? error.message : String(error),
             googleMapsId: placeInput.googleMapsId,
-          });
+          })
           // Continue with provided data if fetch fails
         }
       }
@@ -183,33 +171,29 @@ export const placesRouter = router({
           placeInput.latitude && placeInput.longitude
             ? [placeInput.longitude, placeInput.latitude]
             : fetchedLatitude && fetchedLongitude
-            ? [fetchedLongitude, fetchedLatitude]
-            : [0, 0],
+              ? [fetchedLongitude, fetchedLatitude]
+              : [0, 0],
         types:
           placeInput.types && placeInput.types.length > 0
             ? placeInput.types
-            : fetchedTypes ?? null,
+            : (fetchedTypes ?? null),
         rating: placeInput.rating ?? fetchedRating ?? null,
         websiteUri: placeInput.websiteUri ?? fetchedWebsiteUri ?? null,
         phoneNumber: placeInput.phoneNumber ?? fetchedPhoneNumber ?? null,
         photos:
           placeInput.photos && placeInput.photos.length > 0
             ? placeInput.photos
-            : fetchedPhotos ?? null,
+            : (fetchedPhotos ?? null),
         imageUrl:
           placeInput.imageUrl ??
           (placeInput.photos && placeInput.photos.length > 0
             ? placeInput.photos[0]
-            : fetchedImageUrl ?? null),
-      };
+            : (fetchedImageUrl ?? null)),
+      }
 
-      const { place: createdPlace } = await addPlaceToLists(
-        ctx.user.id,
-        listIds ?? [],
-        placeData
-      );
+      const { place: createdPlace } = await addPlaceToLists(ctx.user.id, listIds ?? [], placeData)
 
-      return createdPlace;
+      return createdPlace
     }),
 
   update: protectedProcedure
@@ -229,40 +213,32 @@ export const placesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, latitude, longitude, ...updateData } = input;
+      const { id, latitude, longitude, ...updateData } = input
 
       const locationUpdate =
-        latitude && longitude
-          ? { location: [longitude, latitude] as [number, number] }
-          : {};
+        latitude && longitude ? { location: [longitude, latitude] as [number, number] } : {}
 
       const updatedPlace = await createOrUpdatePlace(id, {
         ...updateData,
         ...locationUpdate,
-      });
+      })
 
       if (!updatedPlace) {
-        throw new Error(
-          "Place not found or you don't have permission to update it"
-        );
+        throw new Error("Place not found or you don't have permission to update it")
       }
 
-      return updatedPlace;
+      return updatedPlace
     }),
 
-  delete: protectedProcedure
-    .input(z.object({ id: z.uuid() }))
-    .mutation(async ({ input }) => {
-      const deleted = await deletePlaceById(input.id);
+  delete: protectedProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ input }) => {
+    const deleted = await deletePlaceById(input.id)
 
-      if (!deleted) {
-        throw new Error(
-          "Place not found or you don't have permission to delete it"
-        );
-      }
+    if (!deleted) {
+      throw new Error("Place not found or you don't have permission to delete it")
+    }
 
-      return { success: true };
-    }),
+    return { success: true }
+  }),
 
   autocomplete: protectedProcedure
     .input(
@@ -275,89 +251,83 @@ export const placesRouter = router({
       })
     )
     .query(async ({ input }) => {
-      const query = input.query.trim();
+      const query = input.query.trim()
       if (query.length < 2) {
-        return [];
+        return []
       }
 
-      let locationBias:
-        | { latitude: number; longitude: number; radius: number }
-        | undefined;
+      let locationBias: { latitude: number; longitude: number; radius: number } | undefined
 
       try {
         locationBias =
-          typeof input.latitude === "number" &&
-          typeof input.longitude === "number"
+          typeof input.latitude === 'number' && typeof input.longitude === 'number'
             ? {
                 latitude: input.latitude,
                 longitude: input.longitude,
                 radius: input.radius ?? 50000,
               }
-            : undefined;
+            : undefined
 
         const googleResults = await googleSearchPlaces({
           query,
           maxResultCount: 8,
           locationBias,
-        });
+        })
 
-        const predictions = googleResults.map(mapGooglePlaceToPrediction);
-        return predictions;
+        const predictions = googleResults.map(mapGooglePlaceToPrediction)
+        return predictions
       } catch (error) {
-        logger.error("Failed to autocomplete places", {
-          service: "placesRouter",
-          function: "autocomplete",
+        logger.error('Failed to autocomplete places', {
+          service: 'placesRouter',
+          function: 'autocomplete',
           error: error instanceof Error ? error.message : String(error),
           query,
           locationBias,
-        });
-        throw new Error("Failed to fetch autocomplete suggestions");
+        })
+        throw new Error('Failed to fetch autocomplete suggestions')
       }
     }),
 
   getDetailsById: protectedProcedure
     .input(z.object({ id: z.uuid() }))
     .query(async ({ input, ctx }) => {
-      const { id } = input;
-      const dbPlace = await getPlaceById(id);
+      const { id } = input
+      const dbPlace = await getPlaceById(id)
 
       if (!dbPlace) {
-        throw new Error("Place not found");
+        throw new Error('Place not found')
       }
 
-      return enrichPlaceWithDetails(ctx, dbPlace);
+      return enrichPlaceWithDetails(ctx, dbPlace)
     }),
 
   getDetailsByGoogleId: protectedProcedure
     .input(z.object({ googleMapsId: z.string().min(1) }))
     .query(async ({ input, ctx }) => {
-      const { googleMapsId } = input;
+      const { googleMapsId } = input
       try {
-        let dbPlace = await getPlaceByGoogleMapsId(googleMapsId);
+        let dbPlace = await getPlaceByGoogleMapsId(googleMapsId)
 
         if (!dbPlace) {
           const googlePlace = await fetchGooglePlaceDetails({
             placeId: googleMapsId,
-          });
+          })
 
           if (!googlePlace) {
-            throw new Error("Place not found in Google Places API");
+            throw new Error('Place not found in Google Places API')
           }
 
-          const placeData = transformGooglePlaceToPlaceInsert(
-            googlePlace,
-            googleMapsId
-          );
-          dbPlace = await ensurePlaceFromGoogleData(placeData);
+          const placeData = transformGooglePlaceToPlaceInsert(googlePlace, googleMapsId)
+          dbPlace = await ensurePlaceFromGoogleData(placeData)
         }
 
-        return enrichPlaceWithDetails(ctx, dbPlace);
+        return enrichPlaceWithDetails(ctx, dbPlace)
       } catch (error) {
-        logger.error("Error fetching place details by Google ID", {
+        logger.error('Error fetching place details by Google ID', {
           error: error instanceof Error ? error.message : String(error),
           googleMapsId,
-        });
-        throw new Error("Failed to fetch place details");
+        })
+        throw new Error('Failed to fetch place details')
       }
     }),
 
@@ -379,7 +349,7 @@ export const placesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { listIds, place: placeInput } = input;
+      const { listIds, place: placeInput } = input
 
       // Transform input to PlaceInsert format
       const placeData: PlaceInsert = {
@@ -396,24 +366,24 @@ export const placesRouter = router({
         photos: null,
         imageUrl: placeInput.imageUrl ?? null,
         priceLevel: null,
-      };
+      }
 
-      let finalPlace: PlaceSelect;
-      let affectedLists: ListSummary[] = [];
+      let finalPlace: PlaceSelect
+      let affectedLists: ListSummary[] = []
 
       try {
-        const result = await addPlaceToLists(ctx.user.id, listIds, placeData);
-        finalPlace = result.place;
-        affectedLists = result.lists;
+        const result = await addPlaceToLists(ctx.user.id, listIds, placeData)
+        finalPlace = result.place
+        affectedLists = result.lists
 
-        return { place: finalPlace, lists: affectedLists };
+        return { place: finalPlace, lists: affectedLists }
       } catch (error) {
-        logger.error("Failed to add place to lists", {
+        logger.error('Failed to add place to lists', {
           error: error instanceof Error ? error.message : String(error),
           userId: ctx.user.id,
           placeInput,
-        });
-        throw new Error("Failed to process request");
+        })
+        throw new Error('Failed to process request')
       }
     }),
 
@@ -426,30 +396,30 @@ export const placesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { listId, placeId: googleMapsIdOrDbId } = input;
+      const { listId, placeId: googleMapsIdOrDbId } = input
 
       try {
         const removed = await removePlaceFromList({
           listId,
           placeIdentifier: googleMapsIdOrDbId,
           userId: ctx.user.id,
-        });
+        })
 
         if (!removed) {
           throw new Error(
-            "Place not found in this list, or you do not have permission to remove it."
-          );
+            'Place not found in this list, or you do not have permission to remove it.'
+          )
         }
 
-        return { message: "Place removed from list successfully" };
+        return { message: 'Place removed from list successfully' }
       } catch (error) {
-        logger.error("Error deleting place from list", {
+        logger.error('Error deleting place from list', {
           error: error instanceof Error ? error.message : String(error),
           userId: ctx.user.id,
           listId,
           googleMapsIdOrDbId,
-        });
-        throw new Error("Failed to delete place from list");
+        })
+        throw new Error('Failed to delete place from list')
       }
     }),
 
@@ -464,7 +434,7 @@ export const placesRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { latitude, longitude, radiusKm, limit: resultLimit } = input;
+      const { latitude, longitude, radiusKm, limit: resultLimit } = input
 
       try {
         return await getNearbyPlacesFromLists({
@@ -473,16 +443,16 @@ export const placesRouter = router({
           longitude,
           radiusKm,
           limit: resultLimit,
-        });
+        })
       } catch (error) {
-        logger.error("Error fetching nearby places from lists", {
+        logger.error('Error fetching nearby places from lists', {
           error: error instanceof Error ? error.message : String(error),
           userId: ctx.user.id,
           latitude,
           longitude,
           radiusKm,
-        });
-        throw new Error("Failed to fetch nearby places");
+        })
+        throw new Error('Failed to fetch nearby places')
       }
     }),
 
@@ -501,13 +471,13 @@ export const placesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const dateValue = input.date ? new Date(input.date) : new Date();
+      const dateValue = input.date ? new Date(input.date) : new Date()
 
       const event = await createEvent({
         title: input.title,
         description: input.description,
         date: dateValue,
-        type: "Events",
+        type: 'Events',
         placeId: input.placeId,
         visitNotes: input.visitNotes,
         visitRating: input.visitRating,
@@ -515,9 +485,9 @@ export const placesRouter = router({
         userId: ctx.user.id,
         tags: input.tags,
         people: input.people,
-      });
+      })
 
-      return event;
+      return event
     }),
 
   getMyVisits: protectedProcedure
@@ -537,15 +507,15 @@ export const placesRouter = router({
             startDate: input.startDate ? new Date(input.startDate) : undefined,
             endDate: input.endDate ? new Date(input.endDate) : undefined,
           }
-        : undefined;
+        : undefined
 
-      return getVisitsByUser(ctx.user.id, filters);
+      return getVisitsByUser(ctx.user.id, filters)
     }),
 
   getPlaceVisits: protectedProcedure
     .input(z.object({ placeId: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      return getVisitsByPlace(input.placeId, ctx.user.id);
+      return getVisitsByPlace(input.placeId, ctx.user.id)
     }),
 
   updateVisit: protectedProcedure
@@ -564,35 +534,35 @@ export const placesRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { visitId, date, ...updateData } = input;
+      const { visitId, date, ...updateData } = input
 
       const updatedEvent = await updateEvent(visitId, {
         ...updateData,
         date: date ? new Date(date) : undefined,
-      });
+      })
 
       if (!updatedEvent) {
-        throw new Error("Visit not found");
+        throw new Error('Visit not found')
       }
 
-      return updatedEvent;
+      return updatedEvent
     }),
 
   deleteVisit: protectedProcedure
     .input(z.object({ visitId: z.uuid() }))
     .mutation(async ({ input }) => {
-      const deleted = await deleteEvent(input.visitId);
+      const deleted = await deleteEvent(input.visitId)
 
       if (!deleted) {
-        throw new Error("Visit not found");
+        throw new Error('Visit not found')
       }
 
-      return { success: true };
+      return { success: true }
     }),
 
   getVisitStats: protectedProcedure
     .input(z.object({ placeId: z.uuid() }))
     .query(async ({ ctx, input }) => {
-      return getVisitStatsByPlace(input.placeId, ctx.user.id);
+      return getVisitStatsByPlace(input.placeId, ctx.user.id)
     }),
-});
+})

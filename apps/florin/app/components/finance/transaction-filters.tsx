@@ -1,4 +1,6 @@
 import { Button } from '@hominem/ui/button'
+import { DatePicker } from '@hominem/ui/components/date-picker'
+import { FilterChip } from '@hominem/ui/components/filters'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,15 +9,13 @@ import {
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu'
 import { SearchInput } from '@hominem/ui/components/ui/search-input'
+import type { SortOption } from '@hominem/ui/hooks/use-sort'
 import { ListFilter, RefreshCcw } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { AccountSelect } from '~/components/account-select'
-import { DatePicker } from '@hominem/ui/components/date-picker'
-import { FilterChip } from '~/components/finance/filter-chip'
 import { SortControls } from '~/components/finance/sort-controls'
 import type { FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data'
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
-import type { SortOption } from '~/lib/hooks/use-sort'
 
 interface ActiveSortOption extends SortOption {
   onRemove: () => void

@@ -12,9 +12,6 @@ interface ToolInvocationPartProps {
   index: number
 }
 
-/**
- * Component for tool invocation parts
- */
 export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPartProps) {
   const { toolName, toolCallId, type, args, result, isError } = toolInvocation
   const id = toolCallId || `tool-${index}`
@@ -73,5 +70,3 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
 
   return null
 }
-
-

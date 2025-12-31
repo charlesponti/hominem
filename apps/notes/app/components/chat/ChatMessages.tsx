@@ -1,20 +1,20 @@
-import { Search, X } from 'lucide-react'
-import { useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react'
-import type React from 'react'
-import { useVirtualizer } from '@tanstack/react-virtual'
-import { trpc } from '~/lib/trpc/client'
-import type { ExtendedMessage } from '~/lib/types/chat-message'
-import { ChatMessage } from './ChatMessage.js'
-import { useSendMessage } from '~/lib/hooks/use-send-message.js'
-import { useMatches } from 'react-router'
-import { Input } from '@hominem/ui/components/ui/input'
 import { Button } from '@hominem/ui/button'
-import { SkeletonMessage } from './SkeletonMessage'
-import { ThinkingComponent } from './ThinkingComponent'
-import { useScrollDetection } from '~/lib/hooks/use-scroll-detection'
+import { Input } from '@hominem/ui/components/ui/input'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { Search, X } from 'lucide-react'
+import type React from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
+import { useMatches } from 'react-router'
 import { useAutoScroll } from '~/lib/hooks/use-auto-scroll'
 import { useMessageSearch } from '~/lib/hooks/use-message-search'
-import { findPreviousUserMessage, findNextAssistantMessage } from '~/lib/utils/message.js'
+import { useScrollDetection } from '~/lib/hooks/use-scroll-detection'
+import { useSendMessage } from '~/lib/hooks/use-send-message.js'
+import { trpc } from '~/lib/trpc/client'
+import type { ExtendedMessage } from '~/lib/types/chat-message'
+import { findPreviousUserMessage } from '~/lib/utils/message.js'
+import { ChatMessage } from './ChatMessage.js'
+import { SkeletonMessage } from './SkeletonMessage'
+import { ThinkingComponent } from './ThinkingComponent'
 
 interface ChatMessagesProps {
   chatId: string
@@ -161,23 +161,21 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const handleEditMessage = useCallback(
       async (messageId: string, newContent: string) => {
         try {
+          // Update message (backend handles deleting subsequent messages)
           await updateMessageMutation.mutateAsync({
             messageId,
             content: newContent,
           })
-          // After editing, regenerate the assistant response
-          const messageIndex = extendedMessages.findIndex((m) => m.id === messageId)
-          if (messageIndex !== -1) {
-            const nextAssistantMessage = findNextAssistantMessage(extendedMessages, messageIndex)
-            if (nextAssistantMessage) {
-              await handleRegenerate(nextAssistantMessage.id)
-            }
-          }
+          // Regenerate AI response by sending the edited message
+          await sendMessage.mutateAsync({
+            message: newContent,
+            chatId,
+          })
         } catch (error) {
           console.error('Failed to update message:', error)
         }
       },
-      [updateMessageMutation, extendedMessages, handleRegenerate]
+      [updateMessageMutation, sendMessage, chatId]
     )
 
     // Virtual scrolling render

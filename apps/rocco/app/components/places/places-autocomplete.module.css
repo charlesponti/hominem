@@ -6,7 +6,7 @@
 
 .autocompleteItem:focus,
 .autocompleteItem:hover,
-.autocompleteItem[data-selected="true"] {
+.autocompleteItem[data-selected='true'] {
   background-color: var(--input-background-focus);
   color: var(--input-text-focus);
 }

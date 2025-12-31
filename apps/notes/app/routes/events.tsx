@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { ActiveFiltersBar, FilterSelect, useSort, useUrlFilters } from '@hominem/ui'
+import { useEffect, useMemo, useState } from 'react'
 import { data, useNavigate } from 'react-router'
 import { getServerSession } from '~/lib/auth.server'
 import i18n from '~/lib/i18n'
@@ -6,7 +7,6 @@ import type { RouterInput } from '~/lib/trpc'
 import { createServerTRPCClient } from '~/lib/trpc/server'
 import EventForm from '../components/events/EventForm'
 import EventList from '../components/events/EventList'
-import FiltersSection from '../components/events/FiltersSection'
 import StatsDisplay from '../components/events/StatsDisplay'
 import SyncButton from '../components/events/SyncButton'
 import SyncStatus from '../components/events/SyncStatus'
@@ -94,15 +94,76 @@ export async function action({ request }: Route.ActionArgs) {
   return { success: true, event }
 }
 
+type EventFilters = {
+  type: string
+  companion: string
+  source: string
+  sortBy: string
+}
+
 export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
-  const [filterType, setFilterType] = useState('')
-  const [filterCompanion, setFilterCompanion] = useState('')
-  const [filterSource, setFilterSource] = useState('')
-  const [sortBy, setSortBy] = useState('date-desc')
   const [showAddForm, setShowAddForm] = useState(false)
 
   const { sync, syncStatus, isSyncing } = useGoogleCalendarSync()
+
+  // Use shared hooks for filter management with URL sync
+  const { filters, updateFilter } = useUrlFilters<EventFilters>({
+    initialFilters: {
+      type: '',
+      companion: '',
+      source: '',
+      sortBy: 'date-desc',
+    },
+    paramMapping: {
+      type: 'type',
+      companion: 'companion',
+      source: 'source',
+      sortBy: 'sortBy',
+    },
+  })
+
+  // Convert sortBy string to SortOption format for useSort
+  const sortOptionFromString = (sortBy: string): { field: string; direction: 'asc' | 'desc' } => {
+    if (sortBy === 'date-asc') {
+      return { field: 'date', direction: 'asc' }
+    }
+    if (sortBy === 'date-desc') {
+      return { field: 'date', direction: 'desc' }
+    }
+    if (sortBy === 'summary') {
+      return { field: 'summary', direction: 'asc' }
+    }
+    return { field: 'date', direction: 'desc' }
+  }
+
+  const { sortOptions, addSortOption } = useSort({
+    initialSortOptions: [sortOptionFromString(filters.sortBy)],
+    singleSort: true,
+    urlParamName: 'sortBy',
+  })
+
+  // Update sortBy filter when sortOptions change (but not on initial mount to avoid loops)
+  useEffect(() => {
+    if (sortOptions.length > 0) {
+      const sort = sortOptions[0]
+      if (!sort) {
+        return
+      }
+      let newSortBy = 'date-desc'
+      if (sort.field === 'date' && sort.direction === 'asc') {
+        newSortBy = 'date-asc'
+      } else if (sort.field === 'date' && sort.direction === 'desc') {
+        newSortBy = 'date-desc'
+      } else if (sort.field === 'summary') {
+        newSortBy = 'summary'
+      }
+
+      if (newSortBy !== filters.sortBy) {
+        updateFilter('sortBy', newSortBy)
+      }
+    }
+  }, [sortOptions]) // Only depend on sortOptions to avoid loops
 
   const activities = useMemo(
     () =>
@@ -133,21 +194,52 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
     activities.forEach((activity) => {
       activity.people?.forEach((person) => {
         const name = `${person.firstName || ''} ${person.lastName || ''}`.trim()
-        if (name) allCompanions.add(name)
+        if (name) {
+          allCompanions.add(name)
+        }
       })
     })
     return Array.from(allCompanions).sort()
   }, [activities])
 
-  const handleFilterChange = () => {
-    const params = new URLSearchParams()
-    if (filterType) params.set('type', filterType)
-    if (filterCompanion) params.set('companion', filterCompanion)
-    if (filterSource) params.set('source', filterSource)
-    if (sortBy) params.set('sortBy', sortBy)
-
-    navigate(`/events?${params.toString()}`)
-  }
+  // Prepare active filters for display
+  const activeFilters = useMemo(() => {
+    const filtersList = []
+    if (filters.type) {
+      filtersList.push({
+        id: 'type',
+        label: `Type: ${filters.type}`,
+        onRemove: () => updateFilter('type', ''),
+      })
+    }
+    if (filters.companion) {
+      filtersList.push({
+        id: 'companion',
+        label: `Companion: ${filters.companion}`,
+        onRemove: () => updateFilter('companion', ''),
+      })
+    }
+    if (filters.source) {
+      filtersList.push({
+        id: 'source',
+        label: `Source: ${filters.source}`,
+        onRemove: () => updateFilter('source', ''),
+      })
+    }
+    if (filters.sortBy && filters.sortBy !== 'date-desc') {
+      const sortLabels: Record<string, string> = {
+        'date-asc': 'Date (Oldest First)',
+        'date-desc': 'Date (Newest First)',
+        summary: 'Title (A-Z)',
+      }
+      filtersList.push({
+        id: 'sortBy',
+        label: `Sort: ${sortLabels[filters.sortBy] || filters.sortBy}`,
+        onRemove: () => updateFilter('sortBy', 'date-desc'),
+      })
+    }
+    return filtersList
+  }, [filters, updateFilter])
 
   const handleSync = async () => {
     await sync({})
@@ -224,30 +316,71 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
         {/* Filters and Secondary Actions */}
         <div className="mb-8 p-5 rounded-xl bg-card">
-          <div className="flex items-end gap-4">
-            <FiltersSection
-              filterType={filterType}
-              filterCompanion={filterCompanion}
-              filterSource={filterSource}
-              sortBy={sortBy}
-              companions={companions}
-              onFilterTypeChange={setFilterType}
-              onFilterCompanionChange={setFilterCompanion}
-              onFilterSourceChange={setFilterSource}
-              onSortByChange={setSortBy}
-              onFilterChange={handleFilterChange}
-            />
+          <div className="flex flex-col gap-4">
+            <div className="flex items-end gap-4">
+              <div className="flex items-end gap-3 flex-1">
+                <FilterSelect
+                  label="Type"
+                  value={filters.type}
+                  options={[
+                    { value: 'Events', label: 'Events' },
+                    { value: 'Movies', label: 'Movies' },
+                    { value: 'Reading', label: 'Reading' },
+                    { value: 'Dates', label: 'Dates' },
+                    { value: 'Birthdays', label: 'Birthdays' },
+                    { value: 'Anniversaries', label: 'Anniversaries' },
+                  ]}
+                  onChange={(value) => updateFilter('type', value)}
+                  placeholder="All Types"
+                />
+                <FilterSelect
+                  label="Companion"
+                  value={filters.companion}
+                  options={companions.map((c) => ({ value: c, label: c }))}
+                  onChange={(value) => updateFilter('companion', value)}
+                  placeholder="All People"
+                />
+                <FilterSelect
+                  label="Source"
+                  value={filters.source}
+                  options={[
+                    { value: 'manual', label: 'Manual' },
+                    { value: 'google_calendar', label: 'Google Calendar' },
+                  ]}
+                  onChange={(value) => updateFilter('source', value)}
+                  placeholder="All Sources"
+                />
+                <FilterSelect
+                  label="Sort By"
+                  value={filters.sortBy}
+                  options={[
+                    { value: 'date-desc', label: 'Date (Newest First)' },
+                    { value: 'date-asc', label: 'Date (Oldest First)' },
+                    { value: 'summary', label: 'Title (A-Z)' },
+                  ]}
+                  onChange={(value) => {
+                    updateFilter('sortBy', value)
+                    const sortOption = sortOptionFromString(value)
+                    addSortOption(sortOption)
+                  }}
+                  placeholder="Sort By"
+                />
+              </div>
 
-            {/* Secondary action - less prominent */}
-            <button
-              type="button"
-              onClick={() => navigate('/events/people')}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              <span>👥</span>
-              <span>Manage People</span>
-              <span className="text-xs opacity-60">({people.length})</span>
-            </button>
+              {/* Secondary action - less prominent */}
+              <button
+                type="button"
+                onClick={() => navigate('/events/people')}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <span>👥</span>
+                <span>Manage People</span>
+                <span className="text-xs opacity-60">({people.length})</span>
+              </button>
+            </div>
+            {activeFilters.length > 0 && (
+              <ActiveFiltersBar filters={activeFilters} label="Active filters:" />
+            )}
           </div>
         </div>
 

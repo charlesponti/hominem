@@ -2,28 +2,28 @@
  * Production-ready health monitoring service for workers
  * Uses event-driven approach instead of polling intervals
  */
-import { logger } from "@hominem/utils/logger";
-import type { Worker } from "bullmq";
+import { logger } from '@hominem/utils/logger'
+import type { Worker } from 'bullmq'
 
 export interface HealthMetrics {
-  startTime: number;
-  lastJobProcessed?: number;
-  totalJobsProcessed: number;
-  totalJobsFailed: number;
-  isHealthy: boolean;
-  redisConnected: boolean;
-  workerName: string;
+  startTime: number
+  lastJobProcessed?: number
+  totalJobsProcessed: number
+  totalJobsFailed: number
+  isHealthy: boolean
+  redisConnected: boolean
+  workerName: string
 }
 
 export class HealthService {
-  private metrics: HealthMetrics;
-  private worker: Worker;
-  private workerName: string;
-  private isStopped = false;
+  private metrics: HealthMetrics
+  private worker: Worker
+  private workerName: string
+  private isStopped = false
 
   constructor(worker: Worker, workerName: string) {
-    this.worker = worker;
-    this.workerName = workerName;
+    this.worker = worker
+    this.workerName = workerName
     this.metrics = {
       startTime: Date.now(),
       totalJobsProcessed: 0,
@@ -31,9 +31,9 @@ export class HealthService {
       isHealthy: true,
       redisConnected: true,
       workerName,
-    };
+    }
 
-    this.setupHealthMonitoring();
+    this.setupHealthMonitoring()
     // Only log if there are issues - silent initialization for clean startup
   }
 
@@ -42,105 +42,98 @@ export class HealthService {
    */
   private setupHealthMonitoring() {
     // Monitor worker events for health status
-    this.worker.on("ready", () => {
-      this.metrics.redisConnected = true;
-      this.metrics.isHealthy = true;
-      logger.info(`${this.workerName}: Ready and healthy`);
-    });
+    this.worker.on('ready', () => {
+      this.metrics.redisConnected = true
+      this.metrics.isHealthy = true
+      logger.info(`${this.workerName}: Ready and healthy`)
+    })
 
-    this.worker.on("completed", () => {
-      this.metrics.lastJobProcessed = Date.now();
-      this.metrics.totalJobsProcessed++;
-      this.metrics.isHealthy = true;
-    });
+    this.worker.on('completed', () => {
+      this.metrics.lastJobProcessed = Date.now()
+      this.metrics.totalJobsProcessed++
+      this.metrics.isHealthy = true
+    })
 
-    this.worker.on("failed", () => {
-      this.metrics.totalJobsFailed++;
+    this.worker.on('failed', () => {
+      this.metrics.totalJobsFailed++
       // Don't mark as unhealthy immediately - could be data issues
       if (this.getFailureRate() > 0.5) {
-        this.metrics.isHealthy = false;
-        logger.warn(`${this.workerName}: High failure rate detected`);
+        this.metrics.isHealthy = false
+        logger.warn(`${this.workerName}: High failure rate detected`)
       }
-    });
+    })
 
-    this.worker.on("error", (error) => {
-      this.metrics.isHealthy = false;
-      logger.error(`${this.workerName}: Worker error detected`, error);
-    });
+    this.worker.on('error', (error) => {
+      this.metrics.isHealthy = false
+      logger.error(`${this.workerName}: Worker error detected`, error)
+    })
 
-    this.worker.on("stalled", (jobId) => {
-      logger.warn(`${this.workerName}: Job ${jobId} stalled`);
-    });
+    this.worker.on('stalled', (jobId) => {
+      logger.warn(`${this.workerName}: Job ${jobId} stalled`)
+    })
   }
 
   /**
    * Get current health status
    */
   getHealthStatus(): HealthMetrics {
-    return { ...this.metrics };
+    return { ...this.metrics }
   }
 
   /**
    * Get failure rate (0-1)
    */
   private getFailureRate() {
-    const total =
-      this.metrics.totalJobsProcessed + this.metrics.totalJobsFailed;
-    return total > 0 ? this.metrics.totalJobsFailed / total : 0;
+    const total = this.metrics.totalJobsProcessed + this.metrics.totalJobsFailed
+    return total > 0 ? this.metrics.totalJobsFailed / total : 0
   }
 
   /**
    * Check if worker is healthy based on multiple criteria
    */
   isHealthy(): boolean {
-    return (
-      this.metrics.isHealthy &&
-      this.metrics.redisConnected &&
-      this.getFailureRate() < 0.5
-    );
+    return this.metrics.isHealthy && this.metrics.redisConnected && this.getFailureRate() < 0.5
   }
 
   /**
    * Get uptime in milliseconds
    */
   getUptime() {
-    return Date.now() - this.metrics.startTime;
+    return Date.now() - this.metrics.startTime
   }
 
   /**
    * Format health status for logging
    */
   getHealthSummary() {
-    const uptime = Math.floor(this.getUptime() / 1000);
-    const failureRate = (this.getFailureRate() * 100).toFixed(1);
+    const uptime = Math.floor(this.getUptime() / 1000)
+    const failureRate = (this.getFailureRate() * 100).toFixed(1)
 
-    return `${
-      this.workerName
-    }: Healthy=${this.isHealthy()}, Uptime=${uptime}s, Jobs=${
+    return `${this.workerName}: Healthy=${this.isHealthy()}, Uptime=${uptime}s, Jobs=${
       this.metrics.totalJobsProcessed
-    }, Failures=${failureRate}%`;
+    }, Failures=${failureRate}%`
   }
 
   /**
    * Optional: Create health check endpoint data
    */
   async getHealthCheckResponse(): Promise<{
-    status: "healthy" | "unhealthy";
+    status: 'healthy' | 'unhealthy'
     details: HealthMetrics & {
-      uptime: number;
-      failureRate: number;
-    };
+      uptime: number
+      failureRate: number
+    }
   }> {
-    const isHealthy = this.isHealthy();
+    const isHealthy = this.isHealthy()
 
     return {
-      status: isHealthy ? "healthy" : "unhealthy",
+      status: isHealthy ? 'healthy' : 'unhealthy',
       details: {
         ...this.metrics,
         uptime: this.getUptime(),
         failureRate: this.getFailureRate(),
       },
-    };
+    }
   }
 
   /**
@@ -149,10 +142,10 @@ export class HealthService {
    */
   async stop(): Promise<void> {
     if (this.isStopped) {
-      return;
+      return
     }
 
-    this.isStopped = true;
-    logger.info(this.getHealthSummary());
+    this.isStopped = true
+    logger.info(this.getHealthSummary())
   }
 }

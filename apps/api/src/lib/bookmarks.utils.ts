@@ -182,7 +182,7 @@ class URLUtils {
     const trimmed = url.trim()
 
     // Add protocol if missing
-    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    if (!(trimmed.startsWith('http://') || trimmed.startsWith('https://'))) {
       return `https://${trimmed}`
     }
 

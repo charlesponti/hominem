@@ -5,7 +5,7 @@ import { env } from './env.js'
 const isDev = env.NODE_ENV === 'development'
 const isTest = env.NODE_ENV === 'test'
 
-if (!env.RESEND_API_KEY && !isDev && !isTest) {
+if (!((env.RESEND_API_KEY || isDev ) || isTest)) {
   logger.error('The RESEND_API_KEY env var must be set, otherwise the API cannot send emails.')
   process.exit(1)
 }

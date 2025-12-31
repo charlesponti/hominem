@@ -1,4 +1,5 @@
 import type { createServerTRPCClient } from '~/lib/trpc/server'
+import { ChatCreationError } from './errors'
 
 type TRPCClient = ReturnType<typeof createServerTRPCClient>
 
@@ -6,9 +7,7 @@ type TRPCClient = ReturnType<typeof createServerTRPCClient>
  * Gets the first existing chat or creates a new one
  * Returns the chat ID
  */
-export async function getOrCreateChat(
-  trpcClient: TRPCClient
-): Promise<{ chatId: string }> {
+export async function getOrCreateChat(trpcClient: TRPCClient): Promise<{ chatId: string }> {
   const [chat] = await trpcClient.chats.getUserChats.query({
     limit: 1,
   })
@@ -21,6 +20,9 @@ export async function getOrCreateChat(
     title: 'New Chat',
   })
 
+  if (!newChat.chat) {
+    throw new ChatCreationError()
+  }
+
   return { chatId: newChat.chat.id }
 }
-
