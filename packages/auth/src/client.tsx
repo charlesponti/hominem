@@ -6,7 +6,9 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useS
 let supabaseClient: SupabaseClient | null = null
 
 export function getSupabase(config: { url: string; anonKey: string }) {
-  if (supabaseClient) return supabaseClient
+  if (supabaseClient) {
+    return supabaseClient
+  }
 
   supabaseClient = createBrowserClient(config.url, config.anonKey)
   return supabaseClient
@@ -41,7 +43,9 @@ function useSupabaseAuth(
 
   const logout = useCallback(async () => {
     const response = await supabaseClient.auth.signOut()
-    if (response.error) throw response.error
+    if (response.error) {
+      throw response.error
+    }
   }, [supabaseClient])
 
   const signIn = useCallback(async () => {
@@ -51,7 +55,9 @@ function useSupabaseAuth(
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
-    if (response.error) throw response.error
+    if (response.error) {
+      throw response.error
+    }
   }, [supabaseClient])
 
   // Derive user and isAuthenticated from verified authUser
