@@ -166,10 +166,10 @@ export function TweetModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-131">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Twitter className="h-5 w-5 text-blue-500" />
+            <Twitter className="size-5 text-blue-500" />
             Generate Tweet
           </DialogTitle>
           <DialogDescription>
@@ -268,7 +268,7 @@ export function TweetModal({
                     </div>
                   ) : isLoadingStrategies ? (
                     <div className="flex items-center justify-center p-4 border rounded">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <Loader2 className="size-4 animate-spin mr-2" />
                       Loading strategies...
                     </div>
                   ) : customStrategies.length > 0 ? (
@@ -322,7 +322,7 @@ export function TweetModal({
                     disabled={isGenerating}
                     className="flex items-center gap-1"
                   >
-                    <RefreshCw className={`h-3 w-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`size-3 ${isGenerating ? 'animate-spin' : ''}`} />
                     Regenerate
                   </Button>
                 </div>
@@ -330,7 +330,7 @@ export function TweetModal({
 
               {isGenerating ? (
                 <div className="flex items-center justify-center p-8 border rounded-md">
-                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <Loader2 className="size-6 animate-spin" />
                   <span className="ml-2">Generating tweet...</span>
                 </div>
               ) : (
@@ -339,7 +339,7 @@ export function TweetModal({
                   value={generatedTweet}
                   onChange={(e) => updateTweet(e.target.value)}
                   placeholder="Your generated tweet will appear here..."
-                  className="min-h-[100px] resize-none"
+                  className="min-h-25 resize-none"
                   maxLength={TWEET_CHARACTER_LIMIT + 50} // Allow some buffer for editing
                 />
               )}
@@ -373,12 +373,12 @@ export function TweetModal({
               disabled={
                 isGenerating ||
                 (strategyType === 'custom' &&
-                  (!isAuthenticated || !strategy || customStrategies.length === 0))
+                  (!(isAuthenticated && strategy) || customStrategies.length === 0))
               }
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="size-4 animate-spin mr-2" />
                   Generating...
                 </>
               ) : strategyType === 'custom' && !isAuthenticated ? (
@@ -397,12 +397,12 @@ export function TweetModal({
             >
               {postTweet.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="size-4 animate-spin mr-2" />
                   Posting...
                 </>
               ) : (
                 <>
-                  <Twitter className="h-4 w-4 mr-2" />
+                  <Twitter className="size-4 mr-2" />
                   {canPost ? 'Post to X' : 'Open in X'}
                 </>
               )}

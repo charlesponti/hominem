@@ -31,7 +31,9 @@ export default function VisitsPage() {
   const filteredVisits =
     visits
       ?.filter((visit) => {
-        if (!placeFilter) { return true }
+        if (!placeFilter) {
+          return true
+        }
         const placeName = visit.place?.name || ''
         return placeName.toLowerCase().includes(placeFilter.toLowerCase())
       })
@@ -143,7 +145,7 @@ export default function VisitsPage() {
 
                     {visit.visitRating && (
                       <div className="flex items-center gap-1 shrink-0">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <Star className="size-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm font-medium">{visit.visitRating}</span>
                       </div>
                     )}

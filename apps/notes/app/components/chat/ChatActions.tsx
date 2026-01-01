@@ -1,5 +1,5 @@
-import { Eraser, Globe, Loader2, Mic, Paperclip, Volume2 } from 'lucide-react'
 import { Button } from '@hominem/ui/button'
+import { Eraser, Globe, Loader2, Mic, Paperclip, Volume2 } from 'lucide-react'
 
 interface ChatActionsProps {
   onWebSearch: () => void
@@ -73,7 +73,7 @@ export function ChatActions({
         disabled={isLoading}
         className="text-xs text-muted-foreground hover:text-foreground"
       >
-        <Eraser className="h-3 w-3 mr-1" />
+        <Eraser className="size-3 mr-1" />
       </Button>
     </div>
   )

@@ -190,7 +190,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         {showSearch && (
           <div className="border-b p-2 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
             <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
+              <Search className="size-4 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
                 type="text"
@@ -209,7 +209,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                 }}
                 aria-label="Close search"
               >
-                <X className="h-4 w-4" />
+                <X className="size-4" />
               </Button>
             </div>
             {searchQuery && (
@@ -312,7 +312,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
             <div className="space-y-4">
               {filteredMessages.length === 0 && searchQuery ? (
                 <div className="text-center text-muted-foreground py-8">
-                  <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <Search className="size-8 mx-auto mb-2 opacity-50" />
                   <p>No messages found matching &quot;{searchQuery}&quot;</p>
                 </div>
               ) : (

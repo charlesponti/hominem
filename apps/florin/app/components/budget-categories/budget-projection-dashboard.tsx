@@ -52,7 +52,7 @@ export function BudgetProjectionDashboard() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+            <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
             <p className="mt-2 text-sm text-gray-600">Loading budget data...</p>
           </div>
         </CardContent>
@@ -69,7 +69,7 @@ export function BudgetProjectionDashboard() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <Target className="size-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Budget Categories</h3>
             <p className="text-gray-600 mb-4">
               Create budget categories to start tracking your financial goals.
@@ -118,7 +118,7 @@ export function BudgetProjectionDashboard() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+            <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
             <p className="mt-2 text-sm text-gray-600">Calculating projections...</p>
           </div>
         </CardContent>

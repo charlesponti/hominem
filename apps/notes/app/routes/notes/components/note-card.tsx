@@ -1,6 +1,6 @@
 import type { Content } from '@hominem/data/types'
-import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import { Card, CardContent } from '@hominem/ui/components/ui/card'
 import { Edit, Trash2, X } from 'lucide-react'
 import { useMemo } from 'react'
@@ -85,7 +85,7 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
                       onClick={() => onRemoveTag(note.id, tag.value)}
                       className="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-100 transition-colors"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="size-3" />
                     </button>
                   )}
                 </Badge>
@@ -100,7 +100,7 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
             onClick={() => onEdit(note)}
             className="text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors"
           >
-            <Edit className="h-4 w-4 mr-1" /> Edit
+            <Edit className="size-4 mr-1" /> Edit
           </Button>
           <Button
             variant="ghost"
@@ -108,7 +108,7 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
             onClick={() => onDelete(note.id)}
             className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300 transition-colors"
           >
-            <Trash2 className="h-4 w-4 mr-1" /> Delete
+            <Trash2 className="size-4 mr-1" /> Delete
           </Button>
         </div>
       </CardContent>

@@ -156,8 +156,8 @@ export function PlaidLink({
     return (
       <Card className={cn('w-full max-w-md', className)}>
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Building2 className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10">
+            <Building2 className="size-6 text-primary" />
           </div>
           <CardTitle>Connect Your Bank Account</CardTitle>
           <CardDescription>
@@ -167,7 +167,7 @@ export function PlaidLink({
         <CardContent className="space-y-4">
           {hasError && (
             <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className="size-4" />
               <AlertTitle>Connection Error</AlertTitle>
               <AlertDescription>
                 {createTokenError || exchangeError
@@ -185,7 +185,7 @@ export function PlaidLink({
           >
             {isLoading ? (
               <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
+                <div className="mr-2 size-4 animate-spin rounded-full border-2 border-b-transparent" />
                 {isCreatingToken
                   ? 'Initializing...'
                   : isExchanging
@@ -194,7 +194,7 @@ export function PlaidLink({
               </>
             ) : (
               <>
-                <Link className="mr-2 h-4 w-4" />
+                <Link className="mr-2 size-4" />
                 Connect Bank Account
               </>
             )}
@@ -218,12 +218,12 @@ export function PlaidLink({
     >
       {isLoading ? (
         <>
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
+          <div className="size-4 animate-spin rounded-full border-2 border-b-transparent" />
           {isCreatingToken ? 'Initializing...' : isExchanging ? 'Connecting...' : 'Loading...'}
         </>
       ) : (
         <>
-          <Building2 className="h-4 w-4" />
+          <Building2 className="size-4" />
           {children || 'Connect Bank Account'}
         </>
       )}

@@ -1,6 +1,6 @@
 import type { Note } from '@hominem/data/types'
-import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import { format } from 'date-fns'
 import {
   CalendarDays,
@@ -88,7 +88,7 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
             <Button
               variant="outline"
               size="icon"
-              className="h-6 w-6 rounded-full border-slate-300 dark:border-slate-600 shrink-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="rounded-full border-slate-300 dark:border-slate-600 shrink-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               onClick={() => {
                 if (status === 'done') {
                   setTaskToTodoAndResetTime()
@@ -99,9 +99,9 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               disabled={isLoading}
             >
               {completed ? (
-                <CheckCircle2 className="h-4 w-4 text-green-500 dark:text-green-400" />
+                <CheckCircle2 className="size-4 text-green-500 dark:text-green-400" />
               ) : (
-                <div className="h-4 w-4 rounded-full border-2 border-slate-400 dark:border-slate-500" />
+                <div className="size-4 rounded-full border-2 border-slate-400 dark:border-slate-500" />
               )}
             </Button>
             <h3
@@ -116,7 +116,7 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
           </div>
           {dueDate && (
             <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-              <CalendarDays className="h-3 w-3" />
+              <CalendarDays className="size-3" />
               <span>Due {format(new Date(dueDate), 'MMM d')}</span>
             </div>
           )}
@@ -164,12 +164,12 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:text-yellow-300 dark:hover:bg-yellow-900/30"
+                className="size-8 p-0 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:text-yellow-300 dark:hover:bg-yellow-900/30"
                 onClick={startTimer}
                 disabled={isLoading}
                 title="Start task"
               >
-                <PlayCircle className="h-4 w-4" />
+                <PlayCircle className="size-4" />
               </Button>
             )}
 
@@ -177,12 +177,12 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/30"
+                className="size-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/30"
                 onClick={startTimer}
                 disabled={isLoading}
                 title="Resume task"
               >
-                <PlayCircle className="h-4 w-4" />
+                <PlayCircle className="size-4" />
               </Button>
             )}
 
@@ -191,22 +191,22 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
+                  className="size-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
                   onClick={pauseTimer}
                   disabled={isLoading}
                   title="Pause task"
                 >
-                  <PauseCircle className="h-4 w-4" />
+                  <PauseCircle className="size-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
+                  className="size-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
                   onClick={resetTimerForInProgressTask}
                   disabled={isLoading}
                   title="Reset timer"
                 >
-                  <Target className="h-4 w-4" />
+                  <Target className="size-4" />
                 </Button>
               </>
             )}
@@ -215,21 +215,21 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               variant="ghost"
               size="sm"
               onClick={() => onEdit(task)}
-              className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="size-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
               disabled={isLoading}
               title="Edit task"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="size-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-slate-600 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+              className="size-8 p-0 text-slate-600 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
               onClick={() => onDelete(task.id)}
               disabled={isLoading}
               title="Delete task"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4" />
             </Button>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">

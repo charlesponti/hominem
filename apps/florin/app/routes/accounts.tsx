@@ -1,6 +1,6 @@
+import { Button } from '@hominem/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
 import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/button'
 import {
   Card,
   CardContent,
@@ -36,9 +36,9 @@ function AccountCard({
   const getAccountTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return <CreditCard className="h-4 w-4" />
+        return <CreditCard className="size-4" />
       default:
-        return <Building2 className="h-4 w-4" />
+        return <Building2 className="size-4" />
     }
   }
 
@@ -89,7 +89,7 @@ function AccountCard({
                 size="sm"
                 onClick={() => setIsBalanceVisible(!isBalanceVisible)}
               >
-                {isBalanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {isBalanceVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </Button>
             </div>
           )}
@@ -102,7 +102,7 @@ function AccountCard({
         </div>
         <Button variant="outline" size="sm" asChild>
           <RouteLink to={`/accounts/${account.id}`}>
-            <ExternalLink className="h-4 w-4 mr-2" />
+            <ExternalLink className="size-4 mr-2" />
             View Details
           </RouteLink>
         </Button>
@@ -155,7 +155,7 @@ export default function AccountsPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={refreshData} disabled={isLoading}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
+            <RefreshCcw className="size-4 mr-2" />
             Refresh
           </Button>
           <PlaidConnectButton
@@ -174,7 +174,7 @@ export default function AccountsPage() {
 
       {hasError ? (
         <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
+          <AlertTriangle className="size-4" />
           <AlertTitle>Error Loading Data</AlertTitle>
           <AlertDescription>
             {allAccountsQuery.error
@@ -188,7 +188,7 @@ export default function AccountsPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <div className="text-center space-y-4">
-            <RefreshCcw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            <RefreshCcw className="size-8 animate-spin mx-auto text-muted-foreground" />
             <p className="text-muted-foreground">Loading your bank accounts...</p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function AccountsPage() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <div className="p-4 bg-muted rounded-full mb-4">
-              <Building2 className="h-8 w-8 text-muted-foreground" />
+              <Building2 className="size-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-2">No Bank Accounts</h3>
             <p className="text-muted-foreground mb-6 max-w-md">

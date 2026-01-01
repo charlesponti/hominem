@@ -1,3 +1,4 @@
+import { Button } from '@hominem/ui/button'
 import { Badge } from '@hominem/ui/components/ui/badge'
 import {
   Command,
@@ -8,7 +9,6 @@ import {
   CommandList,
 } from '@hominem/ui/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
-import { Button } from '@hominem/ui/button'
 import { Check, Loader2, Plus, X } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { trpc } from '~/lib/trpc/client'
@@ -54,21 +54,25 @@ export function PeopleMultiSelect({
   }, [people, value])
 
   const filteredPeople = useMemo(() => {
-    if (!searchQuery.trim()) { return people }
+    if (!searchQuery.trim()) {
+      return people
+    }
 
     const query = searchQuery.toLowerCase().trim()
     return people.filter((person) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase()
       return (
         person.firstName.toLowerCase().includes(query) ||
-        (person.lastName?.toLowerCase().includes(query)) ||
+        person.lastName?.toLowerCase().includes(query) ||
         fullName.includes(query)
       )
     })
   }, [people, searchQuery])
 
   const canCreateNew = useMemo(() => {
-    if (!searchQuery.trim() || isCreating) { return false }
+    if (!searchQuery.trim() || isCreating) {
+      return false
+    }
     const query = searchQuery.toLowerCase().trim()
     return !filteredPeople.some((person) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase()
@@ -99,7 +103,9 @@ export function PeopleMultiSelect({
     const firstName = nameParts[0] || ''
     const lastName = nameParts.slice(1).join(' ') || undefined
 
-    if (!firstName) { return }
+    if (!firstName) {
+      return
+    }
 
     setIsCreating(true)
     createPersonMutation.mutate({
@@ -153,7 +159,7 @@ export function PeopleMultiSelect({
                         handleRemovePerson(person.id)
                       }}
                     >
-                      <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                      <X className="size-3 text-muted-foreground hover:text-foreground" />
                     </button>
                   </Badge>
                 ))
@@ -173,7 +179,7 @@ export function PeopleMultiSelect({
             <CommandList>
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" />
                 </div>
               ) : (
                 <>
@@ -187,9 +193,9 @@ export function PeopleMultiSelect({
                           disabled={isCreating}
                         >
                           {isCreating ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-2 size-4 animate-spin" />
                           ) : (
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="mr-2 size-4" />
                           )}
                           Create &quot;{searchQuery}&quot;
                         </Button>
@@ -210,7 +216,7 @@ export function PeopleMultiSelect({
                         >
                           <span className="flex-1">{getPersonDisplayName(person)}</span>
                           <Check
-                            className={cn('h-4 w-4', {
+                            className={cn('size-4', {
                               'opacity-0': !isSelected,
                               'opacity-100': isSelected,
                             })}
@@ -226,9 +232,9 @@ export function PeopleMultiSelect({
                         disabled={isCreating}
                       >
                         {isCreating ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="mr-2 size-4 animate-spin" />
                         ) : (
-                          <Plus className="mr-2 h-4 w-4" />
+                          <Plus className="mr-2 size-4" />
                         )}
                         Create &quot;{searchQuery}&quot;
                       </CommandItem>

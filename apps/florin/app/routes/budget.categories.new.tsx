@@ -1,6 +1,5 @@
 import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select'
+import { Input } from '@hominem/ui/input'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -64,7 +64,7 @@ export default function NewBudgetCategory() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={handleCancel}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="size-4 mr-2" />
           Back to Categories
         </Button>
       </div>
@@ -146,7 +146,7 @@ export default function NewBudgetCategory() {
                   createCategoryMutation.isPending
                 }
               >
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="size-4 mr-2" />
                 {createCategoryMutation.isPending ? 'Creating...' : 'Create Category'}
               </Button>
             </div>

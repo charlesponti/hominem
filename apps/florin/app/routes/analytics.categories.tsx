@@ -237,14 +237,14 @@ export default function CategoriesAnalyticsPage() {
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-4 w-4 p-0 ml-1 shrink-0"
+                className="size-4 p-0 ml-1 shrink-0"
                 aria-label={`Remove ${filter.label}`}
                 onClick={(e) => {
                   e.stopPropagation()
                   filter.onRemove()
                 }}
               >
-                <X className="h-3 w-3" />
+                <X className="size-3" />
               </Button>
             </Badge>
           ))}
@@ -255,11 +255,11 @@ export default function CategoriesAnalyticsPage() {
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-4 w-4 p-0 ml-1 shrink-0"
+                className="size-4 p-0 ml-1 shrink-0"
                 aria-label="Clear search"
                 onClick={() => setSearchValue('')}
               >
-                <X className="h-3 w-3" />
+                <X className="size-3" />
               </Button>
             </Badge>
           )}
@@ -312,7 +312,7 @@ export default function CategoriesAnalyticsPage() {
         <div className="relative">
           {isFetching && !isLoading && (
             <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
             </div>
           )}
           <table className="w-full text-sm" aria-label="Categories breakdown">
@@ -336,10 +336,10 @@ export default function CategoriesAnalyticsPage() {
                   >
                     Category
                     {getSortDirection('category') === 'asc' && (
-                      <ArrowUp className="h-4 w-4" aria-hidden="true" />
+                      <ArrowUp className="size-4" aria-hidden="true" />
                     )}
                     {getSortDirection('category') === 'desc' && (
-                      <ArrowDown className="h-4 w-4" aria-hidden="true" />
+                      <ArrowDown className="size-4" aria-hidden="true" />
                     )}
                   </button>
                 </th>
@@ -361,10 +361,10 @@ export default function CategoriesAnalyticsPage() {
                   >
                     Total
                     {getSortDirection('total') === 'asc' && (
-                      <ArrowUp className="h-4 w-4" aria-hidden="true" />
+                      <ArrowUp className="size-4" aria-hidden="true" />
                     )}
                     {getSortDirection('total') === 'desc' && (
-                      <ArrowDown className="h-4 w-4" aria-hidden="true" />
+                      <ArrowDown className="size-4" aria-hidden="true" />
                     )}
                   </button>
                 </th>

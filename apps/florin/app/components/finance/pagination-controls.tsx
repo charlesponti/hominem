@@ -1,6 +1,6 @@
+import { Button } from '@hominem/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { FC } from 'react'
-import { Button } from '@hominem/ui/button'
 
 interface PaginationControlsProps {
   currentPage: number
@@ -33,7 +33,7 @@ export const PaginationControls: FC<PaginationControlsProps> = ({
     <div className="flex items-center justify-center mt-4">
       <div className="flex items-center space-x-2">
         <Button variant="outline" size="sm" onClick={handlePrevious} disabled={currentPage === 0}>
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
           Previous
         </Button>
         <span className="text-sm">
@@ -46,7 +46,7 @@ export const PaginationControls: FC<PaginationControlsProps> = ({
           disabled={currentPage >= totalPages - 1}
         >
           Next
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-4" />
         </Button>
       </div>
     </div>

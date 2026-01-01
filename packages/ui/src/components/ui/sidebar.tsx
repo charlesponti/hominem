@@ -3,17 +3,17 @@
 import './sidebar.css'
 
 import { useIsMobile } from '@hominem/ui'
+import { Button } from '@hominem/ui/button'
+import { Sheet, SheetContent } from '@hominem/ui/components/ui/sheet'
+import { Input } from '@hominem/ui/input'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { PanelLeft } from 'lucide-react'
 import * as React from 'react'
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
+import { cn } from '../../lib/utils'
 import { Separator } from './separator'
-import { Sheet, SheetContent } from '@hominem/ui/components/ui/sheet'
 import { Skeleton } from './skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'
-import { cn } from '../../lib/utils'
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -263,7 +263,7 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn('h-7 w-7', className)}
+      className={cn('size-7', className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()

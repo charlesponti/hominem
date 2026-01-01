@@ -13,7 +13,7 @@ export function AudioWaveform({ isRecording, stream, className = '' }: AudioWave
   const dataArrayRef = useRef<Uint8Array | null>(null)
 
   useEffect(() => {
-    if (!isRecording || !stream || !canvasRef.current) {
+    if (!((isRecording && stream ) && canvasRef.current)) {
       return
     }
 
@@ -53,7 +53,7 @@ export function AudioWaveform({ isRecording, stream, className = '' }: AudioWave
 
       animationRef.current = requestAnimationFrame(draw)
 
-      if (!analyser || !dataArray || !ctx) return
+      if (!((analyser && dataArray ) && ctx)) return
 
       analyser.getByteFrequencyData(dataArray)
 

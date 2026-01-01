@@ -52,7 +52,9 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
 
   // Derive isInList from cached lists data
   const lists = useMemo(() => {
-    if (!(rawLists && googleMapsId)) { return [] }
+    if (!(rawLists && googleMapsId)) {
+      return []
+    }
     return rawLists.map((list) => ({
       ...list,
       isInList: list.places?.some((p) => p.googleMapsId === googleMapsId) ?? false,
@@ -76,7 +78,9 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
   })
 
   const onListSelectChange = (listId: string, isInList: boolean) => {
-    if (!place) { return }
+    if (!place) {
+      return
+    }
 
     setLoadingListId(listId)
     if (isInList) {
@@ -130,7 +134,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
                           <Loader2 size={16} className="animate-spin" />
                         ) : (
                           <Check
-                            className={cn('h-4 w-4', {
+                            className={cn('size-4', {
                               'opacity-0': !list.isInList,
                               'opacity-100': list.isInList,
                             })}

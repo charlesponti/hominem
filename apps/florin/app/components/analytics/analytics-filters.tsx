@@ -144,14 +144,14 @@ function FilterChips({
             type="button"
             size="icon"
             variant="ghost"
-            className="h-4 w-4 p-0 ml-1 shrink-0"
+            className="size-4 p-0 ml-1 shrink-0"
             aria-label={`Remove ${chip.label}`}
             onClick={(e) => {
               e.stopPropagation()
               chip.onRemove()
             }}
           >
-            <X className="h-3 w-3" />
+            <X className="size-3" />
           </Button>
         </Badge>
       ))}
@@ -205,7 +205,7 @@ export function AnalyticsFilters({
           <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Trigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
-                <Filter className="h-4 w-4" />
+                <Filter className="size-4" />
                 Filters
               </Button>
             </Dialog.Trigger>

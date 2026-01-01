@@ -36,7 +36,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
       </div>
     )
   }
@@ -44,7 +44,7 @@ export default function Home() {
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
       </div>
     )
   }
@@ -69,7 +69,7 @@ export default function Home() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               Get Started Free
-              <ArrowRight className="inline-block ml-2 h-5 w-5" />
+              <ArrowRight className="inline-block ml-2 size-5" />
             </button>
             <p className="text-sm text-gray-500 mt-3">No credit card required</p>
           </div>

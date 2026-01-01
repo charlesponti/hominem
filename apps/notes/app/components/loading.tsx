@@ -15,9 +15,9 @@ export function Loading({
   fullScreen = false,
 }: LoadingProps) {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
+    sm: 'size-4',
+    md: 'size-8',
+    lg: 'size-12',
   }
 
   const content = (

@@ -73,7 +73,7 @@ export function SortRow({
         onClick={() => removeSortOption(index)}
         className="size-8 p-0"
       >
-        <X className="h-4 w-4 text-muted-foreground" />
+        <X className="size-4 text-muted-foreground" />
       </Button>
     </div>
   )

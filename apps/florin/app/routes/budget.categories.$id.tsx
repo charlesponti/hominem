@@ -1,3 +1,4 @@
+import { Button } from '@hominem/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,8 +9,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@hominem/ui/components/ui/alert-dialog'
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
@@ -18,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select'
+import { Input } from '@hominem/ui/input'
 import { Save, Trash2 } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -107,7 +107,7 @@ export default function EditBudgetCategory() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+          <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
           <p className="mt-2 text-sm text-gray-600">Loading category...</p>
         </div>
       </div>
@@ -195,7 +195,7 @@ export default function EditBudgetCategory() {
               !formData.name || !formData.averageMonthlyExpense || updateCategoryMutation.isPending
             }
           >
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="size-4 mr-2" />
             {updateCategoryMutation.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
@@ -207,7 +207,7 @@ export default function EditBudgetCategory() {
           onClick={() => setShowDeleteDialog(true)}
           disabled={deleteCategoryMutation.isPending}
         >
-          <Trash2 className="h-4 w-4 mr-2" />
+          <Trash2 className="size-4 mr-2" />
           Delete Category
         </Button>
       </div>

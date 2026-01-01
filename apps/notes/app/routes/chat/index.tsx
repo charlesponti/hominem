@@ -4,7 +4,7 @@ import { createServerTRPCClient } from '~/lib/trpc/server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, session, headers } = await getServerSession(request)
-  if (!user || !session) {
+  if (!(user && session)) {
     return redirect('/', { headers })
   }
 

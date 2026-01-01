@@ -1,5 +1,5 @@
-import { X } from 'lucide-react'
 import { Button } from '@hominem/ui/button'
+import { X } from 'lucide-react'
 import type { AttachmentsPreviewProps } from '~/lib/types/chat'
 
 export function AttachmentsPreview({ files, onRemoveFile, onRemoveAll }: AttachmentsPreviewProps) {
@@ -22,9 +22,9 @@ export function AttachmentsPreview({ files, onRemoveFile, onRemoveAll }: Attachm
               variant="ghost"
               size="icon"
               onClick={() => onRemoveFile(file.id)}
-              className="h-4 w-4"
+              className="size-4"
             >
-              <X className="h-3 w-3" />
+              <X className="size-3" />
             </Button>
           </div>
         ))}

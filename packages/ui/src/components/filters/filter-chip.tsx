@@ -26,14 +26,14 @@ export function FilterChip({ label, onRemove, onClick }: FilterChipProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="h-4 w-4 rounded-full hover:bg-muted-foreground/20"
+        className="size-4 rounded-full hover:bg-muted-foreground/20"
         onClick={(e) => {
           e.stopPropagation()
           onRemove()
         }}
         aria-label={`Remove filter: ${label}`}
       >
-        <X className="h-3 w-3" />
+        <X className="size-3" />
       </Button>
     </div>
   )

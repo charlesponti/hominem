@@ -211,7 +211,7 @@ export function TransactionFilters({
           <DropdownMenu open={isFilterControlsOpen} onOpenChange={setIsFilterControlsOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
-                <ListFilter className="h-4 w-4 mr-2" />
+                <ListFilter className="size-4 mr-2" />
                 Filters
               </Button>
             </DropdownMenuTrigger>
@@ -263,7 +263,7 @@ export function TransactionFilters({
             focusedSortIndex={focusedSortIndex}
           />
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-            <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCcw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>

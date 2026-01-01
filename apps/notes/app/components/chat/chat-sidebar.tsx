@@ -1,9 +1,9 @@
+import { useSupabaseAuthContext } from '@hominem/auth'
+import { Button } from '@hominem/ui/button'
 import { Plus, User } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
 import { ChatList } from '~/components/chat/ChatList'
-import { Button } from '@hominem/ui/button'
-import { useSupabaseAuthContext } from '@hominem/auth'
 import { cn } from '~/lib/utils'
 
 interface ChatSidebarProps {
@@ -69,7 +69,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
             className="w-full justify-start gap-2"
             variant="outline"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             New Chat
           </Button>
         )}
@@ -109,7 +109,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
             className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
             onClick={handleNavigation}
           >
-            <User className="h-5 w-5" />
+            <User className="size-5" />
             <span className="text-sm font-medium">Account</span>
           </RouterLink>
         ) : (

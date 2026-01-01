@@ -1,3 +1,4 @@
+import { Button } from '@hominem/ui/button'
 import {
   Download,
   Loader2,
@@ -10,7 +11,6 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { useEffect } from 'react'
-import { Button } from '@hominem/ui/button'
 import { formatTime, useAudioPlayer } from '~/lib/hooks/use-audio-player.js'
 
 interface AudioPlayerProps {
@@ -136,9 +136,9 @@ export function AudioPlayer({
             size="icon"
             onClick={handleSkipBack}
             disabled={state.isLoading || !src}
-            className="h-8 w-8"
+            className="size-8"
           >
-            <SkipBack className="h-4 w-4" />
+            <SkipBack className="size-4" />
           </Button>
 
           <Button
@@ -146,14 +146,14 @@ export function AudioPlayer({
             size="icon"
             onClick={state.isPlaying ? pause : play}
             disabled={state.isLoading || !src}
-            className="h-10 w-10"
+            className="size-10"
           >
             {state.isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="size-5 animate-spin" />
             ) : state.isPlaying ? (
-              <Pause className="h-5 w-5" />
+              <Pause className="size-5" />
             ) : (
-              <Play className="h-5 w-5" />
+              <Play className="size-5" />
             )}
           </Button>
 
@@ -162,9 +162,9 @@ export function AudioPlayer({
             size="icon"
             onClick={stop}
             disabled={state.isLoading || !src}
-            className="h-8 w-8"
+            className="size-8"
           >
-            <Square className="h-4 w-4" />
+            <Square className="size-4" />
           </Button>
 
           <Button
@@ -172,9 +172,9 @@ export function AudioPlayer({
             size="icon"
             onClick={handleSkipForward}
             disabled={state.isLoading || !src}
-            className="h-8 w-8"
+            className="size-8"
           >
-            <SkipForward className="h-4 w-4" />
+            <SkipForward className="size-4" />
           </Button>
         </div>
 
@@ -182,11 +182,11 @@ export function AudioPlayer({
         <div className="flex items-center gap-2">
           {/* Volume control */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={toggleMute} className="size-8">
               {state.isMuted || state.volume === 0 ? (
-                <VolumeX className="h-4 w-4" />
+                <VolumeX className="size-4" />
               ) : (
-                <Volume2 className="h-4 w-4" />
+                <Volume2 className="size-4" />
               )}
             </Button>
 
@@ -208,10 +208,10 @@ export function AudioPlayer({
               size="icon"
               onClick={handleDownload}
               disabled={!src}
-              className="h-8 w-8"
+              className="size-8"
               title="Download audio"
             >
-              <Download className="h-4 w-4" />
+              <Download className="size-4" />
             </Button>
           )}
         </div>

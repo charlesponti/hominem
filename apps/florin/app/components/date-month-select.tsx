@@ -1,5 +1,3 @@
-import { Calendar } from 'lucide-react'
-import { useMemo } from 'react'
 import {
   Select,
   SelectContent,
@@ -7,6 +5,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select'
+import { Calendar } from 'lucide-react'
+import { useMemo } from 'react'
 
 interface MonthOption {
   value: string
@@ -45,7 +45,7 @@ export function DateMonthSelect({
 
   return (
     <div className="flex items-center gap-2">
-      <Calendar className="h-4 w-4" />
+      <Calendar className="size-4" />
       <Select value={selectedMonthYear} onValueChange={onMonthChange}>
         <SelectTrigger className={className}>
           <SelectValue placeholder={placeholder} />

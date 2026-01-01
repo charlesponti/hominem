@@ -147,7 +147,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
           </div>
         ) : status === 'success' ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <CheckCircle2 className="h-8 w-8 text-green-600 mb-2" />
+            <CheckCircle2 className="size-8 text-green-600 mb-2" />
             <span className="text-sm font-semibold text-green-700">Added!</span>
           </div>
         ) : (

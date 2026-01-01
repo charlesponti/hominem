@@ -57,12 +57,12 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
                     >
                       {isCopied ? (
                         <>
-                          <Check className="w-3 h-3 mr-1" />
+                          <Check className="size-3 mr-1" />
                           <span>Copied</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3 h-3 mr-1" />
+                          <Copy className="size-3 mr-1" />
                           <span>Copy</span>
                         </>
                       )}

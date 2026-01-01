@@ -1,14 +1,14 @@
 'use client'
 
+import { Button } from '@hominem/ui/button'
+import { Alert, AlertDescription } from '@hominem/ui/components/ui/alert'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import type { FileStatus, ImportRequestResponse } from '@hominem/utils/jobs'
 import { AnimatePresence, motion } from 'framer-motion'
 import { memo, useCallback, useEffect, useMemo } from 'react'
 import { DropZone } from '~/components/drop-zone'
 import { FileUploadStatus } from '~/components/file-upload-status'
 import { FileUploadStatusBadge } from '~/components/file-upload-status-badge'
-import { Alert, AlertDescription } from '@hominem/ui/components/ui/alert'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/button'
 import { useFileInput } from '~/lib/hooks/use-file-input'
 import { useImportTransactionsStore } from '~/lib/hooks/use-import-transactions-store'
 import { useToast } from '~/lib/hooks/use-toast'
@@ -258,25 +258,25 @@ export default function TransactionImportPage() {
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 {statusCounts.selected > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="h-2 w-2 bg-gray-400 rounded-full" />
+                    <div className="size-2 bg-gray-400 rounded-full" />
                     {statusCounts.selected} selected
                   </span>
                 )}
                 {statusCounts.processing > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                    <div className="size-2 bg-blue-500 rounded-full" />
                     {statusCounts.processing} processing
                   </span>
                 )}
                 {statusCounts.queued > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="h-2 w-2 bg-amber-500 rounded-full" />
+                    <div className="size-2 bg-amber-500 rounded-full" />
                     {statusCounts.queued} queued
                   </span>
                 )}
                 {statusCounts.completed > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="h-2 w-2 bg-green-500 rounded-full" />
+                    <div className="size-2 bg-green-500 rounded-full" />
                     {statusCounts.completed} completed
                   </span>
                 )}
@@ -360,20 +360,20 @@ const FileImport = memo(function FileImport({
   // Memoize status indicator to prevent recreation
   const statusIndicator = useMemo(() => {
     if (!status) {
-      return <div className="h-3 w-3 bg-gray-400 rounded-full" />
+      return <div className="size-3 bg-gray-400 rounded-full" />
     }
 
     const indicators = {
-      uploading: <div className="h-3 w-3 bg-blue-500 rounded-full animate-pulse" />,
-      processing: <div className="h-3 w-3 bg-purple-500 rounded-full animate-pulse" />,
-      queued: <div className="h-3 w-3 bg-amber-500 rounded-full" />,
-      done: <div className="h-3 w-3 bg-green-500 rounded-full" />,
-      error: <div className="h-3 w-3 bg-red-500 rounded-full" />,
+      uploading: <div className="size-3 bg-blue-500 rounded-full animate-pulse" />,
+      processing: <div className="size-3 bg-purple-500 rounded-full animate-pulse" />,
+      queued: <div className="size-3 bg-amber-500 rounded-full" />,
+      done: <div className="size-3 bg-green-500 rounded-full" />,
+      error: <div className="size-3 bg-red-500 rounded-full" />,
     }
 
     return (
       indicators[status.status as keyof typeof indicators] || (
-        <div className="h-3 w-3 bg-gray-400 rounded-full" />
+        <div className="size-3 bg-gray-400 rounded-full" />
       )
     )
   }, [status])

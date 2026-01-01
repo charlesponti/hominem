@@ -81,7 +81,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <MessageSquare className="size-4 text-muted-foreground flex-shrink-0" />
                   <h3 className="text-sm font-medium truncate">{chat.title || 'Untitled Chat'}</h3>
                 </div>
                 <p className="text-xs text-muted-foreground">{formatChatDate(chat.updatedAt)}</p>
@@ -92,7 +92,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
                 className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
                 onClick={(e) => handleDeleteChat(chat.id, e)}
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="size-3" />
               </Button>
             </div>
           </RouterLink>
@@ -110,7 +110,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
       {/* Search */}
       <div className="p-4 border-b flex-shrink-0">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
           <Input
             placeholder="Search chats..."
             value={searchQuery}

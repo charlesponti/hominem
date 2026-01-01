@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card'
-import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
 import {
   Select,
@@ -15,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select'
+import { Input } from '@hominem/ui/input'
 import { AlertCircle, Calendar, CheckCircle, Loader2 } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync'
@@ -65,7 +65,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
   }, [hasGoogleAccount, loadCalendars])
 
   const handleSync = async () => {
-    if (!hasGoogleAccount || !userId) {
+    if (!(hasGoogleAccount && userId)) {
       return
     }
 
@@ -91,7 +91,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
     <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
+          <Calendar className="size-5" />
           Google Calendar Sync
         </CardTitle>
         <CardDescription>
@@ -101,7 +101,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
       <CardContent className="space-y-4">
         {!hasGoogleAccount ? (
           <div className="text-center py-8">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <AlertCircle className="size-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
               Please connect your Google account first to sync calendar events.
             </p>
@@ -177,7 +177,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
                   This Month
                 </Button>
                 <Button
-                  variant={!timeRange.start && !timeRange.end ? 'default' : 'outline'}
+                  variant={!(timeRange.start || timeRange.end) ? 'default' : 'outline'}
                   onClick={() => setTimeRange({ start: '', end: '' })}
                 >
                   All Time
@@ -188,12 +188,12 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
             <Button onClick={handleSync} disabled={isLoading} className="w-full">
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                   Syncing...
                 </>
               ) : (
                 <>
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="mr-2 size-4" />
                   Sync Calendar
                 </>
               )}
@@ -209,9 +209,9 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
               >
                 <div className="flex items-center gap-2">
                   {result.success ? (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <CheckCircle className="size-5 text-green-600" />
                   ) : (
-                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <AlertCircle className="size-5 text-red-600" />
                   )}
                   <span
                     className={`font-medium ${result.success ? 'text-green-800' : 'text-red-800'}`}

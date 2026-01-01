@@ -41,7 +41,7 @@ export function SortControls({
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">
-          <ListOrdered className="h-4 w-4 mr-2" />
+          <ListOrdered className="size-4 mr-2" />
           Sort
         </Button>
       </DropdownMenuTrigger>
@@ -86,7 +86,7 @@ export function SortControls({
               disabled={availableFieldsToAdd.length === 0}
               className="mt-1"
             >
-              <PlusCircle className="h-4 w-4 mr-2" />
+              <PlusCircle className="size-4 mr-2" />
               Add Sort Criterion
             </DropdownMenuItem>
           </>

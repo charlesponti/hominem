@@ -69,7 +69,7 @@ export default function BudgetCategoriesSetup() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+          <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
           <p className="mt-2 text-sm text-gray-600">Loading transaction categories...</p>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function BudgetCategoriesSetup() {
           onClick={() => navigate('/budget/tracking')}
           className="flex items-center gap-2"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Back to Tracking
         </Button>
         <div>
@@ -133,14 +133,14 @@ export default function BudgetCategoriesSetup() {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-4 w-4 rounded border-2 flex items-center justify-center ${
+                      className={`size-4 rounded border-2 flex items-center justify-center ${
                         selectedCategories.has(transactionCategory.name)
                           ? 'bg-blue-500 border-blue-500'
                           : 'border-gray-300'
                       }`}
                     >
                       {selectedCategories.has(transactionCategory.name) && (
-                        <Check className="h-3 w-3 text-white" />
+                        <Check className="size-3 text-white" />
                       )}
                     </div>
                     <div>
@@ -180,12 +180,12 @@ export default function BudgetCategoriesSetup() {
         >
           {bulkCreateMutation.isPending ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+              <div className="animate-spin rounded-full size-4 border-b-2 border-white" />
               Creating...
             </>
           ) : (
             <>
-              <Plus className="h-4 w-4" />
+              <Plus className="size-4" />
               Create {selectedCategories.size} Categories
             </>
           )}

@@ -84,7 +84,7 @@ function StreamingServiceStreamingRate({
       <div className="flex justify-between items-center">
         <span className="text-sm font-medium">{service.name}</span>
         <div className="flex items-center gap-1">
-          <DollarSign className="h-4 w-4" />
+          <DollarSign className="size-4" />
           <span className="text-lg font-bold">{earnings.toFixed(2)}</span>
         </div>
       </div>

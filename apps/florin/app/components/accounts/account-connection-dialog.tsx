@@ -76,12 +76,12 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
     <Button variant="outline" size="sm">
       {isLinked ? (
         <>
-          <UnlinkIcon className="h-4 w-4 mr-2" />
+          <UnlinkIcon className="size-4 mr-2" />
           Manage Connection
         </>
       ) : (
         <>
-          <LinkIcon className="h-4 w-4 mr-2" />
+          <LinkIcon className="size-4 mr-2" />
           Connect Account
         </>
       )}

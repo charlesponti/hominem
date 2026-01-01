@@ -114,7 +114,7 @@ export default function NotesPage() {
 
   function removeTagFromNote(noteId: string, tagValue: string) {
     const item = allContentItems.find((n) => n.id === noteId)
-    if (!item) return
+    if (!item) { return }
     const newTags = (item.tags || []).filter((tag: { value: string }) => tag.value !== tagValue)
     updateItem.mutate({
       id: noteId,
@@ -169,7 +169,7 @@ export default function NotesPage() {
                       {option.label}
                       {isSelected && (
                         <X
-                          className="ml-1 h-3 w-3"
+                          className="ml-1 size-3"
                           onClick={(e) => {
                             e.stopPropagation()
                             removeContentType(option.value)
@@ -337,7 +337,7 @@ export default function NotesPage() {
         aria-label="Create new item"
         onClick={handleCreateNewItem}
       >
-        <Plus className="h-6 w-6 group-hover:rotate-180 transition-transform duration-300" />
+        <Plus className="size-6 group-hover:rotate-180 transition-transform duration-300" />
       </Button>
     </div>
   )

@@ -90,7 +90,7 @@ export function TransactionsList({
             className="p-4 sm:p-6 animate-pulse border-b border-gray-100 last:border-b-0"
           >
             <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded-full bg-gray-200" />
+              <div className="size-12 rounded-full bg-gray-200" />
               <div className="flex-1 space-y-2">
                 <div className="flex justify-between">
                   <div className="h-4 bg-gray-200 rounded w-1/2" />
@@ -120,8 +120,8 @@ export function TransactionsList({
     return (
       <div className="p-8 text-center border border-gray-200 bg-gray-50 rounded-lg max-w-4xl mx-auto">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-            <DollarSign className="h-6 w-6 text-muted-foreground" />
+          <div className="size-12 rounded-full bg-gray-200 flex items-center justify-center">
+            <DollarSign className="size-6 text-muted-foreground" />
           </div>
           <div className="text-gray-600 font-medium">No transactions found</div>
           <div className="text-sm text-gray-500">Try adjusting your filters or date range</div>

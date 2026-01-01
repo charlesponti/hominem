@@ -58,7 +58,7 @@ export function AnalyticsStatisticsSummary({
               <div key={`stats-skeleton-${key}`} className="flex justify-between items-center">
                 <div className="space-y-1">
                   <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="size-32" />
                 </div>
                 <Skeleton className="h-6 w-20" />
               </div>

@@ -24,7 +24,10 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
 
   // Calculate total budgeted amount from categories
   const totalBudgeted = useMemo(() => {
-    if (!categories) return 0
+    if (!categories) {
+      return 0
+    }
+
     return categories
       .filter((category) => category.type === 'expense')
       .reduce((sum, category) => sum + Number.parseFloat(category.averageMonthlyExpense || '0'), 0)
@@ -42,7 +45,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto" />
+            <div className="animate-spin rounded-full size-6 border-b-2 border-gray-900 mx-auto" />
             <p className="mt-2 text-xs text-gray-600">Loading budget data...</p>
           </div>
         </CardContent>
@@ -95,7 +98,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Target className="h-4 w-4" />
+          <Target className="size-4" />
           Budget Performance
         </CardTitle>
       </CardHeader>

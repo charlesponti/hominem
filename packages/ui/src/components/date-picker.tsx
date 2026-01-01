@@ -52,7 +52,7 @@ export function DatePicker({
             className={cn(className, !value && 'text-muted-foreground')}
             id={id}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <CalendarIcon className="mr-2 size-4" />
             {value ? format(value, dateFormat) : <span>{placeholder}</span>}
           </Button>
         </PopoverTrigger>

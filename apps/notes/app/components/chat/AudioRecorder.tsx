@@ -1,3 +1,4 @@
+import { Button } from '@hominem/ui/button'
 import {
   AlertCircle,
   Download,
@@ -10,7 +11,6 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { Button } from '@hominem/ui/button'
 import { formatDuration, useAudioRecorder } from '~/lib/hooks/use-audio-recorder.js'
 import { AudioPlayer } from './AudioPlayer.js'
 import { AudioWaveform } from './AudioWaveform.js'
@@ -111,7 +111,7 @@ export function AudioRecorder({
   if (!state.isSupported) {
     return (
       <div className={`text-center p-4 text-muted-foreground ${className}`}>
-        <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+        <AlertCircle className="size-8 mx-auto mb-2" />
         <p>Audio recording is not supported in this browser.</p>
       </div>
     )
@@ -122,7 +122,7 @@ export function AudioRecorder({
       {/* Error Display */}
       {state.error && (
         <div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 rounded-lg">
-          <AlertCircle className="h-4 w-4" />
+          <AlertCircle className="size-4" />
           <span>{state.error}</span>
         </div>
       )}
@@ -132,7 +132,7 @@ export function AudioRecorder({
         <div className="space-y-3">
           <div className="flex items-center justify-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <div className="size-3 bg-red-500 rounded-full animate-pulse" />
               <span className="text-sm font-medium">
                 {state.isPaused ? 'Recording Paused' : 'Recording'}
               </span>
@@ -154,10 +154,10 @@ export function AudioRecorder({
         {!state.isRecording ? (
           <Button
             onClick={handleStartRecording}
-            className="h-12 w-12 rounded-full"
+            className="size-12 rounded-full"
             disabled={state.error !== null}
           >
-            <Mic className="h-5 w-5" />
+            <Mic className="size-5" />
           </Button>
         ) : (
           <div className="flex items-center gap-2">
@@ -165,17 +165,17 @@ export function AudioRecorder({
               variant="outline"
               size="icon"
               onClick={state.isPaused ? resumeRecording : pauseRecording}
-              className="h-10 w-10"
+              className="size-10"
             >
-              {state.isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+              {state.isPaused ? <Play className="size-4" /> : <Pause className="size-4" />}
             </Button>
 
             <Button
               variant="destructive"
               onClick={handleStopRecording}
-              className="h-12 w-12 rounded-full"
+              className="size-12 rounded-full"
             >
-              <Square className="h-5 w-5" />
+              <Square className="size-5" />
             </Button>
           </div>
         )}
@@ -212,12 +212,12 @@ export function AudioRecorder({
 
               {isTranscribing ? (
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" />
                   <span className="text-sm">Transcribing audio...</span>
                 </div>
               ) : transcriptionError ? (
                 <div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 rounded-lg">
-                  <AlertCircle className="h-4 w-4" />
+                  <AlertCircle className="size-4" />
                   <span>{transcriptionError}</span>
                 </div>
               ) : transcription ? (
@@ -236,18 +236,18 @@ export function AudioRecorder({
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={downloadRecording}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="size-4 mr-2" />
                 Download
               </Button>
 
               <Button variant="ghost" size="sm" onClick={clearRecording}>
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="size-4 mr-2" />
                 Delete
               </Button>
             </div>
 
             <Button onClick={handleSendRecording} disabled={!state.audioBlob}>
-              <Send className="h-4 w-4 mr-2" />
+              <Send className="size-4 mr-2" />
               Send Recording
             </Button>
           </div>

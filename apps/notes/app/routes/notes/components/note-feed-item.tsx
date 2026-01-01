@@ -1,6 +1,6 @@
 import type { Note } from '@hominem/data/types'
-import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import { Edit, Trash2, X } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
 import SocialX from '~/components/icons/SocialX'
@@ -30,7 +30,9 @@ export function NoteFeedItem({
   const extractHashtags = useMemo(() => {
     const regex = /#(\w+)/g
     const matches = note.content.match(regex)
-    if (!matches) return []
+    if (!matches) {
+      return []
+    }
 
     // Remove the # prefix and return unique tags
     return [...new Set(matches.map((tag) => tag.substring(1)))]
@@ -108,7 +110,7 @@ export function NoteFeedItem({
                     onClick={() => onRemoveTag(note.id, tag.value)}
                     className="ml-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="size-3" />
                   </button>
                 )}
               </Badge>
@@ -126,28 +128,28 @@ export function NoteFeedItem({
               variant="ghost"
               size="sm"
               onClick={() => setShowTweetModal(true)}
-              className="h-8 w-8 p-0 text-slate-600 hover:text-blue-500 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
+              className="size-8 p-0 text-slate-600 hover:text-blue-500 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
               title="Generate tweet"
             >
-              <SocialX className="size-[14px]" />
+              <SocialX className="size-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onEdit(note)}
-              className="h-8 w-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="size-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
               title="Edit note"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="size-4" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onDelete(note.id)}
-              className="h-8 w-8 p-0 text-slate-600 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+              className="size-8 p-0 text-slate-600 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
               title="Delete note"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4" />
             </Button>
           </div>
         </div>

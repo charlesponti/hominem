@@ -29,19 +29,12 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
     category.budgetAmount > 0 ? (category.spent / category.budgetAmount) * 100 : 0
   const remaining = category.budgetAmount - category.spent
 
-  // Determine the color based on spending percentage
-  const getProgressColor = () => {
-    if (spentPercentage > 100) return '#ef4444' // red-500
-    if (spentPercentage > 80) return '#f59e0b' // amber-500
-    return '#10b981' // emerald-500
-  }
-
   return (
     <Card className="relative">
       <CardHeader className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${category.color}`} />
+            <div className={`size-3 rounded-full ${category.color}`} />
             <CardTitle className="text-base">{category.name}</CardTitle>
           </div>
           <div className="flex items-center gap-1">
@@ -49,17 +42,17 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
               variant="ghost"
               size="sm"
               onClick={() => onEdit(category)}
-              className="h-6 w-6 p-0"
+              className="size-6 p-0"
             >
-              <Edit3 className="h-3 w-3" />
+              <Edit3 className="size-3" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onDelete(category)}
-              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+              className="size-6 p-0 text-red-600 hover:text-red-700"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="size-3" />
             </Button>
           </div>
         </div>
@@ -83,10 +76,13 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 rounded-full h-1.5">
           <div
-            className="h-1.5 rounded-full transition-all duration-300 ease-in-out"
+            className={cn('h-1.5 rounded-full transition-all duration-300 ease-in-out', {
+              'bg-red-500': spentPercentage > 100,
+              'bg-amber-500': spentPercentage > 80 && spentPercentage <= 100,
+              'bg-emerald-500': spentPercentage <= 80,
+            })}
             style={{
               width: `${Math.min(spentPercentage, 100)}%`,
-              backgroundColor: getProgressColor(),
             }}
           />
         </div>

@@ -85,7 +85,7 @@ export const ChatMessage = memo(function ChatMessage({
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                <MoreVertical className="size-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={isUser ? 'end' : 'start'} role="menu">
@@ -96,19 +96,19 @@ export const ChatMessage = memo(function ChatMessage({
               >
                 {copied ? (
                   <>
-                    <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                    <Check className="mr-2 size-4" aria-hidden="true" />
                     Copied
                   </>
                 ) : (
                   <>
-                    <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                    <Copy className="mr-2 size-4" aria-hidden="true" />
                     Copy
                   </>
                 )}
               </DropdownMenuItem>
               {isUser && onEdit && (
                 <DropdownMenuItem onClick={startEdit} role="menuitem" aria-label="Edit message">
-                  <Edit2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  <Edit2 className="mr-2 size-4" aria-hidden="true" />
                   Edit
                 </DropdownMenuItem>
               )}
@@ -118,7 +118,7 @@ export const ChatMessage = memo(function ChatMessage({
                   role="menuitem"
                   aria-label="Regenerate response"
                 >
-                  <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
+                  <RotateCcw className="mr-2 size-4" aria-hidden="true" />
                   Regenerate
                 </DropdownMenuItem>
               )}
@@ -131,7 +131,7 @@ export const ChatMessage = memo(function ChatMessage({
                     role="menuitem"
                     aria-label="Delete message"
                   >
-                    <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                    <Trash2 className="mr-2 size-4" aria-hidden="true" />
                     Delete
                   </DropdownMenuItem>
                 </>
@@ -187,7 +187,7 @@ export const ChatMessage = memo(function ChatMessage({
           </span>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
-              <X className="mr-2 h-4 w-4" aria-hidden="true" />
+              <X className="mr-2 size-4" aria-hidden="true" />
               Cancel
             </Button>
             <Button
@@ -196,7 +196,7 @@ export const ChatMessage = memo(function ChatMessage({
               disabled={!canSave}
               aria-label="Save edited message"
             >
-              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+              <Save className="mr-2 size-4" aria-hidden="true" />
               Save
             </Button>
           </div>

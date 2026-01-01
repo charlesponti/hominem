@@ -29,7 +29,7 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
         'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 border border-border',
         {
           'bg-muted text-muted-foreground cursor-not-allowed': disabled || isSyncing,
-          'bg-card text-foreground cursor-pointer hover:bg-accent': !disabled && !isSyncing,
+          'bg-card text-foreground cursor-pointer hover:bg-accent': !(disabled || isSyncing),
         }
       )}
     >

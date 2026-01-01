@@ -1,3 +1,4 @@
+import { Button } from '@hominem/ui/button'
 import {
   AlertCircle,
   CheckCircle,
@@ -10,7 +11,6 @@ import {
   X,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { Button } from '@hominem/ui/button'
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
 import type { UploadedFile } from '~/lib/types/upload.js'
 
@@ -67,15 +67,15 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'image':
-        return <Image className="h-4 w-4" />
+        return <Image className="size-4" />
       case 'audio':
-        return <Music className="h-4 w-4" />
+        return <Music className="size-4" />
       case 'video':
-        return <Video className="h-4 w-4" />
+        return <Video className="size-4" />
       case 'document':
-        return <FileText className="h-4 w-4" />
+        return <FileText className="size-4" />
       default:
-        return <Paperclip className="h-4 w-4" />
+        return <Paperclip className="size-4" />
     }
   }
 
@@ -101,7 +101,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+        <Upload className="mx-auto size-8 text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground mb-2">
           {uploadState.isUploading ? 'Uploading files...' : 'Drop files here or click to upload'}
         </p>
@@ -122,7 +122,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
             input.click()
           }}
         >
-          <Paperclip className="h-4 w-4 mr-2" />
+          <Paperclip className="size-4 mr-2" />
           Choose Files
         </Button>
         <p className="text-xs text-muted-foreground mt-2">
@@ -151,7 +151,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
         <div className="space-y-2">
           {uploadState.errors.map((error) => (
             <div key={error} className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className="size-4" />
               <span>{error}</span>
             </div>
           ))}
@@ -186,7 +186,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                     {file.textContent && (
                       <>
                         <span>•</span>
-                        <CheckCircle className="h-3 w-3 text-green-500" />
+                        <CheckCircle className="size-3 text-green-500" />
                         <span>Processed</span>
                       </>
                     )}
@@ -217,9 +217,9 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                   variant="ghost"
                   size="icon"
                   onClick={() => removeFile(file.id)}
-                  className="flex-shrink-0 h-8 w-8"
+                  className="flex-shrink-0 size-8"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="size-4" />
                 </Button>
               </div>
             ))}

@@ -91,25 +91,20 @@ function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
                 placeName={placeName}
                 visit={visit}
                 trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-6 h-6 w-6"
-                    aria-label="Edit visit"
-                  >
-                    <Edit2 className="h-3.5 w-3.5" />
+                  <Button variant="ghost" size="icon" aria-label="Edit visit">
+                    <Edit2 className="size-3.5" />
                   </Button>
                 }
               />
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-6 h-6 w-6 text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive"
                 onClick={handleDelete}
                 disabled={deleteVisit.isPending}
                 aria-label="Delete visit"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="size-3.5" />
               </Button>
             </div>
           </div>

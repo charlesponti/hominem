@@ -57,7 +57,9 @@ function PlacesAutocomplete({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!(isOpen && data)) { return }
+      if (!(isOpen && data)) {
+        return
+      }
 
       switch (e.key) {
         case 'ArrowDown':
@@ -115,7 +117,7 @@ function PlacesAutocomplete({
     <div data-testid="places-autocomplete" className="relative w-full">
       {/* Input Field */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
           ref={inputRef}
           type="text"
@@ -153,14 +155,14 @@ function PlacesAutocomplete({
                   )}
                   data-testid="places-autocomplete-option"
                 >
-                  <MapPin className="h-4 w-4 text-muted-foreground mr-3 shrink-0" />
+                  <MapPin className="size-4 text-muted-foreground mr-3 shrink-0" />
                   <div className="flex flex-col truncate flex-1">
                     <span className="font-medium text-sm text-gray-900">{suggestion.text}</span>
                     <span className="text-muted-foreground font-light text-xs">
                       {suggestion.address}
                     </span>
                   </div>
-                  {selectedIndex === index && <Check className="ml-auto h-4 w-4 text-primary" />}
+                  {selectedIndex === index && <Check className="ml-auto size-4 text-primary" />}
                 </button>
               ))}
             </div>
@@ -187,7 +189,7 @@ const PlacesAutocompleteLoading = (props: React.ComponentProps<'div'> & { show: 
 
 const LoadingItem = (props: React.ComponentProps<'div'>) => (
   <div className="flex items-center px-3 py-2" {...props}>
-    <div className="h-4 w-4 bg-gray-200 rounded mr-3 animate-pulse" />
+    <div className="size-4 bg-gray-200 rounded mr-3 animate-pulse" />
     <div className="flex flex-col flex-1">
       <div className="w-3/4 h-3 bg-gray-200 rounded mb-1 animate-pulse" />
       <div className="w-1/2 h-2 bg-gray-100 rounded animate-pulse" />

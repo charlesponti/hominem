@@ -1,5 +1,5 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import {
   Card,
   CardContent,
@@ -31,9 +31,9 @@ export function AccountHeader({
   const getAccountTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return <CreditCard className="h-6 w-6" />
+        return <CreditCard className="size-6" />
       default:
-        return <Building2 className="h-6 w-6" />
+        return <Building2 className="size-6" />
     }
   }
 
@@ -68,12 +68,12 @@ export function AccountHeader({
       <div className="flex items-center justify-between">
         <Button variant="outline" className="flex items-center gap-1" asChild>
           <RouteLink to="/accounts">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="size-4 mr-2" />
             Back to Accounts
           </RouteLink>
         </Button>
         <Button variant="outline" onClick={onRefresh} disabled={isLoading}>
-          <RefreshCcw className="h-4 w-4 mr-2" />
+          <RefreshCcw className="size-4 mr-2" />
           Refresh
         </Button>
       </div>
@@ -108,7 +108,7 @@ export function AccountHeader({
                 </span>
               </div>
               <Button variant="ghost" size="sm" onClick={onToggleBalance}>
-                {isBalanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {isBalanceVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </Button>
             </div>
           )}

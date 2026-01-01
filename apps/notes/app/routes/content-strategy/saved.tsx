@@ -49,7 +49,7 @@ export default function SavedContentStrategiesPage() {
           <h1 className="text-2xl font-bold">Saved Content Strategies</h1>
           <Link to="/content-strategy/create">
             <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
+              <Plus className="size-4" />
               Create New Strategy
             </Button>
           </Link>
@@ -57,7 +57,7 @@ export default function SavedContentStrategiesPage() {
 
         {savedStrategies.length === 0 ? (
           <div className="text-center py-16">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <FileText className="size-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No saved strategies</h3>
             <p className="text-muted-foreground mb-6">
               Create your first content strategy to get started.
@@ -76,7 +76,7 @@ export default function SavedContentStrategiesPage() {
                     <div className="flex items-center gap-2">
                       <Link to={`/content-strategy/view/${strategy.id}`}>
                         <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
+                          <Eye className="size-4" />
                         </Button>
                       </Link>
                       <Button
@@ -86,7 +86,7 @@ export default function SavedContentStrategiesPage() {
                         disabled={isDeleting}
                         className="text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </div>
                   </div>

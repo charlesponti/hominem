@@ -96,7 +96,7 @@ export function InlineCreateForm({
   const contentToSave = trimmedContent
   const isSaving = isEditMode ? updateItem.isPending : createItem.isPending
   const isSaveDisabled =
-    isSaving || (!trimmedContent && !trimmedTitle) || (isNoteMode && !trimmedContent)
+    isSaving || (!(trimmedContent || trimmedTitle)) || (isNoteMode && !trimmedContent)
 
   const handleSave = () => {
     setError(null)
@@ -186,9 +186,9 @@ export function InlineCreateForm({
             variant="ghost"
             size="sm"
             onClick={handleCancel}
-            className="h-8 w-8 p-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            className="size-8 p-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </Button>
         </div>
 
@@ -242,7 +242,7 @@ export function InlineCreateForm({
                 variant={inputMode === 'note' ? 'default' : 'outline'}
                 onClick={() => setInputMode('note')}
                 className={cn(
-                  'h-8 w-8 p-0 transition-all hover:shadow-md',
+                  'size-8 p-0 transition-all hover:shadow-md',
                   inputMode === 'note'
                     ? 'bg-blue-500/90 hover:bg-blue-600/90 text-white backdrop-blur-sm'
                     : 'bg-white/70 dark:bg-slate-700/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-700/90'
@@ -250,14 +250,14 @@ export function InlineCreateForm({
                 disabled={!!isEditMode}
                 title="Note"
               >
-                <FileText className="h-4 w-4" />
+                <FileText className="size-4" />
               </Button>
               <Button
                 size="sm"
                 variant={inputMode === 'task' ? 'default' : 'outline'}
                 onClick={() => setInputMode('task')}
                 className={cn(
-                  'h-8 w-8 p-0 transition-all hover:shadow-md',
+                  'size-8 p-0 transition-all hover:shadow-md',
                   inputMode === 'task'
                     ? 'bg-green-500/90 hover:bg-green-600/90 text-white backdrop-blur-sm'
                     : 'bg-white/70 dark:bg-slate-700/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-700/90'
@@ -265,7 +265,7 @@ export function InlineCreateForm({
                 disabled={!!isEditMode}
                 title="Task"
               >
-                <ListChecks className="h-4 w-4" />
+                <ListChecks className="size-4" />
               </Button>
             </div>
 
@@ -276,9 +276,9 @@ export function InlineCreateForm({
               title={isEditMode ? 'Save changes' : `Add ${inputMode}`}
             >
               {isSaving ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
+                <RefreshCw className="size-4 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="size-4" />
               )}
             </Button>
           </div>

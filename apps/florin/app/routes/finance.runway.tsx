@@ -1,8 +1,8 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/button'
+import { Badge } from '@hominem/ui/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Input } from '@hominem/ui/input'
 import { Label } from '@hominem/ui/components/ui/label'
+import { Input } from '@hominem/ui/input'
 import { AlertTriangle, Calendar, DollarSign, TrendingDown } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import {
@@ -144,7 +144,7 @@ export default function RunwayPage() {
         <h1 className="text-3xl font-bold">Financial Runway Calculator</h1>
         {runwayMetrics.isRunwayDangerous && (
           <Badge variant="destructive" className="flex items-center gap-1">
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="size-4" />
             Short Runway
           </Badge>
         )}
@@ -154,7 +154,7 @@ export default function RunwayPage() {
       {runwayMutation.data && !runwayMutation.data.success && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex">
-            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <AlertTriangle className="size-5 text-red-400" />
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Calculation Error</h3>
               <div className="mt-2 text-sm text-red-700">
@@ -173,7 +173,7 @@ export default function RunwayPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(initialBalance)}</div>
@@ -183,7 +183,7 @@ export default function RunwayPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Monthly Burn Rate</CardTitle>
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              <TrendingDown className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(monthlyExpenses)}</div>
@@ -193,7 +193,7 @@ export default function RunwayPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Runway (Months)</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Calendar className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
@@ -214,7 +214,7 @@ export default function RunwayPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Minimum Balance</CardTitle>
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              <TrendingDown className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div

@@ -1,7 +1,7 @@
+import { Button } from '@hominem/ui/button'
 import { Plus } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { DateMonthSelect } from '~/components/date-month-select'
-import { Button } from '@hominem/ui/button'
 import { trpc } from '~/lib/trpc'
 
 interface BudgetTrackingHeaderProps {
@@ -30,7 +30,7 @@ export function BudgetTrackingHeader({
             onClick={() => navigate('/budget/categories/setup')}
             className="flex items-center gap-2"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             Setup from Transactions ({transactionCategories.length})
           </Button>
         )}
@@ -38,7 +38,7 @@ export function BudgetTrackingHeader({
           onClick={() => navigate('/budget/categories/new')}
           className="flex items-center gap-2"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add Category
         </Button>
       </div>

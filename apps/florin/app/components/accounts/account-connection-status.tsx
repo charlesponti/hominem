@@ -33,7 +33,7 @@ export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryP
           </p>
           {plaidLinkedCount > 0 && (
             <p className="text-xs text-blue-600">
-              <Banknote className="h-3 w-3 inline mr-1" />
+              <Banknote className="size-3 inline mr-1" />
               {plaidLinkedCount} linked to Plaid accounts
             </p>
           )}

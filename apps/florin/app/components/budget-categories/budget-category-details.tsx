@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
 import { Progress } from '@hominem/ui/components/ui/progress'
+import { useMemo } from 'react'
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
 import { formatCurrency } from '~/lib/number.utils'
 import { trpc } from '~/lib/trpc'
@@ -83,7 +83,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
   if (isLoadingCategories || isLoadingStats) {
     return (
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+        <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
         <p className="mt-2 text-sm text-gray-600">Loading category details...</p>
       </div>
     )

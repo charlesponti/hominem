@@ -1,7 +1,7 @@
-import type { Goal } from '@hominem/utils/types'
-import { CalendarCheck, Edit, Trash2 } from 'lucide-react'
 import { Button } from '@hominem/ui/button'
 import { Progress } from '@hominem/ui/components/ui/progress'
+import type { Goal } from '@hominem/utils/types'
+import { CalendarCheck, Edit, Trash2 } from 'lucide-react'
 import { PriorityBadge } from './priority-badge'
 import { StatusBadge } from './status-badge'
 
@@ -46,7 +46,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
                     milestone.completed ? 'bg-green-500 border-green-500' : 'border-muted'
                   }`}
                 >
-                  {milestone.completed && <CalendarCheck className="w-3 h-3 text-white" />}
+                  {milestone.completed && <CalendarCheck className="size-3 text-white" />}
                 </div>
                 <span
                   className={`flex-1 ${

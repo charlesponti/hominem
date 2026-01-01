@@ -6,7 +6,7 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
     case 'active':
       return (
         <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-          <CheckCircle className="w-3 h-3 mr-1" />
+          <CheckCircle className="size-3 mr-1" />
           Active
         </Badge>
       )
@@ -14,7 +14,7 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
       return (
         <Badge variant="destructive">
           <svg
-            className="w-3 h-3 mr-1"
+            className="size-3 mr-1"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -36,7 +36,7 @@ export function PlaidStatusBadge({ status }: { status: string | null }) {
       return (
         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
           <svg
-            className="w-3 h-3 mr-1"
+            className="size-3 mr-1"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

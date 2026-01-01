@@ -1,6 +1,6 @@
-import { Twitter } from 'lucide-react'
 import { Button } from '@hominem/ui/button'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
+import { Twitter } from 'lucide-react'
 import { useTwitterOAuth } from '~/hooks/use-twitter'
 
 export function ConnectTwitterAccount() {
@@ -37,7 +37,7 @@ export function ConnectTwitterAccount() {
           variant="outline"
           className="w-full justify-start gap-2"
         >
-          <Twitter className="h-4 w-4" />
+          <Twitter className="size-4" />
           {isConnecting ? 'Connecting...' : 'Connect Twitter'}
         </Button>
       ) : (
@@ -48,7 +48,7 @@ export function ConnectTwitterAccount() {
               className="flex items-center justify-between p-3 border rounded-lg"
             >
               <div className="flex items-center gap-2">
-                <Twitter className="h-4 w-4 text-gray-500" />
+                <Twitter className="size-4 text-gray-500" />
                 <span className="font-medium">@{account.providerAccountId}</span>
               </div>
               <Button

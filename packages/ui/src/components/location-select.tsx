@@ -1,6 +1,8 @@
 import type { GeocodeFeature } from '@hominem/utils/location'
 import { Building, MapIcon } from 'lucide-react'
 import * as React from 'react'
+import { useLocationSearch } from '../hooks/use-location-search'
+import { useMediaQuery } from '../hooks/use-media-query'
 import { Button } from './ui/button'
 import {
   Command,
@@ -12,8 +14,6 @@ import {
 } from './ui/command'
 import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
-import { useLocationSearch } from '../hooks/use-location-search'
-import { useMediaQuery } from '../hooks/use-media-query'
 
 export interface GeocodeFeatureSelectProps {
   initialValue?: string
@@ -105,9 +105,9 @@ function LocationList({ locations, isLoading, query, setQuery, onSelect }: Locat
               >
                 <span className="flex items-center gap-2">
                   {location.layer === 'venue' ? (
-                    <Building className="h-4 w-4" />
+                    <Building className="size-4" />
                   ) : (
-                    <MapIcon className="h-4 w-4" />
+                    <MapIcon className="size-4" />
                   )}
                   {location.label}
                 </span>

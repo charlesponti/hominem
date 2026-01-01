@@ -1,5 +1,5 @@
-import { Plus } from 'lucide-react'
 import { Button } from '@hominem/ui/button'
+import { Plus } from 'lucide-react'
 
 interface BudgetCategoriesHeaderProps {
   transactionCategoriesCount?: number
@@ -24,12 +24,12 @@ export function BudgetCategoriesHeader({
             variant="outline"
             className="flex items-center gap-2"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             Add from Transactions
           </Button>
         )} */}
         <Button onClick={onAddCategory} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add Category
         </Button>
       </div>

@@ -13,8 +13,7 @@ export default function ContentStrategyViewPage() {
 
   const handleDelete = async () => {
     if (
-      !strategy ||
-      !confirm('Are you sure you want to delete this strategy? This action cannot be undone.')
+      !(strategy &&confirm('Are you sure you want to delete this strategy? This action cannot be undone.'))
     ) {
       return
     }
@@ -41,7 +40,7 @@ export default function ContentStrategyViewPage() {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
         <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full size-8 border-b-2 border-blue-500" />
           <span className="ml-3">Loading strategy...</span>
         </div>
       </div>
@@ -71,7 +70,7 @@ export default function ContentStrategyViewPage() {
         <div className="flex items-center gap-4">
           <Link to="/content-strategy/saved">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="size-4 mr-2" />
               Back
             </Button>
           </Link>
@@ -83,7 +82,7 @@ export default function ContentStrategyViewPage() {
         <div className="flex gap-2">
           <Link to={`/content-strategy/edit/${strategy.id}`}>
             <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="size-4 mr-2" />
               Edit
             </Button>
           </Link>
@@ -94,7 +93,7 @@ export default function ContentStrategyViewPage() {
             disabled={isDeleting}
             className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className="size-4 mr-2" />
             {isDeleting ? 'Deleting...' : 'Delete'}
           </Button>
         </div>

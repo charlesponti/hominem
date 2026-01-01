@@ -1,7 +1,7 @@
 import type { GoalMilestone } from '@hominem/data/types'
-import { Plus, XCircle } from 'lucide-react'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
+import { Plus, XCircle } from 'lucide-react'
 
 interface GoalMilestoneListProps {
   milestones: GoalMilestone[]
@@ -39,10 +39,10 @@ export function GoalMilestoneList({
             type="checkbox"
             checked={milestone.completed}
             onChange={(e) => onChange(index, 'completed', e.target.checked)}
-            className="h-5 w-5"
+            className="size-5"
           />
           <Button variant="ghost" size="sm" onClick={() => onRemove(index)}>
-            <XCircle className="h-4 w-4 text-red-500" />
+            <XCircle className="size-4 text-red-500" />
           </Button>
         </div>
       ))}
