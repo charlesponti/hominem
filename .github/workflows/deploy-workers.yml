@@ -1,0 +1,22 @@
+name: deploy-workers
+
+on:
+  workflow_dispatch: # Allow manual trigger
+  workflow_run:
+    workflows: ["code-quality"]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_WORKERS }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: styfle/cancel-workflow-action@0.12.1
+      - uses: actions/checkout@v4
+      - name: Deploy to Railway
+        run: railway up --service ${{ env.SERVICE_ID }} --detach

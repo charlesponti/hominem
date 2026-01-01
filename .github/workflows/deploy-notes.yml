@@ -1,4 +1,4 @@
-name: notes-deploy
+name: deploy-notes
 
 on:
   workflow_dispatch: # Allow manual trigger
@@ -19,10 +19,10 @@ jobs:
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.12.1
-      
+
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Deploy to Railway
         run: railway up --service ${{ env.SERVICE_ID }} --detach
         env:
