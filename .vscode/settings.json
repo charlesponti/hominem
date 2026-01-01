@@ -50,5 +50,6 @@
   },
   "[css]": {
     "editor.defaultFormatter": "biomejs.biome"
-  }
+  },
+  "npm.scriptRunner": "bun"
 }

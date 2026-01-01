@@ -1,3 +1,4 @@
+import { act } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import { renderHook, waitFor } from '../test-utils'
 import { type SortOption, useSort } from './use-sort'
@@ -100,7 +101,10 @@ describe('useSort', () => {
       { field: 'date', direction: 'desc' },
       { field: 'amount', direction: 'asc' },
     ]
-    result.current.setSortOptions(newOptions)
+
+    act(() => {
+      result.current.setSortOptions(newOptions)
+    })
 
     await waitFor(() => {
       expect(result.current.sortOptions).toHaveLength(1)

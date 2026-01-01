@@ -41,7 +41,6 @@ export function useSort(options: UseSortOptions = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const isInitialMountRef = useRef(true)
   const [sortOptions, setSortOptionsState] = useState<SortOption[]>(() => {
-    // Read initial sort from URL on mount
     const urlSortParam = searchParams.get(urlParamName)
     if (urlSortParam) {
       const parsed = parseSortFromUrl(urlSortParam)
@@ -55,7 +54,6 @@ export function useSort(options: UseSortOptions = {}) {
   // Sync sort options to URL when they change (but not on initial mount)
   useEffect(() => {
     if (isInitialMountRef.current) {
-      isInitialMountRef.current = false
       return
     }
 
@@ -70,6 +68,7 @@ export function useSort(options: UseSortOptions = {}) {
     } else {
       newSearchParams.set(urlParamName, JSON.stringify(sortOptions))
     }
+
     setSearchParams(newSearchParams, { replace: true })
   }, [sortOptions, sortOptions.length, urlParamName, searchParams, setSearchParams, singleSort])
 
@@ -89,7 +88,12 @@ export function useSort(options: UseSortOptions = {}) {
       // URL was cleared, clear sort options
       setSortOptionsState([])
     }
-  }, [searchParams, urlParamName, sortOptions.length])
+  }, [searchParams, urlParamName])
+
+  // After initial mount, flip the flag so subsequent updates run their sync logic
+  useEffect(() => {
+    isInitialMountRef.current = false
+  }, [])
 
   const setSortOptions = useCallback(
     (options: SortOption[]) => {
