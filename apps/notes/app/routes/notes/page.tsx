@@ -59,8 +59,8 @@ export default function NotesPage() {
 
   const isAllSelected = selectedTypes.length === 0
   const getFilterDisplayText = () => {
-    if (isAllSelected) return ''
-    if (selectedTypes.length === 1) return ` in ${selectedTypes[0]}s`
+    if (isAllSelected) { return '' }
+    if (selectedTypes.length === 1) { return ` in ${selectedTypes[0]}s` } 
     return ' in selected content types'
   }
 
@@ -114,7 +114,10 @@ export default function NotesPage() {
 
   function removeTagFromNote(noteId: string, tagValue: string) {
     const item = allContentItems.find((n) => n.id === noteId)
-    if (!item) { return }
+    if (!item) { 
+      return 
+    }
+
     const newTags = (item.tags || []).filter((tag: { value: string }) => tag.value !== tagValue)
     updateItem.mutate({
       id: noteId,

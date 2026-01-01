@@ -46,7 +46,9 @@ export function PlaidLink({
   // Initialize link token only when user clicks the button
   // biome-ignore lint/correctness/useExhaustiveDependencies: createLinkToken is stable from mutation
   const initializeLinkToken = useCallback(() => {
-    if (!userId || linkToken || isCreatingToken) return
+    if (!(userId && !linkToken && !isCreatingToken)) {
+      return
+    }
 
     createLinkToken.mutate(undefined, {
       onSuccess: (result) => {
@@ -145,7 +147,7 @@ export function PlaidLink({
   const handleClick = () => {
     if (isReady) {
       open()
-    } else if (!linkToken && !isLoading) {
+    } else if (!(linkToken && isLoading)) {
       // Initialize link token when user clicks
       setShouldAutoOpen(true) // Enable auto-open after token creation
       initializeLinkToken()

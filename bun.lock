@@ -4,10 +4,7 @@
     "": {
       "name": "hominem",
       "dependencies": {
-        "@supabase/storage-js": "^2.7.3",
-        "@trpc/react-query": "^11.7.2",
         "@trpc/server": "^11.4.2",
-        "effect": "^3.16.10",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "react-router": "7.11.0",
@@ -24,6 +21,7 @@
         "lefthook": "^2.0.2",
         "turbo": "^2.7.2",
         "typescript": "5.9.3",
+        "vite-tsconfig-paths": "6.0.3",
         "vitest": "4.0.16",
       },
     },
@@ -564,6 +562,7 @@
         "@ai-sdk/google": "^1.1.10",
         "@ai-sdk/openai": "^1.1.9",
         "@hominem/ai": "workspace:*",
+        "@supabase/storage-js": "^2.7.3",
         "@supabase/supabase-js": "2.88.0",
         "ai": "^4.3.16",
         "cheerio": "^1.0.0",
