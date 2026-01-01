@@ -220,7 +220,7 @@ export async function acceptListInvite(listId: string, acceptingUserId: string, 
         (await tx.query.list.findFirst({
           where: eq(list.id, invite.listId),
         }))
-      if (!l) throw new Error('List not found after accepting invite.')
+      if (!l) { throw new Error('List not found after accepting invite.') }
       return l
     })
 

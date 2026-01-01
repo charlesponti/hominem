@@ -52,7 +52,7 @@ export async function buildInvitePreview(token: string): Promise<InvitePreview |
         ) {
           // Google Places photo reference, process it to get absolute URL
           coverPhoto = buildPlacePhotoUrl(coverPhoto)
-        } else if (!coverPhoto.startsWith('http://') && !coverPhoto.startsWith('https://')) {
+        } else if (!(coverPhoto.startsWith('http://') || coverPhoto.startsWith('https://'))) {
           // Not a Google Places photo reference and not a full URL - skip it
           coverPhoto = null
         }

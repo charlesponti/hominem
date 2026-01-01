@@ -27,7 +27,7 @@ const textSizeClasses = {
  * Proxies Google user content URLs through our API to avoid CORB/CORS issues
  */
 function getProxiedImageUrl(imageUrl: string | null | undefined) {
-  if (!imageUrl) return undefined
+  if (!imageUrl) { return undefined }
 
   // Only proxy Google user content URLs
   if (imageUrl.includes('googleusercontent.com')) {

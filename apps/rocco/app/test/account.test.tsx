@@ -64,6 +64,7 @@ describe('Account', () => {
       routes: [
         {
           path: '/account',
+          // biome-ignore lint/suspicious/noExplicitAny: Test file needs any for route component typing
           Component: Account as any,
           loader: () => mockLoaderData,
         },
@@ -122,6 +123,7 @@ describe('Account', () => {
       routes: [
         {
           path: '/account',
+          // biome-ignore lint/suspicious/noExplicitAny: Test file needs any for route component typing
           Component: Account as any,
           loader: () => mockLoaderData,
         },
@@ -160,6 +162,7 @@ describe('Account', () => {
       routes: [
         {
           path: '/account',
+          // biome-ignore lint/suspicious/noExplicitAny: Test file needs any for route component typing
           Component: Account as any,
           loader: () => mockLoaderData,
         },

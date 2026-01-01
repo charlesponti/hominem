@@ -34,7 +34,7 @@ class PlaceCache {
 
   get(key: string): PlaceSelect | null {
     const entry = this.cache.get(key)
-    if (!entry) return null
+    if (!entry) { return null }
 
     if (Date.now() > entry.expiresAt) {
       this.cache.delete(key)

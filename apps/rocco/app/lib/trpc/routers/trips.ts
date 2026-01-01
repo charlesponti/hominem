@@ -73,7 +73,7 @@ export const tripsRouter = router({
         order: z.number().optional(),
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       try {
         const newTripItem = await addItemToTrip(input)
 

@@ -25,7 +25,7 @@ const CACHE_TIMESTAMP_KEY = 'rocco_geolocation_cache_timestamp'
 const DEFAULT_MAXIMUM_AGE = 300000
 
 function getCachedLocation(): Location | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') { return null }
 
   try {
     const cached = localStorage.getItem(CACHE_KEY)
@@ -45,7 +45,7 @@ function getCachedLocation(): Location | null {
 }
 
 function setCachedLocation(location: Location): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') { return }
 
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(location))

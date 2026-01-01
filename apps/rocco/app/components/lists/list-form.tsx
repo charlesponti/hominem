@@ -73,7 +73,7 @@ export default function ListForm() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
-      if (!name.trim()) return
+      if (!name.trim()) { return }
 
       if (!isAuthenticated) {
         try {

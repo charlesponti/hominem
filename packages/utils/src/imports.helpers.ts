@@ -115,7 +115,7 @@ export async function getImportFileContent(jobId: string): Promise<string | null
 export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY)
-    if (!jobIds.length) return []
+    if (!jobIds.length) { return [] }
 
     const jobs = await getJobsByIds<T>(jobIds)
 
@@ -160,7 +160,7 @@ export async function getJobsByIds<T extends BaseJob>(jobIds: string[]): Promise
 export async function getQueuedJobs<T extends BaseJob>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY)
-    if (!jobIds.length) return []
+    if (!jobIds.length) { return [] }
 
     const jobs = await getJobsByIds<T>(jobIds)
 

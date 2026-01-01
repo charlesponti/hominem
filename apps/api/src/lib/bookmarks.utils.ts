@@ -123,7 +123,9 @@ class MemoryCache {
 
   get(key: string): OpenGraphData | null {
     const entry = this.cache.get(key)
-    if (!entry) return null
+    if (!entry) {
+      return null
+    }
 
     const now = Date.now()
     if (now - entry.timestamp > entry.ttl * 1000) {
@@ -277,7 +279,9 @@ class OpenGraphProcessor {
    * Extract image URL from OpenGraph data
    */
   static extractImageUrl(ogImage: OGImage[] | OGImage | undefined) {
-    if (!ogImage) return undefined
+    if (!ogImage) {
+      return undefined
+    }
 
     if (typeof ogImage === 'string') {
       return ogImage
@@ -301,7 +305,9 @@ class OpenGraphProcessor {
     width?: number
     height?: number
   } {
-    if (!ogImage) return {}
+    if (!ogImage) {
+      return {}
+    }
 
     if (Array.isArray(ogImage) && ogImage[0]) {
       return {
@@ -323,7 +329,9 @@ class OpenGraphProcessor {
    * Process favicon URL
    */
   static processFaviconUrl(faviconUrl: string | undefined, baseUrl: string) {
-    if (!faviconUrl) return undefined
+    if (!faviconUrl) {
+      return undefined
+    }
 
     // If already absolute, return as is
     if (faviconUrl.startsWith('http://') || faviconUrl.startsWith('https://')) {

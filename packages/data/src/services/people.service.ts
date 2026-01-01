@@ -23,7 +23,7 @@ export async function getPeopleForEvent(eventId: string) {
 }
 
 export async function getPeopleForEvents(eventIds: string[]) {
-  if (eventIds.length === 0) return new Map()
+  if (eventIds.length === 0) { return new Map() }
 
   const rows = await db
     .select({
@@ -38,7 +38,7 @@ export async function getPeopleForEvents(eventIds: string[]) {
 
   const map = new Map<string, Array<{ id: string; firstName: string; lastName: string | null }>>()
   for (const row of rows) {
-    if (!row.eventId) continue
+    if (!row.eventId) { continue }
     if (!map.has(row.eventId)) {
       map.set(row.eventId, [])
     }
@@ -52,12 +52,12 @@ export async function getPeopleForEvents(eventIds: string[]) {
 }
 
 export async function replacePeopleForEvent(eventId: string, people?: string[]) {
-  if (people === undefined) return
-  if (people.length === 0) return
+  if (people === undefined) { return }
+  if (people.length === 0) { return }
 
   await db.delete(eventsUsers).where(eq(eventsUsers.eventId, eventId))
 
-  if (people.length === 0) return
+  if (people.length === 0) { return }
 
   const relationships = people.map((personId) => ({
     eventId,
@@ -106,10 +106,10 @@ export async function createPerson(person: PersonInput) {
 export async function updatePerson(id: string, person: PersonInput) {
   const updateData: Record<string, unknown> = {}
 
-  if (person.firstName !== undefined) updateData.firstName = person.firstName
-  if (person.lastName !== undefined) updateData.lastName = person.lastName
-  if (person.email !== undefined) updateData.email = person.email
-  if (person.phone !== undefined) updateData.phone = person.phone
+  if (person.firstName !== undefined) { updateData.firstName = person.firstName }
+  if (person.lastName !== undefined) { updateData.lastName = person.lastName }
+  if (person.email !== undefined) { updateData.email = person.email }
+  if (person.phone !== undefined) { updateData.phone = person.phone }
 
   const result = await db.update(contacts).set(updateData).where(eq(contacts.id, id)).returning()
 

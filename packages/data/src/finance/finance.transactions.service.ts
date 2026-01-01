@@ -319,7 +319,7 @@ export async function createTransaction(
       excluded: tx.excluded,
       note: tx.note,
       parentCategory: tx.parentCategory || '',
-      recurring: tx.recurring || false,
+      recurring: tx.recurring,
       status: tx.status,
       tags: tx.tags,
       type: tx.type,

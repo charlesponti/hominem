@@ -64,7 +64,7 @@ export async function removeUserFromList({
     })
 
     // If neither exists, the user is not a collaborator
-    if (!userListRecord && !acceptedInvite) {
+    if (!(userListRecord || acceptedInvite)) {
       return { error: 'User is not a collaborator on this list.', status: 404 }
     }
 

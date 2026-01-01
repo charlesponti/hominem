@@ -38,7 +38,7 @@ export default function RemoveCollaboratorButton({
     try {
       // Optimistically update the list cache to remove the collaborator
       utils.lists.getById.setData({ id: listId }, (old) => {
-        if (!old || !old.users) return old
+        if (!(old?.users)) { return old }
         return {
           ...old,
           users: old.users.filter((u) => u.id !== userId),
@@ -47,7 +47,7 @@ export default function RemoveCollaboratorButton({
 
       // Optimistically update the invites list to remove the accepted invite
       utils.invites.getByList.setData({ listId }, (old) => {
-        if (!old) return old
+        if (!old) { return old }
         return old.filter((invite) => invite.user_invitedUserId?.id !== userId)
       })
 

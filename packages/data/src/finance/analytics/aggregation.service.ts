@@ -12,13 +12,13 @@ export function parseAmount(amount: string | number): number {
  * Calculate the median of a number array
  */
 export function calculateMedian(values: number[]): number {
-  if (values.length === 0) return 0
-  if (values.length === 1 && values[0] !== undefined) return values[0]
+  if (values.length === 0) { return 0 }
+  if (values.length === 1 && values[0] !== undefined) { return values[0] }
 
   const sorted = [...values].sort((a, b) => a - b)
   const middle = sorted[Math.floor(sorted.length / 2)]
   const beforeMiddle = sorted[Math.floor(sorted.length / 2) - 1]
-  if (!middle || !beforeMiddle) {
+  if (!(middle && beforeMiddle)) {
     return 0
   }
 

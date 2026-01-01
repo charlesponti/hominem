@@ -38,7 +38,7 @@ export class GenerationStatistics {
    * Calculate tokens per second for input
    */
   get inputSpeed() {
-    if (this.inputTime <= 0) return 0
+    if (this.inputTime <= 0) { return 0 }
     return this.inputTokens / this.inputTime
   }
 
@@ -46,7 +46,7 @@ export class GenerationStatistics {
    * Calculate tokens per second for output
    */
   get outputSpeed() {
-    if (this.outputTime <= 0) return 0
+    if (this.outputTime <= 0) { return 0 }
     return this.outputTokens / this.outputTime
   }
 
@@ -55,7 +55,7 @@ export class GenerationStatistics {
    */
   get totalSpeed() {
     const totalTokens = this.inputTokens + this.outputTokens
-    if (this.totalTime <= 0) return 0
+    if (this.totalTime <= 0) { return 0 }
     return totalTokens / this.totalTime
   }
 
@@ -244,7 +244,7 @@ export class PerformanceService {
    */
   stopTimer(name: string) {
     const timer = this.timerRegistry[name]
-    if (!timer) return 0
+    if (!timer) { return 0 }
 
     const duration = timer.stop()
     delete this.timerRegistry[name]

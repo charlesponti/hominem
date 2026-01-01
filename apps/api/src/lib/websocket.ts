@@ -82,7 +82,7 @@ export function createWebSocketManager(): WebSocketManager {
   // Upgrade HTTP connection to WebSocket
   const handleUpgrade = async (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     wss.handleUpgrade(request, socket, head, async (ws: WebSocket) => {
-      if (!request.url) return
+      if (!request.url) { return }
 
       // Extract token from URL
       const url = new URL(request.url, 'http://localhost')

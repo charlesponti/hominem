@@ -40,6 +40,7 @@ export type UpdateNoteInput = z.infer<typeof UpdateNoteZodSchema>
  * - `id` is optional as it might be a new item.
  * - `synced` is omitted as server handles it.
  */
+// biome-ignore lint/correctness/noUnusedVariables: Type is used in sync method parameter
 type SyncClientItem = Omit<Note, 'id' | 'synced' | 'createdAt' | 'updatedAt' | 'timeTracking'> & {
   id?: string
   createdAt?: string
@@ -164,16 +165,19 @@ export class NotesService {
     const validatedInput = UpdateNoteZodSchema.parse(input)
 
     const updateData: Partial<typeof notes.$inferInsert> = {}
-    if (validatedInput.type !== undefined) updateData.type = validatedInput.type
-    if (validatedInput.title !== undefined) updateData.title = validatedInput.title
-    if (validatedInput.content !== undefined) updateData.content = validatedInput.content
-    if (validatedInput.tags !== undefined)
+    if (validatedInput.type !== undefined) { updateData.type = validatedInput.type }
+    if (validatedInput.title !== undefined) { updateData.title = validatedInput.title }
+    if (validatedInput.content !== undefined) { updateData.content = validatedInput.content }
+    if (validatedInput.tags !== undefined) {
       updateData.tags = validatedInput.tags === null ? [] : validatedInput.tags
-    if (validatedInput.taskMetadata !== undefined)
+    }
+    if (validatedInput.taskMetadata !== undefined) {
       updateData.taskMetadata =
         validatedInput.taskMetadata === null ? undefined : validatedInput.taskMetadata
-    if (validatedInput.analysis !== undefined)
+    }
+    if (validatedInput.analysis !== undefined) {
       updateData.analysis = validatedInput.analysis === null ? undefined : validatedInput.analysis
+    }
 
     if (Object.keys(updateData).length === 0) {
       return this.getById(validatedInput.id, validatedInput.userId)

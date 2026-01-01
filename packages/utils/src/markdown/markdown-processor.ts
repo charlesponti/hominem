@@ -91,7 +91,7 @@ export class MarkdownProcessor {
           .map((line) => {
             const [key, ...valueParts] = line.split(':')
             const value = valueParts.join(':').trim()
-            if (!key) return [value]
+            if (!key) { return [value] }
             return [key.trim(), value.replace(/^['"]|['"]$/g, '')]
           })
       )
@@ -151,12 +151,12 @@ export class MarkdownProcessor {
 
     const flushBuffer = () => {
       const texts = buffer.map((l) => l.trim()).filter((l) => l)
-      if (!texts.length) return
+      if (!texts.length) { return }
       const heading = currentHeading || baseName
       const { dates, fullDate } = getDatesFromText(heading)
       const entry: ProcessedMarkdownFileEntry = { filename, heading, content: [], frontmatter }
-      if (dates?.[0]) entry.date = dates[0].start.split('T')[0]
-      else if (fullDate) entry.date = fullDate.split('T')[0]
+      if (dates?.[0]) { entry.date = dates[0].start.split('T')[0] }
+      else if (fullDate) { entry.date = fullDate.split('T')[0] }
       for (const text of texts) {
         const normalized = normalizeWhitespace(text)
         const { isTask, isComplete } = detectTask(normalized)
@@ -191,7 +191,7 @@ export class MarkdownProcessor {
   async getProcessedEntry(params: GetProcessedEntryParams): Promise<EntryContent | undefined> {
     const { $, elem, section } = params
     const text = $(elem).contents().first().text().trim()
-    if (!text) return
+    if (!text) { return }
     const normalizedText = normalizeWhitespace(text)
     const { isTask, isComplete, taskText } = detectTask(normalizedText)
 
@@ -206,7 +206,7 @@ export class MarkdownProcessor {
   }
 
   getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {
-    if (!entry) return undefined
+    if (!entry) { return undefined }
     return entry.content[entry.content.length - 1]
   }
 }

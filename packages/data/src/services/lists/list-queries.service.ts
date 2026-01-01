@@ -577,7 +577,7 @@ export async function getListsContainingPlace(
   placeId?: string,
   googleMapsId?: string
 ): Promise<Array<{ id: string; name: string; itemCount: number; imageUrl: string | null }>> {
-  if (!placeId && !googleMapsId) {
+  if (!(placeId || googleMapsId)) {
     return []
   }
 

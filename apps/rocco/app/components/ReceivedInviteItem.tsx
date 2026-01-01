@@ -36,7 +36,9 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
     normalizedUserEmail !== inviteProps.listInvite.invitedUserEmail.toLowerCase()
 
   const onAcceptClick = useCallback(() => {
-    if (!inviteProps) return
+    if (!inviteProps) {
+      return
+    }
 
     mutate({
       listId: inviteProps.listInvite.listId,

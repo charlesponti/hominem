@@ -42,7 +42,7 @@ export const useUpdateList = (
     ...options,
     onSuccess: (updatedList, variables, context, mutation) => {
       utils.lists.getById.setData({ id: updatedList.id }, (old) => {
-        if (!old) return old
+        if (!old) { return old }
         return {
           ...old,
           ...updatedList,

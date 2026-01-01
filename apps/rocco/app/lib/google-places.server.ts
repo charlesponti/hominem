@@ -104,9 +104,9 @@ const buildCacheKey = (parts: Record<string, unknown>) => {
 }
 
 const readCache = <T>(key: string | undefined): T | null => {
-  if (!key) return null
+  if (!key) { return null }
   const entry = cache.get(key) as CacheEntry<T> | undefined
-  if (!entry) return null
+  if (!entry) { return null }
   if (entry.expiresAt < Date.now()) {
     cache.delete(key)
     return null
@@ -115,7 +115,7 @@ const readCache = <T>(key: string | undefined): T | null => {
 }
 
 const writeCache = <T>(key: string | undefined, value: T, ttl = DEFAULT_CACHE_TTL_MS) => {
-  if (!key) return
+  if (!key) { return }
   cache.set(key, {
     value,
     expiresAt: Date.now() + ttl,
@@ -140,7 +140,7 @@ const requestGoogle = async <T>({
   const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${path}`)
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {
-      if (value === undefined || value === null) return
+      if (value === undefined || value === null) { return }
       url.searchParams.set(key, String(value))
     })
   }
@@ -293,7 +293,7 @@ export const buildPhotoMediaUrl = ({
 export const getNeighborhoodFromAddressComponents = (
   addressComponents: GooglePlaceDetailsResponse['addressComponents']
 ) => {
-  if (!addressComponents) return null
+  if (!addressComponents) { return null }
   const neighborhood = addressComponents.find((component) =>
     component.types.includes('neighborhood')
   )

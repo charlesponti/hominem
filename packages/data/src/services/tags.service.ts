@@ -23,7 +23,7 @@ export async function getTagsForEvent(eventId: string) {
 }
 
 export async function getTagsForEvents(eventIds: string[]) {
-  if (eventIds.length === 0) return new Map()
+  if (eventIds.length === 0) { return new Map() }
 
   const rows = await db
     .select({
@@ -47,7 +47,7 @@ export async function getTagsForEvents(eventIds: string[]) {
     }>
   >()
   for (const row of rows) {
-    if (!row.eventId) continue
+    if (!row.eventId) { continue }
     if (!map.has(row.eventId)) {
       map.set(row.eventId, [])
     }
@@ -62,7 +62,7 @@ export async function getTagsForEvents(eventIds: string[]) {
 }
 
 export async function addTagsToEvent(eventId: string, tagIds: string[]) {
-  if (tagIds.length === 0) return []
+  if (tagIds.length === 0) { return [] }
 
   const relationships = tagIds.map((tagId) => ({
     eventId,
@@ -126,9 +126,9 @@ export async function createTag(tag: TagInput) {
 export async function updateTag(id: string, tag: TagInput) {
   const updateData: Record<string, unknown> = {}
 
-  if (tag.name !== undefined) updateData.name = tag.name
-  if (tag.color !== undefined) updateData.color = tag.color
-  if (tag.description !== undefined) updateData.description = tag.description
+  if (tag.name !== undefined) { updateData.name = tag.name }
+  if (tag.color !== undefined) { updateData.color = tag.color }
+  if (tag.description !== undefined) { updateData.description = tag.description }
 
   const result = await db.update(tags).set(updateData).where(eq(tags.id, id)).returning()
 
@@ -144,7 +144,7 @@ export async function deleteTag(id: string) {
 }
 
 export async function findOrCreateTagsByNames(tagNames: string[]) {
-  if (tagNames.length === 0) return []
+  if (tagNames.length === 0) { return [] }
 
   const tagValues = tagNames.map((name) => ({
     id: randomUUID(),

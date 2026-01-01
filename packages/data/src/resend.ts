@@ -63,7 +63,7 @@ export async function sendAdminNotification({
   adminUser: string
   updatedCount: number
   duration: number
-  errors?: any
+  errors?: unknown
 }) {
   const resend = new Resend(getApiKey())
   const subject = `[Admin Action Completed] ${action}`

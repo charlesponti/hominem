@@ -15,7 +15,7 @@ export async function handleFileUploadBuffer(
   try {
     // Check if the request has multipart form data
     const contentType = request.headers.get('content-type')
-    if (!(contentType && contentType.includes('multipart/form-data'))) {
+    if (!(contentType?.includes('multipart/form-data'))) {
       return null
     }
 

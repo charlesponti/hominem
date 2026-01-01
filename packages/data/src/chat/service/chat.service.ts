@@ -195,7 +195,7 @@ export class ChatService {
         .limit(1)
         .then((rows) => rows[0])
 
-      if (!(currentChat && currentChat.title.startsWith('New Chat'))) {
+      if (!(currentChat?.title.startsWith('New Chat'))) {
         return currentChat
       }
 

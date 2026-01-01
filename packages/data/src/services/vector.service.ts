@@ -19,7 +19,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 export async function upsertVectorDocuments(documents: NewVectorDocument[]) {
-  if (documents.length === 0) return
+  if (documents.length === 0) { return }
 
   await db
     .insert(vectorDocuments)

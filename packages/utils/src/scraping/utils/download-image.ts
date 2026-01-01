@@ -13,7 +13,7 @@ export async function downloadImage({
   imageUrl: string
   name: string
 }): Promise<string | null> {
-  if (!imageUrl) return null
+  if (!imageUrl) { return null }
 
   try {
     // Clean up URL - sometimes there are spaces in the URL

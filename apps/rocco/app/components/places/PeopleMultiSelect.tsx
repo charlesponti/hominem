@@ -54,21 +54,21 @@ export function PeopleMultiSelect({
   }, [people, value])
 
   const filteredPeople = useMemo(() => {
-    if (!searchQuery.trim()) return people
+    if (!searchQuery.trim()) { return people }
 
     const query = searchQuery.toLowerCase().trim()
     return people.filter((person) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase()
       return (
         person.firstName.toLowerCase().includes(query) ||
-        (person.lastName && person.lastName.toLowerCase().includes(query)) ||
+        (person.lastName?.toLowerCase().includes(query)) ||
         fullName.includes(query)
       )
     })
   }, [people, searchQuery])
 
   const canCreateNew = useMemo(() => {
-    if (!searchQuery.trim() || isCreating) return false
+    if (!searchQuery.trim() || isCreating) { return false }
     const query = searchQuery.toLowerCase().trim()
     return !filteredPeople.some((person) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase()
@@ -99,7 +99,7 @@ export function PeopleMultiSelect({
     const firstName = nameParts[0] || ''
     const lastName = nameParts.slice(1).join(' ') || undefined
 
-    if (!firstName) return
+    if (!firstName) { return }
 
     setIsCreating(true)
     createPersonMutation.mutate({

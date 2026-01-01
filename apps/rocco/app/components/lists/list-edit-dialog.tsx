@@ -1,7 +1,7 @@
 import { Alert, Label } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
 import { Textarea } from '@hominem/ui/components/ui/textarea'
+import { Input } from '@hominem/ui/input'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useId, useState } from 'react'
@@ -52,7 +52,10 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
   const handleSave = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
-      if (showDeleteConfirmation) return
+      if (showDeleteConfirmation) {
+        return
+      }
+
       try {
         await updateList.mutateAsync({
           id: list.id,

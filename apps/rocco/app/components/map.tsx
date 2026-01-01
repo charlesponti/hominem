@@ -50,7 +50,7 @@ const MapUpdater = ({
   const coreLibrary = useMapsLibrary('core')
 
   useEffect(() => {
-    if (!map || !enabled) return
+    if (!(map && enabled)) { return }
 
     // If we have multiple markers, fit bounds
     if (markers.length > 1 && coreLibrary?.LatLngBounds) {
@@ -200,7 +200,7 @@ const RoccoMap = ({
 
       // Hide info window
       if (placeId) {
-        if (event?.stop) event.stop()
+        if (event?.stop) { event.stop() }
       }
 
       onMapClick?.(event)

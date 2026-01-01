@@ -39,7 +39,7 @@ export class UserAuthService {
         id: supabaseUser.id,
         email: supabaseUser.email,
       })
-      if (existingUser) return existingUser
+      if (existingUser) { return existingUser }
 
       return await UserAuthService.createUser(supabaseUser)
     } catch (error) {

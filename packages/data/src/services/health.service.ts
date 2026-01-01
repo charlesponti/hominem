@@ -12,10 +12,10 @@ export async function listHealthRecords(filters: {
   activityType?: string
 }) {
   const conditions = []
-  if (filters.userId) conditions.push(eq(health.userId, filters.userId))
-  if (filters.startDate) conditions.push(gte(health.date, filters.startDate))
-  if (filters.endDate) conditions.push(lte(health.date, filters.endDate))
-  if (filters.activityType) conditions.push(eq(health.activityType, filters.activityType))
+  if (filters.userId) { conditions.push(eq(health.userId, filters.userId)) }
+  if (filters.startDate) { conditions.push(gte(health.date, filters.startDate)) }
+  if (filters.endDate) { conditions.push(lte(health.date, filters.endDate)) }
+  if (filters.activityType) { conditions.push(eq(health.activityType, filters.activityType)) }
 
   if (conditions.length === 0) {
     return db.select().from(health)

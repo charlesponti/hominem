@@ -43,7 +43,7 @@ const PlaceStatus = ({ businessStatus, openingHours, ...props }: PlaceStatusProp
     const now = new Date()
     const todayPeriods = openingHoursObj.periods.filter((p) => p.open?.day === todayIdx)
     isOpen = todayPeriods.some((p) => {
-      if (!p.open || !p.close) return false
+      if (!(p.open && p.close)) { return false }
       const openHour = p.open.hours
       const openMin = p.open.minutes || 0
       const closeHour = p.close.hours

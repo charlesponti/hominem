@@ -6,8 +6,8 @@ export const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D
  * Calculate budget status based on percentage spent
  */
 export function getBudgetStatus(percentageSpent: number): 'on-track' | 'warning' | 'over-budget' {
-  if (percentageSpent > 100) return 'over-budget'
-  if (percentageSpent > 90) return 'warning'
+  if (percentageSpent > 100) { return 'over-budget' }
+  if (percentageSpent > 90) { return 'warning' }
   return 'on-track'
 }
 

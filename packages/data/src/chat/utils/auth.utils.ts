@@ -50,7 +50,7 @@ export class AuthUtils {
 
     // Check for authorization header
     const authHeader = headers.authorization
-    if (!(authHeader && authHeader.startsWith('Bearer '))) {
+    if (!(authHeader?.startsWith('Bearer '))) {
       return null
     }
 

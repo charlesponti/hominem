@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, or, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
 import { db } from '../../db'
 import { type Item as ItemSelect, item, list, place, userLists, users } from '../../db/schema'

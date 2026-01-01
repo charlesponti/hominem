@@ -78,12 +78,10 @@ export function convertCopilotTransaction(
     if (finalAmount < 0) {
       finalAmount *= -1
     }
-  } else {
+  } else if (finalAmount > 0) {
     // 'expense' or 'transfer'
     // If Copilot expense/transfer is positive (as expected), make it negative
-    if (finalAmount > 0) {
-      finalAmount *= -1
-    }
+    finalAmount *= -1
   }
 
   return {

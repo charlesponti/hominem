@@ -79,7 +79,7 @@ export function calculateRunway(input: RunwayCalculationInput): RunwayCalculatio
     }
 
     // Safety limit to prevent infinite loops
-    if (runwayMonths > 120) break
+    if (runwayMonths > 120) { break }
   }
 
   // Calculate additional metrics

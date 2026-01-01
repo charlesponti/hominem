@@ -3,7 +3,7 @@ import { db } from '../db'
 import { type Artist, artists } from '../db/schema'
 
 export async function upsertArtists(records: Artist[]) {
-  if (records.length === 0) return []
+  if (records.length === 0) { return [] }
 
   const result = await db
     .insert(artists)

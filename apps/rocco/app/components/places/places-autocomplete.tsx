@@ -57,7 +57,7 @@ function PlacesAutocomplete({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!isOpen || !data) return
+      if (!(isOpen && data)) { return }
 
       switch (e.key) {
         case 'ArrowDown':

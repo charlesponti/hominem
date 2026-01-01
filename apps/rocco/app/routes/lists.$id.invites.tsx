@@ -55,7 +55,7 @@ export default function ListInvites({ loaderData }: Route.ComponentProps) {
     }
   }, [initialInvites, optimisticInvites])
 
-  if (!list || !initialInvites) {
+  if (!(list && initialInvites)) {
     return <Alert type="error">We could not find this list.</Alert>
   }
 

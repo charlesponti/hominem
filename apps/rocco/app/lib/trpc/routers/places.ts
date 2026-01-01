@@ -212,7 +212,7 @@ export const placesRouter = router({
         phoneNumber: z.string().optional(),
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { id, latitude, longitude, ...updateData } = input
 
       const locationUpdate =

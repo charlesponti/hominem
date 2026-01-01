@@ -38,19 +38,19 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
   }, [photos.length])
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) { return }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft') goToPrevious()
-      if (e.key === 'ArrowRight') goToNext()
+      if (e.key === 'Escape') { onClose() }
+      if (e.key === 'ArrowLeft') { goToPrevious() }
+      if (e.key === 'ArrowRight') { goToNext() }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose, goToPrevious, goToNext])
 
-  if (!isOpen) return null
+  if (!isOpen) { return null }
 
   return (
     <div

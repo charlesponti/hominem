@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { updateAccount, type AccountRecord } from '@hominem/data/services'
+import { type AccountRecord, updateAccount } from '@hominem/data/services'
 import { logger } from '@hominem/utils/logger'
 import { z } from 'zod'
 import { env } from './env.js'
@@ -122,7 +122,9 @@ export type TwitterAccount = AccountRecord
  * Checks if a Twitter token is expired or will expire soon
  */
 export function isTokenExpired(expiresAt: Date | null, bufferMinutes = 5): boolean {
-  if (!expiresAt) return false
+  if (!expiresAt) {
+    return false
+  }
   const bufferTime = bufferMinutes * 60 * 1000 // Convert to milliseconds
   return Date.now() >= expiresAt.getTime() - bufferTime
 }
@@ -271,14 +273,14 @@ export async function makeTwitterApiRequest(
         })
       } catch (refreshError) {
         // If refresh fails, return the original 401 response
-        logger.error('Failed to refresh token:', refreshError)
+        logger.error('Failed to refresh token:', { refreshError })
         return response
       }
     }
 
     return response
   } catch (error) {
-    logger.error('Error in makeTwitterApiRequest:', error)
+    logger.error('Error in makeTwitterApiRequest:', { error })
     throw error
   }
 }

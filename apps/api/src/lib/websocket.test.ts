@@ -13,7 +13,7 @@ class MockWebSocketServer extends EventEmitter {
   clients = new Set<MockWebSocket>()
   handleUpgrade = vi.fn()
   close = vi.fn((callback?: () => void) => {
-    if (callback) callback()
+    if (callback) { callback() }
   })
   // Don't override emit - let EventEmitter handle it
 }

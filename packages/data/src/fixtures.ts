@@ -14,14 +14,14 @@ export const createTestUser = async (overrides: Partial<typeof users.$inferInser
     supabaseId = id
   } else if (!id && supabaseId) {
     id = supabaseId
-  } else if (!id && !supabaseId) {
+  } else if (!(id || supabaseId)) {
     id = crypto.randomUUID()
     supabaseId = id
   }
 
   // Fallback for types (should be covered by above logic)
-  if (!id) id = crypto.randomUUID()
-  if (!supabaseId) supabaseId = id
+  if (!id) { id = crypto.randomUUID() }
+  if (!supabaseId) { supabaseId = id }
 
   const user = {
     email: `test-${id}@example.com`,

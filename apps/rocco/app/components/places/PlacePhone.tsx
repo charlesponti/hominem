@@ -5,7 +5,7 @@ interface PlacePhoneProps {
 }
 
 export default function PlacePhone({ phoneNumber }: PlacePhoneProps) {
-  if (!phoneNumber) return null
+  if (!phoneNumber) { return null }
   return (
     <a
       href={`tel:${phoneNumber}`}

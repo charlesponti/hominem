@@ -31,7 +31,7 @@ export default function VisitsPage() {
   const filteredVisits =
     visits
       ?.filter((visit) => {
-        if (!placeFilter) return true
+        if (!placeFilter) { return true }
         const placeName = visit.place?.name || ''
         return placeName.toLowerCase().includes(placeFilter.toLowerCase())
       })

@@ -170,10 +170,10 @@ export const update_finance_account = tool({
       interestRate: string | null
       minimumPayment: string | null
     }> = {}
-    if (args.name) updates.name = args.name
-    if (args.balance) updates.balance = args.balance.toString()
-    if (args.interestRate) updates.interestRate = args.interestRate.toString()
-    if (args.minimumPayment) updates.minimumPayment = args.minimumPayment.toString()
+    if (args.name) { updates.name = args.name }
+    if (args.balance) { updates.balance = args.balance.toString() }
+    if (args.interestRate) { updates.interestRate = args.interestRate.toString() }
+    if (args.minimumPayment) { updates.minimumPayment = args.minimumPayment.toString() }
 
     const updated = await updateAccount(args.accountId, args.userId, updates)
     return { message: `Updated finance account ${updated.id}`, account: updated }
@@ -205,7 +205,7 @@ export const create_transaction = tool({
       category: args.category || '',
       parentCategory: args.parentCategory || '',
       note: args.notes,
-      recurring: args.recurring || false,
+      recurring: args.recurring,
       userId: args.userId,
     }
 
@@ -242,12 +242,12 @@ export const update_transaction = tool({
   parameters: updateTransactionSchema,
   async execute(args) {
     const updates: Partial<FinanceTransactionInsert> = {}
-    if (args.amount) updates.amount = args.amount.toString()
-    if (args.date) updates.date = new Date(args.date)
-    if (args.description) updates.description = args.description
-    if (args.category) updates.category = args.category
-    if (args.parentCategory) updates.parentCategory = args.parentCategory
-    if (args.notes) updates.note = args.notes
+    if (args.amount) { updates.amount = args.amount.toString() }
+    if (args.date) { updates.date = new Date(args.date) }
+    if (args.description) { updates.description = args.description }
+    if (args.category) { updates.category = args.category }
+    if (args.parentCategory) { updates.parentCategory = args.parentCategory }
+    if (args.notes) { updates.note = args.notes }
 
     const updated = await updateTransaction(args.transactionId, args.userId, updates)
     return {

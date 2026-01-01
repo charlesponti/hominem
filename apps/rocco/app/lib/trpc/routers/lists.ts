@@ -158,7 +158,7 @@ export const listsRouter = router({
     .query(async ({ ctx, input }) => {
       return safeAsync(
         async () => {
-          if (!input.placeId && !input.googleMapsId) {
+          if (!(input.placeId || input.googleMapsId)) {
             return []
           }
 

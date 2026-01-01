@@ -1,26 +1,24 @@
+import crypto from 'node:crypto'
 import { upsertArtists } from '@hominem/data'
 import type { Artist } from '@hominem/data/schema'
 import { redis, waitForRateLimit } from '@hominem/utils/redis'
-import axios from 'axios'
-import crypto from 'node:crypto'
 
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env
 const authToken = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')
 
 export async function getSpotifyAccessToken(): Promise<string | null> {
   try {
-    const response = await axios.post(
-      'https://accounts.spotify.com/api/token',
-      'grant_type=client_credentials',
-      {
-        headers: {
-          Authorization: `Basic ${authToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    )
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${authToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials',
+    })
 
-    return response.data.access_token
+    const data = (await response.json()) as { access_token: string }
+    return data.access_token
   } catch (err: unknown) {
     console.error('Could not retrieve Spotify token', err)
     return null
@@ -310,7 +308,9 @@ export async function getGenreArtists(
   // Get artist details with rate limiting
   const values: SpotifyArtist[] = []
   const chunks = artistIds.reduce((acc, _, i) => {
-    if (i % 50 === 0) acc.push(artistIds.slice(i, i + 50))
+    if (i % 50 === 0) {
+      acc.push(artistIds.slice(i, i + 50))
+    }
     return acc
   }, [] as string[][])
 

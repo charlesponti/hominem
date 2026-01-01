@@ -45,7 +45,7 @@ export const useRemoveListItem = (options?: {
       // Optimistically update to the new value
       if (previousList) {
         utils.lists.getById.setData({ id: listId }, (old) => {
-          if (!old || !old.places) return old
+          if (!(old?.places)) { return old }
           return {
             ...old,
             places: old.places.filter((p) => p.placeId !== placeId),

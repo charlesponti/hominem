@@ -52,7 +52,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
 
   // Derive isInList from cached lists data
   const lists = useMemo(() => {
-    if (!rawLists || !googleMapsId) return []
+    if (!(rawLists && googleMapsId)) { return [] }
     return rawLists.map((list) => ({
       ...list,
       isInList: list.places?.some((p) => p.googleMapsId === googleMapsId) ?? false,
@@ -76,7 +76,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
   })
 
   const onListSelectChange = (listId: string, isInList: boolean) => {
-    if (!place) return
+    if (!place) { return }
 
     setLoadingListId(listId)
     if (isInList) {
@@ -91,7 +91,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
     addToList({ listIds: [listId], place })
   }
 
-  if (!isAuthenticated || !place) {
+  if (!(isAuthenticated && place)) {
     return null
   }
 

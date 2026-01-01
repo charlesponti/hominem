@@ -2,7 +2,7 @@ export const taskRegex = /^(\s*[-*]\s*)?(\[[x ]\])/i
 
 export function detectTask(text: string) {
   const taskMatch = text.match(taskRegex)
-  if (!(taskMatch && taskMatch[2])) return { isTask: false, isComplete: false, taskText: null }
+  if (!(taskMatch?.[2])) { return { isTask: false, isComplete: false, taskText: null } }
 
   const isComplete = taskMatch[2].toLowerCase() === '[x]'
   const taskText = text.replace(taskRegex, '').trim()

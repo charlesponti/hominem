@@ -228,7 +228,7 @@ export class FileProcessorService {
 
   static formatFileSize(bytes: number): string {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-    if (bytes === 0) return '0 Bytes'
+    if (bytes === 0) { return '0 Bytes' }
     const i = Math.floor(Math.log(bytes) / Math.log(1024))
     const size = Math.round((bytes / 1024 ** i) * 100) / 100
     return `${size} ${sizes[i]}`

@@ -40,7 +40,7 @@ export async function ensureInstitutionExists(id: string, name: string) {
     where: eq(financialInstitutions.id, id),
   })
 
-  if (existing) return existing
+  if (existing) { return existing }
 
   const [created] = await db
     .insert(financialInstitutions)

@@ -104,7 +104,7 @@ export function LogVisit({ placeId, placeName, visit, trigger }: LogVisitProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
+    if (!title.trim()) { return }
 
     if (isEditing && visit) {
       updateVisitMutation.mutate({

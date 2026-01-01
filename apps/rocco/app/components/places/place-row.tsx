@@ -42,7 +42,7 @@ export default function PlaceRow({
 
   const handlePrefetch = () => {
     const id = href.split('/').pop()
-    if (!id) return
+    if (!id) { return }
 
     if (z.uuid().safeParse(id).success) {
       utils.places.getDetailsById.prefetch({ id })
