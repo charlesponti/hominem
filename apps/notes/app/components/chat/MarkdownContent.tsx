@@ -122,7 +122,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
               {children}
             </a>
           ),
-          // Blockquotes
+          // Block quotes
           blockquote: ({ children }) => (
             <blockquote className="border-l-4 border-muted-foreground/30 pl-4 italic my-4">
               {children}

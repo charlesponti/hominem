@@ -1,8 +1,8 @@
-import { redirect } from 'react-router'
-import { getServerSession } from '../lib/auth.server'
 import { Button } from '@hominem/ui/button'
 import { useState } from 'react'
+import { redirect } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
+import { getServerSession } from '../lib/auth.server'
 
 type RefreshResult = {
   updatedCount: number

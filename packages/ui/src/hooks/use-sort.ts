@@ -88,7 +88,7 @@ export function useSort(options: UseSortOptions = {}) {
       // URL was cleared, clear sort options
       setSortOptionsState([])
     }
-  }, [searchParams, urlParamName])
+  }, [searchParams, urlParamName, sortOptions.length])
 
   // After initial mount, flip the flag so subsequent updates run their sync logic
   useEffect(() => {
