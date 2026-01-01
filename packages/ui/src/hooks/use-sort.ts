@@ -73,6 +73,7 @@ export function useSort(options: UseSortOptions = {}) {
   }, [sortOptions, sortOptions.length, urlParamName, searchParams, setSearchParams, singleSort])
 
   // Sync filters when URL changes externally (e.g., browser back/forward)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: searchParams is stable from hook
   useEffect(() => {
     if (isInitialMountRef.current) {
       return
@@ -88,7 +89,7 @@ export function useSort(options: UseSortOptions = {}) {
       // URL was cleared, clear sort options
       setSortOptionsState([])
     }
-  }, [searchParams, urlParamName, sortOptions.length])
+  }, [searchParams, urlParamName])
 
   // After initial mount, flip the flag so subsequent updates run their sync logic
   useEffect(() => {
