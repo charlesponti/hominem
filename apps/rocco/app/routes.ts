@@ -40,9 +40,6 @@ export default [
 
     route('admin', './routes/admin.tsx'),
 
-    // 404 page
-    route('404', './routes/404.tsx'),
-
     route('*', './routes/$.tsx'),
   ]),
 ] satisfies RouteConfig

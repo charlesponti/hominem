@@ -179,12 +179,5 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
   )
 }
 
-export function ErrorBoundary({ error }: { error: unknown }) {
-  console.error(error)
-  return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-      <h3 className="text-lg font-semibold text-red-900 mb-2">Error Loading Invitations</h3>
-      <p className="text-red-700">An unexpected error occurred while loading invites.</p>
-    </div>
-  )
-}
+import ErrorBoundary from '~/components/ErrorBoundary'
+export { ErrorBoundary }

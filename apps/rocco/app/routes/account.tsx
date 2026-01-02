@@ -103,10 +103,8 @@ export default function Account({ loaderData }: Route.ComponentProps) {
   )
 }
 
-export function ErrorBoundary({ error }: { error: unknown }) {
-  console.error(error)
-  return <Alert type="error">An unexpected error occurred.</Alert>
-}
+import ErrorBoundary from '~/components/ErrorBoundary'
+export { ErrorBoundary }
 
 export function HydrateFallback() {
   return <LoadingScreen />

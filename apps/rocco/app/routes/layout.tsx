@@ -33,7 +33,9 @@ export default function Layout() {
   return (
     <AppLayout navigation={<Header />} backgroundImage="/rocco-background-2.webp">
       <Suspense fallback={<LoadingScreen />}>
-        <Outlet />
+        <div className="max-w-4xl mx-auto">
+          <Outlet />
+        </div>
       </Suspense>
     </AppLayout>
   )
