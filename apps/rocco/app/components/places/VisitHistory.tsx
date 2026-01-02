@@ -92,7 +92,7 @@ function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
                 visit={visit}
                 trigger={
                   <Button variant="ghost" size="icon" aria-label="Edit visit">
-                    <Edit2 className="size-3.5" />
+                    <Edit2 className="size-4" />
                   </Button>
                 }
               />
@@ -104,7 +104,7 @@ function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
                 disabled={deleteVisit.isPending}
                 aria-label="Delete visit"
               >
-                <Trash2 className="size-3.5" />
+                <Trash2 className="size-4" />
               </Button>
             </div>
           </div>

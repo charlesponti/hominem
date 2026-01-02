@@ -1,4 +1,5 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
+import { COMMON_FONT_LINKS, COMMON_ICON_LINKS } from '@hominem/ui'
 import type { AuthChangeEvent } from '@supabase/supabase-js'
 import { useCallback } from 'react'
 import { data, Links, Meta, Outlet, Scripts, ScrollRestoration, useRevalidator } from 'react-router'
@@ -24,26 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   )
 }
 
-export const links = () => [
-  { rel: 'icon', href: '/favicons/favicon.ico' },
-  { rel: 'manifest', href: '/manifest.json' },
-  { rel: 'apple-touch-icon', href: '/favicons/apple-touch-icon-152x152.png' },
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-  {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
-  },
-  {
-    rel: 'preload',
-    as: 'style',
-    href: 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Geist+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
-  },
-  {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Geist+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
-  },
-]
+export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...COMMON_ICON_LINKS]
 
 export const meta = () => [
   { title: 'rocco' },
@@ -104,7 +86,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <Outlet />
           </TRPCProvider>
         </SupabaseAuthProvider>
-
         <ScrollRestoration />
         <Scripts />
       </body>

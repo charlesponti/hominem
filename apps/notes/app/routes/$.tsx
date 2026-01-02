@@ -41,27 +41,20 @@ export default function NotFoundPage() {
 
         {/* Helpful Links */}
         <div className="mt-12 pt-8 border-t border-border/50 w-full">
-          <p className="text-sm text-muted-foreground mb-4 font-light">Quick Links</p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <Link
-              to="/notes"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <StickyNote className="size-3.5" />
+          <p className="text-lg text-muted-foreground mb-4 font-extralight font-serif tracking-tight italic">
+            Quick Links
+          </p>
+          <div className="flex flex-wrap justify-center gap-8 text-sm">
+            <Link to="/notes" className="btn">
+              <StickyNote className="size-4" />
               Notes
             </Link>
-            <Link
-              to="/chat"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <Bot className="size-3.5" />
+            <Link to="/chat" className="btn">
+              <Bot className="size-4" />
               AI Assistant
             </Link>
-            <Link
-              to="/content-strategy"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <Lightbulb className="size-3.5" />
+            <Link to="/content-strategy" className="btn">
+              <Lightbulb className="size-4" />
               Content Strategy
             </Link>
           </div>

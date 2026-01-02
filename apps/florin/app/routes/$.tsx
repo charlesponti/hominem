@@ -42,26 +42,17 @@ export default function NotFoundPage() {
         {/* Helpful Links */}
         <div className="mt-12 pt-8 border-t border-border/50 w-full">
           <p className="text-sm text-muted-foreground mb-4 font-light">Quick Links</p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <Link
-              to="/finance"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <Wallet className="size-3.5" />
+          <div className="flex flex-wrap justify-center gap-8 text-sm">
+            <Link to="/finance" className="btn">
+              <Wallet className="size-4" />
               Finance
             </Link>
-            <Link
-              to="/analytics"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <TrendingUp className="size-3.5" />
+            <Link to="/analytics" className="btn">
+              <TrendingUp className="size-4" />
               Analytics
             </Link>
-            <Link
-              to="/accounts"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <Wallet className="size-3.5" />
+            <Link to="/accounts" className="btn">
+              <Wallet className="size-4" />
               Accounts
             </Link>
           </div>

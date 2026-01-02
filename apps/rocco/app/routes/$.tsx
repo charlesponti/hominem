@@ -1,7 +1,7 @@
 import { PageTitle } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { motion, type Variants } from 'framer-motion'
-import { Home, MapPin, Search } from 'lucide-react'
+import { Home, ListIcon, MapPin, Search } from 'lucide-react'
 import { Link } from 'react-router'
 import ErrorBoundary from '~/components/ErrorBoundary'
 
@@ -74,26 +74,17 @@ export default function NotFoundPage() {
         {/* Helpful Links */}
         <motion.div variants={fadeIn} className="mt-12 pt-8 border-t border-border/50 w-full">
           <p className="text-sm text-muted-foreground mb-4 font-light">Quick Links</p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <Link
-              to="/"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <Search className="size-3.5" />
+          <div className="flex flex-wrap justify-center gap-8 text-sm">
+            <Link to="/" className="btn">
+              <Search className="size-4" />
               Explore Places
             </Link>
-            <Link
-              to="/lists"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <MapPin className="size-3.5" />
+            <Link to="/lists" className="btn">
+              <ListIcon className="size-4" />
               My Lists
             </Link>
-            <Link
-              to="/trips"
-              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
-            >
-              <MapPin className="size-3.5" />
+            <Link to="/trips" className="btn">
+              <MapPin className="size-4" />
               Trips
             </Link>
           </div>

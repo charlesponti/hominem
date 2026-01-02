@@ -255,7 +255,7 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
                   onClick={() => navigate('/')}
                   className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
                 >
-                  <Home className="size-3.5" />
+                  <Home className="size-4" />
                   Explore Places
                 </button>
                 <button
@@ -263,7 +263,7 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
                   onClick={() => navigate('/lists')}
                   className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5"
                 >
-                  <List className="size-3.5" />
+                  <List className="size-4" />
                   My Lists
                 </button>
               </div>

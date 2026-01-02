@@ -14,7 +14,7 @@ body {
 @theme {
   /* Typography */
   --font-mono: 'Geist Mono', ui-monospace, monospace;
-  --font-serif: 'EB Garamound', ui-serif, serif;
+  --font-serif: 'Noto Serif', ui-serif, serif;
   --font-sans: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
 
   /* Base Colors - Light Mode */
@@ -401,5 +401,9 @@ body {
   /* Specialized Styles */
   .price {
     font-size: clamp(1.25rem, 2vw, 1.75rem);
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-md font-light tracking-wide transition-colors bg-primary text-primary-foreground gap-2 flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary hover:outline-none hover:ring-2 hover:ring-offset-2 hover:ring-primary;
   }
 }
