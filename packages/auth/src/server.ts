@@ -38,6 +38,10 @@ export async function getServerAuth(
   request: Request,
   config: AuthConfig
 ): Promise<ServerAuthResult & { headers: Headers }> {
+  if (!request.headers) {
+    throw new Error('Invalid request')
+  }
+
   const { headers, cookies } = createCookieHandlers(request)
 
   const supabase = createServerClient(config.supabaseUrl, config.supabaseAnonKey, { cookies })
@@ -58,11 +62,6 @@ export async function getServerAuth(
       }
     }
 
-    // Fetch session for access token if needed
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
     // Get or create Hominem user
     const userAuthData = await UserAuthService.findOrCreateUser(user as SupabaseAuthUser)
     if (!userAuthData) {
@@ -73,6 +72,11 @@ export async function getServerAuth(
         headers,
       }
     }
+
+    // Fetch session for access token if needed
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
     return {
       user: toHominemUser(userAuthData),
@@ -99,6 +103,10 @@ export function createSupabaseServerClient(
   request: Request,
   config: AuthConfig
 ): { supabase: SupabaseClient; headers: Headers } {
+  if (!request.headers) {
+    throw new Error('Invalid request')
+  }
+
   const { headers, cookies } = createCookieHandlers(request)
 
   const supabase = createServerClient(config.supabaseUrl, config.supabaseAnonKey, { cookies })
