@@ -2,7 +2,7 @@ import { Button } from '@hominem/ui/button'
 import { List } from '@hominem/ui/list'
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { Edit2, Star, Trash2 } from 'lucide-react'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { trpc } from '~/lib/trpc/client'
 import { LogVisit } from './LogVisit'
 
@@ -25,6 +25,9 @@ interface VisitItemProps {
   }
   placeId: string
   placeName: string
+  isEditing: boolean
+  onEdit: () => void
+  onCancel: () => void
 }
 
 const itemVariants: Variants = {
@@ -47,7 +50,7 @@ const itemVariants: Variants = {
   },
 }
 
-function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
+function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: VisitItemProps) {
   const utils = trpc.useUtils()
   const deleteVisit = trpc.places.deleteVisit.useMutation({
     onSuccess: () => {
@@ -62,22 +65,25 @@ function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
     }
   }, [visit.id, deleteVisit])
 
+  if (isEditing) {
+    return (
+      <motion.li variants={itemVariants} layout className="py-2">
+        <LogVisit
+          placeId={placeId}
+          placeName={placeName}
+          visit={visit}
+          onSuccess={onCancel}
+          onCancel={onCancel}
+        />
+      </motion.li>
+    )
+  }
+
   return (
     <motion.li variants={itemVariants} layout className="group">
       <div className="flex items-center gap-3 p-2 hover:bg-gray-50 transition-colors">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="flex-1 text-sm text-accent-foreground truncate font-medium">
-              {visit.title}
-            </p>
-            {visit.visitRating && (
-              <div className="flex items-center gap-1 shrink-0">
-                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                <span className="text-xs text-muted-foreground">{visit.visitRating}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center justify-between gap-2 mt-0.5">
             <span className="text-xs text-muted-foreground">
               {new Date(visit.date).toLocaleDateString('en-US', {
                 month: 'short',
@@ -85,27 +91,31 @@ function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
                 year: 'numeric',
               })}
             </span>
-            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-              <LogVisit
-                placeId={placeId}
-                placeName={placeName}
-                visit={visit}
-                trigger={
-                  <Button variant="ghost" size="icon" aria-label="Edit visit">
-                    <Edit2 className="size-4" />
-                  </Button>
-                }
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive"
-                onClick={handleDelete}
-                disabled={deleteVisit.isPending}
-                aria-label="Delete visit"
-              >
-                <Trash2 className="size-4" />
-              </Button>
+            <p className="flex-1 text-sm text-accent-foreground truncate font-medium">
+              {visit.title}
+            </p>
+            <div className="space-x-6 flex items-center">
+              {visit.visitRating && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <Star className="size-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs text-muted-foreground">{visit.visitRating}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-3">
+                <Button variant="icon" size="icon" aria-label="Edit visit" onClick={onEdit}>
+                  <Edit2 className="size-4" />
+                </Button>
+                <Button
+                  variant="icon"
+                  size="icon"
+                  className="text-destructive hover:text-destructive"
+                  onClick={handleDelete}
+                  disabled={deleteVisit.isPending}
+                  aria-label="Delete visit"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
             </div>
           </div>
           {(visit.description || visit.visitNotes || visit.visitReview || visit.visitPeople) && (
@@ -136,68 +146,42 @@ function VisitItem({ visit, placeId, placeName }: VisitItemProps) {
   )
 }
 
-function VisitStatsSummary({
-  stats,
-}: {
-  stats: { visitCount: number; lastVisitDate: Date | string | null; averageRating: number | null }
-}) {
-  const lastVisitDate = stats.lastVisitDate
-    ? new Date(stats.lastVisitDate).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : null
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="flex items-center gap-4 text-sm text-muted-foreground pb-2"
-    >
-      <span>
-        You&apos;ve visited here{' '}
-        <span className="font-semibold text-foreground">{stats.visitCount}</span>{' '}
-        {stats.visitCount === 1 ? 'time' : 'times'}
-      </span>
-      {lastVisitDate && (
-        <>
-          <span className="text-muted-foreground/50">•</span>
-          <span>
-            Last visit: <span className="font-semibold text-foreground">{lastVisitDate}</span>
-          </span>
-        </>
-      )}
-      {stats.averageRating && (
-        <>
-          <span className="text-muted-foreground/50">•</span>
-          <span>
-            Avg rating:{' '}
-            <span className="font-semibold text-foreground">{stats.averageRating.toFixed(1)}</span>
-          </span>
-        </>
-      )}
-    </motion.div>
-  )
-}
-
 export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
   const { data: visits, isLoading: visitsLoading } = trpc.places.getPlaceVisits.useQuery({
     placeId,
   })
-  const { data: stats, isLoading: statsLoading } = trpc.places.getVisitStats.useQuery({ placeId })
 
-  const showStats = !statsLoading && stats && stats.visitCount > 0
+  const [showInlineForm, setShowInlineForm] = useState(false)
+  const [editingVisitId, setEditingVisitId] = useState<string | null>(null)
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <h3 className="heading-2 font-light">Visit History</h3>
-        <LogVisit placeId={placeId} placeName={placeName} />
+        <Button
+          variant="outline"
+          size="sm"
+          aria-expanded={showInlineForm}
+          aria-controls="log-visit-inline-form"
+          onClick={() => {
+            setShowInlineForm((v) => !v)
+            setEditingVisitId(null)
+          }}
+        >
+          {showInlineForm ? 'Cancel' : 'Log Visit'}
+        </Button>
       </div>
 
-      {showStats && <VisitStatsSummary stats={stats} />}
+      {showInlineForm && (
+        <div id="log-visit-inline-form" className="py-2">
+          <LogVisit
+            placeId={placeId}
+            placeName={placeName}
+            onSuccess={() => setShowInlineForm(false)}
+            onCancel={() => setShowInlineForm(false)}
+          />
+        </div>
+      )}
 
       {!visitsLoading && (!visits || visits.length === 0) ? (
         <motion.div
@@ -211,7 +195,18 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
         <List isLoading={visitsLoading} loadingSize="md">
           <AnimatePresence mode="popLayout">
             {visits?.map((visit) => (
-              <VisitItem key={visit.id} visit={visit} placeId={placeId} placeName={placeName} />
+              <VisitItem
+                key={visit.id}
+                visit={visit}
+                placeId={placeId}
+                placeName={placeName}
+                isEditing={editingVisitId === visit.id}
+                onEdit={() => {
+                  setEditingVisitId(visit.id)
+                  setShowInlineForm(false)
+                }}
+                onCancel={() => setEditingVisitId(null)}
+              />
             ))}
           </AnimatePresence>
         </List>
