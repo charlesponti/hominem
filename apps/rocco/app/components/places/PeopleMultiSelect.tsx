@@ -8,7 +8,14 @@ import {
   CommandItem,
   CommandList,
 } from '@hominem/ui/components/ui/command'
-import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@hominem/ui/components/ui/drawer'
 import { Check, Loader2, Plus, X } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { trpc } from '~/lib/trpc/client'
@@ -120,8 +127,8 @@ export function PeopleMultiSelect({
 
   return (
     <div className="space-y-2">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
@@ -168,10 +175,17 @@ export function PeopleMultiSelect({
               )}
             </div>
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0" align="start">
-          <Command>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Select People</DrawerTitle>
+            <DrawerDescription>
+              Search and select people to include in this visit.
+            </DrawerDescription>
+          </DrawerHeader>
+          <Command className="border-none">
             <CommandInput
+              autoFocus
               placeholder="Search people..."
               value={searchQuery}
               onValueChange={setSearchQuery}
@@ -185,21 +199,19 @@ export function PeopleMultiSelect({
                 <>
                   <CommandEmpty>
                     {canCreateNew ? (
-                      <div className="py-2">
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={handleCreatePerson}
-                          disabled={isCreating}
-                        >
-                          {isCreating ? (
-                            <Loader2 className="mr-2 size-4 animate-spin" />
-                          ) : (
-                            <Plus className="mr-2 size-4" />
-                          )}
-                          Create &quot;{searchQuery}&quot;
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={handleCreatePerson}
+                        disabled={isCreating}
+                      >
+                        {isCreating ? (
+                          <Loader2 className="mr-2 size-4 animate-spin" />
+                        ) : (
+                          <Plus className="mr-2 size-4" />
+                        )}
+                        Create &quot;{searchQuery}&quot;
+                      </Button>
                     ) : (
                       'No people found.'
                     )}
@@ -216,7 +228,7 @@ export function PeopleMultiSelect({
                         >
                           <span className="flex-1">{getPersonDisplayName(person)}</span>
                           <Check
-                            className={cn('size-4', {
+                            className={cn('size-4 text-success', {
                               'opacity-0': !isSelected,
                               'opacity-100': isSelected,
                             })}
@@ -244,8 +256,8 @@ export function PeopleMultiSelect({
               )}
             </CommandList>
           </Command>
-        </PopoverContent>
-      </Popover>
+        </DrawerContent>
+      </Drawer>
     </div>
   )
 }
