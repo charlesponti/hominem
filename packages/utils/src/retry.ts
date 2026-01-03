@@ -1,4 +1,4 @@
-import { logger } from '../logger'
+import { logger } from './logger'
 
 type WithRetryOptions<T> = {
   operation: () => Promise<T>

@@ -1,20 +1,18 @@
 import crypto from 'node:crypto'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { sendInviteEmail } from '../resend'
-import { db } from '../db'
-import { list, users, item as itemTable, userLists } from '../db/schema'
-import {
-  acceptListInvite,
-  getOwnedLists,
-  getUserLists,
-  getOwnedListsWithItemCount,
-  getUserListsWithItemCount,
-  sendListInvite,
-  deleteListInvite,
-} from './lists'
 import { and, eq } from 'drizzle-orm'
-import { createTestUser } from '../fixtures'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { db } from '../db'
+import { item as itemTable, list, userLists, users } from '../db/schema'
 import { listInvite } from '../db/schema/lists.schema'
+import { createTestUser } from '../fixtures'
+import { sendInviteEmail } from '../resend'
+import { acceptListInvite, deleteListInvite, sendListInvite } from './list-invites.service'
+import {
+  getOwnedLists,
+  getOwnedListsWithItemCount,
+  getUserLists,
+  getUserListsWithItemCount,
+} from './list-queries.service'
 
 vi.mock('../resend', () => ({
   sendInviteEmail: vi.fn(),

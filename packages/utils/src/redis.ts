@@ -1,6 +1,6 @@
 import Redis from 'ioredis'
+import delay from './delay'
 import { TIME_UNITS } from './time'
-import delay from './utils/delay.utils'
 
 const { REDIS_URL } = process.env
 

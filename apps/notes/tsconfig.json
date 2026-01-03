@@ -3,6 +3,7 @@
   "include": ["app/**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"],
   "exclude": ["build", "public"],
   "compilerOptions": {
+    "composite": true,
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node", "vite/client", "@testing-library/jest-dom"],
     "target": "ES2022",
@@ -27,5 +28,11 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "references": [{ "path": "../../packages/ui" }]
+  "references": [
+    { "path": "../../packages/ui" },
+    { "path": "../../packages/ai" },
+    { "path": "../../packages/auth" },
+    { "path": "../../packages/data" },
+    { "path": "../../packages/utils" }
+  ]
 }

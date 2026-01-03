@@ -1,7 +1,7 @@
 import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
 import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { adjustDateRange, formatChartDate } from '@hominem/utils/dates'
+import { adjustDateRange, formatMonthYear } from '@hominem/utils/dates'
 import type { Dispatch, SetStateAction } from 'react'
 import { useId, useMemo } from 'react'
 import {
@@ -65,9 +65,11 @@ export function AnalyticsChartDisplay({
   })
 
   const incomeExpensesChartData = useMemo(() => {
-    if (!timeSeriesData?.data) return []
+    if (!timeSeriesData?.data) {
+      return []
+    }
     return timeSeriesData.data.map((point) => ({
-      name: formatChartDate(point.date),
+      name: formatMonthYear(point.date),
       Income: point.income,
       Expenses: Math.abs(point.expenses),
     }))

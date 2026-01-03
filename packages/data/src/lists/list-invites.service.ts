@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { and, eq, or } from 'drizzle-orm'
-import { db, takeUniqueOrThrow } from '../../db'
+import { db, takeUniqueOrThrow } from '../db'
 import {
   type ListInviteSelect,
   type ListSelect,
@@ -8,9 +8,9 @@ import {
   listInvite,
   userLists,
   users,
-} from '../../db/schema'
-import { logger } from '../../logger'
-import { sendInviteEmail } from '../../resend'
+} from '../db/schema'
+import { logger } from '../logger'
+import { sendInviteEmail } from '../resend'
 
 /**
  * Gets all invites for a specific list
@@ -220,7 +220,9 @@ export async function acceptListInvite(listId: string, acceptingUserId: string, 
         (await tx.query.list.findFirst({
           where: eq(list.id, invite.listId),
         }))
-      if (!l) { throw new Error('List not found after accepting invite.') }
+      if (!l) {
+        throw new Error('List not found after accepting invite.')
+      }
       return l
     })
 

@@ -3,7 +3,7 @@ import { openai } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 import type { z } from 'zod'
 
-export async function transformHTMLToSchema<T extends z.ZodObject<z.ZodRawShape, 'strip'>>(
+export async function transformHTMLToSchema<T extends z.ZodObject<z.ZodRawShape>>(
   html: string,
   schema: T,
   model: 'openai' | 'google' = 'openai'

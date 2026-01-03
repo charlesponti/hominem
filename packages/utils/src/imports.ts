@@ -15,7 +15,7 @@ export async function getJobStatus<T>(jobId: string): Promise<T | null> {
     const job = await redis.get(`${IMPORT_JOB_PREFIX}${jobId}`)
     return job ? (JSON.parse(job) as T) : null
   } catch (error) {
-    logger.error(`Failed to get job status for ${jobId}:`, error)
+    logger.error(`Failed to get job status for ${jobId}:`, { error })
     return null
   }
 }
@@ -97,7 +97,7 @@ export async function getUserJobs<T extends BaseJob>(
       pages: Math.ceil(total / limit),
     }
   } catch (error) {
-    logger.error(`Failed to get jobs for user ${userId}:`, error)
+    logger.error(`Failed to get jobs for user ${userId}:`, { error })
     return { jobs: [], total: 0, page, pages: 0 }
   }
 }
@@ -115,7 +115,9 @@ export async function getImportFileContent(jobId: string): Promise<string | null
 export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY)
-    if (!jobIds.length) { return [] }
+    if (!jobIds.length) {
+      return []
+    }
 
     const jobs = await getJobsByIds<T>(jobIds)
 
@@ -134,7 +136,7 @@ export async function getActiveJobs<T extends BaseJob>(): Promise<T[]> {
 
     return jobs
   } catch (error) {
-    logger.error({ error }, 'Failed to get active jobs')
+    logger.error('Failed to get active jobs', { error })
     return []
   }
 }
@@ -160,14 +162,16 @@ export async function getJobsByIds<T extends BaseJob>(jobIds: string[]): Promise
 export async function getQueuedJobs<T extends BaseJob>(): Promise<T[]> {
   try {
     const jobIds = await redis.smembers(IMPORT_JOBS_LIST_KEY)
-    if (!jobIds.length) { return [] }
+    if (!jobIds.length) {
+      return []
+    }
 
     const jobs = await getJobsByIds<T>(jobIds)
 
     // Filter out null jobs and only return queued jobs
     return jobs.filter((job) => job.status === 'queued')
   } catch (error) {
-    logger.error({ error }, 'Failed to get queued jobs')
+    logger.error('Failed to get queued jobs', { error })
     return []
   }
 }

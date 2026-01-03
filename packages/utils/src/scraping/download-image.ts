@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import axios from 'axios'
-import { logger } from '../../logger'
+import { logger } from '../logger'
 
 // Helper function to download image
 export async function downloadImage({
@@ -13,7 +13,9 @@ export async function downloadImage({
   imageUrl: string
   name: string
 }): Promise<string | null> {
-  if (!imageUrl) { return null }
+  if (!imageUrl) {
+    return null
+  }
 
   try {
     // Clean up URL - sometimes there are spaces in the URL

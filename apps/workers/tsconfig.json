@@ -23,6 +23,9 @@
     },
     {
       "path": "../../packages/ai"
+    },
+    {
+      "path": "../../packages/data"
     }
   ],
   "include": ["src/**/*.ts", "test/**/*.ts"],

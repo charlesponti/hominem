@@ -1,3 +1,4 @@
+export * from '../db/schema/lists.schema'
 export {
   getUserListLinks,
   isUserMemberOfList,

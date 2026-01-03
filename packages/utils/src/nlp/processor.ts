@@ -28,7 +28,7 @@ export class NLPProcessor {
 
   async analyzeText(text: string): Promise<TextAnalysis> {
     const llmProvider = new LLMProvider(this.config)
-    const response = await generateObject({
+    const response = await generateObject<z.infer<typeof TextAnalysisSchema>>({
       model: llmProvider.getModel(),
       prompt: `Analyze the following text and extract linguistic patterns, emotions, and topics: "${text}"`,
       schema: TextAnalysisSchema,
@@ -38,7 +38,7 @@ export class NLPProcessor {
 
   async analyzeEmotion(text: string): Promise<TextAnalysisEmotion[]> {
     const llmProvider = new LLMProvider(this.config)
-    const response = await generateObject({
+    const response = await generateObject<z.infer<typeof TextAnalysisEmotionSchema>[]>({
       model: llmProvider.getModel(),
       prompt: `Analyze the emotional journey in this text, breaking it down by sentences: "${text}"`,
       schema: z.array(TextAnalysisEmotionSchema),
@@ -48,7 +48,7 @@ export class NLPProcessor {
 
   async findActionItems(text: string): Promise<ActionItems> {
     const llmProvider = new LLMProvider(this.config)
-    const response = await generateObject({
+    const response = await generateObject<z.infer<typeof ActionItemsSchema>>({
       model: llmProvider.getModel(),
       prompt: `Find action items, commitments, and deadlines in this text: "${text}"`,
       schema: ActionItemsSchema,
@@ -58,7 +58,7 @@ export class NLPProcessor {
 
   async analyzePeople(text: string): Promise<People> {
     const llmProvider = new LLMProvider(this.config)
-    const response = await generateObject({
+    const response = await generateObject<z.infer<typeof PeopleSchema>>({
       model: llmProvider.getModel(),
       prompt: `Return the people mentioned in the following text: "${text}"`,
       schema: PeopleSchema,
@@ -68,7 +68,7 @@ export class NLPProcessor {
 
   async analyzeDecisions(text: string): Promise<Decisions> {
     const llmProvider = new LLMProvider(this.config)
-    const response = await generateObject({
+    const response = await generateObject<z.infer<typeof DecisionsSchema>>({
       model: llmProvider.getModel(),
       prompt: `Analyze decisions, alternatives, and reasoning in this text: "${text}"`,
       schema: DecisionsSchema,
@@ -78,7 +78,7 @@ export class NLPProcessor {
 
   async analyzeHabits(text: string): Promise<Habits> {
     const llmProvider = new LLMProvider(this.config)
-    const response = await generateObject({
+    const response = await generateObject<z.infer<typeof HabitsSchema>>({
       model: llmProvider.getModel(),
       prompt: `Analyze habits, routines, and time patterns in this text: "${text}"`,
       schema: HabitsSchema,

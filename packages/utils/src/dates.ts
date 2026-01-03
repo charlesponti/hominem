@@ -67,23 +67,28 @@ export function getLastMonthFromRange(_dateFrom?: Date, dateTo?: Date) {
 }
 
 // Helper function to format date based on whether it's this year
-export function formatChartDate(dateString: string) {
+export function formatMonthYear(dateString: string) {
   // Parse YYYY-MM format explicitly to avoid timezone issues
   const [yearStr, monthStr] = dateString.split('-')
+  if (!(yearStr && monthStr)) {
+    return ''
+  }
+
   const year = Number.parseInt(yearStr, 10)
   const month = Number.parseInt(monthStr, 10) - 1 // JavaScript months are 0-indexed
 
+  if (Number.isNaN(year) || Number.isNaN(month)) {
+    return ''
+  }
+
+  const date = new Date(year, month, 1)
   const currentYear = new Date().getFullYear()
 
   if (year === currentYear) {
     // This year - show month name only
-    const date = new Date(year, month, 1)
-    return date.toLocaleDateString('en-US', { month: 'short' })
+    return new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date)
   }
 
-  // Other years - show month and year like "Dec '24"
-  const date = new Date(year, month, 1)
-  const monthName = date.toLocaleDateString('en-US', { month: 'short' })
-  const yearShort = year.toString().slice(-2) // Get last 2 digits
-  return `${monthName} '${yearShort}`
+  // Other years - show month and year like "Dec 24"
+  return new Intl.DateTimeFormat('en-US', { month: 'short', year: '2-digit' }).format(date)
 }

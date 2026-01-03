@@ -1,6 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm'
-import { db } from '../../db'
-import { list, listInvite, type UserListsSelect, userLists } from '../../db/schema'
+import { db } from '../db'
+import { list, listInvite, type UserListsSelect, userLists } from '../db/schema'
 
 export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
   const membership = await db.query.userLists.findFirst({

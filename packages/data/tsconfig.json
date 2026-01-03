@@ -12,6 +12,11 @@
       "@hominem/ui": ["../ui/src/index.ts"]
     }
   },
+  "references": [
+    {
+      "path": "../utils"
+    }
+  ],
   "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],
   "exclude": ["node_modules"]
 }

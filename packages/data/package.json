@@ -11,7 +11,7 @@
     "./files": "./src/files.ts",
     "./finance": "./src/finance/index.ts",
     "./fixtures": "./src/fixtures.ts",
-    "./lists": "./src/lists.ts",
+    "./lists": "./src/lists/index.ts",
     "./logger": "./src/logger.ts",
     "./places": "./src/places.ts",
     "./schema": "./src/db/schema/index.ts",
