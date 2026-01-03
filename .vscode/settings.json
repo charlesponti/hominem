@@ -29,6 +29,8 @@
   "tailwindCSS.rootFontSize": 16,
   "tailwindCSS.experimental.configFile": "./packages/ui/src/styles/globals.css",
   "typescript.tsdk": "./node_modules/typescript/lib",
+  "typescript.tsserver.nodePath": "~/.local/share/mise/shims/node",
+  "typescript.tsserver.maxTsServerMemory": 3072,
   "editor.defaultFormatter": "biomejs.biome",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {

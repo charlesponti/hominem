@@ -19,7 +19,8 @@
     "./tools": "./src/tools/index.ts",
     "./types": "./src/types.ts",
     "./vector": "./src/vector.ts",
-    "./chat": "./src/chat/index.ts"
+    "./chat": "./src/chat/index.ts",
+    "./user": "./src/services/user-auth.service.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
