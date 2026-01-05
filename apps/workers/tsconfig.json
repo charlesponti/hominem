@@ -12,9 +12,15 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["src/*"],
-      "@hominem/ui/*": ["../../packages/ui/src/*"],
-      "@hominem/ui": ["../../packages/ui/src/index.ts"]
+      "@/*": [
+        "src/*"
+      ],
+      "@hominem/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@hominem/ui": [
+        "../../packages/ui/src/index.ts"
+      ]
     }
   },
   "references": [
@@ -28,6 +34,14 @@
       "path": "../../packages/data"
     }
   ],
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["node_modules", "build", "**/*.test.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts"
+  ]
 }

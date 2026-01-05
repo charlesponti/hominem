@@ -9,11 +9,26 @@
     "emitDeclarationOnly": true,
     "outDir": "./build",
     "paths": {
-      "@/*": ["./src/*"],
-      "@hominem/ui/*": ["../ui/src/*"],
-      "@hominem/ui": ["../ui/src/index.ts"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@hominem/ui/*": [
+        "../ui/src/*"
+      ],
+      "@hominem/ui": [
+        "../ui/src/index.ts"
+      ]
     }
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./src/**/*.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "build",
+    "dist"
+  ]
 }

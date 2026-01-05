@@ -7,9 +7,15 @@
     "outDir": "./build",
     "rootDir": "./src",
     "paths": {
-      "@/*": ["./src/*"],
-      "@hominem/ui/*": ["../ui/src/*"],
-      "@hominem/ui": ["../ui/src/index.ts"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@hominem/ui/*": [
+        "../ui/src/*"
+      ],
+      "@hominem/ui": [
+        "../ui/src/index.ts"
+      ]
     }
   },
   "references": [
@@ -17,6 +23,14 @@
       "path": "../utils"
     }
   ],
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],
-  "exclude": ["node_modules"]
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./src/**/*.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist"
+  ]
 }

@@ -11,18 +11,42 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["src/*"],
-      "@hominem/ui/*": ["../../packages/ui/src/*"],
-      "@hominem/ui": ["../../packages/ui/src/index.ts"]
+      "@/*": [
+        "src/*"
+      ],
+      "@hominem/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@hominem/ui": [
+        "../../packages/ui/src/index.ts"
+      ]
     }
   },
   "references": [
-    { "path": "../../packages/ai" },
-    { "path": "../../packages/auth" },
-    { "path": "../../packages/data" },
-    { "path": "../../packages/utils" },
-    { "path": "../notes" }
+    {
+      "path": "../../packages/ai"
+    },
+    {
+      "path": "../../packages/auth"
+    },
+    {
+      "path": "../../packages/data"
+    },
+    {
+      "path": "../../packages/utils"
+    },
+    {
+      "path": "../notes"
+    }
   ],
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["node_modules", "build", "**/*.test.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts"
+  ]
 }

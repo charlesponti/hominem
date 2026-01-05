@@ -12,18 +12,39 @@
     "declaration": true,
     "downlevelIteration": true,
     "noImplicitAny": false,
-    "lib": ["dom"],
+    "lib": [
+      "dom"
+    ],
     "paths": {
-      "@/*": ["src/*"],
-      "@hominem/ui/*": ["../../packages/ui/src/*"],
-      "@hominem/ui": ["../../packages/ui/src/index.ts"]
+      "@/*": [
+        "src/*"
+      ],
+      "@hominem/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@hominem/ui": [
+        "../../packages/ui/src/index.ts"
+      ]
     }
   },
   "references": [
-    { "path": "../../packages/utils" },
-    { "path": "../../packages/ai" },
-    { "path": "../../packages/ui" }
+    {
+      "path": "../../packages/utils"
+    },
+    {
+      "path": "../../packages/ai"
+    },
+    {
+      "path": "../../packages/ui"
+    }
   ],
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "build", "**/*.test.ts"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts"
+  ]
 }

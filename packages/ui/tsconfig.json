@@ -7,8 +7,22 @@
     "rootDir": "./src",
     "outDir": "./build",
     "jsx": "react-jsx",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "incremental": true
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],
-  "exclude": ["node_modules"]
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "./src/test-utils.tsx",
+    "./src/**/*.test.tsx",
+    "build",
+    "dist"
+  ]
 }

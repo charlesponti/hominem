@@ -8,10 +8,18 @@
     "rootDir": "./src",
     "module": "ES2022",
     "paths": {
-      "@/*": ["./src/*"],
-      "test": ["./test/*"],
-      "@hominem/ui/*": ["../ui/src/*"],
-      "@hominem/ui": ["../ui/src/index.ts"]
+      "@/*": [
+        "./src/*"
+      ],
+      "test": [
+        "./test/*"
+      ],
+      "@hominem/ui/*": [
+        "../ui/src/*"
+      ],
+      "@hominem/ui": [
+        "../ui/src/index.ts"
+      ]
     }
   },
   "references": [
@@ -19,6 +27,15 @@
       "path": "../ai"
     }
   ],
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.json"],
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./src/**/*.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "build",
+    "dist"
+  ]
 }

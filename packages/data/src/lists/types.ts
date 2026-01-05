@@ -1,4 +1,4 @@
-import type { ListSelect } from '../../db/schema'
+import type { ListSelect } from '../db/schema'
 
 export interface ListUser {
   id?: string
