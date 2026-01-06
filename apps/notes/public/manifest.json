@@ -1,7 +1,7 @@
 {
-  "name": "Florin",
-  "short_name": "Florin",
-  "description": "Florin - Personal Finance Agent",
+  "name": "Notes",
+  "short_name": "Notes",
+  "description": "Notes - Fast personal note-taking app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -63,7 +63,7 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["finance", "productivity", "utilities"],
+  "categories": ["productivity", "notes", "utilities"],
   "screenshots": [],
   "shortcuts": []
 }
