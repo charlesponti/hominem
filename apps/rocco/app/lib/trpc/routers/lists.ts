@@ -7,7 +7,7 @@ import {
   getListsContainingPlace,
   removeUserFromList,
   updateList,
-} from '@hominem/data'
+} from '@hominem/data/lists'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { safeAsync } from '../../errors'

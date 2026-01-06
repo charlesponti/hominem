@@ -19,6 +19,7 @@
     "./schema": "./src/db/schema/index.ts",
     "./services": "./src/services/index.ts",
     "./tools": "./src/tools/index.ts",
+    "./travel": "./src/travel/index.ts",
     "./types": "./src/types.ts",
     "./vector": "./src/vector.ts",
     "./chat": "./src/chat/index.ts",

@@ -104,18 +104,6 @@
       "restart": true
     },
     {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug MCP App (Node.js)",
-      "program": "${workspaceFolder}/apps/mcp/src/index.ts",
-      "cwd": "${workspaceFolder}/apps/mcp",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
-    },
-    {
       "type": "chrome",
       "request": "launch",
       "name": "Debug Notes App (Chrome)",

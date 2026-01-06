@@ -1,5 +1,4 @@
-export * from './db/index'
-export * from './db/schema/index'
-export * from './lists'
+export * from './db'
+export * from './db/schema'
 export * from './resend'
 export * from './services'

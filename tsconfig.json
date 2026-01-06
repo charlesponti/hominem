@@ -13,7 +13,6 @@
   "references": [
     { "path": "./apps/api" },
     { "path": "./apps/cli" },
-    { "path": "./apps/mcp" },
     { "path": "./apps/florin" },
     { "path": "./apps/rocco" },
     { "path": "./apps/notes" },

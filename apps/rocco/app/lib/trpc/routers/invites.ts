@@ -1,15 +1,16 @@
 import {
   acceptListInvite as acceptListInviteService,
   deleteInviteByListAndToken,
-  deleteListInvite as deleteListInviteService,
+  deleteListInvite,
   getInviteByListAndToken,
-  getListInvites as getListInvitesService,
+  getInviteByToken,
+  getInvitesForUser,
+  getListInvites,
   getListOwnedByUser,
   getOutboundInvites,
   isUserMemberOfList,
-  sendListInvite as sendListInviteService,
-} from '@hominem/data'
-import { getInviteByToken, getInvitesForUser } from '@hominem/data/lists'
+  sendListInvite,
+} from '@hominem/data/lists'
 import { UserAuthService } from '@hominem/data/user'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
@@ -94,7 +95,7 @@ export const invitesRouter = router({
         })
       }
 
-      return await getListInvitesService(input.listId)
+      return await getListInvites(input.listId)
     }),
 
   create: protectedProcedure
@@ -148,7 +149,7 @@ export const invitesRouter = router({
         })
       }
 
-      const serviceResponse = await sendListInviteService(
+      const serviceResponse = await sendListInvite(
         input.listId,
         normalizedEmail,
         ctx.user.id,
@@ -266,7 +267,7 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const result = await deleteListInviteService({
+      const result = await deleteListInvite({
         listId: input.listId,
         invitedUserEmail: input.invitedUserEmail,
         userId: ctx.user.id,

@@ -2,43 +2,19 @@
   "name": "@hominem/tools",
   "version": "0.1.0",
   "description": "TanStack AI tool definitions for Hominem",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
+  "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": {
-      "import": "./build/index.js",
-      "types": "./build/index.d.ts"
-    },
-    "./notes": {
-      "import": "./build/notes.js",
-      "types": "./build/notes.d.ts"
-    },
-    "./finance": {
-      "import": "./build/finance.js",
-      "types": "./build/finance.d.ts"
-    },
-    "./workout": {
-      "import": "./build/workout.js",
-      "types": "./build/workout.d.ts"
-    },
-    "./flights": {
-      "import": "./build/flights.js",
-      "types": "./build/flights.d.ts"
-    },
-    "./mental-health": {
-      "import": "./build/mental-health.js",
-      "types": "./build/mental-health.d.ts"
-    },
-    "./taxes": {
-      "import": "./build/taxes.js",
-      "types": "./build/taxes.d.ts"
-    }
+    ".": "./src/index.ts",
+    "./notes": "./src/notes.ts",
+    "./finance": "./src/finance.ts",
+    "./workout": "./src/workout.ts",
+    "./flights": "./src/flights.ts",
+    "./mental-health": "./src/mental-health.ts",
+    "./taxes": "./src/taxes.ts"
   },
   "private": true,
-  "type": "module",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
