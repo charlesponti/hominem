@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
-import { db } from '@hominem/data/db'
-import { budgetCategories, transactions } from '@hominem/data/schema'
 import { and, eq, like } from 'drizzle-orm'
+import { db } from '../../db'
+import { budgetCategories, transactions } from '../../db/schema'
 import { logger } from '../../logger'
 
 export type BudgetCategoryType = (typeof budgetCategories.type.enumValues)[number]

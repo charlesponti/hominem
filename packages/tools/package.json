@@ -1,0 +1,54 @@
+{
+  "name": "@hominem/tools",
+  "version": "0.1.0",
+  "description": "TanStack AI tool definitions for Hominem",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./build/index.js",
+      "types": "./build/index.d.ts"
+    },
+    "./notes": {
+      "import": "./build/notes.js",
+      "types": "./build/notes.d.ts"
+    },
+    "./finance": {
+      "import": "./build/finance.js",
+      "types": "./build/finance.d.ts"
+    },
+    "./workout": {
+      "import": "./build/workout.js",
+      "types": "./build/workout.d.ts"
+    },
+    "./flights": {
+      "import": "./build/flights.js",
+      "types": "./build/flights.d.ts"
+    },
+    "./mental-health": {
+      "import": "./build/mental-health.js",
+      "types": "./build/mental-health.d.ts"
+    },
+    "./taxes": {
+      "import": "./build/taxes.js",
+      "types": "./build/taxes.d.ts"
+    }
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hominem/data": "workspace:*",
+    "@hominem/utils": "workspace:*",
+    "@tanstack/ai": "latest",
+    "zod": "4.2.1"
+  },
+  "devDependencies": {
+    "@hominem/tsconfigs": "workspace:*",
+    "typescript": "^5.3.3"
+  }
+}

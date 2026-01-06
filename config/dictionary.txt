@@ -44,6 +44,7 @@ rgba
 sendgrid
 serp
 serpapi
+setweight
 shadcn
 srid
 styfle

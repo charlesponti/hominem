@@ -54,5 +54,10 @@
   "[css]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "npm.scriptRunner": "bun"
+  "npm.scriptRunner": "bun",
+  "cSpell.words": [
+    "tsquery",
+    "tsvector",
+    "websearch"
+  ]
 }

@@ -1,6 +1,6 @@
-import type { FinanceTransactionInsert } from '@hominem/data/schema'
 import { parse } from 'csv-parse'
 import { Effect, Stream } from 'effect'
+import type { FinanceTransactionInsert } from '../../db/schema'
 import { logger } from '../../logger'
 import { getAndCreateAccountsInBulk } from '../core/account.service'
 import {

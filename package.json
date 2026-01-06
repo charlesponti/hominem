@@ -17,6 +17,7 @@
   "description": "hominem",
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
+    "@tanstack/ai": "^0.2.0",
     "@turbo/gen": "2.6.3",
     "@types/node": "^22.15.2",
     "@types/react": "^19.1.0",

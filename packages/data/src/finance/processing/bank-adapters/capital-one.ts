@@ -3,7 +3,7 @@ import {
   type FinanceTransactionInsert,
   type TransactionType,
   TransactionTypes,
-} from '@hominem/data/schema'
+} from '../../../db/schema'
 
 export interface CapitalOneTransaction {
   'Account Number': string

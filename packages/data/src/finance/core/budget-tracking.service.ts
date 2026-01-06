@@ -1,13 +1,13 @@
-import { db } from '@hominem/data/db'
-import { budgetCategories, transactions } from '@hominem/data/schema'
 import { and, eq, gte, lte, sql } from 'drizzle-orm'
+import { db } from '../../db'
+import { budgetCategories, transactions } from '../../db/schema'
 import type {
   BudgetCategoryWithSpending,
   BudgetChartData,
   BudgetPieData,
   BudgetSummary,
   BudgetTrackingData,
-} from '../types/budget.types'
+} from '../budget.types'
 import { getBudgetStatus, getChartColor, getStatusColor } from './budget.utils'
 
 /**

@@ -1,7 +1,7 @@
-import { db } from '@hominem/data/db'
-import { budgetGoals, financeAccounts, plaidItems, transactions } from '@hominem/data/schema'
 import { eq } from 'drizzle-orm'
-import { logger } from '../../logger'
+import { db } from '../db'
+import { budgetGoals, financeAccounts, plaidItems, transactions } from '../db/schema'
+import { logger } from '../logger'
 
 /**
  * Delete all finance data for a user
@@ -17,7 +17,7 @@ export async function deleteAllFinanceData(userId: string) {
 
     logger.info(`Deleted all finance data for user ${userId}`)
   } catch (error) {
-    logger.error(`Error deleting finance data for user ${userId}:`, error)
+    logger.error(`Error deleting finance data for user ${userId}:`, { error })
     throw error
   }
 }

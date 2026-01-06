@@ -1,13 +1,13 @@
-import { db } from '@hominem/data/db'
+import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm'
+import { z } from 'zod'
+import { db } from '../db'
 import {
   type Note,
   NoteContentTypeSchema,
   type NoteInsert,
   notes,
   TaskMetadataSchema,
-} from '@hominem/data/schema'
-import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm'
-import { z } from 'zod'
+} from '../db/schema'
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -46,60 +46,93 @@ type SyncClientItem = Omit<Note, 'id' | 'synced' | 'createdAt' | 'updatedAt' | '
   updatedAt?: string
 }
 
+// Export Zod schemas and types for notes so other packages can consume them
+export const CreateNoteInputSchema = z.object({
+  title: z.string().describe('The title of the note'),
+  content: z.string().describe('The content/body of the note'),
+  tags: z
+    .array(z.object({ value: z.string() }))
+    .optional()
+    .describe('Tags to categorize the note'),
+  type: NoteContentTypeSchema.optional().describe('Type of note'),
+})
+
+export const NoteOutputSchema = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  content: z.string(),
+  type: NoteContentTypeSchema,
+  tags: z.array(z.object({ value: z.string() })),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+export const ListNotesInputSchema = z.object({
+  limit: z.number().optional().describe('Maximum number of notes to return'),
+  offset: z.number().optional().describe('Pagination offset'),
+  query: z.string().optional().describe('Full-text search query'),
+  types: z.array(NoteContentTypeSchema).optional().describe('Filter by note types'),
+  tags: z.array(z.string()).optional().describe('Filter by tags'),
+  since: z.string().optional().describe('Filter notes updated after this date (ISO 8601)'),
+})
+
+export const ListNotesOutputSchema = z.object({
+  notes: z.array(NoteOutputSchema),
+  total: z.number(),
+})
+
+export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>
+export type NoteOutput = z.infer<typeof NoteOutputSchema>
+export type ListNotesInput = z.infer<typeof ListNotesInputSchema>
+export type ListNotesOutput = z.infer<typeof ListNotesOutputSchema>
+
 export class NotesService {
   async create(input: NoteInsert): Promise<Note> {
     if (!input.userId) {
       throw new ForbiddenError('Not authorized to create note')
     }
-    const now = new Date().toISOString()
-    const noteData: NoteInsert = {
-      ...input,
-      tags: input.tags === null ? [] : input.tags || [],
-      mentions: input.mentions === null ? [] : input.mentions || [],
-      taskMetadata: input.taskMetadata === null ? undefined : input.taskMetadata,
-      analysis: input.analysis === null ? undefined : input.analysis,
-      synced: true,
-      createdAt: input.createdAt || now,
-      updatedAt: input.updatedAt || now,
-    }
 
-    const [item] = await db.insert(notes).values(noteData).returning()
-    if (!item) {
-      throw new Error('Failed to create note: No note returned from database')
-    }
-    return item as Note
+    const [result] = await db.insert(notes).values(input).returning()
+    return result as Note
   }
 
-  async list(
+  /**
+   * Query notes with multidimensional filtering and full-text search
+   * Supports: full-text search, type filtering, tag filtering, and date range filtering
+   */
+  async query(
     userId: string,
     filters?: {
-      types?: Note['type'][]
       query?: string
+      types?: string[]
       tags?: string[]
       since?: string
+      limit?: number
+      offset?: number
     }
-  ): Promise<Note[]> {
+  ): Promise<{ notes: Note[]; total: number }> {
     if (!userId) {
-      throw new ForbiddenError('Not authorized to list notes')
+      throw new ForbiddenError('Not authorized to query notes')
     }
+
     const conditions: SQLWrapper[] = [eq(notes.userId, userId)]
 
+    // Type filtering
     if (filters?.types && filters.types.length > 0) {
-      const typeFilters: SQLWrapper[] = []
-      for (const type of filters.types) {
-        typeFilters.push(sql`${notes.type} = ${type}`)
-      }
+      const typeFilters: SQLWrapper[] = filters.types.map((type) =>
+        eq(notes.type, type as Note['type'])
+      )
       conditions.push(or(...typeFilters) as SQLWrapper)
     }
 
     // Full-Text Search logic
     let ftsQuery = ''
     if (filters?.query && filters.query.trim() !== '') {
-      ftsQuery = filters.query.trim() // Use websearch_to_tsquery which handles operators like ' & ', ' | '
+      ftsQuery = filters.query.trim()
     }
 
-    // Define the tsvector construction SQL
-    // Coalesce is used for title and the tags subquery to handle NULLs gracefully.
+    // Define the tsvector construction SQL for ranking
+    // Weights: title (A) > content (B) > tags (C)
     const tsvector_sql = sql`(
       setweight(to_tsvector('english', coalesce(${notes.title}, '')), 'A') ||
       setweight(to_tsvector('english', ${notes.content}), 'B') ||
@@ -109,13 +142,15 @@ export class NotesService {
     if (ftsQuery) {
       conditions.push(sql`${tsvector_sql} @@ websearch_to_tsquery('english', ${ftsQuery})`)
     }
-    // End of Full-Text Search logic
 
+    // Tag filtering (exact match)
     if (filters?.tags && filters.tags.length > 0) {
       for (const tag of filters.tags) {
         conditions.push(sql`${notes.tags}::jsonb @> ${JSON.stringify([{ value: tag }])}::jsonb`)
       }
     }
+
+    // Date filtering
     if (filters?.since) {
       try {
         const sinceDate = new Date(filters.since).toISOString()
@@ -125,6 +160,7 @@ export class NotesService {
       }
     }
 
+    // Build the base query
     const baseQuery = db
       .select()
       .from(notes)
@@ -133,16 +169,37 @@ export class NotesService {
     // biome-ignore lint/suspicious/noImplicitAnyLet: Query type is complex and inferred correctly
     let orderedQuery
     if (ftsQuery) {
+      // Order by relevance (full-text rank), then by recency
       orderedQuery = baseQuery.orderBy(
         sql`ts_rank_cd(${tsvector_sql}, websearch_to_tsquery('english', ${ftsQuery})) DESC`,
         desc(notes.updatedAt)
       )
     } else {
+      // Order by recency only
       orderedQuery = baseQuery.orderBy(desc(notes.updatedAt))
     }
 
-    const result = await orderedQuery
-    return result as Note[]
+    // Apply pagination
+    if (filters?.limit) {
+      orderedQuery = orderedQuery.limit(filters.limit)
+    }
+    if (filters?.offset) {
+      orderedQuery = orderedQuery.offset(filters.offset)
+    }
+
+    // Get total count (without pagination)
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notes)
+      .where(and(...conditions.filter((c) => !!c)))
+
+    const total = countResult[0]?.count ?? 0
+    const results = await orderedQuery
+
+    return {
+      notes: results as Note[],
+      total,
+    }
   }
 
   async getById(id: string, userId: string): Promise<Note> {
@@ -283,3 +340,5 @@ export class NotesService {
     return results
   }
 }
+
+export const notesService = new NotesService()

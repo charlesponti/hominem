@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
-import { db } from '@hominem/data/db'
-import { budgetCategories, transactions } from '@hominem/data/schema'
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
+import { db } from '../../db'
+import { budgetCategories, transactions } from '../../db/schema'
 import { logger } from '../../logger'
 
 /**
@@ -93,7 +93,7 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
 
     return categories
   } catch (error) {
-    logger.error(`Error fetching transaction categories analysis for user ${userId}:`, error)
+    logger.error(`Error fetching transaction categories analysis for user ${userId}:`, { error })
     throw error
   }
 }
@@ -162,7 +162,7 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
       skipped: categories.length - newCategories.length,
     }
   } catch (error) {
-    logger.error(`Error bulk creating budget categories for user ${userId}:`, error)
+    logger.error(`Error bulk creating budget categories for user ${userId}:`, { error })
     throw error
   }
 }
