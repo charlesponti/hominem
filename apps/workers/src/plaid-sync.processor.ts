@@ -1,17 +1,9 @@
-import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/data/db'
-import {
-  type FinanceAccountInsert,
-  type FinanceTransaction,
-  financeAccounts,
-  plaidItems,
-  transactions,
-} from '@hominem/data/schema'
+import type { FinanceTransaction } from '@hominem/data/schema'
 import { logger } from '@hominem/utils/logger'
 import type { Job } from 'bullmq'
-import { and, eq } from 'drizzle-orm'
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
 import { env } from './env'
+import { PlaidService } from './plaid.service'
 
 /**
  * Job data for Plaid sync jobs
@@ -38,6 +30,7 @@ const configuration = new Configuration({
 })
 
 const plaidClient = new PlaidApi(configuration)
+const plaidService = new PlaidService()
 
 /**
  * Process Plaid sync jobs
@@ -56,9 +49,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
   try {
     // Get the Plaid item from database to make sure it exists and is valid
-    const plaidItem = await db.query.plaidItems.findFirst({
-      where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
-    })
+    const plaidItem = await plaidService.getPlaidItem(userId, itemId)
 
     if (!plaidItem) {
       throw new Error(`Plaid item ${itemId} not found for user ${userId}`)
@@ -70,11 +61,6 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     })
 
     for (const account of accountsResponse.data.accounts) {
-      // Check if account already exists
-      const existingAccount = await db.query.financeAccounts.findFirst({
-        where: eq(financeAccounts.plaidAccountId, account.account_id),
-      })
-
       const accountData = {
         name: account.name,
         officialName: account.official_name || null,
@@ -92,41 +78,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
         userId,
       }
 
-      if (existingAccount) {
-        // Update existing account
-        await db
-          .update(financeAccounts)
-          .set({
-            balance: accountData.balance.toFixed(2),
-            lastUpdated: accountData.lastUpdated,
-          })
-          .where(eq(financeAccounts.id, existingAccount.id))
-
-        logger.info({
-          message: 'Updated existing account',
-          accountId: existingAccount.id,
-          plaidAccountId: account.account_id,
-        })
-      } else {
-        // Insert new account
-        await db.insert(financeAccounts).values({
-          id: randomUUID(),
-          ...accountData,
-          type: accountData.type as FinanceAccountInsert['type'],
-          balance: accountData.balance.toFixed(2),
-          limit: accountData.limit?.toExponential(2),
-          interestRate: null,
-          minimumPayment: null,
-          meta: {},
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-
-        logger.info({
-          message: 'Created new account',
-          plaidAccountId: account.account_id,
-        })
-      }
+      await plaidService.upsertAccount(accountData)
     }
 
     // 2. Fetch and store transactions using transactions/sync endpoint
@@ -152,12 +104,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       // Process added transactions
       if (added.length > 0) {
         // Get all accounts for this user to map Plaid account IDs to our account IDs
-        const userAccounts = await db.query.financeAccounts.findMany({
-          where: and(
-            eq(financeAccounts.userId, userId),
-            eq(financeAccounts.plaidItemId, plaidItem.id)
-          ),
-        })
+        const userAccounts = await plaidService.getUserAccounts(userId, plaidItem.id)
 
         const accountMap = new Map(
           userAccounts.map((account) => [account.plaidAccountId, account.id])
@@ -177,9 +124,9 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
           const accountId = accountMap.get(transaction.account_id)
 
           // Check if transaction already exists
-          const existingTransaction = await db.query.transactions.findFirst({
-            where: eq(transactions.plaidTransactionId, transaction.transaction_id),
-          })
+          const existingTransaction = await plaidService.getTransactionByPlaidId(
+            transaction.transaction_id
+          )
 
           if (existingTransaction) {
             // Skip - we already have this transaction
@@ -187,8 +134,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
           }
 
           // Insert new transaction
-          await db.insert(transactions).values({
-            id: randomUUID(),
+          await plaidService.insertTransaction({
             type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
             amount: Math.abs(transaction.amount).toFixed(2),
             date: new Date(transaction.date),
@@ -206,9 +152,6 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             paymentChannel: transaction.payment_channel,
             location: transaction.location,
             plaidTransactionId: transaction.transaction_id,
-            source: 'plaid',
-            createdAt: new Date(),
-            updatedAt: new Date(),
             userId,
           })
         }
@@ -218,16 +161,14 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       if (modified.length > 0) {
         for (const transaction of modified) {
           // Get the existing transaction
-          const existingTransaction = await db.query.transactions.findFirst({
-            where: eq(transactions.plaidTransactionId, transaction.transaction_id),
-          })
+          const existingTransaction = await plaidService.getTransactionByPlaidId(
+            transaction.transaction_id
+          )
 
           if (!existingTransaction) {
             // If the transaction doesn't exist yet (rare edge case), treat it as a new transaction
             // Find the account ID first
-            const account = await db.query.financeAccounts.findFirst({
-              where: eq(financeAccounts.plaidAccountId, transaction.account_id),
-            })
+            const account = await plaidService.getAccountByPlaidId(transaction.account_id)
 
             if (!account) {
               logger.warn({
@@ -239,8 +180,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             }
 
             // Insert the transaction
-            await db.insert(transactions).values({
-              id: randomUUID(),
+            await plaidService.insertTransaction({
               type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
               amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
@@ -258,32 +198,25 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
               paymentChannel: transaction.payment_channel,
               location: transaction.location,
               plaidTransactionId: transaction.transaction_id,
-              source: 'plaid',
-              createdAt: new Date(),
-              updatedAt: new Date(),
               userId,
             })
           } else {
             // Update the existing transaction
-            await db
-              .update(transactions)
-              .set({
-                type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
-                amount: Math.abs(transaction.amount).toFixed(2),
-                date: new Date(transaction.date),
-                description: transaction.name,
-                merchantName: transaction.merchant_name || null,
-                category: transaction.category
-                  ? transaction.category[transaction.category.length - 1]
+            await plaidService.updateTransaction(existingTransaction.id, {
+              type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
+              amount: Math.abs(transaction.amount).toFixed(2),
+              date: new Date(transaction.date),
+              description: transaction.name,
+              merchantName: transaction.merchant_name || null,
+              category: transaction.category
+                ? transaction.category[transaction.category.length - 1]
+                : null,
+              parentCategory:
+                transaction.category && transaction.category.length > 1
+                  ? transaction.category[0]
                   : null,
-                parentCategory:
-                  transaction.category && transaction.category.length > 1
-                    ? transaction.category[0]
-                    : null,
-                pending: transaction.pending,
-                updatedAt: new Date(),
-              })
-              .where(eq(transactions.id, existingTransaction.id))
+              pending: transaction.pending,
+            })
           }
         }
       }
@@ -299,25 +232,14 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             })
             continue
           }
-          const existingTransaction = await db.query.transactions.findFirst({
-            where: eq(transactions.plaidTransactionId, removed_transaction.transaction_id),
-          })
 
-          if (existingTransaction) {
-            // Delete the transaction
-            await db.delete(transactions).where(eq(transactions.id, existingTransaction.id))
-          }
+          await plaidService.deleteTransaction(removed_transaction.transaction_id)
         }
       }
 
       // Update the cursor in database
       if (cursor) {
-        await db
-          .update(plaidItems)
-          .set({
-            transactionsCursor: cursor,
-          })
-          .where(eq(plaidItems.id, plaidItem.id))
+        await plaidService.updatePlaidItemCursor(plaidItem.id, cursor)
       }
 
       // Update counts
@@ -331,15 +253,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     }
 
     // 3. Update the last synced timestamp for this Plaid item
-    await db
-      .update(plaidItems)
-      .set({
-        lastSyncedAt: new Date(),
-        status: 'active', // Reset any error status
-        error: null,
-        updatedAt: new Date(),
-      })
-      .where(eq(plaidItems.id, plaidItem.id))
+    await plaidService.updatePlaidItemSyncStatus(plaidItem.id, 'active', null)
 
     logger.info({
       message: 'Completed Plaid sync job',
@@ -374,14 +288,10 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     })
 
     // Update item status on error
-    await db
-      .update(plaidItems)
-      .set({
-        status: 'error',
-        error: error instanceof Error ? error.message : String(error),
-        updatedAt: new Date(),
-      })
-      .where(eq(plaidItems.itemId, itemId))
+    await plaidService.updatePlaidItemError(
+      itemId,
+      error instanceof Error ? error.message : String(error)
+    )
 
     throw error
   }

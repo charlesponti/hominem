@@ -15,9 +15,11 @@ const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
   if (
     photoUrl.includes('supabase.co') ||
     (photoUrl.startsWith('http') &&
-      !photoUrl.includes('places/') &&
-      !photoUrl.includes('googleusercontent') &&
-      !photoUrl.includes('googleapis'))
+      !(
+        photoUrl.includes('places/') &&
+        photoUrl.includes('googleusercontent') &&
+        photoUrl.includes('googleapis')
+      ))
   ) {
     return photoUrl
   }

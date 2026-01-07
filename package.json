@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@trpc/server": "^11.4.2",
-    "react": "^19.1.0",
+    "react": "^19.2.3",
     "react-dom": "^19.1.0",
     "react-router": "7.11.0",
     "tsx": "^4.19.3"
@@ -24,6 +24,7 @@
     "@types/react-dom": "^19.1.0",
     "drizzle-kit": "^0.31.4",
     "husky": "^9.1.7",
+    "ink": "^6.6.0",
     "lefthook": "^2.0.2",
     "turbo": "^2.7.3",
     "typescript": "5.9.3",
