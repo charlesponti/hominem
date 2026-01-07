@@ -17,8 +17,13 @@ const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
     (photoUrl.startsWith('http') &&
       !photoUrl.includes('places/') &&
       !photoUrl.includes('googleusercontent') &&
-      !photoUrl.includes('googleapis.com'))
+      !photoUrl.includes('googleapis'))
   ) {
+    return photoUrl
+  }
+
+  // If it's already a full Google APIs URL, return as-is to avoid double-transformation
+  if (photoUrl.includes('googleapis.com')) {
     return photoUrl
   }
 
