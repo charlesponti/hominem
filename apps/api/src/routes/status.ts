@@ -1,4 +1,4 @@
-import { db } from '@hominem/data'
+import { db } from '@hominem/data/db'
 import { health } from '@hominem/data/schema'
 import { Hono } from 'hono'
 

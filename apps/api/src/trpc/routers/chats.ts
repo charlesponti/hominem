@@ -302,6 +302,7 @@ export const chatsRouter = router({
               toolName: tc.function.name,
               type: 'tool-call',
               toolCallId: tc.id,
+              args: JSON.parse(tc.function.arguments) as Record<string, string>,
             })),
           })
         } catch (streamError) {

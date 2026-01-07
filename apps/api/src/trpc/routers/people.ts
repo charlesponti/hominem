@@ -1,4 +1,10 @@
-import { createPerson, deletePerson, getPeople, getPersonById, updatePerson } from '@hominem/data'
+import {
+  createPerson,
+  deletePerson,
+  getPeople,
+  getPersonById,
+  updatePerson,
+} from '@hominem/data/services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

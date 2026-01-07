@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
-import { upsertArtists } from '@hominem/data'
 import type { Artist } from '@hominem/data/schema'
+import { upsertArtists } from '@hominem/data/services'
 import { redis, waitForRateLimit } from '@hominem/utils/redis'
 
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env

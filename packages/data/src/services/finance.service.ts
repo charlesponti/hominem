@@ -208,7 +208,6 @@ export const calculateLoanDetailsOutputSchema = z.object({
   totalInterest: z.number(),
 })
 
-// Minimal FinanceService scaffold
 export class FinanceService {
   async createAccount({
     name,

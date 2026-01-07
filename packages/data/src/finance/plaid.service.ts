@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto'
+import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import {
+  financialInstitutions,
   type PlaidItem,
   type PlaidItemInsert,
-  financialInstitutions,
   plaidItems,
 } from '../db/schema'
-import { and, eq } from 'drizzle-orm'
 
 export async function getPlaidItemByUserAndItemId(
   userId: string,
@@ -40,7 +40,9 @@ export async function ensureInstitutionExists(id: string, name: string) {
     where: eq(financialInstitutions.id, id),
   })
 
-  if (existing) { return existing }
+  if (existing) {
+    return existing
+  }
 
   const [created] = await db
     .insert(financialInstitutions)
@@ -87,7 +89,7 @@ export async function upsertPlaidItem(params: {
       .where(eq(plaidItems.id, existingItem.id))
       .returning()
 
-    return updated
+    return updated!
   }
 
   const [created] = await db
@@ -105,7 +107,7 @@ export async function upsertPlaidItem(params: {
     })
     .returning()
 
-  return created
+  return created!
 }
 
 export async function updatePlaidItemStatusByItemId(

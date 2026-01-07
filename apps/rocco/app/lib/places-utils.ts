@@ -1,4 +1,4 @@
-import type { PlaceInsert } from '@hominem/data'
+import type { PlaceInsert } from '@hominem/data/places'
 import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,

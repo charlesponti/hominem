@@ -1,4 +1,4 @@
-import type { ListPlace as DataListPlace } from '@hominem/data'
+import type { ListPlace as DataListPlace } from '@hominem/data/places'
 import { createElement } from 'react'
 import { vi } from 'vitest'
 

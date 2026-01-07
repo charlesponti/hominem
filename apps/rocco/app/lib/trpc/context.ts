@@ -1,4 +1,4 @@
-import { UserAuthService, type UserSelect } from '@hominem/data'
+import { UserAuthService, type UserSelect } from '@hominem/data/user'
 import { initTRPC, TRPCError } from '@trpc/server'
 import { getServerAuth } from '../auth.server'
 import { logger } from '../logger'

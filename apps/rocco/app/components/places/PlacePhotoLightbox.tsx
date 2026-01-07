@@ -11,13 +11,27 @@ type Props = {
 }
 
 const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
+  // If it's already a Supabase Storage URL or other hosted image, return as-is
+  if (
+    photoUrl.includes('supabase.co') ||
+    (photoUrl.startsWith('http') &&
+      !photoUrl.includes('places/') &&
+      !photoUrl.includes('googleusercontent') &&
+      !photoUrl.includes('googleapis.com'))
+  ) {
+    return photoUrl
+  }
+
+  // Handle Google Places API photo references
   if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
     return `https://places.googleapis.com/v1/${photoUrl}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
   }
 
+  // Handle Google user content URLs
   if (photoUrl.includes('googleusercontent')) {
     return `${photoUrl}=w${width}-h${height}-c`
   }
+
   return photoUrl
 }
 
@@ -38,19 +52,29 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
   }, [photos.length])
 
   useEffect(() => {
-    if (!isOpen) { return }
+    if (!isOpen) {
+      return
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onClose() }
-      if (e.key === 'ArrowLeft') { goToPrevious() }
-      if (e.key === 'ArrowRight') { goToNext() }
+      if (e.key === 'Escape') {
+        onClose()
+      }
+      if (e.key === 'ArrowLeft') {
+        goToPrevious()
+      }
+      if (e.key === 'ArrowRight') {
+        goToNext()
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose, goToPrevious, goToNext])
 
-  if (!isOpen) { return null }
+  if (!isOpen) {
+    return null
+  }
 
   return (
     <div

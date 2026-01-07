@@ -20,7 +20,6 @@
     "@hominem/ai": "workspace:*",
     "@hominem/auth": "workspace:*",
     "@hominem/data": "workspace:*",
-    "@hominem/notes": "workspace:*",
     "@hominem/tools": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/node-server": "^1.19.2",

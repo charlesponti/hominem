@@ -1,4 +1,11 @@
-import { archiveGoal, createGoal, deleteGoal, getGoal, listGoals, updateGoal } from '@hominem/data'
+import {
+  archiveGoal,
+  createGoal,
+  deleteGoal,
+  getGoal,
+  listGoals,
+  updateGoal,
+} from '@hominem/data/services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

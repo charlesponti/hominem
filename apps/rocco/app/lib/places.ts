@@ -1,4 +1,4 @@
-import type { List } from '@hominem/data'
+import type { List } from '@hominem/data/lists'
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { trpc } from './trpc/client'
 import type { Place, PlaceLocation } from './types'
@@ -45,7 +45,9 @@ export const useRemoveListItem = (options?: {
       // Optimistically update to the new value
       if (previousList) {
         utils.lists.getById.setData({ id: listId }, (old) => {
-          if (!(old?.places)) { return old }
+          if (!old?.places) {
+            return old
+          }
           return {
             ...old,
             places: old.places.filter((p) => p.placeId !== placeId),

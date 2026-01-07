@@ -9,40 +9,5 @@
     "moduleResolution": "NodeNext",
     "outDir": "dist",
     "allowImportingTsExtensions": false
-  },
-  "references": [
-    {
-      "path": "./apps/api"
-    },
-    {
-      "path": "./apps/cli"
-    },
-    {
-      "path": "./apps/florin"
-    },
-    {
-      "path": "./apps/rocco"
-    },
-    {
-      "path": "./apps/notes"
-    },
-    {
-      "path": "./apps/workers"
-    },
-    {
-      "path": "./packages/ai"
-    },
-    {
-      "path": "./packages/ui"
-    },
-    {
-      "path": "./packages/utils"
-    },
-    {
-      "path": "./packages/data"
-    },
-    {
-      "path": "./packages/auth"
-    }
-  ]
+  }
 }

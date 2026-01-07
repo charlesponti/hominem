@@ -1,4 +1,4 @@
-import { createPerson, getPeople, type PersonInput } from '@hominem/data'
+import { createPerson, getPeople, type PersonInput } from '@hominem/data/services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../context'
 

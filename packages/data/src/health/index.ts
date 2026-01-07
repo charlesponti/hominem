@@ -1,11 +1,11 @@
+export * from './health.service'
 export {
   assessMentalWellnessInputSchema,
   assessMentalWellnessOutputSchema,
   mentalHealthService,
-} from '../services/mental-health.service'
-
+} from './mental-health.service'
 export {
   recommendWorkoutInputSchema,
   recommendWorkoutOutputSchema,
   workoutService,
-} from '../services/workout.service'
+} from './workout.service'

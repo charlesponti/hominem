@@ -1,22 +1,24 @@
 import { PageTitle } from '@hominem/ui'
 import z from 'zod'
 import ErrorBoundary from '~/components/ErrorBoundary'
-import PlaceTypes from '~/components/places/place-types'
 import PlaceAddress from '~/components/places/PlaceAddress'
 import PlaceLists from '~/components/places/PlaceLists'
 import PlaceMap from '~/components/places/PlaceMap'
 import PlacePhone from '~/components/places/PlacePhone'
 import PlacePhotos from '~/components/places/PlacePhotos'
 import PlaceRating from '~/components/places/PlaceRating'
-import PlacesNearby from '~/components/places/places-nearby'
 import PlaceStatus from '~/components/places/PlaceStatus'
 import PlaceWebsite from '~/components/places/PlaceWebsite'
+import PlaceTypes from '~/components/places/place-types'
+import PlacesNearby from '~/components/places/places-nearby'
 import { VisitHistory } from '~/components/places/VisitHistory'
+import { requireAuth } from '~/lib/guards'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceWithLists } from '~/lib/types'
 import type { Route } from './+types/places.$id'
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  await requireAuth(request)
   const { id } = params
   if (!id) {
     throw new Error('Place ID is required')

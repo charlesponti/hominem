@@ -34,7 +34,9 @@ const possessionIdParamSchema = z.object({
 // Get all possessions for user
 possessionsRoutes.get('/', async (c) => {
   const userId = c.get('userId')
-  if (!userId) { throw ForbiddenError('Unauthorized') }
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
 
   try {
     const items = await listPossessions(userId)
@@ -60,7 +62,9 @@ possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c
   }
 
   const userId = c.get('userId')
-  if (!userId) { throw ForbiddenError('Unauthorized') }
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
 
   try {
     const data = c.req.valid('json')
@@ -92,16 +96,19 @@ possessionsRoutes.put(
   zValidator('json', updatePossessionSchema),
   async (c) => {
     const userId = c.get('userId')
-    if (!userId) { throw ForbiddenError('Unauthorized') }
+    if (!userId) {
+      throw ForbiddenError('Unauthorized')
+    }
 
     try {
       const { id } = c.req.valid('param')
       const data = c.req.valid('json')
 
       const updated = await updatePossession({
+        ...data,
         id,
         userId,
-        ...data,
+        dateAcquired: data.dateAcquired ? new Date(data.dateAcquired) : undefined,
       })
 
       return c.json(updated)
@@ -126,7 +133,9 @@ possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), a
   }
 
   const userId = c.get('userId')
-  if (!userId) { throw ForbiddenError('Unauthorized') }
+  if (!userId) {
+    throw ForbiddenError('Unauthorized')
+  }
 
   try {
     const { id } = c.req.valid('param')

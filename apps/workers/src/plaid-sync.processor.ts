@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/data'
+import { db } from '@hominem/data/db'
 import {
   type FinanceAccountInsert,
   type FinanceTransaction,
@@ -46,7 +46,7 @@ const plaidClient = new PlaidApi(configuration)
 export async function processSyncJob(job: Job<PlaidSyncJob>) {
   const { userId, accessToken, itemId, initialSync } = job.data
 
-  logger.info({
+  logger.info('Processing Plaid sync job', {
     message: 'Processing Plaid sync job',
     jobId: job.id,
     userId,

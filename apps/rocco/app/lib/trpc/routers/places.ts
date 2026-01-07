@@ -1,25 +1,28 @@
 import {
-  addPlaceToLists,
   createEvent,
-  createOrUpdatePlace,
   deleteEvent,
+  getVisitStatsByPlace,
+  getVisitsByPlace,
+  getVisitsByUser,
+  updateEvent,
+} from '@hominem/data/events'
+import {
+  addPlaceToLists,
+  createOrUpdatePlace,
   deletePlaceById,
   ensurePlaceFromGoogleData,
   getItemsForPlace,
   getNearbyPlacesFromLists,
   getPlaceByGoogleMapsId,
   getPlaceById,
-  getVisitsByPlace,
-  getVisitsByUser,
-  getVisitStatsByPlace,
   type PlaceInsert,
   type Place as PlaceSelect,
   removePlaceFromList,
-  updateEvent,
   updatePlacePhotos,
-} from '@hominem/data'
+} from '@hominem/data/places'
 import { z } from 'zod'
 import {
+  buildPhotoMediaUrl,
   getPlaceDetails as fetchGooglePlaceDetails,
   getPlacePhotos as fetchGooglePlacePhotos,
   searchPlaces as googleSearchPlaces,
@@ -191,7 +194,17 @@ export const placesRouter = router({
             : (fetchedImageUrl ?? null)),
       }
 
-      const { place: createdPlace } = await addPlaceToLists(ctx.user.id, listIds ?? [], placeData)
+      // Helper function to build photo media URL with API key
+      const buildPhotoUrl = (photoRef: string) => {
+        return buildPhotoMediaUrl({ photoName: photoRef })
+      }
+
+      const { place: createdPlace } = await addPlaceToLists(
+        ctx.user.id,
+        listIds ?? [],
+        placeData,
+        buildPhotoUrl
+      )
 
       return createdPlace
     }),
@@ -318,7 +331,13 @@ export const placesRouter = router({
           }
 
           const placeData = transformGooglePlaceToPlaceInsert(googlePlace, googleMapsId)
-          dbPlace = await ensurePlaceFromGoogleData(placeData)
+
+          // Helper function to build photo media URL with API key
+          const buildPhotoUrl = (photoRef: string) => {
+            return buildPhotoMediaUrl({ photoName: photoRef })
+          }
+
+          dbPlace = await ensurePlaceFromGoogleData(placeData, buildPhotoUrl)
         }
 
         return enrichPlaceWithDetails(ctx, dbPlace)

@@ -10,7 +10,11 @@ import {
   place,
   tags,
 } from '../db/schema'
-import { getPeopleForEvent, getPeopleForEvents, replacePeopleForEvent } from './people.service'
+import {
+  getPeopleForEvent,
+  getPeopleForEvents,
+  replacePeopleForEvent,
+} from '../services/people.service'
 import {
   addTagsToEvent,
   findOrCreateTagsByNames,
@@ -18,7 +22,7 @@ import {
   getTagsForEvents,
   removeTagsFromEvent,
   syncTagsForEvent,
-} from './tags.service'
+} from '../services/tags.service'
 
 export interface EventFilters {
   tagNames?: string[]

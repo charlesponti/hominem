@@ -5,31 +5,96 @@
   "sideEffects": false,
   "description": "Database schemas and utilities",
   "exports": {
-    ".": "./src/index.ts",
-    "./db": "./src/db/index.ts",
-    "./emails": "./src/resend.ts",
-    "./files": "./src/files.ts",
-    "./finance": "./src/finance/index.ts",
-    "./fixtures": "./src/fixtures.ts",
-    "./health": "./src/health/index.ts",
-    "./lists": "./src/lists/index.ts",
-    "./logger": "./src/logger.ts",
-    "./places": "./src/places.ts",
-    "./notes": "./src/notes/index.ts",
-    "./schema": "./src/db/schema/index.ts",
-    "./services": "./src/services/index.ts",
-    "./tools": "./src/tools/index.ts",
-    "./travel": "./src/travel/index.ts",
-    "./types": "./src/types.ts",
-    "./vector": "./src/vector.ts",
-    "./chat": "./src/chat/index.ts",
-    "./user": "./src/services/user-auth.service.ts"
+    "./db": {
+      "import": "./src/db/index.ts",
+      "types": "./build/db/index.d.ts"
+    },
+    "./emails": {
+      "import": "./src/resend.ts",
+      "types": "./build/resend.d.ts"
+    },
+    "./events": {
+      "import": "./src/events/index.ts",
+      "types": "./build/events/index.d.ts"
+    },
+    "./files": {
+      "import": "./src/files.ts",
+      "types": "./build/files.d.ts"
+    },
+    "./finance": {
+      "import": "./src/finance/index.ts",
+      "types": "./build/finance/index.d.ts"
+    },
+    "./fixtures": {
+      "import": "./src/fixtures.ts",
+      "types": "./build/fixtures.d.ts"
+    },
+    "./google-calendar": {
+      "import": "./src/google.ts",
+      "types": "./build/google.d.ts"
+    },
+    "./health": {
+      "import": "./src/health/index.ts",
+      "types": "./build/health/index.d.ts"
+    },
+    "./lists": {
+      "import": "./src/lists/index.ts",
+      "types": "./build/lists/index.d.ts"
+    },
+    "./logger": {
+      "import": "./src/logger.ts",
+      "types": "./build/logger.d.ts"
+    },
+    "./places": {
+      "import": "./src/places.ts",
+      "types": "./build/places.d.ts"
+    },
+    "./notes": {
+      "import": "./src/notes/index.ts",
+      "types": "./build/notes/index.d.ts"
+    },
+    "./schema": {
+      "import": "./src/db/schema/index.ts",
+      "types": "./build/db/schema/index.d.ts"
+    },
+    "./services": {
+      "import": "./src/services/index.ts",
+      "types": "./build/services/index.d.ts"
+    },
+    "./tools": {
+      "import": "./src/tools/index.ts",
+      "types": "./build/tools/index.d.ts"
+    },
+    "./travel": {
+      "import": "./src/travel/index.ts",
+      "types": "./build/travel/index.d.ts"
+    },
+    "./types": {
+      "import": "./src/types.ts",
+      "types": "./build/types.d.ts"
+    },
+    "./vector": {
+      "import": "./src/vector.ts",
+      "types": "./build/vector.d.ts"
+    },
+    "./chat": {
+      "import": "./src/chat/index.ts",
+      "types": "./build/chat/index.d.ts"
+    },
+    "./user": {
+      "import": "./src/users/index.ts",
+      "types": "./build/users/index.d.ts"
+    },
+    "./package.json": "./package.json"
   },
+  "types": "./build/index.d.ts",
   "scripts": {
+    "build": "tsc -b",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate-test": "DATABASE_URL=postgres://postgres:postgres@localhost:4433/hominem-test drizzle-kit migrate",
     "db:update": "drizzle-kit generate && drizzle-kit migrate",
+    "dev": "tsc -d -w",
     "lint": "biome lint ./src --fix",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

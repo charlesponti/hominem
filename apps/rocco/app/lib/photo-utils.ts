@@ -5,13 +5,29 @@ import { env } from '~/lib/env'
  * Only processes Google Places photo references - must not be called with relative URLs or non-Google URLs.
  * Always returns an absolute URL for Google Maps place photos.
  *
- * @param photoReference - The Google Places photo reference (e.g., "places/.../photos/..." or Google user content URL)
+ * If the URL is already a Supabase Storage URL, returns it as-is.
+ *
+ * @param photoReference - The Google Places photo reference (e.g., "places/.../photos/..." or Google user content URL) or Supabase URL
  * @param width - Desired width in pixels (default: 600)
  * @param height - Desired height in pixels (default: 400)
- * @returns Formatted absolute URL for Google Places photo
- * @throws Error if the input is not a valid Google Places photo reference
+ * @returns Formatted absolute URL for photo
+ * @throws Error if the input is not a valid photo reference
  */
 export function buildPlacePhotoUrl(photoReference: string, width = 600, height = 400) {
+  // If it's already a Supabase Storage URL, return it as-is
+  if (photoReference.includes('supabase.co') || photoReference.startsWith('http')) {
+    // Check if it's not a Google URL
+    if (
+      !(
+        photoReference.includes('places/') &&
+        photoReference.includes('googleusercontent') &&
+        photoReference.includes('googleapis.com')
+      )
+    ) {
+      return photoReference
+    }
+  }
+
   // Handle Google Places API photo references (format: "places/.../photos/...")
   if (photoReference.includes('places/') && photoReference.includes('/photos/')) {
     return `https://places.googleapis.com/v1/${photoReference}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`

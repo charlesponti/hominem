@@ -1,3 +1,4 @@
+import { and, asc, desc, eq, gte, like, lte, type SQL, sql } from 'drizzle-orm'
 import { db } from '../db'
 import {
   type FinanceTransaction,
@@ -5,7 +6,6 @@ import {
   financeAccounts,
   transactions,
 } from '../db/schema'
-import { and, asc, desc, eq, gte, like, lte, type SQL, sql } from 'drizzle-orm'
 import { logger } from '../logger'
 import type { QueryOptions } from './finance.types'
 
@@ -332,9 +332,9 @@ export async function createTransaction(
       throw new Error('Failed to insert transaction(s)')
     }
 
-    return Array.isArray(txOrTxs) ? result : result[0]
-  } catch (error) {
-    logger.error(`Error inserting transaction(s): ${JSON.stringify(txOrTxs)}`, error)
+    return Array.isArray(txOrTxs) ? result : result[0]!
+  } catch (error: unknown) {
+    logger.error(`Error inserting transaction(s): ${JSON.stringify(txOrTxs)}`, error as Error)
     throw new Error(
       `Failed to insert transaction(s): ${error instanceof Error ? error.message : error}`
     )
@@ -369,8 +369,8 @@ export async function updateTransactionIfNeeded(
       await db.update(transactions).set(updates).where(eq(transactions.id, existingTx.id))
       logger.debug(`Updated transaction ${existingTx.id} with additional metadata`)
       return true
-    } catch (error) {
-      logger.error(`Failed to update transaction ${existingTx.id}:`, error)
+    } catch (error: unknown) {
+      logger.error(`Failed to update transaction ${existingTx.id}:`, error as Error)
       return false
     }
   }
@@ -395,8 +395,8 @@ export async function updateTransaction(
     }
 
     return updated
-  } catch (error) {
-    logger.error(`Error updating transaction ${transactionId}:`, error)
+  } catch (error: unknown) {
+    logger.error(`Error updating transaction ${transactionId}:`, error as Error)
     throw error
   }
 }
@@ -406,8 +406,8 @@ export async function deleteTransaction(transactionId: string, userId: string): 
     await db
       .delete(transactions)
       .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
-  } catch (error) {
-    logger.error(`Error deleting transaction ${transactionId}:`, error)
+  } catch (error: unknown) {
+    logger.error(`Error deleting transaction ${transactionId}:`, error as Error)
     throw error
   }
 }

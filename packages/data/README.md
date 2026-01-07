@@ -14,7 +14,7 @@ Database schemas and utilities for the Hominem monorepo.
 
 ```typescript
 // Import database connection
-import { db } from '@hominem/data'
+import { db } from '@hominem/data/db'
 
 // Import schemas
 import { users, transactions, notes } from '@hominem/data/schema'

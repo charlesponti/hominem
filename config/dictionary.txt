@@ -12,6 +12,7 @@ domcontentloaded
 enneagram
 fastify
 googleauth
+googleusercontent
 healthcheck
 ilike
 initdb
