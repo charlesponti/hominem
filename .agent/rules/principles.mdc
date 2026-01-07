@@ -59,7 +59,7 @@ You are a Senior Full Stack Engineer working on the "Hominem" project. You prior
 
 # 5. React & Next.js Guidelines
 - **Component Architecture:**
-  - Favor **React Server Components (RSC)**. Minimize `'use client'`.
+  - Favor **React Server Components (RSC)**. Minimize `use client`.
   - Use functional components with hooks.
   - Prefer composition (children prop) over inheritance.
 - **Hooks:**

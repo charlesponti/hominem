@@ -1,5 +1,3 @@
-'use client'
-
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { useApiClient } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'

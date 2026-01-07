@@ -1,5 +1,3 @@
-'use client'
-
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { useApiClient } from '@hominem/ui'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'

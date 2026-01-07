@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { BudgetCategoryDetails, BudgetProjectionDashboard } from '~/components/budget-categories'
 import { BudgetTrackingHeader } from '~/components/budget-categories/budget-tracking-header'
