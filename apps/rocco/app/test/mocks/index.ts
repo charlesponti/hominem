@@ -80,6 +80,8 @@ export const getMockPlace = (): Place => ({
   wifiInfo: null,
   photos: null,
   priceLevel: null,
+  businessStatus: null,
+  openingHours: null,
 })
 
 export const getMockLists = () => [

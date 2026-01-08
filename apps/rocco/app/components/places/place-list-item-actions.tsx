@@ -35,7 +35,7 @@ const PlaceListItemActions = ({
   onError,
 }: PlaceListItemActionsProps) => {
   const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal()
-  const { mutate: removeListItem } = useRemoveListItem({
+  const removeListItemMutation = useRemoveListItem({
     onSuccess: () => {
       closeDeleteModal()
       onRemove?.()
@@ -46,8 +46,8 @@ const PlaceListItemActions = ({
   })
 
   const onDeleteClick = useCallback(() => {
-    removeListItem({ listId, placeId })
-  }, [listId, placeId, removeListItem])
+    removeListItemMutation.mutate({ listId, itemId: placeId })
+  }, [listId, placeId, removeListItemMutation])
 
   const handleDropdownButtonClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()

@@ -1,4 +1,4 @@
-import type { ListPlace as DataListPlace } from '@hominem/data/places'
+import type { ListPlace as DataListPlace } from '@hominem/data/lists'
 import { createElement } from 'react'
 import { vi } from 'vitest'
 
@@ -39,6 +39,8 @@ export const MOCK_PLACE: Place = {
   createdAt: '2021-01-01T00:00:00.000Z',
   updatedAt: '2021-01-01T00:00:00.000Z',
   itemId: null,
+  businessStatus: null,
+  openingHours: null,
 }
 
 // Create a mock place that conforms to ListPlace type

@@ -117,7 +117,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as unknown,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -156,7 +156,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as unknown,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -194,7 +194,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as unknown,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -239,7 +239,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as unknown,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -266,7 +266,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as unknown,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -295,7 +295,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as unknown,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -323,7 +323,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as unknown,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },

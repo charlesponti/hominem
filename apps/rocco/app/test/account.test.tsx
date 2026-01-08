@@ -9,7 +9,7 @@ import { mockTrpcClient, renderWithRouter } from '~/test/utils'
 const MOCK_USER = getMockUser()
 
 // Mock loader data that will be customized by each test
-let mockLoaderData = { user: MOCK_USER }
+let mockLoaderData: { user: unknown } = { user: MOCK_USER }
 
 // Mock React Router's useLoaderData hook for this specific test
 vi.mock('react-router', async () => {

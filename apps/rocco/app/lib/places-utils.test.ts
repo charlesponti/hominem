@@ -17,7 +17,6 @@ describe('places-utils', () => {
         { name: 'photo1', widthPx: 100, heightPx: 100, authorAttributions: [] },
         { name: 'photo2', widthPx: 100, heightPx: 100, authorAttributions: [] },
       ]
-      // @ts-expect-error - partial mock
       expect(extractPhotoReferences(photos)).toEqual(['photo1', 'photo2'])
     })
 
@@ -25,10 +24,8 @@ describe('places-utils', () => {
       const photos = [
         { name: 'photo1', widthPx: 100, heightPx: 100, authorAttributions: [] },
         { name: '', widthPx: 100, heightPx: 100, authorAttributions: [] },
-        // @ts-expect-error - testing invalid input
         { name: null, widthPx: 100, heightPx: 100, authorAttributions: [] },
       ]
-      // @ts-expect-error - partial mock
       expect(extractPhotoReferences(photos)).toEqual(['photo1'])
     })
   })
@@ -77,7 +74,6 @@ describe('places-utils', () => {
         location: { latitude: 10, longitude: 20 },
         priceLevel: 'PRICE_LEVEL_MODERATE',
       }
-      // @ts-expect-error - partial mock
       const result = mapGooglePlaceToPrediction(placeResult)
 
       expect(result).toEqual({
@@ -97,7 +93,6 @@ describe('places-utils', () => {
         id: 'place123',
         formattedAddress: '123 Main St',
       }
-      // @ts-expect-error - partial mock
       const result = mapGooglePlaceToPrediction(placeResult)
       expect(result.text).toBe('')
     })
@@ -107,7 +102,6 @@ describe('places-utils', () => {
         id: 'place123',
         displayName: { text: 'My Place', languageCode: 'en' },
       }
-      // @ts-expect-error - partial mock
       const result = mapGooglePlaceToPrediction(placeResult)
       expect(result.address).toBe('')
     })

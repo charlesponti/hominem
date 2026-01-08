@@ -37,7 +37,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     throw new Error('Place not found')
   }
 
-  console.info(data)
   return { place: data }
 }
 
