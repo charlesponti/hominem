@@ -18,8 +18,15 @@ export function buildPlacePhotoUrl(photoReference: string, width = 600, height =
     try {
       const url = new URL(photoReference)
       const hostname = url.hostname.toLowerCase()
-      const isGoogleDomain =
-        hostname.endsWith('googleapis.com') || hostname.endsWith('googleusercontent.com')
+      const allowedGoogleHostnames = [
+        'maps.googleapis.com',
+        'places.googleapis.com',
+        'lh3.googleusercontent.com',
+        'lh4.googleusercontent.com',
+        'lh5.googleusercontent.com',
+        'lh6.googleusercontent.com'
+      ]
+      const isGoogleDomain = allowedGoogleHostnames.includes(hostname)
       if (!isGoogleDomain) {
         return photoReference
       }
