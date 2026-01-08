@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Route } from './+types/images'
 
-
-
 const makeRequest = (url: string) => {
   return new Request(url, { method: 'GET', headers: { 'User-Agent': 'test-agent' } })
 }
@@ -24,7 +22,6 @@ describe('rocco /api/images loader', () => {
         new Response(fakeBuffer, { status: 200, headers: { 'content-type': 'image/png' } })
       )
 
-    // @ts-expect-error - override global fetch in test
     global.fetch = fetchSpy
 
     const resource = 'places/PLACE_ID/photos/PHOTO_ID'
@@ -41,7 +38,7 @@ describe('rocco /api/images loader', () => {
     expect(Array.from(body)).toEqual([1, 2, 3])
 
     expect(fetchSpy).toHaveBeenCalled()
-    const calledUrl = fetchSpy.mock.calls[0][0] as unknown as string
+    const calledUrl = fetchSpy.mock.calls[0]?.[0] as unknown as string
     expect(String(calledUrl)).toContain('places.googleapis.com')
     expect(String(calledUrl)).toContain(`key=${process.env.VITE_GOOGLE_API_KEY}`)
   })
@@ -55,7 +52,6 @@ describe('rocco /api/images loader', () => {
         new Response(fakeBuffer, { status: 200, headers: { 'content-type': 'image/jpeg' } })
       )
 
-    // @ts-expect-error - override global fetch in test
     global.fetch = fetchSpy
 
     const photoref = 'AZLaLegacyPhotoRef'
@@ -72,7 +68,7 @@ describe('rocco /api/images loader', () => {
     expect(Array.from(body)).toEqual([4, 5, 6])
 
     expect(fetchSpy).toHaveBeenCalled()
-    const calledUrl = fetchSpy.mock.calls[0][0] as unknown as string
+    const calledUrl = fetchSpy.mock.calls[0]?.[0] as unknown as string
     expect(String(calledUrl)).toContain('maps.googleapis.com')
     expect(String(calledUrl)).toContain(`key=${process.env.VITE_GOOGLE_API_KEY}`)
   })
