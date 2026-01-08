@@ -84,7 +84,11 @@ export function isValidGoogleHost(input: string): boolean {
   try {
     const parsed = new URL(input)
     const hostname = parsed.hostname.toLowerCase()
-    return hostname.endsWith('googleapis.com') || hostname.endsWith('googleusercontent.com')
+    const allowedBaseDomains = ['googleapis.com', 'googleusercontent.com']
+
+    return allowedBaseDomains.some((base) => {
+      return hostname === base || hostname.endsWith('.' + base)
+    })
   } catch {
     return false
   }
