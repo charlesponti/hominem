@@ -2,13 +2,14 @@
  * Migration script to download Google Photos images for existing places
  * and store them in Supabase Storage
  */
-import { db, place } from '@hominem/data/db'
+import { db } from '@hominem/data/db'
 import {
   downloadImage,
   generatePlaceImageFilename,
   getExtensionFromContentType,
   isGooglePhotosUrl,
-} from '@hominem/data/services/place-images.service'
+} from '@hominem/data/places'
+import { place } from '@hominem/data/schema'
 import { placeImagesStorageService } from '@hominem/utils/supabase'
 import { sql } from 'drizzle-orm'
 import { buildPhotoMediaUrl } from '../app/lib/google-places.server'

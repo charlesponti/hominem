@@ -33,6 +33,7 @@ onnxruntime
 openai
 peloton
 pgadmin
+photoreference
 pino
 pkey
 ponti

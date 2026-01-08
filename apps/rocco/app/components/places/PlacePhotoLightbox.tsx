@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { env } from '~/lib/env'
+import { buildPlacePhotoUrl } from '~/lib/photo-utils'
 
 type Props = {
   photos: string[]
@@ -10,35 +10,24 @@ type Props = {
   alt: string
 }
 
+// Translate photo references into URLs using our server-side proxy where appropriate
 const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
-  // If it's already a Supabase Storage URL or other hosted image, return as-is
-  if (
-    photoUrl.includes('supabase.co') ||
-    (photoUrl.startsWith('http') &&
-      !(
-        photoUrl.includes('places/') &&
-        photoUrl.includes('googleusercontent') &&
-        photoUrl.includes('googleapis')
-      ))
-  ) {
+  // Supabase or absolute URLs are returned as-is
+  if (photoUrl.includes('supabase.co') || photoUrl.startsWith('http')) {
     return photoUrl
   }
 
-  // If it's already a full Google APIs URL, return as-is to avoid double-transformation
-  if (photoUrl.includes('googleapis.com')) {
-    return photoUrl
-  }
-
-  // Handle Google Places API photo references
+  // Google Places resource -> proxy through server
   if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
-    return `https://places.googleapis.com/v1/${photoUrl}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
+    return buildPlacePhotoUrl(photoUrl, width, height)
   }
 
-  // Handle Google user content URLs
+  // Google user content urls
   if (photoUrl.includes('googleusercontent')) {
     return `${photoUrl}=w${width}-h${height}-c`
   }
 
+  // Unknown formats - return as-is
   return photoUrl
 }
 

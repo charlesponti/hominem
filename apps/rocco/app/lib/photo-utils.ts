@@ -1,5 +1,3 @@
-import { env } from '~/lib/env'
-
 /**
  * Builds a properly formatted photo URL for Google Places API photos.
  * Only processes Google Places photo references - must not be called with relative URLs or non-Google URLs.
@@ -29,8 +27,9 @@ export function buildPlacePhotoUrl(photoReference: string, width = 600, height =
   }
 
   // Handle Google Places API photo references (format: "places/.../photos/...")
+  // Proxy through our API so we do not expose the API key in the client
   if (photoReference.includes('places/') && photoReference.includes('/photos/')) {
-    return `https://places.googleapis.com/v1/${photoReference}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
+    return `/api/images?resource=${encodeURIComponent(photoReference)}&width=${width}&height=${height}`
   }
 
   // Handle Google user content URLs (these should already be absolute URLs, but we add dimensions)
