@@ -14,14 +14,17 @@
 export function buildPlacePhotoUrl(photoReference: string, width = 600, height = 400) {
   // If it's already a Supabase Storage URL, return it as-is
   if (photoReference.includes('supabase.co') || photoReference.startsWith('http')) {
-    // Check if it's not a Google URL
-    if (
-      !(
-        photoReference.includes('places/') &&
-        photoReference.includes('googleusercontent') &&
-        photoReference.includes('googleapis.com')
-      )
-    ) {
+    // Check if it's not a Google URL by validating the hostname
+    try {
+      const url = new URL(photoReference)
+      const hostname = url.hostname.toLowerCase()
+      const isGoogleDomain =
+        hostname.endsWith('googleapis.com') || hostname.endsWith('googleusercontent.com')
+      if (!isGoogleDomain) {
+        return photoReference
+      }
+    } catch {
+      // If URL parsing fails, return as-is (likely a relative path or malformed URL)
       return photoReference
     }
   }

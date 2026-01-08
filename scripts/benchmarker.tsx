@@ -16,13 +16,16 @@ const testUrls = [
   'https://places.googleapis.com/v1/places/ChIJ789/photos/ghi/media?key=abc',
 ]
 
-// Original check function
+// Original check function (deprecated - has security vulnerability)
 function originalCheck(photoUrl) {
-  return !(
-    photoUrl.includes('places/') &&
-    photoUrl.includes('googleusercontent') &&
-    photoUrl.includes('googleapis.com')
-  )
+  try {
+    const url = new URL(photoUrl)
+    const hostname = url.hostname.toLowerCase()
+    return !(hostname.endsWith('googleapis.com') || hostname.endsWith('googleusercontent.com'))
+  } catch {
+    // If URL parsing fails, check for path patterns
+    return !(photoUrl.includes('places/') && photoUrl.includes('/photos/'))
+  }
 }
 
 // New check function

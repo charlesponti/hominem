@@ -81,9 +81,14 @@ export function generatePlaceImageFilename(googleMapsId: string, photoUrl: strin
  * Checks if a URL is a Google Photos URL that needs to be downloaded
  */
 export function isGooglePhotosUrl(url: string): boolean {
-  return (
-    (url.includes('places/') && url.includes('/photos/')) || url.includes('googleusercontent.com')
-  )
+  try {
+    const parsedUrl = new URL(url)
+    const hostname = parsedUrl.hostname.toLowerCase()
+    return hostname.endsWith('googleapis.com') || hostname.endsWith('googleusercontent.com')
+  } catch {
+    // If it's not a valid URL, check if it looks like a Google Places photo reference path
+    return url.includes('places/') && url.includes('/photos/')
+  }
 }
 
 /**
