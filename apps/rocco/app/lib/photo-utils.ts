@@ -1,3 +1,5 @@
+import { isValidGoogleHost } from '@hominem/data/places'
+
 /**
  * Builds a properly formatted photo URL for Google Places API photos.
  * Only processes Google Places photo references - must not be called with relative URLs or non-Google URLs.
@@ -17,17 +19,8 @@ export function buildPlacePhotoUrl(photoReference: string, width = 600, height =
     // Check if it's not a Google URL by validating the hostname
     try {
       const url = new URL(photoReference)
-      const hostname = url.hostname.toLowerCase()
-      const allowedGoogleHostnames = [
-        'maps.googleapis.com',
-        'places.googleapis.com',
-        'lh3.googleusercontent.com',
-        'lh4.googleusercontent.com',
-        'lh5.googleusercontent.com',
-        'lh6.googleusercontent.com'
-      ]
-      const isGoogleDomain = allowedGoogleHostnames.includes(hostname)
-      if (!isGoogleDomain) {
+      if (!isValidGoogleHost(url.href)) {
+        console.error('Invalid google host:', url.host)
         return photoReference
       }
     } catch {

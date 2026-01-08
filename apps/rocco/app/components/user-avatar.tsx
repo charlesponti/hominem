@@ -1,3 +1,4 @@
+import { isValidGoogleHost } from '@hominem/data/places'
 import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui'
 import { memo, useMemo } from 'react'
 import { cn } from '~/lib/utils'
@@ -27,10 +28,12 @@ const textSizeClasses = {
  * Proxies Google user content URLs through our API to avoid CORB/CORS issues
  */
 function getProxiedImageUrl(imageUrl: string | null | undefined) {
-  if (!imageUrl) { return undefined }
+  if (!imageUrl) {
+    return undefined
+  }
 
   // Only proxy Google user content URLs
-  if (imageUrl.includes('googleusercontent.com')) {
+  if (isValidGoogleHost(imageUrl)) {
     // Use relative path - will be proxied through the same way as /api/trpc
     return `/api/images/proxy?url=${encodeURIComponent(imageUrl)}`
   }

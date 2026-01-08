@@ -97,15 +97,33 @@ export function createTestQueryClient() {
   })
 }
 
-function createUseMutationQuery() {
-  return vi.fn(() => ({
+export interface MockMutationResult<TData = unknown> {
+  mutate: ReturnType<typeof vi.fn>
+  mutateAsync: ReturnType<typeof vi.fn>
+  data: TData | null
+  isLoading: boolean
+  isSuccess: boolean
+  isError: boolean
+  error: Error | null
+  isPending: boolean
+  reset: ReturnType<typeof vi.fn>
+}
+
+type UseMutationFn<TData = unknown> = ReturnType<typeof vi.fn<() => MockMutationResult<TData>>>
+
+function createUseMutationQuery<TData = unknown>(): UseMutationFn<TData> {
+  const defaultResult: MockMutationResult<TData> = {
     mutate: vi.fn(),
     mutateAsync: vi.fn(),
     data: null,
     isLoading: false,
     isSuccess: false,
     isError: false,
-  }))
+    error: null,
+    isPending: false,
+    reset: vi.fn(),
+  }
+  return vi.fn<() => MockMutationResult<TData>>(() => defaultResult)
 }
 
 function createUseQuery() {
@@ -132,79 +150,37 @@ const mockTrpcClient = {
     },
   })),
   lists: {
-    getAll: {
-      useQuery: vi.fn(),
-    },
-    getById: {
-      useQuery: vi.fn(),
-    },
-    create: {
-      useMutation: createUseMutationQuery(),
-    },
-    update: {
-      useMutation: createUseMutationQuery(),
-    },
-    delete: {
-      useMutation: createUseMutationQuery(),
-    },
+    getAll: { useQuery: vi.fn() },
+    getById: { useQuery: vi.fn() },
+    create: { useMutation: createUseMutationQuery() },
+    update: { useMutation: createUseMutationQuery() },
+    delete: { useMutation: createUseMutationQuery() },
   },
   places: {
-    getAll: {
-      useQuery: vi.fn(),
-    },
-    getById: {
-      useQuery: vi.fn(),
-    },
-    getNearbyFromLists: {
-      useQuery: vi.fn(),
-    },
-    autocomplete: {
-      useQuery: vi.fn(),
-    },
-    create: {
-      useMutation: createUseMutationQuery(),
-    },
-    update: {
-      useMutation: createUseMutationQuery(),
-    },
-    delete: {
-      useMutation: createUseMutationQuery(),
-    },
+    getAll: { useQuery: vi.fn() },
+    getById: { useQuery: vi.fn() },
+    getNearbyFromLists: { useQuery: vi.fn() },
+    autocomplete: { useQuery: vi.fn() },
+    create: { useMutation: createUseMutationQuery() },
+    update: { useMutation: createUseMutationQuery() },
+    delete: { useMutation: createUseMutationQuery() },
   },
   items: {
-    getByListId: {
-      useQuery: vi.fn(),
-    },
-    addToList: {
-      useMutation: createUseMutationQuery(),
-    },
-    removeFromList: {
-      useMutation: createUseMutationQuery(),
-    },
+    getByListId: { useQuery: vi.fn() },
+    addToList: { useMutation: createUseMutationQuery() },
+    removeFromList: { useMutation: createUseMutationQuery() },
   },
   invites: {
-    getAll: {
-      useQuery: vi.fn(),
-    },
-    getByList: {
-      useQuery: vi.fn(),
-    },
-    create: {
-      useMutation: vi.fn(),
-    },
-    accept: {
-      useMutation: vi.fn(),
-    },
-    decline: {
-      useMutation: vi.fn(),
-    },
+    getAll: { useQuery: vi.fn() },
+    getByList: { useQuery: vi.fn() },
+    create: { useMutation: vi.fn() },
+    accept: { useMutation: vi.fn() },
+    decline: { useMutation: vi.fn() },
   },
   user: {
-    deleteAccount: {
-      useMutation: vi.fn(),
-    },
+    deleteAccount: { useMutation: vi.fn() },
   },
-}
+} as const
 
 vi.mock('~/lib/trpc/client', () => ({
   trpc: mockTrpcClient,

@@ -1,3 +1,4 @@
+import { isValidGoogleHost } from '@hominem/data/places'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -15,7 +16,7 @@ export function buildImageUrl(src?: string | null, width = 400, height = 300) {
     return `/api/images?resource=${encodeURIComponent(src)}&width=${width}&height=${height}`
   }
 
-  if (src.includes('googleusercontent')) {
+  if (isValidGoogleHost(src) && src.includes('googleusercontent')) {
     return `${src}=w${width}-h${height}-c`
   }
 

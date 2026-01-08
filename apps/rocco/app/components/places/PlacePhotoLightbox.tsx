@@ -1,3 +1,4 @@
+import { isValidGoogleHost } from '@hominem/data/places'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { buildPlacePhotoUrl } from '~/lib/photo-utils'
@@ -23,7 +24,7 @@ const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
   }
 
   // Google user content urls
-  if (photoUrl.includes('googleusercontent')) {
+  if (isValidGoogleHost(photoUrl) && photoUrl.includes('googleusercontent')) {
     return `${photoUrl}=w${width}-h${height}-c`
   }
 

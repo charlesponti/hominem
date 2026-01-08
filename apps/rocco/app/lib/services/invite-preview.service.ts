@@ -1,5 +1,5 @@
 import { getInviteByToken, getPlaceListPreview } from '@hominem/data/lists'
-import { getPlacePhotoById } from '@hominem/data/places'
+import { getPlacePhotoById, isGooglePhotosUrl } from '@hominem/data/places'
 import { buildPlacePhotoUrl } from '~/lib/photo-utils'
 
 export type InvitePreview = {
@@ -44,12 +44,8 @@ export async function buildInvitePreview(token: string): Promise<InvitePreview |
       // Only process with buildPlacePhotoUrl if it's a Google Places photo reference
       // If it's already a full URL, use it as-is
       if (coverPhoto) {
-        if (
-          coverPhoto.includes('places/') ||
-          coverPhoto.includes('/photos/') ||
-          coverPhoto.includes('googleusercontent')
-        ) {
-          // Google Places photo reference, process it to get absolute URL
+        if (isGooglePhotosUrl(coverPhoto)) {
+          // Google Places photo reference or Google-hosted image, process it to get absolute URL
           coverPhoto = buildPlacePhotoUrl(coverPhoto)
         } else if (!(coverPhoto.startsWith('http://') || coverPhoto.startsWith('https://'))) {
           // Not a Google Places photo reference and not a full URL - skip it

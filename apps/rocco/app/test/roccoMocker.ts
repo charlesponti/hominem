@@ -1,7 +1,6 @@
 import { vi } from 'vitest'
-import type { trpc } from '~/lib/trpc/client'
 import type { List, Place } from '~/lib/types'
-import { type MockQueryResult, mockTrpcClient } from '~/test/utils'
+import { type MockMutationResult, type MockQueryResult, mockTrpcClient } from '~/test/utils'
 
 export class RoccoMocker {
   mockListsGetAll(data: List[] | undefined, isLoading = false, error: Error | null = null) {
@@ -69,17 +68,22 @@ export class RoccoMocker {
     )
   }
 
-  mockListsUpdateMutation(overrides?: Partial<ReturnType<typeof trpc.lists.update.useMutation>>) {
-    const base = {
-      data: null,
+  mockListsUpdateMutation(overrides?: Partial<MockMutationResult>) {
+    const result: MockMutationResult = {
       mutate: vi.fn(),
       mutateAsync: vi.fn(),
+      data: null,
       isLoading: false,
       isSuccess: false,
       isError: false,
+      error: null,
+      isPending: false,
+      reset: vi.fn(),
       ...overrides,
     }
-    mockTrpcClient.lists.update.useMutation.mockReturnValue(base)
+    ;(
+      mockTrpcClient.lists.update.useMutation as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValue(result)
   }
 }
 

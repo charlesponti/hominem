@@ -1,164 +1,133 @@
-import { Box, render, Text } from 'ink'
-import { useEffect, useState } from 'react'
+#!/usr/bin/env node
 
-const ITERATIONS = 100000
-const RUNS = 100
+/**
+ * scripts/benchmarker.tsx
+ * Exportable micro-benchmark utility for measuring function execution time.
+ * Use programmatically:
+ *
+ *   import { benchmarkAll, BenchmarkConfig } from './scripts/benchmarker'
+ *   const results = await benchmarkAll([
+ *     { name: 'fast', fn: () => computeFast() },
+ *     { name: 'slow', fn: () => computeSlow() }
+ *   ], { iterations: 100000, runs: 50 })
+ *
+ * The module intentionally contains no domain-specific logic (no URL checks).
+ */
 
-// Sample URLs to test
-const testUrls = [
-  'https://supabase.co/storage/v1/object/public/photos/image.jpg',
-  'https://example.com/places/ChIJ123/photos/abc',
-  'https://lh3.googleusercontent.com/p/abc',
-  'https://maps.googleapis.com/maps/api/place/photo',
-  'https://randomsite.com/image.png',
-  'places/ChIJ456/photos/def',
-  'lh3.googleusercontent.com/q/xyz',
-  'https://places.googleapis.com/v1/places/ChIJ789/photos/ghi/media?key=abc',
-]
-
-// Original check function (deprecated - has security vulnerability)
-function originalCheck(photoUrl) {
-  try {
-    const url = new URL(photoUrl)
-    const hostname = url.hostname.toLowerCase()
-    return !(hostname.endsWith('googleapis.com') || hostname.endsWith('googleusercontent.com'))
-  } catch {
-    // If URL parsing fails, check for path patterns
-    return !(photoUrl.includes('places/') && photoUrl.includes('/photos/'))
-  }
+export type BenchmarkConfig<T = unknown> = {
+  iterations?: number
+  runs?: number
+  inputs?: T[] // per-call inputs; will be passed to fn(input)
+  delayMsBetweenRuns?: number
 }
 
-// New check function
-function newCheck(photoUrl) {
-  return !['places/', 'googleusercontent', 'googleapis.com'].some((str) => photoUrl.includes(str))
+export type BenchResult<T = unknown> = {
+  name: string
+  runs: number[] // nanoseconds per run
+  totalAvgNs: number
+  perCallAvgNs: number
+  stddevNs: number
+  config: Required<BenchmarkConfig<T>>
 }
 
-// Run a single benchmark
-function runBenchmark(fn) {
-  const start = process.hrtime.bigint()
-  for (let i = 0; i < ITERATIONS; i++) {
-    for (const url of testUrls) {
-      fn(url)
-    }
-  }
-  const end = process.hrtime.bigint()
-  return Number(end - start)
+const DEFAULT_CONFIG_BASE = {
+  iterations: 100000,
+  runs: 50,
+  inputs: [] as unknown[],
+  delayMsBetweenRuns: 0,
 }
 
-function App() {
-  const [results, setResults] = useState([])
-  const [currentRun, setCurrentRun] = useState(0)
-  const [isRunning, setIsRunning] = useState(true)
+function makeConfig<T>(config?: BenchmarkConfig<T>): Required<BenchmarkConfig<T>> {
+  return { ...DEFAULT_CONFIG_BASE, ...(config || {}) } as Required<BenchmarkConfig<T>>
+}
 
-  useEffect(() => {
-    const runAllBenchmarks = async () => {
-      const originalResults = []
-      const newResults = []
+function hrtimeNs(): bigint {
+  return process.hrtime.bigint()
+}
 
-      for (let run = 0; run < RUNS; run++) {
-        setCurrentRun(run + 1)
+function mean(arr: number[]) {
+  return arr.reduce((a, b) => a + b, 0) / arr.length
+}
 
-        // Run original
-        const originalTime = runBenchmark(originalCheck)
-        originalResults.push(originalTime)
+function stddev(arr: number[], arrMean = mean(arr)) {
+  const variance = arr.reduce((acc, v) => acc + (v - arrMean) ** 2, 0) / arr.length
+  return Math.sqrt(variance)
+}
 
-        // Run new
-        const newTime = runBenchmark(newCheck)
-        newResults.push(newTime)
-
-        // Small delay to prevent overwhelming
-        await new Promise((resolve) => setTimeout(resolve, 1))
+function runSingleIteration<T, F>(fn: (input?: T) => F, inputs: T[], iterations: number): number {
+  const start = hrtimeNs()
+  for (let i = 0; i < iterations; i++) {
+    if (inputs.length === 0) {
+      void fn()
+    } else {
+      for (const input of inputs) {
+        void fn(input)
       }
-
-      // Calculate averages
-      const originalAvg = originalResults.reduce((a, b) => a + b, 0) / RUNS
-      const newAvg = newResults.reduce((a, b) => a + b, 0) / RUNS
-      const originalAvgPerCall = originalAvg / (ITERATIONS * testUrls.length)
-      const newAvgPerCall = newAvg / (ITERATIONS * testUrls.length)
-
-      setResults([
-        {
-          method: 'Original (3 includes)',
-          totalAvg: originalAvg,
-          perCallAvg: originalAvgPerCall,
-        },
-        {
-          method: 'New (array.some)',
-          totalAvg: newAvg,
-          perCallAvg: newAvgPerCall,
-        },
-      ])
-
-      setIsRunning(false)
     }
-
-    runAllBenchmarks()
-  }, [])
-
-  if (isRunning) {
-    return (
-      <Box flexDirection="column">
-        <Text color="yellow">
-          🔄 Running benchmark {currentRun}/{RUNS}...
-        </Text>
-        <Text dimColor>
-          {ITERATIONS} iterations × {testUrls.length} URLs × {RUNS} runs ={' '}
-          {(ITERATIONS * testUrls.length * RUNS).toLocaleString()} total calls
-        </Text>
-      </Box>
-    )
   }
-
-  return (
-    <Box flexDirection="column">
-      <Text bold color="green">
-        Benchmark Complete!
-      </Text>
-      <Text>Results (averages over {RUNS} runs):</Text>
-      <Text> </Text>
-      <Box borderStyle="round" borderColor="blue" padding={1}>
-        <Box flexDirection="column">
-          <Text bold color="cyan">
-            Method
-          </Text>
-          <Text>─────────────────────────────</Text>
-          {results.map((result, index) => (
-            <Box key={index} marginBottom={1}>
-              <Text>{result.method}</Text>
-            </Box>
-          ))}
-        </Box>
-        <Box flexDirection="column" marginLeft={4}>
-          <Text bold color="cyan">
-            Total Avg (ns)
-          </Text>
-          <Text>────────────────</Text>
-          {results.map((result, index) => (
-            <Box key={index} marginBottom={1}>
-              <Text color={index === 0 ? 'green' : 'yellow'}>
-                {result.totalAvg.toLocaleString()}
-              </Text>
-            </Box>
-          ))}
-        </Box>
-        <Box flexDirection="column" marginLeft={4}>
-          <Text bold color="cyan">
-            Per Call Avg (ns)
-          </Text>
-          <Text>─────────────────</Text>
-          {results.map((result, index) => (
-            <Box key={index} marginBottom={1}>
-              <Text color={index === 0 ? 'green' : 'yellow'}>{result.perCallAvg.toFixed(2)}</Text>
-            </Box>
-          ))}
-        </Box>
-      </Box>
-      <Text dimColor>
-        Note: The original method is faster. Difference:{' '}
-        {(results[1]?.perCallAvg - results[0]?.perCallAvg).toFixed(2)} ns per call
-      </Text>
-    </Box>
-  )
+  const end = hrtimeNs()
+  return Number(end - start) // nanoseconds
 }
 
-render(<App />)
+export async function benchmarkFunction<T, F>(
+  name: string,
+  fn: (input?: T) => F,
+  config?: BenchmarkConfig<T>
+): Promise<BenchResult<T>> {
+  const cfg = makeConfig(config)
+  const results: number[] = []
+
+  for (let r = 0; r < cfg.runs; r++) {
+    const ns = runSingleIteration(fn, cfg.inputs, cfg.iterations)
+    results.push(ns)
+    if (cfg.delayMsBetweenRuns) {
+      await new Promise((res) => setTimeout(res, cfg.delayMsBetweenRuns))
+    }
+  }
+
+  const totalAvgNs = mean(results)
+  const perCallAvgNs =
+    cfg.inputs.length === 0
+      ? totalAvgNs / cfg.iterations
+      : totalAvgNs / (cfg.iterations * cfg.inputs.length)
+  const std = stddev(results, totalAvgNs)
+
+  return {
+    name,
+    runs: results,
+    totalAvgNs,
+    perCallAvgNs,
+    stddevNs: std,
+    config: cfg,
+  }
+}
+
+export async function benchmarkAll<T, F>(
+  tests: Array<{ name: string; fn: (input?: T) => F }>,
+  config?: BenchmarkConfig<T>
+): Promise<BenchResult<T>[]> {
+  const results: BenchResult<T>[] = []
+  for (const t of tests) {
+    const res = await benchmarkFunction(t.name, t.fn, config)
+    results.push(res)
+  }
+  return results
+}
+
+export function formatBenchResults<T>(results: BenchResult<T>[]) {
+  return results.map((r) => ({
+    name: r.name,
+    runs: r.runs.length,
+    totalAvgNs: Math.round(r.totalAvgNs),
+    perCallAvgNs: Number(r.perCallAvgNs.toFixed(2)),
+    stddevNs: Number(r.stddevNs.toFixed(2)),
+    config: r.config,
+  }))
+}
+
+// Minimal CLI for convenience: print usage if executed directly
+if (require.main === module) {
+  console.log('This module exports benchmarking utilities. Use programmatically:')
+  console.log("  import { benchmarkAll } from './scripts/benchmarker'")
+  console.log('See file header comments for usage examples')
+}
