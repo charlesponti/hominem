@@ -7,7 +7,7 @@ import {
   downloadImage,
   generatePlaceImageFilename,
   getExtensionFromContentType,
-  isGooglePhotosUrl,
+  isValidGoogleHost,
 } from '@hominem/data/places'
 import { place } from '@hominem/data/schema'
 import { placeImagesStorageService } from '@hominem/utils/supabase'
@@ -69,7 +69,7 @@ async function processPlacePhotos(
 ): Promise<{ photos: string[]; imageUrl: string | null }> {
   const processedPhotos = await Promise.all(
     photos.map(async (photoUrl) => {
-      if (isGooglePhotosUrl(photoUrl)) {
+      if (isValidGoogleHost(photoUrl)) {
         const supabaseUrl = await downloadAndStoreImage(googleMapsId, photoUrl)
         return supabaseUrl || photoUrl
       }

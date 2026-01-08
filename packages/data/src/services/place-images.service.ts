@@ -87,7 +87,7 @@ export function isValidGoogleHost(input: string): boolean {
     const allowedBaseDomains = ['googleapis.com', 'googleusercontent.com']
 
     return allowedBaseDomains.some((base) => {
-      return hostname === base || hostname.endsWith('.' + base)
+      return hostname === base || hostname.endsWith(`.${base}`)
     })
   } catch {
     return false

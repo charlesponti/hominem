@@ -272,7 +272,7 @@ export const chatsRouter = router({
         })
 
         // Create a placeholder for the assistant message
-        const assistantMessage = await messageService.addMessage({
+        let assistantMessage = await messageService.addMessage({
           chatId: currentChat.id,
           userId: '', // Assistant messages don't have a userId
           role: 'assistant',
@@ -295,7 +295,7 @@ export const chatsRouter = router({
               toolCalls.push(event.toolCall)
             }
           }
-          await messageService.updateMessage({
+          const updatedAssistantMessage = await messageService.updateMessage({
             messageId: assistantMessage.id,
             content: accumulatedContent,
             toolCalls: toolCalls.map((tc) => ({
@@ -305,12 +305,18 @@ export const chatsRouter = router({
               args: JSON.parse(tc.function.arguments) as Record<string, string>,
             })),
           })
+          if (updatedAssistantMessage) {
+            assistantMessage = updatedAssistantMessage
+          }
         } catch (streamError) {
           console.error('Error consuming stream:', streamError)
-          await messageService.updateMessage({
+          const updatedOnError = await messageService.updateMessage({
             messageId: assistantMessage.id,
             content: accumulatedContent || '[Error: Stream processing failed]',
           })
+          if (updatedOnError) {
+            assistantMessage = updatedOnError
+          }
         }
 
         return {
