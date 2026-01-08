@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
 import Account from '~/routes/account'
 import { getMockUser } from '~/test/mocks/index'
-import { mockTrpcClient, renderWithRouter } from '~/test/utils'
+import { roccoMocker } from '~/test/roccoMocker'
+import { renderWithRouter } from '~/test/utils'
 
 // Create a mock user
 const MOCK_USER = getMockUser()
@@ -47,18 +47,13 @@ describe('Account', () => {
     }
 
     // Mock delete account mutation
-    const mockDeleteMutation = {
-      mutate: vi.fn() as (...args: unknown[]) => unknown,
+    roccoMocker.mockUserDeleteAccountMutation({
+      mutate: vi.fn(),
       isPending: false,
       isLoading: false,
       isError: false,
-      error: null as null | { message: string },
-    }
-    mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
-      mockDeleteMutation as unknown as ReturnType<
-        typeof mockTrpcClient.user.deleteAccount.useMutation
-      >
-    )
+      error: null,
+    })
 
     renderWithRouter({
       routes: [
@@ -106,18 +101,13 @@ describe('Account', () => {
     }
 
     // Mock delete account mutation
-    const mockDeleteMutation = {
-      mutate: vi.fn() as (...args: unknown[]) => unknown,
+    roccoMocker.mockUserDeleteAccountMutation({
+      mutate: vi.fn(),
       isPending: false,
       isLoading: false,
       isError: false,
-      error: null as null | { message: string },
-    }
-    mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
-      mockDeleteMutation as unknown as ReturnType<
-        typeof mockTrpcClient.user.deleteAccount.useMutation
-      >
-    )
+      error: null,
+    })
 
     renderWithRouter({
       routes: [
@@ -145,18 +135,13 @@ describe('Account', () => {
 
   test('shows error alert when deletion has error', async () => {
     // Mock delete account mutation to throw error
-    const mockDeleteMutation = {
-      mutate: vi.fn() as (...args: unknown[]) => unknown,
+    roccoMocker.mockUserDeleteAccountMutation({
+      mutate: vi.fn(),
       isPending: false,
-      isLoading: false, // For backward compatibility
+      isLoading: false,
       isError: true,
       error: { message: 'Failed to delete account' },
-    }
-    mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
-      mockDeleteMutation as unknown as ReturnType<
-        typeof mockTrpcClient.user.deleteAccount.useMutation
-      >
-    )
+    })
 
     renderWithRouter({
       routes: [

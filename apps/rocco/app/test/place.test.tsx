@@ -1,15 +1,8 @@
 import { screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import type { Place } from '~/lib/types'
-
 import { MOCK_PLACE } from '~/test/mocks/place'
-import { mockTrpcClient, renderWithRouter } from '~/test/utils'
-
-interface MockQueryResult<T> {
-  data: T | undefined
-  isLoading: boolean
-  error: Error | null
-}
+import { roccoMocker } from '~/test/roccoMocker'
+import { renderWithRouter } from '~/test/utils'
 
 describe('Place', () => {
   beforeEach(() => {
@@ -17,12 +10,7 @@ describe('Place', () => {
   })
 
   test('renders place details', async () => {
-    // Mock place query
-    mockTrpcClient.places.getById.useQuery.mockReturnValue({
-      data: MOCK_PLACE,
-      isLoading: false,
-      error: null,
-    } as MockQueryResult<Place>)
+    roccoMocker.mockPlacesGetById(MOCK_PLACE)
 
     renderWithRouter({
       routes: [
@@ -41,11 +29,7 @@ describe('Place', () => {
 
   test('shows loading state', async () => {
     // Mock place query with loading state
-    mockTrpcClient.places.getById.useQuery.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-    } as MockQueryResult<Place>)
+    roccoMocker.mockPlacesGetById(undefined, true)
 
     renderWithRouter({
       routes: [
@@ -64,11 +48,7 @@ describe('Place', () => {
 
   test('shows error state', async () => {
     // Mock place query with error
-    mockTrpcClient.places.getById.useQuery.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: { message: 'Place not found' },
-    } as MockQueryResult<Place>)
+    roccoMocker.mockPlacesGetById(undefined, false, { message: 'Place not found' } as Error)
 
     renderWithRouter({
       routes: [

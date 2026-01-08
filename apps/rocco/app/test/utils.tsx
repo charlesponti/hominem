@@ -1,9 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { type RenderOptions, type RenderResult, render, screen } from '@testing-library/react'
+import { type RenderOptions, type RenderResult, render } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
 import { createRoutesStub } from 'react-router'
 import { vi } from 'vitest'
 import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './mocks'
+
+export interface MockQueryResult<T> {
+  data: T | undefined
+  isLoading: boolean
+  error: Error | null
+}
 
 const mockSupabaseUser = {
   id: USER_ID,
@@ -250,18 +256,6 @@ export function renderWithRouter(
       <Stub initialEntries={config.initialEntries || ['/']} />
     </QueryClientProvider>
   )
-}
-
-export function waitForLoadingToFinish() {
-  return screen.findByTestId('app-main')
-}
-
-export function queryByTestId(testId: string) {
-  return screen.queryByTestId(testId)
-}
-
-export function findByTestId(testId: string) {
-  return screen.findByTestId(testId)
 }
 
 class ResizeObserver {

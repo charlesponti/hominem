@@ -5,8 +5,9 @@ import type { List } from '~/lib/types'
 import ListPage from '~/routes/lists.$id'
 import { getMockUser, USER_ID } from '~/test/mocks/index'
 import { getMockListPlace } from '~/test/mocks/place'
+import { roccoMocker } from '~/test/roccoMocker'
 import { TEST_LIST_ID } from '~/test/test.setup'
-import { mockTrpcClient, renderWithRouter } from '~/test/utils'
+import { renderWithRouter } from '~/test/utils'
 
 // Mock hooks and dependencies
 vi.mock('~/hooks/useGeolocation', () => ({
@@ -48,11 +49,7 @@ describe('ListPage', () => {
     }
 
     beforeEach(() => {
-      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
-        data: list,
-        isLoading: false,
-        error: null,
-      })
+      roccoMocker.mockListsGetById(list)
     })
 
     test('should display list content', async () => {
@@ -131,17 +128,13 @@ describe('ListPage', () => {
     }
 
     beforeEach(() => {
-      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
-        data: list,
-        isLoading: false,
-        error: null,
-      })
+      roccoMocker.mockListsGetById(list)
 
-      mockTrpcClient.lists.update.useMutation.mockReturnValue({
-        data: null,
+      roccoMocker.mockListsUpdateMutation({
+        data: undefined,
         mutate: vi.fn(),
         mutateAsync: vi.fn(),
-        isLoading: false,
+        isPending: false,
         isSuccess: false,
         isError: false,
       })
@@ -202,11 +195,7 @@ describe('ListPage', () => {
         ],
       }
 
-      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
-        data: listWithUsers,
-        isLoading: false,
-        error: null,
-      })
+      roccoMocker.mockListsGetById(listWithUsers)
 
       renderWithRouter({
         routes: [
@@ -243,11 +232,7 @@ describe('ListPage', () => {
         users: [],
       }
 
-      mockTrpcClient.lists.getById.useQuery.mockReturnValue({
-        data: listWithAccess,
-        isLoading: false,
-        error: null,
-      })
+      roccoMocker.mockListsGetById(listWithAccess)
 
       renderWithRouter({
         routes: [
