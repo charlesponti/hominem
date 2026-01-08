@@ -7,6 +7,7 @@ import {
   downloadImage,
   generatePlaceImageFilename,
   getExtensionFromContentType,
+  isGooglePhotosUrl,
   isValidGoogleHost,
 } from '@hominem/data/places'
 import { place } from '@hominem/data/schema'
@@ -37,7 +38,7 @@ async function downloadAndStoreImage(
     const { buffer, contentType } = await downloadImage({ url: fullUrl })
 
     // Generate a consistent filename
-    const baseFilename = generatePlaceImageFilename(googleMapsId, photoUrl)
+    const baseFilename = generatePlaceImageFilename(googleMapsId)
     const extension = getExtensionFromContentType(contentType)
     const filename = `${baseFilename}${extension}`
 
