@@ -97,7 +97,7 @@ export function createTestQueryClient() {
   })
 }
 
-function createUseMigrationQuery(): ReturnType<typeof vi.fn> {
+function createUseMutationQuery() {
   return vi.fn(() => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn(),
@@ -108,31 +108,27 @@ function createUseMigrationQuery(): ReturnType<typeof vi.fn> {
   }))
 }
 
+function createUseQuery() {
+  return {
+    data: null,
+    isLoading: false,
+    error: null,
+    invalidate: vi.fn(),
+    refetch: vi.fn(),
+    setData: vi.fn(),
+  }
+}
+
 const mockTrpcClient = {
   useUtils: vi.fn(() => ({
     lists: {
-      getAll: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
-      getById: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
+      getAll: createUseQuery(),
+      getById: createUseQuery(),
     },
     places: {
-      getAll: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
-      getNearbyFromLists: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
+      getAll: createUseQuery(),
+      getById: createUseQuery(),
+      getNearbyFromLists: createUseQuery(),
     },
   })),
   lists: {
@@ -143,13 +139,13 @@ const mockTrpcClient = {
       useQuery: vi.fn(),
     },
     create: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
     update: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
     delete: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
   },
   places: {
@@ -166,13 +162,13 @@ const mockTrpcClient = {
       useQuery: vi.fn(),
     },
     create: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
     update: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
     delete: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
   },
   items: {
@@ -180,10 +176,10 @@ const mockTrpcClient = {
       useQuery: vi.fn(),
     },
     addToList: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
     removeFromList: {
-      useMutation: createUseMigrationQuery(),
+      useMutation: createUseMutationQuery(),
     },
   },
   invites: {
