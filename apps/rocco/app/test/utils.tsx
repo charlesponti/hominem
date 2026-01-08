@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { type RenderOptions, render, screen } from '@testing-library/react'
+import { type RenderOptions, type RenderResult, render, screen } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
 import { createRoutesStub } from 'react-router'
 import { vi } from 'vitest'
@@ -91,7 +91,7 @@ export function createTestQueryClient() {
   })
 }
 
-function createUseMigrationQuery() {
+function createUseMigrationQuery(): ReturnType<typeof vi.fn> {
   return vi.fn(() => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn(),
@@ -224,13 +224,16 @@ export function renderWithProviders(
     queryClient?: QueryClient
   } = {},
   options: RenderOptions = {}
-) {
+): RenderResult {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, options)
 }
 
+type RouteStubs = Parameters<typeof createRoutesStub>[0]
+export type RouteComponentType = RouteStubs[number]['Component']
+
 export function renderWithRouter(
   config: {
-    routes: Parameters<typeof createRoutesStub>[0]
+    routes: RouteStubs
     isAuth?: boolean
     initialEntries?: string[]
   },
@@ -239,7 +242,7 @@ export function renderWithRouter(
   }: {
     queryClient?: QueryClient
   } = {}
-) {
+): RenderResult {
   const Stub = createRoutesStub(config.routes)
 
   return render(

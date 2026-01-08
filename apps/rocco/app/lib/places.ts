@@ -1,20 +1,24 @@
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 import { trpc } from './trpc/client'
-import type { Place, PlaceLocation } from './types'
+import type { List, Place } from './types'
 
 export const useRemoveListItem = (
   options?: Partial<Parameters<typeof trpc.items.removeFromList.useMutation>[0]>
 ) => {
   const utils = trpc.useUtils()
 
-  const mutation = trpc.items.removeFromList.useMutation({
-    onMutate: async (variables) => {
+  return trpc.items.removeFromList.useMutation({
+    onMutate: async (variables): Promise<{ previousList: List }> => {
       const { listId, itemId: placeId } = variables
       // Cancel any outgoing refetches
       await utils.lists.getById.cancel({ id: listId })
 
       // Snapshot the previous value
       const previousList = utils.lists.getById.getData({ id: listId })
+
+      if (!previousList) {
+        throw new Error('List not found')
+      }
 
       // Optimistically update to the new value
       if (previousList) {
@@ -34,7 +38,7 @@ export const useRemoveListItem = (
     },
     // If the mutation fails, use the context returned from onMutate to roll back
     onError: (error, variables, context, mutationContext) => {
-      const ctx = context as { previousList?: unknown } | undefined
+      const ctx = context
       if (ctx?.previousList) {
         utils.lists.getById.setData({ id: variables.listId }, ctx.previousList)
       }
@@ -52,19 +56,15 @@ export const useRemoveListItem = (
 
       options?.onSettled?.(data, error, variables, context, mutationContext)
     },
-    onSuccess: (data, variables, context, mutationContext) => {
-      options?.onSuccess?.(data, variables, context, mutationContext)
-    },
+    onSuccess: options?.onSuccess,
   })
-
-  return mutation
 }
 
 export const useAddPlaceToList = (
   options?: Partial<Parameters<typeof trpc.places.create.useMutation>[0]>
 ) => {
   const utils = trpc.useUtils()
-  const createPlaceMutation = trpc.places.create.useMutation({
+  return trpc.places.create.useMutation({
     // Prefetch related data after successful mutation
     onSuccess: (data, variables, _context, mutationContext) => {
       const listIds = variables?.listIds || []
@@ -95,40 +95,16 @@ export const useAddPlaceToList = (
 
       options?.onSuccess?.(data, variables, undefined, mutationContext)
     },
-    onError: (error, variables, _context, mutationContext) => {
-      options?.onError?.(error, variables, undefined, mutationContext)
-    },
-    onSettled: (data, error, variables, _context, mutationContext) => {
-      options?.onSettled?.(data, error, variables, undefined, mutationContext)
-    },
+    onError: options?.onError,
+    onSettled: options?.onSettled,
   })
-
-  return createPlaceMutation
-}
-
-export const useGetPlace = (id: string) => {
-  return trpc.places.getById.useQuery(
-    { id },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 2,
-    }
-  )
-}
-
-// TODO: Implement getWithLists in places router
-export const useGetPlaceLists = () => {
-  // This function needs to be implemented in the places router
-  // For now, return empty data to avoid errors
-  return {
-    data: [],
-    isLoading: false,
-  }
 }
 
 export async function createPlaceFromPrediction(prediction: GooglePlacePrediction): Promise<Place> {
-  // We don't fetch photos here anymore to avoid double fetching.
-  // The photos will be fetched when the user navigates to the place details page.
+  /**
+   * NOTE: Do not fetch photos here to avoid double fetching.
+   * The photos will be fetched when the user navigates to the place details page.
+   */
   const photoUrls: string[] = []
 
   const latitude = prediction.location?.latitude || null
@@ -160,11 +136,4 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
     businessStatus: null,
     openingHours: null,
   }
-}
-
-export type TextSearchQuery = {
-  query: string
-  latitude: PlaceLocation['latitude']
-  longitude: PlaceLocation['longitude']
-  radius: number
 }

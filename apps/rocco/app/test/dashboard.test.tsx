@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { List, PlaceLocation } from '~/lib/types'
 import Dashboard, { loader } from '~/routes/index'
 import { MOCK_LISTS } from '~/test/mocks/index'
-import { mockTrpcClient, renderWithRouter } from '~/test/utils'
+import { mockTrpcClient, type RouteComponentType, renderWithRouter } from '~/test/utils'
 
 interface MockQueryResult<T> {
   data: T | undefined
@@ -117,7 +117,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard as unknown,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -156,7 +156,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard as unknown,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -194,7 +194,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard as unknown,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -239,7 +239,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard as unknown,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -266,7 +266,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard as unknown,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -295,7 +295,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard as unknown,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -323,7 +323,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard as unknown,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
