@@ -77,7 +77,7 @@
         "noUnusedVariables": "error",
         "noUnusedPrivateClassMembers": "error",
         "noUnusedLabels": "error",
-        "noUnusedFunctionParameters": "warn",
+        "noUnusedFunctionParameters": "error",
         "useExhaustiveDependencies": "warn",
         "useHookAtTopLevel": "error"
       },

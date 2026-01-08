@@ -69,7 +69,7 @@ export async function downloadImage({
 /**
  * Generates a consistent filename for a place image
  */
-export function generatePlaceImageFilename(googleMapsId: string, photoUrl: string): string {
+export function generatePlaceImageFilename(googleMapsId: string): string {
   // Create a hash of the photo URL to ensure uniqueness
   return `${googleMapsId}-${Math.random().toString(36).slice(2)}`
 }
