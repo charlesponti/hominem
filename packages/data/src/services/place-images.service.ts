@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto'
-
 /**
  * Service for downloading and managing place images
  */
@@ -73,8 +71,7 @@ export async function downloadImage({
  */
 export function generatePlaceImageFilename(googleMapsId: string, photoUrl: string): string {
   // Create a hash of the photo URL to ensure uniqueness
-  const hash = createHash('sha256').update(photoUrl).digest('hex').substring(0, 12)
-  return `${googleMapsId}-${hash}`
+  return `${googleMapsId}-${Math.random().toString(36).slice(2)}`
 }
 
 /**
