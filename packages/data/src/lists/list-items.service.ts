@@ -4,6 +4,7 @@ import { db } from '../db'
 import { type Item as ItemSelect, item, list, place, userLists, users } from '../db/schema'
 import { logger } from '../logger'
 import { getListOwnedByUser } from './list-queries.service'
+import { getHominemPhotoURL } from '@hominem/utils/images'
 import type { ListPlace } from './types'
 
 /**
@@ -90,7 +91,12 @@ export async function getPlaceListPreview(listId: string) {
       .innerJoin(place, eq(item.itemId, place.id))
       .where(eq(item.listId, listId))
       .limit(1)
-      .then((rows) => rows[0] ?? null)
+      .then((rows) => {
+        const r = rows[0] ?? null
+        if (!r) { return null }
+        const photoUrl = r.imageUrl ? getHominemPhotoURL(r.imageUrl, 600, 400) : null
+        return { ...r, photoUrl }
+      })
   } catch (error) {
     logger.error('Error fetching first place for preview', {
       listId,

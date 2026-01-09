@@ -1,7 +1,5 @@
-import { isValidGoogleHost } from '@hominem/utils/google'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { buildPlacePhotoUrl } from '~/lib/photo-utils'
 
 type Props = {
   photos: string[]
@@ -9,27 +7,6 @@ type Props = {
   isOpen: boolean
   onClose: () => void
   alt: string
-}
-
-// Translate photo references into URLs using our server-side proxy where appropriate
-const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
-  // Supabase or absolute URLs are returned as-is
-  if (photoUrl.includes('supabase.co') || photoUrl.startsWith('http')) {
-    return photoUrl
-  }
-
-  // Google Places resource -> proxy through server
-  if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
-    return buildPlacePhotoUrl(photoUrl, width, height)
-  }
-
-  // Google user content urls
-  if (isValidGoogleHost(photoUrl) && photoUrl.includes('googleusercontent')) {
-    return `${photoUrl}=w${width}-h${height}-c`
-  }
-
-  // Unknown formats - return as-is
-  return photoUrl
 }
 
 const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Props) => {
@@ -125,7 +102,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
       {/* Main image */}
       {photo && (
         <img
-          src={getGooglePlaceImgUrl(photo, 1600, 1200)}
+          src={photo}
           alt={`${alt} - ${activeIndex + 1}`}
           className="max-w-[90vw] max-h-[90vh] object-contain"
           onClick={(e) => e.stopPropagation()}

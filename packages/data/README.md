@@ -8,7 +8,7 @@ Database schemas and utilities for the Hominem monorepo.
 - Drizzle ORM schemas for all domains
 - Type-safe database operations
 - Migration management
-- **Lazy database initialization** - the database connection is only created when you actually use it
+- **Lazy database initialization** - the database connection is only created when used
 
 ## Usage
 

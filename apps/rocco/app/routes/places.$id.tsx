@@ -49,7 +49,12 @@ export default function Place({ loaderData }: Route.ComponentProps) {
         className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700"
         style={{ viewTransitionName: `place-photos-${place.id}` }}
       >
-        <PlacePhotos alt={place.name} photos={place.photos} placeId={place.id} />
+        <PlacePhotos
+          alt={place.name}
+          photos={place.thumbnailPhotos ?? place.photos}
+          fullPhotos={place.photos}
+          placeId={place.id}
+        />
       </div>
 
       <div className="w-full space-y-12">
