@@ -1,5 +1,6 @@
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
+import { getOrCreateQueues } from '@hominem/data/queues'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
@@ -31,7 +32,7 @@ export function createWebSocketManager(): WebSocketManager {
     try {
       redisHandlers.process(wss, channel, message)
     } catch (error) {
-      logger.error('Redis message handler error:', error)
+      logger.error('Redis message handler error:', error as Error)
     }
   })
 
@@ -42,6 +43,10 @@ export function createWebSocketManager(): WebSocketManager {
   // Connection handler
   wss.on('connection', async (ws: WebSocket) => {
     logger.info('WebSocket client connected')
+
+    // Attach shared queues to the connection (singleton per process) so handlers can access them
+    ;(ws as unknown as { queues?: import('@hominem/data/types').Queues }).queues =
+      getOrCreateQueues()
 
     // Send welcome message
     ws.send(
@@ -57,7 +62,7 @@ export function createWebSocketManager(): WebSocketManager {
       try {
         await wsHandlers.process(ws, message.toString())
       } catch (error) {
-        logger.error('WebSocket message handler error:', error)
+        logger.error('WebSocket message handler error:', error as Error)
         // Optionally send error response to client
         ws.send(
           JSON.stringify({
@@ -70,7 +75,7 @@ export function createWebSocketManager(): WebSocketManager {
 
     // Error handler
     ws.on('error', (error) => {
-      logger.error('WebSocket connection error:', error)
+      logger.error('WebSocket connection error:', error as Error)
     })
 
     // Close handler
@@ -82,7 +87,9 @@ export function createWebSocketManager(): WebSocketManager {
   // Upgrade HTTP connection to WebSocket
   const handleUpgrade = async (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     wss.handleUpgrade(request, socket, head, async (ws: WebSocket) => {
-      if (!request.url) { return }
+      if (!request.url) {
+        return
+      }
 
       // Extract token from URL
       const url = new URL(request.url, 'http://localhost')
@@ -106,7 +113,7 @@ export function createWebSocketManager(): WebSocketManager {
 
         wss.emit('connection', ws, request)
       } catch (error) {
-        logger.error('WebSocket authentication error:', error)
+        logger.error('WebSocket authentication error:', error as Error)
         socket.destroy()
         return
       }
@@ -124,7 +131,7 @@ export function createWebSocketManager(): WebSocketManager {
           logger.info('Redis subscriber closed successfully')
         })
         .catch((error) => {
-          logger.error('Error closing Redis subscriber:', error)
+          logger.error('Error closing Redis subscriber:', error as Error)
         })
         .finally(() => {
           // Close WebSocket server

@@ -56,7 +56,7 @@ export class PromptService {
 
       return `${content}${contextValues}`
     } catch (error) {
-      logger.error(`Failed to load prompt '${fileName}':`, error)
+      logger.error(`Failed to load prompt '${fileName}':`, { error })
       return DEFAULT_PROMPT
     }
   }

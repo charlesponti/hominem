@@ -22,7 +22,7 @@ export interface LogEntry {
 }
 
 class Logger {
-  private isDevelopment = process.env.NODE_ENV === 'development'
+  private isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development'
 
   private formatMessage(entry: LogEntry) {
     const { level, message, timestamp, context, error } = entry

@@ -1,4 +1,4 @@
-import { logger } from '@hominem/data/logger'
+import { logger } from '@hominem/utils/logger'
 import { redirect } from 'react-router'
 import { createSupabaseServerClient } from '~/lib/auth.server'
 

@@ -1,3 +1,4 @@
+import { buildPhotoMediaUrl } from '@hominem/utils/images'
 import { env } from '~/lib/env'
 import type { Route } from './+types/images'
 
@@ -28,18 +29,21 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   try {
-    const searchParams = new URLSearchParams({
-      maxWidthPx: width,
-      maxHeightPx: height,
+    const currentTargetUrl = buildPhotoMediaUrl({
       key: env.VITE_GOOGLE_API_KEY,
+      photoName: resource,
+      maxWidthPx: Number(width),
+      maxHeightPx: Number(height),
     })
-    const targetUrl = `https://places.googleapis.com/v1/${resource}/media?${searchParams.toString()}`
 
-    const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent':
-          request.headers.get('User-Agent') || 'Mozilla/5.0 (compatible; ImageProxy/1.0)',
-      },
+    const headers = {
+      'User-Agent': request.headers.get('User-Agent') || 'Mozilla/5.0 (compatible; ImageProxy/1.0)',
+      // Pass Referer to satisfy browser-key restrictions
+      Referer: env.VITE_APP_BASE_URL || request.headers.get('Referer') || 'http://localhost:3000',
+    }
+
+    const response = await fetch(currentTargetUrl, {
+      headers,
       redirect: 'follow',
     })
 

@@ -10,6 +10,6 @@ const envSchema = z.object({
 // Merge import.meta.env (Vite) with process.env as a fallback for test environments
 const mergedEnv = {
   ...(typeof import.meta !== 'undefined' ? import.meta.env : {}),
-  ...process.env,
+  ...(typeof process !== 'undefined' && process.env ? process.env : {}),
 }
 export const env = envSchema.parse(mergedEnv)

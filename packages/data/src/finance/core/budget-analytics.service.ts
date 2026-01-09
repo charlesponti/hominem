@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
+import { logger } from '@hominem/utils/logger'
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
 import { db } from '../../db'
 import { budgetCategories, transactions } from '../../db/schema'
-import { logger } from '../../logger'
 
 /**
  * Get transaction categories analysis

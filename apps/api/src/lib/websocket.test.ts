@@ -13,7 +13,9 @@ class MockWebSocketServer extends EventEmitter {
   clients = new Set<MockWebSocket>()
   handleUpgrade = vi.fn()
   close = vi.fn((callback?: () => void) => {
-    if (callback) { callback() }
+    if (callback) {
+      callback()
+    }
   })
   // Don't override emit - let EventEmitter handle it
 }
@@ -67,6 +69,11 @@ vi.mock('@hominem/utils/logger', () => ({
 vi.mock('@hominem/utils/consts', () => ({
   REDIS_CHANNELS: {
     IMPORT_PROGRESS: 'import-progress',
+  },
+  QUEUE_NAMES: {
+    IMPORT_TRANSACTIONS: 'import-transactions',
+    PLAID_SYNC: 'plaid-sync',
+    PLACE_PHOTO_ENRICH: 'place-photo-enrich',
   },
 }))
 

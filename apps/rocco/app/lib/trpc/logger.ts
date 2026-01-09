@@ -6,12 +6,12 @@ import { logger } from '../logger'
 
 export function initPostHog() {
   // Only enable PostHog in production
-  if (process.env.NODE_ENV !== 'production') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
     logger.info('PostHog disabled in development')
     return
   }
 
-  const apiKey = process.env.POSTHOG_API_KEY
+  const apiKey = typeof process !== 'undefined' ? process.env.POSTHOG_API_KEY : undefined
   if (!apiKey) {
     logger.warn('POSTHOG_API_KEY not configured')
     return
@@ -26,24 +26,25 @@ export function initPostHog() {
 
 export function capturePostHogError(_error: Error, _context?: LogContext) {
   // Only send to PostHog in production
-  if (process.env.NODE_ENV !== 'production') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
     return
   }
 
   // PostHog.capture({
-  // 	distinctId: "server",
-  // 	event: "error",
-  // 	properties: {
-  // 		error: error.message,
-  // 		stack: error.stack,
-  // 		...context,
-  // 	},
+  //  distictId: "server",
+  //  event: "error",
+  //  properties: {
+  //    error: error.message,
+  //    stack: error.stack,
+  //    ...context,
+  //  },
   // });
 }
 
 // Production logger wrapper
 export class ProductionLogger {
-  private logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || 'info'
+  private logLevel: LogLevel =
+    (typeof process !== 'undefined' && (process.env.LOG_LEVEL as LogLevel)) || 'info'
 
   private shouldLog(level: LogLevel): boolean {
     const levels: LogLevel[] = ['debug', 'info', 'warn', 'error', 'fatal']
@@ -52,7 +53,7 @@ export class ProductionLogger {
 
   private async sendToExternalServices(entry: LogEntry) {
     if (entry.level === 'error' || entry.level === 'fatal') {
-      if (process.env.POSTHOG_API_KEY) {
+      if (typeof process !== 'undefined' && process.env.POSTHOG_API_KEY) {
         capturePostHogError(entry.error as Error, entry.context)
       }
     }
@@ -101,11 +102,13 @@ export class ProductionLogger {
 }
 
 export function initProductionLogging() {
-  if (process.env.POSTHOG_API_KEY) {
+  if (typeof process !== 'undefined' && process.env.POSTHOG_API_KEY) {
     initPostHog()
   }
 
   logger.info('Production logging initialized', {
-    services: [process.env.POSTHOG_API_KEY && 'PostHog'].filter(Boolean),
+    services: [
+      typeof process !== 'undefined' && process.env.POSTHOG_API_KEY ? 'PostHog' : undefined,
+    ].filter(Boolean),
   })
 }

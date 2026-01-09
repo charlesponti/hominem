@@ -1,16 +1,16 @@
-import { and, eq, sql } from 'drizzle-orm'
 import crypto from 'node:crypto'
+import { logger } from '@hominem/utils/logger'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '../../db'
 import {
   type FinanceAccount,
   type FinanceAccountInsert,
   type FinanceTransaction,
-  financialInstitutions,
   financeAccounts,
+  financialInstitutions,
   plaidItems,
   transactions,
 } from '../../db/schema'
-import { logger } from '../../logger'
 
 export async function getAccountsMap(): Promise<Map<string, FinanceAccount>> {
   try {

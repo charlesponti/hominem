@@ -9,7 +9,9 @@ export function getHominemPhotoURL(
   width = 1200,
   height = 1200
 ): string | null {
-  if (!photoReference) { return null }
+  if (!photoReference) {
+    return null
+  }
 
   // Google user content URLs (e.g., user-uploaded Google images) should get size params
   if (photoReference.includes('googleusercontent')) {
@@ -32,4 +34,24 @@ export function getHominemPhotoURL(
   }
 
   return null
+}
+
+export const GOOGLE_PLACES_BASE_URL = 'https://places.googleapis.com/v1'
+
+export const buildPhotoMediaUrl = ({
+  key,
+  photoName,
+  maxWidthPx = 600,
+  maxHeightPx = 400,
+}: {
+  key: string
+  photoName: string
+  maxWidthPx?: number
+  maxHeightPx?: number
+}) => {
+  const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${photoName}/media`)
+  url.searchParams.set('maxWidthPx', String(maxWidthPx))
+  url.searchParams.set('maxHeightPx', String(maxHeightPx))
+  url.searchParams.set('key', key)
+  return url.toString()
 }

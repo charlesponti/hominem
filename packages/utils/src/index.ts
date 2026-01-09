@@ -1,6 +1,5 @@
 export * from './delay'
 export * from './imports'
-export * from './logger'
 export * from './markdown/index'
 export * from './nlp/index'
 export * from './redis'

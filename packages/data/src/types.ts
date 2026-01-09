@@ -61,3 +61,14 @@ export type {
 } from './db/schema/shared.schema'
 
 export type { User, UserInsert } from './db/schema/users.schema'
+
+import type { Queue } from 'bullmq'
+
+/**
+ * Common queue shape used across API, workers, and apps
+ */
+export type Queues = {
+  plaidSync: Queue
+  importTransactions: Queue
+  placePhotoEnrich: Queue
+}

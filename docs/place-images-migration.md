@@ -18,7 +18,7 @@ This implementation automatically downloads Google Photos images for places and 
    - Stores images under `places/{googleMapsId}/` directory structure
 
 3. **Updated Place Service** (`packages/data/src/services/places.service.ts`)
-   - `ensurePlaceFromGoogleData` now accepts optional `buildPhotoMediaUrl` function
+   - `upsertPlace` now accepts optional `buildPhotoMediaUrl` function
    - Automatically downloads and replaces Google Photos URLs with Supabase URLs
    - Works for both single place creation and batch operations
    - Falls back to original URL if download fails

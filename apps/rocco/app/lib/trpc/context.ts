@@ -1,4 +1,6 @@
+import { getOrCreateQueues } from '@hominem/data/queues'
 import type { UserSelect } from '@hominem/data/schema'
+import type { Queues } from '@hominem/data/types'
 import { UserAuthService } from '@hominem/data/user'
 import { initTRPC, TRPCError } from '@trpc/server'
 import { getServerAuth } from '../auth.server'
@@ -6,6 +8,7 @@ import { logger } from '../logger'
 
 export interface Context {
   user?: UserSelect | null
+  queues: Queues
   responseHeaders: Headers
 }
 
@@ -13,7 +16,15 @@ export const createContext = async (request?: Request): Promise<Context> => {
   const responseHeaders = new Headers()
 
   if (!request) {
-    return { user: null, responseHeaders }
+    return {
+      user: null,
+      queues: {
+        plaidSync: undefined as unknown as Queues['plaidSync'],
+        importTransactions: undefined as unknown as Queues['importTransactions'],
+        placePhotoEnrich: undefined as unknown as Queues['placePhotoEnrich'],
+      },
+      responseHeaders,
+    }
   }
 
   // Test override for user
@@ -23,7 +34,18 @@ export const createContext = async (request?: Request): Promise<Context> => {
       const localUser = await UserAuthService.findByIdOrEmail({
         id: testUserId,
       })
-      return { user: localUser ?? null, responseHeaders }
+      return {
+        user: localUser ?? null,
+        queues:
+          process.env.NODE_ENV === 'test'
+            ? {
+                plaidSync: undefined as unknown as Queues['plaidSync'],
+                importTransactions: undefined as unknown as Queues['importTransactions'],
+                placePhotoEnrich: undefined as unknown as Queues['placePhotoEnrich'],
+              }
+            : getOrCreateQueues(),
+        responseHeaders,
+      }
     }
   }
 
@@ -61,10 +83,29 @@ export const createContext = async (request?: Request): Promise<Context> => {
             : null,
       }
     }
-    return { user: mappedUser, responseHeaders }
+    return {
+      user: mappedUser,
+      queues:
+        process.env.NODE_ENV === 'test'
+          ? {
+              plaidSync: undefined as unknown as Queues['plaidSync'],
+              importTransactions: undefined as unknown as Queues['importTransactions'],
+              placePhotoEnrich: undefined as unknown as Queues['placePhotoEnrich'],
+            }
+          : getOrCreateQueues(),
+      responseHeaders,
+    }
   } catch (error) {
-    logger.error('Error verifying auth token', { error: error as Error })
-    return { user: null, responseHeaders }
+    logger.error('Error verifying auth token', { error: error })
+    return {
+      user: null,
+      queues: {
+        plaidSync: undefined as unknown as Queues['plaidSync'],
+        importTransactions: undefined as unknown as Queues['importTransactions'],
+        placePhotoEnrich: undefined as unknown as Queues['placePhotoEnrich'],
+      },
+      responseHeaders,
+    }
   }
 }
 

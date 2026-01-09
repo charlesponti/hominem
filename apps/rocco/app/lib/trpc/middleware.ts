@@ -55,7 +55,7 @@ export const loggingMiddleware = middleware(async ({ path, type, next, ctx }) =>
 // Middleware for input validation logging
 export const inputValidationMiddleware = middleware(async ({ path, type, next, input, ctx }) => {
   // Log input for debugging (only in development)
-  if (process.env.NODE_ENV === 'development') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     logger.debug(`tRPC ${type} input`, {
       path,
       type,

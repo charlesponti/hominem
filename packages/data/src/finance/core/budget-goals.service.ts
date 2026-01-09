@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
+import { logger } from '@hominem/utils/logger'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../../db'
 import { budgetGoals } from '../../db/schema'
-import { logger } from '../../logger'
 
 /**
  * Get budget goals for a user

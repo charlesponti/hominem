@@ -1,5 +1,5 @@
-import { logger } from '@hominem/data/logger'
 import { UserAuthService } from '@hominem/data/user'
+import { logger } from '@hominem/utils/logger'
 import {
   type CookieMethodsServer,
   createServerClient,

@@ -1,7 +1,7 @@
+import { logger } from '@hominem/utils/logger'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { budgetGoals, financeAccounts, plaidItems, transactions } from '../db/schema'
-import { logger } from '../logger'
 
 /**
  * Delete all finance data for a user

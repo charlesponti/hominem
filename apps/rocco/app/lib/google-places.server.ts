@@ -1,3 +1,6 @@
+import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/images'
+import { logger } from '@hominem/utils/logger'
+
 import type { GooglePlaceDetailsResponse, GooglePlacesApiResponse } from '~/lib/types'
 
 type CacheEntry<T> = {
@@ -40,7 +43,6 @@ export type PlacePhotosOptions = {
   forceFresh?: boolean
 }
 
-const GOOGLE_PLACES_BASE_URL = 'https://places.googleapis.com/v1'
 const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 5 // 5 minutes
 const MAX_RETRIES = 2
 const RETRY_DELAY_MS = 300
@@ -104,9 +106,13 @@ const buildCacheKey = (parts: Record<string, unknown>) => {
 }
 
 const readCache = <T>(key: string | undefined): T | null => {
-  if (!key) { return null }
+  if (!key) {
+    return null
+  }
   const entry = cache.get(key) as CacheEntry<T> | undefined
-  if (!entry) { return null }
+  if (!entry) {
+    return null
+  }
   if (entry.expiresAt < Date.now()) {
     cache.delete(key)
     return null
@@ -115,7 +121,9 @@ const readCache = <T>(key: string | undefined): T | null => {
 }
 
 const writeCache = <T>(key: string | undefined, value: T, ttl = DEFAULT_CACHE_TTL_MS) => {
-  if (!key) { return }
+  if (!key) {
+    return
+  }
   cache.set(key, {
     value,
     expiresAt: Date.now() + ttl,
@@ -138,9 +146,15 @@ const requestGoogle = async <T>({
   }
 
   const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${path}`)
+  if (path.startsWith('places/')) {
+    logger.info(`[DEBUG] requestGoogle fetching: ${path} (Fresh: ${forceFresh})`)
+  }
+
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {
-      if (value === undefined || value === null) { return }
+      if (value === undefined || value === null) {
+        return
+      }
       url.searchParams.set(key, String(value))
     })
   }
@@ -274,26 +288,12 @@ export const getPlacePhotos = async ({
     .slice(0, limit)
 }
 
-export const buildPhotoMediaUrl = ({
-  photoName,
-  maxWidthPx = 600,
-  maxHeightPx = 400,
-}: {
-  photoName: string
-  maxWidthPx?: number
-  maxHeightPx?: number
-}) => {
-  const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${photoName}/media`)
-  url.searchParams.set('maxWidthPx', String(maxWidthPx))
-  url.searchParams.set('maxHeightPx', String(maxHeightPx))
-  url.searchParams.set('key', getGoogleApiKey())
-  return url.toString()
-}
-
 export const getNeighborhoodFromAddressComponents = (
   addressComponents: GooglePlaceDetailsResponse['addressComponents']
 ) => {
-  if (!addressComponents) { return null }
+  if (!addressComponents) {
+    return null
+  }
   const neighborhood = addressComponents.find((component) =>
     component.types.includes('neighborhood')
   )

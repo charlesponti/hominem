@@ -1,3 +1,4 @@
+import type { Queues } from '@hominem/data/types'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import type { ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
 import { logger } from '@hominem/utils/logger'
@@ -10,11 +11,7 @@ export interface WebSocketMessage {
 }
 
 interface WebSocketWithQueues extends WebSocket {
-  queues?: {
-    importTransactions: {
-      getJobs: (types: string[]) => Promise<Job<ImportTransactionsQueuePayload>[]>
-    }
-  }
+  queues?: Partial<Queues>
 }
 
 export type MessageMiddleware = (
@@ -49,7 +46,7 @@ class WebSocketHandlerRegistry {
       // Set up middleware chain
       const executeMiddleware = async (index = 0): Promise<void> => {
         if (index < this.middleware.length) {
-          await this.middleware[index](ws, message, () => executeMiddleware(index + 1))
+          await this.middleware[index]?.(ws, message, () => executeMiddleware(index + 1))
         } else {
           // After middleware, execute the handler
           const handler = this.handlers.get(message.type)

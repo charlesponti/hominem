@@ -1,3 +1,4 @@
+import { logger } from '@hominem/utils/logger'
 import { and, asc, desc, eq, gte, like, lte, type SQL, sql } from 'drizzle-orm'
 import { db } from '../db'
 import {
@@ -6,7 +7,6 @@ import {
   financeAccounts,
   transactions,
 } from '../db/schema'
-import { logger } from '../logger'
 import type { QueryOptions } from './finance.types'
 
 /**

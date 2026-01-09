@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
+import { logger } from '@hominem/utils/logger'
 import { and, eq } from 'drizzle-orm'
 import { db, takeUniqueOrThrow } from '../db'
 import { list } from '../db/schema'
-import { logger } from '../logger'
 import { getListById } from './list-queries.service'
 import type { List, ListPlace, ListUser, ListWithSpreadOwner } from './types'
 

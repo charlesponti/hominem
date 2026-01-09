@@ -25,6 +25,7 @@ export type AppEnv = {
     queues: {
       plaidSync: Queue
       importTransactions: Queue
+      placePhotoEnrich: Queue
     }
   }
   Variables: {
@@ -45,11 +46,16 @@ export function createServer() {
     connection: redis,
   })
 
+  const placePhotoEnrichQueue = new Queue(QUEUE_NAMES.PLACE_PHOTO_ENRICH, {
+    connection: redis,
+  })
+
   // Add queues to the app context
   app.use('*', async (c, next) => {
     c.set('queues', {
       plaidSync: plaidSyncQueue,
       importTransactions: importTransactionsQueue,
+      placePhotoEnrich: placePhotoEnrichQueue,
     })
     await next()
   })
@@ -90,6 +96,7 @@ export function createServer() {
           queues: {
             plaidSync: plaidSyncQueue,
             importTransactions: importTransactionsQueue,
+            placePhotoEnrich: placePhotoEnrichQueue,
           },
           user: c.get('user'),
           userId: c.get('userId'),

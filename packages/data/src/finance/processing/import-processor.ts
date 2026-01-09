@@ -1,7 +1,7 @@
+import { logger } from '@hominem/utils/logger'
 import { parse } from 'csv-parse'
 import { Effect, Stream } from 'effect'
 import type { FinanceTransactionInsert } from '../../db/schema'
-import { logger } from '../../logger'
 import { getAndCreateAccountsInBulk } from '../core/account.service'
 import {
   type CapitalOneTransaction,

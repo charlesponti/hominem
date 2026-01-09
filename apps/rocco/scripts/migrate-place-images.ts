@@ -3,17 +3,45 @@
  * and store them in Supabase Storage
  */
 import { db } from '@hominem/data/db'
-import {
-  downloadImage,
-  generatePlaceImageFilename,
-  getExtensionFromContentType,
-  isGooglePhotosUrl,
-  isValidGoogleHost,
-} from '@hominem/data/places'
+import { downloadAndStorePlaceImage, isGooglePhotosUrl } from '@hominem/data/places'
 import { place } from '@hominem/data/schema'
-import { placeImagesStorageService } from '@hominem/utils/supabase'
-import { sql } from 'drizzle-orm'
-import { buildPhotoMediaUrl } from '../app/lib/google-places.server'
+import { buildPhotoMediaUrl } from '@hominem/utils/images'
+import { eq, sql } from 'drizzle-orm'
+import { getPlacePhotos } from '../app/lib/google-places.server'
+
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
+
+if (!GOOGLE_PLACES_API_KEY) {
+  throw new Error('GOOGLE_PLACES_API_KEY is not set')
+}
+
+// Adapter for the robust download service
+const urlBuilder = (path: string) => {
+  // If it's already a full URL (e.g. googleusercontent), use it directly
+  if (path.startsWith('http')) {
+    return path
+  }
+
+  // Clean path to remove any potential query params or duplicated base
+  const cleanPath = path.split('?')[0]
+
+  if (!cleanPath) {
+    return null
+  }
+
+  // If path doesn't look right, log a warning
+  if (!(cleanPath.includes('places/') && cleanPath.includes('photos/'))) {
+    console.warn(`Suspicious photo path format: ${cleanPath}`)
+  }
+
+  // Otherwise build the new Places API Media URL
+  return buildPhotoMediaUrl({
+    key: GOOGLE_PLACES_API_KEY,
+    photoName: cleanPath,
+    maxWidthPx: 1600,
+    maxHeightPx: 1600,
+  })
+}
 
 interface MigrationStats {
   total: number
@@ -23,43 +51,7 @@ interface MigrationStats {
   skipped: number
 }
 
-/**
- * Downloads and stores a Google Photos image
- */
-async function downloadAndStoreImage(
-  googleMapsId: string,
-  photoUrl: string
-): Promise<string | null> {
-  try {
-    // Build the full media URL with API key
-    const fullUrl = buildPhotoMediaUrl({ photoName: photoUrl })
-
-    // Download the image
-    const { buffer, contentType } = await downloadImage({ url: fullUrl })
-
-    // Generate a consistent filename
-    const baseFilename = generatePlaceImageFilename(googleMapsId)
-    const extension = getExtensionFromContentType(contentType)
-    const filename = `${baseFilename}${extension}`
-
-    // Store in Supabase Storage under places/{googleMapsId}/
-    const storedFile = await placeImagesStorageService.storeFile(
-      buffer,
-      filename,
-      contentType,
-      `places/${googleMapsId}`
-    )
-
-    return storedFile.url
-  } catch (error) {
-    console.error('Failed to download and store place image:', {
-      googleMapsId,
-      photoUrl,
-      error: error instanceof Error ? error.message : String(error),
-    })
-    return null
-  }
-}
+// downloadAndStoreImage removed in favor of downloadAndStorePlaceImage from @hominem/data/places
 
 /**
  * Processes a single place's photos
@@ -68,19 +60,33 @@ async function processPlacePhotos(
   googleMapsId: string,
   photos: string[]
 ): Promise<{ photos: string[]; imageUrl: string | null }> {
-  const processedPhotos = await Promise.all(
-    photos.map(async (photoUrl) => {
-      if (isValidGoogleHost(photoUrl)) {
-        const supabaseUrl = await downloadAndStoreImage(googleMapsId, photoUrl)
-        return supabaseUrl || photoUrl
+  // We'll collect only the successful Supabase URLs
+  const successfulPhotos: string[] = []
+
+  // Process serially to catch errors easier (and maybe avoid rate limits)
+  for (const photoUrl of photos) {
+    if (isGooglePhotosUrl(photoUrl)) {
+      console.log(`Migrating photo for ${googleMapsId}: ${photoUrl.substring(0, 50)}...`)
+      try {
+        const supabaseUrl = await downloadAndStorePlaceImage(googleMapsId, photoUrl, urlBuilder)
+
+        if (supabaseUrl) {
+          successfulPhotos.push(supabaseUrl)
+        } else {
+          console.warn(`Failed to migrate photo for ${googleMapsId}, skipping.`)
+        }
+      } catch (e) {
+        console.error(`Error migrating photo for ${googleMapsId}:`, e)
       }
-      return photoUrl
-    })
-  )
+    } else {
+      // If it's already not a google photo (e.g. existing supabase url?), keep it
+      successfulPhotos.push(photoUrl)
+    }
+  }
 
   return {
-    photos: processedPhotos,
-    imageUrl: processedPhotos[0] || null,
+    photos: successfulPhotos,
+    imageUrl: successfulPhotos[0] || null,
   }
 }
 
@@ -110,16 +116,43 @@ async function migrateImages() {
       stats.processed++
 
       try {
-        const photos = placeRecord.photos || []
+        // Fetch fresh photos from Google to ensure we have the correct, up-to-date references.
+        // This is critical if the DB contains stale or corrupted photo references.
+        let photos = placeRecord.photos || []
+        try {
+          // biome-ignore lint/suspicious/noConsole: Migration script needs console output
+          console.log(
+            `[${stats.processed}/${stats.total}] Fetching fresh photos for ${placeRecord.name}...`
+          )
+          const freshPhotos = await getPlacePhotos({
+            placeId: placeRecord.googleMapsId,
+            forceFresh: true,
+          })
+
+          if (freshPhotos.length > 0) {
+            photos = freshPhotos
+          } else {
+            console.warn(
+              `No fresh photos found for ${placeRecord.name}, attempting to use existing records...`
+            )
+          }
+        } catch (fetchError) {
+          console.error(`Failed to fetch fresh photos for ${placeRecord.name}:`, fetchError)
+          // If we can't fetch fresh ones, we skip because old ones are likely broken/corrupted
+          // based on user report of "same image" everywhere.
+          continue
+        }
 
         // Check if any photos are Google Photos URLs
+        // Note: Even fresh photos from API might not be "googleusercontent" yet, they are references.
+        // isGooglePhotosUrl returns true for references too.
         const hasGooglePhotos = photos.some((url) => isGooglePhotosUrl(url))
 
         if (!hasGooglePhotos) {
           stats.skipped++
           // biome-ignore lint/suspicious/noConsole: Migration script needs console output
           console.log(
-            `[${stats.processed}/${stats.total}] Skipping ${placeRecord.name} - no Google Photos URLs`
+            `[${stats.processed}/${stats.total}] Skipping ${placeRecord.name} - no Google Photos URLs found`
           )
           continue
         }
@@ -136,11 +169,15 @@ async function migrateImages() {
         )
 
         // Update the place with new photo URLs
-        await db.update(place).set({
-          photos: newPhotos,
-          imageUrl: imageUrl || placeRecord.imageUrl,
-          updatedAt: new Date().toISOString(),
-        })
+        await db
+          .update(place)
+          .set({
+            photos: newPhotos,
+            imageUrl: imageUrl || placeRecord.imageUrl,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(place.id, placeRecord.id))
+
         // biome-ignore lint/suspicious/noConsole: Migration script needs console output
         console.log(`✓ Updated ${placeRecord.name}`)
 

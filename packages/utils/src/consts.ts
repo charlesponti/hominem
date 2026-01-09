@@ -36,6 +36,13 @@ export const QUEUE_NAMES = {
    * - apps/workers/src/google-calendar-sync-worker.ts (processing jobs)
    */
   GOOGLE_CALENDAR_SYNC: 'google-calendar-sync',
+  /**
+   * Queue for place photo enrichment jobs
+   * Used by:
+   * - apps/api (enqueuing jobs)
+   * - apps/workers (processing jobs)
+   */
+  PLACE_PHOTO_ENRICH: 'place-photo-enrich',
 } as const
 
 /**

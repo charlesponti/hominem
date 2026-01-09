@@ -1,15 +1,12 @@
 import type { HominemUser } from '@hominem/auth/server'
+import type { Queues } from '@hominem/data/types'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { initTRPC, TRPCError } from '@trpc/server'
-import type { Queue } from 'bullmq'
 import type { HonoRequest } from 'hono'
 
 export interface Context {
   req: HonoRequest
-  queues: {
-    plaidSync: Queue
-    importTransactions: Queue
-  }
+  queues: Queues
   user?: HominemUser
   userId?: string
   supabaseId: string

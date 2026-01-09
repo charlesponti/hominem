@@ -10,7 +10,7 @@ import { getServerSession } from './lib/auth.server'
 import { initProductionLogging } from './lib/trpc/logger'
 import { TRPCProvider } from './lib/trpc/provider'
 
-if (process.env.NODE_ENV === 'production') {
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
   initProductionLogging()
 }
 

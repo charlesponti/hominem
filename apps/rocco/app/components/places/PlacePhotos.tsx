@@ -7,8 +7,6 @@ type Props = {
   alt: string
   // thumbnails or resolved URLs suitable for the list view
   photos: string[] | null | undefined
-  // optional full-resolution photos for the lightbox
-  fullPhotos?: string[] | null | undefined
   placeId: string
 }
 
@@ -88,7 +86,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
 
       {/* Lightbox */}
       <PlacePhotoLightbox
-        photos={fullPhotos ?? photos ?? []}
+        photos={photos ?? []}
         currentIndex={currentPhotoIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
