@@ -1,10 +1,10 @@
 import crypto from 'node:crypto'
+import { getHominemPhotoURL } from '@hominem/utils/images'
 import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '../db'
 import { type Item as ItemSelect, item, list, place, userLists, users } from '../db/schema'
 import { logger } from '../logger'
 import { getListOwnedByUser } from './list-queries.service'
-import { getHominemPhotoURL } from '@hominem/utils/images'
 import type { ListPlace } from './types'
 
 /**
@@ -93,7 +93,9 @@ export async function getPlaceListPreview(listId: string) {
       .limit(1)
       .then((rows) => {
         const r = rows[0] ?? null
-        if (!r) { return null }
+        if (!r) {
+          return null
+        }
         const photoUrl = r.imageUrl ? getHominemPhotoURL(r.imageUrl, 600, 400) : null
         return { ...r, photoUrl }
       })

@@ -27,8 +27,6 @@ export function getPlaceImageUrl(place: Pick<PlaceSelect, 'imageUrl' | 'photos'>
   return place.imageUrl ?? place.photos?.[0] ?? null
 }
 
-
-
 // In-memory cache for place lookups
 type CacheEntry<T> = {
   data: T
