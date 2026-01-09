@@ -1,9 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { type RenderOptions, render, screen } from '@testing-library/react'
+import { type RenderOptions, type RenderResult, render } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
 import { createRoutesStub } from 'react-router'
 import { vi } from 'vitest'
 import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './mocks'
+
+export interface MockQueryResult<T> {
+  data: T | undefined
+  isLoading: boolean
+  error: Error | null
+}
 
 const mockSupabaseUser = {
   id: USER_ID,
@@ -91,118 +97,90 @@ export function createTestQueryClient() {
   })
 }
 
-function createUseMigrationQuery() {
-  return vi.fn(() => ({
+export interface MockMutationResult<TData = unknown> {
+  mutate: ReturnType<typeof vi.fn>
+  mutateAsync: ReturnType<typeof vi.fn>
+  data: TData | null
+  isLoading: boolean
+  isSuccess: boolean
+  isError: boolean
+  error: Error | null
+  isPending: boolean
+  reset: ReturnType<typeof vi.fn>
+}
+
+type UseMutationFn<TData = unknown> = ReturnType<typeof vi.fn<() => MockMutationResult<TData>>>
+
+function createUseMutationQuery<TData = unknown>(): UseMutationFn<TData> {
+  const defaultResult: MockMutationResult<TData> = {
     mutate: vi.fn(),
     mutateAsync: vi.fn(),
     data: null,
     isLoading: false,
     isSuccess: false,
     isError: false,
-  }))
+    error: null,
+    isPending: false,
+    reset: vi.fn(),
+  }
+  return vi.fn<() => MockMutationResult<TData>>(() => defaultResult)
+}
+
+function createUseQuery() {
+  return {
+    data: null,
+    isLoading: false,
+    error: null,
+    invalidate: vi.fn(),
+    refetch: vi.fn(),
+    setData: vi.fn(),
+  }
 }
 
 const mockTrpcClient = {
   useUtils: vi.fn(() => ({
     lists: {
-      getAll: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
-      getById: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
+      getAll: createUseQuery(),
+      getById: createUseQuery(),
     },
     places: {
-      getAll: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
-      getNearbyFromLists: {
-        invalidate: vi.fn(),
-        refetch: vi.fn(),
-        setData: vi.fn(),
-      },
+      getAll: createUseQuery(),
+      getById: createUseQuery(),
+      getNearbyFromLists: createUseQuery(),
     },
   })),
   lists: {
-    getAll: {
-      useQuery: vi.fn(),
-    },
-    getById: {
-      useQuery: vi.fn(),
-    },
-    create: {
-      useMutation: createUseMigrationQuery(),
-    },
-    update: {
-      useMutation: createUseMigrationQuery(),
-    },
-    delete: {
-      useMutation: createUseMigrationQuery(),
-    },
+    getAll: { useQuery: vi.fn() },
+    getById: { useQuery: vi.fn() },
+    create: { useMutation: createUseMutationQuery() },
+    update: { useMutation: createUseMutationQuery() },
+    delete: { useMutation: createUseMutationQuery() },
   },
   places: {
-    getAll: {
-      useQuery: vi.fn(),
-    },
-    getById: {
-      useQuery: vi.fn(),
-    },
-    getNearbyFromLists: {
-      useQuery: vi.fn(),
-    },
-    autocomplete: {
-      useQuery: vi.fn(),
-    },
-    create: {
-      useMutation: createUseMigrationQuery(),
-    },
-    update: {
-      useMutation: createUseMigrationQuery(),
-    },
-    delete: {
-      useMutation: createUseMigrationQuery(),
-    },
+    getAll: { useQuery: vi.fn() },
+    getById: { useQuery: vi.fn() },
+    getNearbyFromLists: { useQuery: vi.fn() },
+    autocomplete: { useQuery: vi.fn() },
+    create: { useMutation: createUseMutationQuery() },
+    update: { useMutation: createUseMutationQuery() },
+    delete: { useMutation: createUseMutationQuery() },
   },
   items: {
-    getByListId: {
-      useQuery: vi.fn(),
-    },
-    addToList: {
-      useMutation: createUseMigrationQuery(),
-    },
-    removeFromList: {
-      useMutation: createUseMigrationQuery(),
-    },
+    getByListId: { useQuery: vi.fn() },
+    addToList: { useMutation: createUseMutationQuery() },
+    removeFromList: { useMutation: createUseMutationQuery() },
   },
   invites: {
-    getAll: {
-      useQuery: vi.fn(),
-    },
-    getByList: {
-      useQuery: vi.fn(),
-    },
-    create: {
-      useMutation: vi.fn(),
-    },
-    accept: {
-      useMutation: vi.fn(),
-    },
-    decline: {
-      useMutation: vi.fn(),
-    },
+    getAll: { useQuery: vi.fn() },
+    getByList: { useQuery: vi.fn() },
+    create: { useMutation: vi.fn() },
+    accept: { useMutation: vi.fn() },
+    decline: { useMutation: vi.fn() },
   },
   user: {
-    deleteAccount: {
-      useMutation: vi.fn(),
-    },
+    deleteAccount: { useMutation: vi.fn() },
   },
-}
+} as const
 
 vi.mock('~/lib/trpc/client', () => ({
   trpc: mockTrpcClient,
@@ -224,13 +202,16 @@ export function renderWithProviders(
     queryClient?: QueryClient
   } = {},
   options: RenderOptions = {}
-) {
+): RenderResult {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, options)
 }
 
+type RouteStubs = Parameters<typeof createRoutesStub>[0]
+export type RouteComponentType = RouteStubs[number]['Component']
+
 export function renderWithRouter(
   config: {
-    routes: Parameters<typeof createRoutesStub>[0]
+    routes: RouteStubs
     isAuth?: boolean
     initialEntries?: string[]
   },
@@ -239,7 +220,7 @@ export function renderWithRouter(
   }: {
     queryClient?: QueryClient
   } = {}
-) {
+): RenderResult {
   const Stub = createRoutesStub(config.routes)
 
   return render(
@@ -247,18 +228,6 @@ export function renderWithRouter(
       <Stub initialEntries={config.initialEntries || ['/']} />
     </QueryClientProvider>
   )
-}
-
-export function waitForLoadingToFinish() {
-  return screen.findByTestId('app-main')
-}
-
-export function queryByTestId(testId: string) {
-  return screen.queryByTestId(testId)
-}
-
-export function findByTestId(testId: string) {
-  return screen.findByTestId(testId)
 }
 
 class ResizeObserver {

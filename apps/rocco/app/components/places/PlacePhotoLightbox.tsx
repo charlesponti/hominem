@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { env } from '~/lib/env'
 
 type Props = {
   photos: string[]
@@ -8,17 +7,6 @@ type Props = {
   isOpen: boolean
   onClose: () => void
   alt: string
-}
-
-const getGooglePlaceImgUrl = (photoUrl: string, width = 1200, height = 800) => {
-  if (photoUrl.includes('places/') && photoUrl.includes('/photos/')) {
-    return `https://places.googleapis.com/v1/${photoUrl}/media?key=${env.VITE_GOOGLE_API_KEY}&maxWidthPx=${width}&maxHeightPx=${height}`
-  }
-
-  if (photoUrl.includes('googleusercontent')) {
-    return `${photoUrl}=w${width}-h${height}-c`
-  }
-  return photoUrl
 }
 
 const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Props) => {
@@ -38,19 +26,29 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
   }, [photos.length])
 
   useEffect(() => {
-    if (!isOpen) { return }
+    if (!isOpen) {
+      return
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onClose() }
-      if (e.key === 'ArrowLeft') { goToPrevious() }
-      if (e.key === 'ArrowRight') { goToNext() }
+      if (e.key === 'Escape') {
+        onClose()
+      }
+      if (e.key === 'ArrowLeft') {
+        goToPrevious()
+      }
+      if (e.key === 'ArrowRight') {
+        goToNext()
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose, goToPrevious, goToNext])
 
-  if (!isOpen) { return null }
+  if (!isOpen) {
+    return null
+  }
 
   return (
     <div
@@ -104,7 +102,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
       {/* Main image */}
       {photo && (
         <img
-          src={getGooglePlaceImgUrl(photo, 1600, 1200)}
+          src={photo}
           alt={`${alt} - ${activeIndex + 1}`}
           className="max-w-[90vw] max-h-[90vh] object-contain"
           onClick={(e) => e.stopPropagation()}

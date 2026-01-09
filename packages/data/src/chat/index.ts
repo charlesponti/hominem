@@ -1,14 +1,3 @@
-export type {
-  ChatStats,
-  CreateChatParams,
-  SearchChatsParams,
-} from './service/chat.service'
-export { ChatError, ChatService } from './service/chat.service'
-
-export type {
-  ChatMessagesOptions,
-  CreateMessageParams,
-} from './service/message.service'
-export { MessageService } from './service/message.service'
-
-export { AuthUtils } from './utils/auth.utils'
+export * from './service/chat.service'
+export * from './service/message.service'
+export * from './utils/auth.utils'

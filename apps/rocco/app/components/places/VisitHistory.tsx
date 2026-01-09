@@ -102,11 +102,11 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
                 </div>
               )}
               <div className="flex items-center justify-between gap-3">
-                <Button variant="icon" size="icon" aria-label="Edit visit" onClick={onEdit}>
+                <Button variant="ghost" size="icon" aria-label="Edit visit" onClick={onEdit}>
                   <Edit2 className="size-4" />
                 </Button>
                 <Button
-                  variant="icon"
+                  variant="ghost"
                   size="icon"
                   className="text-destructive hover:text-destructive"
                   onClick={handleDelete}

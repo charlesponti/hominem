@@ -34,9 +34,6 @@
     },
     {
       "path": "../../packages/utils"
-    },
-    {
-      "path": "../notes"
     }
   ],
   "include": [

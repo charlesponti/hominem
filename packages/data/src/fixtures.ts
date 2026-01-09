@@ -1,7 +1,7 @@
-import { db } from './db'
-import { users } from '@hominem/data/schema'
-import { eq, or } from 'drizzle-orm'
 import crypto from 'node:crypto'
+import { eq, or } from 'drizzle-orm'
+import { db } from './db'
+import { users } from './db/schema'
 
 export const createTestUser = async (overrides: Partial<typeof users.$inferInsert> = {}) => {
   // If id is provided but supabaseId is not, use id as supabaseId
@@ -20,8 +20,12 @@ export const createTestUser = async (overrides: Partial<typeof users.$inferInser
   }
 
   // Fallback for types (should be covered by above logic)
-  if (!id) { id = crypto.randomUUID() }
-  if (!supabaseId) { supabaseId = id }
+  if (!id) {
+    id = crypto.randomUUID()
+  }
+  if (!supabaseId) {
+    supabaseId = id
+  }
 
   const user = {
     email: `test-${id}@example.com`,

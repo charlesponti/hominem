@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto'
+import { ContentService } from '@hominem/data/services'
 import {
-  ContentService,
   deleteAccountForUser,
   getAccountByUserAndProvider,
   listAccountsByProvider,
-} from '@hominem/data/services'
+} from '@hominem/data/user'
 import { logger } from '@hominem/utils/logger'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'

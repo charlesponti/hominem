@@ -1,3 +1,4 @@
+import { logger } from '@hominem/utils/logger'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../db'
 import { item, place, tripItems, trips } from '../db/schema'
@@ -20,7 +21,7 @@ export async function createTrip(input: {
       .returning()
     return newTrip
   } catch (error) {
-    console.error(
+    logger.error(
       JSON.stringify(
         {
           message: 'Failed to create trip',

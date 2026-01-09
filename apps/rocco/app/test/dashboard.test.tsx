@@ -1,40 +1,17 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import type { List, PlaceLocation } from '~/lib/types'
+import type { PlaceLocation } from '~/lib/types'
 import Dashboard, { loader } from '~/routes/index'
 import { MOCK_LISTS } from '~/test/mocks/index'
-import { mockTrpcClient, renderWithRouter } from '~/test/utils'
+import { roccoMocker } from '~/test/roccoMocker'
+import { type RouteComponentType, renderWithRouter } from '~/test/utils'
 
-interface MockQueryResult<T> {
-  data: T | undefined
-  isLoading: boolean
-  error: Error | null
-}
-
-/**
- * Integration tests for the Dashboard route
- *
- * These tests verify the full integration between:
- * - Loader execution (authentication check)
- * - Component rendering based on loader data
- * - Child components (Lists, PlacesAutocomplete, PlacesNearby)
- * - User interactions
- *
- * We mock only external dependencies:
- * - Auth service (getAuthState)
- * - API calls (trpc queries)
- * - Browser APIs (geolocation)
- * - Heavy components (map)
- */
-
-// Mock external dependencies only
 const mockUseGeolocation = vi.fn()
 vi.mock('~/hooks/useGeolocation', () => ({
   useGeolocation: () => mockUseGeolocation(),
 }))
 
-// Mock the auth service with a default implementation
 const mockGetAuthState = vi.hoisted(() => vi.fn())
 vi.mock('~/lib/auth.server', () => ({
   getAuthState: mockGetAuthState,
@@ -90,24 +67,12 @@ describe('Dashboard Integration Tests', () => {
       error: null,
     })
 
-    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
-      data: MOCK_LISTS,
-      isLoading: false,
-      error: null,
-    } as MockQueryResult<List[]>)
+    roccoMocker.mockListsGetAll(MOCK_LISTS)
 
-    mockTrpcClient.places.getNearbyFromLists.useQuery.mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-    })
+    roccoMocker.mockPlacesGetNearbyFromLists([])
 
     // Mock Google Places autocomplete
-    mockTrpcClient.places.autocomplete.useQuery.mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-    })
+    roccoMocker.mockPlacesAutocomplete([])
   })
 
   test('authenticated user sees dashboard with all components', async () => {
@@ -117,7 +82,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -156,7 +121,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -184,17 +149,13 @@ describe('Dashboard Integration Tests', () => {
       address: '123 Coffee St, San Francisco, CA',
       location: { latitude: 37.7749, longitude: -122.4194 },
     }
-    mockTrpcClient.places.autocomplete.useQuery.mockReturnValue({
-      data: [mockPlace],
-      isLoading: false,
-      error: null,
-    })
+    roccoMocker.mockPlacesAutocomplete([mockPlace])
 
     renderWithRouter({
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -229,17 +190,13 @@ describe('Dashboard Integration Tests', () => {
 
   test('shows empty state when user has no lists', async () => {
     // Mock API to return no lists
-    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
-      data: [],
-      isLoading: false,
-      error: null,
-    })
+    roccoMocker.mockListsGetAll([])
 
     renderWithRouter({
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -266,7 +223,7 @@ describe('Dashboard Integration Tests', () => {
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -285,17 +242,13 @@ describe('Dashboard Integration Tests', () => {
 
   test('shows loading state while fetching lists', async () => {
     // Mock API to return loading state
-    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-    })
+    roccoMocker.mockListsGetAll(undefined, true)
 
     renderWithRouter({
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },
@@ -313,17 +266,13 @@ describe('Dashboard Integration Tests', () => {
 
   test('shows error when lists fail to load', async () => {
     // Mock API to return error
-    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: { message: 'Failed to load lists' },
-    })
+    roccoMocker.mockListsGetAll(undefined, false, { message: 'Failed to load lists' } as Error)
 
     renderWithRouter({
       routes: [
         {
           path: '/',
-          Component: Dashboard,
+          Component: Dashboard as RouteComponentType,
           // biome-ignore lint/suspicious/noExplicitAny: React Router v7 type compatibility
           loader: loader as any,
         },

@@ -1,3 +1,4 @@
+import { isValidGoogleHost } from '@hominem/utils/google'
 import { Hono } from 'hono'
 
 export const imagesRoutes = new Hono()
@@ -17,25 +18,8 @@ imagesRoutes.get('/proxy', async (c) => {
     // Decode the URL if it's encoded
     const decodedUrl = decodeURIComponent(imageUrl)
 
-    // Validate that it's a valid URL
-    let url: URL
-    try {
-      url = new URL(decodedUrl)
-    } catch {
-      return c.json({ error: 'Invalid URL format' }, 400)
-    }
-
-    // Only allow certain domains for security
-    const allowedDomains = [
-      'lh3.googleusercontent.com',
-      'googleusercontent.com',
-      'googleapis.com',
-      'places.googleapis.com',
-    ]
-
-    const isAllowed = allowedDomains.some((domain) => url.hostname.includes(domain))
-
-    if (!isAllowed) {
+    // Only allow Google hosts for security
+    if (!isValidGoogleHost(decodedUrl)) {
       return c.json({ error: 'Domain not allowed' }, 403)
     }
 

@@ -1,5 +1,5 @@
 import { createTestUser as createTestUserShared } from '@hominem/data/fixtures'
-import { UserAuthService } from '@hominem/data/services'
+import { UserAuthService } from '@hominem/data/user'
 import { vi } from 'vitest'
 
 // Track created test users for cleanup
@@ -9,16 +9,8 @@ const createdTestUsers: string[] = []
  * Database mock factory for different table operations
  */
 export const createDbMocks = () => {
-  const mockQueryResult = <T>(data: T[] | T | null = null) => {
-    if (Array.isArray(data)) {
-      return Promise.resolve(data)
-    }
-    return Promise.resolve(data)
-  }
-
-  const mockMutationResult = (count = 1) => {
-    return Promise.resolve({ rowCount: count, rows: [] })
-  }
+  const mockQueryResult = <T>(data: T[] | T | null = null) => Promise.resolve(data)
+  const mockMutationResult = (count = 1) => Promise.resolve({ rowCount: count, rows: [] })
 
   // Table-specific query mocks
   const tableQueries = {

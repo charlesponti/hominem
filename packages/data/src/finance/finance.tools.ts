@@ -1,9 +1,9 @@
-import type { FinanceTransactionInsert } from '@hominem/data/schema'
 import { tool } from 'ai'
 import { z } from 'zod'
+import type { FinanceTransactionInsert } from '../db/schema'
 import { calculateTransactions } from './analytics/transaction-analytics.service'
 import { createAccount, deleteAccount, listAccounts, updateAccount } from './core/account.service'
-import { getBudgetCategories, type BudgetCategoryType } from './core/budget-categories.service'
+import { type BudgetCategoryType, getBudgetCategories } from './core/budget-categories.service'
 import {
   createTransaction,
   deleteTransaction,
@@ -170,10 +170,18 @@ export const update_finance_account = tool({
       interestRate: string | null
       minimumPayment: string | null
     }> = {}
-    if (args.name) { updates.name = args.name }
-    if (args.balance) { updates.balance = args.balance.toString() }
-    if (args.interestRate) { updates.interestRate = args.interestRate.toString() }
-    if (args.minimumPayment) { updates.minimumPayment = args.minimumPayment.toString() }
+    if (args.name) {
+      updates.name = args.name
+    }
+    if (args.balance) {
+      updates.balance = args.balance.toString()
+    }
+    if (args.interestRate) {
+      updates.interestRate = args.interestRate.toString()
+    }
+    if (args.minimumPayment) {
+      updates.minimumPayment = args.minimumPayment.toString()
+    }
 
     const updated = await updateAccount(args.accountId, args.userId, updates)
     return { message: `Updated finance account ${updated.id}`, account: updated }
@@ -242,12 +250,24 @@ export const update_transaction = tool({
   parameters: updateTransactionSchema,
   async execute(args) {
     const updates: Partial<FinanceTransactionInsert> = {}
-    if (args.amount) { updates.amount = args.amount.toString() }
-    if (args.date) { updates.date = new Date(args.date) }
-    if (args.description) { updates.description = args.description }
-    if (args.category) { updates.category = args.category }
-    if (args.parentCategory) { updates.parentCategory = args.parentCategory }
-    if (args.notes) { updates.note = args.notes }
+    if (args.amount) {
+      updates.amount = args.amount.toString()
+    }
+    if (args.date) {
+      updates.date = new Date(args.date)
+    }
+    if (args.description) {
+      updates.description = args.description
+    }
+    if (args.category) {
+      updates.category = args.category
+    }
+    if (args.parentCategory) {
+      updates.parentCategory = args.parentCategory
+    }
+    if (args.notes) {
+      updates.note = args.notes
+    }
 
     const updated = await updateTransaction(args.transactionId, args.userId, updates)
     return {

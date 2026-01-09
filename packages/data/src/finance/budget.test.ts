@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
-import { db } from '@hominem/data/db'
-import { budgetCategories, users } from '@hominem/data/schema'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { db } from '../db'
+import { budgetCategories, users } from '../db/schema'
 import { createTestUser } from '../fixtures'
 
 // Helper to check if DB is available
@@ -40,7 +40,7 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
       .returning()
 
     expect(category1).toHaveLength(1)
-    expect(category1[0].name).toBe('Housing')
+    expect(category1?.[0]?.name).toBe('Housing')
 
     // Create second category with different name
     const category2 = await db
@@ -55,7 +55,7 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
       .returning()
 
     expect(category2).toHaveLength(1)
-    expect(category2[0].name).toBe('Food')
+    expect(category2?.[0]?.name).toBe('Food')
   })
 
   it('should prevent creating categories with duplicate names for the same user', async () => {
@@ -108,8 +108,8 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
       .returning()
 
     expect(category2).toHaveLength(1)
-    expect(category2[0].name).toBe('Housing')
-    expect(category2[0].userId).toBe(testUserId2)
+    expect(category2?.[0]?.name).toBe('Housing')
+    expect(category2?.[0]?.userId).toBe(testUserId2)
   })
 
   it('should handle case sensitivity correctly', async () => {
@@ -135,6 +135,6 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
       .returning()
 
     expect(category).toHaveLength(1)
-    expect(category[0].name).toBe('Housing')
+    expect(category?.[0]?.name).toBe('Housing')
   })
 })

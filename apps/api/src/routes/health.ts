@@ -4,7 +4,7 @@ import {
   getHealthRecord,
   listHealthRecords,
   updateHealthRecord,
-} from '@hominem/data'
+} from '@hominem/data/health'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'

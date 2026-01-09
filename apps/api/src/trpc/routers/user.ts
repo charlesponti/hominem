@@ -1,5 +1,5 @@
 import type { SupabaseAuthUser } from '@hominem/auth/server'
-import { UserAuthService } from '@hominem/data'
+import { UserAuthService } from '@hominem/data/user'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

@@ -32,7 +32,7 @@ export type ChatMessageReasoning = {
 export type ChatMessageToolCall = {
   type: 'tool-call' | 'tool-result'
   toolName: string
-  toolCallId?: string
+  toolCallId: string
   args?: Record<string, unknown>
   result?: unknown
   isError?: boolean
@@ -45,13 +45,15 @@ export type ChatMessageFile = {
   [key: string]: unknown
 }
 
+export type ChatMessageRole = 'user' | 'assistant' | 'tool'
+
 export const chatMessage = pgTable(
   'chat_message',
   {
     id: uuid('id').primaryKey().notNull(),
     chatId: uuid('chatId').notNull(),
     userId: uuid('userId').notNull(),
-    role: text('role').notNull(),
+    role: text('role').$type<ChatMessageRole>().notNull(),
     content: text('content').notNull(),
     toolCalls: json('toolCalls').$type<ChatMessageToolCall[]>(),
     reasoning: text('reasoning'),
@@ -79,6 +81,7 @@ export const chatMessage = pgTable(
   ]
 )
 export type ChatMessageSelect = typeof chatMessage.$inferSelect
+export type ChatMessageInsert = typeof chatMessage.$inferInsert
 
 export const chatRelations = relations(chat, ({ one, many }) => ({
   user: one(users, {

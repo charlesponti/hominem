@@ -12,6 +12,7 @@ domcontentloaded
 enneagram
 fastify
 googleauth
+googleusercontent
 healthcheck
 ilike
 initdb
@@ -32,6 +33,7 @@ onnxruntime
 openai
 peloton
 pgadmin
+photoreference
 pino
 pkey
 ponti
@@ -44,6 +46,7 @@ rgba
 sendgrid
 serp
 serpapi
+setweight
 shadcn
 srid
 styfle

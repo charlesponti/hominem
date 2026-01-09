@@ -7,4 +7,9 @@ const envSchema = z.object({
   VITE_GOOGLE_API_KEY: z.string(),
 })
 
-export const env = envSchema.parse(import.meta.env)
+// Merge import.meta.env (Vite) with process.env as a fallback for test environments
+const mergedEnv = {
+  ...(typeof import.meta !== 'undefined' ? import.meta.env : {}),
+  ...process.env,
+}
+export const env = envSchema.parse(mergedEnv)

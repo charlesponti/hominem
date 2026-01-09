@@ -3,7 +3,7 @@
  */
 import './env.ts'
 
-import { GoogleCalendarService } from '@hominem/data'
+import { GoogleCalendarService } from '@hominem/data/google'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
@@ -103,7 +103,9 @@ googleCalendarWorker.on('error', (error) => {
 
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
-  if (isGoogleCalendarShuttingDown) return
+  if (isGoogleCalendarShuttingDown) {
+    return
+  }
 
   isGoogleCalendarShuttingDown = true
   logger.info(`${signal} received, shutting down Google Calendar worker gracefully...`)

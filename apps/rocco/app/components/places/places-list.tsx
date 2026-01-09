@@ -1,4 +1,4 @@
-import type { ListPlace } from '@hominem/data'
+import type { ListPlace } from '@hominem/data/lists'
 import { Alert } from '@hominem/ui'
 import { List } from '@hominem/ui/list'
 import { useCallback, useState } from 'react'

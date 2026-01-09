@@ -1,7 +1,6 @@
-import { randomUUID } from 'node:crypto'
 import type { FileObject } from '@supabase/storage-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { supabaseAdmin } from './admin'
+import { getSupabaseAdmin } from './admin'
 
 export interface StoredFile {
   id: string
@@ -27,7 +26,7 @@ export class SupabaseStorageService {
       allowedMimeTypes?: string[]
     }
   ) {
-    this.client = supabaseAdmin
+    this.client = getSupabaseAdmin()
     this.bucketName = bucketName
     this.maxFileSize = options?.maxFileSize || 50 * 1024 * 1024 // 50MB default
     this.isPublic = options?.isPublic ?? false
@@ -119,7 +118,7 @@ export class SupabaseStorageService {
 
     await this.ensureBucket()
 
-    const id = randomUUID()
+    const id = crypto.randomUUID()
     const extension = this.getFileExtension(originalName, mimetype)
     const filename = `${userId}/${id}${extension}` // Organize files by user ID
 
@@ -428,6 +427,11 @@ export const csvStorageService = new SupabaseStorageService('csv-imports', {
 })
 
 export const fileStorageService = new SupabaseStorageService('chat-files', {
+  maxFileSize: 10 * 1024 * 1024, // 10MB
+  isPublic: true,
+})
+
+export const placeImagesStorageService = new SupabaseStorageService('place-images', {
   maxFileSize: 10 * 1024 * 1024, // 10MB
   isPublic: true,
 })

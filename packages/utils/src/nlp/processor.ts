@@ -6,8 +6,6 @@ import {
   ActionItemsSchema,
   type Decisions,
   DecisionsSchema,
-  type Habits,
-  HabitsSchema,
   type People,
   PeopleSchema,
   type TextAnalysis,
@@ -72,16 +70,6 @@ export class NLPProcessor {
       model: llmProvider.getModel(),
       prompt: `Analyze decisions, alternatives, and reasoning in this text: "${text}"`,
       schema: DecisionsSchema,
-    })
-    return response.object
-  }
-
-  async analyzeHabits(text: string): Promise<Habits> {
-    const llmProvider = new LLMProvider(this.config)
-    const response = await generateObject<z.infer<typeof HabitsSchema>>({
-      model: llmProvider.getModel(),
-      prompt: `Analyze habits, routines, and time patterns in this text: "${text}"`,
-      schema: HabitsSchema,
     })
     return response.object
   }

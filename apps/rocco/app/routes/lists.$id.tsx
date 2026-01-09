@@ -11,12 +11,15 @@ import PlacesList from '~/components/places/places-list'
 import UserAvatar from '~/components/user-avatar'
 import { MapInteractionProvider } from '~/contexts/map-interaction-context'
 import { useGeolocation } from '~/hooks/useGeolocation'
+import { requireAuth } from '~/lib/guards'
 import { trpc } from '~/lib/trpc/client'
 import { createCaller } from '~/lib/trpc/server'
 import type { PlaceLocation } from '~/lib/types'
 import type { Route } from './+types/lists.$id'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
+  await requireAuth(request)
+
   const { id } = params
   if (!id) {
     return redirect('/404')

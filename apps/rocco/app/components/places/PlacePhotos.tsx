@@ -1,12 +1,14 @@
 import { Image as ImageIcon } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
-import { buildPlacePhotoUrl } from '~/lib/photo-utils'
 import { cn } from '~/lib/utils'
 import PlacePhotoLightbox from './PlacePhotoLightbox'
 
 type Props = {
   alt: string
+  // thumbnails or resolved URLs suitable for the list view
   photos: string[] | null | undefined
+  // optional full-resolution photos for the lightbox
+  fullPhotos?: string[] | null | undefined
   placeId: string
 }
 
@@ -65,7 +67,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
                 </div>
               ) : (
                 <img
-                  src={buildPlacePhotoUrl(photoUrl, 800, 800)}
+                  src={photoUrl}
                   alt={`${alt} - ${index + 1}`}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
@@ -86,7 +88,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
 
       {/* Lightbox */}
       <PlacePhotoLightbox
-        photos={photos}
+        photos={fullPhotos ?? photos ?? []}
         currentIndex={currentPhotoIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}

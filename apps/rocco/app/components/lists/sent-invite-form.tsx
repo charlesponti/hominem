@@ -18,7 +18,7 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
   const mutation = trpc.invites.create.useMutation({
     onSuccess: (invite) => {
       setEmail('')
-      onCreate(invite)
+      onCreate(invite as SentInvite)
     },
   })
 

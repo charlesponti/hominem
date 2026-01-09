@@ -1,11 +1,11 @@
 import crypto from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { cleanupFinanceTestData, seedFinanceTestData } from '../finance-test-seed'
 import {
   calculateTimeSeriesStats,
   generateTimeSeriesData,
   type TimeSeriesDataPoint,
 } from './time-series.service'
-import { cleanupFinanceTestData, seedFinanceTestData } from '../finance-test-seed'
 
 describe.skip('Finance Analyze Service Integration Tests', () => {
   let testUserId: string
@@ -85,12 +85,12 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         compareToPrevious: true,
       })
 
-      expect(result.data[0].trend).toBeUndefined() // January has no previous month
-      expect(result.data[1].trend).toBeDefined() // February has trend (compared to January)
-      expect(result.data[2].trend).toBeDefined() // March has trend (compared to February)
+      expect(result.data[0]!.trend).toBeUndefined() // January has no previous month
+      expect(result.data[1]!.trend).toBeDefined() // February has trend (compared to January)
+      expect(result.data[2]!.trend).toBeDefined() // March has trend (compared to February)
 
       // February vs January trend
-      const febTrend = result.data[1].trend
+      const febTrend = result.data[1]!.trend
       expect(febTrend).toBeDefined()
       if (febTrend) {
         expect(febTrend.direction).toBe('up') // Feb income (1200) > Jan income (1000)
@@ -100,7 +100,7 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
       }
 
       // March vs February trend
-      const marTrend = result.data[2].trend
+      const marTrend = result.data[2]!.trend
       expect(marTrend).toBeDefined()
       if (marTrend) {
         expect(marTrend.direction).toBe('down') // Mar income (1100) < Feb income (1200)
@@ -119,8 +119,8 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
       })
 
       expect(result.data).toHaveLength(2)
-      expect(result.data[0].date).toBe('2023-02') // February comes first (ASC order)
-      expect(result.data[1].date).toBe('2023-03') // March comes second
+      expect(result.data[0]!.date).toBe('2023-02') // February comes first (ASC order)
+      expect(result.data[1]!.date).toBe('2023-03') // March comes second
 
       expect(result.data.find((d) => d.date === '2023-01')).toBeUndefined()
     })

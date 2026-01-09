@@ -14,12 +14,6 @@
     "paths": {
       "@/*": [
         "src/*"
-      ],
-      "@hominem/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../../packages/ui/src/index.ts"
       ]
     }
   },
@@ -39,7 +33,6 @@
     "test/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
     "build",
     "dist",
     "**/*.test.ts"

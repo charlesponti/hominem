@@ -1,4 +1,4 @@
-import { listPlacesMissingPhotos, updatePlacePhotos as setPlacePhotos } from '@hominem/data'
+import { listPlacesMissingPhotos, updatePlacePhotos as setPlacePhotos } from '@hominem/data/places'
 import { env } from '../app/lib/env'
 import { getPlacePhotos } from '../app/lib/google-places.server'
 

@@ -1,13 +1,13 @@
 import crypto from 'node:crypto'
-import { db } from '@hominem/data/db'
+import { eq } from 'drizzle-orm'
+import { db } from '../db'
 import {
   financeAccounts,
   financialInstitutions,
   plaidItems,
   transactions,
   users,
-} from '@hominem/data/schema'
-import { eq } from 'drizzle-orm'
+} from '../db/schema'
 import { createTestUser } from '../fixtures'
 
 export async function seedFinanceTestData({

@@ -61,7 +61,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
     }))
   }, [rawLists, googleMapsId])
 
-  const { mutateAsync: removeFromList } = useRemoveListItem({
+  const removeFromListMutation = useRemoveListItem({
     onSettled: () => {
       setLoadingListId(null)
       revalidator.revalidate()
@@ -69,7 +69,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
     },
   })
 
-  const { mutate: addToList } = useAddPlaceToList({
+  const addToListMutation = useAddPlaceToList({
     onSuccess: () => {
       revalidator.revalidate()
       setOpen(false)
@@ -85,14 +85,31 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
     setLoadingListId(listId)
     if (isInList) {
       if (resolvedPlaceId) {
-        removeFromList({ listId, placeId: resolvedPlaceId })
+        removeFromListMutation.mutateAsync({ listId, itemId: resolvedPlaceId })
       } else {
         setLoadingListId(null)
       }
       return
     }
 
-    addToList({ listIds: [listId], place })
+    if (!place.googleMapsId) {
+      throw new Error('googleMapsId is required')
+    }
+
+    addToListMutation.mutate({
+      name: place.name,
+      address: place.address || undefined,
+      latitude: place.latitude || undefined,
+      longitude: place.longitude || undefined,
+      imageUrl: place.imageUrl || undefined,
+      googleMapsId: place.googleMapsId,
+      rating: place.rating || undefined,
+      types: place.types || undefined,
+      websiteUri: place.websiteUri || undefined,
+      phoneNumber: place.phoneNumber || undefined,
+      photos: place.photos || undefined,
+      listIds: [listId],
+    })
   }
 
   if (!(isAuthenticated && place)) {

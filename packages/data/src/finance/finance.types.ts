@@ -4,7 +4,7 @@ import type {
   FinanceTransaction,
   FinanceTransactionInsert,
   TransactionType,
-} from '@hominem/data/schema'
+} from '../db/schema'
 
 export type {
   FinanceAccount,

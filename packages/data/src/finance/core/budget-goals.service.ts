@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
-import { db } from '@hominem/data/db'
-import { budgetGoals } from '@hominem/data/schema'
 import { and, eq } from 'drizzle-orm'
+import { db } from '../../db'
+import { budgetGoals } from '../../db/schema'
 import { logger } from '../../logger'
 
 /**
@@ -15,7 +15,7 @@ export async function getBudgetGoals(userId: string) {
       .where(eq(budgetGoals.userId, userId))
       .orderBy(budgetGoals.startDate)
   } catch (error) {
-    logger.error(`Error fetching budget goals for user ${userId}:`, error)
+    logger.error(`Error fetching budget goals for user ${userId}:`, { error })
     throw error
   }
 }
@@ -49,7 +49,7 @@ export async function createBudgetGoal(data: {
 
     return goal
   } catch (error) {
-    logger.error('Error creating budget goal:', error)
+    logger.error('Error creating budget goal:', { error })
     throw error
   }
 }
@@ -82,7 +82,7 @@ export async function updateBudgetGoal(
 
     return updated
   } catch (error) {
-    logger.error(`Error updating budget goal ${goalId}:`, error)
+    logger.error(`Error updating budget goal ${goalId}:`, { error })
     throw error
   }
 }
@@ -96,7 +96,7 @@ export async function deleteBudgetGoal(goalId: string, userId: string): Promise<
       .delete(budgetGoals)
       .where(and(eq(budgetGoals.id, goalId), eq(budgetGoals.userId, userId)))
   } catch (error) {
-    logger.error(`Error deleting budget goal ${goalId}:`, error)
+    logger.error(`Error deleting budget goal ${goalId}:`, { error })
     throw error
   }
 }

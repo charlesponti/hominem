@@ -1,0 +1,30 @@
+{
+  "name": "@hominem/tools",
+  "version": "0.1.0",
+  "description": "TanStack AI tool definitions for Hominem",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./notes": "./src/notes.ts",
+    "./finance": "./src/finance.ts",
+    "./workout": "./src/workout.ts",
+    "./flights": "./src/flights.ts",
+    "./mental-health": "./src/mental-health.ts",
+    "./taxes": "./src/taxes.ts"
+  },
+  "private": true,
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hominem/data": "workspace:*",
+    "@hominem/utils": "workspace:*",
+    "@tanstack/ai": "latest",
+    "zod": "4.2.1"
+  },
+  "devDependencies": {
+    "@hominem/tsconfigs": "workspace:*",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,7 +1,7 @@
-import { db } from '@hominem/data/db'
-import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/data/schema'
 import { and, eq, sql } from 'drizzle-orm'
-import { logger } from '../../logger'
+import { db } from '../db'
+import { financeAccounts, financialInstitutions, plaidItems } from '../db/schema'
+import { logger } from '../logger'
 
 export interface InstitutionConnection {
   institutionId: string
@@ -83,7 +83,7 @@ export async function getUserInstitutionConnections(
       error: conn.error,
     }))
   } catch (error) {
-    logger.error('Error getting user institution connections:', error)
+    logger.error('Error getting user institution connections:', { error })
     throw error
   }
 }
@@ -123,7 +123,7 @@ export async function getUserAccounts(userId: string): Promise<InstitutionAccoun
       updatedAt: account.updatedAt,
     }))
   } catch (error) {
-    logger.error('Error getting user accounts:', error)
+    logger.error('Error getting user accounts:', { error })
     throw error
   }
 }
@@ -167,7 +167,7 @@ export async function getInstitutionAccounts(
       updatedAt: account.updatedAt,
     }))
   } catch (error) {
-    logger.error('Error getting institution accounts:', error)
+    logger.error('Error getting institution accounts:', { error })
     throw error
   }
 }
@@ -183,7 +183,7 @@ export async function getInstitution(institutionId: string) {
 
     return institution
   } catch (error) {
-    logger.error('Error getting institution:', error)
+    logger.error('Error getting institution:', { error })
     throw error
   }
 }
@@ -199,7 +199,7 @@ export async function getAllInstitutions() {
 
     return institutions
   } catch (error) {
-    logger.error('Error getting all institutions:', error)
+    logger.error('Error getting all institutions:', { error })
     throw error
   }
 }
@@ -232,7 +232,7 @@ export async function createInstitution(data: {
 
     return institution
   } catch (error) {
-    logger.error('Error creating institution:', error)
+    logger.error('Error creating institution:', { error })
     throw error
   }
 }

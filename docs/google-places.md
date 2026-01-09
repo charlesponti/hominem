@@ -20,6 +20,14 @@
 
 These notes gate the subsequent refactor: the shared helper must support both `/places:searchText` results and `/places/{id}` details with controllable field masks, plus a photo-media helper that generates signed URLs without leaking the API key.
 
+## Image proxy (single canonical route)
+
+- Image proxying for Google Places media is served by the Rocco server at `GET /api/images`. The proxy supports either a v1 Places resource (`resource=places/{place}/photos/{photo}`) or a legacy Maps `photo_reference` (`photoreference=AZLa...`) and forwards the request using the server-side `GOOGLE_API_KEY`.
+- The former tRPC procedure `trpc.images.getPlacePhoto` has been **deprecated** in favor of the HTTP proxy — using the HTTP route is faster (returns raw bytes suitable for `<img src="...">`) and avoids the JSON+base64 roundtrip.
+- The old `/api/images/place-photo` endpoint on the central API server has been removed; consumers should call the Rocco proxy route (`/api/images`).
+
+Deployment note: ensure `GOOGLE_API_KEY` is set for the Rocco server (server-only key). Browser-only `VITE_GOOGLE_API_KEY` continues to be used only for the Maps JS SDK in the client where required.
+
 ## Shared Helper API
 
 - `searchPlaces(options)` & `getPlaceDetails(options)` live in `apps/rocco/app/lib/google-places.server.ts`. Both functions:

@@ -1,4 +1,4 @@
-import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/data'
+import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/data/lists'
 import { z } from 'zod'
 import { protectedProcedure, publicProcedure, router } from '../context'
 

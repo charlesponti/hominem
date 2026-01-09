@@ -1,4 +1,4 @@
-import crypto from 'node:crypto'
+import { placeImagesStorageService } from '@hominem/utils/supabase'
 import { and, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm'
 import { db } from '../db'
 import {
@@ -10,6 +10,12 @@ import {
   type Place as PlaceSelect,
   place,
 } from '../db/schema'
+import {
+  downloadImage,
+  generatePlaceImageFilename,
+  getExtensionFromContentType,
+  isGooglePhotosUrl,
+} from './place-images.service'
 
 export type ListSummary = { id: string; name: string }
 
@@ -34,7 +40,9 @@ class PlaceCache {
 
   get(key: string): PlaceSelect | null {
     const entry = this.cache.get(key)
-    if (!entry) { return null }
+    if (!entry) {
+      return null
+    }
 
     if (Date.now() > entry.expiresAt) {
       this.cache.delete(key)
@@ -154,9 +162,109 @@ export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise
   })
 }
 
-export async function ensurePlaceFromGoogleData(data: PlaceInsert): Promise<PlaceSelect> {
+/**
+ * Downloads a Google Photos image and uploads it to Supabase Storage
+ * @param googleMapsId - The Google Maps ID for the place
+ * @param photoUrl - The Google Photos URL to download
+ * @param buildPhotoMediaUrl - Function to build the full media URL with API key
+ * @returns The Supabase Storage URL or null if download fails
+ */
+async function downloadAndStoreImage(
+  googleMapsId: string,
+  photoUrl: string,
+  buildPhotoMediaUrl: (url: string) => string
+): Promise<string | null> {
+  try {
+    // Build the full media URL with API key
+    const fullUrl = buildPhotoMediaUrl(photoUrl)
+
+    // Download the image
+    const { buffer, contentType } = await downloadImage({ url: fullUrl })
+
+    // Generate a consistent filename
+    const baseFilename = generatePlaceImageFilename(googleMapsId)
+    const extension = getExtensionFromContentType(contentType)
+    const filename = `${baseFilename}${extension}`
+
+    // Store in Supabase Storage under places/{googleMapsId}/
+    const storedFile = await placeImagesStorageService.storeFile(
+      buffer,
+      filename,
+      contentType,
+      `places/${googleMapsId}`
+    )
+
+    return storedFile.url
+  } catch (error) {
+    console.error('Failed to download and store place image:', {
+      googleMapsId,
+      photoUrl,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
+/**
+ * Processes photos array to download Google Photos URLs and replace with Supabase URLs
+ * @param googleMapsId - The Google Maps ID for the place
+ * @param photos - Array of photo URLs (may contain Google Photos URLs)
+ * @param buildPhotoMediaUrl - Function to build the full media URL with API key
+ * @returns Array with Supabase URLs replacing Google Photos URLs
+ */
+async function processPlacePhotos(
+  googleMapsId: string,
+  photos: string[] | null,
+  buildPhotoMediaUrl: (url: string) => string
+): Promise<string[]> {
+  if (!photos || photos.length === 0) {
+    return []
+  }
+
+  const processedPhotos = await Promise.all(
+    photos.map(async (photoUrl) => {
+      // If it's a Google Photos URL, download and store it
+      if (isGooglePhotosUrl(photoUrl)) {
+        const supabaseUrl = await downloadAndStoreImage(googleMapsId, photoUrl, buildPhotoMediaUrl)
+        return supabaseUrl || photoUrl // Fallback to original if download fails
+      }
+      // If it's already a Supabase URL or other URL, keep it
+      return photoUrl
+    })
+  )
+
+  return processedPhotos
+}
+
+export async function ensurePlaceFromGoogleData(
+  data: PlaceInsert,
+  buildPhotoMediaUrl?: (url: string) => string
+): Promise<PlaceSelect> {
+  // Process photos to download Google Photos URLs
+  let processedPhotos = data.photos ?? null
+  let processedImageUrl = data.imageUrl ?? null
+
+  if (buildPhotoMediaUrl) {
+    processedPhotos = await processPlacePhotos(
+      data.googleMapsId,
+      data.photos ?? null,
+      buildPhotoMediaUrl
+    )
+
+    // Also process the main imageUrl if it's a Google Photos URL
+    if (processedImageUrl && isGooglePhotosUrl(processedImageUrl)) {
+      const supabaseUrl = await downloadAndStoreImage(
+        data.googleMapsId,
+        processedImageUrl,
+        buildPhotoMediaUrl
+      )
+      processedImageUrl = supabaseUrl || processedImageUrl
+    }
+  }
+
   // Set imageUrl from photos if not provided
-  const imageUrl = data.imageUrl ?? (data.photos && data.photos.length > 0 ? data.photos[0] : null)
+  const imageUrl =
+    processedImageUrl ?? (processedPhotos && processedPhotos.length > 0 ? processedPhotos[0] : null)
 
   const insertValues = {
     id: crypto.randomUUID(),
@@ -171,7 +279,7 @@ export async function ensurePlaceFromGoogleData(data: PlaceInsert): Promise<Plac
     websiteUri: data.websiteUri ?? null,
     phoneNumber: data.phoneNumber ?? null,
     priceLevel: data.priceLevel ?? null,
-    photos: data.photos ?? null,
+    photos: processedPhotos,
     imageUrl,
   }
 
@@ -223,15 +331,50 @@ export async function ensurePlaceFromGoogleData(data: PlaceInsert): Promise<Plac
 }
 
 export async function ensurePlacesFromGoogleData(
-  placesData: PlaceInsert[]
+  placesData: PlaceInsert[],
+  buildPhotoMediaUrl?: (url: string) => string
 ): Promise<PlaceSelect[]> {
   if (placesData.length === 0) {
     return []
   }
 
-  const insertValues = placesData.map((data) => {
-    const imageUrl =
-      data.imageUrl ?? (data.photos && data.photos.length > 0 ? data.photos[0] : null)
+  // Process each place's photos in parallel
+  const processedPlacesData = await Promise.all(
+    placesData.map(async (data) => {
+      let processedPhotos = data.photos ?? null
+      let processedImageUrl = data.imageUrl ?? null
+
+      if (buildPhotoMediaUrl) {
+        processedPhotos = await processPlacePhotos(
+          data.googleMapsId,
+          data.photos ?? null,
+          buildPhotoMediaUrl
+        )
+
+        // Also process the main imageUrl if it's a Google Photos URL
+        if (processedImageUrl && isGooglePhotosUrl(processedImageUrl)) {
+          const supabaseUrl = await downloadAndStoreImage(
+            data.googleMapsId,
+            processedImageUrl,
+            buildPhotoMediaUrl
+          )
+          processedImageUrl = supabaseUrl || processedImageUrl
+        }
+      }
+
+      const imageUrl =
+        processedImageUrl ??
+        (processedPhotos && processedPhotos.length > 0 ? processedPhotos[0] : null)
+
+      return {
+        ...data,
+        photos: processedPhotos,
+        imageUrl,
+      }
+    })
+  )
+
+  const insertValues = processedPlacesData.map((data) => {
     return {
       id: crypto.randomUUID(),
       googleMapsId: data.googleMapsId,
@@ -246,7 +389,7 @@ export async function ensurePlacesFromGoogleData(
       phoneNumber: data.phoneNumber ?? null,
       priceLevel: data.priceLevel ?? null,
       photos: data.photos ?? null,
-      imageUrl,
+      imageUrl: data.imageUrl ?? null,
     }
   })
 
@@ -321,9 +464,14 @@ export async function deletePlaceById(id: string): Promise<boolean> {
   return result.length > 0
 }
 
-export async function addPlaceToLists(userId: string, listIds: string[], placeData: PlaceInsert) {
+export async function addPlaceToLists(
+  userId: string,
+  listIds: string[],
+  placeData: PlaceInsert,
+  buildPhotoMediaUrl?: (url: string) => string
+) {
   return db.transaction(async (tx) => {
-    const placeRecord = await ensurePlaceFromGoogleData(placeData)
+    const placeRecord = await ensurePlaceFromGoogleData(placeData, buildPhotoMediaUrl)
 
     const itemInsertValues = listIds.map((listId) => ({
       listId,

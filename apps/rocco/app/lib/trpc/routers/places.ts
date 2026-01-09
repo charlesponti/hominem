@@ -1,25 +1,29 @@
 import {
-  addPlaceToLists,
   createEvent,
-  createOrUpdatePlace,
   deleteEvent,
+  getVisitStatsByPlace,
+  getVisitsByPlace,
+  getVisitsByUser,
+  updateEvent,
+} from '@hominem/data/events'
+import {
+  addPlaceToLists,
+  createOrUpdatePlace,
   deletePlaceById,
   ensurePlaceFromGoogleData,
   getItemsForPlace,
   getNearbyPlacesFromLists,
   getPlaceByGoogleMapsId,
   getPlaceById,
-  getVisitsByPlace,
-  getVisitsByUser,
-  getVisitStatsByPlace,
   type PlaceInsert,
   type Place as PlaceSelect,
   removePlaceFromList,
-  updateEvent,
   updatePlacePhotos,
-} from '@hominem/data'
+} from '@hominem/data/places'
+import { getHominemPhotoURL } from '@hominem/utils/images'
 import { z } from 'zod'
 import {
+  buildPhotoMediaUrl,
   getPlaceDetails as fetchGooglePlaceDetails,
   getPlacePhotos as fetchGooglePlacePhotos,
   searchPlaces as googleSearchPlaces,
@@ -31,7 +35,7 @@ import {
   transformGooglePlaceToPlaceInsert,
 } from '~/lib/places-utils'
 import { logger } from '../../logger'
-import { type Context, protectedProcedure, publicProcedure, router } from '../context'
+import { type Context, protectedProcedure, router } from '../context'
 
 type ListSummary = {
   id: string
@@ -60,36 +64,25 @@ const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: PlaceSelect) => {
     }
   }
 
+  // Resolve photo URLs server-side so clients receive ready-to-use image URLs:
+  const thumbnailPhotos = placePhotos
+    .map((p) => getHominemPhotoURL(p, 800, 800))
+    .filter((p): p is string => Boolean(p))
+
+  const fullPhotos = placePhotos
+    .map((p) => getHominemPhotoURL(p, 1600, 1200))
+    .filter((p): p is string => Boolean(p))
+
   return {
     ...dbPlace,
     associatedLists,
-    photos: placePhotos,
+    // photos will be the full-resolution URLs; thumbnails provided separately
+    photos: fullPhotos,
+    thumbnailPhotos,
   }
 }
 
 export const placesRouter = router({
-  getById: publicProcedure.input(z.object({ id: z.uuid() })).query(async ({ input }) => {
-    const foundPlace = await getPlaceById(input.id)
-
-    if (!foundPlace) {
-      throw new Error('Place not found')
-    }
-
-    return foundPlace
-  }),
-
-  getByGoogleMapsId: publicProcedure
-    .input(z.object({ googleMapsId: z.string() }))
-    .query(async ({ input }) => {
-      const foundPlace = await getPlaceByGoogleMapsId(input.googleMapsId)
-
-      if (!foundPlace) {
-        throw new Error('Place not found')
-      }
-
-      return foundPlace
-    }),
-
   create: protectedProcedure
     .input(
       z.object({
@@ -191,7 +184,17 @@ export const placesRouter = router({
             : (fetchedImageUrl ?? null)),
       }
 
-      const { place: createdPlace } = await addPlaceToLists(ctx.user.id, listIds ?? [], placeData)
+      // Helper function to build photo media URL with API key
+      const buildPhotoUrl = (photoRef: string) => {
+        return buildPhotoMediaUrl({ photoName: photoRef })
+      }
+
+      const { place: createdPlace } = await addPlaceToLists(
+        ctx.user.id,
+        listIds ?? [],
+        placeData,
+        buildPhotoUrl
+      )
 
       return createdPlace
     }),
@@ -318,7 +321,13 @@ export const placesRouter = router({
           }
 
           const placeData = transformGooglePlaceToPlaceInsert(googlePlace, googleMapsId)
-          dbPlace = await ensurePlaceFromGoogleData(placeData)
+
+          // Helper function to build photo media URL with API key
+          const buildPhotoUrl = (photoRef: string) => {
+            return buildPhotoMediaUrl({ photoName: photoRef })
+          }
+
+          dbPlace = await ensurePlaceFromGoogleData(placeData, buildPhotoUrl)
         }
 
         return enrichPlaceWithDetails(ctx, dbPlace)

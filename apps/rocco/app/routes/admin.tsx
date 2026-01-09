@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { redirect } from 'react-router'
 import { trpc } from '~/lib/trpc/client'
 import { getServerSession } from '../lib/auth.server'
+import type { Route } from './+types/admin'
 
 type RefreshResult = {
   updatedCount: number
@@ -10,7 +11,7 @@ type RefreshResult = {
   errors?: unknown
 }
 
-export async function loader(request: Route.LoaderArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await getServerSession(request)
 
   if (!user?.isAdmin) {
@@ -48,7 +49,9 @@ export default function AdminRoute() {
         <div className="mt-4 p-4 border rounded bg-gray-50">
           <div>Updated: {result.updatedCount}</div>
           <div>Duration: {result.duration}ms</div>
-          {result.errors && <div className="text-red-600">Error: {String(result.errors)}</div>}
+          {result.errors ? (
+            <div className="text-red-600">Error: {String(result.errors)}</div>
+          ) : null}
         </div>
       )}
     </div>

@@ -1,7 +1,6 @@
-import { getInviteByToken } from '@hominem/data'
-import { getPlaceListPreview } from '@hominem/data/lists'
+import { getInviteByToken, getPlaceListPreview } from '@hominem/data/lists'
 import { getPlacePhotoById } from '@hominem/data/places'
-import { buildPlacePhotoUrl } from '~/lib/photo-utils'
+import { getHominemPhotoURL } from '@hominem/utils/images'
 
 export type InvitePreview = {
   listId?: string
@@ -35,28 +34,13 @@ export async function buildInvitePreview(token: string): Promise<InvitePreview |
     if (firstPlace) {
       firstItemName = firstPlace.name ?? firstPlace.description ?? null
 
-      // Try to get cover photo from imageUrl first, then fall back to fetching photo by ID
-      coverPhoto = firstPlace.imageUrl
+      // Prefer server-provided resolved photo URL when available
+      coverPhoto = (firstPlace as { photoUrl?: string }).photoUrl ?? firstPlace.imageUrl
 
+      // Fall back to fetching by place photo id and resolve on the server
       if (!coverPhoto && firstPlace.itemId) {
-        coverPhoto = await getPlacePhotoById(firstPlace.itemId)
-      }
-
-      // Only process with buildPlacePhotoUrl if it's a Google Places photo reference
-      // If it's already a full URL, use it as-is
-      if (coverPhoto) {
-        if (
-          coverPhoto.includes('places/') ||
-          coverPhoto.includes('/photos/') ||
-          coverPhoto.includes('googleusercontent')
-        ) {
-          // Google Places photo reference, process it to get absolute URL
-          coverPhoto = buildPlacePhotoUrl(coverPhoto)
-        } else if (!(coverPhoto.startsWith('http://') || coverPhoto.startsWith('https://'))) {
-          // Not a Google Places photo reference and not a full URL - skip it
-          coverPhoto = null
-        }
-        // If it's already a full URL (http/https), leave it as-is
+        const rawPhoto = await getPlacePhotoById(firstPlace.itemId)
+        coverPhoto = rawPhoto ? getHominemPhotoURL(rawPhoto, 600, 400) : null
       }
     }
   }

@@ -1,8 +1,8 @@
-import { db, takeUniqueOrThrow } from '@hominem/data'
-import { type Chat, type ChatMessageSelect, chat, chatMessage } from '@hominem/data/schema'
 import { logger } from '@hominem/utils/logger'
 import { and, desc, eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
+import { db, takeUniqueOrThrow } from '../../db'
+import { type Chat, type ChatMessageSelect, chat, chatMessage } from '../../db/schema'
 
 export interface CreateChatParams {
   title: string
@@ -195,7 +195,7 @@ export class ChatService {
         .limit(1)
         .then((rows) => rows[0])
 
-      if (!(currentChat?.title.startsWith('New Chat'))) {
+      if (!currentChat?.title.startsWith('New Chat')) {
         return currentChat
       }
 

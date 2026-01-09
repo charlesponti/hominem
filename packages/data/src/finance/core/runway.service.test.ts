@@ -64,10 +64,10 @@ describe('Runway Service', () => {
       })
 
       expect(result).toHaveLength(12)
-      expect(result[0].month).toBeDefined()
-      expect(result[0].balance).toBe(8000) // 10000 - 2000
-      expect(result[4].balance).toBe(0) // Month 5: 10000 - (5 * 2000) = 0
-      expect(result[5].balance).toBe(-2000) // Month 6: negative balance
+      expect(result[0]!.month).toBeDefined()
+      expect(result[0]!.balance).toBe(8000) // 10000 - 2000
+      expect(result[4]!.balance).toBe(0) // Month 5: 10000 - (5 * 2000) = 0
+      expect(result[5]!.balance).toBe(-2000) // Month 6: negative balance
     })
 
     it('should include planned purchases in projection', () => {
@@ -84,7 +84,7 @@ describe('Runway Service', () => {
         ],
       })
 
-      expect(result[0].balance).toBe(5000) // 10000 - 2000 - 3000
+      expect(result[0]!.balance).toBe(5000) // 10000 - 2000 - 3000
     })
   })
 })

@@ -1,4 +1,13 @@
 import { logger } from '@hominem/utils/logger'
+import { initSupabaseAdmin } from '@hominem/utils/supabase'
+import { env } from './env'
+
+// Initialize Supabase admin client for worker processes
+initSupabaseAdmin({
+  supabaseUrl: env.SUPABASE_URL,
+  supabaseServiceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+})
+
 import './env.ts'
 
 // Import all worker entry points
@@ -12,7 +21,9 @@ let isShuttingDown = false
 const shutdownTimeout = 5000 // 5 seconds timeout for graceful shutdown
 
 function gracefulShutdown(exitCode = 0) {
-  if (isShuttingDown) return
+  if (isShuttingDown) {
+    return
+  }
 
   isShuttingDown = true
   logger.info('Initiating graceful shutdown for main process...')
