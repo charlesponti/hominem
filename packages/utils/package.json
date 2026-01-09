@@ -9,6 +9,7 @@
     "./consts": "./src/consts.ts",
     "./dates": "./src/dates.ts",
     "./imports": "./src/imports.ts",
+    "./google": "./src/google.ts",
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
     "./jobs": "./src/jobs/index.ts",

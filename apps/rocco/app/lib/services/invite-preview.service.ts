@@ -1,5 +1,6 @@
 import { getInviteByToken, getPlaceListPreview } from '@hominem/data/lists'
-import { getPlacePhotoById, isValidGoogleHost } from '@hominem/data/places'
+import { getPlacePhotoById } from '@hominem/data/places'
+import { isValidGoogleHost } from '@hominem/utils/google'
 import { buildPlacePhotoUrl } from '~/lib/photo-utils'
 
 export type InvitePreview = {

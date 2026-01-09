@@ -1,4 +1,4 @@
-import { isValidGoogleHost } from '@hominem/data/places'
+import { isValidGoogleHost } from '@hominem/utils/google'
 import { Hono } from 'hono'
 
 export const imagesRoutes = new Hono()

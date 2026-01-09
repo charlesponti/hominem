@@ -1,4 +1,4 @@
-import { isValidGoogleHost } from '@hominem/data/places'
+import { isValidGoogleHost } from '@hominem/utils/google'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 

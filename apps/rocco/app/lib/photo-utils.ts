@@ -1,4 +1,4 @@
-import { isValidGoogleHost } from '@hominem/data/places'
+import { isValidGoogleHost } from '@hominem/utils/google'
 
 /**
  * Builds a properly formatted photo URL for Google Places API photos.

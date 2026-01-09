@@ -1,4 +1,4 @@
-import { isValidGoogleHost } from '@hominem/data/places'
+import { isValidGoogleHost } from '@hominem/utils/google'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { buildPlacePhotoUrl } from '~/lib/photo-utils'
