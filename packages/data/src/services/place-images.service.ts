@@ -28,11 +28,12 @@ export interface DownloadedImage {
 export async function downloadAndStorePlaceImage(
   googleMapsId: string,
   photoUrl: string,
-  buildPhotoMediaUrl: (url: string) => string
+  buildPhotoMediaUrl?: (url: string) => string,
+  photoIndex = 0
 ): Promise<string | null> {
   try {
     // Build the full media URL with API key
-    let fullUrl = buildPhotoMediaUrl(photoUrl)
+    let fullUrl = buildPhotoMediaUrl?.(photoUrl) ?? photoUrl
     const urlObj = new URL(fullUrl)
 
     // Initial attempt: Use Google Places API (New) with explicit JSON response
@@ -58,22 +59,13 @@ export async function downloadAndStorePlaceImage(
     }
 
     // Download the image (either from the successful New API URI or the Legacy API URL)
-    const { buffer, contentType } = await downloadImage({ url: fullUrl })
+    const { buffer } = await downloadImage({ url: fullUrl })
 
-    // Generate a consistent filename
-    const baseFilename = generatePlaceImageFilename(googleMapsId)
-    const extension = getExtensionFromContentType(contentType)
-    const filename = `${baseFilename}${extension}`
+    // Use helper to convert + upload full + thumb
+    const { fullUrl: storedFullUrl } = await savePlacePhoto(googleMapsId, buffer, photoIndex)
 
-    // Store in Supabase Storage under places/{googleMapsId}/
-    const storedFile = await placeImagesStorageService.storeFile(
-      buffer,
-      filename,
-      contentType,
-      `places/${googleMapsId}`
-    )
-
-    return storedFile.url
+    // Return the full-size URL (clients will request thumbnails separately via helper)
+    return storedFullUrl
   } catch (error) {
     console.error('Failed to download and store place image:', {
       googleMapsId,
@@ -81,6 +73,80 @@ export async function downloadAndStorePlaceImage(
       error: error instanceof Error ? error.message : String(error),
     })
     return null
+  }
+}
+
+/**
+ * Save a place photo: converts buffer to full + thumbnail WebP and uploads both files.
+ * Returns the uploaded URLs and filenames.
+ */
+export async function savePlacePhoto(
+  googleMapsId: string,
+  buffer: Buffer,
+  photoIndex = 0
+): Promise<{
+  fullUrl: string | null
+  thumbUrl: string | null
+  fullFilename: string
+  thumbFilename: string
+}> {
+  try {
+    const sharpLib = (await import('sharp')).default
+
+    const fullBuffer = await sharpLib(buffer)
+      .resize({ width: 1600, height: 1200, fit: 'inside' })
+      .webp({ quality: 80 })
+      .toBuffer()
+
+    const thumbBuffer = await sharpLib(buffer)
+      .resize({ width: 800, height: 800, fit: 'cover' })
+      .webp({ quality: 75 })
+      .toBuffer()
+
+    const fullFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'full')}.webp`
+    const thumbFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'thumb')}.webp`
+
+    const storedFull = await placeImagesStorageService.storeFile(
+      fullBuffer,
+      fullFilename,
+      'image/webp',
+      `places/${googleMapsId}`,
+      { filename: fullFilename }
+    )
+
+    let thumbUrl: string | null = null
+    try {
+      const storedThumb = await placeImagesStorageService.storeFile(
+        thumbBuffer,
+        thumbFilename,
+        'image/webp',
+        `places/${googleMapsId}`,
+        { filename: thumbFilename }
+      )
+      thumbUrl = storedThumb.url
+    } catch (err) {
+      console.error('Failed to upload thumbnail for place image:', {
+        googleMapsId,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+
+    return {
+      fullUrl: storedFull.url,
+      thumbUrl,
+      fullFilename,
+      thumbFilename,
+    }
+  } catch (error) {
+    console.error('savePlacePhoto failed:', {
+      googleMapsId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+
+    const fullFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'full')}.webp`
+    const thumbFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'thumb')}.webp`
+
+    return { fullUrl: null, thumbUrl: null, fullFilename, thumbFilename }
   }
 }
 
@@ -141,8 +207,17 @@ export async function downloadImage({
 /**
  * Generates a consistent filename for a place image
  */
-export function generatePlaceImageFilename(googleMapsId: string): string {
-  // Create a unique filename with timestamp and random string
+export function generatePlaceImageFilename(
+  googleMapsId: string,
+  index?: number,
+  size?: 'full' | 'thumb'
+): string {
+  // Deterministic when index and size are provided
+  if (typeof index === 'number' && index >= 0 && size) {
+    return `${googleMapsId}-${index}-${size}`
+  }
+
+  // Fallback for legacy callers: keep previous unique behavior
   return `${googleMapsId}-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 

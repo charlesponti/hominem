@@ -78,9 +78,7 @@ export const invitesRouter = router({
     }),
 
   // Get invites sent by the current user (outbound)
-  getSent: protectedProcedure.query(async ({ ctx }) => {
-    return await getOutboundInvites(ctx.user.id)
-  }),
+  getSent: protectedProcedure.query(async ({ ctx }) => getOutboundInvites(ctx.user.id)),
 
   // Get all invites for a specific list
   getByList: protectedProcedure

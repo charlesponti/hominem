@@ -110,7 +110,8 @@ export class SupabaseStorageService {
     buffer: Buffer,
     originalName: string,
     mimetype: string,
-    userId: string
+    userId: string,
+    options?: { filename?: string; keepOriginalName?: boolean }
   ): Promise<StoredFile> {
     if (buffer.byteLength > this.maxFileSize) {
       throw new Error(`File size exceeds maximum limit of ${this.maxFileSize} bytes`)
@@ -120,7 +121,25 @@ export class SupabaseStorageService {
 
     const id = crypto.randomUUID()
     const extension = this.getFileExtension(originalName, mimetype)
-    const filename = `${userId}/${id}${extension}` // Organize files by user ID
+
+    // Determine stored filename.
+    // Priority:
+    // 1) options.filename (sanitized)
+    // 2) keepOriginalName -> sanitized originalName
+    // 3) generated id + extension (legacy behavior)
+    let storedName: string
+    if (options?.filename) {
+      // sanitize provided filename
+      const sanitized = options.filename.replace(/[^a-zA-Z0-9.-]/g, '_')
+      storedName = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`
+    } else if (options?.keepOriginalName) {
+      const sanitized = originalName.replace(/[^a-zA-Z0-9.-]/g, '_')
+      storedName = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`
+    } else {
+      storedName = `${id}${extension}`
+    }
+
+    const filename = `${userId}/${storedName}` // Organize files by user ID
 
     // Upload to Supabase Storage
     const { data: _data, error } = await this.client.storage

@@ -18,8 +18,17 @@ export function getHominemPhotoURL(
     return `${photoReference}=w${width}-h${height}-c`
   }
 
-  // Already a Supabase URL - return as-is
+  // Already a Supabase URL - return thumbnail variant for small sizes
   if (photoReference.includes('supabase.co')) {
+    // If width looks like a thumbnail request (<= 800), prefer the -thumb variant
+    if (width <= 800) {
+      // Insert "-thumb" before the file extension (preserve query string if present)
+      const parts = photoReference.split('?')
+      const base = parts[0]
+      const qs = parts[1] ? `?${parts[1]}` : ''
+      const thumb = base?.replace(/(\.[a-z0-9]+)$/i, '-thumb$1')
+      return `${thumb}${qs}`
+    }
     return photoReference
   }
 

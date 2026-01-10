@@ -57,7 +57,7 @@ const getEnvVar = (key: string): string | undefined => {
 
 const rawEnv = {
   VITE_APP_BASE_URL: getEnvVar('VITE_APP_BASE_URL'),
-  SUPABASE_URL: getEnvVar('SUPABASE_URL'),
+  SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   VITE_SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL'),
   SUPABASE_SERVICE_ROLE_KEY: getEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
   GOOGLE_API_KEY: getEnvVar('GOOGLE_API_KEY'),

@@ -664,8 +664,7 @@ export async function getListsContainingPlace(
           try {
             const newUrl = await downloadAndStorePlaceImage(
               preferredPlace.googleMapsId,
-              imageUrl,
-              buildPhotoMediaUrl
+              imageUrl.startsWith('http') ? imageUrl : buildPhotoMediaUrl(imageUrl)
             )
 
             if (newUrl) {

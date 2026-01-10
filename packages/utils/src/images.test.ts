@@ -6,9 +6,13 @@ describe('getHominemPhotoURL', () => {
     expect(getHominemPhotoURL('', 800, 600)).toBeNull()
   })
 
-  it('returns supabase URLs unchanged', () => {
+  it('returns thumb variant for small supabase requests and unchanged for larger', () => {
     const url = 'https://xyz.supabase.co/storage/v1/object/public/places/abc.jpg'
-    expect(getHominemPhotoURL(url, 800, 600)).toBe(url)
+    const thumbUrl = 'https://xyz.supabase.co/storage/v1/object/public/places/abc-thumb.jpg'
+    // Small request should return thumb
+    expect(getHominemPhotoURL(url, 800, 600)).toBe(thumbUrl)
+    // Larger request should return as-is
+    expect(getHominemPhotoURL(url, 1600, 1200)).toBe(url)
   })
 
   it('builds proxy URL for Google Places reference', () => {
