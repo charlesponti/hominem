@@ -54,7 +54,8 @@ aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
   }
 
   try {
-    const validatedInput = c.req.valid('json')
+    const input = c.req.valid('json')
+    const { genres = [] } = input
 
     // Read the prompt template from the markdown file
     const promptTemplatePath = path.join(
@@ -67,23 +68,17 @@ aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
 
     // Inject variables into the prompt template
     let prompt = promptTemplate
-      .replace('{{durationInDays}}', validatedInput.durationInDays.toString())
-      .replace('{{startCity}}', validatedInput.startCity)
-      .replace('{{endCity}}', validatedInput.endCity)
-      .replace('{{numberOfBandMembers}}', validatedInput.numberOfBandMembers.toString())
-      .replace('{{numberOfCrewMembers}}', validatedInput.numberOfCrewMembers.toString())
-      .replace('{{startingDate}}', validatedInput.startingDate || new Date().toISOString())
+      .replace('{{durationInDays}}', input.durationInDays.toString())
+      .replace('{{startCity}}', input.startCity)
+      .replace('{{endCity}}', input.endCity)
+      .replace('{{numberOfBandMembers}}', input.numberOfBandMembers.toString())
+      .replace('{{numberOfCrewMembers}}', input.numberOfCrewMembers.toString())
+      .replace('{{startingDate}}', input.startingDate || new Date().toISOString())
 
-    const genresListBlock =
-      validatedInput.genres && validatedInput.genres.length > 0
-        ? `- Music genre: ${validatedInput.genres.join(', ')}`
-        : ''
+    const genresListBlock = genres.length > 0 ? `- Music genre: ${genres.join(', ')}` : ''
     prompt = prompt.replace('{{genresListBlock}}', genresListBlock)
 
-    const genresForOptimization =
-      validatedInput.genres && validatedInput.genres.length > 0
-        ? validatedInput.genres.join('/')
-        : 'generic'
+    const genresForOptimization = genres.length > 0 ? genres.join('/') : 'generic'
     prompt = prompt.replace('{{genresForOptimization}}', genresForOptimization)
 
     const { object: tourBreakdown } = await generateObject({

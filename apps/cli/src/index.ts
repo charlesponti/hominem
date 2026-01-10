@@ -7,9 +7,9 @@ import { command as aiCommand } from './commands/ai'
 import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
 import { command as initCommand } from './commands/init'
-import { command as notesNotesCommand } from './commands/notes'
+import { command as notesCommand } from './commands/notes'
 import { command as notionCommand } from './commands/notion'
-import { command as notesCommand } from './commands/possessions.js'
+import { command as possessionsCommand } from './commands/possessions'
 import { command as toolsCommand } from './commands/tools'
 
 async function init() {
@@ -20,8 +20,8 @@ async function init() {
   program.addCommand(authCommand)
   program.addCommand(initCommand)
   program.addCommand(aiCommand)
+  program.addCommand(possessionsCommand)
   program.addCommand(notesCommand)
-  program.addCommand(notesNotesCommand)
   program.addCommand(toolsCommand)
   program.addCommand(convertCommand)
   program.addCommand(notionCommand)

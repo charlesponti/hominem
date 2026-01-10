@@ -4,6 +4,10 @@ import { financeAccounts, transactions } from '../../db/schema'
 import { buildWhereConditions } from '../finance.transactions.service'
 import type { CategorySummary, QueryOptions, TopMerchant } from '../finance.types'
 
+const formatCurrency = (amount: number): string => {
+  return Number.parseFloat(amount.toString() || '0').toFixed(2)
+}
+
 /**
  * Summarize transactions by category
  */
@@ -31,10 +35,10 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
   return result.map((row) => ({
     category: row.category,
     count: row.count,
-    total: Number.parseFloat(row.total.toString()).toFixed(2),
-    average: Number.parseFloat(row.average.toString()).toFixed(2),
-    minimum: Number.parseFloat(row.minimum.toString()).toFixed(2),
-    maximum: Number.parseFloat(row.maximum.toString()).toFixed(2),
+    total: formatCurrency(row.total),
+    average: formatCurrency(row.average),
+    minimum: formatCurrency(row.minimum),
+    maximum: formatCurrency(row.maximum),
   }))
 }
 
@@ -64,9 +68,9 @@ export async function summarizeByMonth(options: QueryOptions) {
   return result.map((row) => ({
     month: row.month,
     count: row.count,
-    income: Number.parseFloat(row.income?.toString() || '0').toFixed(2),
-    expenses: Number.parseFloat(row.expenses?.toString() || '0').toFixed(2),
-    average: Number.parseFloat(row.average?.toString() || '0').toFixed(2),
+    income: formatCurrency(row.income),
+    expenses: formatCurrency(row.expenses),
+    average: formatCurrency(row.average),
   }))
 }
 
@@ -102,7 +106,7 @@ export async function findTopMerchants(options: QueryOptions): Promise<TopMercha
       .map((row) => ({
         merchant: row.merchant,
         frequency: row.frequency,
-        totalSpent: Number.parseFloat(row.totalSpent.toString()).toFixed(2),
+        totalSpent: formatCurrency(row.totalSpent),
         firstTransaction: row.firstTransaction,
         lastTransaction: row.lastTransaction,
       }))
@@ -177,10 +181,10 @@ export async function calculateTransactions(
 
   return {
     count: stats.count,
-    total: Number.parseFloat(stats.total?.toString() || '0').toFixed(2),
-    average: Number.parseFloat(stats.average?.toString() || '0').toFixed(2),
-    minimum: Number.parseFloat(stats.minimum?.toString() || '0').toFixed(2),
-    maximum: Number.parseFloat(stats.maximum?.toString() || '0').toFixed(2),
+    total: formatCurrency(stats.total),
+    average: formatCurrency(stats.average),
+    minimum: formatCurrency(stats.minimum),
+    maximum: formatCurrency(stats.maximum),
   }
 }
 
