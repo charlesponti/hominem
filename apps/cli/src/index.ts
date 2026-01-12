@@ -8,7 +8,6 @@ import authCommand from './commands/auth'
 import convertCommand from './commands/convert'
 import { command as initCommand } from './commands/init'
 import { command as notesCommand } from './commands/notes'
-import { command as notionCommand } from './commands/notion'
 import { command as possessionsCommand } from './commands/possessions'
 import { command as toolsCommand } from './commands/tools'
 
@@ -24,7 +23,6 @@ async function init() {
   program.addCommand(notesCommand)
   program.addCommand(toolsCommand)
   program.addCommand(convertCommand)
-  program.addCommand(notionCommand)
 
   program.parse(process.argv)
 }
