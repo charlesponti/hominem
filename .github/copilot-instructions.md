@@ -1,5 +1,13 @@
 # Hominem Copilot Instructions
 
+Hominem is a monorepo full-stack application with local-first architecture.
+
+For detailed coding guidelines, see specialized instruction files in `.github/instructions/`:
+- **All files:** [principles.instructions.md](instructions/principles.instructions.md) - Universal coding standards
+- **React components:** [react.instructions.md](instructions/react.instructions.md) - Component patterns & state management
+- **API development:** [api.instructions.md](instructions/api.instructions.md) - tRPC, authentication, endpoints
+- **Database code:** [database.instructions.md](instructions/database.instructions.md) - Drizzle ORM, migrations, queries
+
 ## Project Overview
 Hominem is a monorepo full-stack application with local-first architecture. It uses Bun, Next.js (App Router), Drizzle ORM, Zustand, React Query + IndexedDB, Tailwind CSS, Shadcn UI, and Vitest.
 
@@ -12,34 +20,43 @@ Hominem is a monorepo full-stack application with local-first architecture. It u
 - **Auth**: Supabase Auth with helpers in `packages/auth`.
 
 ## Key Workflows
-- **Install**: `bun install`
-- **Dev**: `bun run dev` (Turbo parallel)
-- **Build**: `bun run build` (Turbo)
-- **Test**: `bun run test --force` (Vitest)
-- **Lint**: `bun run lint --parallel` (Biome)
-- **DB**: Edit `packages/data/src/db/schema/*`, run `bun run db:generate`, `bun run db:migrate`
+- **Install:** `bun install`
+- **Dev:** `bun run dev` (Turbo)
+- **Build:** `bun run build --force` (Turbo)
+- **Test:** `bun run test --force` (Vitest)
+- **Lint:** `bun run lint --parallel` (Biome)
+- **Database:**
+  - Modify schema: Edit `packages/data/src/db/schema/*`
+  - Generate migrations: `bun run db:generate`
+  - Apply migrations: `bun run db:migrate`
 
-## Code Style (Biome)
+## Quick Reference
 - 2 spaces, no semicolons, single quotes (code), double (JSX)
 - Naming: camelCase (vars/fns), PascalCase (components), `is/has` booleans
-- Strict TypeScript: no `any`, use `unknown` or strict types
-- Imports: types separate, e.g., `import type { Foo } from 'bar'; import { foo } from 'bar';`
+## Quick Reference
 
-## React Patterns
-- Prefer RSC, minimize `use client`
-- Hooks: custom for CRUD, return `{ data, setData, operation }`
-- State: optimistic updates, invalidate on success
-- Forms: React Hook Form + Zod
-- Error: early returns, guard clauses, no `else`
+### Code Style
+- 2 spaces, no semicolons, single quotes (code), double quotes (JSX)
+- Naming: `camelCase` (vars/fns), `PascalCase` (components), `is/has` (booleans)
+- TypeScript: No `any`, import types separately
+- Error handling: Early returns, guard clauses, no `else` after return
 
-## Examples
-- tRPC: `trpc.lists.getAll.useQuery()` in components
-- DB: `import { db } from '@hominem/data/db'`
-- UI: Shadcn components from `@hominem/ui`
+### Tech Stack Summary
+- **Runtime:** Bun
+- **Framework:** React Router (rocco, florin, notes)
+- **API:** Hono + tRPC
+- **Database:** Drizzle ORM + PostgreSQL (Supabase)
+- **Auth:** Supabase Auth
+- **State:** Zustand (global), React Query + IndexedDB (server/local-first)
+- **UI:** Tailwind CSS, Shadcn UI, Radix UI
+- **Validation:** Zod
+- **Testing:** Vitest, React Testing Library
 
-## Conventions
-- Local-first: save to IndexedDB, sync to API
-- Validation: Zod schemas
-- Testing: Vitest, focus on critical paths
-- UI: mobile-first, semantic HTML, no `@apply`</content>
-<parameter name="filePath">/Users/charlesponti/Developer/hominem/.github/copilot-instructions.md
+### Common Patterns
+- **tRPC Client:** `trpc.resource.operation.useQuery()` or `.useMutation()`
+- **tRPC Server:** `createCaller(request).resource.operation(input)`
+- **Auth:** Import from `@hominem/auth`
+- **Data:** Import from `@hominem/data`
+- **Utils:** Import from `@hominem/utils`
+- **Forms:** React Hook Form + Zod validation
+- **Data Flow:** IndexedDB → React Query → API sync
