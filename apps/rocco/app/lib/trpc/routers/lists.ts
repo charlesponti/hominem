@@ -162,7 +162,11 @@ export const listsRouter = router({
             return []
           }
 
-          return await getListsContainingPlace(ctx.user.id, input.placeId, input.googleMapsId)
+          return await getListsContainingPlace({
+            userId: ctx.user.id,
+            placeId: input.placeId,
+            googleMapsId: input.googleMapsId,
+          })
         },
         'getContainingPlace lists',
         {

@@ -1,12 +1,10 @@
+import { createPlacePhotoUrlBuilder } from '@hominem/utils/images'
 import { logger } from '@hominem/utils/logger'
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
 import { db } from '../db'
 import { item, type ListSelect, list, place, userLists, users } from '../db/schema'
-import { isGooglePhotosUrl, type PlaceImagesService } from '../services/place-images.service'
-import { createOrUpdatePlace } from '../services/places.service'
 import { formatList } from './list-crud.service'
 import { getListPlaces, getListPlacesMap } from './list-items.service'
-import { createPlacePhotoUrlBuilder } from '@hominem/utils/images'
 import type { List, ListUser, ListWithSpreadOwner } from './types'
 
 /**
@@ -575,13 +573,15 @@ export async function getListOwnedByUser(
   return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) })
 }
 
-export async function getListsContainingPlace(
-  userId: string,
-  placeId?: string,
-  googleMapsId?: string,
-  buildPhotoMediaUrl: (url: string) => string = (ref: string) => ref,
-  placeImagesService?: PlaceImagesService
-): Promise<Array<{ id: string; name: string; itemCount: number; imageUrl: string | null }>> {
+export async function getListsContainingPlace({
+  userId,
+  placeId,
+  googleMapsId,
+}: {
+  userId: string
+  placeId?: string
+  googleMapsId?: string
+}): Promise<Array<{ id: string; name: string; itemCount: number; imageUrl: string | null }>> {
   if (!(placeId || googleMapsId)) {
     return []
   }
@@ -651,36 +651,7 @@ export async function getListsContainingPlace(
         placesInList.find((p) => p.placeId !== resolvedPlaceId) || placesInList[0]
 
       if (preferredPlace?.imageUrl) {
-        let imageUrl = preferredPlace.imageUrl
-
-        // Lazy migration: if this is a Google Photos URL, try to download and update it
-        if (
-          buildPhotoMediaUrl &&
-          isGooglePhotosUrl(imageUrl) &&
-          preferredPlace.googleMapsId &&
-          placeImagesService
-        ) {
-          try {
-            const newUrl = await placeImagesService.downloadAndStorePlaceImage(
-              preferredPlace.googleMapsId,
-              imageUrl
-            )
-
-            if (newUrl) {
-              imageUrl = newUrl
-              // Fire-and-forget DB update to save this for next time
-              createOrUpdatePlace(preferredPlace.placeId, { imageUrl: newUrl }).catch((err) =>
-                logger.error('Failed to update place image url after lazy migration', {
-                  error: err,
-                })
-              )
-            }
-          } catch (err) {
-            // Ignore error, return original URL
-            logger.warn('Failed lazy image migration', { error: err })
-          }
-        }
-
+        const imageUrl = preferredPlace.imageUrl
         imageMap.set(listId, imageUrl)
       }
     }
