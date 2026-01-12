@@ -1,46 +1,45 @@
-# Copilot Instructions for Hominem Monorepo
+# Hominem Copilot Instructions
 
-## Overview
-- **Monorepo** managed with Bun, Turbo, and Biome. Apps live in `apps/`, shared code in `packages/`.
-- Major apps: `api` (Hono, tRPC, Drizzle, Supabase), `rocco` (React Router, tRPC, Supabase), `florin` (finance), `notes`, `cli`, `workers`.
-- Shared packages: `data` (ORM/services), `utils`, `ui` (components), `ai`, `auth`, `types`, `tsconfig`.
+## Project Overview
+Hominem is a monorepo full-stack application with local-first architecture. It uses Bun, Next.js (App Router), Drizzle ORM, Zustand, React Query + IndexedDB, Tailwind CSS, Shadcn UI, and Vitest.
 
-## Developer Workflows
-- **Install:** `bun install`
-- **Build all:** `bun run build` (Turbo)
-- **Dev all:** `bun run dev` or `turbo run dev --parallel`
-- **Test all:** `bun run test` (Vitest)
-- **Lint:** `bun run lint` (Biome)
-- **Migrate DB:** `bun run db:migrate` (Drizzle)
-- **App-specific:** use `bun run -C apps/<app> <script>` or app's package.json scripts.
-- **CI:** See `.github/workflows/` for deploy and setup details. Bun 1.3+ required.
+## Architecture
+- **Monorepo Structure**: Apps in `apps/`, shared packages in `packages/`.
+- **API**: `apps/api` exposes tRPC routers via Hono.
+- **Frontends**: `apps/rocco` (React Router), `apps/florin` (finance), `apps/notes`.
+- **Data**: Drizzle schemas in `packages/data/src/db/schema/`, lazy initialization.
+- **State**: Zustand for global state, React Query + IndexedDB for server/local-first data.
+- **Auth**: Supabase Auth with helpers in `packages/auth`.
 
-## Key Patterns & Conventions
-- **Formatting:** Biome enforced (2-space, 100-char, single quotes, no semis, double quotes for JSX).
-- **TypeScript:** Explicit types, never use `any`, import types separately (`import type { Foo}`).
-- **React:** Functional components, hooks, minimize `useEffect`/`useState`, prefer RSC, custom hooks for API ops.
-- **State:** Zustand (global), React Query + IndexedDB (data), optimistic updates, context for intermediate state.
-- **Validation:** Use Zod for schemas.
-- **Error Handling:** Early returns, guard clauses, log with context, user-friendly messages.
-- **UI:** Tailwind, Shadcn, Radix UI, mobile-first, no `@apply`.
-- **Testing:** Vitest, React Testing Library, coverage via `vitest run --coverage`.
-- **Performance:** Route/code splitting, dynamic import, Suspense, lazy load images, cache queries.
+## Key Workflows
+- **Install**: `bun install`
+- **Dev**: `bun run dev` (Turbo parallel)
+- **Build**: `bun run build` (Turbo)
+- **Test**: `bun run test --force` (Vitest)
+- **Lint**: `bun run lint --parallel` (Biome)
+- **DB**: Edit `packages/data/src/db/schema/*`, run `bun run db:generate`, `bun run db:migrate`
 
-## API & Data Flow
-- **API:** `apps/api` exposes tRPC routers (see `src/trpc/index.ts`).
-- **App Data:** Apps (e.g., `rocco`) use tRPC client (`~/lib/trpc/client`) and server (`~/lib/trpc/server`) for data access.
-- **Auth:** Supabase Auth, with helpers in `~/lib/supabase/server` and `~/lib/supabase/client`.
-- **Database:** Drizzle ORM, schema in `packages/data/src/db/schema/`.
-- **Invites/Lists:** See `apps/rocco/app/lib/trpc/routers/lists.ts` for list/invite logic and patterns.
+## Code Style (Biome)
+- 2 spaces, no semicolons, single quotes (code), double (JSX)
+- Naming: camelCase (vars/fns), PascalCase (components), `is/has` booleans
+- Strict TypeScript: no `any`, use `unknown` or strict types
+- Imports: types separate, e.g., `import type { Foo } from 'bar'; import { foo } from 'bar';`
+
+## React Patterns
+- Prefer RSC, minimize `use client`
+- Hooks: custom for CRUD, return `{ data, setData, operation }`
+- State: optimistic updates, invalidate on success
+- Forms: React Hook Form + Zod
+- Error: early returns, guard clauses, no `else`
 
 ## Examples
-- **tRPC usage:** `trpc.lists.getAll.useQuery()` in components, `createCaller(request)` for server loaders.
-- **Supabase client:** `const { supabase } = createClient(request)` for SSR auth.
-- **Shared services:** Import from `@hominem/data` for business logic.
+- tRPC: `trpc.lists.getAll.useQuery()` in components
+- DB: `import { db } from '@hominem/data/db'`
+- UI: Shadcn components from `@hominem/ui`
 
-## Project-Specific Notes
-- **Source-only packages:** No build step in `packages/`; apps transpile directly.
-- **Env vars:** Managed via Turbo (`turbo.json`), see `README.md` for required Supabase keys.
-- **CI/CD:** Deploys via GitHub Actions, see `.github/workflows/`.
-
-For more, see `CLAUDE.md`, and each app's `README.md`.
+## Conventions
+- Local-first: save to IndexedDB, sync to API
+- Validation: Zod schemas
+- Testing: Vitest, focus on critical paths
+- UI: mobile-first, semantic HTML, no `@apply`</content>
+<parameter name="filePath">/Users/charlesponti/Developer/hominem/.github/copilot-instructions.md

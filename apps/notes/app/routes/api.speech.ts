@@ -54,7 +54,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
     // Store the audio file using Supabase storage
     const fileName = `speech-${Date.now()}-${voice}-${speed}.mp3`
-    const storedFile = await fileStorageService.storeFile(buffer, fileName, 'audio/mpeg', userId)
+    const storedFile = await fileStorageService.storeFile(buffer, 'audio/mpeg', userId, {
+      filename: fileName,
+    })
 
     return jsonResponse({
       success: true,

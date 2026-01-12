@@ -1,78 +1,79 @@
 import { isValidGoogleHost } from '@hominem/utils/google'
+import { downloadImage } from '@hominem/utils/http'
+import { createPlacePhotoUrlBuilder } from '@hominem/utils/images'
 import { placeImagesStorageService } from '@hominem/utils/supabase'
-import { env } from '../env.server'
 
-/**
- * Service for downloading and managing place images
- */
-
-export interface DownloadImageOptions {
-  url: string
-  maxRetries?: number
-  timeout?: number
-}
-
-export interface DownloadedImage {
-  buffer: Buffer
-  contentType: string
-  size: number
+export interface PlaceImagesService {
+  downloadAndStorePlaceImage: (
+    googleMapsId: string,
+    photoUrl: string,
+    photoIndex?: number
+  ) => Promise<string | null>
 }
 
 /**
- * Downloads a Google Photos image and uploads it to Supabase Storage
- * @param googleMapsId - The Google Maps ID for the place
- * @param photoUrl - The Google Photos URL to download
- * @param buildPhotoMediaUrl - Function to build the full media URL with API key
- * @returns The Supabase Storage URL or null if download fails
+ * Create a place-images service instance bound to env vars (e.g., APP_BASE_URL, GOOGLE_PLACES_API_KEY)
+ * Developer must call this with their env values to get a working service.
  */
-export async function downloadAndStorePlaceImage(
-  googleMapsId: string,
-  photoUrl: string,
-  buildPhotoMediaUrl?: (url: string) => string,
-  photoIndex = 0
-): Promise<string | null> {
-  try {
-    // Build the full media URL with API key
-    let fullUrl = buildPhotoMediaUrl?.(photoUrl) ?? photoUrl
-    const urlObj = new URL(fullUrl)
+export function createPlaceImagesService({
+  appBaseUrl,
+  googleApiKey,
+}: {
+  appBaseUrl?: string
+  googleApiKey?: string
+}) {
+  const buildPhotoUrl = createPlacePhotoUrlBuilder(googleApiKey)
+  async function downloadAndStorePlaceImage(
+    googleMapsId: string,
+    photoUrl: string,
+    photoIndex = 0
+  ): Promise<string | null> {
+    try {
+      // Build the full media URL with API key
+      let fullUrl = buildPhotoUrl(photoUrl) ?? photoUrl
+      const urlObj = new URL(fullUrl)
 
-    // Initial attempt: Use Google Places API (New) with explicit JSON response
-    // This avoids generic HTTP client redirect issues and provides better error handling.
-    if (fullUrl.includes('places.googleapis.com') && fullUrl.includes('/media')) {
-      urlObj.searchParams.set('skipHttpRedirect', 'true')
+      // Initial attempt: Use Google Places API (New) with explicit JSON response
+      // This avoids generic HTTP client redirect issues and provides better error handling.
+      if (fullUrl.includes('places.googleapis.com') && fullUrl.includes('/media')) {
+        urlObj.searchParams.set('skipHttpRedirect', 'true')
 
-      const response = await fetch(urlObj.toString())
+        const response = await fetch(urlObj.toString())
 
-      if (response.ok) {
-        // Happy path: New API worked
-        const data = (await response.json()) as { photoUri?: string }
-        if (data.photoUri) {
-          fullUrl = data.photoUri
+        if (response.ok) {
+          const data = (await response.json()) as { photoUri?: string }
+          if (data.photoUri) {
+            fullUrl = data.photoUri
+          } else {
+            throw new Error('No photoUri in Google API response')
+          }
         } else {
-          throw new Error('No photoUri in Google API response')
+          // Other errors (400, 403, 404, 500)
+          const errorText = await response.text()
+          throw new Error(`Google API Error (${response.status}): ${errorText.substring(0, 200)}`)
         }
-      } else {
-        // Other errors (400, 403, 404, 500)
-        const errorText = await response.text()
-        throw new Error(`Google API Error (${response.status}): ${errorText.substring(0, 200)}`)
       }
+
+      // Download the image (either from the successful New API URI or the Legacy API URL)
+      const { buffer } = await downloadImage({ url: fullUrl }, appBaseUrl)
+
+      // Use helper to convert + upload full + thumb
+      const { fullUrl: storedFullUrl } = await savePlacePhoto(googleMapsId, buffer, photoIndex)
+
+      // Return the full-size URL (clients will request thumbnails separately via helper)
+      return storedFullUrl
+    } catch (error) {
+      console.error('Failed to download and store place image:', {
+        googleMapsId,
+        photoUrl,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return null
     }
+  }
 
-    // Download the image (either from the successful New API URI or the Legacy API URL)
-    const { buffer } = await downloadImage({ url: fullUrl })
-
-    // Use helper to convert + upload full + thumb
-    const { fullUrl: storedFullUrl } = await savePlacePhoto(googleMapsId, buffer, photoIndex)
-
-    // Return the full-size URL (clients will request thumbnails separately via helper)
-    return storedFullUrl
-  } catch (error) {
-    console.error('Failed to download and store place image:', {
-      googleMapsId,
-      photoUrl,
-      error: error instanceof Error ? error.message : String(error),
-    })
-    return null
+  return {
+    downloadAndStorePlaceImage,
   }
 }
 
@@ -103,27 +104,29 @@ export async function savePlacePhoto(
       .webp({ quality: 75 })
       .toBuffer()
 
-    const fullFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'full')}.webp`
-    const thumbFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'thumb')}.webp`
+    const baseFullFilename = generatePlaceImageFilename(googleMapsId, photoIndex, 'full')
+    const baseThumbFilename = generatePlaceImageFilename(googleMapsId, photoIndex, 'thumb')
 
     const storedFull = await placeImagesStorageService.storeFile(
       fullBuffer,
-      fullFilename,
       'image/webp',
       `places/${googleMapsId}`,
-      { filename: fullFilename }
+      { filename: baseFullFilename }
     )
 
+    const fullFilename = storedFull.filename.split('/').pop() || `${baseFullFilename}.webp`
+
     let thumbUrl: string | null = null
+    let thumbFilename = `${baseThumbFilename}.webp`
     try {
       const storedThumb = await placeImagesStorageService.storeFile(
         thumbBuffer,
-        thumbFilename,
         'image/webp',
         `places/${googleMapsId}`,
-        { filename: thumbFilename }
+        { filename: baseThumbFilename }
       )
       thumbUrl = storedThumb.url
+      thumbFilename = storedThumb.filename.split('/').pop() || `${baseThumbFilename}.webp`
     } catch (err) {
       console.error('Failed to upload thumbnail for place image:', {
         googleMapsId,
@@ -143,65 +146,16 @@ export async function savePlacePhoto(
       error: error instanceof Error ? error.message : String(error),
     })
 
-    const fullFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'full')}.webp`
-    const thumbFilename = `${generatePlaceImageFilename(googleMapsId, photoIndex, 'thumb')}.webp`
+    const baseFullFilename = generatePlaceImageFilename(googleMapsId, photoIndex, 'full')
+    const baseThumbFilename = generatePlaceImageFilename(googleMapsId, photoIndex, 'thumb')
 
-    return { fullUrl: null, thumbUrl: null, fullFilename, thumbFilename }
-  }
-}
-
-/**
- * Downloads an image from a URL with retry logic
- */
-export async function downloadImage({
-  url,
-  maxRetries = 3,
-  timeout = 10000,
-}: DownloadImageOptions): Promise<DownloadedImage> {
-  let lastError: Error | null = null
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), timeout)
-
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Hominem/1.0',
-          // Use Referer to satisfy browser-key restrictions when fetching from Legacy API
-          Referer: env.APP_BASE_URL,
-        },
-      })
-
-      clearTimeout(timeoutId)
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const contentType = response.headers.get('content-type') || 'image/jpeg'
-      const arrayBuffer = await response.arrayBuffer()
-      const buffer = Buffer.from(arrayBuffer)
-
-      return {
-        buffer,
-        contentType,
-        size: buffer.length,
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error))
-
-      if (attempt < maxRetries - 1) {
-        // Wait before retrying (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000))
-      }
+    return {
+      fullUrl: null,
+      thumbUrl: null,
+      fullFilename: `${baseFullFilename}.webp`,
+      thumbFilename: `${baseThumbFilename}.webp`,
     }
   }
-
-  throw new Error(
-    `Failed to download image after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`
-  )
 }
 
 /**

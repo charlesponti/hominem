@@ -23,8 +23,10 @@ describe('savePlacePhoto', () => {
   it('uploads full and thumb with deterministic filenames', async () => {
     const googleMapsId = 'g123'
     const buffer = Buffer.from('test-buffer')
-    const fullFilename = `${googleMapsId}-0-full.webp`
-    const thumbFilename = `${googleMapsId}-0-thumb.webp`
+    const baseFullFilename = `${googleMapsId}-0-full`
+    const baseThumbFilename = `${googleMapsId}-0-thumb`
+    const fullFilename = `${baseFullFilename}.webp`
+    const thumbFilename = `${baseThumbFilename}.webp`
     const fullUrl = 'https://cdn/full.webp'
     const thumbUrl = 'https://cdn/thumb.webp'
 
@@ -32,7 +34,7 @@ describe('savePlacePhoto', () => {
       .spyOn(placeImagesStorageService, 'storeFile')
       .mockResolvedValueOnce({
         id: 'mock-id-1',
-        originalName: fullFilename,
+        originalName: baseFullFilename,
         filename: `places/${googleMapsId}/${fullFilename}`,
         mimetype: 'image/webp',
         size: Buffer.from(fullFilename).length,
@@ -41,7 +43,7 @@ describe('savePlacePhoto', () => {
       } as StoredFile)
       .mockResolvedValueOnce({
         id: 'mock-id-2',
-        originalName: thumbFilename,
+        originalName: baseThumbFilename,
         filename: `places/${googleMapsId}/${thumbFilename}`,
         mimetype: 'image/webp',
         size: Buffer.from(thumbFilename).length,
@@ -57,14 +59,13 @@ describe('savePlacePhoto', () => {
     const secondCall = storeSpy.mock.calls[1]
 
     // First call = full image
-    expect(firstCall?.[1]).toBe(fullFilename)
-    expect(firstCall?.[2]).toBe('image/webp')
-    expect(firstCall?.[3]).toBe(`places/${googleMapsId}`)
-    expect(firstCall?.[4]).toEqual({ filename: fullFilename })
+    expect(firstCall?.[1]).toBe('image/webp')
+    expect(firstCall?.[2]).toBe(`places/${googleMapsId}`)
+    expect(firstCall?.[3]).toEqual({ filename: baseFullFilename })
 
     // Second call = thumbnail
-    expect(secondCall?.[1]).toBe(thumbFilename)
-    expect(secondCall?.[4]).toEqual({ filename: thumbFilename })
+    expect(secondCall?.[1]).toBe('image/webp')
+    expect(secondCall?.[3]).toEqual({ filename: baseThumbFilename })
 
     expect(res.fullUrl).toBe(fullUrl)
     expect(res.thumbUrl).toBe(thumbUrl)
@@ -75,13 +76,14 @@ describe('savePlacePhoto', () => {
   it('continues when thumbnail upload fails', async () => {
     const googleMapsId = 'g456'
     const buffer = Buffer.from('test-buffer-2')
-    const fullFilename = `${googleMapsId}-0-full.webp`
+    const baseFullFilename = `${googleMapsId}-0-full`
+    const fullFilename = `${baseFullFilename}.webp`
 
     const storeSpy = vi
       .spyOn(placeImagesStorageService, 'storeFile')
       .mockResolvedValueOnce({
         id: 'mock-id-3',
-        originalName: fullFilename,
+        originalName: baseFullFilename,
         filename: `places/${googleMapsId}/${fullFilename}`,
         mimetype: 'image/webp',
         size: Buffer.from(fullFilename).length,

@@ -3,9 +3,8 @@
  * and store them in Supabase Storage
  */
 import { db } from '@hominem/data/db'
-import { downloadAndStorePlaceImage, isGooglePhotosUrl } from '@hominem/data/places'
+import { createPlaceImagesService, isGooglePhotosUrl } from '@hominem/data/places'
 import { place } from '@hominem/data/schema'
-import { buildPhotoMediaUrl } from '@hominem/utils/images'
 import { eq, sql } from 'drizzle-orm'
 import { getPlacePhotos } from '../app/lib/google-places.server'
 
@@ -15,33 +14,10 @@ if (!GOOGLE_PLACES_API_KEY) {
   throw new Error('GOOGLE_PLACES_API_KEY is not set')
 }
 
-// Adapter for the robust download service
-const urlBuilder = (path: string) => {
-  // If it's already a full URL (e.g. googleusercontent), use it directly
-  if (path.startsWith('http')) {
-    return path
-  }
-
-  // Clean path to remove any potential query params or duplicated base
-  const cleanPath = path.split('?')[0]
-
-  if (!cleanPath) {
-    return null
-  }
-
-  // If path doesn't look right, log a warning
-  if (!(cleanPath.includes('places/') && cleanPath.includes('photos/'))) {
-    console.warn(`Suspicious photo path format: ${cleanPath}`)
-  }
-
-  // Otherwise build the new Places API Media URL
-  return buildPhotoMediaUrl({
-    key: GOOGLE_PLACES_API_KEY,
-    photoName: cleanPath,
-    maxWidthPx: 1600,
-    maxHeightPx: 1600,
-  })
-}
+const placeImagesService = createPlaceImagesService({
+  appBaseUrl: process.env.APP_BASE_URL,
+  googleApiKey: GOOGLE_PLACES_API_KEY,
+})
 
 interface MigrationStats {
   total: number
@@ -68,7 +44,10 @@ async function processPlacePhotos(
     if (isGooglePhotosUrl(photoUrl)) {
       console.log(`Migrating photo for ${googleMapsId}: ${photoUrl.substring(0, 50)}...`)
       try {
-        const supabaseUrl = await downloadAndStorePlaceImage(googleMapsId, photoUrl, urlBuilder)
+        const supabaseUrl = await placeImagesService.downloadAndStorePlaceImage(
+          googleMapsId,
+          photoUrl
+        )
 
         if (supabaseUrl) {
           successfulPhotos.push(supabaseUrl)

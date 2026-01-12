@@ -154,9 +154,9 @@ export const vectorRouter = router({
         // Store file using fileStorageService (no disk I/O needed)
         const storedFile = await fileStorageService.storeFile(
           Buffer.from(uploadedFile.buffer.buffer),
-          uploadedFile.filename || 'upload.csv',
           uploadedFile.mimetype,
-          ctx.userId
+          ctx.userId,
+          { filename: uploadedFile.filename || 'upload.csv' }
         )
 
         // Process the CSV for vector embeddings

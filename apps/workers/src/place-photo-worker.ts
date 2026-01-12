@@ -1,10 +1,11 @@
 import './env.ts'
 
-import { updatePlacePhotosFromGoogle } from '@hominem/data/places'
+import { createPlaceImagesService, updatePlacePhotosFromGoogle } from '@hominem/data/places'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
 import { redis } from '@hominem/utils/redis'
 import { type Job, Worker } from 'bullmq'
+import { env } from './env.ts'
 import { HealthService } from './health.service'
 
 const CONCURRENCY = 2
@@ -18,10 +19,24 @@ const processPlacePhotoJob = async (job: Job<PlacePhotoEnrichPayload>) => {
   logger.info(`Processing place photo enrichment job ${job.id} for place ${job.data.placeId}`)
   try {
     const { placeId, forceFresh } = job.data
-    const result = await updatePlacePhotosFromGoogle(placeId, { forceFresh })
+
+    // Create required helpers from env
+    const apiKey = env.GOOGLE_API_KEY
+    const placeImagesService = createPlaceImagesService({
+      appBaseUrl: env.APP_BASE_URL,
+      googleApiKey: apiKey,
+    })
+
+    const result = await updatePlacePhotosFromGoogle(placeId, {
+      forceFresh,
+      placeImagesService,
+      googleApiKey: apiKey,
+    })
+
     if (!result) {
       throw new Error('No photos fetched or update did not change place')
     }
+
     logger.info(`Place photo enrichment succeeded for place ${placeId}`)
     return { success: true }
   } catch (error) {

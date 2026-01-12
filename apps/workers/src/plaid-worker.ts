@@ -1,6 +1,3 @@
-/**
- * Plaid sync worker using BullMQ
- */
 import './env.ts'
 
 import { QUEUE_NAMES } from '@hominem/utils/consts'
@@ -68,8 +65,10 @@ plaidWorker.on('stalled', (jobId) => {
   logger.warn(`Plaid sync job ${jobId} stalled`)
 })
 
-const handlePlaidShutdown = async () => {
-  if (isPlaidShuttingDown) return
+const handleShutdown = async () => {
+  if (isPlaidShuttingDown) {
+    return
+  }
 
   isPlaidShuttingDown = true
   logger.info('Starting graceful shutdown of Plaid sync worker...')
@@ -85,10 +84,10 @@ const handlePlaidShutdown = async () => {
 
 process.on('SIGTERM', async () => {
   logger.info('Plaid sync worker received SIGTERM, cleaning up...')
-  await handlePlaidShutdown()
+  await handleShutdown()
 })
 
 process.on('SIGINT', async () => {
   logger.info('Plaid sync worker received SIGINT, cleaning up...')
-  await handlePlaidShutdown()
+  await handleShutdown()
 })

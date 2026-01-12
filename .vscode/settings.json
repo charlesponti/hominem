@@ -26,6 +26,7 @@
     "strings": true
   },
   "css.validate": false,
+  "terminal.integrated.shellIntegration.enabled": true,
   "tailwindCSS.rootFontSize": 16,
   "tailwindCSS.experimental.configFile": "./packages/ui/src/styles/globals.css",
   "editor.defaultFormatter": "biomejs.biome",

@@ -10,11 +10,88 @@ const NotionConfigSchema = z.object({
   NOTION_DATABASE_ID: z.string().min(1, 'Notion database ID is required'),
 })
 
+// === Notion filter/sort schemas ===
+const TextFilterSchema = z.object({
+  contains: z.string().optional(),
+  does_not_contain: z.string().optional(),
+  equals: z.string().optional(),
+  is_empty: z.boolean().optional(),
+  is_not_empty: z.boolean().optional(),
+  starts_with: z.string().optional(),
+  ends_with: z.string().optional(),
+})
+
+const NumberFilterSchema = z.object({
+  equals: z.number().optional(),
+  does_not_equal: z.number().optional(),
+  greater_than: z.number().optional(),
+  less_than: z.number().optional(),
+  greater_than_or_equal_to: z.number().optional(),
+  less_than_or_equal_to: z.number().optional(),
+  is_empty: z.boolean().optional(),
+  is_not_empty: z.boolean().optional(),
+})
+
+const SelectFilterSchema = z.object({
+  equals: z.string().optional(),
+  does_not_equal: z.string().optional(),
+  is_empty: z.boolean().optional(),
+  is_not_empty: z.boolean().optional(),
+})
+
+const DateFilterSchema = z.object({
+  equals: z.string().optional(),
+  before: z.string().optional(),
+  after: z.string().optional(),
+  on_or_before: z.string().optional(),
+  on_or_after: z.string().optional(),
+  is_empty: z.boolean().optional(),
+  is_not_empty: z.boolean().optional(),
+})
+
+const CheckboxFilterSchema = z.object({ equals: z.boolean() })
+
+const PropertyTitleFilter = z.object({ property: z.string(), title: TextFilterSchema })
+const PropertyRichTextFilter = z.object({ property: z.string(), rich_text: TextFilterSchema })
+const PropertyNumberFilter = z.object({ property: z.string(), number: NumberFilterSchema })
+const PropertySelectFilter = z.object({ property: z.string(), select: SelectFilterSchema })
+const PropertyMultiSelectFilter = z.object({ property: z.string(), multi_select: SelectFilterSchema })
+const PropertyDateFilter = z.object({ property: z.string(), date: DateFilterSchema })
+const PropertyCheckboxFilter = z.object({ property: z.string(), checkbox: CheckboxFilterSchema })
+const PropertyCreatedTimeFilter = z.object({ property: z.string(), created_time: DateFilterSchema })
+const PropertyLastEditedTimeFilter = z.object({ property: z.string(), last_edited_time: DateFilterSchema })
+const PropertyFormulaFilter = z.object({ property: z.string(), formula: z.union([TextFilterSchema, NumberFilterSchema, z.object({})]).optional() })
+
+const FilterSchema: z.ZodTypeAny = z.lazy(() =>
+  z.union([
+    z.object({ and: z.array(FilterSchema) }),
+    z.object({ or: z.array(FilterSchema) }),
+    z.object({ not: FilterSchema }),
+    PropertyTitleFilter,
+    PropertyRichTextFilter,
+    PropertyNumberFilter,
+    PropertySelectFilter,
+    PropertyMultiSelectFilter,
+    PropertyDateFilter,
+    PropertyCheckboxFilter,
+    PropertyCreatedTimeFilter,
+    PropertyLastEditedTimeFilter,
+    PropertyFormulaFilter,
+  ])
+)
+
+const SortItemSchema = z.union([
+  z.object({ property: z.string(), direction: z.enum(['ascending', 'descending']) }),
+  z.object({ timestamp: z.enum(['created_time', 'last_edited_time']), direction: z.enum(['ascending', 'descending']) }),
+])
+
+const SortSchema = z.array(SortItemSchema)
+
 const SyncOptionsSchema = z.object({
   limit: z.number().min(1).max(100).default(100),
   startCursor: z.string().optional(),
-  filter: z.string().optional(),
-  sort: z.string().optional(),
+  filter: FilterSchema.optional(),
+  sort: SortSchema.optional(),
   dryRun: z.boolean().default(false),
   batchSize: z.number().min(1).max(50).default(10),
   contentType: z.enum(['note', 'task', 'document']).default('note'),
@@ -76,8 +153,8 @@ export const syncCommand = new Command('sync')
         database_id: config.NOTION_DATABASE_ID,
         page_size: syncOptions.limit,
         start_cursor: syncOptions.startCursor,
-        filter: syncOptions.filter as any,
-        sorts: syncOptions.sort as any,
+        filter: syncOptions.filter,
+        sorts: syncOptions.sort,
       })
 
       const results = response.results as NotionResult[]

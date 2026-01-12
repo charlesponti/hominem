@@ -30,7 +30,7 @@ describe('SupabaseStorageService.storeFile filename option', () => {
     svc.client = fakeClient
 
     const buffer = Buffer.from('x')
-    const res = await svc.storeFile(buffer, 'g789-0-full.webp', 'image/webp', 'places/g789', {
+    const res = await svc.storeFile(buffer, 'image/webp', 'places/g789', {
       filename: 'g789-0-full.webp',
     })
 

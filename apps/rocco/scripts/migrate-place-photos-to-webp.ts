@@ -7,7 +7,7 @@
  */
 
 import { db } from '@hominem/data/db'
-import { downloadAndStorePlaceImage, isGooglePhotosUrl, savePlacePhoto } from '@hominem/data/places'
+import { createPlaceImagesService, isGooglePhotosUrl, savePlacePhoto } from '@hominem/data/places'
 import { place } from '@hominem/data/schema'
 import type { SingleBar } from 'cli-progress'
 import cliProgress from 'cli-progress'
@@ -22,20 +22,13 @@ if (!GOOGLE_PLACES_API_KEY) {
   )
 }
 
+const placeImagesService = createPlaceImagesService({
+  appBaseUrl: process.env.APP_BASE_URL,
+  googleApiKey: GOOGLE_PLACES_API_KEY,
+})
+
 function isSupabasePublicUrl(url: string): boolean {
   return url.includes('.supabase.co') && url.includes('/storage/v1/object/public/')
-}
-
-// Adapter for downloadAndStorePlaceImage which expects a builder for Google references
-const urlBuilder = (path: string) => {
-  if (!GOOGLE_PLACES_API_KEY) {
-    return null
-  }
-  if (path.startsWith('http')) {
-    return path
-  }
-  const cleanPath = path.split('?')[0]
-  return `https://places.googleapis.com/v1/${cleanPath}/media?maxWidthPx=1600&maxHeightPx=1600&key=${GOOGLE_PLACES_API_KEY}`
 }
 
 // Helper to create and manage a spinner while running an async function.
@@ -68,7 +61,7 @@ async function migrateSinglePhoto(
     return await runWithSpinner('Migrating Google photo', async (spin) => {
       spin.text = 'Downloading via Google Places API'
       try {
-        const newUrl = await downloadAndStorePlaceImage(googleMapsId, photo, urlBuilder)
+        const newUrl = await placeImagesService.downloadAndStorePlaceImage(googleMapsId, photo)
         if (newUrl) {
           spin.succeed('Google photo migrated')
           return newUrl

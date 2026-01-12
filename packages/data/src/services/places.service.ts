@@ -10,8 +10,7 @@ import {
   type Place as PlaceSelect,
   place,
 } from '../db/schema'
-import { env } from '../env.server'
-import { downloadAndStorePlaceImage, isGooglePhotosUrl } from './place-images.service'
+import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service'
 
 export type ListSummary = { id: string; name: string }
 
@@ -23,68 +22,7 @@ export function getPlaceImageUrl(place: Pick<PlaceSelect, 'imageUrl' | 'photos'>
   return place.imageUrl ?? place.photos?.[0] ?? null
 }
 
-// In-memory cache for place lookups
-type CacheEntry<T> = {
-  data: T
-  expiresAt: number
-}
-
-class PlaceCache {
-  private cache = new Map<string, CacheEntry<PlaceSelect>>()
-  readonly TTL_MS = 5 * 60 * 1000 // 5 minutes for googleMapsId lookups
-  readonly TTL_SHORT_MS = 2 * 60 * 1000 // 2 minutes for id lookups
-
-  get(key: string): PlaceSelect | null {
-    const entry = this.cache.get(key)
-    if (!entry) {
-      return null
-    }
-
-    if (Date.now() > entry.expiresAt) {
-      this.cache.delete(key)
-      return null
-    }
-
-    return entry.data
-  }
-
-  set(key: string, data: PlaceSelect, ttl: number = this.TTL_MS): void {
-    this.cache.set(key, {
-      data,
-      expiresAt: Date.now() + ttl,
-    })
-  }
-
-  delete(key: string): void {
-    this.cache.delete(key)
-  }
-
-  clear(): void {
-    this.cache.clear()
-  }
-
-  // Clean up expired entries (call periodically)
-  cleanup(): void {
-    const now = Date.now()
-    for (const [key, entry] of this.cache.entries()) {
-      if (now > entry.expiresAt) {
-        this.cache.delete(key)
-      }
-    }
-  }
-}
-
-const placeCache = new PlaceCache()
-
-// Cleanup expired entries every 10 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(
-    () => {
-      placeCache.cleanup()
-    },
-    10 * 60 * 1000
-  )
-}
+import { placeCache } from './place-cache'
 
 function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
   return latitude != null && longitude != null ? [longitude, latitude] : [0, 0]
@@ -97,6 +35,91 @@ function extractListSummaries(
     .map((record) => record.list)
     .filter((list): list is { id: string; name: string } => Boolean(list))
     .map((list) => ({ id: list.id, name: list.name }))
+}
+
+const placeUpdateSet = {
+  name: sql`EXCLUDED.name`,
+  address: sql`EXCLUDED.address`,
+  latitude: sql`EXCLUDED.latitude`,
+  longitude: sql`EXCLUDED.longitude`,
+  location: sql`EXCLUDED.location`,
+  types: sql`EXCLUDED.types`,
+  rating: sql`EXCLUDED.rating`,
+  websiteUri: sql`EXCLUDED."websiteUri"`,
+  phoneNumber: sql`EXCLUDED."phoneNumber"`,
+  priceLevel: sql`EXCLUDED."priceLevel"`,
+  photos: sql`EXCLUDED.photos`,
+  imageUrl: sql`COALESCE(EXCLUDED."imageUrl", CASE WHEN EXCLUDED.photos IS NOT NULL AND array_length(EXCLUDED.photos, 1) > 0 THEN EXCLUDED.photos[1] ELSE place."imageUrl" END)`,
+  updatedAt: new Date().toISOString(),
+}
+
+function updateCacheForPlace(result: PlaceSelect): void {
+  placeCache.delete(`place:id:${result.id}`)
+  placeCache.delete(`place:googleMapsId:${result.googleMapsId}`)
+  placeCache.set(`place:id:${result.id}`, result, placeCache.TTL_SHORT_MS)
+  placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result)
+}
+
+async function preparePlaceInsertData(
+  data: PlaceInsert,
+  options?: {
+    buildPhotoMediaUrl?: (url: string) => string
+    placeImagesService?: PlaceImagesService
+  }
+): Promise<{
+  id: string
+  googleMapsId: string
+  name: string
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  location: [number, number]
+  types: string[] | null
+  rating: number | null
+  websiteUri: string | null
+  phoneNumber: string | null
+  priceLevel: number | null
+  photos: string[] | null
+  imageUrl: string | null
+}> {
+  let processedPhotos = data.photos ?? null
+  let imageUrl = data.imageUrl ?? null
+
+  if (options?.buildPhotoMediaUrl) {
+    processedPhotos = await processPlacePhotos(
+      data.googleMapsId,
+      data.photos ?? [],
+      options.placeImagesService
+    )
+
+    // Also process the main imageUrl if it's a Google Photos URL
+    if (imageUrl && isGooglePhotosUrl(imageUrl)) {
+      if (options?.placeImagesService) {
+        const supabaseUrl = await options.placeImagesService.downloadAndStorePlaceImage(
+          data.googleMapsId,
+          imageUrl
+        )
+        imageUrl = supabaseUrl || imageUrl
+      }
+    }
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    googleMapsId: data.googleMapsId,
+    name: data.name,
+    address: data.address ?? null,
+    latitude: data.latitude ?? null,
+    longitude: data.longitude ?? null,
+    location: data.location ?? toLocationTuple(data.latitude, data.longitude),
+    types: data.types ?? null,
+    rating: data.rating ?? null,
+    websiteUri: data.websiteUri ?? null,
+    phoneNumber: data.phoneNumber ?? null,
+    priceLevel: data.priceLevel ?? null,
+    photos: processedPhotos,
+    imageUrl: imageUrl ?? (processedPhotos && processedPhotos.length > 0 ? processedPhotos[0]! : null),
+  }
 }
 
 export async function getPlacePhotoById(id: string): Promise<string | undefined> {
@@ -167,22 +190,26 @@ export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise
  */
 async function processPlacePhotos(
   googleMapsId: string,
-  photos: string[] | null,
-  buildPhotoMediaUrl: (url: string) => string
+  photos: string[] = [],
+  placeImagesService?: PlaceImagesService
 ): Promise<string[]> {
-  if (!photos || photos.length === 0) {
-    return []
+  if (photos.length === 0) {
+    return photos
   }
 
   const processedPhotos = await Promise.all(
     photos.map(async (photoUrl) => {
       // If it's a Google Photos URL, download and store it
       if (isGooglePhotosUrl(photoUrl)) {
-        // Use the shared service function
-        const supabaseUrl = await downloadAndStorePlaceImage(
+        if (!placeImagesService) {
+          // No service provided; skip download and keep original URL
+          return photoUrl
+        }
+
+        // Use the provided service
+        const supabaseUrl = await placeImagesService.downloadAndStorePlaceImage(
           googleMapsId,
-          photoUrl,
-          buildPhotoMediaUrl
+          photoUrl
         )
         return supabaseUrl || photoUrl // Fallback to original if download fails
       }
@@ -197,83 +224,23 @@ async function processPlacePhotos(
 export async function upsertPlace({
   data,
   buildPhotoMediaUrl,
+  placeImagesService,
 }: {
   data: PlaceInsert
   buildPhotoMediaUrl?: (url: string) => string
+  placeImagesService?: PlaceImagesService
 }): Promise<PlaceSelect> {
-  // Process photos to download Google Photos URLs
-  let processedPhotos = data.photos ?? null
-  let processedImageUrl = data.imageUrl ?? null
-
-  if (buildPhotoMediaUrl) {
-    processedPhotos = await processPlacePhotos(
-      data.googleMapsId,
-      data.photos ?? null,
-      buildPhotoMediaUrl
-    )
-
-    // Also process the main imageUrl if it's a Google Photos URL
-    if (processedImageUrl && isGooglePhotosUrl(processedImageUrl)) {
-      const supabaseUrl = await downloadAndStorePlaceImage(
-        data.googleMapsId,
-        processedImageUrl,
-        buildPhotoMediaUrl
-      )
-      processedImageUrl = supabaseUrl || processedImageUrl
-    }
-  }
-
-  // Set imageUrl from photos if not provided
-  const imageUrl =
-    processedImageUrl ?? (processedPhotos && processedPhotos.length > 0 ? processedPhotos[0] : null)
-
-  const insertValues = {
-    id: crypto.randomUUID(),
-    googleMapsId: data.googleMapsId,
-    name: data.name,
-    address: data.address ?? null,
-    latitude: data.latitude ?? null,
-    longitude: data.longitude ?? null,
-    location: data.location ?? toLocationTuple(data.latitude, data.longitude),
-    types: data.types ?? null,
-    rating: data.rating ?? null,
-    websiteUri: data.websiteUri ?? null,
-    phoneNumber: data.phoneNumber ?? null,
-    priceLevel: data.priceLevel ?? null,
-    photos: processedPhotos,
-    imageUrl,
-  }
+  const insertValues = await preparePlaceInsertData(data, {
+    buildPhotoMediaUrl,
+    placeImagesService,
+  })
 
   const [result] = await db
     .insert(place)
     .values(insertValues)
     .onConflictDoUpdate({
       target: place.googleMapsId,
-      set: {
-        // Always update name if provided
-        name: sql`EXCLUDED.name`,
-        // Update address if provided (can be null)
-        address: sql`EXCLUDED.address`,
-        // Update location if latitude/longitude are provided
-        latitude: sql`EXCLUDED.latitude`,
-        longitude: sql`EXCLUDED.longitude`,
-        location: sql`EXCLUDED.location`,
-        // Update types if provided
-        types: sql`EXCLUDED.types`,
-        // Update rating if provided (can be null)
-        rating: sql`EXCLUDED.rating`,
-        // Update websiteUri if provided (can be null)
-        websiteUri: sql`EXCLUDED."websiteUri"`,
-        // Update phoneNumber if provided (can be null)
-        phoneNumber: sql`EXCLUDED."phoneNumber"`,
-        // Update priceLevel if provided (can be null)
-        priceLevel: sql`EXCLUDED."priceLevel"`,
-        // Update photos if provided
-        photos: sql`EXCLUDED.photos`,
-        // Update imageUrl: use EXCLUDED if provided, otherwise use first photo if photos exist
-        imageUrl: sql`COALESCE(EXCLUDED."imageUrl", CASE WHEN EXCLUDED.photos IS NOT NULL AND array_length(EXCLUDED.photos, 1) > 0 THEN EXCLUDED.photos[1] ELSE place."imageUrl" END)`,
-        updatedAt: new Date().toISOString(),
-      },
+      set: placeUpdateSet,
     })
     .returning()
 
@@ -281,12 +248,7 @@ export async function upsertPlace({
     throw new Error('Failed to ensure place')
   }
 
-  // Invalidate cache for this place
-  placeCache.delete(`place:id:${result.id}`)
-  placeCache.delete(`place:googleMapsId:${result.googleMapsId}`)
-  // Update cache with new data
-  placeCache.set(`place:id:${result.id}`, result, placeCache.TTL_SHORT_MS)
-  placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result)
+  updateCacheForPlace(result)
 
   return result
 }
@@ -303,87 +265,25 @@ export async function ensurePlaceFromGoogleData(
 
 export async function ensurePlacesFromGoogleData(
   placesData: PlaceInsert[],
-  buildPhotoMediaUrl?: (url: string) => string
+  buildPhotoMediaUrl?: (url: string) => string,
+  placeImagesService?: PlaceImagesService
 ): Promise<PlaceSelect[]> {
   if (placesData.length === 0) {
     return []
   }
 
-  // Process each place's photos in parallel
-  const processedPlacesData = await Promise.all(
-    placesData.map(async (data) => {
-      let processedPhotos = data.photos ?? null
-      let processedImageUrl = data.imageUrl ?? null
-
-      if (buildPhotoMediaUrl) {
-        processedPhotos = await processPlacePhotos(
-          data.googleMapsId,
-          data.photos ?? null,
-          buildPhotoMediaUrl
-        )
-
-        // Also process the main imageUrl if it's a Google Photos URL
-        if (processedImageUrl && isGooglePhotosUrl(processedImageUrl)) {
-          const supabaseUrl = await downloadAndStorePlaceImage(
-            data.googleMapsId,
-            processedImageUrl,
-            buildPhotoMediaUrl
-          )
-          processedImageUrl = supabaseUrl || processedImageUrl
-        }
-      }
-
-      const imageUrl =
-        processedImageUrl ??
-        (processedPhotos && processedPhotos.length > 0 ? processedPhotos[0] : null)
-
-      return {
-        ...data,
-        photos: processedPhotos,
-        imageUrl,
-      }
-    })
+  const insertValues = await Promise.all(
+    placesData.map((data) =>
+      preparePlaceInsertData(data, { buildPhotoMediaUrl, placeImagesService })
+    )
   )
-
-  const insertValues = processedPlacesData.map((data) => {
-    return {
-      id: crypto.randomUUID(),
-      googleMapsId: data.googleMapsId,
-      name: data.name,
-      address: data.address ?? null,
-      latitude: data.latitude ?? null,
-      longitude: data.longitude ?? null,
-      location: data.location ?? toLocationTuple(data.latitude, data.longitude),
-      types: data.types ?? null,
-      rating: data.rating ?? null,
-      websiteUri: data.websiteUri ?? null,
-      phoneNumber: data.phoneNumber ?? null,
-      priceLevel: data.priceLevel ?? null,
-      photos: data.photos ?? null,
-      imageUrl: data.imageUrl ?? null,
-    }
-  })
 
   const results = await db
     .insert(place)
     .values(insertValues)
     .onConflictDoUpdate({
       target: place.googleMapsId,
-      set: {
-        name: sql`EXCLUDED.name`,
-        address: sql`EXCLUDED.address`,
-        latitude: sql`EXCLUDED.latitude`,
-        longitude: sql`EXCLUDED.longitude`,
-        location: sql`EXCLUDED.location`,
-        types: sql`EXCLUDED.types`,
-        rating: sql`EXCLUDED.rating`,
-        websiteUri: sql`EXCLUDED."websiteUri"`,
-        phoneNumber: sql`EXCLUDED."phoneNumber"`,
-        priceLevel: sql`EXCLUDED."priceLevel"`,
-        photos: sql`EXCLUDED.photos`,
-        imageUrl: sql`COALESCE(EXCLUDED."imageUrl", CASE WHEN EXCLUDED.photos IS NOT NULL AND array_length(EXCLUDED.photos, 1) > 0 THEN EXCLUDED.photos[1] ELSE place."imageUrl" END)`,
-        updatedAt: new Date().toISOString(),
-      },
+      set: placeUpdateSet,
     })
     .returning()
 
@@ -420,30 +320,10 @@ export async function createOrUpdatePlace(
     .returning()
 
   if (updated) {
-    // Invalidate and update cache
-    placeCache.delete(`place:id:${id}`)
-    placeCache.delete(`place:googleMapsId:${updated.googleMapsId}`)
-    placeCache.set(`place:id:${id}`, updated, placeCache.TTL_SHORT_MS)
-    placeCache.set(`place:googleMapsId:${updated.googleMapsId}`, updated)
+    updateCacheForPlace(updated)
   }
 
   return updated
-}
-
-/**
- * Build a Google Places media URL for a photo reference.
- * Kept here to avoid cross-package imports; matches the behavior in apps/rocco/google-places.server
- */
-function buildGooglePlaceMediaUrl(photoName: string, maxWidthPx = 1600, maxHeightPx = 1200) {
-  const key = env.GOOGLE_API_KEY
-  if (!key) {
-    throw new Error('Google API key not configured')
-  }
-  const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${photoName}/media`)
-  url.searchParams.set('maxWidthPx', String(maxWidthPx))
-  url.searchParams.set('maxHeightPx', String(maxHeightPx))
-  url.searchParams.set('key', key)
-  return url.toString()
 }
 
 /**
@@ -452,8 +332,13 @@ function buildGooglePlaceMediaUrl(photoName: string, maxWidthPx = 1600, maxHeigh
 async function fetchGooglePlacePhotoNames(
   googleMapsId: string,
   limit = 6,
-  forceFresh = false
+  forceFresh = false,
+  apiKey?: string
 ): Promise<string[]> {
+  if (!apiKey) {
+    throw new Error('Google API key required to fetch photo names')
+  }
+
   // Use the same fields approach as apps/rocco
   const url = new URL(`${GOOGLE_PLACES_BASE_URL}/places/${googleMapsId}`)
   if (forceFresh) {
@@ -461,7 +346,7 @@ async function fetchGooglePlacePhotoNames(
   }
   url.searchParams.set('fields', 'photos')
 
-  const headers = new Headers({ 'X-Goog-Api-Key': env.GOOGLE_API_KEY || '' })
+  const headers = new Headers({ 'X-Goog-Api-Key': apiKey })
 
   const res = await fetch(url.toString(), { headers })
   if (!res.ok) {
@@ -484,7 +369,13 @@ async function fetchGooglePlacePhotoNames(
  */
 export async function updatePlacePhotosFromGoogle(
   placeId: string,
-  options?: { forceFresh?: boolean }
+  options?: {
+    forceFresh?: boolean
+    // Developer must provide a service with API key for downloading photos
+    placeImagesService?: PlaceImagesService
+    googleApiKey?: string
+    buildPhotoMediaUrl?: (url: string) => string
+  }
 ): Promise<boolean> {
   const forceFresh = options?.forceFresh ?? false
   const existing = await getPlaceById(placeId)
@@ -492,7 +383,18 @@ export async function updatePlacePhotosFromGoogle(
     return false
   }
 
-  const fetchedPhotoNames = await fetchGooglePlacePhotoNames(existing.googleMapsId, 6, forceFresh)
+  if (!(options?.placeImagesService && options?.googleApiKey)) {
+    throw new Error(
+      'updatePlacePhotosFromGoogle requires placeImagesService and googleApiKey in options'
+    )
+  }
+
+  const fetchedPhotoNames = await fetchGooglePlacePhotoNames(
+    existing.googleMapsId,
+    6,
+    forceFresh,
+    options.googleApiKey
+  )
   if (!fetchedPhotoNames || fetchedPhotoNames.length === 0) {
     return false
   }
@@ -514,10 +416,11 @@ export async function updatePlacePhotosFromGoogle(
     imageUrl: existing.imageUrl ?? null,
   }
 
-  // Call upsertPlace with our internal media URL builder
+  // Call upsertPlace with the provided media URL builder and service
   const updated = await upsertPlace({
     data: placeData,
-    buildPhotoMediaUrl: buildGooglePlaceMediaUrl,
+    buildPhotoMediaUrl: options?.buildPhotoMediaUrl,
+    placeImagesService: options?.placeImagesService,
   })
 
   // If the DB record now includes photos, return true

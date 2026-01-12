@@ -1,12 +1,12 @@
-import { buildPhotoMediaUrl as buildPhotoMediaUrlUtil } from '@hominem/utils/images'
 import { logger } from '@hominem/utils/logger'
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
 import { db } from '../db'
 import { item, type ListSelect, list, place, userLists, users } from '../db/schema'
-import { downloadAndStorePlaceImage, isGooglePhotosUrl } from '../services/place-images.service'
+import { isGooglePhotosUrl, type PlaceImagesService } from '../services/place-images.service'
 import { createOrUpdatePlace } from '../services/places.service'
 import { formatList } from './list-crud.service'
 import { getListPlaces, getListPlacesMap } from './list-items.service'
+import { createPlacePhotoUrlBuilder } from '@hominem/utils/images'
 import type { List, ListUser, ListWithSpreadOwner } from './types'
 
 /**
@@ -575,18 +575,12 @@ export async function getListOwnedByUser(
   return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) })
 }
 
-export function getDefaultPhotoUrlBuilder() {
-  return (ref: string) =>
-    process.env.GOOGLE_API_KEY
-      ? buildPhotoMediaUrlUtil({ photoName: ref, key: process.env.GOOGLE_API_KEY })
-      : ref
-}
-
 export async function getListsContainingPlace(
   userId: string,
   placeId?: string,
   googleMapsId?: string,
-  buildPhotoMediaUrl: (url: string) => string = getDefaultPhotoUrlBuilder()
+  buildPhotoMediaUrl: (url: string) => string = (ref: string) => ref,
+  placeImagesService?: PlaceImagesService
 ): Promise<Array<{ id: string; name: string; itemCount: number; imageUrl: string | null }>> {
   if (!(placeId || googleMapsId)) {
     return []
@@ -660,11 +654,16 @@ export async function getListsContainingPlace(
         let imageUrl = preferredPlace.imageUrl
 
         // Lazy migration: if this is a Google Photos URL, try to download and update it
-        if (buildPhotoMediaUrl && isGooglePhotosUrl(imageUrl) && preferredPlace.googleMapsId) {
+        if (
+          buildPhotoMediaUrl &&
+          isGooglePhotosUrl(imageUrl) &&
+          preferredPlace.googleMapsId &&
+          placeImagesService
+        ) {
           try {
-            const newUrl = await downloadAndStorePlaceImage(
+            const newUrl = await placeImagesService.downloadAndStorePlaceImage(
               preferredPlace.googleMapsId,
-              imageUrl.startsWith('http') ? imageUrl : buildPhotoMediaUrl(imageUrl)
+              imageUrl
             )
 
             if (newUrl) {
@@ -702,4 +701,16 @@ export async function getListsContainingPlace(
     })
     return []
   }
+}
+
+/**
+ * Get a default photo URL builder that uses GOOGLE_API_KEY if available
+ */
+export function getDefaultPhotoUrlBuilder(): (ref: string) => string {
+  const apiKey = process.env.GOOGLE_API_KEY
+  if (apiKey) {
+    const builder = createPlacePhotoUrlBuilder(apiKey)
+    return (ref: string) => builder(ref) || ref
+  }
+  return (ref: string) => ref
 }

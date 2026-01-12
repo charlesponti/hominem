@@ -11,6 +11,7 @@
     "./images": "./src/images.ts",
     "./imports": "./src/imports.ts",
     "./google": "./src/google.ts",
+    "./http": "./src/http.ts",
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
     "./jobs": "./src/jobs/index.ts",

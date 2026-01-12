@@ -64,3 +64,44 @@ export const buildPhotoMediaUrl = ({
   url.searchParams.set('key', key)
   return url.toString()
 }
+
+/**
+ * Factory to create a simple URL builder for Google place photos.
+ * Returns a function `(path: string) => string | null` which:
+ * - returns `null` if `apiKey` is not provided
+ * - returns absolute URLs unchanged
+ * - strips query params from photo references before building
+ * - warns if the path doesn't look like a places photos reference
+ */
+export function createPlacePhotoUrlBuilder(
+  apiKey?: string,
+  opts?: { maxWidthPx?: number; maxHeightPx?: number }
+): (path: string) => string | null {
+  return (path: string) => {
+    if (!apiKey) {
+      return null
+    }
+    if (!path) {
+      return null
+    }
+    if (path.startsWith('http')) {
+      return path
+    }
+
+    const cleanPath = path.split('?')[0]
+    if (!cleanPath) {
+      return null
+    }
+
+    if (!(cleanPath.includes('places/') && cleanPath.includes('/photos/'))) {
+      console.warn(`Suspicious photo path format: ${cleanPath}`)
+    }
+
+    return buildPhotoMediaUrl({
+      key: apiKey,
+      photoName: cleanPath,
+      maxWidthPx: opts?.maxWidthPx ?? 1600,
+      maxHeightPx: opts?.maxHeightPx ?? 1600,
+    })
+  }
+}

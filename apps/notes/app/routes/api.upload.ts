@@ -1,10 +1,10 @@
-import { createSupabaseServerClient } from '../lib/auth.server'
 import { FileProcessorService } from '@hominem/data/files'
 import { indexProcessedFile } from '@hominem/data/vector'
 import { fileStorageService } from '@hominem/utils/supabase'
 import type { ActionFunctionArgs } from 'react-router'
 import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upload.js'
 import { jsonResponse } from '~/lib/utils/json-response'
+import { createSupabaseServerClient } from '../lib/auth.server'
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -44,9 +44,9 @@ export async function action({ request }: ActionFunctionArgs) {
         // Store the file with user authentication
         const storedFile = await fileStorageService.storeFile(
           Buffer.from(buffer),
-          file.name,
           file.type,
-          user.id
+          user.id,
+          { filename: file.name }
         )
 
         // Process the file based on its type

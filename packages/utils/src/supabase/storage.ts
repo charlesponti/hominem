@@ -101,17 +101,19 @@ export class SupabaseStorageService {
   /**
    * Store a file in Supabase storage (general purpose)
    * @param buffer - The file buffer
-   * @param originalName - The original file name
    * @param mimetype - The file MIME type
    * @param userId - The user ID for organizing files
+   * @param options - Optional configuration
    * @returns StoredFile object with metadata
    */
   async storeFile(
     buffer: Buffer,
-    originalName: string,
     mimetype: string,
     userId: string,
-    options?: { filename?: string; keepOriginalName?: boolean }
+    options?: {
+      filename?: string // base filename to use (extension auto-appended)
+      originalName?: string // for record-keeping, defaults to filename or 'file'
+    }
   ): Promise<StoredFile> {
     if (buffer.byteLength > this.maxFileSize) {
       throw new Error(`File size exceeds maximum limit of ${this.maxFileSize} bytes`)
@@ -120,20 +122,17 @@ export class SupabaseStorageService {
     await this.ensureBucket()
 
     const id = crypto.randomUUID()
+    const originalName = options?.originalName || options?.filename || 'file'
     const extension = this.getFileExtension(originalName, mimetype)
 
     // Determine stored filename.
     // Priority:
     // 1) options.filename (sanitized)
-    // 2) keepOriginalName -> sanitized originalName
-    // 3) generated id + extension (legacy behavior)
+    // 2) generated id + extension (legacy behavior)
     let storedName: string
     if (options?.filename) {
       // sanitize provided filename
       const sanitized = options.filename.replace(/[^a-zA-Z0-9.-]/g, '_')
-      storedName = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`
-    } else if (options?.keepOriginalName) {
-      const sanitized = originalName.replace(/[^a-zA-Z0-9.-]/g, '_')
       storedName = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`
     } else {
       storedName = `${id}${extension}`
