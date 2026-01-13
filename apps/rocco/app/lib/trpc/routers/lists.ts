@@ -54,7 +54,7 @@ export const listsRouter = router({
     .input(
       z.object({
         name: z.string().min(1),
-        description: z.string().min(1),
+        description: z.string().optional(),
         isPublic: z.boolean().default(false),
       }),
     )
