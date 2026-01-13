@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".env.local", "**/.env.*local"],
+  "globalDependencies": ["package.json", "bun.lock", ".env.local", "**/.env.*local"],
   "globalEnv": [
     "SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -22,36 +22,54 @@
   ],
   "tasks": {
     "build": {
-      "outputs": [".next/**", "!.next/cache/**", "build/**", "dist/**", "*.tsbuildinfo"],
-      "dependsOn": ["^build"]
-    },
-    "lint": {
-      "outputs": []
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true,
-      "dependsOn": ["@hominem/data#build"]
-    },
-    "test": {
-      "dependsOn": [],
-      "outputs": []
-    },
-    "typecheck": {
       "dependsOn": ["^build"],
-      "outputs": []
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".react-router/**",
+        "build/**",
+        "dist/**",
+        "*.tsbuildinfo"
+      ]
     },
-    "format": {
-      "outputs": []
+    "check": {
+      "dependsOn": ["lint", "typecheck", "test"]
+    },
+    "clean": {
+      "cache": false
     },
     "db:migrate": {
       "cache": false
     },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["@hominem/data#build"],
+      "persistent": true
+    },
+    "format": {
+      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
+      "outputs": []
+    },
+    "lint": {
+      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
+      "outputs": []
+    },
     "start": {
       "dependsOn": ["build"]
     },
-    "clean": {
-      "cache": false
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "app/**/*.{ts,tsx,js,jsx}",
+        "test/**/*.{ts,tsx,js,jsx}"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"],
+      "outputs": ["*.tsbuildinfo"]
     }
   }
 }
