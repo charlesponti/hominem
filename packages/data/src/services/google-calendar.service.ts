@@ -1,29 +1,29 @@
-import { and, eq } from 'drizzle-orm'
-import { OAuth2Client } from 'google-auth-library'
-import { type calendar_v3, google } from 'googleapis'
-import { v7 as uuidv7 } from 'uuid'
-import { db } from '../db'
-import { type CalendarEventInsert, type EventSourceEnum, events } from '../db/schema'
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { type calendar_v3, google, Auth } from 'googleapis';
+import { v7 as uuidv7 } from 'uuid';
+import { logger } from '@hominem/utils/logger';
+import { db } from '../db';
+import { type CalendarEventInsert, type EventSourceEnum, events } from '../db/schema';
 
-type GoogleCalendarEvent = calendar_v3.Schema$Event
+type GoogleCalendarEvent = calendar_v3.Schema$Event;
 
 export interface GoogleTokens {
-  accessToken: string
-  refreshToken?: string
+  accessToken: string;
+  refreshToken?: string;
 }
 
 export interface SyncResult {
-  success: boolean
-  created: number
-  updated: number
-  deleted: number
-  errors: string[]
+  success: boolean;
+  created: number;
+  updated: number;
+  deleted: number;
+  errors: string[];
 }
 
 export interface GoogleCalendarSyncStatus {
-  lastSyncedAt: Date | null
-  syncError: string | null
-  eventCount: number
+  lastSyncedAt: Date | null;
+  syncError: string | null;
+  eventCount: number;
 }
 
 /**
@@ -33,14 +33,14 @@ export interface GoogleCalendarSyncStatus {
 export function convertGoogleCalendarEvent(
   googleEvent: GoogleCalendarEvent,
   calendarId: string,
-  userId: string
+  userId: string,
 ): CalendarEventInsert {
   if (!googleEvent.id) {
-    throw new Error('Google Calendar event must have an id')
+    throw new Error('Google Calendar event must have an id');
   }
 
-  const startDate = googleEvent.start?.dateTime || googleEvent.start?.date
-  const endDate = googleEvent.end?.dateTime || googleEvent.end?.date
+  const startDate = googleEvent.start?.dateTime || googleEvent.start?.date;
+  const endDate = googleEvent.end?.dateTime || googleEvent.end?.date;
 
   return {
     id: uuidv7(),
@@ -56,28 +56,28 @@ export function convertGoogleCalendarEvent(
     calendarId,
     lastSyncedAt: new Date(),
     syncError: null,
-  }
+  };
 }
 
 export class GoogleCalendarService {
-  private oauth2Client: OAuth2Client
-  private calendar: ReturnType<typeof google.calendar>
-  private userId: string
+  private oauth2Client: Auth.OAuth2Client;
+  private calendar: ReturnType<typeof google.calendar>;
+  private userId: string;
 
   constructor(userId: string, tokens: GoogleTokens) {
-    this.userId = userId
-    this.oauth2Client = new OAuth2Client(
+    this.userId = userId;
+    this.oauth2Client = new Auth.OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
-    )
+      process.env.GOOGLE_REDIRECT_URI,
+    );
 
     this.oauth2Client.setCredentials({
       access_token: tokens.accessToken,
       refresh_token: tokens.refreshToken,
-    })
+    });
 
-    this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client })
+    this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
   }
 
   /**
@@ -86,7 +86,7 @@ export class GoogleCalendarService {
   async syncGoogleCalendarEvents(
     calendarId = 'primary',
     timeMin?: string,
-    timeMax?: string
+    timeMax?: string,
   ): Promise<SyncResult> {
     const result: SyncResult = {
       success: true,
@@ -94,97 +94,156 @@ export class GoogleCalendarService {
       updated: 0,
       deleted: 0,
       errors: [],
-    }
+    };
 
     try {
-      // Fetch events from Google Calendar
-      const response = await this.calendar.events.list({
-        calendarId,
-        timeMin: timeMin || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days ago
-        timeMax,
-        maxResults: 2500,
-        singleEvents: true,
-        orderBy: 'startTime',
-      })
+      // Fetch all events from Google Calendar with pagination
+      const googleEvents: GoogleCalendarEvent[] = [];
+      let pageToken: string | undefined;
 
-      const googleEvents = response.data.items || []
+      const timeMinParam = timeMin || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+      do {
+        const response = await this.calendar.events.list({
+          calendarId,
+          timeMin: timeMinParam,
+          timeMax,
+          maxResults: 2500,
+          singleEvents: true,
+          orderBy: 'startTime',
+          pageToken,
+        });
+
+        if (response.data.items) {
+          googleEvents.push(...response.data.items);
+        }
+        pageToken = response.data.nextPageToken || undefined;
+      } while (pageToken);
+
+      logger.info('Fetched events from Google Calendar', {
+        userId: this.userId,
+        calendarId,
+        count: googleEvents.length,
+      });
 
       // Get existing synced events from our database for this calendar
       const existingEvents = await db
         .select()
         .from(events)
-        .where(and(eq(events.userId, this.userId), eq(events.calendarId, calendarId)))
+        .where(
+          and(
+            eq(events.userId, this.userId),
+            eq(events.calendarId, calendarId),
+            eq(events.source, 'google_calendar'),
+          ),
+        );
 
-      const existingEventsByExternalId = new Map(existingEvents.map((e) => [e.externalId, e]))
-
-      const googleEventIds = new Set<string>()
+      const existingEventsByExternalId = new Map(existingEvents.map((e) => [e.externalId, e]));
+      const googleEventIds = new Set<string>();
+      const eventsToUpsert: CalendarEventInsert[] = [];
 
       // Process each Google Calendar event
       for (const googleEvent of googleEvents) {
-        if (!googleEvent.id) {
-          continue
-        }
-
-        googleEventIds.add(googleEvent.id)
+        if (!googleEvent.id) continue;
+        googleEventIds.add(googleEvent.id);
 
         try {
-          const eventData = convertGoogleCalendarEvent(googleEvent, calendarId, this.userId)
-          const existingEvent = existingEventsByExternalId.get(googleEvent.id)
+          const eventData = convertGoogleCalendarEvent(googleEvent, calendarId, this.userId);
+          const existingEvent = existingEventsByExternalId.get(googleEvent.id);
 
           if (existingEvent) {
-            // Check if Google Calendar event is newer
-            const googleUpdated = googleEvent.updated ? new Date(googleEvent.updated) : null
-            const localUpdated = existingEvent.updatedAt
+            const googleUpdated = googleEvent.updated ? new Date(googleEvent.updated) : null;
+            const localUpdated = existingEvent.updatedAt;
 
-            if (googleUpdated && localUpdated && googleUpdated.getTime() > localUpdated.getTime()) {
-              // Update existing event
-              await this.updateLocalEvent(
-                existingEvent.id,
-                eventData,
-                googleEvent.updated ?? undefined
-              )
-              result.updated++
+            if (
+              !googleUpdated ||
+              !localUpdated ||
+              googleUpdated.getTime() > localUpdated.getTime()
+            ) {
+              // Prepare for update
+              eventsToUpsert.push({
+                ...eventData,
+                id: existingEvent.id, // Keep original ID
+                createdAt: existingEvent.createdAt,
+                updatedAt: googleUpdated || new Date(),
+              });
+              result.updated++;
             }
           } else {
-            // Create new event
-            await this.createLocalEvent(eventData, googleEvent.updated || undefined)
-            result.created++
+            // Prepare for insert
+            eventsToUpsert.push({
+              ...eventData,
+              updatedAt: googleEvent.updated ? new Date(googleEvent.updated) : new Date(),
+            });
+            result.created++;
           }
         } catch (error) {
           result.errors.push(
-            `Failed to sync event ${googleEvent.id}: ${
+            `Failed to process event ${googleEvent.id}: ${
               error instanceof Error ? error.message : String(error)
-            }`
-          )
+            }`,
+          );
         }
       }
 
-      // Handle deleted events (events in our DB that no longer exist in Google Calendar)
-      for (const existingEvent of existingEvents) {
-        if (existingEvent.externalId && !googleEventIds.has(existingEvent.externalId)) {
-          try {
-            await db
-              .update(events)
-              .set({ deletedAt: new Date() })
-              .where(eq(events.id, existingEvent.id))
-            result.deleted++
-          } catch (error) {
-            result.errors.push(
-              `Failed to mark event as deleted ${existingEvent.id}: ${
-                error instanceof Error ? error.message : String(error)
-              }`
-            )
-          }
+      // Batch Upsert
+      if (eventsToUpsert.length > 0) {
+        const CHUNK_SIZE = 500;
+        for (let i = 0; i < eventsToUpsert.length; i += CHUNK_SIZE) {
+          const chunk = eventsToUpsert.slice(i, i + CHUNK_SIZE);
+          await db
+            .insert(events)
+            .values(chunk)
+            .onConflictDoUpdate({
+              target: [events.externalId, events.calendarId],
+              set: {
+                title: sql`excluded.title`,
+                description: sql`excluded.description`,
+                date: sql`excluded.date`,
+                dateStart: sql`excluded.date_start`,
+                dateEnd: sql`excluded.date_end`,
+                lastSyncedAt: sql`excluded.last_synced_at`,
+                syncError: sql`excluded.sync_error`,
+                updatedAt: sql`excluded.updated_at`,
+              },
+            });
         }
       }
+
+      // Handle deleted events
+      const idsToMarkDeleted: string[] = existingEvents
+        .filter((e) => e.externalId && !googleEventIds.has(e.externalId) && !e.deletedAt)
+        .map((e) => e.id);
+
+      if (idsToMarkDeleted.length > 0) {
+        const CHUNK_SIZE = 500;
+        for (let i = 0; i < idsToMarkDeleted.length; i += CHUNK_SIZE) {
+          const chunk = idsToMarkDeleted.slice(i, i + CHUNK_SIZE);
+          await db.update(events).set({ deletedAt: new Date() }).where(inArray(events.id, chunk));
+          result.deleted += chunk.length;
+        }
+      }
+
+      logger.info('Google Calendar sync completed', {
+        userId: this.userId,
+        calendarId,
+        created: result.created,
+        updated: result.updated,
+        deleted: result.deleted,
+        errors: result.errors.length,
+      });
     } catch (error) {
-      result.success = false
-      result.errors.push(
-        `Failed to sync Google Calendar: ${error instanceof Error ? error.message : String(error)}`
-      )
+      result.success = false;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Failed to sync Google Calendar: ${errorMessage}`);
+      logger.error('Google Calendar sync failed', {
+        userId: this.userId,
+        calendarId,
+        error: errorMessage,
+      });
     }
 
-    return result
+    return result;
   }
 
   /**
@@ -192,16 +251,16 @@ export class GoogleCalendarService {
    */
   async pushEventToGoogle(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const eventData = await db.select().from(events).where(eq(events.id, eventId)).limit(1)
+      const eventData = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
 
       if (eventData.length === 0) {
-        return { success: false, error: 'Event not found' }
+        return { success: false, error: 'Event not found' };
       }
 
-      const event = eventData[0]
+      const event = eventData[0];
 
       if (!event) {
-        return { success: false, error: 'Event not found' }
+        return { success: false, error: 'Event not found' };
       }
 
       const googleEvent: Record<string, unknown> = {
@@ -213,7 +272,7 @@ export class GoogleCalendarService {
         end: {
           dateTime: event.dateEnd?.toISOString() || event.date.toISOString(),
         },
-      }
+      };
 
       if (event.externalId && event.calendarId) {
         // Update existing Google Calendar event
@@ -221,14 +280,14 @@ export class GoogleCalendarService {
           calendarId: event.calendarId,
           eventId: event.externalId,
           requestBody: googleEvent,
-        })
+        });
       } else {
         // Create new Google Calendar event
-        const calendarId = event.calendarId || 'primary'
+        const calendarId = event.calendarId || 'primary';
         const result = await this.calendar.events.insert({
           calendarId,
           requestBody: googleEvent,
-        })
+        });
 
         // Update our database with the new external ID
         await db
@@ -239,15 +298,21 @@ export class GoogleCalendarService {
             source: 'google_calendar' as EventSourceEnum,
             lastSyncedAt: new Date(),
           })
-          .where(eq(events.id, eventId))
+          .where(eq(events.id, eventId));
       }
 
-      return { success: true }
+      return { success: true };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to push event to Google Calendar', {
+        eventId,
+        userId: this.userId,
+        error: errorMessage,
+      });
       return {
         success: false,
-        error: error instanceof Error ? error.message : String(error),
-      }
+        error: errorMessage,
+      };
     }
   }
 
@@ -256,19 +321,26 @@ export class GoogleCalendarService {
    */
   async deleteEventFromGoogle(
     eventId: string,
-    calendarId: string
+    calendarId: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
       await this.calendar.events.delete({
         calendarId,
         eventId,
-      })
-      return { success: true }
+      });
+      return { success: true };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to delete event from Google Calendar', {
+        eventId,
+        calendarId,
+        userId: this.userId,
+        error: errorMessage,
+      });
       return {
         success: false,
-        error: error instanceof Error ? error.message : String(error),
-      }
+        error: errorMessage,
+      };
     }
   }
 
@@ -277,25 +349,28 @@ export class GoogleCalendarService {
    */
   async getCalendarList(): Promise<Array<{ id: string; summary: string }>> {
     try {
-      const response = await this.calendar.calendarList.list()
+      const response = await this.calendar.calendarList.list();
       return (
         response.data.items
           ?.filter(
             (
-              item
+              item,
             ): item is calendar_v3.Schema$CalendarListEntry & {
-              id: string
-              summary: string
-            } => Boolean(item.id && item.summary)
+              id: string;
+              summary: string;
+            } => Boolean(item.id && item.summary),
           )
           .map((item) => ({
             id: item.id,
             summary: item.summary,
           })) || []
-      )
+      );
     } catch (error) {
-      console.error('Error fetching calendar list:', error)
-      throw new Error('Failed to fetch calendar list')
+      logger.error('Error fetching calendar list', {
+        userId: this.userId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new Error('Failed to fetch calendar list');
     }
   }
 
@@ -307,49 +382,15 @@ export class GoogleCalendarService {
       .select()
       .from(events)
       .where(and(eq(events.userId, this.userId), eq(events.source, 'google_calendar')))
-      .orderBy(events.lastSyncedAt)
+      .orderBy(events.lastSyncedAt);
 
-    const lastEvent = syncedEvents[syncedEvents.length - 1]
+    const lastEvent = syncedEvents[syncedEvents.length - 1];
 
     return {
       lastSyncedAt: lastEvent?.lastSyncedAt || null,
       syncError: lastEvent?.syncError || null,
       eventCount: syncedEvents.length,
-    }
-  }
-
-  /**
-   * Create a local event from Google Calendar data
-   */
-  private async createLocalEvent(eventData: CalendarEventInsert, googleUpdatedAt?: string) {
-    await db.insert(events).values({
-      ...eventData,
-      createdAt: new Date(),
-      updatedAt: googleUpdatedAt ? new Date(googleUpdatedAt) : new Date(),
-    })
-  }
-
-  /**
-   * Update a local event with Google Calendar data
-   */
-  private async updateLocalEvent(
-    eventId: string,
-    eventData: CalendarEventInsert,
-    googleUpdatedAt?: string
-  ) {
-    await db
-      .update(events)
-      .set({
-        title: eventData.title,
-        description: eventData.description,
-        date: eventData.date,
-        dateStart: eventData.dateStart,
-        dateEnd: eventData.dateEnd,
-        lastSyncedAt: new Date(),
-        syncError: null,
-        updatedAt: googleUpdatedAt ? new Date(googleUpdatedAt) : new Date(),
-      })
-      .where(eq(events.id, eventId))
+    };
   }
 }
 
@@ -357,31 +398,33 @@ export class GoogleCalendarService {
  * Helper to refresh Google OAuth token if needed
  */
 export async function refreshGoogleToken(
-  refreshToken: string
+  refreshToken: string,
 ): Promise<{ accessToken: string; expiresIn: number } | null> {
   try {
-    const oauth2Client = new OAuth2Client(
+    const oauth2Client = new Auth.OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
-    )
+      process.env.GOOGLE_REDIRECT_URI,
+    );
 
     oauth2Client.setCredentials({
       refresh_token: refreshToken,
-    })
+    });
 
-    const { credentials } = await oauth2Client.refreshAccessToken()
+    const { credentials } = await oauth2Client.refreshAccessToken();
 
     if (!credentials.access_token) {
-      return null
+      return null;
     }
 
     return {
       accessToken: credentials.access_token,
       expiresIn: credentials.expiry_date || 3600,
-    }
+    };
   } catch (error) {
-    console.error('Failed to refresh Google token:', error)
-    return null
+    logger.error('Failed to refresh Google token', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
   }
 }

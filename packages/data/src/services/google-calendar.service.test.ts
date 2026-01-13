@@ -1,45 +1,48 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { convertGoogleCalendarEvent, GoogleCalendarService } from './google-calendar.service'
-
-// Mock the google-auth-library
-vi.mock('google-auth-library', () => {
-  class MockOAuth2Client {
-    setCredentials = vi.fn()
-  }
-  return {
-    OAuth2Client: MockOAuth2Client,
-  }
-})
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { convertGoogleCalendarEvent, GoogleCalendarService } from './google-calendar.service';
 
 // Mock googleapis
-vi.mock('googleapis', () => ({
-  google: {
-    calendar: vi.fn(() => ({
-      events: {
-        list: vi.fn(),
-        insert: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-      },
-      calendarList: {
-        list: vi.fn(),
-      },
-    })),
-  },
-}))
+vi.mock('googleapis', () => {
+  class MockOAuth2Client {
+    setCredentials = vi.fn();
+    refreshAccessToken = vi.fn();
+  }
+  return {
+    Auth: {
+      OAuth2Client: MockOAuth2Client,
+    },
+    google: {
+      calendar: vi.fn(() => ({
+        events: {
+          list: vi.fn(),
+          insert: vi.fn(),
+          update: vi.fn(),
+          delete: vi.fn(),
+        },
+        calendarList: {
+          list: vi.fn(),
+        },
+      })),
+    },
+  };
+});
 
 // Mock database
 vi.mock('../db', () => ({
   db: {
     select: vi.fn(() => ({
       from: vi.fn(() => ({
-        where: vi.fn(() => ({
-          orderBy: vi.fn(() => Promise.resolve([])),
-        })),
+        where: vi.fn().mockImplementation(() => {
+          const promise = Promise.resolve([]) as any;
+          promise.orderBy = vi.fn().mockReturnValue(promise);
+          return promise;
+        }),
       })),
     })),
     insert: vi.fn(() => ({
-      values: vi.fn(() => Promise.resolve()),
+      values: vi.fn(() => ({
+        onConflictDoUpdate: vi.fn(() => Promise.resolve()),
+      })),
     })),
     update: vi.fn(() => ({
       set: vi.fn(() => ({
@@ -47,38 +50,38 @@ vi.mock('../db', () => ({
       })),
     })),
   },
-}))
+}));
 
 describe('GoogleCalendarService', () => {
-  const mockUserId = 'user-123'
+  const mockUserId = 'user-123';
   const mockTokens = {
     accessToken: 'mock-access-token',
     refreshToken: 'mock-refresh-token',
-  }
+  };
 
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   describe('constructor', () => {
     it('should create a service instance with valid tokens', () => {
-      const service = new GoogleCalendarService(mockUserId, mockTokens)
-      expect(service).toBeDefined()
-    })
-  })
+      const service = new GoogleCalendarService(mockUserId, mockTokens);
+      expect(service).toBeDefined();
+    });
+  });
 
   describe('getSyncStatus', () => {
     it('should return sync status with no events', async () => {
-      const service = new GoogleCalendarService(mockUserId, mockTokens)
-      const status = await service.getSyncStatus()
+      const service = new GoogleCalendarService(mockUserId, mockTokens);
+      const status = await service.getSyncStatus();
 
       expect(status).toEqual({
         lastSyncedAt: null,
         syncError: null,
         eventCount: 0,
-      })
-    })
-  })
+      });
+    });
+  });
 
   describe('convertGoogleCalendarEvent', () => {
     it('should convert Google Calendar event to internal format', () => {
@@ -92,17 +95,17 @@ describe('GoogleCalendarService', () => {
         end: {
           dateTime: '2024-01-01T11:00:00Z',
         },
-      }
+      };
 
-      const result = convertGoogleCalendarEvent(googleEvent, 'primary', mockUserId)
+      const result = convertGoogleCalendarEvent(googleEvent, 'primary', mockUserId);
 
-      expect(result.title).toBe('Test Event')
-      expect(result.description).toBe('Test Description')
-      expect(result.source).toBe('google_calendar')
-      expect(result.externalId).toBe('google-event-1')
-      expect(result.calendarId).toBe('primary')
-      expect(result.userId).toBe(mockUserId)
-    })
+      expect(result.title).toBe('Test Event');
+      expect(result.description).toBe('Test Description');
+      expect(result.source).toBe('google_calendar');
+      expect(result.externalId).toBe('google-event-1');
+      expect(result.calendarId).toBe('primary');
+      expect(result.userId).toBe(mockUserId);
+    });
 
     it('should handle events without description', () => {
       const googleEvent = {
@@ -114,13 +117,13 @@ describe('GoogleCalendarService', () => {
         end: {
           dateTime: '2024-01-01T11:00:00Z',
         },
-      }
+      };
 
-      const result = convertGoogleCalendarEvent(googleEvent, 'primary', mockUserId)
+      const result = convertGoogleCalendarEvent(googleEvent, 'primary', mockUserId);
 
-      expect(result.title).toBe('Test Event')
-      expect(result.description).toBeNull()
-    })
+      expect(result.title).toBe('Test Event');
+      expect(result.description).toBeNull();
+    });
 
     it('should use default title for events without summary', () => {
       const googleEvent = {
@@ -132,11 +135,68 @@ describe('GoogleCalendarService', () => {
         end: {
           dateTime: '2024-01-01T11:00:00Z',
         },
-      }
+      };
 
-      const result = convertGoogleCalendarEvent(googleEvent, 'primary', mockUserId)
+      const result = convertGoogleCalendarEvent(googleEvent, 'primary', mockUserId);
 
-      expect(result.title).toBe('Untitled Event')
-    })
-  })
-})
+      expect(result.title).toBe('Untitled Event');
+    });
+  });
+
+  describe('syncGoogleCalendarEvents', () => {
+    it('should sync events and handle pagination', async () => {
+      const service = new GoogleCalendarService(mockUserId, mockTokens);
+
+      const mockList = vi
+        .fn()
+        .mockResolvedValueOnce({
+          data: {
+            items: [{ id: 'event-1', summary: 'Event 1' }],
+            nextPageToken: 'page-2',
+          },
+        })
+        .mockResolvedValueOnce({
+          data: {
+            items: [{ id: 'event-2', summary: 'Event 2' }],
+          },
+        });
+
+      // @ts-ignore - access private calendar to mock
+      service.calendar.events.list = mockList;
+
+      const result = await service.syncGoogleCalendarEvents();
+
+      expect(result.success).toBe(true);
+      expect(result.created).toBe(2);
+      expect(mockList).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle deletions', async () => {
+      const service = new GoogleCalendarService(mockUserId, mockTokens);
+
+      const mockList = vi.fn().mockResolvedValue({
+        data: {
+          items: [{ id: 'event-1', summary: 'Event 1' }],
+        },
+      });
+
+      // @ts-ignore
+      service.calendar.events.list = mockList;
+
+      const { db } = await import('../db');
+      vi.mocked(db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi
+            .fn()
+            .mockResolvedValue([
+              { id: 'old-event-id', externalId: 'event-removed', calendarId: 'primary' },
+            ]),
+        }),
+      } as any);
+
+      const result = await service.syncGoogleCalendarEvents();
+
+      expect(result.deleted).toBe(1);
+    });
+  });
+});
