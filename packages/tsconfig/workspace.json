@@ -3,7 +3,9 @@
   "display": "Workspace Shared",
   "extends": "./base.json",
   "compilerOptions": {
+    "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowJs": true,
     "paths": {
       "@hominem/ai/*": ["../../packages/ai/src/*"],
       "@hominem/ai": ["../../packages/ai/src/index.ts"],
@@ -17,5 +19,13 @@
       "@hominem/utils": ["../../packages/utils/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "**/build", "**/dist", ".turbo"]
+  "exclude": [
+    "node_modules",
+    "**/build",
+    "**/dist",
+    ".turbo",
+    ".git",
+    ".DS_Store",
+    "**/.react-router"
+  ]
 }

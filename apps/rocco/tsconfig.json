@@ -1,7 +1,7 @@
 {
   "extends": "../../packages/tsconfig/react.json",
-  "include": ["**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"],
-  "exclude": ["node_modules", "build", "dist", "public"],
+  "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "build", "dist", "public", ".turbo"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "composite": true,
@@ -15,7 +15,13 @@
     "paths": {
       "~/*": ["./app/*"],
       "@hominem/ui/*": ["../../packages/ui/src/*"],
-      "@hominem/ui": ["../../packages/ui/src/index.ts"]
+      "@hominem/ui": ["../../packages/ui/src/index.ts"],
+      "@hominem/utils/*": ["../../packages/utils/src/*"],
+      "@hominem/utils": ["../../packages/utils/src/index.ts"],
+      "@hominem/data/*": ["../../packages/data/src/*"],
+      "@hominem/data": ["../../packages/data/src/index.ts"],
+      "@hominem/auth/*": ["../../packages/auth/src/*"],
+      "@hominem/auth": ["../../packages/auth/src/index.ts"]
     },
     "noEmit": true,
     "resolveJsonModule": true,
