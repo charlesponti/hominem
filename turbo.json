@@ -66,8 +66,11 @@
       ],
       "outputs": []
     },
+    "typegen": {
+      "outputs": [".react-router/**", "app/routes/+types/**/*"]
+    },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "typegen"],
       "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"],
       "outputs": ["*.tsbuildinfo"]
     }

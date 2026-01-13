@@ -20,8 +20,8 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:view": "npx vite preview --outDir coverage/lcov-report",
     "test:watch": "vitest",
-    "typecheck": "react-router typegen && tsc --noEmit",
-    "update-photos": "tsx scripts/update-place-photos.ts"
+    "typecheck": "tsc --noEmit",
+    "typegen": "react-router typegen"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

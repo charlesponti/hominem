@@ -48,13 +48,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
     build: {
       cssCodeSplit: true,
-      minify: isProd ? 'terser' : false,
-      terserOptions: {
-        compress: {
-          drop_console: isProd,
-          drop_debugger: isProd,
-        },
-      },
+      minify: isProd ? 'esbuild' : false,
       rollupOptions: {
         external: ['node:perf_hooks', 'perf_hooks'],
       },
