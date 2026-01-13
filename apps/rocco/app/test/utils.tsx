@@ -1,14 +1,14 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { type RenderOptions, type RenderResult, render } from '@testing-library/react'
-import type { ReactElement, ReactNode } from 'react'
-import { createRoutesStub } from 'react-router'
-import { vi } from 'vitest'
-import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './mocks'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type RenderOptions, type RenderResult, render } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
+import { createRoutesStub } from 'react-router';
+import { vi } from 'vitest';
+import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './mocks';
 
 export interface MockQueryResult<T> {
-  data: T | undefined
-  isLoading: boolean
-  error: Error | null
+  data: T | undefined;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 const mockSupabaseUser = {
@@ -25,7 +25,7 @@ const mockSupabaseUser = {
   aud: 'authenticated',
   created_at: '2023-01-01T00:00:00Z',
   updated_at: '2023-01-01T00:00:00Z',
-}
+};
 
 const mockSession = {
   access_token: 'mock-access-token',
@@ -34,7 +34,7 @@ const mockSession = {
   expires_at: Date.now() + 3600000,
   token_type: 'bearer',
   user: mockSupabaseUser,
-}
+};
 
 vi.mock('~/lib/supabase', () => ({
   supabase: {
@@ -50,7 +50,7 @@ vi.mock('~/lib/supabase', () => ({
       }),
     },
   },
-}))
+}));
 
 const mockSupabaseClient = {
   auth: {
@@ -64,7 +64,7 @@ const mockSupabaseClient = {
       data: { subscription: { unsubscribe: vi.fn() } },
     }),
   },
-}
+};
 
 const mockAuthContextValue = {
   user: mockSupabaseUser,
@@ -75,14 +75,14 @@ const mockAuthContextValue = {
   logout: vi.fn(),
   signIn: vi.fn(),
   userId: USER_ID,
-}
+};
 
 vi.mock('@hominem/auth', () => ({
   SupabaseAuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
   useSupabaseAuth: () => mockAuthContextValue,
   useSupabaseAuthContext: () => mockAuthContextValue,
   getSupabase: () => mockSupabaseClient,
-}))
+}));
 
 export function createTestQueryClient() {
   return new QueryClient({
@@ -94,22 +94,22 @@ export function createTestQueryClient() {
         retry: false,
       },
     },
-  })
+  });
 }
 
 export interface MockMutationResult<TData = unknown> {
-  mutate: ReturnType<typeof vi.fn>
-  mutateAsync: ReturnType<typeof vi.fn>
-  data: TData | null
-  isLoading: boolean
-  isSuccess: boolean
-  isError: boolean
-  error: Error | null
-  isPending: boolean
-  reset: ReturnType<typeof vi.fn>
+  mutate: ReturnType<typeof vi.fn>;
+  mutateAsync: ReturnType<typeof vi.fn>;
+  data: TData | null;
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  error: Error | null;
+  isPending: boolean;
+  reset: ReturnType<typeof vi.fn>;
 }
 
-type UseMutationFn<TData = unknown> = ReturnType<typeof vi.fn<() => MockMutationResult<TData>>>
+type UseMutationFn<TData = unknown> = ReturnType<typeof vi.fn<() => MockMutationResult<TData>>>;
 
 function createUseMutationQuery<TData = unknown>(): UseMutationFn<TData> {
   const defaultResult: MockMutationResult<TData> = {
@@ -122,8 +122,8 @@ function createUseMutationQuery<TData = unknown>(): UseMutationFn<TData> {
     error: null,
     isPending: false,
     reset: vi.fn(),
-  }
-  return vi.fn<() => MockMutationResult<TData>>(() => defaultResult)
+  };
+  return vi.fn<() => MockMutationResult<TData>>(() => defaultResult);
 }
 
 function createUseQuery() {
@@ -134,7 +134,7 @@ function createUseQuery() {
     invalidate: vi.fn(),
     refetch: vi.fn(),
     setData: vi.fn(),
-  }
+  };
 }
 
 const mockTrpcClient = {
@@ -180,54 +180,54 @@ const mockTrpcClient = {
   user: {
     deleteAccount: { useMutation: vi.fn() },
   },
-} as const
+} as const;
 
 vi.mock('~/lib/trpc/client', () => ({
   trpc: mockTrpcClient,
-}))
+}));
 
-const MockTRPCProvider = ({ children }: { children: ReactNode }) => <>{children}</>
+const MockTRPCProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
 
 vi.mock('~/lib/trpc/provider', () => ({
   TRPCProvider: MockTRPCProvider,
-}))
+}));
 
-export { mockTrpcClient }
+export { mockTrpcClient };
 
 export function renderWithProviders(
   ui: ReactElement,
   {
     queryClient = createTestQueryClient(),
   }: {
-    queryClient?: QueryClient
+    queryClient?: QueryClient;
   } = {},
-  options: RenderOptions = {}
+  options: RenderOptions = {},
 ): RenderResult {
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, options)
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, options);
 }
 
-type RouteStubs = Parameters<typeof createRoutesStub>[0]
-export type RouteComponentType = RouteStubs[number]['Component']
+type RouteStubs = Parameters<typeof createRoutesStub>[0];
+export type RouteComponentType = RouteStubs[number]['Component'];
 
 export function renderWithRouter(
   config: {
-    routes: RouteStubs
-    isAuth?: boolean
-    initialEntries?: string[]
+    routes: RouteStubs;
+    isAuth?: boolean;
+    initialEntries?: string[];
   },
   {
     queryClient = createTestQueryClient(),
   }: {
-    queryClient?: QueryClient
-  } = {}
+    queryClient?: QueryClient;
+  } = {},
 ): RenderResult {
-  const Stub = createRoutesStub(config.routes)
+  const Stub = createRoutesStub(config.routes);
 
   return render(
     <QueryClientProvider client={queryClient}>
       <Stub initialEntries={config.initialEntries || ['/']} />
-    </QueryClientProvider>
-  )
+    </QueryClientProvider>,
+  );
 }
 
 class ResizeObserver {
@@ -235,4 +235,4 @@ class ResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-;(global as typeof globalThis).ResizeObserver = ResizeObserver
+(global as typeof globalThis).ResizeObserver = ResizeObserver;

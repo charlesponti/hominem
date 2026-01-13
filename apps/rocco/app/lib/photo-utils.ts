@@ -5,5 +5,5 @@
  * a pair of `thumbnail`/`full` URLs and update the client to consume those fields.
  */
 export function buildPlacePhotoUrl(): never {
-  throw new Error('buildPlacePhotoUrl is deprecated - use server-resolved photo URLs instead')
+  throw new Error('buildPlacePhotoUrl is deprecated - use server-resolved photo URLs instead');
 }

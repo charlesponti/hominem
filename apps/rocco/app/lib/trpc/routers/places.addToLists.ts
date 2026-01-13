@@ -1,9 +1,9 @@
-import { addPlaceToLists } from '@hominem/data/places'
-import { z } from 'zod'
-import { protectedProcedure } from '../context'
-import { buildPhotoUrl } from './places.helpers'
+import { addPlaceToLists } from '@hominem/data/places';
+import { z } from 'zod';
+import { protectedProcedure } from '../context';
+import { buildPhotoUrl } from './places.helpers';
 
-type ListSummary = { id: string; name: string }
+type ListSummary = { id: string; name: string };
 
 export const addToLists = protectedProcedure
   .input(
@@ -20,10 +20,10 @@ export const addToLists = protectedProcedure
         websiteUri: z.string().optional().nullable(),
         phoneNumber: z.string().optional().nullable(),
       }),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
-    const { listIds, place: placeInput } = input
+    const { listIds, place: placeInput } = input;
 
     // Transform input to PlaceInsert format
     const placeData = {
@@ -40,12 +40,12 @@ export const addToLists = protectedProcedure
       photos: null,
       imageUrl: placeInput.imageUrl ?? null,
       priceLevel: null,
-    }
+    };
 
     try {
-      const result = await addPlaceToLists(ctx.user.id, listIds, placeData, buildPhotoUrl)
-      return { place: result.place, lists: result.lists as ListSummary[] }
+      const result = await addPlaceToLists(ctx.user.id, listIds, placeData, buildPhotoUrl);
+      return { place: result.place, lists: result.lists as ListSummary[] };
     } catch {
-      throw new Error('Failed to process request')
+      throw new Error('Failed to process request');
     }
-  })
+  });

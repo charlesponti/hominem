@@ -1,5 +1,5 @@
-import { List as ListIcon, Mail, Search } from 'lucide-react'
-import AppLink from './app-link'
+import { List as ListIcon, Mail, Search } from 'lucide-react';
+import AppLink from './app-link';
 
 const Footer = () => {
   return (
@@ -16,7 +16,7 @@ const Footer = () => {
         <Mail className="inline-block" />
       </AppLink>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

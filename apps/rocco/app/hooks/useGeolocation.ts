@@ -1,55 +1,59 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
 export type Location = {
-  latitude: number
-  longitude: number
-}
+  latitude: number;
+  longitude: number;
+};
 
 type UseGeolocationOptions = {
-  enabled?: boolean
-  enableHighAccuracy?: boolean
-  timeout?: number
-  maximumAge?: number
-}
+  enabled?: boolean;
+  enableHighAccuracy?: boolean;
+  timeout?: number;
+  maximumAge?: number;
+};
 
 type UseGeolocationReturn = {
-  currentLocation: Location | null
-  isLoading: boolean
-  error: GeolocationPositionError | null
-}
+  currentLocation: Location | null;
+  isLoading: boolean;
+  error: GeolocationPositionError | null;
+};
 
-const CACHE_KEY = 'rocco_geolocation_cache'
-const CACHE_TIMESTAMP_KEY = 'rocco_geolocation_cache_timestamp'
+const CACHE_KEY = 'rocco_geolocation_cache';
+const CACHE_TIMESTAMP_KEY = 'rocco_geolocation_cache_timestamp';
 
 // Cache location for 5 minutes by default
-const DEFAULT_MAXIMUM_AGE = 300000
+const DEFAULT_MAXIMUM_AGE = 300000;
 
 function getCachedLocation(): Location | null {
-  if (typeof window === 'undefined') { return null }
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   try {
-    const cached = localStorage.getItem(CACHE_KEY)
-    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+    const cached = localStorage.getItem(CACHE_KEY);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
 
     if (cached && timestamp) {
-      const age = Date.now() - Number.parseInt(timestamp, 10)
+      const age = Date.now() - Number.parseInt(timestamp, 10);
       if (age < DEFAULT_MAXIMUM_AGE) {
-        return JSON.parse(cached) as Location
+        return JSON.parse(cached) as Location;
       }
     }
   } catch {
     // Ignore cache errors
   }
 
-  return null
+  return null;
 }
 
 function setCachedLocation(location: Location): void {
-  if (typeof window === 'undefined') { return }
+  if (typeof window === 'undefined') {
+    return;
+  }
 
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(location))
-    localStorage.setItem(CACHE_TIMESTAMP_KEY, String(Date.now()))
+    localStorage.setItem(CACHE_KEY, JSON.stringify(location));
+    localStorage.setItem(CACHE_TIMESTAMP_KEY, String(Date.now()));
   } catch {
     // Ignore cache errors
   }
@@ -61,74 +65,74 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
     enableHighAccuracy = false,
     timeout = 5000,
     maximumAge = DEFAULT_MAXIMUM_AGE,
-  } = options
+  } = options;
 
   // Initialize with cached location if available (doesn't block server rendering)
   const [currentLocation, setCurrentLocation] = useState<Location | null>(() =>
-    typeof window !== 'undefined' ? getCachedLocation() : null
-  )
-  const [isLoading, setIsLoading] = useState<boolean>(enabled)
-  const [error, setError] = useState<GeolocationPositionError | null>(null)
+    typeof window !== 'undefined' ? getCachedLocation() : null,
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(enabled);
+  const [error, setError] = useState<GeolocationPositionError | null>(null);
 
   useEffect(() => {
     // Don't run on server
     if (typeof window === 'undefined') {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
 
     if (!enabled) {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
 
     // Check if we have a valid cached location
-    const cached = getCachedLocation()
+    const cached = getCachedLocation();
     if (cached) {
-      setCurrentLocation(cached)
-      setIsLoading(false)
+      setCurrentLocation(cached);
+      setIsLoading(false);
       // Still try to update in the background if cache is getting stale
       const cacheAge =
-        Date.now() - Number.parseInt(localStorage.getItem(CACHE_TIMESTAMP_KEY) || '0', 10)
+        Date.now() - Number.parseInt(localStorage.getItem(CACHE_TIMESTAMP_KEY) || '0', 10);
       // Only update if cache is older than half the maximum age
       if (cacheAge < maximumAge / 2) {
-        return
+        return;
       }
     }
 
     if (!navigator.geolocation) {
-      setIsLoading(false)
+      setIsLoading(false);
       setError(
         new Error(
-          'Geolocation is not supported by your browser'
-        ) as unknown as GeolocationPositionError
-      )
-      return
+          'Geolocation is not supported by your browser',
+        ) as unknown as GeolocationPositionError,
+      );
+      return;
     }
 
     const successHandler = (position: GeolocationPosition) => {
       const location = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-      }
-      setCurrentLocation(location)
-      setCachedLocation(location)
-      setIsLoading(false)
-      setError(null)
-    }
+      };
+      setCurrentLocation(location);
+      setCachedLocation(location);
+      setIsLoading(false);
+      setError(null);
+    };
 
     const errorHandler = (err: GeolocationPositionError) => {
-      setError(err)
-      setIsLoading(false)
+      setError(err);
+      setIsLoading(false);
       // Don't clear cached location on error, use it as fallback
-    }
+    };
 
     navigator.geolocation.getCurrentPosition(successHandler, errorHandler, {
       enableHighAccuracy,
       timeout,
       maximumAge,
-    })
-  }, [enabled, enableHighAccuracy, timeout, maximumAge])
+    });
+  }, [enabled, enableHighAccuracy, timeout, maximumAge]);
 
-  return { currentLocation, isLoading, error }
+  return { currentLocation, isLoading, error };
 }

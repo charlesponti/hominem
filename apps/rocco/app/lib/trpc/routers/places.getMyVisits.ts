@@ -1,6 +1,6 @@
-import { getVisitsByUser } from '@hominem/data/events'
-import { z } from 'zod'
-import { protectedProcedure } from '../context'
+import { getVisitsByUser } from '@hominem/data/events';
+import { z } from 'zod';
+import { protectedProcedure } from '../context';
 
 export const getMyVisits = protectedProcedure
   .input(
@@ -10,7 +10,7 @@ export const getMyVisits = protectedProcedure
         startDate: z.string().optional(),
         endDate: z.string().optional(),
       })
-      .optional()
+      .optional(),
   )
   .query(async ({ ctx, input }) => {
     const filters = input
@@ -19,7 +19,7 @@ export const getMyVisits = protectedProcedure
           startDate: input.startDate ? new Date(input.startDate) : undefined,
           endDate: input.endDate ? new Date(input.endDate) : undefined,
         }
-      : undefined
+      : undefined;
 
-    return getVisitsByUser(ctx.user.id, filters)
-  })
+    return getVisitsByUser(ctx.user.id, filters);
+  });

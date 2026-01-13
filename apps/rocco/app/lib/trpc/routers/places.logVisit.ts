@@ -1,6 +1,6 @@
-import { createEvent } from '@hominem/data/events'
-import { z } from 'zod'
-import { protectedProcedure } from '../context'
+import { createEvent } from '@hominem/data/events';
+import { z } from 'zod';
+import { protectedProcedure } from '../context';
 
 export const logVisit = protectedProcedure
   .input(
@@ -14,10 +14,10 @@ export const logVisit = protectedProcedure
       visitReview: z.string().optional(),
       tags: z.array(z.string()).optional(),
       people: z.array(z.string()).optional(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
-    const dateValue = input.date ? new Date(input.date) : new Date()
+    const dateValue = input.date ? new Date(input.date) : new Date();
 
     const event = await createEvent({
       title: input.title,
@@ -31,7 +31,7 @@ export const logVisit = protectedProcedure
       userId: ctx.user.id,
       tags: input.tags,
       people: input.people,
-    })
+    });
 
-    return event
-  })
+    return event;
+  });

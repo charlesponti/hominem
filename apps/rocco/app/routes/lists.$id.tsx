@@ -1,43 +1,43 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { Alert, PageTitle } from '@hominem/ui'
-import { Loading } from '@hominem/ui/loading'
-import { UserPlus } from 'lucide-react'
-import { useMemo } from 'react'
-import { Link, redirect } from 'react-router'
-import ErrorBoundary from '~/components/ErrorBoundary'
-import ListEditButton from '~/components/lists/list-edit-button'
-import LazyMap from '~/components/map.lazy'
-import PlacesList from '~/components/places/places-list'
-import UserAvatar from '~/components/user-avatar'
-import { MapInteractionProvider } from '~/contexts/map-interaction-context'
-import { useGeolocation } from '~/hooks/useGeolocation'
-import { requireAuth } from '~/lib/guards'
-import { trpc } from '~/lib/trpc/client'
-import { createCaller } from '~/lib/trpc/server'
-import type { PlaceLocation } from '~/lib/types'
-import type { Route } from './+types/lists.$id'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Alert, PageTitle } from '@hominem/ui';
+import { Loading } from '@hominem/ui/loading';
+import { UserPlus } from 'lucide-react';
+import { useMemo } from 'react';
+import { Link, redirect } from 'react-router';
+import ErrorBoundary from '~/components/ErrorBoundary';
+import ListEditButton from '~/components/lists/list-edit-button';
+import LazyMap from '~/components/map.lazy';
+import PlacesList from '~/components/places/places-list';
+import UserAvatar from '~/components/user-avatar';
+import { MapInteractionProvider } from '~/contexts/map-interaction-context';
+import { useGeolocation } from '~/hooks/useGeolocation';
+import { requireAuth } from '~/lib/guards';
+import { trpc } from '~/lib/trpc/client';
+import { createCaller } from '~/lib/trpc/server';
+import type { PlaceLocation } from '~/lib/types';
+import type { Route } from './+types/lists.$id';
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  await requireAuth(request)
+  await requireAuth(request);
 
-  const { id } = params
+  const { id } = params;
   if (!id) {
-    return redirect('/404')
+    return redirect('/404');
   }
 
-  const trpcServer = createCaller(request)
-  const list = await trpcServer.lists.getById({ id })
+  const trpcServer = createCaller(request);
+  const list = await trpcServer.lists.getById({ id });
   if (!list) {
-    return redirect('/404')
+    return redirect('/404');
   }
 
-  return { list }
+  return { list };
 }
 
 export default function ListPage({ loaderData }: Route.ComponentProps) {
-  const { user } = useSupabaseAuthContext()
+  const { user } = useSupabaseAuthContext();
 
-  const listId = loaderData.list.id
+  const listId = loaderData.list.id;
 
   const {
     data: list,
@@ -49,9 +49,9 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
       initialData: loaderData.list,
       enabled: !!listId,
       staleTime: 1000 * 60,
-    }
-  )
-  const { currentLocation, isLoading: isLoadingLocation } = useGeolocation()
+    },
+  );
+  const { currentLocation, isLoading: isLoadingLocation } = useGeolocation();
 
   const markers: PlaceLocation[] = useMemo(
     () =>
@@ -64,8 +64,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
           name: p.name,
           imageUrl: p.imageUrl,
         })),
-    [list.places]
-  )
+    [list.places],
+  );
 
   // Show loading state only on initial load
   if (isLoading) {
@@ -73,11 +73,11 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
       <div className="flex items-center justify-center h-32">
         <Loading size="lg" />
       </div>
-    )
+    );
   }
 
-  const isOwner = list.userId === user?.id
-  const hasAccess = list.hasAccess ?? isOwner
+  const isOwner = list.userId === user?.id;
+  const hasAccess = list.hasAccess ?? isOwner;
 
   return (
     <MapInteractionProvider>
@@ -142,7 +142,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
     </MapInteractionProvider>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

@@ -1,31 +1,31 @@
-import { TRPCError } from '@trpc/server'
+import { TRPCError } from '@trpc/server';
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal'
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export interface LogContext {
-  userId?: string
-  requestId?: string
-  path?: string
-  method?: string
-  userAgent?: string
-  ip?: string
-  [key: string]: unknown
+  userId?: string;
+  requestId?: string;
+  path?: string;
+  method?: string;
+  userAgent?: string;
+  ip?: string;
+  [key: string]: unknown;
 }
 
 export interface LogEntry {
-  level: LogLevel
-  message: string
-  timestamp: string
-  context?: LogContext
-  error?: Error | TRPCError
-  stack?: string
+  level: LogLevel;
+  message: string;
+  timestamp: string;
+  context?: LogContext;
+  error?: Error | TRPCError;
+  stack?: string;
 }
 
 class Logger {
-  private isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development'
+  private isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
 
   private formatMessage(entry: LogEntry) {
-    const { level, message, timestamp, context, error } = entry
+    const { level, message, timestamp, context, error } = entry;
 
     if (this.isDevelopment) {
       // Development: Human-readable format with colors
@@ -35,23 +35,23 @@ class Logger {
         warn: '\x1b[33m', // Yellow
         error: '\x1b[31m', // Red
         fatal: '\x1b[35m', // Magenta
-      }
-      const reset = '\x1b[0m'
+      };
+      const reset = '\x1b[0m';
 
-      let formatted = `${colorMap[level]}[${level.toUpperCase()}]${reset} ${timestamp} - ${message}`
+      let formatted = `${colorMap[level]}[${level.toUpperCase()}]${reset} ${timestamp} - ${message}`;
 
       if (context && Object.keys(context).length > 0) {
-        formatted += `\n  Context: ${JSON.stringify(context, null, 2)}`
+        formatted += `\n  Context: ${JSON.stringify(context, null, 2)}`;
       }
 
       if (error) {
-        formatted += `\n  Error: ${error.message}`
+        formatted += `\n  Error: ${error.message}`;
         if (error.stack) {
-          formatted += `\n  Stack: ${error.stack}`
+          formatted += `\n  Stack: ${error.stack}`;
         }
       }
 
-      return formatted
+      return formatted;
     }
 
     // Production: JSON format for log aggregation
@@ -70,7 +70,7 @@ class Logger {
             }),
           }
         : undefined,
-    })
+    });
   }
 
   private log(level: LogLevel, message: string, context?: LogContext, error?: Error | TRPCError) {
@@ -81,32 +81,32 @@ class Logger {
       context,
       error,
       stack: error?.stack,
-    }
+    };
 
-    const formattedMessage = this.formatMessage(entry)
+    const formattedMessage = this.formatMessage(entry);
 
     // In development, use console methods
     if (this.isDevelopment) {
       switch (level) {
         case 'debug':
           // biome-ignore lint/suspicious/noConsole: reason
-          console.debug(formattedMessage)
-          break
+          console.debug(formattedMessage);
+          break;
         case 'info':
-          console.info(formattedMessage)
-          break
+          console.info(formattedMessage);
+          break;
         case 'warn':
-          console.warn(formattedMessage)
-          break
+          console.warn(formattedMessage);
+          break;
         case 'error':
         case 'fatal':
-          console.error(formattedMessage)
-          break
+          console.error(formattedMessage);
+          break;
       }
     } else {
       // In production, use console.error for all levels to ensure visibility
       // In a real production environment, you'd send this to a logging service
-      console.error(formattedMessage)
+      console.error(formattedMessage);
 
       // TODO: Integrate with external logging services like:
       // - PostHog for analytics and error tracking
@@ -117,29 +117,29 @@ class Logger {
   }
 
   debug(message: string, context?: LogContext) {
-    this.log('debug', message, context)
+    this.log('debug', message, context);
   }
 
   info(message: string, context?: LogContext) {
-    this.log('info', message, context)
+    this.log('info', message, context);
   }
 
   warn(message: string, context?: LogContext, error?: Error) {
-    this.log('warn', message, context, error)
+    this.log('warn', message, context, error);
   }
 
   error(message: string, context?: LogContext, error?: Error | TRPCError) {
-    this.log('error', message, context, error)
+    this.log('error', message, context, error);
   }
 
   fatal(message: string, context?: LogContext, error?: Error | TRPCError) {
-    this.log('fatal', message, context, error)
+    this.log('fatal', message, context, error);
   }
 
   // Convenience method for tRPC errors
   logTRPCError(error: TRPCError, context?: LogContext) {
-    const level = this.getErrorLevel(error)
-    this.log(level, `tRPC Error: ${error.message}`, context, error)
+    const level = this.getErrorLevel(error);
+    this.log(level, `tRPC Error: ${error.message}`, context, error);
   }
 
   // Determine log level based on tRPC error code
@@ -149,23 +149,23 @@ class Logger {
       case 'UNAUTHORIZED':
       case 'FORBIDDEN':
       case 'NOT_FOUND':
-        return 'warn'
+        return 'warn';
       case 'TIMEOUT':
       case 'TOO_MANY_REQUESTS':
-        return 'error'
+        return 'error';
       case 'INTERNAL_SERVER_ERROR':
       case 'METHOD_NOT_SUPPORTED':
       case 'PARSE_ERROR':
       case 'UNSUPPORTED_MEDIA_TYPE':
-        return 'fatal'
+        return 'fatal';
       default:
-        return 'error'
+        return 'error';
     }
   }
 
   // Method for logging API requests
   logRequest(method: string, path: string, context?: LogContext) {
-    this.info(`${method} ${path}`, context)
+    this.info(`${method} ${path}`, context);
   }
 
   // Method for logging API responses
@@ -174,12 +174,12 @@ class Logger {
     path: string,
     statusCode: number,
     duration: number,
-    context?: LogContext
+    context?: LogContext,
   ) {
-    const level = statusCode >= 400 ? 'warn' : 'info'
-    this.log(level, `${method} ${path} - ${statusCode} (${duration}ms)`, context)
+    const level = statusCode >= 400 ? 'warn' : 'info';
+    this.log(level, `${method} ${path} - ${statusCode} (${duration}ms)`, context);
   }
 }
 
 // Export singleton instance
-export const logger = new Logger()
+export const logger = new Logger();

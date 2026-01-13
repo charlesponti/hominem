@@ -1,28 +1,28 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { PageTitle } from '@hominem/ui'
-import { Loading } from '@hominem/ui/loading'
-import { redirect } from 'react-router'
-import ErrorBoundary from '~/components/ErrorBoundary'
-import { trpc } from '~/lib/trpc/client'
-import { createCaller } from '~/lib/trpc/server'
-import type { Route } from './+types/lists.$id.invites.sent'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { PageTitle } from '@hominem/ui';
+import { Loading } from '@hominem/ui/loading';
+import { redirect } from 'react-router';
+import ErrorBoundary from '~/components/ErrorBoundary';
+import { trpc } from '~/lib/trpc/client';
+import { createCaller } from '~/lib/trpc/server';
+import type { Route } from './+types/lists.$id.invites.sent';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const trpcServer = createCaller(request)
-  const { userId } = useSupabaseAuthContext()
-  const data = await trpcServer.invites.getSent()
+  const trpcServer = createCaller(request);
+  const { userId } = useSupabaseAuthContext();
+  const data = await trpcServer.invites.getSent();
 
   if (!userId) {
-    return redirect('/')
+    return redirect('/');
   }
 
-  return { invites: data }
+  return { invites: data };
 }
 
 export default function ListSentInvites({ loaderData }: Route.ComponentProps) {
   const { data, isLoading } = trpc.invites.getSent.useQuery(undefined, {
     initialData: loaderData.invites,
-  })
+  });
 
   return (
     <>
@@ -52,7 +52,7 @@ export default function ListSentInvites({ loaderData }: Route.ComponentProps) {
         )}
       </div>
     </>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

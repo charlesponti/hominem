@@ -12,7 +12,7 @@ const PlacePriceLevel = ({ priceLevel }: { priceLevel: number }) => {
           ))
       }
     </p>
-  )
-}
+  );
+};
 
-export default PlacePriceLevel
+export default PlacePriceLevel;

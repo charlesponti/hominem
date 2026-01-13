@@ -1,19 +1,19 @@
-import { List } from 'lucide-react'
-import { Link } from 'react-router'
-import { trpc } from '~/lib/trpc/client'
-import { buildImageUrl } from '~/lib/utils'
+import { List } from 'lucide-react';
+import { Link } from 'react-router';
+import { trpc } from '~/lib/trpc/client';
+import { buildImageUrl } from '~/lib/utils';
 
 type ListRowProps = {
-  id: string
-  name: string
-  count: number
-  imageUrl?: string | null
-  imageAlt?: string
-}
+  id: string;
+  name: string;
+  count: number;
+  imageUrl?: string | null;
+  imageAlt?: string;
+};
 
 export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
-  const utils = trpc.useUtils()
-  const thumbnailUrl = buildImageUrl(imageUrl, 80, 80)
+  const utils = trpc.useUtils();
+  const thumbnailUrl = buildImageUrl(imageUrl, 80, 80);
 
   return (
     <li className="flex items-center gap-3 p-2 group hover:bg-gray-50 transition-colors">
@@ -21,7 +21,7 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
         to={`/lists/${id}`}
         viewTransition
         onMouseEnter={() => {
-          utils.lists.getById.prefetch({ id })
+          utils.lists.getById.prefetch({ id });
         }}
         className="flex-1 min-w-0 focus:outline-none"
       >
@@ -68,5 +68,5 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
         </div>
       </Link>
     </li>
-  )
+  );
 }

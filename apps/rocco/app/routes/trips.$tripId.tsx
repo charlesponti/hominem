@@ -1,20 +1,20 @@
-import { PageTitle } from '@hominem/ui'
-import ErrorBoundary from '~/components/ErrorBoundary'
-import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal'
-import { createCaller } from '~/lib/trpc/server'
-import type { Route } from './+types/trips.$tripId'
+import { PageTitle } from '@hominem/ui';
+import ErrorBoundary from '~/components/ErrorBoundary';
+import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal';
+import { createCaller } from '~/lib/trpc/server';
+import type { Route } from './+types/trips.$tripId';
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const trpcServer = createCaller(request)
-  const trip = await trpcServer.trips.getById({ id: params.tripId })
+  const trpcServer = createCaller(request);
+  const trip = await trpcServer.trips.getById({ id: params.tripId });
   if (!trip) {
-    throw new Response('Not Found', { status: 404 })
+    throw new Response('Not Found', { status: 404 });
   }
-  return { trip }
+  return { trip };
 }
 
 export default function TripPage({ loaderData }: Route.ComponentProps) {
-  const { trip } = loaderData
+  const { trip } = loaderData;
 
   return (
     <div className="p-4">
@@ -40,7 +40,7 @@ export default function TripPage({ loaderData }: Route.ComponentProps) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

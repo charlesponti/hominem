@@ -1,33 +1,33 @@
-import { Button } from '@hominem/ui/button'
-import { List } from '@hominem/ui/list'
-import { AnimatePresence, motion, type Variants } from 'framer-motion'
-import { Edit2, Star, Trash2 } from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { trpc } from '~/lib/trpc/client'
-import { LogVisit } from './LogVisit'
+import { Button } from '@hominem/ui/button';
+import { List } from '@hominem/ui/list';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
+import { Edit2, Star, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { trpc } from '~/lib/trpc/client';
+import { LogVisit } from './LogVisit';
 
 interface VisitHistoryProps {
-  placeId: string
-  placeName: string
+  placeId: string;
+  placeName: string;
 }
 
 interface VisitItemProps {
   visit: {
-    id: string
-    title: string
-    date: Date | string
-    description: string | null
-    visitNotes: string | null
-    visitReview: string | null
-    visitPeople: string | null
-    visitRating: number | null
-    people?: Array<{ id: string }>
-  }
-  placeId: string
-  placeName: string
-  isEditing: boolean
-  onEdit: () => void
-  onCancel: () => void
+    id: string;
+    title: string;
+    date: Date | string;
+    description: string | null;
+    visitNotes: string | null;
+    visitReview: string | null;
+    visitPeople: string | null;
+    visitRating: number | null;
+    people?: Array<{ id: string }>;
+  };
+  placeId: string;
+  placeName: string;
+  isEditing: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
 }
 
 const itemVariants: Variants = {
@@ -48,22 +48,22 @@ const itemVariants: Variants = {
       ease: 'easeIn',
     },
   },
-}
+};
 
 function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: VisitItemProps) {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
   const deleteVisit = trpc.places.deleteVisit.useMutation({
     onSuccess: () => {
-      utils.places.getPlaceVisits.invalidate({ placeId })
-      utils.places.getVisitStats.invalidate({ placeId })
+      utils.places.getPlaceVisits.invalidate({ placeId });
+      utils.places.getVisitStats.invalidate({ placeId });
     },
-  })
+  });
 
   const handleDelete = useCallback(async () => {
     if (confirm('Are you sure you want to delete this visit?')) {
-      await deleteVisit.mutateAsync({ visitId: visit.id })
+      await deleteVisit.mutateAsync({ visitId: visit.id });
     }
-  }, [visit.id, deleteVisit])
+  }, [visit.id, deleteVisit]);
 
   if (isEditing) {
     return (
@@ -76,7 +76,7 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
           onCancel={onCancel}
         />
       </motion.li>
-    )
+    );
   }
 
   return (
@@ -143,16 +143,16 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
         </div>
       </div>
     </motion.li>
-  )
+  );
 }
 
 export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
   const { data: visits, isLoading: visitsLoading } = trpc.places.getPlaceVisits.useQuery({
     placeId,
-  })
+  });
 
-  const [showInlineForm, setShowInlineForm] = useState(false)
-  const [editingVisitId, setEditingVisitId] = useState<string | null>(null)
+  const [showInlineForm, setShowInlineForm] = useState(false);
+  const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
 
   return (
     <div className="space-y-1">
@@ -164,8 +164,8 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
           aria-expanded={showInlineForm}
           aria-controls="log-visit-inline-form"
           onClick={() => {
-            setShowInlineForm((v) => !v)
-            setEditingVisitId(null)
+            setShowInlineForm((v) => !v);
+            setEditingVisitId(null);
           }}
         >
           {showInlineForm ? 'Cancel' : 'Log Visit'}
@@ -202,8 +202,8 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
                 placeName={placeName}
                 isEditing={editingVisitId === visit.id}
                 onEdit={() => {
-                  setEditingVisitId(visit.id)
-                  setShowInlineForm(false)
+                  setEditingVisitId(visit.id);
+                  setShowInlineForm(false);
                 }}
                 onCancel={() => setEditingVisitId(null)}
               />
@@ -212,5 +212,5 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
         </List>
       )}
     </div>
-  )
+  );
 }

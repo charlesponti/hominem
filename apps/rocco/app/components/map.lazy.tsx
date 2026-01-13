@@ -1,6 +1,6 @@
-import { Loading } from '@hominem/ui/loading'
-import { lazy, Suspense } from 'react'
-import type { RoccoMapProps } from './map'
+import { Loading } from '@hominem/ui/loading';
+import { lazy, Suspense } from 'react';
+import type { RoccoMapProps } from './map';
 
 const MapPlaceholder = () => (
   <div className="flex flex-1 relative overflow-hidden rounded-lg shadow-md size-full bg-slate-100 animate-pulse">
@@ -8,16 +8,16 @@ const MapPlaceholder = () => (
       <Loading size="xl" />
     </div>
   </div>
-)
+);
 
 const LazyMap = (props: RoccoMapProps) => {
-  const RoccoMap = lazy(() => import('./map'))
+  const RoccoMap = lazy(() => import('./map'));
 
   return (
     <Suspense fallback={<MapPlaceholder />}>
       <RoccoMap {...props} />
     </Suspense>
-  )
-}
+  );
+};
 
-export default LazyMap
+export default LazyMap;

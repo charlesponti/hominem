@@ -1,38 +1,38 @@
-import { Alert } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/label'
-import { type SyntheticEvent, useCallback, useId, useState } from 'react'
-import { trpc } from '~/lib/trpc/client'
-import type { SentInvite } from '~/lib/types'
+import { Alert } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/input';
+import { Label } from '@hominem/ui/label';
+import { type SyntheticEvent, useCallback, useId, useState } from 'react';
+import { trpc } from '~/lib/trpc/client';
+import type { SentInvite } from '~/lib/types';
 
 type SentInviteFormProps = {
-  listId: string
-  onCreate: (invite: SentInvite) => void
-}
+  listId: string;
+  onCreate: (invite: SentInvite) => void;
+};
 
 export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps) {
-  const [email, setEmail] = useState('')
-  const emailId = useId()
+  const [email, setEmail] = useState('');
+  const emailId = useId();
 
   const mutation = trpc.invites.create.useMutation({
     onSuccess: (invite) => {
-      setEmail('')
-      onCreate(invite as SentInvite)
+      setEmail('');
+      onCreate(invite as SentInvite);
     },
-  })
+  });
 
   const onNameChange = useCallback((e: SyntheticEvent<HTMLInputElement>) => {
-    setEmail(e.currentTarget.value)
-  }, [])
+    setEmail(e.currentTarget.value);
+  }, []);
 
   const onFormSubmit = useCallback(
     async (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      await mutation.mutateAsync({ listId, invitedUserEmail: email })
+      e.preventDefault();
+      await mutation.mutateAsync({ listId, invitedUserEmail: email });
     },
-    [email, mutation, listId]
-  )
+    [email, mutation, listId],
+  );
 
   return (
     <div className="flex flex-col gap-3">
@@ -62,5 +62,5 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
         </Button>
       </form>
     </div>
-  )
+  );
 }

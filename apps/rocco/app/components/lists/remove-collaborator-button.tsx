@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -7,18 +7,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
-import { Trash2 } from 'lucide-react'
-import { useCallback } from 'react'
-import { useModal } from '~/hooks/useModal'
-import { trpc } from '~/lib/trpc/client'
+} from '@hominem/ui/dialog';
+import { Trash2 } from 'lucide-react';
+import { useCallback } from 'react';
+import { useModal } from '~/hooks/useModal';
+import { trpc } from '~/lib/trpc/client';
 
 type RemoveCollaboratorButtonProps = {
-  listId: string
-  userId: string
-  userName: string
-  userEmail: string
-}
+  listId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+};
 
 export default function RemoveCollaboratorButton({
   listId,
@@ -26,58 +26,62 @@ export default function RemoveCollaboratorButton({
   userName,
   userEmail,
 }: RemoveCollaboratorButtonProps) {
-  const { isOpen, open, close } = useModal()
-  const utils = trpc.useUtils()
-  const removeCollaborator = trpc.lists.removeCollaborator.useMutation()
+  const { isOpen, open, close } = useModal();
+  const utils = trpc.useUtils();
+  const removeCollaborator = trpc.lists.removeCollaborator.useMutation();
 
   const handleRemove = useCallback(async () => {
     // Store previous values for rollback
-    const previousList = utils.lists.getById.getData({ id: listId })
-    const previousInvites = utils.invites.getByList.getData({ listId })
+    const previousList = utils.lists.getById.getData({ id: listId });
+    const previousInvites = utils.invites.getByList.getData({ listId });
 
     try {
       // Optimistically update the list cache to remove the collaborator
       utils.lists.getById.setData({ id: listId }, (old) => {
-        if (!(old?.users)) { return old }
+        if (!old?.users) {
+          return old;
+        }
         return {
           ...old,
           users: old.users.filter((u) => u.id !== userId),
-        }
-      })
+        };
+      });
 
       // Optimistically update the invites list to remove the accepted invite
       utils.invites.getByList.setData({ listId }, (old) => {
-        if (!old) { return old }
-        return old.filter((invite) => invite.user_invitedUserId?.id !== userId)
-      })
+        if (!old) {
+          return old;
+        }
+        return old.filter((invite) => invite.user_invitedUserId?.id !== userId);
+      });
 
       // Sync with server
       await removeCollaborator.mutateAsync({
         listId,
         userId,
-      })
+      });
 
       // Invalidate queries to ensure fresh data
-      utils.lists.getById.invalidate({ id: listId })
-      utils.invites.getByList.invalidate({ listId })
+      utils.lists.getById.invalidate({ id: listId });
+      utils.invites.getByList.invalidate({ listId });
 
-      close()
+      close();
     } catch (error) {
-      console.error('Failed to remove collaborator:', error)
+      console.error('Failed to remove collaborator:', error);
       // Rollback optimistic updates on error
       if (previousList) {
-        utils.lists.getById.setData({ id: listId }, previousList)
+        utils.lists.getById.setData({ id: listId }, previousList);
       }
       if (previousInvites) {
-        utils.invites.getByList.setData({ listId }, previousInvites)
+        utils.invites.getByList.setData({ listId }, previousInvites);
       }
       // Also invalidate to ensure we get fresh data
-      utils.lists.getById.invalidate({ id: listId })
-      utils.invites.getByList.invalidate({ listId })
+      utils.lists.getById.invalidate({ id: listId });
+      utils.invites.getByList.invalidate({ listId });
     }
-  }, [removeCollaborator, listId, userId, utils, close])
+  }, [removeCollaborator, listId, userId, utils, close]);
 
-  const displayName = userName || userEmail
+  const displayName = userName || userEmail;
 
   return (
     <>
@@ -124,5 +128,5 @@ export default function RemoveCollaboratorButton({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

@@ -1,35 +1,35 @@
-import { useCallback, useState } from 'react'
-import { data, useNavigate } from 'react-router'
-import ErrorBoundary from '~/components/ErrorBoundary'
-import Lists from '~/components/lists/lists'
-import PlacesAutocomplete from '~/components/places/places-autocomplete'
-import PlacesNearby from '~/components/places/places-nearby'
-import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
-import { getAuthState } from '~/lib/auth.server'
-import type { Route } from './+types/index'
-import AboutPage from './about'
+import { useCallback, useState } from 'react';
+import { data, useNavigate } from 'react-router';
+import ErrorBoundary from '~/components/ErrorBoundary';
+import Lists from '~/components/lists/lists';
+import PlacesAutocomplete from '~/components/places/places-autocomplete';
+import PlacesNearby from '~/components/places/places-nearby';
+import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';
+import { getAuthState } from '~/lib/auth.server';
+import type { Route } from './+types/index';
+import AboutPage from './about';
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const { isAuthenticated, headers } = await getAuthState(request)
-  return data({ isAuthenticated }, { headers })
-}
+  const { isAuthenticated, headers } = await getAuthState(request);
+  return data({ isAuthenticated }, { headers });
+};
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { isAuthenticated } = loaderData
-  const navigate = useNavigate()
-  const [, setSelectedPlace] = useState<GooglePlacePrediction | null>(null)
+  const { isAuthenticated } = loaderData;
+  const navigate = useNavigate();
+  const [, setSelectedPlace] = useState<GooglePlacePrediction | null>(null);
 
   const handlePlaceSelected = useCallback(
     (place: GooglePlacePrediction) => {
-      setSelectedPlace(place)
+      setSelectedPlace(place);
       // Navigate to the place page
-      navigate(`/places/${place.place_id}`)
+      navigate(`/places/${place.place_id}`);
     },
-    [navigate]
-  )
+    [navigate],
+  );
 
   if (!isAuthenticated) {
-    return <AboutPage />
+    return <AboutPage />;
   }
 
   return (
@@ -40,7 +40,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
       <Lists />
     </div>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

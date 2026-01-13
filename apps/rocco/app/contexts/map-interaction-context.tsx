@@ -1,24 +1,24 @@
-import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
+import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
 interface MapInteractionContextType {
-  hoveredPlaceId: string | null
-  setHoveredPlaceId: (id: string | null) => void
+  hoveredPlaceId: string | null;
+  setHoveredPlaceId: (id: string | null) => void;
 }
 
-const MapInteractionContext = createContext<MapInteractionContextType | undefined>(undefined)
+const MapInteractionContext = createContext<MapInteractionContextType | undefined>(undefined);
 
 export function MapInteractionProvider({ children }: { children: ReactNode }) {
-  const [hoveredPlaceId, setHoveredPlaceId] = useState<string | null>(null)
+  const [hoveredPlaceId, setHoveredPlaceId] = useState<string | null>(null);
 
-  const value = useMemo(() => ({ hoveredPlaceId, setHoveredPlaceId }), [hoveredPlaceId])
+  const value = useMemo(() => ({ hoveredPlaceId, setHoveredPlaceId }), [hoveredPlaceId]);
 
-  return <MapInteractionContext.Provider value={value}>{children}</MapInteractionContext.Provider>
+  return <MapInteractionContext.Provider value={value}>{children}</MapInteractionContext.Provider>;
 }
 
 export function useMapInteraction() {
-  const context = useContext(MapInteractionContext)
+  const context = useContext(MapInteractionContext);
   if (context === undefined) {
-    throw new Error('useMapInteraction must be used within a MapInteractionProvider')
+    throw new Error('useMapInteraction must be used within a MapInteractionProvider');
   }
-  return context
+  return context;
 }

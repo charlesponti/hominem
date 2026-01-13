@@ -1,4 +1,4 @@
-import { UserPlus } from 'lucide-react'
+import { UserPlus } from 'lucide-react';
 
 export default function InvitesEmptyState() {
   return (
@@ -11,5 +11,5 @@ export default function InvitesEmptyState() {
         Use the form above to invite others to collaborate on this list.
       </p>
     </div>
-  )
+  );
 }

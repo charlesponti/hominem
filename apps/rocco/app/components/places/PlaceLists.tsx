@@ -1,20 +1,20 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { List } from '@hominem/ui/list'
-import { memo } from 'react'
-import { ListRow } from '~/components/lists/list-row'
-import AddPlaceToList from '~/components/places/add-to-list-control'
-import { trpc } from '~/lib/trpc/client'
-import type { PlaceWithLists } from '~/lib/types'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { List } from '@hominem/ui/list';
+import { memo } from 'react';
+import { ListRow } from '~/components/lists/list-row';
+import AddPlaceToList from '~/components/places/add-to-list-control';
+import { trpc } from '~/lib/trpc/client';
+import type { PlaceWithLists } from '~/lib/types';
 
 type Props = {
-  place: PlaceWithLists
-}
+  place: PlaceWithLists;
+};
 
 const PlaceLists = ({ place }: Props) => {
-  const { isAuthenticated } = useSupabaseAuthContext()
+  const { isAuthenticated } = useSupabaseAuthContext();
 
-  const resolvedPlaceId = place.id
-  const googleMapsId = place.googleMapsId
+  const resolvedPlaceId = place.id;
+  const googleMapsId = place.googleMapsId;
 
   const { data: listsContainingPlace = [], isLoading } = trpc.lists.getContainingPlace.useQuery(
     {
@@ -23,11 +23,11 @@ const PlaceLists = ({ place }: Props) => {
     },
     {
       enabled: isAuthenticated && Boolean(resolvedPlaceId || googleMapsId),
-    }
-  )
+    },
+  );
 
   if (!isAuthenticated) {
-    return null
+    return null;
   }
 
   return (
@@ -52,7 +52,7 @@ const PlaceLists = ({ place }: Props) => {
         </List>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default memo(PlaceLists)
+export default memo(PlaceLists);

@@ -1,7 +1,7 @@
-import type { HTMLAttributes } from 'react'
-import { cn } from '~/lib/utils'
+import type { HTMLAttributes } from 'react';
+import { cn } from '~/lib/utils';
 
-const EXCLUDED_TYPES = ['establishment', 'food', 'point_of_interest', 'political']
+const EXCLUDED_TYPES = ['establishment', 'food', 'point_of_interest', 'political'];
 
 // Emoji mapping for place types
 const TYPE_EMOJIS: Record<string, string> = {
@@ -70,10 +70,10 @@ const TYPE_EMOJIS: Record<string, string> = {
   embassy: '🏢',
   fire_station: '🚒',
   police: '👮',
-}
+};
 
 interface PlaceTypeProps extends HTMLAttributes<HTMLSpanElement> {
-  emoji?: string
+  emoji?: string;
 }
 
 const PlaceType = ({ children, className, emoji, ...props }: PlaceTypeProps) => {
@@ -93,7 +93,7 @@ const PlaceType = ({ children, className, emoji, ...props }: PlaceTypeProps) => 
         'transition-all duration-200 ease-out',
         'hover:shadow-md hover:scale-105 hover:border-indigo-300/80',
         'active:scale-100',
-        className
+        className,
       )}
       {...props}
     >
@@ -104,14 +104,14 @@ const PlaceType = ({ children, className, emoji, ...props }: PlaceTypeProps) => 
       )}
       <span className="capitalize">{children}</span>
     </span>
-  )
-}
+  );
+};
 
 const PlaceTypes = ({ limit, types }: { limit?: number; types: string[] }) => {
-  const filterExcludedTypes = (type: string) => !EXCLUDED_TYPES.includes(type)
+  const filterExcludedTypes = (type: string) => !EXCLUDED_TYPES.includes(type);
 
   const isPointOfInterest =
-    types.length === 2 && types.includes('establishment') && types.includes('point_of_interest')
+    types.length === 2 && types.includes('establishment') && types.includes('point_of_interest');
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
@@ -123,14 +123,14 @@ const PlaceTypes = ({ limit, types }: { limit?: number; types: string[] }) => {
           .filter(filterExcludedTypes)
           .filter((type, _index, arr) => {
             if (type === 'store' && arr.length > 1) {
-              return false
+              return false;
             }
 
             if (type.includes('_restaurant') && arr.includes('restaurant')) {
-              return false
+              return false;
             }
 
-            return true
+            return true;
           })
           .map((type) => (
             <PlaceType key={type} emoji={TYPE_EMOJIS[type]}>
@@ -139,7 +139,7 @@ const PlaceTypes = ({ limit, types }: { limit?: number; types: string[] }) => {
           ))
       )}
     </div>
-  )
-}
+  );
+};
 
-export default PlaceTypes
+export default PlaceTypes;

@@ -1,21 +1,21 @@
-import type { ListPlace as DataListPlace } from '@hominem/data/lists'
-import { createElement } from 'react'
-import { vi } from 'vitest'
+import type { ListPlace as DataListPlace } from '@hominem/data/lists';
+import { createElement } from 'react';
+import { vi } from 'vitest';
 
-import type { GooglePlaceData, Place } from '~/lib/types'
-import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './index'
+import type { GooglePlaceData, Place } from '~/lib/types';
+import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './index';
 
 vi.mock('@vis.gl/react-google-maps', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
+  const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
     useApiIsLoaded: () => true,
     useApiLoadingStatus: vi.fn(),
     Map: () => createElement('div', { 'data-testid': 'google-map' }),
-  }
-})
+  };
+});
 
-export const PLACE_ID = 'place-id'
+export const PLACE_ID = 'place-id';
 
 export const MOCK_PLACE: Place = {
   id: PLACE_ID,
@@ -41,7 +41,7 @@ export const MOCK_PLACE: Place = {
   itemId: null,
   businessStatus: null,
   openingHours: null,
-}
+};
 
 // Create a mock place that conforms to ListPlace type
 export const MOCK_LIST_PLACE: GooglePlaceData = {
@@ -61,7 +61,7 @@ export const MOCK_LIST_PLACE: GooglePlaceData = {
   wifiInfo: null,
   photos: MOCK_PLACE.photos,
   priceLevel: MOCK_PLACE.priceLevel,
-}
+};
 
 export const MOCK_PLACE_SEARCH = [
   {
@@ -70,7 +70,7 @@ export const MOCK_PLACE_SEARCH = [
     latitude: 456,
     longitude: 678,
   },
-]
+];
 
 /**
  * Creates a mock ListPlace (from @hominem/data) from a Place mock
@@ -98,4 +98,4 @@ export const getMockListPlace = (overrides?: Partial<DataListPlace>): DataListPl
     image: null,
   },
   ...overrides,
-})
+});

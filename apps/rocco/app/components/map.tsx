@@ -1,5 +1,5 @@
-import { Alert } from '@hominem/ui'
-import { Loading } from '@hominem/ui/loading'
+import { Alert } from '@hominem/ui';
+import { Loading } from '@hominem/ui/loading';
 import {
   AdvancedMarker,
   APIProvider,
@@ -10,30 +10,30 @@ import {
   useApiLoadingStatus,
   useMap,
   useMapsLibrary,
-} from '@vis.gl/react-google-maps'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { useMapInteraction } from '~/contexts/map-interaction-context'
-import type { Place, PlaceLocation } from '~/lib/types'
-import { cn } from '~/lib/utils'
-import styles from './map.module.css'
+} from '@vis.gl/react-google-maps';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useMapInteraction } from '~/contexts/map-interaction-context';
+import type { Place, PlaceLocation } from '~/lib/types';
+import { cn } from '~/lib/utils';
+import styles from './map.module.css';
 
 // Default center (San Francisco) when no places or location available
 const DEFAULT_CENTER: PlaceLocation = {
   latitude: 37.7749,
   longitude: -122.4194,
-}
+};
 
 export type RoccoMapProps = {
-  isLoadingCurrentLocation: boolean
-  currentLocation?: PlaceLocation | null
-  setSelected?: (place: Place | null) => void
-  zoom: number
-  center?: PlaceLocation
-  markers: PlaceLocation[]
-  onMapClick?: (event: MapMouseEvent) => void
-  onMarkerClick?: () => void
-  mapId?: string
-}
+  isLoadingCurrentLocation: boolean;
+  currentLocation?: PlaceLocation | null;
+  setSelected?: (place: Place | null) => void;
+  zoom: number;
+  center?: PlaceLocation;
+  markers: PlaceLocation[];
+  onMapClick?: (event: MapMouseEvent) => void;
+  onMarkerClick?: () => void;
+  mapId?: string;
+};
 
 const MapUpdater = ({
   center,
@@ -41,48 +41,50 @@ const MapUpdater = ({
   zoom,
   enabled,
 }: {
-  center: { lat: number; lng: number }
-  markers: PlaceLocation[]
-  zoom: number
-  enabled: boolean
+  center: { lat: number; lng: number };
+  markers: PlaceLocation[];
+  zoom: number;
+  enabled: boolean;
 }) => {
-  const map = useMap()
-  const coreLibrary = useMapsLibrary('core')
+  const map = useMap();
+  const coreLibrary = useMapsLibrary('core');
 
   useEffect(() => {
-    if (!(map && enabled)) { return }
+    if (!(map && enabled)) {
+      return;
+    }
 
     // If we have multiple markers, fit bounds
     if (markers.length > 1 && coreLibrary?.LatLngBounds) {
-      const bounds = new coreLibrary.LatLngBounds()
-      let hasValidMarker = false
+      const bounds = new coreLibrary.LatLngBounds();
+      let hasValidMarker = false;
 
       markers.forEach((marker) => {
         if (marker.latitude && marker.longitude) {
-          bounds.extend({ lat: marker.latitude, lng: marker.longitude })
-          hasValidMarker = true
+          bounds.extend({ lat: marker.latitude, lng: marker.longitude });
+          hasValidMarker = true;
         }
-      })
+      });
 
       if (hasValidMarker) {
-        map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 })
+        map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
       }
     } else if (markers.length === 1) {
-      const singleMarker = markers[0]
+      const singleMarker = markers[0];
       if (singleMarker?.latitude && singleMarker?.longitude) {
         // If we have exactly one marker, center on it
-        map.setCenter({ lat: singleMarker.latitude, lng: singleMarker.longitude })
-        map.setZoom(zoom)
+        map.setCenter({ lat: singleMarker.latitude, lng: singleMarker.longitude });
+        map.setZoom(zoom);
       }
     } else {
       // Otherwise use the provided center
-      map.setCenter(center)
-      map.setZoom(zoom)
+      map.setCenter(center);
+      map.setZoom(zoom);
     }
-  }, [map, coreLibrary, markers, center, zoom, enabled])
+  }, [map, coreLibrary, markers, center, zoom, enabled]);
 
-  return null
-}
+  return null;
+};
 
 // Memoized marker component to prevent unnecessary re-renders
 const MapMarker = memo(
@@ -92,10 +94,10 @@ const MapMarker = memo(
     isSelected,
     onClick,
   }: {
-    marker: PlaceLocation
-    isHovered: boolean
-    isSelected: boolean
-    onClick: () => void
+    marker: PlaceLocation;
+    isHovered: boolean;
+    isSelected: boolean;
+    onClick: () => void;
   }) => {
     // Memoize position object to avoid recreation
     const position = useMemo(
@@ -103,8 +105,8 @@ const MapMarker = memo(
         lat: marker.latitude,
         lng: marker.longitude,
       }),
-      [marker.latitude, marker.longitude]
-    )
+      [marker.latitude, marker.longitude],
+    );
 
     // Memoize style object based on hover/selected state
     const markerStyle = useMemo(
@@ -118,8 +120,8 @@ const MapMarker = memo(
         transition: 'width 0.2s, height 0.2s, background-color 0.2s',
         cursor: 'pointer' as const,
       }),
-      [isHovered, isSelected]
-    )
+      [isHovered, isSelected],
+    );
 
     return (
       <AdvancedMarker
@@ -131,11 +133,11 @@ const MapMarker = memo(
       >
         <div style={markerStyle} />
       </AdvancedMarker>
-    )
-  }
-)
+    );
+  },
+);
 
-MapMarker.displayName = 'MapMarker'
+MapMarker.displayName = 'MapMarker';
 
 const RoccoMap = ({
   zoom,
@@ -147,91 +149,93 @@ const RoccoMap = ({
   markers,
   mapId,
 }: RoccoMapProps) => {
-  const mapsLoadingState = useApiLoadingStatus()
-  const { hoveredPlaceId } = useMapInteraction()
-  const [selectedMarker, setSelectedMarker] = useState<PlaceLocation | null>(null)
-  const [hasUserInteracted, setHasUserInteracted] = useState(false)
+  const mapsLoadingState = useApiLoadingStatus();
+  const { hoveredPlaceId } = useMapInteraction();
+  const [selectedMarker, setSelectedMarker] = useState<PlaceLocation | null>(null);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   // Get mapId from prop, env variable, or use default
   const effectiveMapId = useMemo(
     () => mapId || import.meta.env.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID',
-    [mapId]
-  )
+    [mapId],
+  );
 
   // Calculate initial center: use provided center, or first marker, or current location, or default
   const initialCenter = useMemo(() => {
     if (center) {
-      return center
+      return center;
     }
     if (markers.length > 0) {
-      return markers[0] as PlaceLocation
+      return markers[0] as PlaceLocation;
     }
     if (currentLocation) {
       return {
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude,
-      } as PlaceLocation
+      } as PlaceLocation;
     }
-    return DEFAULT_CENTER
-  }, [center, markers, currentLocation])
+    return DEFAULT_CENTER;
+  }, [center, markers, currentLocation]);
 
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({
     lat: initialCenter.latitude,
     lng: initialCenter.longitude,
-  })
-  const [mapZoom, setMapZoom] = useState(zoom)
+  });
+  const [mapZoom, setMapZoom] = useState(zoom);
 
   // Memoize marker click handler factory to avoid recreating functions
   const handleMarkerClick = useCallback((marker: PlaceLocation) => {
-    setHasUserInteracted(true)
-    setSelectedMarker(marker)
-  }, [])
+    setHasUserInteracted(true);
+    setSelectedMarker(marker);
+  }, []);
 
   const onClick = useCallback(
     (event: MapMouseEvent) => {
-      const { placeId } = event.detail
+      const { placeId } = event.detail;
 
       // Mark that user has interacted with the map
-      setHasUserInteracted(true)
+      setHasUserInteracted(true);
 
       // Remove currently selected marker
-      setSelected?.(null)
-      setSelectedMarker(null)
+      setSelected?.(null);
+      setSelectedMarker(null);
 
       // Hide info window
       if (placeId) {
-        if (event?.stop) { event.stop() }
+        if (event?.stop) {
+          event.stop();
+        }
       }
 
-      onMapClick?.(event)
+      onMapClick?.(event);
     },
-    [onMapClick, setSelected]
-  )
+    [onMapClick, setSelected],
+  );
 
   // Update center/zoom on user interaction
   const handleMapIdle = useCallback((event: MapEvent<unknown>) => {
-    const map = event.map
+    const map = event.map;
     if (map) {
       // Mark that user has interacted with the map
-      setHasUserInteracted(true)
+      setHasUserInteracted(true);
 
-      const newCenter = map.getCenter()
-      const newZoom = map.getZoom()
+      const newCenter = map.getCenter();
+      const newZoom = map.getZoom();
       if (newCenter && newZoom) {
         setMapCenter({
           lat: newCenter.lat(),
           lng: newCenter.lng(),
-        })
-        setMapZoom(newZoom)
+        });
+        setMapZoom(newZoom);
       }
     }
-  }, [])
+  }, []);
 
   const renderedMarkers = useMemo(
     () =>
       markers.map((marker, index) => {
-        const isHovered = hoveredPlaceId && marker.id === hoveredPlaceId
-        const isSelected = selectedMarker?.id === marker.id
+        const isHovered = hoveredPlaceId && marker.id === hoveredPlaceId;
+        const isSelected = selectedMarker?.id === marker.id;
 
         return (
           <MapMarker
@@ -241,13 +245,13 @@ const RoccoMap = ({
             isSelected={!!isSelected}
             onClick={() => handleMarkerClick(marker)}
           />
-        )
+        );
       }),
-    [markers, hoveredPlaceId, selectedMarker?.id, handleMarkerClick]
-  )
+    [markers, hoveredPlaceId, selectedMarker?.id, handleMarkerClick],
+  );
 
   if (mapsLoadingState === 'FAILED') {
-    return <Alert type="error">The Maps Library could not be loaded.</Alert>
+    return <Alert type="error">The Maps Library could not be loaded.</Alert>;
   }
 
   if (mapsLoadingState === 'LOADING') {
@@ -255,7 +259,7 @@ const RoccoMap = ({
       <div className="flex items-center justify-center max-w-[300px] mx-auto min-h-full">
         <Loading size="xl" />
       </div>
-    )
+    );
   }
 
   return (
@@ -332,7 +336,7 @@ const RoccoMap = ({
         </GoogleMap>
       </div>
     </APIProvider>
-  )
-}
+  );
+};
 
-export default RoccoMap
+export default RoccoMap;

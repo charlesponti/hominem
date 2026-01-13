@@ -1,53 +1,53 @@
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 type Props = {
-  photos: string[]
-  currentIndex: number
-  isOpen: boolean
-  onClose: () => void
-  alt: string
-}
+  photos: string[];
+  currentIndex: number;
+  isOpen: boolean;
+  onClose: () => void;
+  alt: string;
+};
 
 const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Props) => {
-  const [activeIndex, setActiveIndex] = useState(currentIndex)
-  const photo = photos[activeIndex]
+  const [activeIndex, setActiveIndex] = useState(currentIndex);
+  const photo = photos[activeIndex];
 
   useEffect(() => {
-    setActiveIndex(currentIndex)
-  }, [currentIndex])
+    setActiveIndex(currentIndex);
+  }, [currentIndex]);
 
   const goToPrevious = useCallback(() => {
-    setActiveIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1))
-  }, [photos.length])
+    setActiveIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+  }, [photos.length]);
 
   const goToNext = useCallback(() => {
-    setActiveIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1))
-  }, [photos.length])
+    setActiveIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+  }, [photos.length]);
 
   useEffect(() => {
     if (!isOpen) {
-      return
+      return;
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        onClose();
       }
       if (e.key === 'ArrowLeft') {
-        goToPrevious()
+        goToPrevious();
       }
       if (e.key === 'ArrowRight') {
-        goToNext()
+        goToNext();
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose, goToPrevious, goToNext])
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, goToPrevious, goToNext]);
 
   if (!isOpen) {
-    return null
+    return null;
   }
 
   return (
@@ -76,8 +76,8 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
           <button
             type="button"
             onClick={(e) => {
-              e.stopPropagation()
-              goToPrevious()
+              e.stopPropagation();
+              goToPrevious();
             }}
             className="absolute left-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all hover:scale-110"
             aria-label="Previous photo"
@@ -88,8 +88,8 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
           <button
             type="button"
             onClick={(e) => {
-              e.stopPropagation()
-              goToNext()
+              e.stopPropagation();
+              goToNext();
             }}
             className="absolute right-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all hover:scale-110"
             aria-label="Next photo"
@@ -109,7 +109,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
         />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default PlacePhotoLightbox
+export default PlacePhotoLightbox;

@@ -1,11 +1,11 @@
-import type { User } from '@supabase/supabase-js'
-import type { List, Place } from '~/lib/types'
+import type { User } from '@supabase/supabase-js';
+import type { List, Place } from '~/lib/types';
 
-export * from './place'
+export * from './place';
 
-export const USER_ID = 'user-id'
-export const TEST_USER_EMAIL = 'test-user@ponti.io'
-export const TEST_USER_NAME = 'Test User'
+export const USER_ID = 'user-id';
+export const TEST_USER_EMAIL = 'test-user@ponti.io';
+export const TEST_USER_NAME = 'Test User';
 
 export const TEST_USER: User = {
   id: USER_ID,
@@ -30,7 +30,7 @@ export const TEST_USER: User = {
   role: undefined,
   identities: [],
   factors: [],
-}
+};
 
 export const getMockUser = () => ({
   id: USER_ID,
@@ -56,7 +56,7 @@ export const getMockUser = () => ({
   role: undefined,
   identities: [],
   factors: [],
-})
+});
 
 export const getMockPlace = (): Place => ({
   id: '123',
@@ -82,7 +82,7 @@ export const getMockPlace = (): Place => ({
   priceLevel: null,
   businessStatus: null,
   openingHours: null,
-})
+});
 
 export const getMockLists = () => [
   {
@@ -103,7 +103,7 @@ export const getMockLists = () => [
     createdAt: '2021-01-01T00:00:00.000Z',
     updatedAt: '2021-01-01T00:00:00.000Z',
   },
-]
+];
 
 export const MOCK_LIST: List = {
   id: 'list-1',
@@ -115,7 +115,7 @@ export const MOCK_LIST: List = {
   updatedAt: new Date().toISOString(),
   places: [],
   createdBy: getMockUser(),
-}
+};
 
 export const MOCK_LISTS: List[] = [
   MOCK_LIST,
@@ -130,4 +130,4 @@ export const MOCK_LISTS: List[] = [
     updatedAt: new Date().toISOString(),
     createdBy: getMockUser(),
   },
-]
+];

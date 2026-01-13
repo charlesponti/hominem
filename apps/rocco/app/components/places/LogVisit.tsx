@@ -1,95 +1,95 @@
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/label'
-import { Textarea } from '@hominem/ui/textarea'
-import { useEffect, useState } from 'react'
-import { useRevalidator } from 'react-router'
-import { trpc } from '~/lib/trpc/client'
-import { PeopleMultiSelect } from './PeopleMultiSelect'
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/input';
+import { Label } from '@hominem/ui/label';
+import { Textarea } from '@hominem/ui/textarea';
+import { useEffect, useState } from 'react';
+import { useRevalidator } from 'react-router';
+import { trpc } from '~/lib/trpc/client';
+import { PeopleMultiSelect } from './PeopleMultiSelect';
 
 interface LogVisitProps {
-  placeId: string
-  placeName?: string
+  placeId: string;
+  placeName?: string;
   visit?: {
-    id: string
-    title: string
-    date: Date | string
-    description: string | null
-    visitNotes: string | null
-    visitReview: string | null
-    visitPeople: string | null
-    visitRating: number | null
-    people?: Array<{ id: string }>
-  }
-  onSuccess?: () => void
-  onCancel?: () => void
+    id: string;
+    title: string;
+    date: Date | string;
+    description: string | null;
+    visitNotes: string | null;
+    visitReview: string | null;
+    visitPeople: string | null;
+    visitRating: number | null;
+    people?: Array<{ id: string }>;
+  };
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: LogVisitProps) {
-  const isEditing = !!visit
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [visitNotes, setVisitNotes] = useState('')
-  const [visitRating, setVisitRating] = useState<number | undefined>(undefined)
-  const [visitReview, setVisitReview] = useState('')
-  const [selectedPeople, setSelectedPeople] = useState<string[]>([])
-  const revalidator = useRevalidator()
-  const utils = trpc.useUtils()
+  const isEditing = !!visit;
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [visitNotes, setVisitNotes] = useState('');
+  const [visitRating, setVisitRating] = useState<number | undefined>(undefined);
+  const [visitReview, setVisitReview] = useState('');
+  const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
+  const revalidator = useRevalidator();
+  const utils = trpc.useUtils();
 
   // Initialize form with visit data when editing
   useEffect(() => {
     if (visit) {
-      setTitle(visit.title)
-      setDescription(visit.description || '')
-      setDate(new Date(visit.date).toISOString().split('T')[0])
-      setVisitNotes(visit.visitNotes || '')
-      setVisitRating(visit.visitRating || undefined)
-      setVisitReview(visit.visitReview || '')
+      setTitle(visit.title);
+      setDescription(visit.description || '');
+      setDate(new Date(visit.date).toISOString().split('T')[0]);
+      setVisitNotes(visit.visitNotes || '');
+      setVisitRating(visit.visitRating || undefined);
+      setVisitReview(visit.visitReview || '');
       if (visit.people && visit.people.length > 0) {
-        setSelectedPeople(visit.people.map((p) => p.id))
+        setSelectedPeople(visit.people.map((p) => p.id));
       } else if (visit.visitPeople) {
         try {
-          const parsed = JSON.parse(visit.visitPeople)
+          const parsed = JSON.parse(visit.visitPeople);
           if (Array.isArray(parsed)) {
-            setSelectedPeople(parsed)
+            setSelectedPeople(parsed);
           }
         } catch {
           // No-op for legacy comma-separated strings
         }
       } else {
-        setSelectedPeople([])
+        setSelectedPeople([]);
       }
     } else {
-      setTitle('')
-      setDescription('')
-      setDate(new Date().toISOString().split('T')[0])
-      setVisitNotes('')
-      setVisitRating(undefined)
-      setVisitReview('')
-      setSelectedPeople([])
+      setTitle('');
+      setDescription('');
+      setDate(new Date().toISOString().split('T')[0]);
+      setVisitNotes('');
+      setVisitRating(undefined);
+      setVisitReview('');
+      setSelectedPeople([]);
     }
-  }, [visit])
+  }, [visit]);
 
   const handleSuccess = () => {
-    utils.places.getPlaceVisits.invalidate({ placeId })
-    utils.places.getVisitStats.invalidate({ placeId })
-    revalidator.revalidate()
-    onSuccess?.()
-  }
+    utils.places.getPlaceVisits.invalidate({ placeId });
+    utils.places.getVisitStats.invalidate({ placeId });
+    revalidator.revalidate();
+    onSuccess?.();
+  };
 
   const logVisitMutation = trpc.places.logVisit.useMutation({
     onSuccess: handleSuccess,
-  })
+  });
 
   const updateVisitMutation = trpc.places.updateVisit.useMutation({
     onSuccess: handleSuccess,
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!title.trim()) {
-      return
+      return;
     }
 
     if (isEditing && visit) {
@@ -102,7 +102,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
         visitRating,
         visitReview: visitReview.trim() || undefined,
         people: selectedPeople.length > 0 ? selectedPeople : undefined,
-      })
+      });
     } else {
       logVisitMutation.mutate({
         placeId,
@@ -113,11 +113,11 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
         visitRating,
         visitReview: visitReview.trim() || undefined,
         people: selectedPeople.length > 0 ? selectedPeople : undefined,
-      })
+      });
     }
-  }
+  };
 
-  const isLoading = logVisitMutation.isPending || updateVisitMutation.isPending
+  const isLoading = logVisitMutation.isPending || updateVisitMutation.isPending;
 
   return (
     <section className="p-4">
@@ -207,5 +207,5 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
         </div>
       </form>
     </section>
-  )
+  );
 }

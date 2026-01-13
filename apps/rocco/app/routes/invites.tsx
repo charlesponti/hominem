@@ -1,27 +1,27 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { PageTitle } from '@hominem/ui'
-import { List } from '@hominem/ui/list'
-import { Loading } from '@hominem/ui/loading'
-import { Mail } from 'lucide-react'
-import { useCallback } from 'react'
-import { data } from 'react-router'
-import ReceivedInviteItem from '~/components/ReceivedInviteItem'
-import { getAuthState } from '~/lib/auth.server'
-import { env } from '~/lib/env'
-import { buildInvitePreview } from '~/lib/services/invite-preview.service'
-import { createCaller } from '~/lib/trpc/server'
-import type { ReceivedInvite } from '~/lib/types'
-import type { Route } from './+types/invites'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { PageTitle } from '@hominem/ui';
+import { List } from '@hominem/ui/list';
+import { Loading } from '@hominem/ui/loading';
+import { Mail } from 'lucide-react';
+import { useCallback } from 'react';
+import { data } from 'react-router';
+import ReceivedInviteItem from '~/components/ReceivedInviteItem';
+import { getAuthState } from '~/lib/auth.server';
+import { env } from '~/lib/env';
+import { buildInvitePreview } from '~/lib/services/invite-preview.service';
+import { createCaller } from '~/lib/trpc/server';
+import type { ReceivedInvite } from '~/lib/types';
+import type { Route } from './+types/invites';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url)
-  const token = url.searchParams.get('token') || undefined
+  const url = new URL(request.url);
+  const token = url.searchParams.get('token') || undefined;
 
-  const { isAuthenticated, headers } = await getAuthState(request)
+  const { isAuthenticated, headers } = await getAuthState(request);
 
   // If not authenticated, allow viewing the page and return preview data when possible
   if (!isAuthenticated) {
-    const preview = token ? await buildInvitePreview(token) : null
+    const preview = token ? await buildInvitePreview(token) : null;
 
     return data(
       {
@@ -30,44 +30,44 @@ export async function loader({ request }: Route.LoaderArgs) {
         requiresAuth: true,
         preview,
       },
-      { headers }
-    )
+      { headers },
+    );
   }
 
   // Authenticated flow: fetch invites via tRPC
-  const trpcServer = createCaller(request)
+  const trpcServer = createCaller(request);
   const invites = (await trpcServer.invites.getReceived(
-    token ? { token } : undefined
-  )) as ReceivedInvite[]
+    token ? { token } : undefined,
+  )) as ReceivedInvite[];
 
   // Check if token belongs to another user
   const tokenMismatch = token
     ? Boolean(invites.find((invite) => invite.token === token)?.belongsToAnotherUser)
-    : false
+    : false;
 
-  return data({ invites, tokenMismatch, requiresAuth: false, preview: null }, { headers })
+  return data({ invites, tokenMismatch, requiresAuth: false, preview: null }, { headers });
 }
 
 export function meta(args: Route.MetaArgs) {
-  const loaderData = args.loaderData
-  const preview = loaderData?.preview
+  const loaderData = args.loaderData;
+  const preview = loaderData?.preview;
 
   // Build URL
-  const fullPath = args.location.pathname + args.location.search
-  const url = new URL(fullPath, env.VITE_APP_BASE_URL)
+  const fullPath = args.location.pathname + args.location.search;
+  const url = new URL(fullPath, env.VITE_APP_BASE_URL);
 
   // Default meta tags
   const defaultTags = [
     { title: 'List Invites - Rocco' },
     { name: 'description', content: 'View and accept list invitations' },
-  ]
+  ];
 
   // If we have preview data, add Open Graph tags for rich link previews
   if (preview) {
-    const title = `You're invited to "${preview.listName}"`
+    const title = `You're invited to "${preview.listName}"`;
     const description = preview.firstItemName
       ? `Join this list featuring ${preview.firstItemName} and more`
-      : `Join "${preview.listName}" on Rocco`
+      : `Join "${preview.listName}" on Rocco`;
 
     const tags = [
       { title },
@@ -81,23 +81,23 @@ export function meta(args: Route.MetaArgs) {
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
-    ]
+    ];
 
     if (preview.coverPhoto) {
-      const imageUrl = preview.coverPhoto
+      const imageUrl = preview.coverPhoto;
 
       tags.push(
         { property: 'og:image', content: imageUrl },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { name: 'twitter:image', content: imageUrl }
-      )
+        { name: 'twitter:image', content: imageUrl },
+      );
     }
 
-    return tags
+    return tags;
   }
 
-  return defaultTags
+  return defaultTags;
 }
 
 export function HydrateFallback() {
@@ -105,16 +105,16 @@ export function HydrateFallback() {
     <div className="flex items-center justify-center h-32">
       <Loading size="lg" />
     </div>
-  )
+  );
 }
 
 export default function Invites({ loaderData }: Route.ComponentProps) {
-  const { invites, tokenMismatch, requiresAuth, preview } = loaderData
-  const { isAuthenticated, user, supabase } = useSupabaseAuthContext()
-  const currentUserEmail = user?.email?.toLowerCase()
+  const { invites, tokenMismatch, requiresAuth, preview } = loaderData;
+  const { isAuthenticated, user, supabase } = useSupabaseAuthContext();
+  const currentUserEmail = user?.email?.toLowerCase();
 
   const onSignIn = useCallback(async () => {
-    const redirectPath = window.location.pathname + window.location.search
+    const redirectPath = window.location.pathname + window.location.search;
 
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -122,8 +122,8 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
         // Add query params directly to redirectTo URL (like notes app does)
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
       },
-    })
-  }, [supabase])
+    });
+  }, [supabase]);
 
   return (
     <div className="space-y-8 pb-8">
@@ -176,8 +176,8 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
         </List>
       )}
     </div>
-  )
+  );
 }
 
-import ErrorBoundary from '~/components/ErrorBoundary'
-export { ErrorBoundary }
+import ErrorBoundary from '~/components/ErrorBoundary';
+export { ErrorBoundary };

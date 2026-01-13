@@ -1,12 +1,12 @@
-import { motion, type Variants } from 'framer-motion'
-import { BookmarkCheck, MapPin, Share2, Sparkles } from 'lucide-react'
-import { Link } from 'react-router'
-import ErrorBoundary from '~/components/ErrorBoundary'
+import { motion, type Variants } from 'framer-motion';
+import { BookmarkCheck, MapPin, Share2, Sparkles } from 'lucide-react';
+import { Link } from 'react-router';
+import ErrorBoundary from '~/components/ErrorBoundary';
 
 const fadeIn: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeInOut' } },
-}
+};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -17,7 +17,7 @@ const staggerContainer = {
       delayChildren: 0.1,
     },
   },
-}
+};
 
 export default function AboutPage() {
   return (
@@ -158,7 +158,7 @@ export default function AboutPage() {
         </motion.div>
       </section>
     </div>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

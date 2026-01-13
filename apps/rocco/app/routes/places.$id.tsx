@@ -1,47 +1,55 @@
-import { PageTitle } from '@hominem/ui'
-import z from 'zod'
-import ErrorBoundary from '~/components/ErrorBoundary'
-import PlaceAddress from '~/components/places/PlaceAddress'
-import PlaceLists from '~/components/places/PlaceLists'
-import PlaceMap from '~/components/places/PlaceMap'
-import PlacePhone from '~/components/places/PlacePhone'
-import PlacePhotos from '~/components/places/PlacePhotos'
-import PlaceRating from '~/components/places/PlaceRating'
-import PlaceStatus from '~/components/places/PlaceStatus'
-import PlaceWebsite from '~/components/places/PlaceWebsite'
-import PlaceTypes from '~/components/places/place-types'
-import PlacesNearby from '~/components/places/places-nearby'
-import { VisitHistory } from '~/components/places/VisitHistory'
-import { requireAuth } from '~/lib/guards'
-import { createCaller } from '~/lib/trpc/server'
-import type { PlaceWithLists } from '~/lib/types'
-import type { Route } from './+types/places.$id'
+import { PageTitle } from '@hominem/ui';
+import z from 'zod';
+import ErrorBoundary from '~/components/ErrorBoundary';
+import PlaceAddress from '~/components/places/PlaceAddress';
+import PlaceLists from '~/components/places/PlaceLists';
+import PlaceMap from '~/components/places/PlaceMap';
+import PlacePhone from '~/components/places/PlacePhone';
+import PlacePhotos from '~/components/places/PlacePhotos';
+import PlaceRating from '~/components/places/PlaceRating';
+import PlaceStatus from '~/components/places/PlaceStatus';
+import PlaceWebsite from '~/components/places/PlaceWebsite';
+import PlaceTypes from '~/components/places/place-types';
+import PlacesNearby from '~/components/places/places-nearby';
+import { VisitHistory } from '~/components/places/VisitHistory';
+import { requireAuth } from '~/lib/guards';
+import { logger } from '~/lib/logger';
+import { createCaller } from '~/lib/trpc/server';
+import type { PlaceWithLists } from '~/lib/types';
+import type { Route } from './+types/places.$id';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  await requireAuth(request)
-  const { id } = params
+  await requireAuth(request);
+  const { id } = params;
   if (!id) {
-    throw new Error('Place ID is required')
+    throw new Error('Place ID is required');
   }
 
-  const trpcServer = createCaller(request)
+  const trpcServer = createCaller(request);
 
-  let data: PlaceWithLists | null = null
+  let data: PlaceWithLists | null = null;
   if (z.uuid().safeParse(id).success) {
-    data = await trpcServer.places.getDetailsById({ id })
+    data = await trpcServer.places.getDetailsById({ id });
   } else {
-    data = await trpcServer.places.getDetailsByGoogleId({ googleMapsId: id })
+    data = await trpcServer.places.getDetailsByGoogleId({ googleMapsId: id });
   }
 
   if (!data) {
-    throw new Error('Place not found')
+    throw new Error('Place not found');
   }
 
-  return { place: data }
+  logger.info('Loaded place details', {
+    id: data.id,
+    googleMapsId: data.googleMapsId,
+    photosCount: data.photos?.length ?? 0,
+    thumbnailsCount: data.thumbnailPhotos?.length ?? 0,
+  });
+
+  return { place: data };
 }
 
 export default function Place({ loaderData }: Route.ComponentProps) {
-  const { place } = loaderData
+  const { place } = loaderData;
 
   return (
     <div data-testid="place" className="flex flex-col items-start gap-4">
@@ -115,7 +123,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

@@ -1,10 +1,10 @@
-import { MapPin } from 'lucide-react'
+import { MapPin } from 'lucide-react';
 
 type PlaceAddressProps = {
-  address: string
-  name: string
-  place_id: string
-}
+  address: string;
+  name: string;
+  place_id: string;
+};
 
 const PlaceAddress = ({ address, name, place_id }: PlaceAddressProps) => {
   return (
@@ -17,7 +17,7 @@ const PlaceAddress = ({ address, name, place_id }: PlaceAddressProps) => {
       <MapPin size={16} className="shrink-0" />
       <span className="line-clamp-1">{address}</span>
     </a>
-  )
-}
+  );
+};
 
-export default PlaceAddress
+export default PlaceAddress;

@@ -1,10 +1,10 @@
-import { Star } from 'lucide-react'
-import { cn } from '~/lib/utils'
+import { Star } from 'lucide-react';
+import { cn } from '~/lib/utils';
 
 type PlaceRatingProps = {
-  rating: number
-  size?: 'sm' | 'md' | 'lg'
-}
+  rating: number;
+  size?: 'sm' | 'md' | 'lg';
+};
 
 const PlaceRating = ({ rating, size = 'md' }: PlaceRatingProps) => {
   return (
@@ -21,7 +21,7 @@ const PlaceRating = ({ rating, size = 'md' }: PlaceRatingProps) => {
         <span className="text-gray-500">/ 5</span>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PlaceRating
+export default PlaceRating;

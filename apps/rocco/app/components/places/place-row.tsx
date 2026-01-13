@@ -1,28 +1,28 @@
-import { Star } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Link } from 'react-router'
-import z from 'zod'
-import { trpc } from '~/lib/trpc/client'
-import { buildImageUrl, cn } from '~/lib/utils'
+import { Star } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router';
+import z from 'zod';
+import { trpc } from '~/lib/trpc/client';
+import { buildImageUrl, cn } from '~/lib/utils';
 
 type PlaceRowProps = {
-  name: string
-  href: string
-  photoUrl?: string | null
-  imageUrl?: string | null
-  meta?: ReactNode
-  subtitle?: ReactNode
-  accessory?: ReactNode
-  isSelected?: boolean
-  onMouseEnter?: () => void
-  onMouseLeave?: () => void
+  name: string;
+  href: string;
+  photoUrl?: string | null;
+  imageUrl?: string | null;
+  meta?: ReactNode;
+  subtitle?: ReactNode;
+  accessory?: ReactNode;
+  isSelected?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   addedBy?: {
-    id: string
-    name: string | null
-    email: string
-    image: string | null
-  } | null
-}
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+  } | null;
+};
 
 export default function PlaceRow({
   name,
@@ -37,19 +37,21 @@ export default function PlaceRow({
   onMouseLeave,
   addedBy,
 }: PlaceRowProps) {
-  const resolvedImage = buildImageUrl(photoUrl) ?? buildImageUrl(imageUrl) ?? null
-  const utils = trpc.useUtils()
+  const resolvedImage = buildImageUrl(photoUrl) ?? buildImageUrl(imageUrl) ?? null;
+  const utils = trpc.useUtils();
 
   const handlePrefetch = () => {
-    const id = href.split('/').pop()
-    if (!id) { return }
+    const id = href.split('/').pop();
+    if (!id) {
+      return;
+    }
 
     if (z.uuid().safeParse(id).success) {
-      utils.places.getDetailsById.prefetch({ id })
+      utils.places.getDetailsById.prefetch({ id });
     } else {
-      utils.places.getDetailsByGoogleId.prefetch({ googleMapsId: id })
+      utils.places.getDetailsByGoogleId.prefetch({ googleMapsId: id });
     }
-  }
+  };
 
   return (
     <li
@@ -58,7 +60,7 @@ export default function PlaceRow({
         'focus-within:bg-indigo-50 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2',
         {
           'bg-indigo-50': isSelected,
-        }
+        },
       )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -109,5 +111,5 @@ export default function PlaceRow({
 
       {accessory ? <div className="ml-2 flex items-center">{accessory}</div> : null}
     </li>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import { searchPlaces as googleSearchPlaces } from '~/lib/google-places.server'
-import { mapGooglePlaceToPrediction } from '~/lib/places-utils'
-import { logger } from '../../logger'
-import { protectedProcedure } from '../context'
+import { z } from 'zod';
+import { searchPlaces as googleSearchPlaces } from '~/lib/google-places.server';
+import { mapGooglePlaceToPrediction } from '~/lib/places-utils';
+import { logger } from '../../logger';
+import { protectedProcedure } from '../context';
 
 export const autocomplete = protectedProcedure
   .input(
@@ -12,15 +12,15 @@ export const autocomplete = protectedProcedure
       longitude: z.number().optional(),
       // optional radius in meters to control location bias for results
       radius: z.number().optional().default(50000),
-    })
+    }),
   )
   .query(async ({ input }) => {
-    const query = input.query.trim()
+    const query = input.query.trim();
     if (query.length < 2) {
-      return []
+      return [];
     }
 
-    let locationBias: { latitude: number; longitude: number; radius: number } | undefined
+    let locationBias: { latitude: number; longitude: number; radius: number } | undefined;
 
     try {
       locationBias =
@@ -30,16 +30,16 @@ export const autocomplete = protectedProcedure
               longitude: input.longitude,
               radius: input.radius ?? 50000,
             }
-          : undefined
+          : undefined;
 
       const googleResults = await googleSearchPlaces({
         query,
         maxResultCount: 8,
         locationBias,
-      })
+      });
 
-      const predictions = googleResults.map(mapGooglePlaceToPrediction)
-      return predictions
+      const predictions = googleResults.map(mapGooglePlaceToPrediction);
+      return predictions;
     } catch (error) {
       logger.error('Failed to autocomplete places', {
         service: 'placesRouter',
@@ -47,7 +47,7 @@ export const autocomplete = protectedProcedure
         error: error instanceof Error ? error.message : String(error),
         query,
         locationBias,
-      })
-      throw new Error('Failed to fetch autocomplete suggestions')
+      });
+      throw new Error('Failed to fetch autocomplete suggestions');
     }
-  })
+  });

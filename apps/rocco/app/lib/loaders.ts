@@ -2,19 +2,19 @@
  * Type definitions for loader/action arguments
  */
 export interface LoaderArgs {
-  params: Record<string, string>
-  request: Request
+  params: Record<string, string>;
+  request: Request;
 }
 
 /**
  * Error response for data loaders
  */
 export class LoaderError extends Error {
-  status: number
+  status: number;
 
   constructor(message: string, status = 400) {
-    super(message)
-    this.status = status
+    super(message);
+    this.status = status;
   }
 }
 
@@ -23,12 +23,12 @@ export class LoaderError extends Error {
  */
 export async function handleLoaderData<T>(
   promise: Promise<T>,
-  errorMessage = 'Failed to load data'
+  errorMessage = 'Failed to load data',
 ): Promise<T> {
   try {
-    return await promise
+    return await promise;
   } catch (error) {
-    console.error('Loader error:', error)
-    throw new LoaderError(errorMessage)
+    console.error('Loader error:', error);
+    throw new LoaderError(errorMessage);
   }
 }

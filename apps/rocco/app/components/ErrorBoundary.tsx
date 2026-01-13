@@ -1,6 +1,6 @@
-import { PageTitle } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { motion, type Variants } from 'framer-motion'
+import { PageTitle } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { motion, type Variants } from 'framer-motion';
 import {
   AlertCircle,
   ArrowLeft,
@@ -13,19 +13,19 @@ import {
   ServerCrash,
   ShieldAlert,
   WifiOff,
-} from 'lucide-react'
-import { useState } from 'react'
-import { isRouteErrorResponse, useNavigate } from 'react-router'
-import Header from './header'
+} from 'lucide-react';
+import { useState } from 'react';
+import { isRouteErrorResponse, useNavigate } from 'react-router';
+import Header from './header';
 
 interface ErrorBoundaryProps {
-  error: unknown
+  error: unknown;
 }
 
 const fadeIn: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
-}
+};
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -36,20 +36,20 @@ const staggerContainer: Variants = {
       delayChildren: 0.2,
     },
   },
-}
+};
 
 const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.9 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
-}
+};
 
 interface ErrorDetails {
-  message: string
-  details: string
-  icon: React.ReactNode
-  iconColor: string
-  suggestions: string[]
-  showAuth?: boolean
+  message: string;
+  details: string;
+  icon: React.ReactNode;
+  iconColor: string;
+  suggestions: string[];
+  showAuth?: boolean;
 }
 
 function getErrorDetails(error: unknown): ErrorDetails {
@@ -62,7 +62,7 @@ function getErrorDetails(error: unknown): ErrorDetails {
           icon: <AlertCircle className="size-20 sm:size-24" />,
           iconColor: 'text-blue-500/70',
           suggestions: ['Check the URL for typos', 'Return to the home page', 'Browse your lists'],
-        }
+        };
       case 401:
         return {
           message: 'Authentication Required',
@@ -71,7 +71,7 @@ function getErrorDetails(error: unknown): ErrorDetails {
           iconColor: 'text-amber-500/70',
           suggestions: ['Sign in with your Google account', 'Contact support if you need help'],
           showAuth: true,
-        }
+        };
       case 403:
         return {
           message: 'Access Denied',
@@ -83,7 +83,7 @@ function getErrorDetails(error: unknown): ErrorDetails {
             'Contact the list owner for access',
             'Return to your lists',
           ],
-        }
+        };
       case 500:
         return {
           message: 'Server Error',
@@ -95,7 +95,7 @@ function getErrorDetails(error: unknown): ErrorDetails {
             'Wait a few minutes and try again',
             'Contact support if the issue persists',
           ],
-        }
+        };
       case 503:
         return {
           message: 'Service Unavailable',
@@ -107,7 +107,7 @@ function getErrorDetails(error: unknown): ErrorDetails {
             'Try again in a few minutes',
             'Check our status page',
           ],
-        }
+        };
       default:
         return {
           message: `Error ${error.status}`,
@@ -115,13 +115,13 @@ function getErrorDetails(error: unknown): ErrorDetails {
           icon: <AlertCircle className="size-20 sm:size-24" />,
           iconColor: 'text-red-500/70',
           suggestions: ['Try refreshing the page', 'Go back to the previous page', 'Return home'],
-        }
+        };
     }
   }
 
   // Handle regular Error objects
   if (error instanceof Error) {
-    console.error('ErrorBoundary caught an error:', error)
+    console.error('ErrorBoundary caught an error:', error);
     return {
       message: 'Something Went Wrong',
       details:
@@ -135,37 +135,37 @@ function getErrorDetails(error: unknown): ErrorDetails {
         'Clear your browser cache',
         'Contact support if the issue persists',
       ],
-    }
+    };
   }
 
   // Fallback for unknown errors
-  console.error('ErrorBoundary caught an error:', error)
+  console.error('ErrorBoundary caught an error:', error);
   return {
     message: 'Unexpected Error',
     details: 'An unexpected error occurred. Please try again.',
     icon: <AlertCircle className="size-20 sm:size-24" />,
     iconColor: 'text-gray-500/70',
     suggestions: ['Try refreshing the page', 'Return to the home page', 'Contact support'],
-  }
+  };
 }
 
 export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
-  const navigate = useNavigate()
-  const [showStack, setShowStack] = useState(false)
-  const errorDetails = getErrorDetails(error)
-  const stack = import.meta.env.DEV && error instanceof Error ? error.stack : undefined
+  const navigate = useNavigate();
+  const [showStack, setShowStack] = useState(false);
+  const errorDetails = getErrorDetails(error);
+  const stack = import.meta.env.DEV && error instanceof Error ? error.stack : undefined;
 
   const handleRetry = () => {
-    window.location.reload()
-  }
+    window.location.reload();
+  };
 
   const handleGoBack = () => {
     if (window.history.length > 1) {
-      navigate(-1)
+      navigate(-1);
     } else {
-      navigate('/')
+      navigate('/');
     }
-  }
+  };
 
   return (
     <div className="h-full w-full flex flex-col items-center">
@@ -301,5 +301,5 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
         </main>
       </div>
     </div>
-  )
+  );
 }

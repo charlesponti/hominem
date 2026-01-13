@@ -1,28 +1,28 @@
-import { Image as ImageIcon } from 'lucide-react'
-import { memo, useCallback, useState } from 'react'
-import { cn } from '~/lib/utils'
-import PlacePhotoLightbox from './PlacePhotoLightbox'
+import { Image as ImageIcon } from 'lucide-react';
+import { memo, useCallback, useState } from 'react';
+import { cn } from '~/lib/utils';
+import PlacePhotoLightbox from './PlacePhotoLightbox';
 
 type Props = {
-  alt: string
+  alt: string;
   // thumbnails or resolved URLs suitable for the list view
-  photos: string[] | null | undefined
-  placeId: string
-}
+  photos: string[] | null | undefined;
+  placeId: string;
+};
 
 const PlacePhotos = ({ alt, photos, placeId }: Props) => {
-  const [failedImages, setFailedImages] = useState<Set<number>>(new Set())
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const handleImageError = useCallback((index: number) => {
-    setFailedImages((prev) => new Set(prev).add(index))
-  }, [])
+    setFailedImages((prev) => new Set(prev).add(index));
+  }, []);
 
   const openLightbox = useCallback((index: number) => {
-    setCurrentPhotoIndex(index)
-    setLightboxOpen(true)
-  }, [])
+    setCurrentPhotoIndex(index);
+    setLightboxOpen(true);
+  }, []);
 
   if (!photos || photos.length === 0) {
     return (
@@ -32,7 +32,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
           <p className="text-gray-500 text-sm">No photos available</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -46,7 +46,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
         }}
       >
         {photos.map((photoUrl, index) => {
-          const hasFailed = failedImages.has(index)
+          const hasFailed = failedImages.has(index);
 
           return (
             <button
@@ -74,13 +74,13 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
                     index === 0 ? { viewTransitionName: `place-photo-image-${placeId}` } : undefined
                   }
                   className={cn(
-                    'object-cover w-full h-full transition-all duration-300 group-hover:scale-105'
+                    'object-cover w-full h-full transition-all duration-300 group-hover:scale-105',
                   )}
                   onError={() => handleImageError(index)}
                 />
               )}
             </button>
-          )
+          );
         })}
       </div>
 
@@ -93,7 +93,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
         alt={alt}
       />
     </>
-  )
-}
+  );
+};
 
-export default memo(PlacePhotos)
+export default memo(PlacePhotos);

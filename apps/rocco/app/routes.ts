@@ -1,4 +1,4 @@
-import { index, layout, type RouteConfig, route } from '@react-router/dev/routes'
+import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
 
 export default [
   route('api/trpc/*', './routes/api/trpc.ts'),
@@ -42,4 +42,4 @@ export default [
 
     route('*', './routes/$.tsx'),
   ]),
-] satisfies RouteConfig
+] satisfies RouteConfig;

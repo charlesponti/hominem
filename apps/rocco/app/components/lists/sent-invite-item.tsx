@@ -1,47 +1,47 @@
-import { Button } from '@hominem/ui/button'
-import { Check, Link as LinkIcon, Mail } from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { env } from '~/lib/env'
-import type { SentInvite } from '~/lib/types'
-import UserAvatar from '../user-avatar'
-import DeleteInviteButton from './delete-invite-button'
-import RemoveCollaboratorButton from './remove-collaborator-button'
+import { Button } from '@hominem/ui/button';
+import { Check, Link as LinkIcon, Mail } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { env } from '~/lib/env';
+import type { SentInvite } from '~/lib/types';
+import UserAvatar from '../user-avatar';
+import DeleteInviteButton from './delete-invite-button';
+import RemoveCollaboratorButton from './remove-collaborator-button';
 
 type SentInviteItemProps = {
-  invite: SentInvite
-  listId: string
-  onDelete: (email: string) => void
-}
+  invite: SentInvite;
+  listId: string;
+  onDelete: (email: string) => void;
+};
 
 export default function SentInviteItem({ invite, listId, onDelete }: SentInviteItemProps) {
-  const { accepted, invitedUserEmail, token, user_invitedUserId } = invite
-  const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const { accepted, invitedUserEmail, token, user_invitedUserId } = invite;
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const getInviteUrl = useCallback(
     (inviteToken: string) => {
-      const baseUrl = env.VITE_APP_BASE_URL.replace(/\/$/, '')
-      return `${baseUrl}/invites?token=${inviteToken}&listId=${listId}`
+      const baseUrl = env.VITE_APP_BASE_URL.replace(/\/$/, '');
+      return `${baseUrl}/invites?token=${inviteToken}&listId=${listId}`;
     },
-    [listId]
-  )
+    [listId],
+  );
 
   const copyInviteUrl = useCallback(
     async (inviteToken: string) => {
-      const url = getInviteUrl(inviteToken)
+      const url = getInviteUrl(inviteToken);
       try {
-        await navigator.clipboard.writeText(url)
-        setCopiedToken(inviteToken)
-        setTimeout(() => setCopiedToken(null), 2000)
+        await navigator.clipboard.writeText(url);
+        setCopiedToken(inviteToken);
+        setTimeout(() => setCopiedToken(null), 2000);
       } catch (error) {
-        console.error('Failed to copy invite URL:', error)
+        console.error('Failed to copy invite URL:', error);
       }
     },
-    [getInviteUrl]
-  )
+    [getInviteUrl],
+  );
 
-  const isCopied = copiedToken === token
-  const profilePhoto = user_invitedUserId?.photoUrl || user_invitedUserId?.image
-  const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U'
+  const isCopied = copiedToken === token;
+  const profilePhoto = user_invitedUserId?.photoUrl || user_invitedUserId?.image;
+  const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U';
 
   return (
     <li className="flex flex-col md:flex-row md:items-center gap-3 p-3 group hover:bg-gray-50 transition-colors">
@@ -97,5 +97,5 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
         )}
       </div>
     </li>
-  )
+  );
 }

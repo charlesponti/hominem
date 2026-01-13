@@ -1,97 +1,97 @@
 {
   "name": "@hominem/data",
   "version": "0.0.0",
+  "description": "Database schemas and utilities",
   "type": "module",
   "sideEffects": false,
-  "description": "Database schemas and utilities",
+  "types": "./build/index.d.ts",
   "exports": {
     "./db": {
-      "import": "./src/db/index.ts",
-      "types": "./build/db/index.d.ts"
+      "types": "./build/db/index.d.ts",
+      "import": "./src/db/index.ts"
     },
     "./emails": {
-      "import": "./src/resend.ts",
-      "types": "./build/resend.d.ts"
+      "types": "./build/resend.d.ts",
+      "import": "./src/resend.ts"
     },
     "./events": {
-      "import": "./src/events/index.ts",
-      "types": "./build/events/index.d.ts"
+      "types": "./build/events/index.d.ts",
+      "import": "./src/events/index.ts"
     },
     "./files": {
-      "import": "./src/files.ts",
-      "types": "./build/files.d.ts"
+      "types": "./build/files.d.ts",
+      "import": "./src/files.ts"
     },
     "./finance": {
-      "import": "./src/finance/index.ts",
-      "types": "./build/finance/index.d.ts"
+      "types": "./build/finance/index.d.ts",
+      "import": "./src/finance/index.ts"
     },
     "./fixtures": {
-      "import": "./src/fixtures.ts",
-      "types": "./build/fixtures.d.ts"
+      "types": "./build/fixtures.d.ts",
+      "import": "./src/fixtures.ts"
     },
     "./google-calendar": {
-      "import": "./src/google.ts",
-      "types": "./build/google.d.ts"
+      "types": "./build/google.d.ts",
+      "import": "./src/google.ts"
     },
     "./health": {
-      "import": "./src/health/index.ts",
-      "types": "./build/health/index.d.ts"
+      "types": "./build/health/index.d.ts",
+      "import": "./src/health/index.ts"
     },
     "./lists": {
-      "import": "./src/lists/index.ts",
-      "types": "./build/lists/index.d.ts"
+      "types": "./build/lists/index.d.ts",
+      "import": "./src/lists/index.ts"
     },
     "./logger": {
-      "import": "./src/logger.ts",
-      "types": "./build/logger.d.ts"
+      "types": "./build/logger.d.ts",
+      "import": "./src/logger.ts"
     },
     "./places": {
-      "import": "./src/places.ts",
-      "types": "./build/places.d.ts"
+      "types": "./build/places.d.ts",
+      "import": "./src/places.ts"
     },
     "./notes": {
-      "import": "./src/notes/index.ts",
-      "types": "./build/notes/index.d.ts"
+      "types": "./build/notes/index.d.ts",
+      "import": "./src/notes/index.ts"
     },
     "./schema": {
-      "import": "./src/db/schema/index.ts",
-      "types": "./build/db/schema/index.d.ts"
+      "types": "./build/db/schema/index.d.ts",
+      "import": "./src/db/schema/index.ts"
     },
     "./services": {
-      "import": "./src/services/index.ts",
-      "types": "./build/services/index.d.ts"
+      "types": "./build/services/index.d.ts",
+      "import": "./src/services/index.ts"
     },
     "./queues": {
-      "import": "./src/queues.ts",
-      "types": "./build/queues.d.ts"
+      "types": "./build/queues.d.ts",
+      "import": "./src/queues.ts"
     },
     "./tools": {
-      "import": "./src/tools/index.ts",
-      "types": "./build/tools/index.d.ts"
+      "types": "./build/tools/index.d.ts",
+      "import": "./src/tools/index.ts"
     },
     "./travel": {
-      "import": "./src/travel/index.ts",
-      "types": "./build/travel/index.d.ts"
+      "types": "./build/travel/index.d.ts",
+      "import": "./src/travel/index.ts"
     },
     "./types": {
-      "import": "./src/types.ts",
-      "types": "./build/types.d.ts"
+      "types": "./build/types.d.ts",
+      "import": "./src/types.ts"
     },
     "./vector": {
-      "import": "./src/vector.ts",
-      "types": "./build/vector.d.ts"
+      "types": "./build/vector.d.ts",
+      "import": "./src/vector.ts"
     },
     "./chat": {
-      "import": "./src/chat/index.ts",
-      "types": "./build/chat/index.d.ts"
+      "types": "./build/chat/index.d.ts",
+      "import": "./src/chat/index.ts"
     },
     "./user": {
-      "import": "./src/users/index.ts",
-      "types": "./build/users/index.d.ts"
+      "types": "./build/users/index.d.ts",
+      "import": "./src/users/index.ts"
     },
     "./package.json": "./package.json"
   },
-  "types": "./build/index.d.ts",
   "scripts": {
     "build": "tsc -b",
     "db:generate": "drizzle-kit generate",
@@ -99,32 +99,32 @@
     "db:migrate-test": "DATABASE_URL=postgres://postgres:postgres@localhost:4433/hominem-test drizzle-kit migrate",
     "db:update": "drizzle-kit generate && drizzle-kit migrate",
     "dev": "tsc -d -w",
-    "lint": "biome lint ./src --fix",
+    "format": "bunx oxfmt ./src",
+    "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest",
-    "format": "biome format ./src --fix"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",
     "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",
+    "bullmq": "5.66.4",
     "csv-parse": "^5.6.0",
     "csv-parser": "^3.2.0",
-    "bullmq": "5.66.4",
     "dotenv": "17.2.3",
     "drizzle-zod": "^0.7.0",
     "effect": "^3.16.10",
-    "googleapis": "^144.0.0",
     "google-auth-library": "9.15.1",
+    "googleapis": "^144.0.0",
     "langchain": "^0.3.15",
     "mammoth": "^1.9.1",
     "openai": "4.83.0",
     "pdf2json": "^3.1.6",
     "postgres": "^3.4.5",
     "resend": "^4.0.1",
+    "sharp": "^0.32.4",
     "uuid": "^11.1.0",
-    "zod": "4.2.1",
-    "sharp": "^0.32.4"
+    "zod": "4.2.1"
   },
   "devDependencies": {
     "@hominem/tsconfigs": "workspace:*",

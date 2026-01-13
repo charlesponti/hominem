@@ -1,5 +1,5 @@
-import type { LogContext, LogEntry, LogLevel } from '../logger'
-import { logger } from '../logger'
+import type { LogContext, LogEntry, LogLevel } from '../logger';
+import { logger } from '../logger';
 
 // PostHog integration for analytics and error tracking
 // import { PostHog } from "posthog-node";
@@ -7,14 +7,14 @@ import { logger } from '../logger'
 export function initPostHog() {
   // Only enable PostHog in production
   if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-    logger.info('PostHog disabled in development')
-    return
+    logger.info('PostHog disabled in development');
+    return;
   }
 
-  const apiKey = typeof process !== 'undefined' ? process.env.POSTHOG_API_KEY : undefined
+  const apiKey = typeof process !== 'undefined' ? process.env.POSTHOG_API_KEY : undefined;
   if (!apiKey) {
-    logger.warn('POSTHOG_API_KEY not configured')
-    return
+    logger.warn('POSTHOG_API_KEY not configured');
+    return;
   }
 
   // PostHog.init(apiKey, {
@@ -27,7 +27,7 @@ export function initPostHog() {
 export function capturePostHogError(_error: Error, _context?: LogContext) {
   // Only send to PostHog in production
   if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-    return
+    return;
   }
 
   // PostHog.capture({
@@ -44,24 +44,24 @@ export function capturePostHogError(_error: Error, _context?: LogContext) {
 // Production logger wrapper
 export class ProductionLogger {
   private logLevel: LogLevel =
-    (typeof process !== 'undefined' && (process.env.LOG_LEVEL as LogLevel)) || 'info'
+    (typeof process !== 'undefined' && (process.env.LOG_LEVEL as LogLevel)) || 'info';
 
   private shouldLog(level: LogLevel): boolean {
-    const levels: LogLevel[] = ['debug', 'info', 'warn', 'error', 'fatal']
-    return levels.indexOf(level) >= levels.indexOf(this.logLevel)
+    const levels: LogLevel[] = ['debug', 'info', 'warn', 'error', 'fatal'];
+    return levels.indexOf(level) >= levels.indexOf(this.logLevel);
   }
 
   private async sendToExternalServices(entry: LogEntry) {
     if (entry.level === 'error' || entry.level === 'fatal') {
       if (typeof process !== 'undefined' && process.env.POSTHOG_API_KEY) {
-        capturePostHogError(entry.error as Error, entry.context)
+        capturePostHogError(entry.error as Error, entry.context);
       }
     }
   }
 
   async log(level: LogLevel, message: string, context?: LogContext, error?: Error) {
     if (!this.shouldLog(level)) {
-      return
+      return;
     }
 
     const entry: LogEntry = {
@@ -71,44 +71,44 @@ export class ProductionLogger {
       context,
       error,
       stack: error?.stack,
-    }
+    };
 
     // Send to external services
-    await this.sendToExternalServices(entry)
+    await this.sendToExternalServices(entry);
 
     // Also log to console for immediate visibility
-    console.error(JSON.stringify(entry))
+    console.error(JSON.stringify(entry));
   }
 
   async debug(message: string, context?: LogContext) {
-    await this.log('debug', message, context)
+    await this.log('debug', message, context);
   }
 
   async info(message: string, context?: LogContext) {
-    await this.log('info', message, context)
+    await this.log('info', message, context);
   }
 
   async warn(message: string, context?: LogContext, error?: Error) {
-    await this.log('warn', message, context, error)
+    await this.log('warn', message, context, error);
   }
 
   async error(message: string, context?: LogContext, error?: Error) {
-    await this.log('error', message, context, error)
+    await this.log('error', message, context, error);
   }
 
   async fatal(message: string, context?: LogContext, error?: Error) {
-    await this.log('fatal', message, context, error)
+    await this.log('fatal', message, context, error);
   }
 }
 
 export function initProductionLogging() {
   if (typeof process !== 'undefined' && process.env.POSTHOG_API_KEY) {
-    initPostHog()
+    initPostHog();
   }
 
   logger.info('Production logging initialized', {
     services: [
       typeof process !== 'undefined' && process.env.POSTHOG_API_KEY ? 'PostHog' : undefined,
     ].filter(Boolean),
-  })
+  });
 }

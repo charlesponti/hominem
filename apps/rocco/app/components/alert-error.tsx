@@ -1,8 +1,8 @@
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react';
 
 type AlertErrorProps = {
-  error?: string
-}
+  error?: string;
+};
 function AlertError({ error }: AlertErrorProps) {
   return (
     <div className="mb-8">
@@ -13,7 +13,7 @@ function AlertError({ error }: AlertErrorProps) {
         </span>
       </div>
     </div>
-  )
+  );
 }
 
-export default AlertError
+export default AlertError;

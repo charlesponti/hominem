@@ -1,54 +1,54 @@
-import { Button } from '@hominem/ui/button'
-import { ArrowRight, ListCheck } from 'lucide-react'
-import { useCallback } from 'react'
-import { Link } from 'react-router'
-import { trpc } from '~/lib/trpc/client'
-import type { ReceivedInvite } from '~/lib/types'
+import { Button } from '@hominem/ui/button';
+import { ArrowRight, ListCheck } from 'lucide-react';
+import { useCallback } from 'react';
+import { Link } from 'react-router';
+import { trpc } from '~/lib/trpc/client';
+import type { ReceivedInvite } from '~/lib/types';
 
 type ReceivedInviteItemProps =
   | {
-      variant: 'preview'
+      variant: 'preview';
       preview: {
-        listName: string
-        coverPhoto?: string | null
-        firstItemName?: string | null
-        invitedUserEmail?: string | null
-        onSignIn: () => void
-      }
+        listName: string;
+        coverPhoto?: string | null;
+        firstItemName?: string | null;
+        invitedUserEmail?: string | null;
+        onSignIn: () => void;
+      };
     }
   | {
-      variant?: 'invite'
-      listInvite: ReceivedInvite
-      currentUserEmail?: string
-      canAccept?: boolean
-    }
+      variant?: 'invite';
+      listInvite: ReceivedInvite;
+      currentUserEmail?: string;
+      canAccept?: boolean;
+    };
 
 const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
-  const inviteProps = props.variant !== 'preview' ? props : null
-  const previewProps = props.variant === 'preview' ? props : null
+  const inviteProps = props.variant !== 'preview' ? props : null;
+  const previewProps = props.variant === 'preview' ? props : null;
 
-  const { mutate, status } = trpc.invites.accept.useMutation()
+  const { mutate, status } = trpc.invites.accept.useMutation();
 
-  const normalizedUserEmail = inviteProps?.currentUserEmail?.toLowerCase()
+  const normalizedUserEmail = inviteProps?.currentUserEmail?.toLowerCase();
   const isEmailMismatch =
     normalizedUserEmail &&
     inviteProps &&
-    normalizedUserEmail !== inviteProps.listInvite.invitedUserEmail.toLowerCase()
+    normalizedUserEmail !== inviteProps.listInvite.invitedUserEmail.toLowerCase();
 
   const onAcceptClick = useCallback(() => {
     if (!inviteProps) {
-      return
+      return;
     }
 
     mutate({
       listId: inviteProps.listInvite.listId,
       token: inviteProps.listInvite.token,
-    })
-  }, [inviteProps, mutate])
+    });
+  }, [inviteProps, mutate]);
 
   // Handle preview variant
   if (previewProps) {
-    const { preview } = previewProps
+    const { preview } = previewProps;
     return (
       <li className="flex flex-col gap-3 p-6 bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center gap-3">
@@ -97,12 +97,12 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
           </Button>
         </div>
       </li>
-    )
+    );
   }
 
   // Handle invite variant - TypeScript knows inviteProps is not null here
-  const { listInvite, canAccept = true } = inviteProps!
-  const { accepted, list } = listInvite
+  const { listInvite, canAccept = true } = inviteProps!;
+  const { accepted, list } = listInvite;
 
   return (
     <li className="flex flex-col gap-3 p-6 bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -134,19 +134,19 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
         </p>
       )}
     </li>
-  )
-}
+  );
+};
 
-export default ReceivedInviteItem
+export default ReceivedInviteItem;
 
 const AcceptButton = ({
   status,
   canAccept,
   onAcceptClick,
 }: {
-  status: 'pending' | 'success' | 'error' | 'idle'
-  canAccept: boolean
-  onAcceptClick: () => void
+  status: 'pending' | 'success' | 'error' | 'idle';
+  canAccept: boolean;
+  onAcceptClick: () => void;
 }) => {
   return (
     <Button
@@ -156,5 +156,5 @@ const AcceptButton = ({
     >
       {status === 'pending' ? 'Accepting...' : canAccept ? 'Accept invite' : 'Sign in to accept'}
     </Button>
-  )
-}
+  );
+};

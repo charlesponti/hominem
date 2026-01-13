@@ -1,9 +1,9 @@
 {
   "name": "@hominem/utils",
   "version": "0.0.0",
+  "description": "Random utilities",
   "type": "module",
   "sideEffects": false,
-  "description": "Random utilities",
   "exports": {
     "./supabase": "./src/supabase/index.ts",
     "./consts": "./src/consts.ts",
@@ -23,10 +23,10 @@
     "./time": "./src/time.ts"
   },
   "scripts": {
-    "lint": "biome lint ./src --fix",
+    "format": "bunx oxfmt ./src",
+    "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest",
-    "format": "biome format ./src --fix"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.10",
@@ -39,9 +39,9 @@
     "cheerio": "^1.0.0",
     "compromise": "^14.14.4",
     "csvtojson": "^2.0.10",
+    "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
     "dotenv": "17.2.3",
-    "date-fns": "^3.6.0",
     "drizzle-zod": "^0.7.0",
     "effect": "^3.16.10",
     "ioredis": "^5.5.0",

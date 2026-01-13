@@ -1,24 +1,24 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { Button } from '@hominem/ui/button'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui/dropdown'
-import { Globe2Icon, List, LogOut, MoreHorizontal, Settings, UserPlus } from 'lucide-react'
-import { useCallback } from 'react'
-import { href, Link, useNavigate } from 'react-router'
+} from '@hominem/ui/dropdown';
+import { Globe2Icon, List, LogOut, MoreHorizontal, Settings, UserPlus } from 'lucide-react';
+import { useCallback } from 'react';
+import { href, Link, useNavigate } from 'react-router';
 
-const APP_NAME = 'Rocco'
+const APP_NAME = 'Rocco';
 
 const NavigationMenu = () => {
-  const navigate = useNavigate()
-  const { logout } = useSupabaseAuthContext()
+  const navigate = useNavigate();
+  const { logout } = useSupabaseAuthContext();
   const onLogoutClick = useCallback(async () => {
-    await logout()
-    navigate('/')
-  }, [logout, navigate])
+    await logout();
+    navigate('/');
+  }, [logout, navigate]);
 
   return (
     <DropdownMenu modal={false}>
@@ -73,11 +73,11 @@ const NavigationMenu = () => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
 
 function Header() {
-  const { isAuthenticated, isLoading, supabase } = useSupabaseAuthContext()
+  const { isAuthenticated, isLoading, supabase } = useSupabaseAuthContext();
 
   return (
     <header
@@ -111,7 +111,7 @@ function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

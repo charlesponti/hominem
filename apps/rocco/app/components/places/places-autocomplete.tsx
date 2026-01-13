@@ -1,90 +1,90 @@
-import { Alert } from '@hominem/ui'
-import { Input } from '@hominem/ui/input'
-import { Check, MapPin, Search } from 'lucide-react'
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { useGeolocation } from '~/hooks/useGeolocation'
+import { Alert } from '@hominem/ui';
+import { Input } from '@hominem/ui/input';
+import { Check, MapPin, Search } from 'lucide-react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useGeolocation } from '~/hooks/useGeolocation';
 import {
   type GooglePlacePrediction,
   useGooglePlacesAutocomplete,
-} from '~/hooks/useGooglePlacesAutocomplete'
-import { cn } from '~/lib/utils'
-import styles from './places-autocomplete.module.css'
+} from '~/hooks/useGooglePlacesAutocomplete';
+import { cn } from '~/lib/utils';
+import styles from './places-autocomplete.module.css';
 
 function PlacesAutocomplete({
   setSelected,
 }: {
-  setSelected: (place: GooglePlacePrediction) => void
+  setSelected: (place: GooglePlacePrediction) => void;
 }) {
-  const [value, setValue] = useState('')
-  const [isOpen, setIsOpen] = useState(false)
-  const [selectedIndex, setSelectedIndex] = useState(-1)
-  const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const DEBOUNCE_TIME_MS = 300
-  const [debouncedValue, setDebouncedValue] = useState('')
-  const { currentLocation } = useGeolocation()
+  const [value, setValue] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const DEBOUNCE_TIME_MS = 300;
+  const [debouncedValue, setDebouncedValue] = useState('');
+  const { currentLocation } = useGeolocation();
 
   const onValueChange = useCallback((newValue: string) => {
-    setValue(newValue)
-    setSelectedIndex(-1)
-    setIsOpen(newValue.length > 0)
+    setValue(newValue);
+    setSelectedIndex(-1);
+    setIsOpen(newValue.length > 0);
 
     if (timeoutId.current) {
-      clearTimeout(timeoutId.current)
+      clearTimeout(timeoutId.current);
     }
     const id = setTimeout(() => {
-      setDebouncedValue(newValue)
-    }, DEBOUNCE_TIME_MS)
-    timeoutId.current = id
-  }, [])
+      setDebouncedValue(newValue);
+    }, DEBOUNCE_TIME_MS);
+    timeoutId.current = id;
+  }, []);
 
   const { data, error, isLoading } = useGooglePlacesAutocomplete({
     input: debouncedValue,
     location: currentLocation ?? undefined,
-  })
+  });
 
   const handleSelect = useCallback(
     (place: GooglePlacePrediction) => {
-      setValue(`${place.text}, ${place.address}`)
-      setSelected(place)
-      setIsOpen(false)
-      setSelectedIndex(-1)
-      inputRef.current?.blur()
+      setValue(`${place.text}, ${place.address}`);
+      setSelected(place);
+      setIsOpen(false);
+      setSelectedIndex(-1);
+      inputRef.current?.blur();
     },
-    [setSelected]
-  )
+    [setSelected],
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!(isOpen && data)) {
-        return
+        return;
       }
 
       switch (e.key) {
         case 'ArrowDown':
-          e.preventDefault()
-          setSelectedIndex((prev) => (prev < data.length - 1 ? prev + 1 : 0))
-          break
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev < data.length - 1 ? prev + 1 : 0));
+          break;
         case 'ArrowUp':
-          e.preventDefault()
-          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : data.length - 1))
-          break
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : data.length - 1));
+          break;
         case 'Enter':
-          e.preventDefault()
+          e.preventDefault();
           if (selectedIndex >= 0 && data[selectedIndex]) {
-            handleSelect(data[selectedIndex])
+            handleSelect(data[selectedIndex]);
           }
-          break
+          break;
         case 'Escape':
-          setIsOpen(false)
-          setSelectedIndex(-1)
-          inputRef.current?.blur()
-          break
+          setIsOpen(false);
+          setSelectedIndex(-1);
+          inputRef.current?.blur();
+          break;
       }
     },
-    [isOpen, data, selectedIndex, handleSelect]
-  )
+    [isOpen, data, selectedIndex, handleSelect],
+  );
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -95,23 +95,23 @@ function PlacesAutocomplete({
         inputRef.current &&
         !inputRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false)
-        setSelectedIndex(-1)
+        setIsOpen(false);
+        setSelectedIndex(-1);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (timeoutId.current) {
-        clearTimeout(timeoutId.current)
+        clearTimeout(timeoutId.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
     <div data-testid="places-autocomplete" className="relative w-full">
@@ -151,7 +151,7 @@ function PlacesAutocomplete({
                     'flex items-center px-3 py-2 cursor-pointer transition-colors w-full text-left overflow-x-hidden',
                     'hover:bg-gray-50 focus:bg-gray-50 focus:outline-none',
                     selectedIndex === index && 'bg-gray-100',
-                    styles.autocompleteItem
+                    styles.autocompleteItem,
                   )}
                   data-testid="places-autocomplete-option"
                 >
@@ -176,7 +176,7 @@ function PlacesAutocomplete({
 
       {error && <Alert type="error">{error.message}</Alert>}
     </div>
-  )
+  );
 }
 
 const PlacesAutocompleteLoading = (props: React.ComponentProps<'div'> & { show: boolean }) => (
@@ -185,7 +185,7 @@ const PlacesAutocompleteLoading = (props: React.ComponentProps<'div'> & { show: 
     <LoadingItem />
     <LoadingItem />
   </div>
-)
+);
 
 const LoadingItem = (props: React.ComponentProps<'div'>) => (
   <div className="flex items-center px-3 py-2" {...props}>
@@ -195,6 +195,6 @@ const LoadingItem = (props: React.ComponentProps<'div'>) => (
       <div className="w-1/2 h-2 bg-gray-100 rounded animate-pulse" />
     </div>
   </div>
-)
+);
 
-export default memo(PlacesAutocomplete)
+export default memo(PlacesAutocomplete);

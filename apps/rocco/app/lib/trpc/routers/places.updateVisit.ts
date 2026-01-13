@@ -1,6 +1,6 @@
-import { updateEvent } from '@hominem/data/events'
-import { z } from 'zod'
-import { protectedProcedure } from '../context'
+import { updateEvent } from '@hominem/data/events';
+import { z } from 'zod';
+import { protectedProcedure } from '../context';
 
 export const updateVisit = protectedProcedure
   .input(
@@ -15,19 +15,19 @@ export const updateVisit = protectedProcedure
       visitPeople: z.string().optional().nullable(),
       tags: z.array(z.string()).optional(),
       people: z.array(z.string()).optional(),
-    })
+    }),
   )
   .mutation(async ({ input }) => {
-    const { visitId, date, ...updateData } = input
+    const { visitId, date, ...updateData } = input;
 
     const updatedEvent = await updateEvent(visitId, {
       ...updateData,
       date: date ? new Date(date) : undefined,
-    })
+    });
 
     if (!updatedEvent) {
-      throw new Error('Visit not found')
+      throw new Error('Visit not found');
     }
 
-    return updatedEvent
-  })
+    return updatedEvent;
+  });

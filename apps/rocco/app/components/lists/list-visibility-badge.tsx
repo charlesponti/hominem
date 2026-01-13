@@ -1,8 +1,8 @@
-import { Globe, Lock } from 'lucide-react'
-import { cn } from '~/lib/utils'
+import { Globe, Lock } from 'lucide-react';
+import { cn } from '~/lib/utils';
 
 interface ListVisibilityBadgeProps {
-  isPublic: boolean
+  isPublic: boolean;
 }
 
 export default function ListVisibilityBadge({ isPublic }: ListVisibilityBadgeProps) {
@@ -25,5 +25,5 @@ export default function ListVisibilityBadge({ isPublic }: ListVisibilityBadgePro
         </>
       )}
     </span>
-  )
+  );
 }

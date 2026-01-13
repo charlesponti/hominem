@@ -1,6 +1,6 @@
-import { createPerson, getPeople, type PersonInput } from '@hominem/data/services'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../context'
+import { createPerson, getPeople, type PersonInput } from '@hominem/data/services';
+import { z } from 'zod';
+import { protectedProcedure, router } from '../context';
 
 export const peopleRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => getPeople({ userId: ctx.user.id })),
@@ -12,7 +12,7 @@ export const peopleRouter = router({
         lastName: z.string().optional(),
         email: z.email().optional(),
         phone: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const personInput: PersonInput = {
@@ -21,8 +21,8 @@ export const peopleRouter = router({
         lastName: input.lastName,
         email: input.email,
         phone: input.phone,
-      }
+      };
 
-      return createPerson(personInput)
+      return createPerson(personInput);
     }),
-})
+});

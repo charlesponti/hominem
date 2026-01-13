@@ -1,26 +1,26 @@
-import { Trash } from 'lucide-react'
-import { useDeleteList } from '~/lib/lists'
+import { Trash } from 'lucide-react';
+import { useDeleteList } from '~/lib/lists';
 
 const ListDeleteButton = ({ listId, onDelete }: { listId: string; onDelete: () => void }) => {
   const { mutateAsync } = useDeleteList({
     onSuccess: () => {
-      onDelete()
+      onDelete();
     },
-  })
+  });
 
   const onDeleteClick = async (e: React.MouseEvent) => {
     if (e.button !== 0) {
-      return
+      return;
     }
 
-    await mutateAsync({ id: listId })
-  }
+    await mutateAsync({ id: listId });
+  };
 
   const onDeleteKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      await mutateAsync({ id: listId })
+      await mutateAsync({ id: listId });
     }
-  }
+  };
 
   return (
     <button
@@ -32,7 +32,7 @@ const ListDeleteButton = ({ listId, onDelete }: { listId: string; onDelete: () =
     >
       <Trash width={24} height={24} className="text-red-500" />
     </button>
-  )
-}
+  );
+};
 
-export default ListDeleteButton
+export default ListDeleteButton;

@@ -1,20 +1,26 @@
-import { Button } from '@hominem/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@hominem/ui/dialog'
-import { useRevalidator } from 'react-router'
-import { useModal } from '~/hooks/useModal'
-import { trpc } from '~/lib/trpc/client'
+import { Button } from '@hominem/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@hominem/ui/dialog';
+import { useRevalidator } from 'react-router';
+import { useModal } from '~/hooks/useModal';
+import { trpc } from '~/lib/trpc/client';
 
 export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
-  const { isOpen, open, close } = useModal()
-  const { data: lists } = trpc.lists.getAll.useQuery()
-  const addItemMutation = trpc.trips.addItem.useMutation()
-  const revalidator = useRevalidator()
+  const { isOpen, open, close } = useModal();
+  const { data: lists } = trpc.lists.getAll.useQuery();
+  const addItemMutation = trpc.trips.addItem.useMutation();
+  const revalidator = useRevalidator();
 
   const handleAddPlace = async (itemId: string) => {
-    await addItemMutation.mutateAsync({ tripId, itemId })
-    revalidator.revalidate()
-    close()
-  }
+    await addItemMutation.mutateAsync({ tripId, itemId });
+    revalidator.revalidate();
+    close();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(openState) => (openState ? open() : close())}>
@@ -47,5 +53,5 @@ export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

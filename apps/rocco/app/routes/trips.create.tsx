@@ -1,37 +1,37 @@
-import { PageTitle } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
-import { useId } from 'react'
-import { Form, Link, useNavigation } from 'react-router'
-import ErrorBoundary from '~/components/ErrorBoundary'
-import { createCaller } from '~/lib/trpc/server'
-import type { Route } from './+types/trips.create'
+import { PageTitle } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/input';
+import { useId } from 'react';
+import { Form, Link, useNavigation } from 'react-router';
+import ErrorBoundary from '~/components/ErrorBoundary';
+import { createCaller } from '~/lib/trpc/server';
+import type { Route } from './+types/trips.create';
 
 export async function action({ request }: Route.ActionArgs) {
-  const trpcServer = createCaller(request)
-  const formData = await request.formData()
-  const name = formData.get('name') as string
-  const startDateStr = formData.get('startDate') as string
-  const endDateStr = formData.get('endDate') as string
+  const trpcServer = createCaller(request);
+  const formData = await request.formData();
+  const name = formData.get('name') as string;
+  const startDateStr = formData.get('startDate') as string;
+  const endDateStr = formData.get('endDate') as string;
 
   // Convert date strings to Date objects if provided
-  const startDate = startDateStr ? new Date(startDateStr) : undefined
-  const endDate = endDateStr ? new Date(endDateStr) : undefined
+  const startDate = startDateStr ? new Date(startDateStr) : undefined;
+  const endDate = endDateStr ? new Date(endDateStr) : undefined;
 
   try {
-    const trip = await trpcServer.trips.create({ name, startDate, endDate })
-    return { success: true, tripId: trip.id }
-  } catch (_error) {
-    return { success: false, error: 'Failed to create trip' }
+    const trip = await trpcServer.trips.create({ name, startDate, endDate });
+    return { success: true, tripId: trip.id };
+  } catch {
+    return { success: false, error: 'Failed to create trip' };
   }
 }
 
 export default function CreateTripPage({ actionData }: Route.ComponentProps) {
-  const navigation = useNavigation()
-  const isSubmitting = navigation.state === 'submitting'
-  const nameId = useId()
-  const startDateId = useId()
-  const endDateId = useId()
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === 'submitting';
+  const nameId = useId();
+  const startDateId = useId();
+  const endDateId = useId();
 
   // Redirect to the new trip page on successful creation
   if (actionData?.success && actionData.tripId) {
@@ -43,7 +43,7 @@ export default function CreateTripPage({ actionData }: Route.ComponentProps) {
           <Button>View Trip</Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -97,7 +97,7 @@ export default function CreateTripPage({ actionData }: Route.ComponentProps) {
         </div>
       </Form>
     </div>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

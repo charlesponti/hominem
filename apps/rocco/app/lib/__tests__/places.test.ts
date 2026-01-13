@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { createPlaceFromPrediction } from '../places'
-import type { GooglePlacePrediction } from '../types'
+import { describe, expect, it } from 'vitest';
+import { createPlaceFromPrediction } from '../places';
+import type { GooglePlacePrediction } from '../types';
 
 describe('createPlaceFromPrediction', () => {
   it('uses address as address if available', async () => {
@@ -9,13 +9,13 @@ describe('createPlaceFromPrediction', () => {
       text: 'Test Place',
       address: 'Test Address',
       location: null,
-    }
+    };
 
-    const place = await createPlaceFromPrediction(prediction)
+    const place = await createPlaceFromPrediction(prediction);
 
-    expect(place.name).toBe('Test Place')
-    expect(place.address).toBe('Test Address')
-  })
+    expect(place.name).toBe('Test Place');
+    expect(place.address).toBe('Test Address');
+  });
 
   it('falls back to empty string for address if address is missing', async () => {
     const prediction: GooglePlacePrediction = {
@@ -23,11 +23,11 @@ describe('createPlaceFromPrediction', () => {
       text: 'Test Place',
       address: '',
       location: null,
-    }
+    };
 
-    const place = await createPlaceFromPrediction(prediction)
+    const place = await createPlaceFromPrediction(prediction);
 
-    expect(place.name).toBe('Test Place')
-    expect(place.address).toBe('')
-  })
-})
+    expect(place.name).toBe('Test Place');
+    expect(place.address).toBe('');
+  });
+});

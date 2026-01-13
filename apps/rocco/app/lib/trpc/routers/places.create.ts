@@ -1,10 +1,11 @@
-import { addPlaceToLists, type PlaceInsert } from '@hominem/data/places'
-import { z } from 'zod'
-import { getPlaceDetails as fetchGooglePlaceDetails } from '~/lib/google-places.server'
-import { extractPhotoReferences } from '~/lib/places-utils'
-import { logger } from '../../logger'
-import { protectedProcedure } from '../context'
-import { buildPhotoUrl } from './places.helpers'
+import { addPlaceToLists, type PlaceInsert } from '@hominem/data/places';
+import { z } from 'zod';
+import { getPlaceDetails as fetchGooglePlaceDetails } from '~/lib/google-places.server';
+import { sanitizeStoredPhotos } from '@hominem/utils/images';
+import { extractPhotoReferences } from '~/lib/places-utils';
+import { logger } from '../../logger';
+import { protectedProcedure } from '../context';
+import { buildPhotoUrl } from './places.helpers';
 
 export const create = protectedProcedure
   .input(
@@ -22,21 +23,21 @@ export const create = protectedProcedure
       phoneNumber: z.string().optional(),
       photos: z.array(z.string()).optional(),
       listIds: z.array(z.uuid()).optional(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
-    const { listIds, ...placeInput } = input
+    const { listIds, ...placeInput } = input;
 
     // Fetch Google Place details if photos/imageUrl are missing
-    let fetchedPhotos: string[] | null = null
-    let fetchedImageUrl: string | null = null
-    let fetchedRating: number | null = null
-    let fetchedTypes: string[] | null = null
-    let fetchedAddress: string | null = null
-    let fetchedLatitude: number | null = null
-    let fetchedLongitude: number | null = null
-    let fetchedWebsiteUri: string | null = null
-    let fetchedPhoneNumber: string | null = null
+    let fetchedPhotos: string[] | null = null;
+    let fetchedImageUrl: string | null = null;
+    let fetchedRating: number | null = null;
+    let fetchedTypes: string[] | null = null;
+    let fetchedAddress: string | null = null;
+    let fetchedLatitude: number | null = null;
+    let fetchedLongitude: number | null = null;
+    let fetchedWebsiteUri: string | null = null;
+    let fetchedPhoneNumber: string | null = null;
 
     const needsDetails =
       !placeInput.photos ||
@@ -44,34 +45,35 @@ export const create = protectedProcedure
       !placeInput.imageUrl ||
       !placeInput.rating ||
       !placeInput.types ||
-      placeInput.types.length === 0
+      placeInput.types.length === 0;
 
     if (needsDetails) {
       try {
         const googlePlace = await fetchGooglePlaceDetails({
           placeId: placeInput.googleMapsId,
           forceFresh: true,
-        })
+        });
 
         if (googlePlace) {
-          // Extract photos
-          fetchedPhotos = extractPhotoReferences(googlePlace.photos)
-          fetchedImageUrl = fetchedPhotos.length > 0 && fetchedPhotos[0] ? fetchedPhotos[0] : null
+          // Extract and sanitize photos
+          const rawPhotos = extractPhotoReferences(googlePlace.photos);
+          fetchedPhotos = sanitizeStoredPhotos(rawPhotos);
+          fetchedImageUrl = fetchedPhotos.length > 0 && fetchedPhotos[0] ? fetchedPhotos[0] : null;
 
           // Use fetched data to fill in missing fields
-          fetchedRating = googlePlace.rating ?? null
-          fetchedTypes = googlePlace.types ?? null
-          fetchedAddress = googlePlace.formattedAddress ?? null
-          fetchedLatitude = googlePlace.location?.latitude ?? null
-          fetchedLongitude = googlePlace.location?.longitude ?? null
-          fetchedWebsiteUri = googlePlace.websiteUri ?? null
-          fetchedPhoneNumber = googlePlace.nationalPhoneNumber ?? null
+          fetchedRating = googlePlace.rating ?? null;
+          fetchedTypes = googlePlace.types ?? null;
+          fetchedAddress = googlePlace.formattedAddress ?? null;
+          fetchedLatitude = googlePlace.location?.latitude ?? null;
+          fetchedLongitude = googlePlace.location?.longitude ?? null;
+          fetchedWebsiteUri = googlePlace.websiteUri ?? null;
+          fetchedPhoneNumber = googlePlace.nationalPhoneNumber ?? null;
         }
       } catch (error) {
         logger.error('Failed to fetch Google Place details during create', {
           error: error instanceof Error ? error.message : String(error),
           googleMapsId: placeInput.googleMapsId,
-        })
+        });
         // Continue with provided data if fetch fails
       }
     }
@@ -96,25 +98,25 @@ export const create = protectedProcedure
       phoneNumber: placeInput.phoneNumber ?? fetchedPhoneNumber ?? null,
       photos:
         placeInput.photos && placeInput.photos.length > 0
-          ? placeInput.photos
+          ? sanitizeStoredPhotos(placeInput.photos)
           : (fetchedPhotos ?? null),
       imageUrl:
         placeInput.imageUrl ??
         (placeInput.photos && placeInput.photos.length > 0
           ? placeInput.photos[0]
           : (fetchedImageUrl ?? null)),
-    }
+    };
 
     const { place: createdPlace } = await addPlaceToLists(
       ctx.user.id,
       listIds ?? [],
       placeData,
-      buildPhotoUrl
-    )
+      buildPhotoUrl,
+    );
 
     // If there are no photos stored yet but we have a Google Maps ID, enqueue background enrichment
     try {
-      const queues = ctx.queues
+      const queues = ctx.queues;
       if (
         (createdPlace.photos == null || createdPlace.photos.length === 0) &&
         createdPlace.googleMapsId
@@ -122,14 +124,14 @@ export const create = protectedProcedure
         await queues.placePhotoEnrich.add('enrich', {
           placeId: createdPlace.id,
           forceFresh: true,
-        })
+        });
       }
     } catch (err) {
       // Non-fatal: log but don't break the request
       logger.warn('Failed to enqueue place photo enrichment', {
         error: err instanceof Error ? err.message : String(err),
-      })
+      });
     }
 
-    return createdPlace
-  })
+    return createdPlace;
+  });

@@ -1,5 +1,5 @@
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
 import {
   Command,
   CommandEmpty,
@@ -7,7 +7,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@hominem/ui/components/ui/command'
+} from '@hominem/ui/components/ui/command';
 import {
   Drawer,
   DrawerContent,
@@ -15,22 +15,22 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@hominem/ui/components/ui/drawer'
-import { Check, Loader2, Plus, X } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
-import { trpc } from '~/lib/trpc/client'
-import { cn } from '~/lib/utils'
+} from '@hominem/ui/components/ui/drawer';
+import { Check, Loader2, Plus, X } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { trpc } from '~/lib/trpc/client';
+import { cn } from '~/lib/utils';
 
 interface Person {
-  id: string
-  firstName: string
-  lastName: string | null
+  id: string;
+  firstName: string;
+  lastName: string | null;
 }
 
 interface PeopleMultiSelectProps {
-  value: string[]
-  onChange: (personIds: string[]) => void
-  placeholder?: string
+  value: string[];
+  onChange: (personIds: string[]) => void;
+  placeholder?: string;
 }
 
 export function PeopleMultiSelect({
@@ -38,92 +38,92 @@ export function PeopleMultiSelect({
   onChange,
   placeholder = 'Select people...',
 }: PeopleMultiSelectProps) {
-  const [open, setOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
-  const utils = trpc.useUtils()
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const utils = trpc.useUtils();
 
-  const { data: people = [], isLoading } = trpc.people.list.useQuery()
+  const { data: people = [], isLoading } = trpc.people.list.useQuery();
   const createPersonMutation = trpc.people.create.useMutation({
     onSuccess: (newPerson) => {
-      onChange([...value, newPerson.id])
-      setSearchQuery('')
-      setIsCreating(false)
-      setOpen(false)
+      onChange([...value, newPerson.id]);
+      setSearchQuery('');
+      setIsCreating(false);
+      setOpen(false);
       utils.people.list.setData(undefined, (oldPeople = []) => {
-        return [...oldPeople, newPerson]
-      })
+        return [...oldPeople, newPerson];
+      });
     },
-  })
+  });
 
   const selectedPeople = useMemo(() => {
-    return people.filter((person) => value.includes(person.id))
-  }, [people, value])
+    return people.filter((person) => value.includes(person.id));
+  }, [people, value]);
 
   const filteredPeople = useMemo(() => {
     if (!searchQuery.trim()) {
-      return people
+      return people;
     }
 
-    const query = searchQuery.toLowerCase().trim()
+    const query = searchQuery.toLowerCase().trim();
     return people.filter((person) => {
-      const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase()
+      const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase();
       return (
         person.firstName.toLowerCase().includes(query) ||
         person.lastName?.toLowerCase().includes(query) ||
         fullName.includes(query)
-      )
-    })
-  }, [people, searchQuery])
+      );
+    });
+  }, [people, searchQuery]);
 
   const canCreateNew = useMemo(() => {
     if (!searchQuery.trim() || isCreating) {
-      return false
+      return false;
     }
-    const query = searchQuery.toLowerCase().trim()
+    const query = searchQuery.toLowerCase().trim();
     return !filteredPeople.some((person) => {
-      const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase()
-      return fullName === query || person.firstName.toLowerCase() === query
-    })
-  }, [searchQuery, filteredPeople, isCreating])
+      const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase();
+      return fullName === query || person.firstName.toLowerCase() === query;
+    });
+  }, [searchQuery, filteredPeople, isCreating]);
 
   const handleTogglePerson = useCallback(
     (personId: string) => {
       if (value.includes(personId)) {
-        onChange(value.filter((id) => id !== personId))
+        onChange(value.filter((id) => id !== personId));
       } else {
-        onChange([...value, personId])
+        onChange([...value, personId]);
       }
     },
-    [value, onChange]
-  )
+    [value, onChange],
+  );
 
   const handleRemovePerson = useCallback(
     (personId: string) => {
-      onChange(value.filter((id) => id !== personId))
+      onChange(value.filter((id) => id !== personId));
     },
-    [value, onChange]
-  )
+    [value, onChange],
+  );
 
   const handleCreatePerson = useCallback(() => {
-    const nameParts = searchQuery.trim().split(/\s+/)
-    const firstName = nameParts[0] || ''
-    const lastName = nameParts.slice(1).join(' ') || undefined
+    const nameParts = searchQuery.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || undefined;
 
     if (!firstName) {
-      return
+      return;
     }
 
-    setIsCreating(true)
+    setIsCreating(true);
     createPersonMutation.mutate({
       firstName,
       lastName,
-    })
-  }, [searchQuery, createPersonMutation])
+    });
+  }, [searchQuery, createPersonMutation]);
 
   const getPersonDisplayName = (person: Person) => {
-    return person.lastName ? `${person.firstName} ${person.lastName}` : person.firstName
-  }
+    return person.lastName ? `${person.firstName} ${person.lastName}` : person.firstName;
+  };
 
   return (
     <div className="space-y-2">
@@ -143,8 +143,8 @@ export function PeopleMultiSelect({
                     variant="secondary"
                     className="mr-1"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      handleRemovePerson(person.id)
+                      e.stopPropagation();
+                      handleRemovePerson(person.id);
                     }}
                   >
                     {getPersonDisplayName(person)}
@@ -153,17 +153,17 @@ export function PeopleMultiSelect({
                       className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          handleRemovePerson(person.id)
+                          handleRemovePerson(person.id);
                         }
                       }}
                       onMouseDown={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
+                        e.preventDefault();
+                        e.stopPropagation();
                       }}
                       onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleRemovePerson(person.id)
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemovePerson(person.id);
                       }}
                     >
                       <X className="size-3 text-muted-foreground hover:text-foreground" />
@@ -218,7 +218,7 @@ export function PeopleMultiSelect({
                   </CommandEmpty>
                   <CommandGroup>
                     {filteredPeople.map((person) => {
-                      const isSelected = value.includes(person.id)
+                      const isSelected = value.includes(person.id);
                       return (
                         <CommandItem
                           key={person.id}
@@ -234,7 +234,7 @@ export function PeopleMultiSelect({
                             })}
                           />
                         </CommandItem>
-                      )
+                      );
                     })}
                     {canCreateNew && filteredPeople.length > 0 && (
                       <CommandItem
@@ -259,5 +259,5 @@ export function PeopleMultiSelect({
         </DrawerContent>
       </Drawer>
     </div>
-  )
+  );
 }

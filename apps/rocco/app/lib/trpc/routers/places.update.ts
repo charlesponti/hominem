@@ -1,6 +1,6 @@
-import { createOrUpdatePlace } from '@hominem/data/places'
-import { z } from 'zod'
-import { protectedProcedure } from '../context'
+import { createOrUpdatePlace } from '@hominem/data/places';
+import { z } from 'zod';
+import { protectedProcedure } from '../context';
 
 export const update = protectedProcedure
   .input(
@@ -16,22 +16,22 @@ export const update = protectedProcedure
       types: z.array(z.string()).optional(),
       websiteUri: z.string().optional(),
       phoneNumber: z.string().optional(),
-    })
+    }),
   )
   .mutation(async ({ input }) => {
-    const { id, latitude, longitude, ...updateData } = input
+    const { id, latitude, longitude, ...updateData } = input;
 
     const locationUpdate =
-      latitude && longitude ? { location: [longitude, latitude] as [number, number] } : {}
+      latitude && longitude ? { location: [longitude, latitude] as [number, number] } : {};
 
     const updatedPlace = await createOrUpdatePlace(id, {
       ...updateData,
       ...locationUpdate,
-    })
+    });
 
     if (!updatedPlace) {
-      throw new Error("Place not found or you don't have permission to update it")
+      throw new Error("Place not found or you don't have permission to update it");
     }
 
-    return updatedPlace
-  })
+    return updatedPlace;
+  });

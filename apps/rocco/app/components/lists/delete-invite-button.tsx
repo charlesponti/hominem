@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -7,38 +7,38 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
-import { Trash2 } from 'lucide-react'
-import { useCallback } from 'react'
-import { useModal } from '~/hooks/useModal'
-import { trpc } from '~/lib/trpc/client'
+} from '@hominem/ui/dialog';
+import { Trash2 } from 'lucide-react';
+import { useCallback } from 'react';
+import { useModal } from '~/hooks/useModal';
+import { trpc } from '~/lib/trpc/client';
 
 type DeleteInviteButtonProps = {
-  listId: string
-  invitedUserEmail: string
-  onDelete: (email: string) => void
-}
+  listId: string;
+  invitedUserEmail: string;
+  onDelete: (email: string) => void;
+};
 
 export default function DeleteInviteButton({
   listId,
   invitedUserEmail,
   onDelete,
 }: DeleteInviteButtonProps) {
-  const { isOpen, open, close } = useModal()
-  const deleteInvite = trpc.invites.delete.useMutation()
+  const { isOpen, open, close } = useModal();
+  const deleteInvite = trpc.invites.delete.useMutation();
 
   const handleDelete = useCallback(async () => {
     // Optimistically remove immediately
-    onDelete(invitedUserEmail)
+    onDelete(invitedUserEmail);
     try {
-      await deleteInvite.mutateAsync({ listId, invitedUserEmail })
-      close()
+      await deleteInvite.mutateAsync({ listId, invitedUserEmail });
+      close();
     } catch (error) {
-      console.error('Failed to delete invite:', error)
+      console.error('Failed to delete invite:', error);
       // Note: We don't rollback here since onDelete was already called
       // The parent component should handle error recovery if needed
     }
-  }, [deleteInvite, listId, invitedUserEmail, onDelete, close])
+  }, [deleteInvite, listId, invitedUserEmail, onDelete, close]);
 
   return (
     <>
@@ -84,5 +84,5 @@ export default function DeleteInviteButton({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

@@ -1,19 +1,19 @@
-import { getOrCreateQueues } from '@hominem/data/queues'
-import type { UserSelect } from '@hominem/data/schema'
-import type { Queues } from '@hominem/data/types'
-import { UserAuthService } from '@hominem/data/user'
-import { initTRPC, TRPCError } from '@trpc/server'
-import { getServerAuth } from '../auth.server'
-import { logger } from '../logger'
+import { getOrCreateQueues } from '@hominem/data/queues';
+import type { UserSelect } from '@hominem/data/schema';
+import type { Queues } from '@hominem/data/types';
+import { UserAuthService } from '@hominem/data/user';
+import { initTRPC, TRPCError } from '@trpc/server';
+import { getServerAuth } from '../auth.server';
+import { logger } from '../logger';
 
 export interface Context {
-  user?: UserSelect | null
-  queues: Queues
-  responseHeaders: Headers
+  user?: UserSelect | null;
+  queues: Queues;
+  responseHeaders: Headers;
 }
 
 export const createContext = async (request?: Request): Promise<Context> => {
-  const responseHeaders = new Headers()
+  const responseHeaders = new Headers();
 
   if (!request) {
     return {
@@ -24,16 +24,16 @@ export const createContext = async (request?: Request): Promise<Context> => {
         placePhotoEnrich: undefined as unknown as Queues['placePhotoEnrich'],
       },
       responseHeaders,
-    }
+    };
   }
 
   // Test override for user
   if (process.env.NODE_ENV === 'test') {
-    const testUserId = request.headers.get('x-user-id')
+    const testUserId = request.headers.get('x-user-id');
     if (testUserId) {
       const localUser = await UserAuthService.findByIdOrEmail({
         id: testUserId,
-      })
+      });
       return {
         user: localUser ?? null,
         queues:
@@ -45,20 +45,20 @@ export const createContext = async (request?: Request): Promise<Context> => {
               }
             : getOrCreateQueues(),
         responseHeaders,
-      }
+      };
     }
   }
 
   try {
-    const { user, headers } = await getServerAuth(request)
+    const { user, headers } = await getServerAuth(request);
 
     // Copy auth headers (cookies) to response headers
     headers.forEach((value, key) => {
-      responseHeaders.append(key, value)
-    })
+      responseHeaders.append(key, value);
+    });
 
     // Map user to expected UserSelect type if present
-    let mappedUser: UserSelect | null = null
+    let mappedUser: UserSelect | null = null;
     if (user) {
       mappedUser = {
         id: user.id,
@@ -81,7 +81,7 @@ export const createContext = async (request?: Request): Promise<Context> => {
           typeof (user as unknown as Record<string, unknown>).emailVerified === 'string'
             ? ((user as unknown as Record<string, unknown>).emailVerified as string)
             : null,
-      }
+      };
     }
     return {
       user: mappedUser,
@@ -94,9 +94,9 @@ export const createContext = async (request?: Request): Promise<Context> => {
             }
           : getOrCreateQueues(),
       responseHeaders,
-    }
+    };
   } catch (error) {
-    logger.error('Error verifying auth token', { error: error })
+    logger.error('Error verifying auth token', { error: error });
     return {
       user: null,
       queues: {
@@ -105,45 +105,45 @@ export const createContext = async (request?: Request): Promise<Context> => {
         placePhotoEnrich: undefined as unknown as Queues['placePhotoEnrich'],
       },
       responseHeaders,
-    }
+    };
   }
-}
+};
 
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<Context>().create();
 
-export const router = t.router
-export const publicProcedure = t.procedure
+export const router = t.router;
+export const publicProcedure = t.procedure;
 
 const isAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.user) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You must be logged in to access this resource',
-    })
+    });
   }
   return next({
     ctx: {
       ...ctx,
       user: ctx.user,
     },
-  })
-})
+  });
+});
 
 const isAdmin = t.middleware(({ ctx, next }) => {
   if (!ctx.user) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You must be logged in to access this resource',
-    })
+    });
   }
   if (!ctx.user.isAdmin) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'You must be an admin to access this resource',
-    })
+    });
   }
-  return next({ ctx })
-})
+  return next({ ctx });
+});
 
-export const protectedProcedure = t.procedure.use(isAuthed)
-export const adminProcedure = t.procedure.use(isAdmin)
+export const protectedProcedure = t.procedure.use(isAuthed);
+export const adminProcedure = t.procedure.use(isAdmin);

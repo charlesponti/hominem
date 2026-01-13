@@ -1,23 +1,23 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { Label } from '@hominem/ui/components/ui/label'
-import { Input } from '@hominem/ui/input'
-import { Star } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router'
-import { trpc } from '~/lib/trpc/client'
-import { buildImageUrl } from '~/lib/utils'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Label } from '@hominem/ui/components/ui/label';
+import { Input } from '@hominem/ui/input';
+import { Star } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router';
+import { trpc } from '~/lib/trpc/client';
+import { buildImageUrl } from '~/lib/utils';
 
 export default function VisitsPage() {
-  const { isAuthenticated } = useSupabaseAuthContext()
-  const [placeFilter, setPlaceFilter] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
+  const { isAuthenticated } = useSupabaseAuthContext();
+  const [placeFilter, setPlaceFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const { data: visits, isLoading } = trpc.places.getMyVisits.useQuery({
     startDate: startDate || undefined,
     endDate: endDate || undefined,
-  })
+  });
 
   if (!isAuthenticated) {
     return (
@@ -25,23 +25,23 @@ export default function VisitsPage() {
         <h1 className="text-2xl font-bold mb-4">My Visits</h1>
         <p className="text-muted-foreground">Please sign in to view your visits.</p>
       </div>
-    )
+    );
   }
 
   const filteredVisits =
     visits
       ?.filter((visit) => {
         if (!placeFilter) {
-          return true
+          return true;
         }
-        const placeName = visit.place?.name || ''
-        return placeName.toLowerCase().includes(placeFilter.toLowerCase())
+        const placeName = visit.place?.name || '';
+        return placeName.toLowerCase().includes(placeFilter.toLowerCase());
       })
       .sort((a, b) => {
-        const dateA = new Date(a.date).getTime()
-        const dateB = new Date(b.date).getTime()
-        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB
-      }) || []
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+      }) || [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -179,5 +179,5 @@ export default function VisitsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

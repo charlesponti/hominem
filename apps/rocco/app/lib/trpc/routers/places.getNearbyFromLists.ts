@@ -1,6 +1,6 @@
-import { getNearbyPlacesFromLists } from '@hominem/data/places'
-import { z } from 'zod'
-import { protectedProcedure } from '../context'
+import { getNearbyPlacesFromLists } from '@hominem/data/places';
+import { z } from 'zod';
+import { protectedProcedure } from '../context';
 
 export const getNearbyFromLists = protectedProcedure
   .input(
@@ -9,10 +9,10 @@ export const getNearbyFromLists = protectedProcedure
       longitude: z.number(),
       radiusKm: z.number().optional().default(5),
       limit: z.number().optional().default(4),
-    })
+    }),
   )
   .query(async ({ ctx, input }) => {
-    const { latitude, longitude, radiusKm, limit: resultLimit } = input
+    const { latitude, longitude, radiusKm, limit: resultLimit } = input;
 
     try {
       return await getNearbyPlacesFromLists({
@@ -21,8 +21,8 @@ export const getNearbyFromLists = protectedProcedure
         longitude,
         radiusKm,
         limit: resultLimit,
-      })
+      });
     } catch {
-      throw new Error('Failed to fetch nearby places')
+      throw new Error('Failed to fetch nearby places');
     }
-  })
+  });

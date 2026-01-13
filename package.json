@@ -26,6 +26,8 @@
     "husky": "^9.1.7",
     "ink": "^6.6.0",
     "lefthook": "^2.0.2",
+    "oxfmt": "^0.24.0",
+    "oxlint": "^1.39.0",
     "turbo": "^2.7.4",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.0.3",

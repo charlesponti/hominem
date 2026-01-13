@@ -1,30 +1,30 @@
-import { List } from '@hominem/ui/list'
-import { Loading } from '@hominem/ui/loading'
-import { MapPin } from 'lucide-react'
-import { href } from 'react-router'
-import { useGeolocation } from '~/hooks/useGeolocation'
-import { trpc } from '~/lib/trpc/client'
-import PlaceRow from './place-row'
+import { List } from '@hominem/ui/list';
+import { Loading } from '@hominem/ui/loading';
+import { MapPin } from 'lucide-react';
+import { href } from 'react-router';
+import { useGeolocation } from '~/hooks/useGeolocation';
+import { trpc } from '~/lib/trpc/client';
+import PlaceRow from './place-row';
 
 type Props = {
-  latitude?: number
-  longitude?: number
-  radiusKm?: number
-  limit?: number
-}
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
+  limit?: number;
+};
 
 // Default location: San Francisco (fallback)
 const DEFAULT_LOCATION = {
   latitude: 37.7749,
   longitude: -122.4194,
-}
+};
 
 const formatDistance = (distanceInMeters: number) => {
   if (distanceInMeters < 1000) {
-    return `${Math.round(distanceInMeters)}m`
+    return `${Math.round(distanceInMeters)}m`;
   }
-  return `${(distanceInMeters / 1000).toFixed(1)}km`
-}
+  return `${(distanceInMeters / 1000).toFixed(1)}km`;
+};
 
 export default function PlacesNearby({
   latitude: providedLatitude,
@@ -38,13 +38,13 @@ export default function PlacesNearby({
     enableHighAccuracy: false,
     timeout: 5000,
     maximumAge: 300000, // Cache location for 5 minutes
-  })
+  });
 
   // Use provided coordinates, or user's geolocation, or fall back to default
   const location =
     providedLatitude !== undefined && providedLongitude !== undefined
       ? { latitude: providedLatitude, longitude: providedLongitude }
-      : currentLocation || DEFAULT_LOCATION
+      : currentLocation || DEFAULT_LOCATION;
   const {
     data: places = [],
     isLoading,
@@ -54,8 +54,8 @@ export default function PlacesNearby({
     longitude: location.longitude,
     radiusKm,
     limit,
-  })
-  const title = <h2 className="heading-2">Nearby</h2>
+  });
+  const title = <h2 className="heading-2">Nearby</h2>;
 
   if (isLoading) {
     return (
@@ -65,7 +65,7 @@ export default function PlacesNearby({
           <Loading size="lg" />
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -76,7 +76,7 @@ export default function PlacesNearby({
           <p className="text-red-600">Error loading nearby places: {error.message}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (places.length === 0) {
@@ -90,7 +90,7 @@ export default function PlacesNearby({
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -120,9 +120,9 @@ export default function PlacesNearby({
                   : null
               }
             />
-          )
+          );
         })}
       </List>
     </div>
-  )
+  );
 }

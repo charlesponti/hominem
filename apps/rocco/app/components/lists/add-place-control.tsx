@@ -1,70 +1,70 @@
-import { Alert } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
-import { Loading } from '@hominem/ui/loading'
-import { CheckCircle2, PlusCircle } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import PlacesAutocomplete from '~/components/places/places-autocomplete'
-import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
-import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places'
+import { Alert } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover';
+import { Loading } from '@hominem/ui/loading';
+import { CheckCircle2, PlusCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import PlacesAutocomplete from '~/components/places/places-autocomplete';
+import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';
+import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places';
 
 interface AddPlaceControlProps {
-  listId: string
-  canAdd?: boolean
+  listId: string;
+  canAdd?: boolean;
 }
 
-type Status = 'idle' | 'submitting' | 'success' | 'error'
+type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceControlProps) {
-  const [open, setOpen] = useState(false)
-  const [status, setStatus] = useState<Status>('idle')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<Status>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearSuccessTimer = () => {
     if (successTimerRef.current) {
-      clearTimeout(successTimerRef.current)
-      successTimerRef.current = null
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
     }
-  }
+  };
 
   useEffect(() => {
     return () => {
       if (successTimerRef.current) {
-        clearTimeout(successTimerRef.current)
+        clearTimeout(successTimerRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const addPlaceToList = useAddPlaceToList({
     onSuccess: () => {
-      setStatus('success')
-      clearSuccessTimer()
+      setStatus('success');
+      clearSuccessTimer();
       successTimerRef.current = setTimeout(() => {
-        setOpen(false)
-        setStatus('idle')
-        setErrorMessage(null)
-      }, 1500)
+        setOpen(false);
+        setStatus('idle');
+        setErrorMessage(null);
+      }, 1500);
     },
     onError: (error) => {
-      setStatus('error')
+      setStatus('error');
       const message =
         error instanceof Error
           ? error.message
           : typeof error === 'string'
             ? error
-            : 'Failed to add place. Please try again.'
-      setErrorMessage(message)
+            : 'Failed to add place. Please try again.';
+      setErrorMessage(message);
     },
-  })
+  });
 
   const handlePlaceSelect = async (prediction: GooglePlacePrediction) => {
-    setStatus('submitting')
-    setErrorMessage(null)
+    setStatus('submitting');
+    setErrorMessage(null);
     try {
-      const place = await createPlaceFromPrediction(prediction)
+      const place = await createPlaceFromPrediction(prediction);
       if (!place.googleMapsId) {
-        throw new Error('googleMapsId is required')
+        throw new Error('googleMapsId is required');
       }
       addPlaceToList.mutate({
         name: place.name,
@@ -79,53 +79,53 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         phoneNumber: place.phoneNumber || undefined,
         photos: place.photos || undefined,
         listIds: [listId],
-      })
+      });
     } catch (error) {
-      setStatus('error')
+      setStatus('error');
       const message =
         error instanceof Error
           ? error.message
           : typeof error === 'string'
             ? error
-            : 'Failed to process place selection. Please try again.'
-      setErrorMessage(message)
+            : 'Failed to process place selection. Please try again.';
+      setErrorMessage(message);
     }
-  }
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (status === 'submitting') {
-      return
+      return;
     }
     if (!newOpen) {
-      clearSuccessTimer()
-      setStatus('idle')
-      setErrorMessage(null)
+      clearSuccessTimer();
+      setStatus('idle');
+      setErrorMessage(null);
     }
-    setOpen(newOpen)
-  }
+    setOpen(newOpen);
+  };
 
   const handleRetry = () => {
-    setStatus('idle')
-    setErrorMessage(null)
-  }
+    setStatus('idle');
+    setErrorMessage(null);
+  };
 
   const getErrorMessage = () => {
     if (addPlaceToList.error) {
-      const error = addPlaceToList.error
+      const error = addPlaceToList.error;
       if (error instanceof Error) {
-        return error.message
+        return error.message;
       }
       if (typeof error === 'string') {
-        return error
+        return error;
       }
       if (error && typeof error === 'object' && 'message' in error) {
-        return String(error.message)
+        return String(error.message);
       }
     }
-    return errorMessage
-  }
+    return errorMessage;
+  };
 
-  const displayError = getErrorMessage()
+  const displayError = getErrorMessage();
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -175,5 +175,5 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }

@@ -1,51 +1,51 @@
-import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google'
-import { logger } from '@hominem/utils/logger'
+import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google';
+import { logger } from '@hominem/utils/logger';
 
-import type { GooglePlaceDetailsResponse, GooglePlacesApiResponse } from '~/lib/types'
+import type { GooglePlaceDetailsResponse, GooglePlacesApiResponse } from '~/lib/types';
 
 type CacheEntry<T> = {
-  value: T
-  expiresAt: number
-}
+  value: T;
+  expiresAt: number;
+};
 
 type GoogleRequestOptions = {
-  path: string
-  method?: 'GET' | 'POST'
-  body?: Record<string, unknown>
-  fieldMask?: string
-  searchParams?: Record<string, string | number | undefined>
-  cacheKey?: string
-  cacheTtlMs?: number
-  forceFresh?: boolean
-}
+  path: string;
+  method?: 'GET' | 'POST';
+  body?: Record<string, unknown>;
+  fieldMask?: string;
+  searchParams?: Record<string, string | number | undefined>;
+  cacheKey?: string;
+  cacheTtlMs?: number;
+  forceFresh?: boolean;
+};
 
 export type SearchPlacesOptions = {
-  query: string
+  query: string;
   locationBias?: {
-    latitude: number
-    longitude: number
-    radius: number
-  }
-  fieldMask?: string
-  maxResultCount?: number
-  forceFresh?: boolean
-}
+    latitude: number;
+    longitude: number;
+    radius: number;
+  };
+  fieldMask?: string;
+  maxResultCount?: number;
+  forceFresh?: boolean;
+};
 
 export type PlaceDetailsOptions = {
-  placeId: string
-  fieldMask?: string
-  forceFresh?: boolean
-}
+  placeId: string;
+  fieldMask?: string;
+  forceFresh?: boolean;
+};
 
 export type PlacePhotosOptions = {
-  placeId: string
-  limit?: number
-  forceFresh?: boolean
-}
+  placeId: string;
+  limit?: number;
+  forceFresh?: boolean;
+};
 
-const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 5 // 5 minutes
-const MAX_RETRIES = 2
-const RETRY_DELAY_MS = 300
+const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 5; // 5 minutes
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 300;
 
 // Field names without prefix (for Place Details API - single place response)
 const FIELDS = {
@@ -59,10 +59,10 @@ const FIELDS = {
   priceLevel: 'priceLevel',
   photos: 'photos',
   addressComponents: 'addressComponents',
-} as const
+} as const;
 
 // Helper to add 'places.' prefix for search endpoints
-const withPlacesPrefix = (fields: string[]) => fields.map((f) => `places.${f}`).join(',')
+const withPlacesPrefix = (fields: string[]) => fields.map((f) => `places.${f}`).join(',');
 
 // For search endpoints (returns places array)
 const DEFAULT_SEARCH_FIELD_MASK = withPlacesPrefix([
@@ -73,7 +73,7 @@ const DEFAULT_SEARCH_FIELD_MASK = withPlacesPrefix([
   FIELDS.types,
   FIELDS.websiteUri,
   FIELDS.nationalPhoneNumber,
-])
+]);
 
 // For place details endpoint (returns single place)
 const DEFAULT_DETAILS_FIELD_MASK = [
@@ -87,48 +87,48 @@ const DEFAULT_DETAILS_FIELD_MASK = [
   FIELDS.priceLevel,
   FIELDS.photos,
   FIELDS.addressComponents,
-].join(',')
+].join(',');
 
-const cache = new Map<string, CacheEntry<unknown>>()
+const cache = new Map<string, CacheEntry<unknown>>();
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const getGoogleApiKey = () => {
-  const key = process.env.GOOGLE_API_KEY ?? process.env.VITE_GOOGLE_API_KEY
+  const key = process.env.GOOGLE_API_KEY ?? process.env.VITE_GOOGLE_API_KEY;
   if (!key) {
-    throw new Error('Google Places API key is not configured')
+    throw new Error('Google Places API key is not configured');
   }
-  return key
-}
+  return key;
+};
 
 const buildCacheKey = (parts: Record<string, unknown>) => {
-  return JSON.stringify(parts)
-}
+  return JSON.stringify(parts);
+};
 
 const readCache = <T>(key: string | undefined): T | null => {
   if (!key) {
-    return null
+    return null;
   }
-  const entry = cache.get(key) as CacheEntry<T> | undefined
+  const entry = cache.get(key) as CacheEntry<T> | undefined;
   if (!entry) {
-    return null
+    return null;
   }
   if (entry.expiresAt < Date.now()) {
-    cache.delete(key)
-    return null
+    cache.delete(key);
+    return null;
   }
-  return entry.value
-}
+  return entry.value;
+};
 
 const writeCache = <T>(key: string | undefined, value: T, ttl = DEFAULT_CACHE_TTL_MS) => {
   if (!key) {
-    return
+    return;
   }
   cache.set(key, {
     value,
     expiresAt: Date.now() + ttl,
-  })
-}
+  });
+};
 
 const requestGoogle = async <T>({
   path,
@@ -140,35 +140,41 @@ const requestGoogle = async <T>({
   cacheTtlMs,
   forceFresh,
 }: GoogleRequestOptions): Promise<T> => {
-  const cached = !forceFresh ? readCache<T>(cacheKey) : null
+  const cached = !forceFresh ? readCache<T>(cacheKey) : null;
   if (cached) {
-    return cached
+    return cached;
   }
 
-  const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${path}`)
+  const url = new URL(`${GOOGLE_PLACES_BASE_URL}/${path}`);
   if (path.startsWith('places/')) {
-    logger.info(`[DEBUG] requestGoogle fetching: ${path} (Fresh: ${forceFresh})`)
+    logger.info(`[Google API] Request: ${path}`, {
+      method,
+      fieldMask,
+      searchParams,
+      forceFresh,
+      isCached: !!cached,
+    });
   }
 
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {
       if (value === undefined || value === null) {
-        return
+        return;
       }
-      url.searchParams.set(key, String(value))
-    })
+      url.searchParams.set(key, String(value));
+    });
   }
 
   const headers = new Headers({
     'X-Goog-Api-Key': getGoogleApiKey(),
-  })
+  });
 
   if (fieldMask) {
-    headers.set('X-Goog-FieldMask', fieldMask)
+    headers.set('X-Goog-FieldMask', fieldMask);
   }
 
   if (method !== 'GET') {
-    headers.set('Content-Type', 'application/json')
+    headers.set('Content-Type', 'application/json');
   }
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -176,29 +182,29 @@ const requestGoogle = async <T>({
       method,
       headers,
       body: method === 'GET' ? undefined : JSON.stringify(body ?? {}),
-    })
+    });
 
     if (response.ok) {
-      const json = (await response.json()) as T
-      writeCache(cacheKey, json, cacheTtlMs)
-      return json
+      const json = (await response.json()) as T;
+      writeCache(cacheKey, json, cacheTtlMs);
+      return json;
     }
 
-    const errorPayload = await response.text()
-    const isRetriable = response.status === 429 || response.status >= 500
+    const errorPayload = await response.text();
+    const isRetriable = response.status === 429 || response.status >= 500;
 
     if (isRetriable && attempt < MAX_RETRIES) {
-      await sleep(RETRY_DELAY_MS * (attempt + 1))
-      continue
+      await sleep(RETRY_DELAY_MS * (attempt + 1));
+      continue;
     }
 
     throw new Error(
-      `Google Places API request failed: ${response.status} ${response.statusText} ${errorPayload}`
-    )
+      `Google Places API request failed: ${response.status} ${response.statusText} ${errorPayload}`,
+    );
   }
 
-  throw new Error('Google Places API request exhausted retries')
-}
+  throw new Error('Google Places API request exhausted retries');
+};
 
 export const getPlaceDetails = async ({
   placeId,
@@ -209,7 +215,7 @@ export const getPlaceDetails = async ({
     path: 'places-details',
     placeId,
     fieldMask,
-  })
+  });
 
   const response = await requestGoogle<GooglePlaceDetailsResponse>({
     path: `places/${placeId}`,
@@ -217,14 +223,14 @@ export const getPlaceDetails = async ({
     fieldMask,
     cacheKey,
     forceFresh,
-  })
+  });
 
   if (!response) {
-    throw new Error(`Place ${placeId} not found`)
+    throw new Error(`Place ${placeId} not found`);
   }
 
-  return response
-}
+  return response;
+};
 
 export const searchPlaces = async ({
   query,
@@ -236,7 +242,7 @@ export const searchPlaces = async ({
   const body: Record<string, unknown> = {
     textQuery: query,
     maxResultCount,
-  }
+  };
 
   if (locationBias) {
     body.locationBias = {
@@ -247,7 +253,7 @@ export const searchPlaces = async ({
         },
         radius: locationBias.radius,
       },
-    }
+    };
   }
 
   const cacheKey = buildCacheKey({
@@ -256,7 +262,7 @@ export const searchPlaces = async ({
     locationBias,
     fieldMask,
     maxResultCount,
-  })
+  });
 
   const response = await requestGoogle<{ places?: GooglePlacesApiResponse[] }>({
     path: 'places:searchText',
@@ -265,10 +271,10 @@ export const searchPlaces = async ({
     fieldMask,
     cacheKey,
     forceFresh,
-  })
+  });
 
-  return response.places ?? []
-}
+  return response.places ?? [];
+};
 
 export const getPlacePhotos = async ({
   placeId,
@@ -279,27 +285,32 @@ export const getPlacePhotos = async ({
     placeId,
     fieldMask: FIELDS.photos,
     forceFresh,
-  })
+  });
 
-  const photos = details.photos ?? []
+  const photos = details.photos ?? [];
+  logger.info('Extracted photo names from Google details', {
+    placeId,
+    count: photos.length,
+    limit,
+  });
   return photos
     .map((photo) => photo.name)
     .filter((name): name is string => typeof name === 'string' && name.length > 0)
-    .slice(0, limit)
-}
+    .slice(0, limit);
+};
 
 export const getNeighborhoodFromAddressComponents = (
-  addressComponents: GooglePlaceDetailsResponse['addressComponents']
+  addressComponents: GooglePlaceDetailsResponse['addressComponents'],
 ) => {
   if (!addressComponents) {
-    return null
+    return null;
   }
   const neighborhood = addressComponents.find((component) =>
-    component.types.includes('neighborhood')
-  )
-  return neighborhood ? neighborhood.longText : null
-}
+    component.types.includes('neighborhood'),
+  );
+  return neighborhood ? neighborhood.longText : null;
+};
 
 export const googlePlacesTestUtils = {
   clearCache: () => cache.clear(),
-}
+};

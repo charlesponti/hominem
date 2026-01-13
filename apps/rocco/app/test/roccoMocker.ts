@@ -1,6 +1,6 @@
-import { vi } from 'vitest'
-import type { List, Place } from '~/lib/types'
-import { type MockMutationResult, type MockQueryResult, mockTrpcClient } from '~/test/utils'
+import { vi } from 'vitest';
+import type { List, Place } from '~/lib/types';
+import { type MockMutationResult, type MockQueryResult, mockTrpcClient } from '~/test/utils';
 
 export class RoccoMocker {
   mockListsGetAll(data: List[] | undefined, isLoading = false, error: Error | null = null) {
@@ -8,7 +8,7 @@ export class RoccoMocker {
       data,
       isLoading,
       error,
-    } as MockQueryResult<List[]>)
+    } as MockQueryResult<List[]>);
   }
 
   mockListsGetById(data: List | undefined, isLoading = false, error: Error | null = null) {
@@ -16,31 +16,31 @@ export class RoccoMocker {
       data,
       isLoading,
       error,
-    } as MockQueryResult<List>)
+    } as MockQueryResult<List>);
   }
 
   mockPlacesGetNearbyFromLists(
     data: Place[] | undefined,
     isLoading = false,
-    error: Error | null = null
+    error: Error | null = null,
   ) {
     mockTrpcClient.places.getNearbyFromLists.useQuery.mockReturnValue({
       data,
       isLoading,
       error,
-    } as MockQueryResult<Place[]>)
+    } as MockQueryResult<Place[]>);
   }
 
   mockPlacesAutocomplete(
     data: Array<unknown> | undefined,
     isLoading = false,
-    error: Error | null = null
+    error: Error | null = null,
   ) {
     mockTrpcClient.places.autocomplete.useQuery.mockReturnValue({
       data,
       isLoading,
       error,
-    } as MockQueryResult<Array<unknown>>)
+    } as MockQueryResult<Array<unknown>>);
   }
 
   mockPlacesGetById(data: Place | undefined, isLoading = false, error: Error | null = null) {
@@ -48,7 +48,7 @@ export class RoccoMocker {
       data,
       isLoading,
       error,
-    } as MockQueryResult<Place>)
+    } as MockQueryResult<Place>);
   }
 
   mockUserDeleteAccountMutation(overrides?: Partial<Record<string, unknown>>) {
@@ -60,12 +60,12 @@ export class RoccoMocker {
       isError: false,
       error: null,
       ...overrides,
-    }
+    };
     mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
       mockDeleteMutation as unknown as ReturnType<
         typeof mockTrpcClient.user.deleteAccount.useMutation
-      >
-    )
+      >,
+    );
   }
 
   mockListsUpdateMutation(overrides?: Partial<MockMutationResult>) {
@@ -80,11 +80,11 @@ export class RoccoMocker {
       isPending: false,
       reset: vi.fn(),
       ...overrides,
-    }
-    ;(
+    };
+    (
       mockTrpcClient.lists.update.useMutation as unknown as ReturnType<typeof vi.fn>
-    ).mockReturnValue(result)
+    ).mockReturnValue(result);
   }
 }
 
-export const roccoMocker = new RoccoMocker()
+export const roccoMocker = new RoccoMocker();

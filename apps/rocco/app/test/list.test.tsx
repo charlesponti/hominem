@@ -1,23 +1,23 @@
-import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
-import type { List } from '~/lib/types'
-import ListPage from '~/routes/lists.$id'
-import { getMockUser, USER_ID } from '~/test/mocks/index'
-import { getMockListPlace } from '~/test/mocks/place'
-import { roccoMocker } from '~/test/roccoMocker'
-import { TEST_LIST_ID } from '~/test/test.setup'
-import { renderWithRouter } from '~/test/utils'
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { List } from '~/lib/types';
+import ListPage from '~/routes/lists.$id';
+import { getMockUser, USER_ID } from '~/test/mocks/index';
+import { getMockListPlace } from '~/test/mocks/place';
+import { roccoMocker } from '~/test/roccoMocker';
+import { TEST_LIST_ID } from '~/test/test.setup';
+import { renderWithRouter } from '~/test/utils';
 
 // Mock hooks and dependencies
 vi.mock('~/hooks/useGeolocation', () => ({
   useGeolocation: () => ({ currentLocation: { lat: 0, lng: 0 }, isLoading: false }),
-}))
+}));
 
 vi.mock('~/contexts/map-interaction-context', () => ({
   MapInteractionProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useMapInteraction: () => ({ hoveredPlaceId: null, setHoveredPlaceId: vi.fn() }),
-}))
+}));
 
 /**
  * Simplified list tests using renderWithRouter
@@ -29,8 +29,8 @@ vi.mock('~/contexts/map-interaction-context', () => ({
  */
 describe('ListPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   describe('when list does not belong to user', () => {
     const list: List = {
@@ -46,11 +46,11 @@ describe('ListPage', () => {
       createdBy: getMockUser(),
       isPublic: false,
       users: [],
-    }
+    };
 
     beforeEach(() => {
-      roccoMocker.mockListsGetById(list)
-    })
+      roccoMocker.mockListsGetById(list);
+    });
 
     test('should display list content', async () => {
       renderWithRouter({
@@ -64,12 +64,12 @@ describe('ListPage', () => {
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
+      });
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'test list' })).toBeInTheDocument()
-      })
-    })
+        expect(screen.getByRole('heading', { name: 'test list' })).toBeInTheDocument();
+      });
+    });
 
     test('should not show owner controls for non-owner', async () => {
       renderWithRouter({
@@ -82,15 +82,15 @@ describe('ListPage', () => {
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
+      });
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'test list' })).toBeInTheDocument()
-      })
+        expect(screen.getByRole('heading', { name: 'test list' })).toBeInTheDocument();
+      });
 
       // Edit button should NOT be visible for non-owners
-      expect(screen.queryByLabelText('Edit list')).not.toBeInTheDocument()
-    })
+      expect(screen.queryByLabelText('Edit list')).not.toBeInTheDocument();
+    });
 
     test('should not show add button when no access', async () => {
       renderWithRouter({
@@ -103,13 +103,13 @@ describe('ListPage', () => {
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
+      });
 
       await waitFor(() => {
-        expect(screen.queryByTestId('add-to-list-button')).not.toBeInTheDocument()
-      })
-    })
-  })
+        expect(screen.queryByTestId('add-to-list-button')).not.toBeInTheDocument();
+      });
+    });
+  });
 
   describe('when list belongs to user', () => {
     const list: List = {
@@ -125,10 +125,10 @@ describe('ListPage', () => {
       createdBy: getMockUser(),
       isPublic: false,
       users: [],
-    }
+    };
 
     beforeEach(() => {
-      roccoMocker.mockListsGetById(list)
+      roccoMocker.mockListsGetById(list);
 
       roccoMocker.mockListsUpdateMutation({
         data: undefined,
@@ -137,8 +137,8 @@ describe('ListPage', () => {
         isPending: false,
         isSuccess: false,
         isError: false,
-      })
-    })
+      });
+    });
 
     test('should display list with owner controls', async () => {
       renderWithRouter({
@@ -151,16 +151,16 @@ describe('ListPage', () => {
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
+      });
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument()
-        expect(screen.getByLabelText('Edit list')).toBeInTheDocument()
-      })
-    })
+        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument();
+        expect(screen.getByLabelText('Edit list')).toBeInTheDocument();
+      });
+    });
 
     test('should open edit dialog when clicking edit icon', async () => {
-      const user = userEvent.setup()
+      const user = userEvent.setup();
 
       renderWithRouter({
         routes: [
@@ -172,19 +172,19 @@ describe('ListPage', () => {
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
+      });
 
       await waitFor(() =>
-        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument()
-      )
+        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument(),
+      );
 
-      const editButton = screen.getByLabelText('Edit list')
-      await user.click(editButton)
+      const editButton = screen.getByLabelText('Edit list');
+      await user.click(editButton);
 
       await waitFor(() => {
-        expect(screen.getByTestId('list-edit-dialog')).toBeInTheDocument()
-      })
-    })
+        expect(screen.getByTestId('list-edit-dialog')).toBeInTheDocument();
+      });
+    });
 
     test('should show user avatars when list has collaborators', async () => {
       const listWithUsers: List = {
@@ -193,9 +193,9 @@ describe('ListPage', () => {
           { id: USER_ID, name: 'Test User', email: 'test@example.com', image: null },
           { id: 'user-2', name: 'Collaborator', email: 'collab@example.com', image: null },
         ],
-      }
+      };
 
-      roccoMocker.mockListsGetById(listWithUsers)
+      roccoMocker.mockListsGetById(listWithUsers);
 
       renderWithRouter({
         routes: [
@@ -207,13 +207,13 @@ describe('ListPage', () => {
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
+      });
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument()
-      })
-    })
-  })
+        expect(screen.getByRole('heading', { name: 'my list' })).toBeInTheDocument();
+      });
+    });
+  });
 
   describe('hasAccess logic', () => {
     test('should show add button when user has access', async () => {
@@ -230,9 +230,9 @@ describe('ListPage', () => {
         createdBy: getMockUser(),
         isPublic: false,
         users: [],
-      }
+      };
 
-      roccoMocker.mockListsGetById(listWithAccess)
+      roccoMocker.mockListsGetById(listWithAccess);
 
       renderWithRouter({
         routes: [
@@ -244,11 +244,11 @@ describe('ListPage', () => {
           },
         ],
         initialEntries: [`/lists/${TEST_LIST_ID}`],
-      })
+      });
 
       await waitFor(() => {
-        expect(screen.getByTestId('add-to-list-button')).toBeInTheDocument()
-      })
-    })
-  })
-})
+        expect(screen.getByTestId('add-to-list-button')).toBeInTheDocument();
+      });
+    });
+  });
+});

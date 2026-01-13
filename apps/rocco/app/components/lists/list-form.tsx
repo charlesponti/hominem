@@ -1,83 +1,85 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
-import { Loading } from '@hominem/ui/loading'
-import { PlusCircle } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useCreateList } from '~/lib/lists'
-import { cn } from '~/lib/utils'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/input';
+import { Loading } from '@hominem/ui/loading';
+import { PlusCircle } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCreateList } from '~/lib/lists';
+import { cn } from '~/lib/utils';
 
-type FormStatus = 'idle' | 'open' | 'submitting' | 'success'
+type FormStatus = 'idle' | 'open' | 'submitting' | 'success';
 
-const STORAGE_KEY = 'rocco:list-draft'
+const STORAGE_KEY = 'rocco:list-draft';
 
 export default function ListForm() {
-  const [name, setName] = useState('')
-  const [status, setStatus] = useState<FormStatus>('idle')
-  const inputRef = useRef<HTMLInputElement>(null)
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { supabase, isAuthenticated } = useSupabaseAuthContext()
+  const [name, setName] = useState('');
+  const [status, setStatus] = useState<FormStatus>('idle');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { supabase, isAuthenticated } = useSupabaseAuthContext();
 
   const { mutate: createList } = useCreateList({
     onSuccess: () => {
       try {
-        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(STORAGE_KEY);
       } catch {}
-      setStatus('success')
+      setStatus('success');
       successTimerRef.current = setTimeout(() => {
-        setName('')
-        setStatus('idle')
-      }, 1500)
+        setName('');
+        setStatus('idle');
+      }, 1500);
     },
-  })
+  });
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as { name?: string }
+        const parsed = JSON.parse(raw) as { name?: string };
         if (parsed.name) {
-          setName(parsed.name)
-          setStatus('open')
+          setName(parsed.name);
+          setStatus('open');
         }
       }
     } catch {}
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (status === 'open' && inputRef.current) {
-      inputRef.current.focus()
+      inputRef.current.focus();
     }
-  }, [status])
+  }, [status]);
 
   useEffect(() => {
     return () => {
       if (successTimerRef.current) {
-        clearTimeout(successTimerRef.current)
+        clearTimeout(successTimerRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const handleOpen = () => {
-    setStatus('open')
-  }
+    setStatus('open');
+  };
 
   const handleClose = () => {
-    setName('')
+    setName('');
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STORAGE_KEY);
     } catch {}
-    setStatus('idle')
-  }
+    setStatus('idle');
+  };
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
-      e.preventDefault()
-      if (!name.trim()) { return }
+      e.preventDefault();
+      if (!name.trim()) {
+        return;
+      }
 
       if (!isAuthenticated) {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }))
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }));
         } catch {}
 
         await supabase.auth.signInWithOAuth({
@@ -85,23 +87,23 @@ export default function ListForm() {
           options: {
             redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/lists')}`,
           },
-        })
+        });
 
-        return
+        return;
       }
 
-      setStatus('submitting')
+      setStatus('submitting');
       createList({
         name: name.trim(),
         description: 'No description',
-      })
+      });
     },
-    [name, isAuthenticated, supabase, createList]
-  )
+    [name, isAuthenticated, supabase, createList],
+  );
 
-  const isOverlayVisible = status === 'submitting' || status === 'success'
-  const showInput = status === 'open' || status === 'submitting' || status === 'success'
-  const canSubmit = name.trim().length > 0 && status === 'open'
+  const isOverlayVisible = status === 'submitting' || status === 'success';
+  const showInput = status === 'open' || status === 'submitting' || status === 'success';
+  const canSubmit = name.trim().length > 0 && status === 'open';
 
   return (
     <div className="flex gap-1">
@@ -122,7 +124,7 @@ export default function ListForm() {
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
-                      handleClose()
+                      handleClose();
                     }
                   }}
                   required
@@ -171,5 +173,5 @@ export default function ListForm() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-import { List } from '@hominem/ui/list'
-import { trpc } from '~/lib/trpc/client'
-import ListForm from './list-form'
-import { ListRow } from './list-row'
+import { List } from '@hominem/ui/list';
+import { trpc } from '~/lib/trpc/client';
+import ListForm from './list-form';
+import { ListRow } from './list-row';
 
 export default function Lists() {
-  const { data: lists = [], isLoading, error } = trpc.lists.getAll.useQuery()
+  const { data: lists = [], isLoading, error } = trpc.lists.getAll.useQuery();
 
-  const title = <h2 className="heading-2">Lists</h2>
+  const title = <h2 className="heading-2">Lists</h2>;
 
   if (error) {
     return (
@@ -16,7 +16,7 @@ export default function Lists() {
           <p className="text-red-600">Error loading lists: {error.message}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -45,5 +45,5 @@ export default function Lists() {
         <ListForm />
       </div>
     </div>
-  )
+  );
 }

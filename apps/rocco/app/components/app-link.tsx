@@ -1,6 +1,6 @@
-import type { PropsWithChildren } from 'react'
-import { Link, useMatches } from 'react-router'
-import { cn } from '~/lib/utils'
+import type { PropsWithChildren } from 'react';
+import { Link, useMatches } from 'react-router';
+import { cn } from '~/lib/utils';
 
 const AppLink = ({
   btn,
@@ -10,13 +10,13 @@ const AppLink = ({
   ...props
 }: PropsWithChildren<
   React.HTMLProps<HTMLAnchorElement> & {
-    btn?: boolean
-    className?: string
-    to: string
+    btn?: boolean;
+    className?: string;
+    to: string;
   }
 >) => {
-  const matches = useMatches()
-  const isActive = matches.some((match) => match.pathname === to)
+  const matches = useMatches();
+  const isActive = matches.some((match) => match.pathname === to);
 
   if (btn) {
     return (
@@ -27,7 +27,7 @@ const AppLink = ({
           {children}
         </span>
       </Link>
-    )
+    );
   }
 
   return (
@@ -37,12 +37,12 @@ const AppLink = ({
       className={cn(
         'text-gray-900 cursor-pointer',
         isActive ? 'bg-indigo-100 text-indigo-700' : null,
-        className
+        className,
       )}
     >
       {children}
     </Link>
-  )
-}
+  );
+};
 
-export default AppLink
+export default AppLink;

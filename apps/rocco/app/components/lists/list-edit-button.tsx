@@ -1,15 +1,15 @@
-import { Button } from '@hominem/ui/button'
-import { Pencil } from 'lucide-react'
-import { useState } from 'react'
-import type { List } from '~/lib/types'
-import ListEditDialog from './list-edit-dialog'
+import { Button } from '@hominem/ui/button';
+import { Pencil } from 'lucide-react';
+import { useState } from 'react';
+import type { List } from '~/lib/types';
+import ListEditDialog from './list-edit-dialog';
 
 interface ListEditButtonProps {
-  list: List
+  list: List;
 }
 
 export default function ListEditButton({ list }: ListEditButtonProps) {
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   return (
     <>
@@ -25,5 +25,5 @@ export default function ListEditButton({ list }: ListEditButtonProps) {
       </Button>
       <ListEditDialog list={list} isOpen={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} />
     </>
-  )
+  );
 }

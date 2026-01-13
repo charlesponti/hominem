@@ -1,14 +1,14 @@
-import { PageTitle } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { motion, type Variants } from 'framer-motion'
-import { Home, ListIcon, MapPin, Search } from 'lucide-react'
-import { Link } from 'react-router'
-import ErrorBoundary from '~/components/ErrorBoundary'
+import { PageTitle } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { motion, type Variants } from 'framer-motion';
+import { Home, ListIcon, MapPin, Search } from 'lucide-react';
+import { Link } from 'react-router';
+import ErrorBoundary from '~/components/ErrorBoundary';
 
 const fadeIn: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
-}
+};
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -19,12 +19,12 @@ const staggerContainer: Variants = {
       delayChildren: 0.2,
     },
   },
-}
+};
 
 const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.9 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
-}
+};
 
 export default function NotFoundPage() {
   return (
@@ -91,7 +91,7 @@ export default function NotFoundPage() {
         </motion.div>
       </motion.div>
     </div>
-  )
+  );
 }
 
-export { ErrorBoundary }
+export { ErrorBoundary };

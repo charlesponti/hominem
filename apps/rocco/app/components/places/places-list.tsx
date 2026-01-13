@@ -1,26 +1,26 @@
-import type { ListPlace } from '@hominem/data/lists'
-import { Alert } from '@hominem/ui'
-import { List } from '@hominem/ui/list'
-import { useCallback, useState } from 'react'
-import { href } from 'react-router'
-import AddPlaceControl from '~/components/lists/add-place-control'
-import { useMapInteraction } from '~/contexts/map-interaction-context'
-import PlaceListItemActions from './place-list-item-actions'
-import PlaceRow from './place-row'
+import type { ListPlace } from '@hominem/data/lists';
+import { Alert } from '@hominem/ui';
+import { List } from '@hominem/ui/list';
+import { useCallback, useState } from 'react';
+import { href } from 'react-router';
+import AddPlaceControl from '~/components/lists/add-place-control';
+import { useMapInteraction } from '~/contexts/map-interaction-context';
+import PlaceListItemActions from './place-list-item-actions';
+import PlaceRow from './place-row';
 
 interface PlacesListProps {
-  places: ListPlace[]
-  listId: string
-  canAdd?: boolean
+  places: ListPlace[];
+  listId: string;
+  canAdd?: boolean;
 }
 
 export default function PlacesList({ places, listId, canAdd = true }: PlacesListProps) {
-  const { setHoveredPlaceId } = useMapInteraction()
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const { setHoveredPlaceId } = useMapInteraction();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDeleteError = useCallback(() => {
-    setDeleteError('Could not delete place. Please try again.')
-  }, [])
+    setDeleteError('Could not delete place. Please try again.');
+  }, []);
 
   return (
     <>
@@ -66,5 +66,5 @@ export default function PlacesList({ places, listId, canAdd = true }: PlacesList
         </List>
       ) : null}
     </>
-  )
+  );
 }

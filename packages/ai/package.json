@@ -3,17 +3,13 @@
   "version": "0.0.0",
   "type": "module",
   "sideEffects": false,
+  "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },
-  "main": "./src/index.ts",
   "scripts": {
-    "format": "biome format ./src --fix",
-    "lint": "biome lint ./src --fix"
-  },
-  "devDependencies": {
-    "@hominem/tsconfigs": "workspace:*",
-    "typescript": "5.9.3"
+    "format": "bunx oxfmt ./src",
+    "lint": "bunx oxlint ./src"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.20",
@@ -21,5 +17,9 @@
     "@ai-sdk/openai-compatible": "^0.1.13",
     "ai": "^4.3.16",
     "ollama-ai-provider": "^1.2.0"
+  },
+  "devDependencies": {
+    "@hominem/tsconfigs": "workspace:*",
+    "typescript": "5.9.3"
   }
 }

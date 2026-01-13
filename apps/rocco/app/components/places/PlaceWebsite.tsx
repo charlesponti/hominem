@@ -1,4 +1,4 @@
-import { LinkIcon } from 'lucide-react'
+import { LinkIcon } from 'lucide-react';
 
 const PlaceWebsite = ({ website }: { website: string }) => {
   return (
@@ -11,7 +11,7 @@ const PlaceWebsite = ({ website }: { website: string }) => {
       <LinkIcon size={14} className="inline-block" />
       {website.replace(/(^\w+:|^)\/\//, '').split('/')[0]}
     </a>
-  )
-}
+  );
+};
 
-export default PlaceWebsite
+export default PlaceWebsite;

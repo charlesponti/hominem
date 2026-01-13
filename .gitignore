@@ -51,14 +51,7 @@ bun-debug.log*
 # turbo
 .turbo
 
-# IDE
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.idea
-
+# Supabase
 supabase/.temp
 supabase/.branches
 

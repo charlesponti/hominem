@@ -1,12 +1,14 @@
-import type { PlaceInsert } from '@hominem/data/places'
+import type { PlaceInsert } from '@hominem/data/places';
 import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,
   GooglePlacesApiResponse,
-} from '~/lib/types'
+} from '~/lib/types';
+import { sanitizeStoredPhotos } from '@hominem/utils/images';
+import { logger } from './logger';
 
 function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
-  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0]
+  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0];
 }
 
 /**
@@ -14,13 +16,14 @@ function toLocationTuple(latitude?: number | null, longitude?: number | null): [
  */
 export const transformGooglePlaceToPlaceInsert = (
   googlePlace: GooglePlaceDetailsResponse,
-  googleMapsId: string
+  googleMapsId: string,
 ): PlaceInsert => {
-  const fetchedPhotos = extractPhotoReferences(googlePlace.photos)
-  const latitude = googlePlace.location?.latitude ?? null
-  const longitude = googlePlace.location?.longitude ?? null
+  const rawPhotos = extractPhotoReferences(googlePlace.photos);
+  const fetchedPhotos = sanitizeStoredPhotos(rawPhotos);
+  const latitude = googlePlace.location?.latitude ?? null;
+  const longitude = googlePlace.location?.longitude ?? null;
 
-  return {
+  const result: PlaceInsert = {
     googleMapsId,
     name: googlePlace.displayName?.text || 'Unknown Place',
     address: googlePlace.formattedAddress ?? null,
@@ -34,26 +37,26 @@ export const transformGooglePlaceToPlaceInsert = (
     priceLevel: parsePriceLevel(googlePlace.priceLevel),
     photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
     imageUrl: null, // Will be computed from photos if needed
-  }
-}
+  };
+
+  logger.info('Transformed Google Place to DB insert', {
+    googleMapsId,
+    name: result.name,
+    photosCount: fetchedPhotos.length,
+  });
+
+  return result;
+};
 
 export const extractPhotoReferences = (photos: GooglePlaceDetailsResponse['photos']) => {
   if (!photos) {
-    return []
+    return [];
   }
 
   return photos
     .map((photo) => photo.name)
-    .filter((name): name is string => typeof name === 'string' && name.length > 0)
-}
-
-export const sanitizeStoredPhotos = (photos: string[] | null | undefined) => {
-  if (!Array.isArray(photos)) {
-    return []
-  }
-
-  return photos.filter((photo): photo is string => typeof photo === 'string' && photo.length > 0)
-}
+    .filter((name): name is string => typeof name === 'string' && name.length > 0);
+};
 
 /**
  * Converts Google Places API price level string to a numeric value.
@@ -61,12 +64,12 @@ export const sanitizeStoredPhotos = (photos: string[] | null | undefined) => {
  */
 export const parsePriceLevel = (priceLevel: string | number | null | undefined) => {
   if (priceLevel === null || priceLevel === undefined) {
-    return null
+    return null;
   }
 
   // If it's already a number, return it
   if (typeof priceLevel === 'number') {
-    return priceLevel
+    return priceLevel;
   }
 
   const priceLevelMap: Record<string, number> = {
@@ -75,13 +78,13 @@ export const parsePriceLevel = (priceLevel: string | number | null | undefined) 
     PRICE_LEVEL_MODERATE: 2,
     PRICE_LEVEL_EXPENSIVE: 3,
     PRICE_LEVEL_VERY_EXPENSIVE: 4,
-  }
+  };
 
-  return priceLevelMap[priceLevel] ?? null
-}
+  return priceLevelMap[priceLevel] ?? null;
+};
 
 export const mapGooglePlaceToPrediction = (
-  placeResult: GooglePlacesApiResponse
+  placeResult: GooglePlacesApiResponse,
 ): GooglePlacePrediction => ({
   place_id: placeResult.id,
   text: placeResult.displayName?.text ?? '',
@@ -96,4 +99,4 @@ export const mapGooglePlaceToPrediction = (
         }
       : null,
   priceLevel: placeResult.priceLevel,
-})
+});
