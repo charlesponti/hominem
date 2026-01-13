@@ -4,7 +4,7 @@ import {
   deleteListItem,
   getAllUserListsWithPlaces,
   getListById,
-  getListsContainingPlace,
+  getPlaceLists,
   removeUserFromList,
   updateList,
 } from '@hominem/data/lists';
@@ -162,7 +162,7 @@ export const listsRouter = router({
             return [];
           }
 
-          return await getListsContainingPlace({
+          return await getPlaceLists({
             userId: ctx.user.id,
             placeId: input.placeId,
             googleMapsId: input.googleMapsId,

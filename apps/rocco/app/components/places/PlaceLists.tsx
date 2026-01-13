@@ -1,5 +1,6 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { List } from '@hominem/ui/list';
+import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { ListRow } from '~/components/lists/list-row';
 import AddPlaceToList from '~/components/places/add-to-list-control';
@@ -36,6 +37,16 @@ const PlaceLists = ({ place }: Props) => {
         <h3 className="heading-2 font-light">Lists</h3>
         <AddPlaceToList placeId={place.id} />
       </div>
+
+      {listsContainingPlace.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-sm text-muted-foreground py-4"
+        >
+          You haven't added this place to any lists yet.
+        </motion.div>
+      ) : null}
 
       {(isLoading || listsContainingPlace.length > 0) && (
         <List isLoading={isLoading} loadingSize="md">

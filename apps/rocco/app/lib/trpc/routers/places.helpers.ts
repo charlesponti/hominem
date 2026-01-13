@@ -2,7 +2,6 @@ import type { Place as PlaceSelect } from '@hominem/data/places';
 import { getItemsForPlace } from '@hominem/data/places';
 import { buildPhotoMediaUrl } from '@hominem/utils/google';
 import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
-import { logger } from '~/lib/logger';
 import type { Context } from '../context';
 
 export const buildPhotoUrl = (photoRef: string) =>
@@ -29,13 +28,6 @@ export const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: PlaceSelect
   const fullPhotos = placePhotos
     .map((p: string) => getHominemPhotoURL(p, 1600, 1200))
     .filter((p: string | null): p is string => Boolean(p));
-
-  logger.debug('Enriched place photos', {
-    placeId: dbPlace.id,
-    rawPhotosCount: placePhotos.length,
-    thumbnailsCount: thumbnailPhotos.length,
-    fullPhotosCount: fullPhotos.length,
-  });
 
   return {
     ...dbPlace,

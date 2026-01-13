@@ -1,6 +1,5 @@
 import { buildPhotoMediaUrl } from '@hominem/utils/google';
 import { env } from '~/lib/env';
-import { logger } from '~/lib/logger';
 import type { Route } from './+types/images';
 
 /**
@@ -37,13 +36,6 @@ export async function loader({ request }: Route.LoaderArgs) {
       maxHeightPx: Number(height),
     });
 
-    logger.debug('Proxying photo request', {
-      resource,
-      width,
-      height,
-      target: currentTargetUrl.replace(env.VITE_GOOGLE_API_KEY, '[REDACTED]'),
-    });
-
     const headers = {
       'User-Agent': request.headers.get('User-Agent') || 'Mozilla/5.0 (compatible; ImageProxy/1.0)',
       // Pass Referer to satisfy browser-key restrictions
@@ -64,23 +56,18 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const buffer = await response.arrayBuffer();
 
-    return new Response(buffer, {
+    return new Response(response.body, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400',
+        'Cache-Control': 'public, max-age=604800, stale-while-revalidate=86400',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
       },
     });
   } catch (err) {
-    logger.error(
-      'Error proxying Google Places photo',
-      { resource },
-      err instanceof Error ? err : undefined,
-    );
+    console.error('Error proxying Google Places photo:', resource, err);
     return new Response(JSON.stringify({ error: 'Failed to proxy Google Places photo' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

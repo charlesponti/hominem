@@ -1,5 +1,3 @@
-import { logger } from './logger';
-
 /**
  * Append Google user photo sizing parameters to a Google user content URL.
  *
@@ -74,7 +72,6 @@ export function getHominemPhotoURL(
       proxyUrl.searchParams.set('height', String(height));
       // Return relative path
       const result = `${proxyUrl.pathname}${proxyUrl.search}`;
-      logger.debug('Generated Hominem photo proxy URL', { photoReference, result });
       return result;
     }
     return null;
@@ -103,6 +100,5 @@ export function getHominemPhotoURL(
   }
 
   // Other absolute URLs returned as-is
-  logger.debug('Hominem photo URL unchanged', { photoReference });
   return photoReference;
 }

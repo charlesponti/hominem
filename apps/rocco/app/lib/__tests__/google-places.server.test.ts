@@ -7,26 +7,26 @@ import {
   searchPlaces,
 } from '../google-places.server';
 
-const createFetchResponse = (
-  data: unknown,
-  overrides?: { ok?: boolean; status?: number; statusText?: string },
-) =>
-  ({
-    ok: overrides?.ok ?? true,
-    status: overrides?.status ?? 200,
-    statusText: overrides?.statusText ?? 'OK',
-    json: async () => data,
-    text: async () => JSON.stringify(data),
-  }) as unknown as Response;
+const mockSearchText = vi.fn();
+const mockGet = vi.fn();
+
+vi.mock('googleapis', () => ({
+  google: {
+    places: vi.fn().mockReturnValue({
+      places: {
+        searchText: (...args: any[]) => mockSearchText(...args),
+        get: (...args: any[]) => mockGet(...args),
+      },
+    }),
+  },
+}));
 
 describe('google-places.server helper', () => {
-  const fetchMock = vi.fn();
-
   beforeEach(() => {
     process.env.GOOGLE_API_KEY = 'test-key';
     googlePlacesTestUtils.clearCache();
-    fetchMock.mockReset();
-    vi.stubGlobal('fetch', fetchMock);
+    mockSearchText.mockReset();
+    mockGet.mockReset();
   });
 
   afterEach(() => {
@@ -46,7 +46,7 @@ describe('google-places.server helper', () => {
       ],
     };
 
-    fetchMock.mockResolvedValue(createFetchResponse(payload));
+    mockSearchText.mockResolvedValue({ data: payload });
 
     const params = {
       query: 'coffee',
@@ -57,33 +57,27 @@ describe('google-places.server helper', () => {
 
     expect(first).toHaveLength(1);
     expect(second).toHaveLength(1);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(mockSearchText).toHaveBeenCalledTimes(1);
   });
 
   it('surfaces Google API errors when fetching details', async () => {
-    fetchMock.mockResolvedValue(
-      createFetchResponse(
-        { error: { message: 'quota exceeded' } },
-        { ok: false, status: 500, statusText: 'Server Error' },
-      ),
-    );
+    mockGet.mockRejectedValue(new Error('API Error'));
 
     await expect(getPlaceDetails({ placeId: 'bad-id', forceFresh: true })).rejects.toThrow(
-      /Google Places API request failed/,
+      /API Error/,
     );
-    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
   it('returns limited photo references via getPlacePhotos', async () => {
-    fetchMock.mockResolvedValue(
-      createFetchResponse({
+    mockGet.mockResolvedValue({
+      data: {
         photos: [{ name: 'places/foo/photos/1' }, { name: 'places/foo/photos/2' }],
-      }),
-    );
+      },
+    });
 
     const photos = await getPlacePhotos({ placeId: 'foo', limit: 1, forceFresh: true });
     expect(photos).toEqual(['places/foo/photos/1']);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(mockGet).toHaveBeenCalledTimes(1);
   });
 
   it('buildPhotoMediaUrl includes api key and sizing params', () => {

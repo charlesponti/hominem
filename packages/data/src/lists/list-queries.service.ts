@@ -1,10 +1,10 @@
-import { logger } from '@hominem/utils/logger'
-import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
-import { db } from '../db'
-import { item, type ListSelect, list, place, userLists, users } from '../db/schema'
-import { formatList } from './list-crud.service'
-import { getListPlaces, getListPlacesMap } from './list-items.service'
-import type { List, ListUser, ListWithSpreadOwner } from './types'
+import { logger } from '@hominem/utils/logger';
+import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
+import { db } from '../db';
+import { item, type ListSelect, list, place, userLists, users } from '../db/schema';
+import { formatList } from './list-crud.service';
+import { getListPlaces, getListPlacesMap } from './list-items.service';
+import type { List, ListUser, ListWithSpreadOwner } from './types';
 
 /**
  * Get lists that the user is explicitly a member of (shared with them)
@@ -12,17 +12,17 @@ import type { List, ListUser, ListWithSpreadOwner } from './types'
 export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[]> {
   try {
     type SharedListDbResultBase = {
-      id: string
-      name: string
-      description: string | null
-      userId: string
-      isPublic: boolean
-      createdAt: string
-      updatedAt: string
-      owner_id: string | null
-      owner_email: string | null
-      owner_name: string | null
-    }
+      id: string;
+      name: string;
+      description: string | null;
+      userId: string;
+      isPublic: boolean;
+      createdAt: string;
+      updatedAt: string;
+      owner_id: string | null;
+      owner_email: string | null;
+      owner_name: string | null;
+    };
 
     const baseSelect = {
       id: list.id,
@@ -35,15 +35,15 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
       owner_id: users.id,
       owner_email: users.email,
       owner_name: users.name,
-    }
+    };
 
     const query = db
       .select(baseSelect)
       .from(userLists)
       .where(eq(userLists.userId, userId))
       .innerJoin(list, eq(userLists.listId, list.id))
-      .innerJoin(users, eq(list.userId, users.id))
-    const results = (await query.orderBy(desc(list.createdAt))) as SharedListDbResultBase[]
+      .innerJoin(users, eq(list.userId, users.id));
+    const results = (await query.orderBy(desc(list.createdAt))) as SharedListDbResultBase[];
 
     return results.map((item) => {
       const listPart = {
@@ -54,7 +54,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
         isPublic: item.isPublic,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
-      }
+      };
 
       const ownerPart = item.owner_id
         ? {
@@ -62,21 +62,21 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
             email: item.owner_email as string,
             name: item.owner_name,
           }
-        : null
+        : null;
 
       const listItem: ListWithSpreadOwner = {
         ...(listPart as ListSelect),
         owner: ownerPart,
-      }
+      };
 
-      return listItem
-    })
+      return listItem;
+    });
   } catch (error) {
     logger.error('Error fetching shared lists for user', {
       userId,
       error: error instanceof Error ? error.message : String(error),
-    })
-    return []
+    });
+    return [];
   }
 }
 
@@ -85,7 +85,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
  */
 export async function getUserListsWithItemCount(
   userId: string,
-  itemType?: string
+  itemType?: string,
 ): Promise<ListWithSpreadOwner[]> {
   try {
     const baseSelect = {
@@ -99,9 +99,9 @@ export async function getUserListsWithItemCount(
       owner_id: users.id,
       owner_email: users.email,
       owner_name: users.name,
-    }
+    };
 
-    const selectFields = { ...baseSelect, itemCount: count(item.id) }
+    const selectFields = { ...baseSelect, itemCount: count(item.id) };
 
     const query = db
       .select(selectFields)
@@ -110,7 +110,7 @@ export async function getUserListsWithItemCount(
       .innerJoin(list, eq(userLists.listId, list.id))
       .leftJoin(
         item,
-        and(eq(userLists.listId, item.listId), itemType ? eq(item.type, itemType) : undefined)
+        and(eq(userLists.listId, item.listId), itemType ? eq(item.type, itemType) : undefined),
       )
       .innerJoin(users, eq(list.userId, users.id))
       .groupBy(
@@ -123,10 +123,10 @@ export async function getUserListsWithItemCount(
         list.updatedAt,
         users.id,
         users.email,
-        users.name
-      )
+        users.name,
+      );
 
-    const results = await query.orderBy(desc(list.createdAt))
+    const results = await query.orderBy(desc(list.createdAt));
 
     return results.map((item) => {
       const listPart = {
@@ -137,7 +137,7 @@ export async function getUserListsWithItemCount(
         isPublic: item.isPublic,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
-      }
+      };
 
       const ownerPart = item.owner_id
         ? {
@@ -145,25 +145,25 @@ export async function getUserListsWithItemCount(
             email: item.owner_email as string,
             name: item.owner_name,
           }
-        : null
+        : null;
 
       const listItem: ListWithSpreadOwner = {
         ...(listPart as ListSelect),
         owner: ownerPart,
-      }
+      };
 
       if (item.itemCount !== null) {
-        listItem.itemCount = Number(item.itemCount)
+        listItem.itemCount = Number(item.itemCount);
       }
 
-      return listItem
-    })
+      return listItem;
+    });
   } catch (error) {
     logger.error('Error fetching shared lists for user', {
       userId,
       error: error instanceof Error ? error.message : String(error),
-    })
-    return []
+    });
+    return [];
   }
 }
 
@@ -175,17 +175,17 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
     // Lightweight: no item join / no item counts
 
     type OwnedListDbResultBase = {
-      id: string
-      name: string
-      description: string | null
-      userId: string
-      isPublic: boolean
-      createdAt: string
-      updatedAt: string
-      owner_id: string | null
-      owner_email: string | null
-      owner_name: string | null
-    }
+      id: string;
+      name: string;
+      description: string | null;
+      userId: string;
+      isPublic: boolean;
+      createdAt: string;
+      updatedAt: string;
+      owner_id: string | null;
+      owner_email: string | null;
+      owner_name: string | null;
+    };
 
     const baseSelect = {
       id: list.id,
@@ -198,14 +198,14 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       owner_id: users.id,
       owner_email: users.email,
       owner_name: users.name,
-    }
+    };
 
     const query = db
       .select(baseSelect)
       .from(list)
       .where(eq(list.userId, userId))
-      .innerJoin(users, eq(users.id, list.userId))
-    const queryResults = (await query.orderBy(desc(list.createdAt))) as OwnedListDbResultBase[]
+      .innerJoin(users, eq(users.id, list.userId));
+    const queryResults = (await query.orderBy(desc(list.createdAt))) as OwnedListDbResultBase[];
 
     return queryResults.map((dbItem) => {
       const listPart = {
@@ -216,30 +216,30 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
         isPublic: dbItem.isPublic,
         createdAt: dbItem.createdAt,
         updatedAt: dbItem.updatedAt,
-      }
+      };
       const ownerPart = dbItem.owner_id
         ? {
             id: dbItem.owner_id,
             email: dbItem.owner_email as string,
             name: dbItem.owner_name,
           }
-        : null
+        : null;
 
       const listItem: ListWithSpreadOwner = {
         ...(listPart as ListSelect),
         owner: ownerPart,
-      }
+      };
 
       // No item counts in the lightweight metadata response
 
-      return listItem
-    })
+      return listItem;
+    });
   } catch (error) {
     logger.error('Error fetching owned lists for user', {
       userId,
       error: error instanceof Error ? error.message : String(error),
-    })
-    return []
+    });
+    return [];
   }
 }
 
@@ -248,23 +248,23 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
  */
 export async function getOwnedListsWithItemCount(
   userId: string,
-  itemType?: string
+  itemType?: string,
 ): Promise<ListWithSpreadOwner[]> {
   try {
     type OwnedListDbResultBase = {
-      id: string
-      name: string
-      description: string | null
-      userId: string
-      isPublic: boolean
-      createdAt: string
-      updatedAt: string
-      owner_id: string | null
-      owner_email: string | null
-      owner_name: string | null
-    }
-    type OwnedListDbResultWithCount = OwnedListDbResultBase & { itemCount: string | null }
-    type OwnedListDbResult = OwnedListDbResultBase | OwnedListDbResultWithCount
+      id: string;
+      name: string;
+      description: string | null;
+      userId: string;
+      isPublic: boolean;
+      createdAt: string;
+      updatedAt: string;
+      owner_id: string | null;
+      owner_email: string | null;
+      owner_name: string | null;
+    };
+    type OwnedListDbResultWithCount = OwnedListDbResultBase & { itemCount: string | null };
+    type OwnedListDbResult = OwnedListDbResultBase | OwnedListDbResultWithCount;
 
     const baseSelect = {
       id: list.id,
@@ -277,9 +277,9 @@ export async function getOwnedListsWithItemCount(
       owner_id: users.id,
       owner_email: users.email,
       owner_name: users.name,
-    }
+    };
 
-    const selectFields = { ...baseSelect, itemCount: count(item.id) }
+    const selectFields = { ...baseSelect, itemCount: count(item.id) };
 
     const query = db
       .select(selectFields)
@@ -297,10 +297,10 @@ export async function getOwnedListsWithItemCount(
         list.updatedAt,
         users.id,
         users.email,
-        users.name
-      )
+        users.name,
+      );
 
-    const queryResults = (await query.orderBy(desc(list.createdAt))) as OwnedListDbResult[]
+    const queryResults = (await query.orderBy(desc(list.createdAt))) as OwnedListDbResult[];
 
     return queryResults.map((dbItem) => {
       const listPart = {
@@ -311,32 +311,32 @@ export async function getOwnedListsWithItemCount(
         isPublic: dbItem.isPublic,
         createdAt: dbItem.createdAt,
         updatedAt: dbItem.updatedAt,
-      }
+      };
       const ownerPart = dbItem.owner_id
         ? {
             id: dbItem.owner_id,
             email: dbItem.owner_email as string,
             name: dbItem.owner_name,
           }
-        : null
+        : null;
 
       const listItem: ListWithSpreadOwner = {
         ...(listPart as ListSelect),
         owner: ownerPart,
-      }
+      };
 
       if ('itemCount' in dbItem && dbItem.itemCount !== null) {
-        listItem.itemCount = Number(dbItem.itemCount)
+        listItem.itemCount = Number(dbItem.itemCount);
       }
 
-      return listItem
-    })
+      return listItem;
+    });
   } catch (error) {
     logger.error('Error fetching owned lists for user', {
       userId,
       error: error instanceof Error ? error.message : String(error),
-    })
-    return []
+    });
+    return [];
   }
 }
 
@@ -347,8 +347,8 @@ export async function getOwnedListsWithItemCount(
  * @returns Object containing ownedListsWithPlaces and sharedListsWithPlaces
  */
 export async function getAllUserListsWithPlaces(userId: string): Promise<{
-  ownedListsWithPlaces: List[]
-  sharedListsWithPlaces: List[]
+  ownedListsWithPlaces: List[];
+  sharedListsWithPlaces: List[];
 }> {
   try {
     // Single query to get all lists the user has access to (owned OR shared)
@@ -374,37 +374,37 @@ export async function getAllUserListsWithPlaces(userId: string): Promise<{
       .where(
         or(
           eq(list.userId, userId), // Owned lists
-          isNotNull(userLists.listId) // Shared lists (join matched)
-        )
+          isNotNull(userLists.listId), // Shared lists (join matched)
+        ),
       )
-      .orderBy(desc(list.createdAt))
+      .orderBy(desc(list.createdAt));
 
     if (allLists.length === 0) {
       return {
         ownedListsWithPlaces: [],
         sharedListsWithPlaces: [],
-      }
+      };
     }
 
     // Deduplicate lists (a list could appear twice if user owns it AND it's shared)
-    const uniqueLists = new Map<string, (typeof allLists)[0]>()
+    const uniqueLists = new Map<string, (typeof allLists)[0]>();
     for (const dbItem of allLists) {
       if (!uniqueLists.has(dbItem.id)) {
-        uniqueLists.set(dbItem.id, dbItem)
+        uniqueLists.set(dbItem.id, dbItem);
       } else {
         // If already exists, prefer owned status
-        const existing = uniqueLists.get(dbItem.id)!
+        const existing = uniqueLists.get(dbItem.id)!;
         if (dbItem.isOwned && !existing.isOwned) {
-          uniqueLists.set(dbItem.id, dbItem)
+          uniqueLists.set(dbItem.id, dbItem);
         }
       }
     }
 
-    const listIds = Array.from(uniqueLists.keys())
-    const placesMap = await getListPlacesMap(listIds)
+    const listIds = Array.from(uniqueLists.keys());
+    const placesMap = await getListPlacesMap(listIds);
 
-    const ownedLists: List[] = []
-    const sharedLists: List[] = []
+    const ownedLists: List[] = [];
+    const sharedLists: List[] = [];
 
     for (const dbItem of uniqueLists.values()) {
       const listPart = {
@@ -415,7 +415,7 @@ export async function getAllUserListsWithPlaces(userId: string): Promise<{
         isPublic: dbItem.isPublic,
         createdAt: dbItem.createdAt,
         updatedAt: dbItem.updatedAt,
-      }
+      };
 
       const ownerPart = dbItem.owner_id
         ? {
@@ -423,35 +423,35 @@ export async function getAllUserListsWithPlaces(userId: string): Promise<{
             email: dbItem.owner_email as string,
             name: dbItem.owner_name,
           }
-        : null
+        : null;
 
       const listData: ListWithSpreadOwner = {
         ...(listPart as ListSelect),
         owner: ownerPart,
-      }
+      };
 
-      const places = placesMap.get(dbItem.id) || []
+      const places = placesMap.get(dbItem.id) || [];
 
       if (dbItem.isOwned) {
-        ownedLists.push(formatList(listData, places, true, true))
+        ownedLists.push(formatList(listData, places, true, true));
       } else {
-        sharedLists.push(formatList(listData, places, false, true))
+        sharedLists.push(formatList(listData, places, false, true));
       }
     }
 
     return {
       ownedListsWithPlaces: ownedLists,
       sharedListsWithPlaces: sharedLists,
-    }
+    };
   } catch (error) {
     logger.error('Error fetching all user lists with places', {
       userId,
       error: error instanceof Error ? error.message : String(error),
-    })
+    });
     return {
       ownedListsWithPlaces: [],
       sharedListsWithPlaces: [],
-    }
+    };
   }
 }
 
@@ -479,10 +479,10 @@ export async function getListById(id: string, userId?: string | null) {
       .from(list)
       .where(eq(list.id, id))
       .innerJoin(users, eq(users.id, list.userId))
-      .then((rows) => rows[0])
+      .then((rows) => rows[0]);
 
     if (!result) {
-      return null
+      return null;
     }
 
     const listPart = {
@@ -493,7 +493,7 @@ export async function getListById(id: string, userId?: string | null) {
       isPublic: result.isPublic,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
-    }
+    };
 
     const ownerPart = result.owner_id
       ? {
@@ -501,23 +501,23 @@ export async function getListById(id: string, userId?: string | null) {
           email: result.owner_email as string,
           name: result.owner_name,
         }
-      : null
+      : null;
 
     const listDataForFormat: ListWithSpreadOwner = {
       ...(listPart as ListSelect),
       owner: ownerPart,
-    }
+    };
 
-    const places = await getListPlaces(id)
+    const places = await getListPlaces(id);
 
-    const isOwnList = listDataForFormat.userId === userId
-    let hasAccess = isOwnList
+    const isOwnList = listDataForFormat.userId === userId;
+    let hasAccess = isOwnList;
 
     if (!hasAccess && userId) {
       const sharedAccess = await db.query.userLists.findFirst({
         where: and(eq(userLists.listId, id), eq(userLists.userId, userId)),
-      })
-      hasAccess = Boolean(sharedAccess)
+      });
+      hasAccess = Boolean(sharedAccess);
     }
 
     // Efficiently fetch all collaborators (users who have access to this list) with their avatars
@@ -538,51 +538,51 @@ export async function getListById(id: string, userId?: string | null) {
           email: row.email,
           name: row.name || undefined,
           image: row.image || undefined,
-        }))
-      )
+        })),
+      );
 
     // Always include the owner as the first collaborator
-    const allCollaborators: ListUser[] = []
+    const allCollaborators: ListUser[] = [];
     if (result.owner_id) {
       allCollaborators.push({
         id: result.owner_id,
         email: result.owner_email as string,
         name: result.owner_name || undefined,
         image: result.owner_image || undefined,
-      })
+      });
     }
     // Add other collaborators (excluding owner if they're also in userLists)
     for (const collaborator of collaborators) {
       if (collaborator.id !== result.owner_id) {
-        allCollaborators.push(collaborator)
+        allCollaborators.push(collaborator);
       }
     }
 
-    return formatList(listDataForFormat, places, isOwnList, hasAccess, allCollaborators)
+    return formatList(listDataForFormat, places, isOwnList, hasAccess, allCollaborators);
   } catch (error) {
-    console.error(`Error fetching list ${id}:`, error)
-    return null
+    console.error(`Error fetching list ${id}:`, error);
+    return null;
   }
 }
 
 export async function getListOwnedByUser(
   listId: string,
-  userId: string
+  userId: string,
 ): Promise<ListSelect | undefined> {
-  return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) })
+  return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) });
 }
 
-export async function getListsContainingPlace({
+export async function getPlaceLists({
   userId,
   placeId,
   googleMapsId,
 }: {
-  userId: string
-  placeId?: string
-  googleMapsId?: string
+  userId: string;
+  placeId?: string;
+  googleMapsId?: string;
 }): Promise<Array<{ id: string; name: string; itemCount: number; imageUrl: string | null }>> {
   if (!(placeId || googleMapsId)) {
-    return []
+    return [];
   }
 
   try {
@@ -609,21 +609,21 @@ export async function getListsContainingPlace({
             ? eq(place.id, placeId)
             : googleMapsId
               ? eq(place.googleMapsId, googleMapsId)
-              : sql`false`
-        )
+              : sql`false`,
+        ),
       )
       .leftJoin(userLists, and(eq(userLists.listId, list.id), eq(userLists.userId, userId)))
       .where(
-        and(eq(item.itemType, 'PLACE'), or(eq(list.userId, userId), isNotNull(userLists.listId)))
+        and(eq(item.itemType, 'PLACE'), or(eq(list.userId, userId), isNotNull(userLists.listId))),
       )
-      .groupBy(list.id, list.name, place.id)
+      .groupBy(list.id, list.name, place.id);
 
     if (listsContainingPlace.length === 0) {
-      return []
+      return [];
     }
 
-    const listIds = listsContainingPlace.map((l) => l.id)
-    const resolvedPlaceId = listsContainingPlace[0]?.resolvedPlaceId
+    const listIds = listsContainingPlace.map((l) => l.id);
+    const resolvedPlaceId = listsContainingPlace[0]?.resolvedPlaceId;
 
     // Get thumbnail imageUrl for each list (prefer different place, fallback to any)
     const allPlacesInLists = await db
@@ -632,26 +632,26 @@ export async function getListsContainingPlace({
         placeId: place.id,
         googleMapsId: place.googleMapsId,
         imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
-          'imageUrl'
+          'imageUrl',
         ),
         createdAt: item.createdAt,
       })
       .from(item)
       .innerJoin(place, eq(place.id, item.itemId))
       .where(and(inArray(item.listId, listIds), eq(item.itemType, 'PLACE')))
-      .orderBy(item.listId, item.createdAt)
+      .orderBy(item.listId, item.createdAt);
 
-    const imageMap = new Map<string, string | null>()
+    const imageMap = new Map<string, string | null>();
 
     for (const listId of listIds) {
-      const placesInList = allPlacesInLists.filter((p) => p.listId === listId)
+      const placesInList = allPlacesInLists.filter((p) => p.listId === listId);
       // Prefer a place that's not the current one
       const preferredPlace =
-        placesInList.find((p) => p.placeId !== resolvedPlaceId) || placesInList[0]
+        placesInList.find((p) => p.placeId !== resolvedPlaceId) || placesInList[0];
 
       if (preferredPlace?.imageUrl) {
-        const imageUrl = preferredPlace.imageUrl
-        imageMap.set(listId, imageUrl)
+        const imageUrl = preferredPlace.imageUrl;
+        imageMap.set(listId, imageUrl);
       }
     }
 
@@ -661,14 +661,14 @@ export async function getListsContainingPlace({
       name: l.name,
       itemCount: Number(l.itemCount),
       imageUrl: imageMap.get(l.id) || null,
-    }))
+    }));
   } catch (error) {
     logger.error('Error fetching lists containing place', {
       userId,
       placeId,
       googleMapsId,
       error: error instanceof Error ? error.message : String(error),
-    })
-    return []
+    });
+    return [];
   }
 }

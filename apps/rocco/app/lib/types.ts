@@ -1,4 +1,5 @@
 import type { inferRouterOutputs } from '@trpc/server';
+import type { places_v1 } from 'googleapis';
 import type { AppRouter } from './trpc/router';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -41,21 +42,7 @@ export type GooglePlacePrediction = {
   priceLevel?: string | number | null;
 };
 
-export type GooglePlacesApiResponse = {
-  id: string;
-  displayName?: {
-    text: string;
-  };
-  formattedAddress?: string;
-  location?: {
-    latitude: number;
-    longitude: number;
-  };
-  types?: string[];
-  websiteUri?: string | null;
-  nationalPhoneNumber?: string | null;
-  priceLevel?: string;
-};
+export type GooglePlacesApiResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
 
 // Type for temporary place data from Google Places API
 export type GooglePlaceData = {
@@ -77,29 +64,6 @@ export type GooglePlaceData = {
   priceLevel?: number | null;
 };
 
-export type GooglePlacePhoto = {
-  name?: string | null;
-};
-
-export type GoogleAddressComponent = {
-  longText: string;
-  shortText: string;
-  types: string[];
-  languageCode: string;
-};
-
-export type GooglePlaceDetailsResponse = {
-  displayName?: { text?: string | null };
-  formattedAddress?: string | null;
-  addressComponents?: GoogleAddressComponent[];
-  location?: {
-    latitude?: number | null;
-    longitude?: number | null;
-  };
-  types?: string[];
-  rating?: number | null;
-  websiteUri?: string | null;
-  nationalPhoneNumber?: string | null;
-  priceLevel?: string | null;
-  photos?: GooglePlacePhoto[];
-};
+export type GoogleAddressComponent = places_v1.Schema$GoogleMapsPlacesV1PlaceAddressComponent;
+export type GooglePlacePhoto = places_v1.Schema$GoogleMapsPlacesV1PlacePhoto;
+export type GooglePlaceDetailsResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
