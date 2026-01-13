@@ -1,6 +1,7 @@
 import type { Place as PlaceSelect } from '@hominem/data/places'
 import { getItemsForPlace } from '@hominem/data/places'
-import { buildPhotoMediaUrl, getHominemPhotoURL } from '@hominem/utils/images'
+import { buildPhotoMediaUrl } from '@hominem/utils/google'
+import { getHominemPhotoURL } from '@hominem/utils/images'
 import { getPlacePhotos as fetchGooglePlacePhotos } from '~/lib/google-places.server'
 import { sanitizeStoredPhotos } from '~/lib/places-utils'
 import type { Context } from '../context'
@@ -8,7 +9,7 @@ import type { Context } from '../context'
 export const buildPhotoUrl = (photoRef: string) =>
   buildPhotoMediaUrl({
     key: process.env.GOOGLE_API_KEY!,
-    photoName: photoRef,
+    pathname: photoRef,
   })
 
 export const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: PlaceSelect) => {

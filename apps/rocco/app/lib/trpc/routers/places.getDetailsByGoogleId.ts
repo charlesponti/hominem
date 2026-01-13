@@ -1,5 +1,5 @@
 import { getPlaceByGoogleMapsId, upsertPlace } from '@hominem/data/places'
-import { buildPhotoMediaUrl } from '@hominem/utils/images'
+import { buildPhotoMediaUrl } from '@hominem/utils/google'
 import { z } from 'zod'
 import { getPlaceDetails as fetchGooglePlaceDetails } from '~/lib/google-places.server'
 import { transformGooglePlaceToPlaceInsert } from '~/lib/places-utils'
@@ -29,7 +29,7 @@ export const getDetailsByGoogleId = protectedProcedure
         const buildPhotoUrl = (photoRef: string) => {
           return buildPhotoMediaUrl({
             key: import.meta.env.GOOGLE_PLACES_API_KEY,
-            photoName: photoRef,
+            pathname: photoRef,
           })
         }
 

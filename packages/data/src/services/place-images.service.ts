@@ -1,7 +1,8 @@
 import { isValidGoogleHost } from '@hominem/utils/google'
 import { downloadImage } from '@hominem/utils/http'
-import { createPlacePhotoUrlBuilder } from '@hominem/utils/images'
+import { isGooglePlacesPhotoReference } from '@hominem/utils/images'
 import { placeImagesStorageService } from '@hominem/utils/supabase'
+import { google } from 'googleapis'
 
 export interface PlaceImagesService {
   downloadAndStorePlaceImage: (
@@ -20,42 +21,57 @@ export function createPlaceImagesService({
   googleApiKey,
 }: {
   appBaseUrl?: string
-  googleApiKey?: string
+  googleApiKey: string
 }) {
-  const buildPhotoUrl = createPlacePhotoUrlBuilder(googleApiKey)
+  const placesClient = google.places({ version: 'v1', auth: googleApiKey })
+
   async function downloadAndStorePlaceImage(
     googleMapsId: string,
     photoUrl: string,
     photoIndex = 0
   ): Promise<string | null> {
     try {
-      // Build the full media URL with API key
-      let fullUrl = buildPhotoUrl(photoUrl) ?? photoUrl
-      const urlObj = new URL(fullUrl)
+      let downloadUrl = photoUrl
+      let resourceName: string | null = null
 
-      // Initial attempt: Use Google Places API (New) with explicit JSON response
-      // This avoids generic HTTP client redirect issues and provides better error handling.
-      if (fullUrl.includes('places.googleapis.com') && fullUrl.includes('/media')) {
-        urlObj.searchParams.set('skipHttpRedirect', 'true')
-
-        const response = await fetch(urlObj.toString())
-
-        if (response.ok) {
-          const data = (await response.json()) as { photoUri?: string }
-          if (data.photoUri) {
-            fullUrl = data.photoUri
-          } else {
-            throw new Error('No photoUri in Google API response')
+      if (isGooglePlacesPhotoReference(photoUrl)) {
+        resourceName = photoUrl
+      } else {
+        try {
+          const urlObj = new URL(photoUrl)
+          if (urlObj.hostname.includes('places.googleapis.com')) {
+            const rawPath = urlObj.pathname.replace(/^\/?v1\//, '').replace(/^\//, '')
+            const baseRef = rawPath.replace(/\/media$/, '')
+            if (isGooglePlacesPhotoReference(baseRef)) {
+              resourceName = rawPath
+            }
           }
+        } catch {
+          // invalid url, ignore
+        }
+      }
+
+      if (resourceName) {
+        if (!resourceName.endsWith('/media')) {
+          resourceName += '/media'
+        }
+
+        const response = await placesClient.places.photos.getMedia({
+          name: resourceName,
+          maxWidthPx: 1600,
+          maxHeightPx: 1200,
+          skipHttpRedirect: true,
+        })
+
+        if (response.data.photoUri) {
+          downloadUrl = response.data.photoUri
         } else {
-          // Other errors (400, 403, 404, 500)
-          const errorText = await response.text()
-          throw new Error(`Google API Error (${response.status}): ${errorText.substring(0, 200)}`)
+          throw new Error('No photoUri in Google API response')
         }
       }
 
       // Download the image (either from the successful New API URI or the Legacy API URL)
-      const { buffer } = await downloadImage({ url: fullUrl }, appBaseUrl)
+      const { buffer } = await downloadImage({ url: downloadUrl }, appBaseUrl)
 
       // Use helper to convert + upload full + thumb
       const { fullUrl: storedFullUrl } = await savePlacePhoto(googleMapsId, buffer, photoIndex)
@@ -182,8 +198,8 @@ export function isGooglePhotosUrl(url: string): boolean {
   // If it's a proper URL with a Google host, accept it
   return (
     isValidGoogleHost(url) ||
-    // Otherwise, it may be a Google Places photo reference path (e.g., "places/.../photos/...")
-    (url.includes('places/') && url.includes('/photos/'))
+    // Otherwise, use the stricter helper to recognize Google Places photo references
+    isGooglePlacesPhotoReference(url)
   )
 }
 

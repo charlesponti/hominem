@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { z } from 'zod'
 
 const envSchema = z.object({
+  APP_BASE_URL: z.url(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   DATABASE_URL: z.string().url(),
   GOOGLE_API_KEY: z.string(),

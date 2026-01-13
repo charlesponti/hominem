@@ -1,44 +1,5 @@
 {
-  "tailwindCSS.includeLanguages": {
-    "typescript": "javascript",
-    "typescriptreact": "javascript"
-  },
-  "tailwindCSS.files.exclude": [
-    "**/.git/**",
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/dist/**"
-  ],
-  "tailwindCSS.experimental.classRegex": [
-    [
-      "cva\\(([^)]*)\\)",
-      "[\"'`]([^\"'`]*).*?[\"'`]"
-    ],
-    [
-      "cn\\(([^)]*)\\)",
-      "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"
-    ]
-  ],
-  "files.associations": {
-    "*.css": "tailwindcss"
-  },
-  "editor.quickSuggestions": {
-    "strings": true
-  },
-  "css.validate": false,
-  "terminal.integrated.shellIntegration.enabled": true,
-  "tailwindCSS.rootFontSize": 16,
-  "tailwindCSS.experimental.configFile": "./packages/ui/src/styles/globals.css",
-  "editor.defaultFormatter": "biomejs.biome",
-  "editor.formatOnSave": true,
-  "github.copilot.chat.newWorkspace.useContext7": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports.biome": "explicit"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescriptreact]": {
+  "[css]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
   "[javascript]": {
@@ -53,13 +14,53 @@
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
-  "[css]": {
+  "[typescript]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "npm.scriptRunner": "bun",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
   "cSpell.words": [
     "tsquery",
     "tsvector",
     "websearch"
-  ]
+  ],
+  "css.validate": false,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  },
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "geminicodeassist.inlineSuggestions.enableAuto": true,
+  "github.copilot.chat.newWorkspace.useContext7": true,
+  "npm.scriptRunner": "bun",
+  "tailwindCSS.experimental.classRegex": [
+    [
+      "cva\\(([^)]*)\\)",
+      "[\"'`]([^\"'`]*).*?[\"'`]"
+    ],
+    [
+      "cn\\(([^)]*)\\)",
+      "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"
+    ]
+  ],
+  "tailwindCSS.experimental.configFile": "./packages/ui/src/styles/globals.css",
+  "tailwindCSS.files.exclude": [
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**"
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.rootFontSize": 16,
+  "terminal.integrated.shellIntegration.enabled": true
 }

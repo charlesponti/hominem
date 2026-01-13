@@ -1,4 +1,4 @@
-import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/images'
+import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google'
 import { and, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm'
 import { db } from '../db'
 import {
@@ -118,7 +118,8 @@ async function preparePlaceInsertData(
     phoneNumber: data.phoneNumber ?? null,
     priceLevel: data.priceLevel ?? null,
     photos: processedPhotos,
-    imageUrl: imageUrl ?? (processedPhotos && processedPhotos.length > 0 ? processedPhotos[0]! : null),
+    imageUrl:
+      imageUrl ?? (processedPhotos && processedPhotos.length > 0 ? processedPhotos[0]! : null),
   }
 }
 

@@ -1,4 +1,4 @@
-import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/images'
+import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google'
 import { logger } from '@hominem/utils/logger'
 
 import type { GooglePlaceDetailsResponse, GooglePlacesApiResponse } from '~/lib/types'

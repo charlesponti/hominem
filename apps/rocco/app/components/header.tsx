@@ -86,8 +86,8 @@ function Header() {
     >
       <div className="flex px-4 py-2 items-center justify-between">
         <Link to="/" className="flex items-center space-x-1">
-          <img src="/favicons/favicon-96x96.png" alt={APP_NAME} className="size-4 mt-1" />
-          <span className="heading-3 lowercase text-primary">{APP_NAME}</span>
+          <img src="/icons/favicon-96x96.png" alt={APP_NAME} className="size-3 mt-1" />
+          <span className="heading-4 lowercase text-primary">{APP_NAME}</span>
         </Link>
         {!isLoading && (
           <div className="flex items-center space-x-2">

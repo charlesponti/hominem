@@ -1,11 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildPhotoMediaUrl, createPlacePhotoUrlBuilder } from '../images'
+import { describe, expect, it } from 'vitest'
+import { buildPhotoMediaUrl } from '../google.js'
+import { getHominemPhotoURL, isGooglePlacesPhotoReference } from '../images.js'
 
 describe('buildPhotoMediaUrl', () => {
   it('builds a Google Places media URL with correct query params', () => {
     const url = buildPhotoMediaUrl({
       key: 'test-key',
-      photoName: 'places/abc/photos/1',
+      pathname: 'places/abc/photos/1',
       maxWidthPx: 1600,
       maxHeightPx: 1200,
     })
@@ -17,50 +18,48 @@ describe('buildPhotoMediaUrl', () => {
   })
 })
 
-describe('createPlacePhotoUrlBuilder', () => {
-  const apiKey = 'my-key'
-  let warnSpy: ReturnType<typeof vi.spyOn>
-
-  beforeEach(() => {
-    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+describe('getHominemPhotoURL', () => {
+  it('returns null for empty input', () => {
+    expect(getHominemPhotoURL('', 800, 600)).toBeNull()
   })
 
-  afterEach(() => {
-    warnSpy.mockRestore()
+  it('returns thumb variant for small supabase requests and unchanged for larger', () => {
+    const url = 'https://xyz.supabase.co/storage/v1/object/public/places/abc.jpg'
+    const thumbUrl = 'https://xyz.supabase.co/storage/v1/object/public/places/abc-thumb.jpg'
+    // Small request should return thumb
+    expect(getHominemPhotoURL(url, 800, 600)).toBe(thumbUrl)
+    // Larger request should return as-is
+    expect(getHominemPhotoURL(url, 1600, 1200)).toBe(url)
   })
 
-  it('returns null when apiKey is not provided', () => {
-    const builder = createPlacePhotoUrlBuilder(undefined)
-    expect(builder('places/abc/photos/1')).toBeNull()
+  it('builds proxy URL for Google Places reference', () => {
+    const ref = 'places/ChIJ.../photos/abcd'
+    const out = getHominemPhotoURL(ref, 640, 480)
+    expect(out).toBe(`/api/images?resource=${encodeURIComponent(ref)}&width=640&height=480`)
   })
 
-  it('returns absolute URLs unchanged', () => {
-    const builder = createPlacePhotoUrlBuilder(apiKey)
-    const abs = 'https://lh3.googleusercontent.com/abc'
-    expect(builder(abs)).toBe(abs)
+  it('appends dimensions to googleusercontent URLs', () => {
+    const url = 'https://lh3.googleusercontent.com/abc'
+    expect(getHominemPhotoURL(url, 320, 200)).toBe(`${url}=w320-h200-c`)
   })
 
-  it('strips query params and builds url for references', () => {
-    const builder = createPlacePhotoUrlBuilder(apiKey)
-    const input = 'places/abc/photos/1?foo=bar'
-    const url = builder(input)
-    const expected = buildPhotoMediaUrl({
-      key: apiKey,
-      photoName: 'places/abc/photos/1',
-      maxWidthPx: 1600,
-      maxHeightPx: 1600,
-    })
-    expect(url).toBe(expected)
+  it('does not proxy malformed place references', () => {
+    // reversed order or malformed should not be proxied
+    expect(getHominemPhotoURL('photos/places/abc', 640, 480)).toBeNull()
+    expect(getHominemPhotoURL('places//photos/1', 640, 480)).toBeNull()
+  })
+})
+
+describe('isGooglePlacesPhotoReference', () => {
+  it('recognizes valid references', () => {
+    expect(isGooglePlacesPhotoReference('places/abc/photos/1')).toBe(true)
+    expect(isGooglePlacesPhotoReference('places/abc/photos/1?foo=bar')).toBe(true)
   })
 
-  it('warns for suspicious paths', () => {
-    const builder = createPlacePhotoUrlBuilder(apiKey)
-    expect(builder('weird/path')).toBeTruthy()
-    expect(warnSpy).toHaveBeenCalled()
-  })
-
-  it('returns null for empty path', () => {
-    const builder = createPlacePhotoUrlBuilder(apiKey)
-    expect(builder('')).toBeNull()
+  it('rejects invalid or malformed references', () => {
+    expect(isGooglePlacesPhotoReference('photos/places/abc')).toBe(false)
+    expect(isGooglePlacesPhotoReference('places//photos/1')).toBe(false)
+    expect(isGooglePlacesPhotoReference('places/abc/photos/')).toBe(false)
+    expect(isGooglePlacesPhotoReference('foo/places/photos/bar')).toBe(false)
   })
 })

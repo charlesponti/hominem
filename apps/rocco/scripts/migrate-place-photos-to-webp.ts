@@ -12,19 +12,26 @@ import { place } from '@hominem/data/schema'
 import type { SingleBar } from 'cli-progress'
 import cliProgress from 'cli-progress'
 import { eq, sql } from 'drizzle-orm'
-// CLI niceties for progress/spinners
+import type { Ora } from 'ora'
 import ora from 'ora'
+import z from 'zod'
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
-if (!GOOGLE_PLACES_API_KEY) {
+const { data } = z
+  .object({
+    GOOGLE_PLACES_API_KEY: z.string().min(1),
+  })
+  .safeParse(process.env)
+
+if (!data) {
   console.warn(
     'Warning: GOOGLE_PLACES_API_KEY not set. Google reference migration will be skipped.'
   )
+  process.exit(0)
 }
 
 const placeImagesService = createPlaceImagesService({
   appBaseUrl: process.env.APP_BASE_URL,
-  googleApiKey: GOOGLE_PLACES_API_KEY,
+  googleApiKey: data.GOOGLE_PLACES_API_KEY,
 })
 
 function isSupabasePublicUrl(url: string): boolean {
@@ -32,7 +39,7 @@ function isSupabasePublicUrl(url: string): boolean {
 }
 
 // Helper to create and manage a spinner while running an async function.
-async function runWithSpinner<T>(label: string, fn: (spin: ora.Ora) => Promise<T>): Promise<T> {
+async function runWithSpinner<T>(label: string, fn: (spin: Ora) => Promise<T>): Promise<T> {
   const spin = ora(label).start()
   try {
     const res = await fn(spin)
@@ -52,12 +59,6 @@ async function migrateSinglePhoto(
   placeName?: string
 ): Promise<string> {
   if (isGooglePhotosUrl(photo)) {
-    if (!GOOGLE_PLACES_API_KEY) {
-      console.warn('Skipping Google photo (no API key):', photo)
-      progressBar?.increment(1, { place: placeName || '' })
-      return photo
-    }
-
     return await runWithSpinner('Migrating Google photo', async (spin) => {
       spin.text = 'Downloading via Google Places API'
       try {

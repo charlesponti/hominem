@@ -1,4 +1,3 @@
-import { createPlacePhotoUrlBuilder } from '@hominem/utils/images'
 import { logger } from '@hominem/utils/logger'
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
 import { db } from '../db'
@@ -672,16 +671,4 @@ export async function getListsContainingPlace({
     })
     return []
   }
-}
-
-/**
- * Get a default photo URL builder that uses GOOGLE_API_KEY if available
- */
-export function getDefaultPhotoUrlBuilder(): (ref: string) => string {
-  const apiKey = process.env.GOOGLE_API_KEY
-  if (apiKey) {
-    const builder = createPlacePhotoUrlBuilder(apiKey)
-    return (ref: string) => builder(ref) || ref
-  }
-  return (ref: string) => ref
 }

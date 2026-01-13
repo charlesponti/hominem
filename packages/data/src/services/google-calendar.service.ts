@@ -121,7 +121,9 @@ export class GoogleCalendarService {
 
       // Process each Google Calendar event
       for (const googleEvent of googleEvents) {
-        if (!googleEvent.id) { continue }
+        if (!googleEvent.id) {
+          continue
+        }
 
         googleEventIds.add(googleEvent.id)
 

@@ -1,4 +1,4 @@
-import { buildPhotoMediaUrl } from '@hominem/utils/images'
+import { buildPhotoMediaUrl } from '@hominem/utils/google'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   getPlaceDetails,
@@ -89,7 +89,7 @@ describe('google-places.server helper', () => {
   it('buildPhotoMediaUrl includes api key and sizing params', () => {
     const url = buildPhotoMediaUrl({
       key: 'test-key',
-      photoName: 'places/foo/photos/1',
+      pathname: 'places/foo/photos/1',
       maxWidthPx: 800,
       maxHeightPx: 600,
     })

@@ -13,7 +13,7 @@ vi.mock('sharp', () => ({
 
 import type { StoredFile } from '@hominem/utils/supabase'
 import { placeImagesStorageService } from '@hominem/utils/supabase'
-import { savePlacePhoto } from './place-images.service'
+import { isGooglePhotosUrl, savePlacePhoto } from './place-images.service'
 
 describe('savePlacePhoto', () => {
   beforeEach(() => {
@@ -101,5 +101,24 @@ describe('savePlacePhoto', () => {
     expect(res.thumbUrl).toBeNull()
 
     consoleSpy.mockRestore()
+  })
+})
+
+describe('isGooglePhotosUrl', () => {
+  it('accepts known Google hosts', () => {
+    expect(isGooglePhotosUrl('https://lh3.googleusercontent.com/abc')).toBe(true)
+    expect(
+      isGooglePhotosUrl('https://photos.googleapis.com/v1/places/abc/photos/1/media?key=abc')
+    ).toBe(true)
+  })
+
+  it('accepts valid Places references', () => {
+    expect(isGooglePhotosUrl('places/abc/photos/1')).toBe(true)
+    expect(isGooglePhotosUrl('places/abc/photos/1?foo=bar')).toBe(true)
+  })
+
+  it('rejects malformed references and non-google hosts', () => {
+    expect(isGooglePhotosUrl('photos/places/abc')).toBe(false)
+    expect(isGooglePhotosUrl('https://example.com/image.jpg')).toBe(false)
   })
 })
