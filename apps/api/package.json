@@ -48,7 +48,7 @@
     "dotenv": "17.2.3",
     "drizzle-zod": "^0.7.0",
     "effect": "^3.16.10",
-    "googleapis": "^144.0.0",
+    "googleapis": "^170.0.0",
     "gpt-tokenizer": "^2.9.0",
     "hono": "^4.10.7",
     "ioredis": "^5.5.0",
