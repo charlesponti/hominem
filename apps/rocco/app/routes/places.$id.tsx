@@ -59,7 +59,9 @@ export default function Place({ loaderData }: Route.ComponentProps) {
       >
         <PlacePhotos
           alt={place.name}
-          photos={place.thumbnailPhotos ?? place.photos}
+          photos={place.photos}
+          thumbnailPhotos={place.thumbnailPhotos}
+          fullPhotos={place.fullPhotos}
           placeId={place.id}
         />
       </div>

@@ -5,15 +5,22 @@ import PlacePhotoLightbox from './PlacePhotoLightbox';
 
 type Props = {
   alt: string;
-  // thumbnails or resolved URLs suitable for the list view
-  photos: string[] | null | undefined;
+  // Raw photo references or resolved URLs
+  photos?: string[] | null;
+  // Pre-proxied URLs from tRPC
+  thumbnailPhotos?: string[] | null;
+  fullPhotos?: string[] | null;
   placeId: string;
 };
 
-const PlacePhotos = ({ alt, photos, placeId }: Props) => {
+const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Props) => {
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  // Fallback to raw photos if display urls aren't provided (unlikely with latest trpc)
+  const displayPhotos = thumbnailPhotos || photos || [];
+  const lightboxPhotos = fullPhotos || photos || [];
 
   const handleImageError = useCallback((index: number) => {
     setFailedImages((prev) => new Set(prev).add(index));
@@ -24,7 +31,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
     setLightboxOpen(true);
   }, []);
 
-  if (!photos || photos.length === 0) {
+  if (!displayPhotos || displayPhotos.length === 0) {
     return (
       <div className="h-80 flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50 rounded-2xl">
         <div className="text-center">
@@ -45,7 +52,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
           scrollbarGutter: 'stable',
         }}
       >
-        {photos.map((photoUrl, index) => {
+        {displayPhotos.map((photoUrl, index) => {
           const hasFailed = failedImages.has(index);
 
           return (
@@ -54,7 +61,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
               key={photoUrl}
               onClick={() => openLightbox(index)}
               className="shrink-0 snap-center group relative cursor-pointer w-[85vw] h-[85vw] max-w-[350px] max-h-[350px] sm:w-[350px] sm:h-[350px] aspect-square rounded-2xl overflow-hidden bg-gray-100 hover:scale-105 transition-all duration-300"
-              aria-label={`View photo ${index + 1} of ${photos.length}`}
+              aria-label={`View photo ${index + 1} of ${displayPhotos.length}`}
             >
               {hasFailed ? (
                 <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-indigo-50 to-purple-50">
@@ -65,7 +72,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
                 </div>
               ) : (
                 <img
-                  src={photoUrl}
+                  src={photoUrl || ''}
                   alt={`${alt} - ${index + 1}`}
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
@@ -86,7 +93,7 @@ const PlacePhotos = ({ alt, photos, placeId }: Props) => {
 
       {/* Lightbox */}
       <PlacePhotoLightbox
-        photos={photos ?? []}
+        photos={lightboxPhotos.filter((p): p is string => Boolean(p))}
         currentIndex={currentPhotoIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}

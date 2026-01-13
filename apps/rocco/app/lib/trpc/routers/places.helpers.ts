@@ -32,8 +32,13 @@ export const enrichPlaceWithDetails = async (_ctx: Context, dbPlace: PlaceSelect
   return {
     ...dbPlace,
     associatedLists,
-    // photos will be the full-resolution URLs; thumbnails provided separately
-    photos: fullPhotos,
+    // Keep the raw photos in the photos field
+    photos: placePhotos,
+    // Provided separately for display
     thumbnailPhotos,
+    fullPhotos,
+    // imageUrl should ideally also be raw, but if it's already used in many places,
+    // it's safer to leave as-is or handle it similarly.
+    // For now, let's just ensure we have the expanded photo fields.
   };
 };

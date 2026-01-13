@@ -3,7 +3,9 @@ import {
   extractPhotoReferences,
   mapGooglePlaceToPrediction,
   parsePriceLevel,
+  transformGooglePlaceToPlaceInsert,
 } from './places-utils';
+import type { GooglePlaceDetailsResponse } from '~/lib/types';
 
 describe('places-utils', () => {
   describe('extractPhotoReferences', () => {
@@ -91,6 +93,73 @@ describe('places-utils', () => {
       };
       const result = mapGooglePlaceToPrediction(placeResult);
       expect(result.address).toBe('');
+    });
+  });
+
+  describe('transformGooglePlaceToPlaceInsert', () => {
+    it('should transform a complete Google Place to PlaceInsert', () => {
+      const googlePlace: GooglePlaceDetailsResponse = {
+        displayName: { text: 'Test Place', languageCode: 'en' },
+        formattedAddress: '123 Test St',
+        location: { latitude: 45, longitude: -122 },
+        types: ['restaurant', 'food'],
+        rating: 4.5,
+        websiteUri: 'https://example.com',
+        nationalPhoneNumber: '+1 555-0199',
+        priceLevel: 'PRICE_LEVEL_MODERATE',
+        photos: [
+          { name: 'places/123/photos/abc', widthPx: 100, heightPx: 100, authorAttributions: [] },
+          { name: 'places/123/photos/def', widthPx: 100, heightPx: 100, authorAttributions: [] },
+        ],
+      };
+
+      const result = transformGooglePlaceToPlaceInsert(googlePlace, 'google-id-123');
+
+      expect(result).toEqual({
+        googleMapsId: 'google-id-123',
+        name: 'Test Place',
+        address: '123 Test St',
+        latitude: 45,
+        longitude: -122,
+        location: [-122, 45], // [longitude, latitude]
+        types: ['restaurant', 'food'],
+        rating: 4.5,
+        websiteUri: 'https://example.com',
+        phoneNumber: '+1 555-0199',
+        priceLevel: 2,
+        photos: ['places/123/photos/abc', 'places/123/photos/def'],
+        imageUrl: null,
+      });
+    });
+
+    it('should handle missing optional fields', () => {
+      const googlePlace: GooglePlaceDetailsResponse = {
+        displayName: { text: 'Minimal Place', languageCode: 'en' },
+      };
+
+      const result = transformGooglePlaceToPlaceInsert(googlePlace, 'min-id');
+
+      expect(result).toMatchObject({
+        googleMapsId: 'min-id',
+        name: 'Minimal Place',
+        address: null,
+        latitude: null,
+        longitude: null,
+        photos: null,
+      });
+    });
+
+    it('should sanitize photos during transformation', () => {
+      const googlePlace: GooglePlaceDetailsResponse = {
+        displayName: { text: 'Sanitized Place', languageCode: 'en' },
+        photos: [
+          { name: 'places/123/photos/abc', widthPx: 100, heightPx: 100, authorAttributions: [] },
+          { name: '', widthPx: 100, heightPx: 100, authorAttributions: [] },
+        ],
+      };
+
+      const result = transformGooglePlaceToPlaceInsert(googlePlace, 'san-id');
+      expect(result.photos).toEqual(['places/123/photos/abc']);
     });
   });
 });

@@ -1,5 +1,5 @@
 import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google';
-import { sanitizeStoredPhotos } from '@hominem/utils/images';
+import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';
 import { and, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
@@ -61,7 +61,7 @@ function updateCacheForPlace(result: PlaceSelect): void {
   placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result);
 }
 
-async function preparePlaceInsertData(
+export async function preparePlaceInsertData(
   data: PlaceInsert,
   options?: {
     buildPhotoMediaUrl?: (url: string) => string;
@@ -84,7 +84,7 @@ async function preparePlaceInsertData(
   imageUrl: string | null;
 }> {
   let processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null;
-  let imageUrl = data.imageUrl ?? null;
+  let imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null;
 
   if (options?.buildPhotoMediaUrl) {
     processedPhotos = await processPlacePhotos(

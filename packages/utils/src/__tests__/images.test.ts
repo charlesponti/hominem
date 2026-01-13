@@ -3,6 +3,7 @@ import { buildPhotoMediaUrl } from '../google.js';
 import {
   getHominemPhotoURL,
   isGooglePlacesPhotoReference,
+  normalizePhotoReference,
   sanitizeStoredPhotos,
 } from '../images.js';
 
@@ -68,6 +69,20 @@ describe('isGooglePlacesPhotoReference', () => {
   });
 });
 
+describe('normalizePhotoReference', () => {
+  it('extracts resource from proxy URL', () => {
+    const ref = 'places/abc/photos/1';
+    const proxy = `/api/images?resource=${encodeURIComponent(ref)}&width=1600`;
+    expect(normalizePhotoReference(proxy)).toBe(ref);
+  });
+
+  it('returns original if not a proxy URL', () => {
+    const ref = 'https://example.com/image.jpg';
+    expect(normalizePhotoReference(ref)).toBe(ref);
+    expect(normalizePhotoReference('places/abc/photos/1')).toBe('places/abc/photos/1');
+  });
+});
+
 describe('sanitizeStoredPhotos', () => {
   it('should return empty array if input is not an array', () => {
     expect(sanitizeStoredPhotos(null)).toEqual([]);
@@ -82,5 +97,12 @@ describe('sanitizeStoredPhotos', () => {
   it('should deduplicate photo references', () => {
     const photos = ['photo1', 'photo1', 'photo2'];
     expect(sanitizeStoredPhotos(photos)).toEqual(['photo1', 'photo2']);
+  });
+
+  it('should normalize and deduplicate mixed proxy and raw references', () => {
+    const ref = 'places/abc/photos/1';
+    const proxy = `/api/images?resource=${encodeURIComponent(ref)}&width=1600`;
+    const photos = [ref, proxy, 'photo2'];
+    expect(sanitizeStoredPhotos(photos)).toEqual([ref, 'photo2']);
   });
 });
