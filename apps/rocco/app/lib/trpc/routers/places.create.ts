@@ -1,11 +1,10 @@
 import { addPlaceToLists, isGooglePhotosUrl, type PlaceInsert } from '@hominem/data/places';
 import { z } from 'zod';
-import { getPlaceDetails as fetchGooglePlaceDetails } from '~/lib/google-places.server';
+import { googlePlaces } from '@hominem/data/places';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { extractPhotoReferences } from '~/lib/places-utils';
 import { logger } from '../../logger';
 import { protectedProcedure } from '../context';
-import { buildPhotoUrl } from './places.helpers';
 
 export const create = protectedProcedure
   .input(
@@ -49,25 +48,25 @@ export const create = protectedProcedure
 
     if (needsDetails) {
       try {
-        const googlePlace = await fetchGooglePlaceDetails({
+        const googlePlaceData = await googlePlaces.getDetails({
           placeId: placeInput.googleMapsId,
           forceFresh: true,
         });
 
-        if (googlePlace) {
+        if (googlePlaceData) {
           // Extract and sanitize photos
-          const rawPhotos = extractPhotoReferences(googlePlace.photos);
+          const rawPhotos = extractPhotoReferences(googlePlaceData.photos);
           fetchedPhotos = sanitizeStoredPhotos(rawPhotos);
           fetchedImageUrl = fetchedPhotos.length > 0 && fetchedPhotos[0] ? fetchedPhotos[0] : null;
 
           // Use fetched data to fill in missing fields
-          fetchedRating = googlePlace.rating ?? null;
-          fetchedTypes = googlePlace.types ?? null;
-          fetchedAddress = googlePlace.formattedAddress ?? null;
-          fetchedLatitude = googlePlace.location?.latitude ?? null;
-          fetchedLongitude = googlePlace.location?.longitude ?? null;
-          fetchedWebsiteUri = googlePlace.websiteUri ?? null;
-          fetchedPhoneNumber = googlePlace.nationalPhoneNumber ?? null;
+          fetchedRating = googlePlaceData.rating ?? null;
+          fetchedTypes = googlePlaceData.types ?? null;
+          fetchedAddress = googlePlaceData.formattedAddress ?? null;
+          fetchedLatitude = googlePlaceData.location?.latitude ?? null;
+          fetchedLongitude = googlePlaceData.location?.longitude ?? null;
+          fetchedWebsiteUri = googlePlaceData.websiteUri ?? null;
+          fetchedPhoneNumber = googlePlaceData.nationalPhoneNumber ?? null;
         }
       } catch (error) {
         logger.error('Failed to fetch Google Place details during create', {
@@ -107,12 +106,7 @@ export const create = protectedProcedure
           : (fetchedImageUrl ?? null)),
     };
 
-    const { place: createdPlace } = await addPlaceToLists(
-      ctx.user.id,
-      listIds ?? [],
-      placeData,
-      buildPhotoUrl,
-    );
+    const { place: createdPlace } = await addPlaceToLists(ctx.user.id, listIds ?? [], placeData);
 
     // If there are no photos stored yet but we have a Google Maps ID, enqueue background enrichment
     try {

@@ -1,7 +1,6 @@
 import { addPlaceToLists } from '@hominem/data/places';
 import { z } from 'zod';
 import { protectedProcedure } from '../context';
-import { buildPhotoUrl } from './places.helpers';
 
 type ListSummary = { id: string; name: string };
 
@@ -43,7 +42,7 @@ export const addToLists = protectedProcedure
     };
 
     try {
-      const result = await addPlaceToLists(ctx.user.id, listIds, placeData, buildPhotoUrl);
+      const result = await addPlaceToLists(ctx.user.id, listIds, placeData);
       return { place: result.place, lists: result.lists as ListSummary[] };
     } catch {
       throw new Error('Failed to process request');

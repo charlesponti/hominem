@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { searchPlaces as googleSearchPlaces } from '~/lib/google-places.server';
+import { googlePlaces } from '@hominem/data/places';
 import { mapGooglePlaceToPrediction } from '~/lib/places-utils';
 import { logger } from '../../logger';
 import { protectedProcedure } from '../context';
@@ -32,13 +32,12 @@ export const autocomplete = protectedProcedure
             }
           : undefined;
 
-      const googleResults = await googleSearchPlaces({
-        query,
-        maxResultCount: 8,
-        locationBias,
+      const places = await googlePlaces.search({
+        query: query,
+        locationBias: locationBias,
       });
 
-      const predictions = googleResults.map(mapGooglePlaceToPrediction);
+      const predictions = places.map(mapGooglePlaceToPrediction);
       return predictions;
     } catch (error) {
       logger.error('Failed to autocomplete places', {

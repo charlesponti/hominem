@@ -4,8 +4,12 @@ import type {
   GooglePlacePrediction,
   GooglePlacesApiResponse,
 } from '~/lib/types';
-import { sanitizeStoredPhotos } from '@hominem/utils/images';
-import { logger } from './logger';
+import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
+
+export const getPlacePhotoUrl = (reference: string | null | undefined) => {
+  if (!reference) return null;
+  return getHominemPhotoURL(reference);
+};
 
 function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
   return latitude != null && longitude != null ? [longitude, latitude] : [0, 0];
@@ -38,12 +42,6 @@ export const transformGooglePlaceToPlaceInsert = (
     photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
     imageUrl: null, // Will be computed from photos if needed
   };
-
-  logger.info('Transformed Google Place to DB insert', {
-    googleMapsId,
-    name: result.name,
-    photosCount: fetchedPhotos.length,
-  });
 
   return result;
 };
@@ -86,7 +84,7 @@ export const parsePriceLevel = (priceLevel: string | number | null | undefined) 
 export const mapGooglePlaceToPrediction = (
   placeResult: GooglePlacesApiResponse,
 ): GooglePlacePrediction => ({
-  place_id: placeResult.id,
+  place_id: placeResult.id ?? '',
   text: placeResult.displayName?.text ?? '',
   address: placeResult.formattedAddress ?? '',
   location:

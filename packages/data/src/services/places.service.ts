@@ -61,13 +61,7 @@ function updateCacheForPlace(result: PlaceSelect): void {
   placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result);
 }
 
-export async function preparePlaceInsertData(
-  data: PlaceInsert,
-  options?: {
-    buildPhotoMediaUrl?: (url: string) => string;
-    placeImagesService?: PlaceImagesService;
-  },
-): Promise<{
+export async function preparePlaceInsertData(data: PlaceInsert): Promise<{
   id: string;
   googleMapsId: string;
   name: string;
@@ -83,27 +77,8 @@ export async function preparePlaceInsertData(
   photos: string[] | null;
   imageUrl: string | null;
 }> {
-  let processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null;
-  let imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null;
-
-  if (options?.buildPhotoMediaUrl || options?.placeImagesService) {
-    processedPhotos = await processPlacePhotos(
-      data.googleMapsId,
-      data.photos ?? [],
-      options.placeImagesService,
-    );
-
-    // Also process the main imageUrl if it's a Google Photos URL
-    if (imageUrl && isGooglePhotosUrl(imageUrl)) {
-      if (options?.placeImagesService) {
-        const supabaseUrl = await options.placeImagesService.downloadAndStorePlaceImage(
-          data.googleMapsId,
-          imageUrl,
-        );
-        imageUrl = supabaseUrl || imageUrl;
-      }
-    }
-  }
+  const processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null;
+  const imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null;
 
   return {
     id: crypto.randomUUID(),
@@ -187,7 +162,6 @@ export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise
  * Processes photos array to download Google Photos URLs and replace with Supabase URLs
  * @param googleMapsId - The Google Maps ID for the place
  * @param photos - Array of photo URLs (may contain Google Photos URLs)
- * @param buildPhotoMediaUrl - Function to build the full media URL with API key
  * @returns Array with Supabase URLs replacing Google Photos URLs
  */
 export async function processPlacePhotos(
@@ -200,7 +174,7 @@ export async function processPlacePhotos(
   }
 
   const processedPhotos = await Promise.all(
-    photos.map(async (photoUrl) => {
+    photos.map(async (photoUrl, index) => {
       // If it's a Google Photos URL, download and store it
       if (isGooglePhotosUrl(photoUrl)) {
         if (!placeImagesService) {
@@ -208,10 +182,11 @@ export async function processPlacePhotos(
           return photoUrl;
         }
 
-        // Use the provided service
+        // Use the provided service with the photo index
         const supabaseUrl = await placeImagesService.downloadAndStorePlaceImage(
           googleMapsId,
           photoUrl,
+          index,
         );
         return supabaseUrl || photoUrl; // Fallback to original if download fails
       }
@@ -223,19 +198,8 @@ export async function processPlacePhotos(
   return processedPhotos;
 }
 
-export async function upsertPlace({
-  data,
-  buildPhotoMediaUrl,
-  placeImagesService,
-}: {
-  data: PlaceInsert;
-  buildPhotoMediaUrl?: (url: string) => string;
-  placeImagesService?: PlaceImagesService;
-}): Promise<PlaceSelect> {
-  const insertValues = await preparePlaceInsertData(data, {
-    buildPhotoMediaUrl,
-    placeImagesService,
-  });
+export async function upsertPlace({ data }: { data: PlaceInsert }): Promise<PlaceSelect> {
+  const insertValues = await preparePlaceInsertData(data);
 
   const [result] = await db
     .insert(place)
@@ -339,7 +303,6 @@ export async function updatePlacePhotosFromGoogle(
     // Developer must provide a service with API key for downloading photos
     placeImagesService?: PlaceImagesService;
     googleApiKey?: string;
-    buildPhotoMediaUrl?: (url: string) => string;
   },
 ): Promise<boolean> {
   const forceFresh = options?.forceFresh ?? false;
@@ -384,8 +347,6 @@ export async function updatePlacePhotosFromGoogle(
   // Call upsertPlace with the provided media URL builder and service
   const updated = await upsertPlace({
     data: placeData,
-    buildPhotoMediaUrl: options?.buildPhotoMediaUrl,
-    placeImagesService: options?.placeImagesService,
   });
 
   // If the DB record now includes photos, return true
@@ -397,14 +358,9 @@ export async function deletePlaceById(id: string): Promise<boolean> {
   return result.length > 0;
 }
 
-export async function addPlaceToLists(
-  userId: string,
-  listIds: string[],
-  placeData: PlaceInsert,
-  buildPhotoMediaUrl?: (url: string) => string,
-) {
+export async function addPlaceToLists(userId: string, listIds: string[], placeData: PlaceInsert) {
   return db.transaction(async (tx) => {
-    const placeRecord = await upsertPlace({ data: placeData, buildPhotoMediaUrl });
+    const placeRecord = await upsertPlace({ data: placeData });
 
     const itemInsertValues = listIds.map((listId) => ({
       listId,

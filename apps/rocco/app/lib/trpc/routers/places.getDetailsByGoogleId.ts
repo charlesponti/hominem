@@ -1,7 +1,6 @@
 import { getPlaceByGoogleMapsId, isGooglePhotosUrl, upsertPlace } from '@hominem/data/places';
-import { buildPhotoMediaUrl } from '@hominem/utils/google';
 import { z } from 'zod';
-import { getPlaceDetails as fetchGooglePlaceDetails } from '~/lib/google-places.server';
+import { googlePlaces } from '@hominem/data/places';
 import { transformGooglePlaceToPlaceInsert } from '~/lib/places-utils';
 import { logger } from '../../logger';
 import { protectedProcedure } from '../context';
@@ -15,8 +14,9 @@ export const getDetailsByGoogleId = protectedProcedure
       let dbPlace = await getPlaceByGoogleMapsId(googleMapsId);
 
       if (!dbPlace) {
-        const googlePlace = await fetchGooglePlaceDetails({
-          placeId: googleMapsId,
+        const googlePlace = await googlePlaces.getDetails({
+          placeId: input.googleMapsId,
+          forceFresh: true,
         });
 
         if (!googlePlace) {
@@ -25,15 +25,7 @@ export const getDetailsByGoogleId = protectedProcedure
 
         const placeData = transformGooglePlaceToPlaceInsert(googlePlace, googleMapsId);
 
-        // Helper function to build photo media URL with API key
-        const buildPhotoUrl = (photoRef: string) => {
-          return buildPhotoMediaUrl({
-            key: import.meta.env.GOOGLE_PLACES_API_KEY,
-            pathname: photoRef,
-          });
-        };
-
-        dbPlace = await upsertPlace({ data: placeData, buildPhotoMediaUrl: buildPhotoUrl });
+        dbPlace = await upsertPlace({ data: placeData });
       }
 
       // If photos are missing or raw refs, try to enrich in background

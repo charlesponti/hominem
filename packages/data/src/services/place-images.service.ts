@@ -4,6 +4,22 @@ import { isGooglePlacesPhotoReference } from '@hominem/utils/images';
 import { placeImagesStorageService } from '@hominem/utils/supabase';
 import { google } from 'googleapis';
 
+let _placeImagesServiceInstance: PlaceImagesService | undefined;
+
+/**
+ * Get or create a singleton instance of PlaceImagesService.
+ * Used by background workers and server-side scripts.
+ */
+export function getPlaceImagesService(): PlaceImagesService {
+  if (!_placeImagesServiceInstance) {
+    _placeImagesServiceInstance = createPlaceImagesService({
+      googleApiKey: process.env.VITE_GOOGLE_API_KEY || process.env.GOOGLE_API_KEY || '',
+      appBaseUrl: process.env.VITE_APP_BASE_URL,
+    });
+  }
+  return _placeImagesServiceInstance;
+}
+
 export interface PlaceImagesService {
   downloadAndStorePlaceImage: (
     googleMapsId: string,

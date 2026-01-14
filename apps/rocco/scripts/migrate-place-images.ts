@@ -10,7 +10,7 @@ import {
 } from '@hominem/data/places';
 import { place } from '@hominem/data/schema';
 import { eq, sql } from 'drizzle-orm';
-import { getPlacePhotos } from '../app/lib/google-places.server';
+import { googlePlaces } from '@hominem/data/places';
 
 const GOOGLE_PLACES_API_KEY =
   process.env.GOOGLE_PLACES_API_KEY ||
@@ -85,7 +85,7 @@ async function migrateImages() {
           console.log(
             `[${stats.processed}/${stats.total}] Fetching fresh photos for ${placeRecord.name}...`,
           );
-          const freshPhotos = await getPlacePhotos({
+          const freshPhotos = await googlePlaces.getPhotos({
             placeId: placeRecord.googleMapsId,
             forceFresh: true,
           });

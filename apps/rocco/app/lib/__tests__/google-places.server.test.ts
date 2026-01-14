@@ -1,11 +1,5 @@
 import { buildPhotoMediaUrl } from '@hominem/utils/google';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  getPlaceDetails,
-  getPlacePhotos,
-  googlePlacesTestUtils,
-  searchPlaces,
-} from '../google-places.server';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockSearchText = vi.fn();
 const mockGet = vi.fn();
@@ -22,8 +16,18 @@ vi.mock('googleapis', () => ({
 }));
 
 describe('google-places.server helper', () => {
-  beforeEach(() => {
+  let googlePlaces: any;
+  let googlePlacesTestUtils: any;
+
+  beforeAll(async () => {
     process.env.GOOGLE_API_KEY = 'test-key';
+    // Dynamic import to ensure env var is set before module init
+    const mod = await import('@hominem/data/places');
+    googlePlaces = mod.googlePlaces;
+    googlePlacesTestUtils = mod.googlePlacesTestUtils;
+  });
+
+  beforeEach(() => {
     googlePlacesTestUtils.clearCache();
     mockSearchText.mockReset();
     mockGet.mockReset();
@@ -52,8 +56,8 @@ describe('google-places.server helper', () => {
       query: 'coffee',
       locationBias: { latitude: 37.5, longitude: -122.3, radius: 500 },
     };
-    const first = await searchPlaces(params);
-    const second = await searchPlaces(params);
+    const first = await googlePlaces.search(params);
+    const second = await googlePlaces.search(params);
 
     expect(first).toHaveLength(1);
     expect(second).toHaveLength(1);
@@ -63,7 +67,7 @@ describe('google-places.server helper', () => {
   it('surfaces Google API errors when fetching details', async () => {
     mockGet.mockRejectedValue(new Error('API Error'));
 
-    await expect(getPlaceDetails({ placeId: 'bad-id', forceFresh: true })).rejects.toThrow(
+    await expect(googlePlaces.getDetails({ placeId: 'bad-id', forceFresh: true })).rejects.toThrow(
       /API Error/,
     );
   });
@@ -75,7 +79,7 @@ describe('google-places.server helper', () => {
       },
     });
 
-    const photos = await getPlacePhotos({ placeId: 'foo', limit: 1, forceFresh: true });
+    const photos = await googlePlaces.getPhotos({ placeId: 'foo', limit: 1, forceFresh: true });
     expect(photos).toEqual(['places/foo/photos/1']);
     expect(mockGet).toHaveBeenCalledTimes(1);
   });

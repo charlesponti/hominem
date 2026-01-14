@@ -1,6 +1,6 @@
-import { listPlacesMissingPhotos, updatePlacePhotos as setPlacePhotos } from '@hominem/data/places';
+import { listPlacesMissingPhotos, updatePlacePhotosFromGoogle } from '@hominem/data/places';
 import { env } from '../app/lib/env';
-import { getPlacePhotos } from '../app/lib/google-places.server';
+import { googlePlaces } from '@hominem/data/places';
 
 if (!env.VITE_GOOGLE_API_KEY) {
   throw new Error('GOOGLE_API_KEY environment variable is required');
@@ -19,17 +19,21 @@ async function refreshPlacePhotos() {
       }
 
       try {
-        const photoUrls = await getPlacePhotos({
+        const photos = await googlePlaces.getPhotos({
           placeId: placeRecord.googleMapsId,
           forceFresh: true,
         });
 
-        if (photoUrls.length === 0) {
+        if (photos.length === 0) {
           continue;
         }
 
         // Update the place with photo references
-        await setPlacePhotos(placeRecord.id, photoUrls);
+        await updatePlacePhotosFromGoogle(placeRecord.id, {
+          forceFresh: true,
+          placeImagesService: undefined, // Add service here if running in context with storage
+          googleApiKey: env.VITE_GOOGLE_API_KEY,
+        });
         _updatedCount++;
 
         // Add a small delay to avoid hitting API rate limits

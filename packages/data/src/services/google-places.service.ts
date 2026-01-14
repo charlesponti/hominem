@@ -1,8 +1,6 @@
-import { google, type places_v1 } from 'googleapis';
 import { logger } from '@hominem/utils/logger';
 import { redis } from '@hominem/utils/redis';
-
-import type { GooglePlaceDetailsResponse, GooglePlacesApiResponse } from '~/lib/types';
+import { google, type places_v1 } from 'googleapis';
 
 export type SearchPlacesOptions = {
   query: string;
@@ -27,6 +25,48 @@ export type PlacePhotosOptions = {
   limit?: number;
   forceFresh?: boolean;
 };
+
+// Types extracted from rocco/app/lib/types.ts
+export type PlaceLocation = {
+  latitude: number;
+  longitude: number;
+  id?: string;
+  name?: string;
+  imageUrl?: string | null;
+};
+
+export type GooglePlacePrediction = {
+  place_id: string;
+  text: string;
+  address: string;
+  location: PlaceLocation | null;
+  priceLevel?: string | number | null;
+};
+
+export type GooglePlacesApiResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
+
+export type GooglePlaceData = {
+  id: string;
+  googleMapsId: string | null;
+  name: string;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  description: string | null;
+  types: string[] | null;
+  imageUrl: string | null;
+  phoneNumber: string | null;
+  rating: number | null;
+  websiteUri: string | null;
+  bestFor: string | null;
+  wifiInfo: string | null;
+  photos?: string[] | null;
+  priceLevel?: number | null;
+};
+
+export type GoogleAddressComponent = places_v1.Schema$GoogleMapsPlacesV1PlaceAddressComponent;
+export type GooglePlacePhoto = places_v1.Schema$GoogleMapsPlacesV1Photo;
+export type GooglePlaceDetailsResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
 
 const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours for persistent cache
 
@@ -114,7 +154,7 @@ const writeCache = async <T>(key: string | undefined, value: T, ttlMs = DEFAULT_
   }
 };
 
-export const getPlaceDetails = async ({
+const getDetails = async ({
   placeId,
   fieldMask = DEFAULT_DETAILS_FIELD_MASK,
   forceFresh,
@@ -130,12 +170,16 @@ export const getPlaceDetails = async ({
     return cached;
   }
 
-  const response = await placesClient.places.get({
-    name: `places/${placeId}`,
-    headers: {
-      'X-Goog-FieldMask': fieldMask,
+  const response = await placesClient.places.get(
+    {
+      name: `places/${placeId}`,
     },
-  });
+    {
+      headers: {
+        'X-Goog-FieldMask': fieldMask,
+      },
+    },
+  );
 
   const data = response.data;
   if (!data) {
@@ -146,7 +190,7 @@ export const getPlaceDetails = async ({
   return data;
 };
 
-export const searchPlaces = async ({
+const search = async ({
   query,
   locationBias,
   fieldMask = DEFAULT_SEARCH_FIELD_MASK,
@@ -183,24 +227,28 @@ export const searchPlaces = async ({
     return cached;
   }
 
-  const response = await placesClient.places.searchText({
-    requestBody: body,
-    headers: {
-      'X-Goog-FieldMask': fieldMask,
+  const response = await placesClient.places.searchText(
+    {
+      requestBody: body,
     },
-  });
+    {
+      headers: {
+        'X-Goog-FieldMask': fieldMask,
+      },
+    },
+  );
 
   const places = response.data.places ?? [];
   await writeCache(cacheKey, places);
   return places;
 };
 
-export const getPlacePhotos = async ({
+const getPhotos = async ({
   placeId,
   limit = 6,
   forceFresh,
 }: PlacePhotosOptions): Promise<string[]> => {
-  const details = await getPlaceDetails({
+  const details = await getDetails({
     placeId,
     fieldMask: FIELDS.photos,
     forceFresh,
@@ -211,6 +259,12 @@ export const getPlacePhotos = async ({
     .map((photo) => photo.name)
     .filter((name): name is string => typeof name === 'string' && name.length > 0)
     .slice(0, limit);
+};
+
+export const googlePlaces = {
+  getDetails,
+  search,
+  getPhotos,
 };
 
 export const getNeighborhoodFromAddressComponents = (
