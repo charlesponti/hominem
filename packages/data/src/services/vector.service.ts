@@ -5,9 +5,10 @@ import { randomUUID } from 'node:crypto'
 import { Readable } from 'node:stream'
 import OpenAI from 'openai'
 import { db } from '../db'
+import { env } from '../env'
 import { type NewVectorDocument, vectorDocuments } from '../db/schema'
 
-const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' })
+const openaiClient = new OpenAI({ apiKey: env.OPENAI_API_KEY || '' })
 
 async function generateEmbedding(text: string): Promise<number[]> {
   const response = await openaiClient.embeddings.create({

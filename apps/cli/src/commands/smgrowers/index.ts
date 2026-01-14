@@ -1,6 +1,6 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@hominem/data/redis'
 import { Command } from 'commander'
 import { consola } from 'consola'
 import ora from 'ora'

@@ -1,27 +1,27 @@
-import 'dotenv/config';
+import { env } from '../src/env';
 
 /**
  * Migration script to download Google Photos images for existing places
  * and store them in Supabase Storage
  */
-import { db } from '@hominem/data/db';
+import { db } from '../src/db';
 import {
   createPlaceImagesService,
   isGooglePhotosUrl,
   processPlacePhotos,
-} from '@hominem/data/places';
-import { place } from '@hominem/data/schema';
+  googlePlaces
+} from '../src/places';
+import { place } from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { googlePlaces } from '@hominem/data/places';
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const GOOGLE_API_KEY = env.GOOGLE_API_KEY;
 
 if (!GOOGLE_API_KEY) {
   throw new Error('GOOGLE_API_KEY is not set');
 }
 
 const placeImagesService = createPlaceImagesService({
-  appBaseUrl: process.env.APP_BASE_URL,
+  appBaseUrl: env.APP_BASE_URL,
   googleApiKey: GOOGLE_API_KEY,
 });
 
@@ -60,17 +60,19 @@ async function migrateImages() {
     for (const placeRecord of places) {
       stats.processed++;
 
-      // Check if place already has non-Google photos (presumably Supabase)
-      // If so, we consider it migrated and skip
-      if (
-        placeRecord.photos &&
-        placeRecord.photos.length > 0 &&
-        placeRecord.photos.some((url) => !isGooglePhotosUrl(url))
-      ) {
+      // Check if place already has enough Supabase photos (at least 5)
+      // We don't skip if it's not an array or has fewer than 5 Supabase photos
+      const currentPhotos = placeRecord.photos || [];
+      const isArray = Array.isArray(currentPhotos);
+      const supabasePhotosCount = isArray
+        ? currentPhotos.filter((url) => !isGooglePhotosUrl(url)).length
+        : 0;
+
+      if (isArray && supabasePhotosCount >= 5) {
         stats.skipped++;
         // biome-ignore lint/suspicious/noConsole: Migration script needs console output
         console.log(
-          `[${stats.processed}/${stats.total}] Skipping ${placeRecord.name} - already has Supabase photos`,
+          `[${stats.processed}/${stats.total}] Skipping ${placeRecord.name} - already has ${supabasePhotosCount} Supabase photos`,
         );
         continue;
       }
@@ -78,7 +80,7 @@ async function migrateImages() {
       try {
         // Fetch fresh photos from Google to ensure we have the correct, up-to-date references.
         // This is critical if the DB contains stale or corrupted photo references.
-        let photos = placeRecord.photos || [];
+        let photos = Array.isArray(placeRecord.photos) ? placeRecord.photos : [];
         try {
           // biome-ignore lint/suspicious/noConsole: Migration script needs console output
           console.log(
@@ -141,6 +143,7 @@ async function migrateImages() {
           })
           .where(eq(place.id, placeRecord.id));
 
+        stats.updated++;
         // biome-ignore lint/suspicious/noConsole: Migration script needs console output
         console.log(`✓ Updated ${placeRecord.name}`);
 
@@ -167,6 +170,8 @@ async function migrateImages() {
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);
+  } finally {
+    process.exit(0);
   }
 }
 

@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { env } from './env'
 
 type SendInviteEmailParams = {
   to: string
@@ -8,7 +9,7 @@ type SendInviteEmailParams = {
 }
 
 function getApiKey(): string {
-  const key = process.env.RESEND_API_KEY
+  const key = env.RESEND_API_KEY
   if (!key) {
     throw new Error('RESEND_API_KEY is not set')
   }
@@ -16,7 +17,7 @@ function getApiKey(): string {
 }
 
 function getFromEmail(): string {
-  const from = process.env.RESEND_FROM_EMAIL
+  const from = env.RESEND_FROM_EMAIL
   if (!from) {
     throw new Error('RESEND_FROM_EMAIL is not set')
   }
@@ -24,7 +25,7 @@ function getFromEmail(): string {
 }
 
 function formatFrom(fromEmail: string): string {
-  const name = process.env.RESEND_FROM_NAME
+  const name = env.RESEND_FROM_NAME
   return name ? `${name} <${fromEmail}>` : fromEmail
 }
 

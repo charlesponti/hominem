@@ -1,13 +1,16 @@
 import Redis from 'ioredis'
-import delay from './delay'
-import { TIME_UNITS } from './time'
+import { delay, TIME_UNITS } from '@hominem/utils'
+import { env } from './env'
 
-const { REDIS_URL } = process.env
+// For compatibility with utility exports if they are not yet updated
+// We might need to import specifically from files if index exports aren't clean
+const REDIS_URL = env.REDIS_URL
 
 export const redis = new Redis(REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
   family: 0,
 })
+
 const MAX_REQUESTS = 50
 
 export async function checkRateLimit(key: string): Promise<boolean> {

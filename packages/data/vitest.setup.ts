@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeEach } from 'vitest'
 import { client } from './src/db'
+import { env } from './src/env'
 import { startTestTransaction, type TestTransaction } from './src/test-utils/db-transaction'
 
 process.env.NODE_ENV = 'test'

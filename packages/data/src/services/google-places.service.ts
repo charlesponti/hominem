@@ -1,5 +1,5 @@
 import { logger } from '@hominem/utils/logger';
-import { redis } from '@hominem/utils/redis';
+import { redis } from '../redis';
 import { google, type places_v1 } from 'googleapis';
 
 export type SearchPlacesOptions = {
@@ -67,11 +67,12 @@ export type GooglePlaceData = {
 export type GoogleAddressComponent = places_v1.Schema$GoogleMapsPlacesV1PlaceAddressComponent;
 export type GooglePlacePhoto = places_v1.Schema$GoogleMapsPlacesV1Photo;
 export type GooglePlaceDetailsResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
+import { env } from '../env';
 
 const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours for persistent cache
 
 const getGoogleApiKey = () => {
-  const key = process.env.GOOGLE_API_KEY ?? process.env.VITE_GOOGLE_API_KEY;
+  const key = env.GOOGLE_API_KEY ?? env.VITE_GOOGLE_API_KEY;
   if (!key) {
     throw new Error('Google Places API key is not configured');
   }

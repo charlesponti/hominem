@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer'
 import mammoth from 'mammoth'
 import OpenAI from 'openai'
 import PDFParser from 'pdf2json'
+import { env } from '../env'
 
 export interface ProcessedFile {
   id: string
@@ -16,7 +17,7 @@ export interface ProcessedFile {
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
+  apiKey: env.OPENAI_API_KEY || '',
 })
 
 export class FileProcessorService {

@@ -1,6 +1,6 @@
 import type { Queues } from '@hominem/data/types'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
-import type { ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
+import type { ImportTransactionsQueuePayload } from '@hominem/data/jobs'
 import { logger } from '@hominem/utils/logger'
 import type { Job } from 'bullmq'
 import type { WebSocket } from 'ws'

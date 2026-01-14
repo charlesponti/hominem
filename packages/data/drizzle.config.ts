@@ -1,11 +1,12 @@
 import 'dotenv/config'
 import assert from 'node:assert'
 import { defineConfig } from 'drizzle-kit'
+import { env } from './src/env'
 
 const DATABASE_URL =
-  process.env.NODE_ENV === 'test'
+  env.NODE_ENV === 'test'
     ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
-    : process.env.DATABASE_URL
+    : env.DATABASE_URL
 
 assert(DATABASE_URL, 'Missing DATABASE_URL')
 

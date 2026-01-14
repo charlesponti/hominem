@@ -1,4 +1,5 @@
 import { ChatError } from '../service/chat.service'
+import { env } from '../../env'
 
 /**
  * Authentication utilities for chat service
@@ -44,7 +45,7 @@ export class AuthUtils {
    */
   static extractUserIdFromHeaders(headers: Record<string, string>) {
     // Check for test mode header
-    if (process.env.NODE_ENV === 'test') {
+    if (env.NODE_ENV === 'test') {
       return headers['x-user-id'] || null
     }
 

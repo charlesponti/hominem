@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import type { Artist } from '@hominem/data/schema'
 import { upsertArtists } from '@hominem/data/services'
-import { redis, waitForRateLimit } from '@hominem/utils/redis'
+import { redis, waitForRateLimit } from '@hominem/data/redis'
 
 const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env
 const authToken = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')

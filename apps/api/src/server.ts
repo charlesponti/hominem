@@ -1,5 +1,5 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@hominem/data/redis'
 import { trpcServer } from '@hono/trpc-server'
 import { Queue } from 'bullmq'
 import { Hono } from 'hono'

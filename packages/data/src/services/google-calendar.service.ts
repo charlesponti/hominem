@@ -3,6 +3,7 @@ import { type calendar_v3, google, Auth } from 'googleapis';
 import { v7 as uuidv7 } from 'uuid';
 import { logger } from '@hominem/utils/logger';
 import { db } from '../db';
+import { env } from '../env';
 import { type CalendarEventInsert, type EventSourceEnum, events } from '../db/schema';
 
 type GoogleCalendarEvent = calendar_v3.Schema$Event;
@@ -67,9 +68,9 @@ export class GoogleCalendarService {
   constructor(userId: string, tokens: GoogleTokens) {
     this.userId = userId;
     this.oauth2Client = new Auth.OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI,
+      env.GOOGLE_CLIENT_ID,
+      env.GOOGLE_CLIENT_SECRET,
+      env.GOOGLE_REDIRECT_URI,
     );
 
     this.oauth2Client.setCredentials({
@@ -402,9 +403,9 @@ export async function refreshGoogleToken(
 ): Promise<{ accessToken: string; expiresIn: number } | null> {
   try {
     const oauth2Client = new Auth.OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI,
+      env.GOOGLE_CLIENT_ID,
+      env.GOOGLE_CLIENT_SECRET,
+      env.GOOGLE_REDIRECT_URI,
     );
 
     oauth2Client.setCredentials({

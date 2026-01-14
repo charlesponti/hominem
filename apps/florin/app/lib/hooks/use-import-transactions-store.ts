@@ -1,7 +1,7 @@
 import { useSupabaseAuthContext } from '@hominem/auth'
 import { useApiClient } from '@hominem/ui'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
-import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/utils/jobs'
+import type { FileStatus, ImportRequestResponse, ImportTransactionsJob } from '@hominem/data/jobs'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWebSocketStore, type WebSocketMessage } from '~/store/websocket-store'

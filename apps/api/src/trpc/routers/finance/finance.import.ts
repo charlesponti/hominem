@@ -1,5 +1,5 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import type { ImportTransactionsQueuePayload } from '@hominem/utils/jobs'
+import type { ImportTransactionsQueuePayload } from '@hominem/data/jobs'
 import { csvStorageService } from '@hominem/utils/supabase'
 import { zValidator } from '@hono/zod-validator'
 import type { Job } from 'bullmq'

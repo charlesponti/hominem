@@ -1,8 +1,8 @@
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
-import { IMPORT_JOB_PREFIX } from '@hominem/utils/imports'
-import type { ImportTransactionsJob } from '@hominem/utils/jobs'
+import { IMPORT_JOB_PREFIX } from '@hominem/data/jobs'
+import type { ImportTransactionsJob } from '@hominem/data/jobs'
 import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@hominem/data/redis'
 import type { BaseJob } from '@hominem/utils/types'
 
 import { JOB_PROCESSING, REDIS } from './config'

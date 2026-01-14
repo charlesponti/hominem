@@ -1,4 +1,4 @@
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@hominem/data/redis'
 import type { Context, Next } from 'hono'
 
 const IMPORT_RATE_LIMIT_PREFIX = 'ratelimit:import:'

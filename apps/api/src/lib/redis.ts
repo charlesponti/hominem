@@ -1,5 +1,5 @@
 import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@hominem/data/redis'
 
 // Set up Redis event handlers once
 redis.on('error', (err) => {

@@ -1,11 +1,12 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
+import { env } from '../env'
 import * as schema from './schema'
 
 const DATABASE_URL =
-  process.env.NODE_ENV === 'test'
+  env.NODE_ENV === 'test'
     ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
-    : process.env.DATABASE_URL
+    : env.DATABASE_URL
 
 let client: ReturnType<typeof postgres> | null = null
 let db: PostgresJsDatabase<typeof schema> | null = null
@@ -21,15 +22,9 @@ function ensureClient(): ReturnType<typeof postgres> {
     // Configure connection pool for better performance and scalability
     // Defaults: max=20 connections, idle_timeout=30s, max_lifetime=1h
     // Can be overridden via environment variables
-    const maxConnections = process.env.DB_MAX_CONNECTIONS
-      ? Number.parseInt(process.env.DB_MAX_CONNECTIONS, 10)
-      : 20
-    const idleTimeout = process.env.DB_IDLE_TIMEOUT
-      ? Number.parseInt(process.env.DB_IDLE_TIMEOUT, 10)
-      : 30
-    const maxLifetime = process.env.DB_MAX_LIFETIME
-      ? Number.parseInt(process.env.DB_MAX_LIFETIME, 10)
-      : 3600
+    const maxConnections = env.DB_MAX_CONNECTIONS ?? 20
+    const idleTimeout = env.DB_IDLE_TIMEOUT ?? 30
+    const maxLifetime = env.DB_MAX_LIFETIME ?? 3600
 
     client = postgres(DATABASE_URL, {
       max: maxConnections, // Maximum number of connections in the pool

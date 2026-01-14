@@ -8,7 +8,7 @@ import {
 } from '../../../../test/api-test-utils'
 
 // Mock dependencies
-vi.mock('@hominem/utils/imports', () => ({
+vi.mock('@hominem/data/jobs', () => ({
   getJobStatus: vi.fn(),
   getUserJobs: vi.fn(),
 }))

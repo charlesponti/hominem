@@ -3,6 +3,7 @@
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import type { ConnectionOptions } from 'bullmq'
 import { Queue } from 'bullmq'
+import { env } from './env'
 import type { Queues } from './types'
 
 let singleton: Queues | null = null
@@ -17,7 +18,7 @@ export function getOrCreateQueues(): Queues {
   }
 
   // Construct connection options from REDIS_URL to avoid ioredis type mismatch
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+  const redisUrl = env.REDIS_URL
   const url = new URL(redisUrl)
   const connectionOptions: ConnectionOptions = {
     host: url.hostname,

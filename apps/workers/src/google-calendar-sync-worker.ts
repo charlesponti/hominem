@@ -6,7 +6,7 @@ import './env.ts'
 import { GoogleCalendarService } from '@hominem/data/google'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@hominem/data/redis'
 import { type Job, Worker } from 'bullmq'
 import { HealthService } from './health.service'
 

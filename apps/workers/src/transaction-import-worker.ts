@@ -3,13 +3,13 @@ import './env.ts'
 import { processTransactionsFromCSVBuffer } from '@hominem/data/finance'
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/utils/redis'
+import { redis } from '@hominem/data/redis'
 import { csvStorageService } from '@hominem/utils/supabase'
 import type {
   ImportTransactionsJob,
   ImportTransactionsQueuePayload,
   JobStats,
-} from '@hominem/utils/jobs'
+} from '@hominem/data/jobs'
 import { type Job, Worker } from 'bullmq'
 import { Effect } from 'effect'
 import { HealthService } from './health.service'

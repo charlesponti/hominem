@@ -1,4 +1,4 @@
-import type { BaseJob, JobStats } from '@hominem/utils/jobs'
+import type { BaseJob, JobStats } from '@hominem/data/jobs'
 import { logger } from '@hominem/utils/logger'
 
 /**

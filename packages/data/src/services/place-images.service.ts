@@ -3,6 +3,7 @@ import { downloadImage } from '@hominem/utils/http';
 import { isGooglePlacesPhotoReference } from '@hominem/utils/images';
 import { placeImagesStorageService } from '@hominem/utils/supabase';
 import { google } from 'googleapis';
+import { env } from '../env';
 
 let _placeImagesServiceInstance: PlaceImagesService | undefined;
 
@@ -13,8 +14,8 @@ let _placeImagesServiceInstance: PlaceImagesService | undefined;
 export function getPlaceImagesService(): PlaceImagesService {
   if (!_placeImagesServiceInstance) {
     _placeImagesServiceInstance = createPlaceImagesService({
-      googleApiKey: process.env.VITE_GOOGLE_API_KEY || process.env.GOOGLE_API_KEY || '',
-      appBaseUrl: process.env.VITE_APP_BASE_URL,
+      googleApiKey: env.VITE_GOOGLE_API_KEY || env.GOOGLE_API_KEY || '',
+      appBaseUrl: env.VITE_APP_BASE_URL,
     });
   }
   return _placeImagesServiceInstance;
