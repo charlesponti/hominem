@@ -9,6 +9,9 @@
   "css.validate": false,
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
+
+  // Increase Vitest extension project limit (default 5)
+  "vitest.maximumConfigs": 20,
   "editor.quickSuggestions": {
     "strings": true
   },
