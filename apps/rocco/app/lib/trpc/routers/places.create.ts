@@ -1,4 +1,4 @@
-import { addPlaceToLists, type PlaceInsert } from '@hominem/data/places';
+import { addPlaceToLists, isGooglePhotosUrl, type PlaceInsert } from '@hominem/data/places';
 import { z } from 'zod';
 import { getPlaceDetails as fetchGooglePlaceDetails } from '~/lib/google-places.server';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
@@ -117,8 +117,9 @@ export const create = protectedProcedure
     // If there are no photos stored yet but we have a Google Maps ID, enqueue background enrichment
     try {
       const queues = ctx.queues;
+      const hasGooglePhotos = createdPlace.photos?.some((url) => isGooglePhotosUrl(url));
       if (
-        (createdPlace.photos == null || createdPlace.photos.length === 0) &&
+        (createdPlace.photos == null || createdPlace.photos.length === 0 || hasGooglePhotos) &&
         createdPlace.googleMapsId
       ) {
         await queues.placePhotoEnrich.add('enrich', {

@@ -3,12 +3,19 @@
  * and store them in Supabase Storage
  */
 import { db } from '@hominem/data/db';
-import { createPlaceImagesService, isGooglePhotosUrl } from '@hominem/data/places';
+import {
+  createPlaceImagesService,
+  isGooglePhotosUrl,
+  processPlacePhotos,
+} from '@hominem/data/places';
 import { place } from '@hominem/data/schema';
 import { eq, sql } from 'drizzle-orm';
 import { getPlacePhotos } from '../app/lib/google-places.server';
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const GOOGLE_PLACES_API_KEY =
+  process.env.GOOGLE_PLACES_API_KEY ||
+  process.env.VITE_GOOGLE_API_KEY ||
+  process.env.GOOGLE_API_KEY;
 
 if (!GOOGLE_PLACES_API_KEY) {
   throw new Error('GOOGLE_PLACES_API_KEY is not set');
@@ -30,46 +37,6 @@ interface MigrationStats {
 // downloadAndStoreImage removed in favor of downloadAndStorePlaceImage from @hominem/data/places
 
 /**
- * Processes a single place's photos
- */
-async function processPlacePhotos(
-  googleMapsId: string,
-  photos: string[],
-): Promise<{ photos: string[]; imageUrl: string | null }> {
-  // We'll collect only the successful Supabase URLs
-  const successfulPhotos: string[] = [];
-
-  // Process serially to catch errors easier (and maybe avoid rate limits)
-  for (const photoUrl of photos) {
-    if (isGooglePhotosUrl(photoUrl)) {
-      console.log(`Migrating photo for ${googleMapsId}: ${photoUrl.substring(0, 50)}...`);
-      try {
-        const supabaseUrl = await placeImagesService.downloadAndStorePlaceImage(
-          googleMapsId,
-          photoUrl,
-        );
-
-        if (supabaseUrl) {
-          successfulPhotos.push(supabaseUrl);
-        } else {
-          console.warn(`Failed to migrate photo for ${googleMapsId}, skipping.`);
-        }
-      } catch (e) {
-        console.error(`Error migrating photo for ${googleMapsId}:`, e);
-      }
-    } else {
-      // If it's already not a google photo (e.g. existing supabase url?), keep it
-      successfulPhotos.push(photoUrl);
-    }
-  }
-
-  return {
-    photos: successfulPhotos,
-    imageUrl: successfulPhotos[0] || null,
-  };
-}
-
-/**
  * Main migration function
  */
 async function migrateImages() {
@@ -82,17 +49,32 @@ async function migrateImages() {
   };
 
   try {
-    // Find all places with photos that might contain Google Photos URLs
+    // Find all places with a Google Maps ID (we'll check photos inside loop)
     const places = await db.query.place.findMany({
-      where: sql`${place.photos} IS NOT NULL AND array_length(${place.photos}, 1) > 0`,
+      where: sql`${place.googleMapsId} IS NOT NULL`,
     });
 
     stats.total = places.length;
     // biome-ignore lint/suspicious/noConsole: Migration script needs console output
-    console.log(`Found ${stats.total} places with photos`);
+    console.log(`Found ${stats.total} places with Google Maps ID`);
 
     for (const placeRecord of places) {
       stats.processed++;
+
+      // Check if place already has non-Google photos (presumably Supabase)
+      // If so, we consider it migrated and skip
+      if (
+        placeRecord.photos &&
+        placeRecord.photos.length > 0 &&
+        placeRecord.photos.some((url) => !isGooglePhotosUrl(url))
+      ) {
+        stats.skipped++;
+        // biome-ignore lint/suspicious/noConsole: Migration script needs console output
+        console.log(
+          `[${stats.processed}/${stats.total}] Skipping ${placeRecord.name} - already has Supabase photos`,
+        );
+        continue;
+      }
 
       try {
         // Fetch fresh photos from Google to ensure we have the correct, up-to-date references.
@@ -122,7 +104,7 @@ async function migrateImages() {
           continue;
         }
 
-        // Check if any photos are Google Photos URLs
+        // Check if any photos are Google Photos URLs (refs usually are)
         // Note: Even fresh photos from API might not be "googleusercontent" yet, they are references.
         // isGooglePhotosUrl returns true for references too.
         const hasGooglePhotos = photos.some((url) => isGooglePhotosUrl(url));
@@ -141,18 +123,21 @@ async function migrateImages() {
           `[${stats.processed}/${stats.total}] Processing ${placeRecord.name} (${photos.length} photos)`,
         );
 
-        // Process the photos
-        const { photos: newPhotos, imageUrl } = await processPlacePhotos(
+        // Process the photos using the shared service function
+        const newPhotos = await processPlacePhotos(
           placeRecord.googleMapsId,
           photos,
+          placeImagesService,
         );
+
+        const newImageUrl = newPhotos.length > 0 ? newPhotos[0] : null;
 
         // Update the place with new photo URLs
         await db
           .update(place)
           .set({
             photos: newPhotos,
-            imageUrl: imageUrl || placeRecord.imageUrl,
+            imageUrl: newImageUrl || placeRecord.imageUrl,
             updatedAt: new Date().toISOString(),
           })
           .where(eq(place.id, placeRecord.id));

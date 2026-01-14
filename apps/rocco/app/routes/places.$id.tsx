@@ -13,7 +13,6 @@ import PlaceTypes from '~/components/places/place-types';
 import PlacesNearby from '~/components/places/places-nearby';
 import { VisitHistory } from '~/components/places/VisitHistory';
 import { requireAuth } from '~/lib/guards';
-import { logger } from '~/lib/logger';
 import { createCaller } from '~/lib/trpc/server';
 import type { PlaceWithLists } from '~/lib/types';
 import type { Route } from './+types/places.$id';
@@ -27,23 +26,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const trpcServer = createCaller(request);
 
-  let data: PlaceWithLists | null = null;
+  let data: PlaceWithLists;
   if (z.uuid().safeParse(id).success) {
     data = await trpcServer.places.getDetailsById({ id });
   } else {
     data = await trpcServer.places.getDetailsByGoogleId({ googleMapsId: id });
   }
-
-  if (!data) {
-    throw new Error('Place not found');
-  }
-
-  logger.info('Loaded place details', {
-    id: data.id,
-    googleMapsId: data.googleMapsId,
-    photosCount: data.photos?.length ?? 0,
-    thumbnailsCount: data.thumbnailPhotos?.length ?? 0,
-  });
 
   return { place: data };
 }

@@ -86,7 +86,7 @@ export async function preparePlaceInsertData(
   let processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null;
   let imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null;
 
-  if (options?.buildPhotoMediaUrl) {
+  if (options?.buildPhotoMediaUrl || options?.placeImagesService) {
     processedPhotos = await processPlacePhotos(
       data.googleMapsId,
       data.photos ?? [],
@@ -190,7 +190,7 @@ export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise
  * @param buildPhotoMediaUrl - Function to build the full media URL with API key
  * @returns Array with Supabase URLs replacing Google Photos URLs
  */
-async function processPlacePhotos(
+export async function processPlacePhotos(
   googleMapsId: string,
   photos: string[] = [],
   placeImagesService?: PlaceImagesService,
@@ -253,43 +253,6 @@ export async function upsertPlace({
   updateCacheForPlace(result);
 
   return result;
-}
-
-/**
- * @deprecated Use `upsertPlace` instead. Kept for backward compatibility.
- */
-export async function ensurePlaceFromGoogleData(
-  data: PlaceInsert,
-  buildPhotoMediaUrl?: (url: string) => string,
-): Promise<PlaceSelect> {
-  return upsertPlace({ data, buildPhotoMediaUrl });
-}
-
-export async function ensurePlacesFromGoogleData(
-  placesData: PlaceInsert[],
-  buildPhotoMediaUrl?: (url: string) => string,
-  placeImagesService?: PlaceImagesService,
-): Promise<PlaceSelect[]> {
-  if (placesData.length === 0) {
-    return [];
-  }
-
-  const insertValues = await Promise.all(
-    placesData.map((data) =>
-      preparePlaceInsertData(data, { buildPhotoMediaUrl, placeImagesService }),
-    ),
-  );
-
-  const results = await db
-    .insert(place)
-    .values(insertValues)
-    .onConflictDoUpdate({
-      target: place.googleMapsId,
-      set: placeUpdateSet,
-    })
-    .returning();
-
-  return results;
 }
 
 export async function createOrUpdatePlace(

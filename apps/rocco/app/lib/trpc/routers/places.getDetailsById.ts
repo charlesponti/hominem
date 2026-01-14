@@ -1,7 +1,8 @@
-import { getPlaceById } from '@hominem/data/places';
+import { getPlaceById, isGooglePhotosUrl } from '@hominem/data/places';
 import { z } from 'zod';
 import { protectedProcedure } from '../context';
 import { enrichPlaceWithDetails } from './places.helpers';
+import { logger } from '@hominem/utils/logger';
 
 export const getDetailsById = protectedProcedure
   .input(z.object({ id: z.uuid() }))
@@ -18,7 +19,15 @@ export const getDetailsById = protectedProcedure
     // If there are no stored photos but we fetched photos for display, enqueue background enrichment
     try {
       const queues = ctx.queues;
-      if ((dbPlace.photos == null || dbPlace.photos.length === 0) && dbPlace.googleMapsId) {
+      const hasGooglePhotos = dbPlace.photos?.some((url) => isGooglePhotosUrl(url));
+      if (
+        (dbPlace.photos == null || dbPlace.photos.length === 0 || hasGooglePhotos) &&
+        dbPlace.googleMapsId
+      ) {
+        logger.debug('Enqueueing photo enrich for place', {
+          placeId: dbPlace.id,
+          googleMapsId: dbPlace.googleMapsId,
+        });
         await queues.placePhotoEnrich.add('enrich', {
           placeId: dbPlace.id,
           forceFresh: true,
