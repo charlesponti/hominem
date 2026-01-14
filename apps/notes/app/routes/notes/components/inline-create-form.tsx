@@ -172,6 +172,45 @@ export function InlineCreateForm({
 
   if (!isVisible) return null
 
+  // Simplified view for always-visible mode
+  const isAlwaysVisible = isVisible && !itemToEdit && mode === 'create'
+
+  if (isAlwaysVisible) {
+    return (
+      <div className="w-full">
+        <div className="space-y-3">
+          <Textarea
+            placeholder="What's on your mind? Use #tag to add tags..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            rows={3}
+            className="text-base bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all resize-none"
+          />
+
+          <div className="flex justify-end">
+            <Button
+              onClick={handleSave}
+              disabled={isSaveDisabled}
+              className="h-9 px-6 bg-blue-500 hover:bg-blue-600 text-white transition-all disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+            >
+              {isSaving ? (
+                <RefreshCw className="size-4 animate-spin" />
+              ) : (
+                'Post'
+              )}
+            </Button>
+          </div>
+
+          {error && (
+            <div className="text-red-500 text-sm p-3 text-center bg-red-100 dark:bg-red-900/30 rounded-md border border-red-200 dark:border-red-800/50">
+              {error.message}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto mb-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-lg transition-all duration-200">
       <div className="p-4">
