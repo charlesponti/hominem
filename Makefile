@@ -47,7 +47,8 @@ clean:
 	find . -type d -name ".next" -exec rm -rf {} +
 	find . -type d -name ".turbo" -exec rm -rf {} +
 	find . -name "bun.lock" -exec rm -rf {} +
-
+	find . -name '*.tsbuildinfo' -type f -not -path './node_modules/*' -delete
+	
 # Stop Docker containers
 docker-down:
 	$(DOCKER_COMPOSE) down

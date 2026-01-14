@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 /**
  * Migration script to download Google Photos images for existing places
  * and store them in Supabase Storage
@@ -12,18 +14,15 @@ import { place } from '@hominem/data/schema';
 import { eq, sql } from 'drizzle-orm';
 import { googlePlaces } from '@hominem/data/places';
 
-const GOOGLE_PLACES_API_KEY =
-  process.env.GOOGLE_PLACES_API_KEY ||
-  process.env.VITE_GOOGLE_API_KEY ||
-  process.env.GOOGLE_API_KEY;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
-if (!GOOGLE_PLACES_API_KEY) {
-  throw new Error('GOOGLE_PLACES_API_KEY is not set');
+if (!GOOGLE_API_KEY) {
+  throw new Error('GOOGLE_API_KEY is not set');
 }
 
 const placeImagesService = createPlaceImagesService({
   appBaseUrl: process.env.APP_BASE_URL,
-  googleApiKey: GOOGLE_PLACES_API_KEY,
+  googleApiKey: GOOGLE_API_KEY,
 });
 
 interface MigrationStats {

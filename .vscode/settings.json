@@ -1,9 +1,11 @@
 {
-  "cSpell.words": [
-    "tsquery",
-    "tsvector",
-    "websearch"
-  ],
+  "cSpell.words": ["tsquery", "tsvector", "websearch"],
+  "typescript.tsserver.maxTsServerMemory": 8192,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.tsserver.useSyntaxServer": "auto",
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.tsserver.log": "off",
   "css.validate": false,
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
@@ -17,22 +19,27 @@
   "github.copilot.chat.newWorkspace.useContext7": true,
   "npm.scriptRunner": "bun",
   "tailwindCSS.experimental.classRegex": [
-    [
-      "cva\\(([^)]*)\\)",
-      "[\"'`]([^\"'`]*).*?[\"'`]"
-    ],
-    [
-      "cn\\(([^)]*)\\)",
-      "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"
-    ]
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"]
   ],
   "tailwindCSS.experimental.configFile": "./packages/ui/src/styles/globals.css",
-  "tailwindCSS.files.exclude": [
-    "**/.git/**",
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/dist/**"
-  ],
+  "tailwindCSS.files.exclude": ["**/.git/**", "**/node_modules/**", "**/.next/**", "**/dist/**"],
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/.turbo": true,
+    "**/.react-router": true,
+    "**/*.tsbuildinfo": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/build/**": true,
+    "**/dist/**": true,
+    "**/.turbo/**": true,
+    "**/.react-router/**": true,
+    "**/*.tsbuildinfo": true
+  },
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
     "typescriptreact": "javascript"
