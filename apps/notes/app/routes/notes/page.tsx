@@ -1,5 +1,4 @@
 import type { Note } from '@hominem/data/types'
-import { Button } from '@hominem/ui/button'
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useDeleteNote, useNotesList, useUpdateNote } from '~/hooks/use-notes'
