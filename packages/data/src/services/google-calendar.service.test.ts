@@ -2,30 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { convertGoogleCalendarEvent, GoogleCalendarService } from './google-calendar.service';
 
 // Mock googleapis
-vi.mock('googleapis', () => {
-  class MockOAuth2Client {
-    setCredentials = vi.fn();
-    refreshAccessToken = vi.fn();
-  }
-  return {
-    Auth: {
-      OAuth2Client: MockOAuth2Client,
-    },
-    google: {
-      calendar: vi.fn(() => ({
-        events: {
-          list: vi.fn(),
-          insert: vi.fn(),
-          update: vi.fn(),
-          delete: vi.fn(),
-        },
-        calendarList: {
-          list: vi.fn(),
-        },
-      })),
-    },
-  };
-});
+vi.mock('googleapis', () => import('../test-utils/google-api-mocks').then((m) => m.googleapi));
 
 // Mock database
 vi.mock('../db', () => ({

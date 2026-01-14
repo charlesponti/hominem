@@ -109,7 +109,7 @@ export const createContext = async (request?: Request): Promise<Context> => {
   }
 };
 
-const t = initTRPC.context<Context>().create();
+export const t = initTRPC.context<Context>().create();
 
 export const router = t.router;
 export const publicProcedure = t.procedure;

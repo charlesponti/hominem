@@ -1,13 +1,35 @@
 import { describe, expect, it, vi } from 'vitest';
-import { preparePlaceInsertData } from './places.service';
+import { preparePlaceInsertData, refreshAllPlaces } from './places.service';
 import type { PlaceInsert } from '../db/schema';
+import { googlePlaces } from './google-places.service';
 
-// Mock crypto for deterministic results if needed, though randomUUID is fine for now
-// Mock drizzle-orm and db to avoid actual DB connection
+// Mock googlePlaces
+vi.mock('./google-places.service', () => ({
+  googlePlaces: {
+    getDetails: vi.fn(),
+  },
+}));
+
+// Mock db
 vi.mock('../db', () => ({
   db: {
-    select: vi.fn(),
-    insert: vi.fn(),
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn().mockResolvedValue([]),
+      })),
+    })),
+    insert: vi.fn(() => ({
+      values: vi.fn(() => ({
+        onConflictDoUpdate: vi.fn(() => ({
+          returning: vi.fn().mockResolvedValue([{ id: '1' }]),
+        })),
+      })),
+    })),
+    query: {
+      place: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+    },
   },
 }));
 
@@ -60,5 +82,46 @@ describe('preparePlaceInsertData', () => {
 
     expect(result.photos).toEqual(['photo1', 'photo2']);
     expect(result.imageUrl).toBe('photo1');
+  });
+});
+
+describe('refreshAllPlaces', () => {
+  it('should fetch details for places missing photos and update them', async () => {
+    const { db } = await import('../db');
+    const mockPlace = { id: 'p1', googleMapsId: 'g1', name: 'Original Name' };
+
+    // Mock listPlacesMissingPhotos response
+    vi.mocked(db.query.place.findMany).mockResolvedValue([mockPlace] as any);
+
+    // Mock googlePlaces details
+    vi.mocked(googlePlaces.getDetails).mockResolvedValue({
+      id: 'g1',
+      displayName: { text: 'New Name' },
+      formattedAddress: '123 New St',
+      location: { latitude: 10, longitude: 20 },
+      photos: [{ name: 'photo-1' }],
+    });
+
+    const result = await refreshAllPlaces();
+
+    expect(result.updatedCount).toBe(1);
+    expect(result.errors).toHaveLength(0);
+    expect(googlePlaces.getDetails).toHaveBeenCalledWith({ placeId: 'g1' });
+    expect(db.insert).toHaveBeenCalled();
+  });
+
+  it('should collect errors for failed updates', async () => {
+    const { db } = await import('../db');
+    const mockPlace = { id: 'p1', googleMapsId: 'g1' };
+
+    vi.mocked(db.query.place.findMany).mockResolvedValue([mockPlace] as any);
+
+    vi.mocked(googlePlaces.getDetails).mockRejectedValue(new Error('API Down'));
+
+    const result = await refreshAllPlaces();
+
+    expect(result.updatedCount).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('API Down');
   });
 });

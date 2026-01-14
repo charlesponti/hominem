@@ -592,35 +592,50 @@ export async function listPlacesMissingPhotos(): Promise<PlaceSelect[]> {
   });
 }
 
+import { googlePlaces } from './google-places.service';
+
 export async function refreshAllPlaces() {
   // Find all places missing photos (or other stale data)
   const places = await listPlacesMissingPhotos();
   let updatedCount = 0;
   const errors: string[] = [];
 
-  for (const place of places) {
+  for (const placeRecord of places) {
     try {
-      // Fetch latest data from Google Maps API (stub: replace with actual API call)
-      // Example: const googleData = await fetchGoogleMapsData(place.googleMapsId)
-      const googleData = {
-        googleMapsId: place.googleMapsId,
-        name: place.name,
-        address: place.address,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        types: place.types,
-        rating: place.rating,
-        websiteUri: place.websiteUri,
-        phoneNumber: place.phoneNumber,
-        priceLevel: place.priceLevel,
-        photos: place.photos ?? [],
-        imageUrl: place.imageUrl ?? null,
-        location: [place.longitude ?? 0, place.latitude ?? 0] as [number, number],
-      };
-      await upsertPlace({ data: googleData });
+      // Fetch latest data from Google Maps API
+      const googleData = await googlePlaces.getDetails({
+        placeId: placeRecord.googleMapsId,
+      });
+
+      if (!googleData) {
+        errors.push(`Place ${placeRecord.id} not found on Google Maps`);
+        continue;
+      }
+
+      await upsertPlace({
+        data: {
+          googleMapsId: googleData.id!,
+          name: googleData.displayName?.text ?? placeRecord.name,
+          address: googleData.formattedAddress ?? placeRecord.address,
+          latitude: googleData.location?.latitude ?? placeRecord.latitude,
+          longitude: googleData.location?.longitude ?? placeRecord.longitude,
+          location: [
+            googleData.location?.latitude ?? placeRecord.latitude ?? 0,
+            googleData.location?.longitude ?? placeRecord.longitude ?? 0,
+          ],
+          types: googleData.types ?? placeRecord.types,
+          phoneNumber: googleData.nationalPhoneNumber ?? placeRecord.phoneNumber,
+          websiteUri: googleData.websiteUri ?? placeRecord.websiteUri,
+          priceLevel:
+            googleData.priceLevel === 'PRICE_LEVEL_UNSPECIFIED' || !googleData.priceLevel
+              ? null
+              : (googleData.priceLevel as unknown as number),
+          photos: googleData.photos?.map((p) => p.name!) ?? [],
+        },
+      });
       updatedCount++;
     } catch (err) {
-      errors.push(`Failed for ${place.id}: ${String(err)}`);
+      errors.push(`Failed for ${placeRecord.id}: ${String(err)}`);
     }
   }
 

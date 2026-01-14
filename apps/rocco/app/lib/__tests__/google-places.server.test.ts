@@ -1,19 +1,8 @@
 import { buildPhotoMediaUrl } from '@hominem/utils/google';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mockPlaces } from '../../../../../packages/data/src/test-utils/google-api-mocks';
 
-const mockSearchText = vi.fn();
-const mockGet = vi.fn();
-
-vi.mock('googleapis', () => ({
-  google: {
-    places: vi.fn().mockReturnValue({
-      places: {
-        searchText: (...args: any[]) => mockSearchText(...args),
-        get: (...args: any[]) => mockGet(...args),
-      },
-    }),
-  },
-}));
+vi.mock('googleapis', () => import('../../../../../packages/data/src/test-utils/google-api-mocks').then((m) => m.googleapi));
 
 describe('google-places.server helper', () => {
   let googlePlaces: any;
@@ -29,8 +18,8 @@ describe('google-places.server helper', () => {
 
   beforeEach(() => {
     googlePlacesTestUtils.clearCache();
-    mockSearchText.mockReset();
-    mockGet.mockReset();
+    mockPlaces.searchText.mockReset();
+    mockPlaces.get.mockReset();
   });
 
   afterEach(() => {
@@ -50,7 +39,7 @@ describe('google-places.server helper', () => {
       ],
     };
 
-    mockSearchText.mockResolvedValue({ data: payload });
+    mockPlaces.searchText.mockResolvedValue({ data: payload });
 
     const params = {
       query: 'coffee',
@@ -61,11 +50,11 @@ describe('google-places.server helper', () => {
 
     expect(first).toHaveLength(1);
     expect(second).toHaveLength(1);
-    expect(mockSearchText).toHaveBeenCalledTimes(1);
+    expect(mockPlaces.searchText).toHaveBeenCalledTimes(1);
   });
 
   it('surfaces Google API errors when fetching details', async () => {
-    mockGet.mockRejectedValue(new Error('API Error'));
+    mockPlaces.get.mockRejectedValue(new Error('API Error'));
 
     await expect(googlePlaces.getDetails({ placeId: 'bad-id', forceFresh: true })).rejects.toThrow(
       /API Error/,
@@ -73,7 +62,7 @@ describe('google-places.server helper', () => {
   });
 
   it('returns limited photo references via getPlacePhotos', async () => {
-    mockGet.mockResolvedValue({
+    mockPlaces.get.mockResolvedValue({
       data: {
         photos: [{ name: 'places/foo/photos/1' }, { name: 'places/foo/photos/2' }],
       },
@@ -81,7 +70,7 @@ describe('google-places.server helper', () => {
 
     const photos = await googlePlaces.getPhotos({ placeId: 'foo', limit: 1, forceFresh: true });
     expect(photos).toEqual(['places/foo/photos/1']);
-    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockPlaces.get).toHaveBeenCalledTimes(1);
   });
 
   it('buildPhotoMediaUrl includes api key and sizing params', () => {
