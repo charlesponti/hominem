@@ -18,13 +18,20 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
       return
     }
 
-    let timeoutId: NodeJS.Timeout | null = null
+    let timeoutId: number | null = null
     let controllerChangeHandler: (() => void) | null = null
 
-    // Set fallback timeout
-    timeoutId = setTimeout(() => {
+    const clearTimeoutAndSetReady = () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
       setIsReady(true)
-      timeoutId = null
+    }
+
+    // Set fallback timeout
+    timeoutId = window.setTimeout(() => {
+      setIsReady(true)
     }, 3000)
 
     // Handle controller change (new service worker activated)
@@ -45,34 +52,22 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
 
         // If there's already an active controller, we're good to go
         if (navigator.serviceWorker.controller) {
-          if (timeoutId) {
-            clearTimeout(timeoutId)
-            timeoutId = null
-          }
-          setIsReady(true)
+          clearTimeoutAndSetReady()
         } else {
           // First-time install: wait for the SW to be ready
           navigator.serviceWorker.ready.then(() => {
-            if (timeoutId) {
-              clearTimeout(timeoutId)
-              timeoutId = null
-            }
-            setIsReady(true)
+            clearTimeoutAndSetReady()
           })
         }
       })
       .catch((error) => {
         console.error('Service Worker registration failed:', error)
-        if (timeoutId) {
-          clearTimeout(timeoutId)
-          timeoutId = null
-        }
-        setIsReady(true) // Still show the app even if SW fails
+        clearTimeoutAndSetReady() // Still show the app even if SW fails
       })
 
     // Cleanup function
     return () => {
-      if (timeoutId) {
+      if (timeoutId !== null) {
         clearTimeout(timeoutId)
       }
       if (controllerChangeHandler) {
