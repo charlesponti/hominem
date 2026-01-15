@@ -72,7 +72,7 @@ export const notesRouter = router({
 
       try {
         // Get all notes matching filters
-        const allNotes = await notesService.list(userId, {
+        const { notes: allNotes } = await notesService.query(userId, {
           types: input.types,
           query: input.query,
           tags: input.tags,
