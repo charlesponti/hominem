@@ -18,7 +18,7 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
       return
     }
 
-    let timeoutId: number | null = null
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
     let controllerChangeHandler: (() => void) | null = null
 
     const clearTimeoutAndSetReady = () => {
@@ -30,7 +30,7 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
     }
 
     // Set fallback timeout
-    timeoutId = window.setTimeout(() => {
+    timeoutId = setTimeout(() => {
       setIsReady(true)
     }, 3000)
 
