@@ -5,6 +5,10 @@ on:
     # Run at 4:00 AM UTC every day
     - cron: '0 4 * * *'
   workflow_dispatch: # Allow manual trigger
+  push:
+    paths:
+      - "packages/data/scripts/migrate-place-images.ts"
+      - ".github/workflows/migrate-place-images.yml"
 
 jobs:
   migrate:
