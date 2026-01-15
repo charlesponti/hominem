@@ -1,5 +1,5 @@
 import { SupabaseAuthProvider } from '@hominem/auth';
-import { COMMON_FONT_LINKS, COMMON_ICON_LINKS } from '@hominem/ui';
+import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useCallback } from 'react';
 import {
@@ -85,15 +85,17 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        <SupabaseAuthProvider
-          initialSession={session}
-          config={supabaseConfig}
-          onAuthEvent={handleAuthEvent}
-        >
-          <TRPCProvider>
-            <Outlet />
-          </TRPCProvider>
-        </SupabaseAuthProvider>
+        <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
+          <SupabaseAuthProvider
+            initialSession={session}
+            config={supabaseConfig}
+            onAuthEvent={handleAuthEvent}
+          >
+            <TRPCProvider>
+              <Outlet />
+            </TRPCProvider>
+          </SupabaseAuthProvider>
+        </UpdateGuard>
         <ScrollRestoration />
         <Scripts />
       </body>
