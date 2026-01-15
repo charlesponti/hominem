@@ -1,5 +1,5 @@
 import { SupabaseAuthProvider } from '@hominem/auth'
-import { COMMON_FONT_LINKS, COMMON_ICON_LINKS } from '@hominem/ui'
+import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui'
 import type { AuthChangeEvent } from '@supabase/supabase-js'
 import type React from 'react'
 import { useCallback } from 'react'
@@ -52,7 +52,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <UpdateGuard logo="/logo-florin.png" appName="Florin">
+          {children}
+        </UpdateGuard>
         <ScrollRestoration />
         <Scripts />
       </body>
