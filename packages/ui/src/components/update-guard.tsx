@@ -18,33 +18,67 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
       return
     }
 
+    let timeoutId: NodeJS.Timeout | null = null
+    let controllerChangeHandler: (() => void) | null = null
+
+    // Set fallback timeout
+    timeoutId = setTimeout(() => {
+      setIsReady(true)
+      timeoutId = null
+    }, 3000)
+
+    // Handle controller change (new service worker activated)
+    controllerChangeHandler = () => {
+      window.location.reload()
+    }
+
     navigator.serviceWorker
       .register('/sw.js')
       .then((reg) => {
-        // 1. Manually trigger an update check on launch
+        // Manually trigger an update check on launch
         reg.update()
 
-        // 2. If a new worker takes over, reload the app to get new assets
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          window.location.reload()
-        })
+        // If a new worker takes over, reload the app to get new assets
+        if (controllerChangeHandler) {
+          navigator.serviceWorker.addEventListener('controllerchange', controllerChangeHandler)
+        }
 
-        // 3. If there's already an active controller, we're good to go
+        // If there's already an active controller, we're good to go
         if (navigator.serviceWorker.controller) {
+          if (timeoutId) {
+            clearTimeout(timeoutId)
+            timeoutId = null
+          }
           setIsReady(true)
         } else {
           // First-time install: wait for the SW to be ready
-          navigator.serviceWorker.ready.then(() => setIsReady(true))
+          navigator.serviceWorker.ready.then(() => {
+            if (timeoutId) {
+              clearTimeout(timeoutId)
+              timeoutId = null
+            }
+            setIsReady(true)
+          })
         }
       })
       .catch((error) => {
         console.error('Service Worker registration failed:', error)
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
         setIsReady(true) // Still show the app even if SW fails
       })
 
-    // Fallback: Don't keep them on the load screen forever (e.g., 3 seconds)
-    const timeout = setTimeout(() => setIsReady(true), 3000)
-    return () => clearTimeout(timeout)
+    // Cleanup function
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+      if (controllerChangeHandler) {
+        navigator.serviceWorker.removeEventListener('controllerchange', controllerChangeHandler)
+      }
+    }
   }, [])
 
   if (!isReady) {
