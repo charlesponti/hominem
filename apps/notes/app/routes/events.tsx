@@ -1,4 +1,5 @@
-import { ActiveFiltersBar, FilterSelect, useSort, useUrlFilters } from '@hominem/ui'
+import { ActiveFiltersBar, FilterSelect } from '@hominem/ui/filters'
+import { useSort, useUrlFilters } from '@hominem/ui/hooks'
 import { useEffect, useMemo, useState } from 'react'
 import { data, useNavigate } from 'react-router'
 import { getServerSession } from '~/lib/auth.server'

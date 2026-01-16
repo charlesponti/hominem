@@ -1,16 +1,16 @@
 {
   "cSpell.words": ["tsquery", "tsvector", "websearch"],
-  "typescript.tsserver.maxTsServerMemory": 8192,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.preferences.includePackageJsonAutoImports": "off",
   "typescript.tsserver.useSyntaxServer": "auto",
   "typescript.disableAutomaticTypeAcquisition": true,
-  "typescript.tsserver.log": "off",
+  "typescript.tsserver.log": "normal",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferGoToSourceDefinition": true,
+  "typescript.tsserver.enableTracing": false,
   "css.validate": false,
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
-
-  // Increase Vitest extension project limit (default 5)
   "vitest.maximumConfigs": 20,
   "editor.quickSuggestions": {
     "strings": true

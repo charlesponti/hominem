@@ -63,7 +63,7 @@ export async function getServerAuth(
     }
 
     // Get or create Hominem user
-    const userAuthData = await UserAuthService.findOrCreateUser(user as SupabaseAuthUser)
+    const userAuthData = await UserAuthService.findOrCreateUser({ ...user, email: user.email ?? '' })
     if (!userAuthData) {
       return {
         user: null,

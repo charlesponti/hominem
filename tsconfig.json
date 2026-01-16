@@ -1,13 +1,18 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "@hominem/root",
-  "extends": "./packages/tsconfig/workspace.json",
-  "compilerOptions": {
-    "rootDir": ".",
-    "baseUrl": ".",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "outDir": "dist",
-    "allowImportingTsExtensions": false
-  }
+  "files": [],
+  "references": [
+    { "path": "packages/ai" },
+    { "path": "packages/auth" },
+    { "path": "packages/data" },
+    { "path": "packages/trpc-types" },
+    { "path": "packages/tools" },
+    { "path": "packages/ui" },
+    { "path": "packages/utils" },
+    { "path": "apps/api" },
+    { "path": "apps/cli" },
+    { "path": "apps/florin" },
+    { "path": "apps/notes" },
+    { "path": "apps/rocco" },
+    { "path": "apps/workers" }
+  ]
 }

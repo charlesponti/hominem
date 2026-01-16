@@ -40,6 +40,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   initialEntries?: string[]
 }
 
+// @ts-ignore
 const customRender = (ui: ReactElement, options?: CustomRenderOptions) => {
   const { initialEntries, ...renderOptions } = options ?? {}
   return render(ui, {

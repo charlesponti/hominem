@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@hominem/ai": ["packages/ai/build/src/index.d.ts"],
+      "@hominem/ai/*": ["packages/ai/build/src/*"],
+      "@hominem/auth": ["packages/auth/build/src/index.d.ts"],
+      "@hominem/auth/*": ["packages/auth/build/src/*"],
+      "@hominem/data": ["packages/data/build/src/index.d.ts"],
+      "@hominem/data/*": ["packages/data/build/src/*"],
+      "@hominem/trpc": ["packages/trpc/build/index.d.ts"],
+      "@hominem/trpc/*": ["packages/trpc/build/*"],
+      "@hominem/tools": ["packages/tools/build/src/index.d.ts"],
+      "@hominem/tools/*": ["packages/tools/build/src/*"],
+      "@hominem/ui": ["packages/ui/build/src/index.d.ts"],
+      "@hominem/ui/*": ["packages/ui/build/src/*"],
+      "@hominem/utils": ["packages/utils/build/src/index.d.ts"],
+      "@hominem/utils/*": ["packages/utils/build/src/*"]
+    }
+  }
+}

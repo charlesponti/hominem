@@ -16,9 +16,9 @@ import { invitesRoutes } from './routes/invites/index.js'
 import { oauthRoutes } from './routes/oauth/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
 import { statusRoutes } from './routes/status'
-import { appRouter } from './trpc/index.js'
-import { financeRoutes } from './trpc/routers/finance/index.js'
-import { plaidRoutes } from './trpc/routers/finance/plaid/index.js'
+import { appRouter } from './index.js'
+import { financeRoutes } from './routers/finance/index.js'
+import { plaidRoutes } from './routers/finance/plaid/index.js'
 
 export type AppEnv = {
   Bindings: {

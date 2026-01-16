@@ -1,50 +1,24 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "CLI",
-  "extends": "../../packages/tsconfig/node.json",
+  "extends": [
+    "../../tsconfig.base.json",
+    "../../tsconfig.paths.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
-    "outDir": "build",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "composite": true,
-    "declaration": true,
-    "downlevelIteration": true,
-    "noImplicitAny": false,
-    "lib": [
-      "dom"
-    ],
+    "jsx": "react-jsx",
+    "types": ["node", "bun-types"],
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@hominem/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../../packages/ui/src/index.ts"
-      ]
-    }
+      "@/*": ["src/*"]
+    },
+    "noEmit": true
   },
   "references": [
-    {
-      "path": "../../packages/utils"
-    },
-    {
-      "path": "../../packages/ai"
-    },
-    {
-      "path": "../../packages/ui"
-    }
+    { "path": "../../packages/ai" },
+    { "path": "../../packages/data" },
+    { "path": "../../packages/trpc" },
+    { "path": "../../packages/utils" }
   ],
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "**/*.test.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

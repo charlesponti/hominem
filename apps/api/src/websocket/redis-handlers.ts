@@ -34,7 +34,7 @@ class RedisMessageHandlerRegistry {
         logger.warn(`No handler registered for Redis channel: ${channel}`)
       }
     } catch (error) {
-      logger.error('Error processing Redis message:', error)
+      logger.error('Error processing Redis message:', error as Error)
       // Decide if a generic error message should be sent to clients
       // For now, just logging server-side
     }

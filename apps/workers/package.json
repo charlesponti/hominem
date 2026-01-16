@@ -11,6 +11,7 @@
     "dev": "bun --watch src/index.ts | pino-pretty",
     "start": "bun src/index.ts",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "format": "biome format ./src --fix"
   },
   "dependencies": {
@@ -23,7 +24,7 @@
     "dotenv": "17.2.3",
     "drizzle-orm": "0.45.1",
     "effect": "^3.16.10",
-    "ioredis": "^5.6.1",
+    "ioredis": "^5.9.1",
     "mailparser": "^3.7.2",
     "pdf-parse": "^1.1.1",
     "pino": "^9.7.0",
@@ -32,7 +33,6 @@
     "zod": "4.2.1"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "workspace:*",
     "@types/mailparser": "^3.4.5",
     "@types/pdf-parse": "^1.1.5",
     "vitest": "4.0.16"

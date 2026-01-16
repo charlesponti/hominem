@@ -1,17 +1,15 @@
-import '@total-typescript/ts-reset'
-import 'dotenv/config'
+import { serve } from '@hono/node-server'
+import { createServer } from '@hominem/trpc'
+import { env } from '@hominem/trpc/lib/env'
 
-import { initSupabaseAdmin } from '@hominem/utils/supabase'
-import { env } from './lib/env.js'
-import { startServer } from './server.js'
+const app = createServer()
+const port = env.PORT
 
-// Initialize Supabase admin client from environment for this process
-initSupabaseAdmin({
-  supabaseUrl: env.SUPABASE_URL,
-  supabaseServiceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
-})
+console.log(`Server is running on port ${port}`)
 
-startServer().catch((error) => {
-  console.error(error)
-  process.exit(1)
+serve({
+  fetch: app.fetch,
+  port: Number(port),
+  maxRequestBodySize: 200 * 1024 * 1024, // 200MB to allow for large file uploads
+  overrideGlobalObjects: false,
 })

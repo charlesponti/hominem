@@ -8,6 +8,7 @@
   },
   "scripts": {
     "format": "biome format ./src --fix",
+    "typecheck": "tsc --noEmit",
     "scrape": "npx playwright test",
     "scrape:headed": "npx playwright test --headed",
     "scrape:debug": "npx playwright test --debug",
@@ -23,6 +24,7 @@
     "@browserbasehq/stagehand": "^2.4.0",
     "@hominem/ai": "workspace:*",
     "@hominem/data": "workspace:*",
+    "@hominem/trpc": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@playwright/test": "^1.51.1",
     "@trpc/client": "11.8.0",
@@ -52,7 +54,7 @@
     "zod": "4.2.1"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "workspace:*",
-    "@types/node": "^22.15.2"
+    "@types/node": "^22.15.2",
+    "bun-types": "^1.3.6"
   }
 }

@@ -469,7 +469,7 @@ class BookmarkService {
     // Process site name
     let siteName = result.ogSiteName
     if (!siteName) {
-      siteName = SiteDetector.getFallbackSiteName(url)
+      siteName = SiteDetector.getFallbackSiteName(url) ?? domain
     }
 
     // Process favicon

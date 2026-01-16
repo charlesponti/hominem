@@ -1,28 +1,18 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "UI Package",
-  "extends": "../tsconfig/library.json",
+  "extends": [
+    "../../tsconfig.base.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./build",
     "jsx": "react-jsx",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "incremental": true
+    "types": ["vite/client", "node"]
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx"
+  "references": [
+    { "path": "../auth" },
+    { "path": "../utils" }
   ],
-  "exclude": [
-    "node_modules",
-    "./src/test-utils.tsx",
-    "./src/**/*.test.tsx",
-    "build",
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
 }

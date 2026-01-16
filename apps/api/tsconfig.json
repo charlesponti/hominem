@@ -1,48 +1,21 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "API",
-  "extends": "../../packages/tsconfig/node.json",
+  "extends": [
+    "../../tsconfig.base.json",
+    "../../tsconfig.paths.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "build",
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@hominem/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../../packages/ui/src/index.ts"
-      ]
-    }
+    "rootDir": ".",
+    "types": ["node"],
+    "noEmit": true
   },
   "references": [
-    {
-      "path": "../../packages/ai"
-    },
-    {
-      "path": "../../packages/auth"
-    },
-    {
-      "path": "../../packages/data"
-    },
-    {
-      "path": "../../packages/utils"
-    }
+    { "path": "../../packages/ai" },
+    { "path": "../../packages/auth" },
+    { "path": "../../packages/data" },
+    { "path": "../../packages/tools" },
+    { "path": "../../packages/utils" }
   ],
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

@@ -1,6 +1,6 @@
 import { Button } from '@hominem/ui/button'
 import { DatePicker } from '@hominem/ui/components/date-picker'
-import { FilterChip } from '@hominem/ui/components/filters'
+import { FilterChip } from '@hominem/ui/filters'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu'
 import { SearchInput } from '@hominem/ui/components/ui/search-input'
-import type { SortOption } from '@hominem/ui/hooks/use-sort'
+import type { SortOption } from '@hominem/ui/hooks'
 import { ListFilter, RefreshCcw } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { AccountSelect } from '~/components/account-select'

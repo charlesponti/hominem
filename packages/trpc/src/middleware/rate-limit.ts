@@ -50,7 +50,7 @@ function createRateLimiter(options: RateLimiterOptions) {
     c.res.headers.set('X-RateLimit-Limit', max.toString())
     c.res.headers.set('X-RateLimit-Remaining', Math.max(0, max - count).toString())
 
-    await next()
+    return next()
   }
 }
 

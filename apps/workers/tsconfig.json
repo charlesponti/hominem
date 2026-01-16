@@ -1,40 +1,21 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "API",
-  "extends": "../../packages/tsconfig/node.json",
+  "extends": [
+    "../../tsconfig.base.json",
+    "../../tsconfig.paths.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "build",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "composite": true,
-    "declaration": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "rootDir": ".",
+    "types": ["node"],
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    }
+      "@/*": ["src/*"]
+    },
+    "noEmit": true
   },
   "references": [
-    {
-      "path": "../../packages/utils"
-    },
-    {
-      "path": "../../packages/ai"
-    },
-    {
-      "path": "../../packages/data"
-    }
+    { "path": "../../packages/data" },
+    { "path": "../../packages/utils" }
   ],
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
-  ],
-  "exclude": [
-    "build",
-    "dist",
-    "**/*.test.ts"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

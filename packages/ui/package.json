@@ -6,9 +6,18 @@
     ".": "./src/index.ts",
     "./button": "./src/components/ui/button.tsx",
     "./components/*": "./src/components/*",
+    "./components/ui/badge": "./src/components/ui/badge.tsx",
+    "./components/ui/command": "./src/components/ui/command.tsx",
+    "./components/ui/drawer": "./src/components/ui/drawer.tsx",
+    "./components/ui/label": "./src/components/ui/label.tsx",
+    "./components/ui/popover": "./src/components/ui/popover.tsx",
+    "./components/ui/textarea": "./src/components/ui/textarea.tsx",
+    "./components/layout/app-layout": "./src/components/layout/app-layout.tsx",
     "./dialog": "./src/components/ui/dialog.tsx",
     "./dropdown": "./src/components/ui/dropdown-menu.tsx",
     "./card": "./src/components/ui/card.tsx",
+    "./filters": "./src/components/filters/index.ts",
+    "./hooks": "./src/hooks/index.ts",
     "./input": "./src/components/ui/input.tsx",
     "./label": "./src/components/ui/label.tsx",
     "./list": "./src/components/list.tsx",
@@ -21,6 +30,7 @@
   "scripts": {
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui"
   },
@@ -72,7 +82,6 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",

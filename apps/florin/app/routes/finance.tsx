@@ -1,4 +1,4 @@
-import { useSort } from '@hominem/ui/hooks/use-sort'
+import { useSort } from '@hominem/ui/hooks'
 import { useEffect, useState } from 'react'
 import { PaginationControls } from '~/components/finance/pagination-controls'
 import { TransactionFilters } from '~/components/finance/transaction-filters'

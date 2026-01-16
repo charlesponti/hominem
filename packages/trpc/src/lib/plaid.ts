@@ -47,7 +47,9 @@ export function verifyPlaidWebhookSignature(
 
     for (const component of components) {
       const [key, value] = component.split('=')
-      signatureMap[key.trim()] = value.trim()
+      if (key && value) {
+        signatureMap[key.trim()] = value.trim()
+      }
     }
 
     const receivedSignature = signatureMap.t

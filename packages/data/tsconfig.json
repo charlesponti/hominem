@@ -1,36 +1,15 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Data Package",
-  "extends": "../tsconfig/library.json",
+  "extends": [
+    "../../tsconfig.base.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./build",
-    "rootDir": "./src",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@hominem/ui/*": [
-        "../ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../ui/src/index.ts"
-      ]
-    }
+    "rootDir": ".",
+    "outDir": "./build"
   },
   "references": [
-    {
-      "path": "../utils"
-    }
+    { "path": "../utils" }
   ],
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.json"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
 }

@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select'
-import type { SortDirection, SortField, SortOption } from '@hominem/ui/hooks/use-sort'
+import type { SortDirection, SortField, SortOption } from '@hominem/ui/hooks'
 import { X } from 'lucide-react'
 
 interface SortRowProps {

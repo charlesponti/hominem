@@ -1,6 +1,6 @@
 import { Badge } from '@hominem/ui/components/ui/badge'
 import { Button } from '@hominem/ui/components/ui/button'
-import { useSort } from '@hominem/ui/hooks/use-sort'
+import { useSort } from '@hominem/ui/hooks'
 import { format, subMonths } from 'date-fns'
 import { ArrowDown, ArrowUp, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'

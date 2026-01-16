@@ -1,46 +1,27 @@
 {
-  "extends": "../../packages/tsconfig/react.json",
-  "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
-  "exclude": ["build", "public", "dist", "node_modules", ".turbo"],
+  "extends": [
+    "../../tsconfig.base.json",
+    "../../tsconfig.paths.json"
+  ],
   "compilerOptions": {
-    "composite": true,
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["node", "vite/client", "@testing-library/jest-dom"],
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
+    "rootDir": ".",
+    "rootDirs": [".", "./.react-router/types"],
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client", "@testing-library/jest-dom"],
     "paths": {
-      "~/*": ["./app/*"],
-      "@hominem/ui/*": ["../../packages/ui/src/*"],
-      "@hominem/ui": ["../../packages/ui/src/index.ts"]
+      "~/*": ["./app/*"]
     },
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "skipDefaultLibCheck": true,
-    "isolatedModules": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true
+    "noEmit": true
   },
   "references": [
-    {
-      "path": "../../packages/ui"
-    },
-    {
-      "path": "../../packages/ai"
-    },
-    {
-      "path": "../../packages/auth"
-    },
-    {
-      "path": "../../packages/data"
-    },
-    {
-      "path": "../../packages/utils"
-    }
-  ]
+    { "path": "../../packages/ai" },
+    { "path": "../../packages/auth" },
+    { "path": "../../packages/data" },
+    { "path": "../../packages/trpc" },
+    { "path": "../../packages/ui" },
+    { "path": "../../packages/utils" }
+  ],
+  "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "build", "dist", ".turbo", "**/*.test.ts", "**/*.test.tsx"]
 }

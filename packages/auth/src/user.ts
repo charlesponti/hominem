@@ -57,9 +57,9 @@ export function toHominemUser(source: HominemUserSource): HominemUser {
     email: source.email,
     name: source.name || undefined,
     image: source.image || source.photoUrl || undefined,
-    supabaseId: source.supabaseId,
+    supabaseId: source.supabaseId ?? '',
     isAdmin: Boolean(source.isAdmin),
-    createdAt: source.createdAt,
-    updatedAt: source.updatedAt,
+    createdAt: source.createdAt.toString(),
+    updatedAt: source.updatedAt.toString(),
   }
 }

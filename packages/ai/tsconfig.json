@@ -1,34 +1,15 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "AI Package",
-  "extends": "../tsconfig/library.json",
+  "extends": [
+    "../../tsconfig.base.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "./src",
-    "incremental": true,
-    "emitDeclarationOnly": true,
-    "outDir": "./build",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@hominem/ui/*": [
-        "../ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../ui/src/index.ts"
-      ]
-    }
+    "rootDir": ".",
+    "outDir": "./build"
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.json"
+  "references": [
+    { "path": "../utils" }
   ],
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts",
-    "build",
-    "dist"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

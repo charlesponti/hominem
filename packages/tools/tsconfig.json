@@ -1,16 +1,16 @@
 {
-  "extends": "@hominem/tsconfigs/node.json",
-  "compilerOptions": {
-    "outDir": "./build",
-    "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
-  },
-  "include": [
-    "src"
+  "extends": [
+    "../../tsconfig.base.json"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "./build"
+  },
+  "references": [
+    { "path": "../data" },
+    { "path": "../utils" }
+  ],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

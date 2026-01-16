@@ -1,6 +1,6 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '../../../../packages/types/trpc'
+import type { AppRouter } from '@hominem/trpc'
 import { getValidAccessToken } from '../utils/auth-utils'
 
 export type RouterInput = inferRouterInputs<AppRouter>

@@ -19,7 +19,6 @@
     "ollama-ai-provider": "^1.2.0"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "workspace:*",
     "typescript": "5.9.3"
   }
 }

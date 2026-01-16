@@ -1,6 +1,5 @@
 import type { LinkDescriptor } from 'react-router'
 
-export * from './components/filters'
 export * from './components/layout'
 export * from './components/location-select'
 export * from './components/page-title'

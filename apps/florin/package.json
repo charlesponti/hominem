@@ -15,6 +15,7 @@
   "dependencies": {
     "@hominem/auth": "workspace:*",
     "@hominem/data": "workspace:*",
+    "@hominem/trpc": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",

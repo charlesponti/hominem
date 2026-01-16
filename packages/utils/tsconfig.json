@@ -1,41 +1,12 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Utils Package",
-  "extends": "../tsconfig/library.json",
+  "extends": [
+    "../../tsconfig.base.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./build",
-    "rootDir": "./src",
-    "module": "ES2022",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "test": [
-        "./test/*"
-      ],
-      "@hominem/ui/*": [
-        "../ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../ui/src/index.ts"
-      ]
-    }
+    "rootDir": ".",
+    "outDir": "./build"
   },
-  "references": [
-    {
-      "path": "../ai"
-    }
-  ],
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.json"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts",
-    "build",
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
 }
