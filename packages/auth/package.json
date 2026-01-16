@@ -5,23 +5,22 @@
   "exports": {
     ".": "./src/index.ts",
     "./types": "./src/types.ts",
-    "./server": "./src/server-index.ts",
-    "./server-index": "./src/server-index.ts"
+    "./server": "./src/server-index.ts"
   },
   "scripts": {
-    "build": "tsc -b",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hominem/data": "workspace:*",
+    "@hominem/db": "workspace:*",
+    "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "better-auth": "^1.4.12",
-    "react": "^19.2.3",
     "zod": "4.2.1"
   },
   "devDependencies": {
     "@types/node": "^22.18.13",
     "@types/react": "^19.2.2",
+    "react": "^19.2.3",
     "typescript": "5.9.3",
     "vite": "7.3.0"
   },
