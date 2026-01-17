@@ -1,0 +1,39 @@
+{
+  "name": "@hominem/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "development": "./src/index.ts",
+      "default": "./build/index.js"
+    },
+    "./schema": {
+      "types": "./build/schema/index.d.ts",
+      "development": "./src/schema/index.ts",
+      "default": "./build/schema/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.1",
+    "drizzle-zod": "^0.7.0",
+    "postgres": "^3.4.5",
+    "zod": "4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

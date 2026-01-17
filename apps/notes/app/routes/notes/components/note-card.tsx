@@ -1,4 +1,4 @@
-import type { Content } from '@hominem/data/types'
+import type { Content } from '@hominem/services/types'
 import { Button } from '@hominem/ui/button'
 import { Badge } from '@hominem/ui/components/ui/badge'
 import { Card, CardContent } from '@hominem/ui/components/ui/card'

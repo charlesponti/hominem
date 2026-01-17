@@ -7,9 +7,6 @@
     "VITE_APP_BASE_URL",
     "VITE_SUPABASE_URL",
     "VITE_SUPABASE_ANON_KEY",
-    "COOKIE_NAME",
-    "COOKIE_SALT",
-    "COOKIE_SECRET",
     "DATABASE_URL",
     "GITHUB_TOKEN",
     "GOOGLE_CLIENT_ID",
@@ -23,14 +20,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        ".react-router/**",
-        "build/**",
-        "dist/**",
-        "*.tsbuildinfo"
-      ]
+      "outputs": [".next/**", "!.next/cache/**", ".react-router/**", "build/**", "dist/**"]
     },
     "check": {
       "dependsOn": ["lint", "typecheck", "test"]
@@ -43,8 +33,8 @@
     },
     "dev": {
       "cache": false,
-      "dependsOn": ["@hominem/data#build"],
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["^dev"]
     },
     "format": {
       "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],

@@ -1,4 +1,4 @@
-import type { ContentStrategy } from '@hominem/data/schema'
+import type { ContentStrategy } from '@hominem/db/schema'
 import { Button } from '@hominem/ui/button'
 import { Checkbox } from '@hominem/ui/components/ui/checkbox'
 import { Input } from '@hominem/ui/input'

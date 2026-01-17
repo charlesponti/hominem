@@ -1,4 +1,4 @@
-import type { Note, NoteInsert, Priority, TaskMetadata } from '@hominem/data/types'
+import type { Note, NoteInsert, Priority, TaskMetadata } from '@hominem/services/types'
 import { Button } from '@hominem/ui/button'
 import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Textarea } from '@hominem/ui/components/ui/textarea'

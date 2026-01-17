@@ -1,0 +1,21 @@
+{
+  "extends": [
+    "../../tsconfig.base.json",
+    "../../tsconfig.paths.json"
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "types": ["node"],
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "noEmit": true
+  },
+  "references": [
+    { "path": "../../packages/services" },
+    { "path": "../../packages/utils" }
+  ],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

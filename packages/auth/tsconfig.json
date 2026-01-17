@@ -1,41 +1,14 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Auth Package",
-  "extends": "../tsconfig/workspace.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "target": "ES2022",
-    "types": [
-      "vite/client"
-    ],
-    "lib": [
-      "ES2022",
-      "DOM"
-    ],
+    "rootDir": "src",
+    "outDir": "./build",
     "jsx": "react-jsx",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "composite": true,
-    "incremental": true
+    "types": ["vite/client", "node"],
+    "composite": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "build"
-  ],
-  "references": [
-    {
-      "path": "../data"
-    }
-  ]
+  "references": [{ "path": "../services" }, { "path": "../utils" }],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "**/*.test.tsx"]
 }

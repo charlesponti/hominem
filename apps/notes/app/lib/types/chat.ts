@@ -1,5 +1,5 @@
 // Shared chat types for both client and server
-import type { ChatMessageSelect } from '@hominem/data/schema'
+import type { ChatMessageSelect } from '@hominem/db/schema'
 import type { ProcessedFile } from './upload'
 
 // Re-export ProcessedFile for convenience
@@ -68,7 +68,7 @@ export interface ChatWithMessages extends Chat {
 /**
  * Database types re-exported for convenience
  */
-export type { ChatMessageSelect } from '@hominem/data/schema'
+export type { ChatMessageSelect } from '@hominem/db/schema'
 
 /**
  * File attachment in chat UI (simplified for display)

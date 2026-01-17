@@ -1,4 +1,4 @@
-import type { GoalMilestone } from '@hominem/data/types'
+import type { GoalMilestone } from '@hominem/services/types'
 import { Button } from '@hominem/ui/button'
 import { Input } from '@hominem/ui/input'
 import { Plus, XCircle } from 'lucide-react'

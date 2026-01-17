@@ -1,4 +1,4 @@
-import type { ContentStrategiesSelect } from '@hominem/data/schema'
+import type { ContentStrategiesSelect } from '@hominem/db/schema'
 import { useCallback, useState } from 'react'
 import { useToast } from '@hominem/ui/components/ui/use-toast'
 import {

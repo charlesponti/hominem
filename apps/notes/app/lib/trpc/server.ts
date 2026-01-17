@@ -1,5 +1,5 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
-import type { AppRouter } from '../../../../../packages/types/trpc'
+import type { AppRouter } from '@hominem/trpc'
 
 export function createServerTRPCClient(accessToken?: string) {
   return createTRPCProxyClient<AppRouter>({
