@@ -1,4 +1,4 @@
-import type { ImportTransactionsQueuePayload } from '@hominem/services/jobs';
+import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
 import type { Job } from 'bullmq';
 
 import { QUEUE_NAMES } from '@hominem/utils/consts';

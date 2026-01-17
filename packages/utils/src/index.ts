@@ -1,6 +1,5 @@
 export * from './delay'
 export * from './markdown/index'
-export * from './nlp/index'
 export * from './retry'
 export * from './schemas/index'
 export * from './scraping/index'

@@ -17,6 +17,11 @@
       "types": "./build/server-index.d.ts",
       "development": "./src/server-index.ts",
       "default": "./build/server-index.js"
+    },
+    "./tools": {
+      "types": "./build/tools.d.ts",
+      "development": "./src/tools.ts",
+      "default": "./build/tools.js"
     }
   },
   "scripts": {
@@ -25,10 +30,10 @@
   },
   "dependencies": {
     "@hominem/db": "workspace:*",
-    "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@supabase/ssr": "0.8.0",
     "@supabase/supabase-js": "2.88.0",
+    "ai": "^4.3.16",
     "better-auth": "^1.4.12",
     "zod": "4.2.1"
   },

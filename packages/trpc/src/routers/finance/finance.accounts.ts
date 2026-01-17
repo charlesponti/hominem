@@ -9,35 +9,36 @@ import {
   listAccountsWithRecentTransactions,
   listPlaidConnectionsForUser,
   updateAccount,
-} from '@hominem/services/finance'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../../procedures'
+} from '@hominem/finance-services';
+import { z } from 'zod';
+
+import { protectedProcedure, router } from '../../procedures';
 
 export const accountsRouter = router({
   list: protectedProcedure
     .input(
       z.object({
         includeInactive: z.boolean().optional().default(false),
-      })
+      }),
     )
     .query(async ({ ctx }) => {
-      return await listAccounts(ctx.userId)
+      return await listAccounts(ctx.userId);
     }),
 
   get: protectedProcedure.input(z.object({ id: z.uuid() })).query(async ({ input, ctx }) => {
-    const account = await getAccountWithPlaidInfo(input.id, ctx.userId)
+    const account = await getAccountWithPlaidInfo(input.id, ctx.userId);
 
     if (!account) {
-      return null
+      return null;
     }
 
-    const accountWithTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5)
-    const accountData = accountWithTransactions.find((acc) => acc.id === account.id)
+    const accountWithTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5);
+    const accountData = accountWithTransactions.find((acc) => acc.id === account.id);
 
     return {
       ...account,
       transactions: accountData?.transactions || [],
-    }
+    };
   }),
 
   create: protectedProcedure
@@ -47,14 +48,14 @@ export const accountsRouter = router({
         type: z.enum(['checking', 'savings', 'investment', 'credit']),
         balance: z.number().optional(),
         institution: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Check if account with same name already exists for user
-      const existingAccount = await findAccountByNameForUser(ctx.userId, input.name)
+      const existingAccount = await findAccountByNameForUser(ctx.userId, input.name);
 
       if (existingAccount) {
-        throw new Error('Account with this name already exists')
+        throw new Error('Account with this name already exists');
       }
 
       return await createAccount({
@@ -64,7 +65,7 @@ export const accountsRouter = router({
         balance: input.balance?.toString() || '0',
         institutionId: input.institution || null,
         meta: null,
-      })
+      });
     }),
 
   update: protectedProcedure
@@ -75,23 +76,23 @@ export const accountsRouter = router({
         type: z.enum(['checking', 'savings', 'investment', 'credit']).optional(),
         balance: z.number().optional(),
         institution: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, ...updates } = input
+      const { id, ...updates } = input;
 
       // Ensure exists
-      const existing = await getAccountById(id, ctx.userId)
+      const existing = await getAccountById(id, ctx.userId);
       if (!existing) {
-        throw new Error('Account not found')
+        throw new Error('Account not found');
       }
 
       // If name is being changed, check if new name conflicts with existing account
       if (updates.name && updates.name !== existing.name) {
-        const nameConflict = await findAccountByNameForUser(ctx.userId, updates.name)
+        const nameConflict = await findAccountByNameForUser(ctx.userId, updates.name);
 
         if (nameConflict && nameConflict.id !== id) {
-          throw new Error('Another account with this name already exists')
+          throw new Error('Another account with this name already exists');
         }
       }
 
@@ -99,37 +100,37 @@ export const accountsRouter = router({
         ...updates,
         balance: updates.balance?.toString(),
         institutionId: updates.institution,
-      })
+      });
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ input, ctx }) => {
-    const existing = await getAccountById(input.id, ctx.userId)
+    const existing = await getAccountById(input.id, ctx.userId);
     if (!existing) {
-      throw new Error('Account not found')
+      throw new Error('Account not found');
     }
 
-    await deleteAccount(input.id, ctx.userId)
-    return { success: true, message: 'Account deleted successfully' }
+    await deleteAccount(input.id, ctx.userId);
+    return { success: true, message: 'Account deleted successfully' };
   }),
   all: protectedProcedure.query(async ({ ctx }) => {
-    const allAccounts = await listAccountsWithPlaidInfo(ctx.userId)
+    const allAccounts = await listAccountsWithPlaidInfo(ctx.userId);
 
     // Get recent transactions for each account using the existing service method
-    const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5)
+    const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5);
     const transactionsMap = new Map(
-      accountsWithRecentTransactions.map((acc) => [acc.id, acc.transactions || []])
-    )
+      accountsWithRecentTransactions.map((acc) => [acc.id, acc.transactions || []]),
+    );
 
     const accountsWithTransactions = allAccounts.map((account) => {
       return {
         ...account,
         transactions: transactionsMap.get(account.id) || [],
-      }
-    })
+      };
+    });
 
     // Get Plaid connections separately starting from plaidItems table
     // This ensures we capture all Plaid connections, even those without corresponding finance accounts
-    const plaidConnections = await listPlaidConnectionsForUser(ctx.userId)
+    const plaidConnections = await listPlaidConnectionsForUser(ctx.userId);
 
     const uniqueConnections = plaidConnections.map((connection) => ({
       id: connection.id,
@@ -140,11 +141,11 @@ export const accountsRouter = router({
       lastSyncedAt: connection.lastSyncedAt,
       error: connection.error,
       createdAt: connection.createdAt,
-    }))
+    }));
 
     return {
       accounts: accountsWithTransactions,
       connections: uniqueConnections,
-    }
+    };
   }),
-})
+});

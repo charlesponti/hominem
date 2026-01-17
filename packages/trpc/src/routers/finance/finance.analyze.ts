@@ -5,9 +5,10 @@ import {
   generateTimeSeriesData,
   getMonthlyStats,
   summarizeByCategory,
-} from '@hominem/services/finance'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../../procedures'
+} from '@hominem/finance-services';
+import { z } from 'zod';
+
+import { protectedProcedure, router } from '../../procedures';
 
 // Analytics tRPC router
 export const analyzeRouter = router({
@@ -23,7 +24,7 @@ export const analyzeRouter = router({
         groupBy: z.enum(['month', 'week', 'day']).optional().default('month'),
         includeStats: z.boolean().optional().default(false),
         compareToPrevious: z.boolean().optional().default(false),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const result = await generateTimeSeriesData({
@@ -36,9 +37,9 @@ export const analyzeRouter = router({
         includeStats: input.includeStats,
         compareToPrevious: input.compareToPrevious,
         userId: ctx.userId,
-      })
+      });
 
-      return result
+      return result;
     }),
 
   // Top merchants
@@ -50,7 +51,7 @@ export const analyzeRouter = router({
         account: z.string().optional(),
         category: z.string().optional(),
         limit: z.number().optional().default(5),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       const options = {
@@ -60,9 +61,9 @@ export const analyzeRouter = router({
         account: input.account,
         category: input.category,
         limit: input.limit,
-      }
-      const result = await findTopMerchants(options)
-      return result
+      };
+      const result = await findTopMerchants(options);
+      return result;
     }),
 
   // Category breakdown
@@ -72,8 +73,8 @@ export const analyzeRouter = router({
       const result = await summarizeByCategory({
         ...input,
         userId: ctx.userId,
-      })
-      return result
+      });
+      return result;
     }),
 
   // Calculate transactions
@@ -85,15 +86,15 @@ export const analyzeRouter = router({
         category: z.string().optional(),
         accounts: z.array(z.string()).optional(),
         type: z.enum(['income', 'expense']).optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const result = await calculateTransactions({
         ...input,
         userId: ctx.userId,
-      })
+      });
 
-      return result
+      return result;
     }),
 
   // Monthly stats
@@ -101,9 +102,9 @@ export const analyzeRouter = router({
     .input(
       z.object({
         month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
-      return getMonthlyStats({ month: input.month, userId: ctx.userId })
+      return getMonthlyStats({ month: input.month, userId: ctx.userId });
     }),
-})
+});

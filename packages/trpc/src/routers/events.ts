@@ -7,7 +7,7 @@ import {
   getEvents,
   getSyncStatus,
   updateEvent,
-} from '@hominem/services/events'
+} from '@hominem/events-services'
 import { z } from 'zod'
 import { protectedProcedure, publicProcedure, router } from '../procedures'
 

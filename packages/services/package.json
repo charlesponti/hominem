@@ -10,20 +10,10 @@
       "development": "./src/resend.ts",
       "default": "./build/resend.js"
     },
-    "./events": {
-      "types": "./build/events/index.d.ts",
-      "development": "./src/events/index.ts",
-      "default": "./build/events/index.js"
-    },
     "./files": {
       "types": "./build/files.d.ts",
       "development": "./src/files.ts",
       "default": "./build/files.js"
-    },
-    "./finance": {
-      "types": "./build/finance/index.d.ts",
-      "development": "./src/finance/index.ts",
-      "default": "./build/finance/index.js"
     },
     "./fixtures": {
       "types": "./build/fixtures.d.ts",
@@ -35,21 +25,6 @@
       "development": "./src/google.ts",
       "default": "./build/google.js"
     },
-    "./health": {
-      "types": "./build/health/index.d.ts",
-      "development": "./src/health/index.ts",
-      "default": "./build/health/index.js"
-    },
-    "./jobs": {
-      "types": "./build/jobs/index.d.ts",
-      "development": "./src/jobs/index.ts",
-      "default": "./build/jobs/index.js"
-    },
-    "./lists": {
-      "types": "./build/lists/index.d.ts",
-      "development": "./src/lists/index.ts",
-      "default": "./build/lists/index.js"
-    },
     "./logger": {
       "types": "./build/logger.d.ts",
       "development": "./src/logger.ts",
@@ -59,11 +34,6 @@
       "types": "./build/places.d.ts",
       "development": "./src/places.ts",
       "default": "./build/places.js"
-    },
-    "./notes": {
-      "types": "./build/notes/index.d.ts",
-      "development": "./src/notes/index.ts",
-      "default": "./build/notes/index.js"
     },
     "./services": {
       "types": "./build/services/index.d.ts",
@@ -80,11 +50,6 @@
       "development": "./src/redis.ts",
       "default": "./build/redis.js"
     },
-    "./tools": {
-      "types": "./build/tools/index.d.ts",
-      "development": "./src/tools/index.ts",
-      "default": "./build/tools/index.js"
-    },
     "./travel": {
       "types": "./build/travel/index.d.ts",
       "development": "./src/travel/index.ts",
@@ -99,16 +64,6 @@
       "types": "./build/vector.d.ts",
       "development": "./src/vector.ts",
       "default": "./build/vector.js"
-    },
-    "./chat": {
-      "types": "./build/chat/index.d.ts",
-      "development": "./src/chat/index.ts",
-      "default": "./build/chat/index.js"
-    },
-    "./user": {
-      "types": "./build/users/index.d.ts",
-      "development": "./src/users/index.ts",
-      "default": "./build/users/index.js"
     },
     "./package.json": "./package.json"
   },

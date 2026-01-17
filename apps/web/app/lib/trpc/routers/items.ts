@@ -1,5 +1,6 @@
-import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/services/lists';
+import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/lists-services';
 import { z } from 'zod';
+
 import { protectedProcedure, publicProcedure, router } from '../context';
 
 export const itemsRouter = router({

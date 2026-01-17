@@ -1,4 +1,4 @@
-import { getInviteByToken, getPlaceListPreview } from '@hominem/services/lists';
+import { getInviteByToken, getPlaceListPreview } from '@hominem/lists-services';
 import { getPlacePhotoById } from '@hominem/services/places';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 

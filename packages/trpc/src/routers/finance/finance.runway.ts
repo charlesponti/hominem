@@ -1,6 +1,7 @@
-import { calculateRunway, calculateRunwayProjection } from '@hominem/services/finance'
-import { z } from 'zod'
-import { publicProcedure } from '../../procedures'
+import { calculateRunway, calculateRunwayProjection } from '@hominem/finance-services';
+import { z } from 'zod';
+
+import { publicProcedure } from '../../procedures';
 
 export const runwayRouter = publicProcedure
   .input(
@@ -15,15 +16,15 @@ export const runwayRouter = publicProcedure
             date: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
               message: 'Invalid date format',
             }),
-          })
+          }),
         )
         .optional(),
-    })
+    }),
   )
   .mutation(async ({ input }) => {
     try {
-      const runwayResult = calculateRunway(input)
-      const projectionData = calculateRunwayProjection(input)
+      const runwayResult = calculateRunway(input);
+      const projectionData = calculateRunwayProjection(input);
 
       return {
         success: true,
@@ -31,12 +32,12 @@ export const runwayRouter = publicProcedure
           ...runwayResult,
           projectionData,
         },
-      }
+      };
     } catch (error) {
-      console.error('Runway calculation error:', error)
+      console.error('Runway calculation error:', error);
       return {
         success: false,
         error: 'Failed to calculate runway',
-      }
+      };
     }
-  })
+  });

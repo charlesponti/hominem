@@ -1,4 +1,4 @@
-import { LLMProvider, type LLMProviderConfig } from '@hominem/ai'
+import { LLMProvider, type LLMProviderConfig } from '../llm.provider'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import {
@@ -12,7 +12,7 @@ import {
   type TextAnalysisEmotion,
   TextAnalysisEmotionSchema,
   TextAnalysisSchema,
-} from '../schemas'
+} from '@hominem/utils/schemas'
 
 export class NLPProcessor {
   private config: LLMProviderConfig

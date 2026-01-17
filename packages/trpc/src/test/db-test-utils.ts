@@ -1,5 +1,5 @@
 import { createTestUser as createTestUserShared } from '@hominem/services/fixtures'
-import { UserAuthService } from '@hominem/services/user'
+import { UserAuthService } from '@hominem/auth'
 import { vi } from 'vitest'
 
 // Track created test users for cleanup

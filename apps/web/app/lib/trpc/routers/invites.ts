@@ -10,10 +10,11 @@ import {
   getOutboundInvites,
   isUserMemberOfList,
   sendListInvite,
-} from '@hominem/services/lists';
-import { UserAuthService } from '@hominem/services/user';
+} from '@hominem/lists-services';
+import { UserAuthService } from '@hominem/auth';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+
 import { protectedProcedure, router } from '../context';
 
 export const invitesRouter = router({

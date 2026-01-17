@@ -1,13 +1,14 @@
-import { insertTransactionSchema, updateTransactionSchema } from '@hominem/db/schema'
+import { insertTransactionSchema, updateTransactionSchema } from '@hominem/db/schema';
 import {
   createTransaction,
   deleteTransaction,
   getAccountById,
   queryTransactions,
   updateTransaction,
-} from '@hominem/services/finance'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../../procedures'
+} from '@hominem/finance-services';
+import { z } from 'zod';
+
+import { protectedProcedure, router } from '../../procedures';
 
 // Transactions tRPC router
 export const transactionsRouter = router({
@@ -45,24 +46,24 @@ export const transactionsRouter = router({
           .union([z.enum(['asc', 'desc']), z.array(z.enum(['asc', 'desc']))])
           .optional()
           .describe('Sort direction(s)'),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
-      const result = await queryTransactions({ ...input, userId: ctx.userId })
-      return result
+      const result = await queryTransactions({ ...input, userId: ctx.userId });
+      return result;
     }),
 
   create: protectedProcedure
     .input(insertTransactionSchema.omit({ userId: true }))
     .mutation(async ({ input, ctx }) => {
       if (input.accountId) {
-        const account = await getAccountById(input.accountId, ctx.userId)
+        const account = await getAccountById(input.accountId, ctx.userId);
         if (!account) {
-          throw new Error('Account not found')
+          throw new Error('Account not found');
         }
       }
 
-      return await createTransaction({ ...input, userId: ctx.userId } as any)
+      return await createTransaction({ ...input, userId: ctx.userId } as any);
     }),
 
   update: protectedProcedure
@@ -70,24 +71,24 @@ export const transactionsRouter = router({
       z.object({
         id: z.uuid(),
         data: updateTransactionSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, data } = input
+      const { id, data } = input;
 
       // Optional: Validate accountId if provided
       if (data.accountId) {
-        const account = await getAccountById(data.accountId, ctx.userId)
+        const account = await getAccountById(data.accountId, ctx.userId);
         if (!account) {
-          throw new Error('Account not found')
+          throw new Error('Account not found');
         }
       }
 
-      return await updateTransaction(id, ctx.userId, data as any)
+      return await updateTransaction(id, ctx.userId, data as any);
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ input, ctx }) => {
-    await deleteTransaction(input.id, ctx.userId)
-    return { success: true, message: 'Transaction deleted successfully' }
+    await deleteTransaction(input.id, ctx.userId);
+    return { success: true, message: 'Transaction deleted successfully' };
   }),
-})
+});

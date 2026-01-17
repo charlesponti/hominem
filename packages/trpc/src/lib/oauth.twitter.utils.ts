@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { type AccountRecord, updateAccount } from '@hominem/services/user'
+import { type AccountRecord, updateAccount } from '@hominem/auth'
 import { logger } from '@hominem/utils/logger'
 import { z } from 'zod'
 import { env } from './env.js'

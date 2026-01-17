@@ -1,6 +1,6 @@
 import type { HominemUser, SupabaseAuthUser } from '@hominem/auth/server'
 import { toHominemUser } from '@hominem/auth/server'
-import { UserAuthService } from '@hominem/services/user'
+import { UserAuthService } from '@hominem/auth'
 import { type CookieMethodsServer, createServerClient, parseCookieHeader } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'

@@ -1,31 +1,32 @@
-import './env.ts'
-
-import { processTransactionsFromCSVBuffer } from '@hominem/services/finance'
-import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts'
-import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/services/redis'
-import { csvStorageService } from '@hominem/utils/supabase'
+import './env.ts';
 import type {
   ImportTransactionsJob,
   ImportTransactionsQueuePayload,
   JobStats,
-} from '@hominem/services/jobs'
-import { type Job, Worker } from 'bullmq'
-import { Effect } from 'effect'
-import { HealthService } from './health.service'
+} from '@hominem/jobs-services';
+
+import { processTransactionsFromCSVBuffer } from '@hominem/finance';
+import { redis } from '@hominem/services/redis';
+import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
+import { csvStorageService } from '@hominem/utils/supabase';
+import { type Job, Worker } from 'bullmq';
+import { Effect } from 'effect';
+
+import { HealthService } from './health.service';
 
 const CONCURRENCY = process.env.WORKER_CONCURRENCY
   ? Number.parseInt(process.env.WORKER_CONCURRENCY, 10)
-  : 3
+  : 3;
 
 const processImportTransactionsJob = async (
-  job: Job<ImportTransactionsQueuePayload>
+  job: Job<ImportTransactionsQueuePayload>,
 ): Promise<{ success: boolean; stats: JobStats }> => {
   if (!job.id) {
-    throw new Error('Job ID is undefined, cannot process BullMQ job.')
+    throw new Error('Job ID is undefined, cannot process BullMQ job.');
   }
 
-  logger.info(`Processing job ${job.id} (${job.data.fileName}) for user ${job.data.userId}`)
+  logger.info(`Processing job ${job.id} (${job.data.fileName}) for user ${job.data.userId}`);
 
   const stats: JobStats = {
     created: 0,
@@ -37,25 +38,27 @@ const processImportTransactionsJob = async (
     errors: [],
     progress: 0,
     processingTime: 0,
-  }
-  const startTime = Date.now()
+  };
+  const startTime = Date.now();
 
-  await job.updateProgress(0)
+  await job.updateProgress(0);
 
   if (!job.data.csvFilePath) {
-    throw new Error(`CSV file path not found in job ${job.id}`)
+    throw new Error(`CSV file path not found in job ${job.id}`);
   }
 
-  const fileBuffer = await csvStorageService.downloadCsvFileAsBuffer(job.data.csvFilePath as string)
+  const fileBuffer = await csvStorageService.downloadCsvFileAsBuffer(
+    job.data.csvFilePath as string,
+  );
   if (!fileBuffer || fileBuffer.length === 0) {
-    throw new Error('Downloaded CSV file is empty')
+    throw new Error('Downloaded CSV file is empty');
   }
 
-  const csvContent = fileBuffer.toString('utf-8')
+  const csvContent = fileBuffer.toString('utf-8');
   const totalLinesToProcess = Math.max(
     1,
-    csvContent.split('\n').length - (csvContent.includes('\n') ? 1 : 0)
-  )
+    csvContent.split('\n').length - (csvContent.includes('\n') ? 1 : 0),
+  );
 
   const jobData: ImportTransactionsJob = {
     jobId: job.id as string,
@@ -71,71 +74,74 @@ const processImportTransactionsJob = async (
     },
     stats: { progress: 0 },
     startTime: job.timestamp,
-  }
+  };
 
-  let processedCount = 0
-  let lastReportedProgress = -1
-  const progressUpdateInterval = 1000 // 1 second
-  let lastProgressUpdateTime = Date.now()
+  let processedCount = 0;
+  let lastReportedProgress = -1;
+  const progressUpdateInterval = 1000; // 1 second
+  let lastProgressUpdateTime = Date.now();
 
   const countableActionKeys: ReadonlyArray<
     keyof Pick<JobStats, 'created' | 'updated' | 'skipped' | 'merged' | 'invalid'>
-  > = ['created', 'updated', 'skipped', 'merged', 'invalid']
+  > = ['created', 'updated', 'skipped', 'merged', 'invalid'];
 
   const isCountableActionKey = (key: string): key is (typeof countableActionKeys)[number] =>
-    countableActionKeys.includes(key as (typeof countableActionKeys)[number])
+    countableActionKeys.includes(key as (typeof countableActionKeys)[number]);
 
-  jobData.stats.total = 0
+  jobData.stats.total = 0;
 
   try {
     const results = await Effect.runPromise(
       processTransactionsFromCSVBuffer({
         csvBuffer: fileBuffer,
         userId: job.data.userId,
-      })
-    )
+      }),
+    );
 
     for (const result of results) {
-      processedCount++
-      jobData.stats.total = (jobData.stats.total || 0) + 1
+      processedCount++;
+      jobData.stats.total = (jobData.stats.total || 0) + 1;
 
       if (result.action) {
         if (isCountableActionKey(result.action)) {
-          jobData.stats[result.action] = (jobData.stats[result.action] ?? 0) + 1
+          jobData.stats[result.action] = (jobData.stats[result.action] ?? 0) + 1;
         } else {
           logger.warn(
-            `Job ${job.id}: Received unexpected action key '${result.action}' from processor`
-          )
+            `Job ${job.id}: Received unexpected action key '${result.action}' from processor`,
+          );
         }
       }
 
-      const currentProgress = Math.min(99, Math.round((processedCount / totalLinesToProcess) * 100))
+      const currentProgress = Math.min(
+        99,
+        Math.round((processedCount / totalLinesToProcess) * 100),
+      );
 
-      jobData.stats.progress = currentProgress
+      jobData.stats.progress = currentProgress;
 
-      const now = Date.now()
+      const now = Date.now();
       if (now - lastProgressUpdateTime > progressUpdateInterval) {
         if (currentProgress !== lastReportedProgress) {
-          await job.updateProgress(currentProgress)
-          lastReportedProgress = currentProgress
+          await job.updateProgress(currentProgress);
+          lastReportedProgress = currentProgress;
         }
-        lastProgressUpdateTime = now
+        lastProgressUpdateTime = now;
       }
     }
 
-    stats.progress = 100
-    stats.processingTime = Date.now() - startTime
+    stats.progress = 100;
+    stats.processingTime = Date.now() - startTime;
 
-    await job.updateProgress(100)
+    await job.updateProgress(100);
 
-    logger.info(`[transaction-import] Job ${job.id} completed`)
+    logger.info(`[transaction-import] Job ${job.id} completed`);
 
     return {
       success: true,
       stats,
-    }
+    };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Error processing job ${job.id}`, {
       error: {
         name: error instanceof Error ? error.name : 'Unknown',
@@ -149,25 +155,25 @@ const processImportTransactionsJob = async (
         userId: job.data.userId,
         csvFilePath: job.data.csvFilePath,
       },
-    })
-    throw error
+    });
+    throw error;
   }
-}
+};
 
 const worker = new Worker(QUEUE_NAMES.IMPORT_TRANSACTIONS, processImportTransactionsJob, {
   connection: redis,
   concurrency: CONCURRENCY,
-})
+});
 
-const healthService = new HealthService(worker, 'Transaction Import Worker')
+const healthService = new HealthService(worker, 'Transaction Import Worker');
 
 worker.on('active', (job: Job<ImportTransactionsQueuePayload>) => {
-  logger.info(`Job ${job.id} (${job.data.fileName}) started processing`)
-})
+  logger.info(`Job ${job.id} (${job.data.fileName}) started processing`);
+});
 
 worker.on('completed', async (job, result) => {
-  logger.info(`Job ${job.id} completed successfully`)
-  const finalStats = result?.stats || {}
+  logger.info(`Job ${job.id} completed successfully`);
+  const finalStats = result?.stats || {};
   await redis.publish(
     REDIS_CHANNELS.IMPORT_PROGRESS,
     JSON.stringify([
@@ -184,14 +190,14 @@ worker.on('completed', async (job, result) => {
         fileName: job.data.fileName,
         userId: job.data.userId,
       },
-    ])
-  )
-})
+    ]),
+  );
+});
 
 worker.on('failed', (job, error) => {
   logger.error(
-    `[transaction-import] Job ${job?.id} failed: ${error instanceof Error ? error.message : String(error)}`
-  )
+    `[transaction-import] Job ${job?.id} failed: ${error instanceof Error ? error.message : String(error)}`,
+  );
   if (job) {
     void redis.publish(
       REDIS_CHANNELS.IMPORT_PROGRESS,
@@ -203,22 +209,22 @@ worker.on('failed', (job, error) => {
           fileName: job.data.fileName,
           userId: job.data.userId,
         },
-      ])
-    )
+      ]),
+    );
   }
-})
+});
 
 worker.on('error', (error: Error) => {
-  logger.error('Worker error', { error })
-})
+  logger.error('Worker error', { error });
+});
 
 worker.on('progress', (job, progress) => {
   logger.debug(
     `Job ${job.id} progress: ${
       typeof progress === 'number' ? `${progress}%` : JSON.stringify(progress)
-    }`
-  )
-  const progressPercentage = typeof progress === 'number' ? progress : job.progress
+    }`,
+  );
+  const progressPercentage = typeof progress === 'number' ? progress : job.progress;
   void redis.publish(
     REDIS_CHANNELS.IMPORT_PROGRESS,
     JSON.stringify([
@@ -232,27 +238,27 @@ worker.on('progress', (job, progress) => {
         fileName: job.data.fileName,
         userId: job.data.userId,
       },
-    ])
-  )
-})
+    ]),
+  );
+});
 
-let isShuttingDown = false
+let isShuttingDown = false;
 const shutdown = async (signal: string) => {
-  if (isShuttingDown) return
-  isShuttingDown = true
-  logger.info(`Received ${signal}, shutting down gracefully...`)
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  logger.info(`Received ${signal}, shutting down gracefully...`);
   try {
-    await worker.close()
-    logger.info('Worker closed successfully')
-    logger.info(healthService.getHealthSummary())
+    await worker.close();
+    logger.info('Worker closed successfully');
+    logger.info(healthService.getHealthSummary());
   } catch (error) {
-    logger.error('Error during worker shutdown', { error })
+    logger.error('Error during worker shutdown', { error });
   }
-}
+};
 
 process.on('SIGTERM', () => {
-  void shutdown('SIGTERM')
-})
+  void shutdown('SIGTERM');
+});
 process.on('SIGINT', () => {
-  void shutdown('SIGINT')
-})
+  void shutdown('SIGINT');
+});

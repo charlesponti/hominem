@@ -1,7 +1,7 @@
 import { getOrCreateQueues } from '@hominem/services/queues';
 import type { UserSelect } from '@hominem/db/schema';
 import type { Queues } from '@hominem/services/types';
-import { UserAuthService } from '@hominem/services/user';
+import { UserAuthService } from '@hominem/auth';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { getServerAuth } from '../auth.server';
 import { logger } from '../logger';

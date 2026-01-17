@@ -1,4 +1,4 @@
-import { ChatService, MessageService } from '@hominem/services/chat'
+import { ChatService, MessageService } from '@hominem/chat-services'
 import { chat } from '@tanstack/ai'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'

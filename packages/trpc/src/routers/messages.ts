@@ -1,4 +1,4 @@
-import { MessageService } from '@hominem/services/chat'
+import { MessageService } from '@hominem/chat-services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

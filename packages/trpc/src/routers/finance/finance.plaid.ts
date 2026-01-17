@@ -1,17 +1,19 @@
+import { db } from '@hominem/db';
+import { plaidItems } from '@hominem/db/schema';
 import {
   ensureInstitutionExists,
   getPlaidItemById,
   upsertPlaidItem,
   deletePlaidItem,
-} from '@hominem/services/finance'
-import { db } from '@hominem/db'
-import { plaidItems } from '@hominem/db/schema'
-import { and, eq } from 'drizzle-orm'
-import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { z } from 'zod'
-import { env } from '@/lib/env.js'
-import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '@/lib/plaid.js'
-import { protectedProcedure, router } from '../../procedures'
+} from '@hominem/finance-services';
+import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { and, eq } from 'drizzle-orm';
+import { z } from 'zod';
+
+import { env } from '@/lib/env.js';
+import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '@/lib/plaid.js';
+
+import { protectedProcedure, router } from '../../procedures';
 
 export const plaidRouter = router({
   // Create a new Plaid link token
@@ -24,16 +26,16 @@ export const plaidRouter = router({
         country_codes: PLAID_COUNTRY_CODES,
         language: 'en',
         webhook: `${env.API_URL}/api/finance/plaid/webhook`,
-      })
+      });
 
       return {
         success: true,
         linkToken: createTokenResponse.data.link_token,
         expiration: createTokenResponse.data.expiration,
-      }
+      };
     } catch (error) {
-      console.error(`Failed to create Plaid link token: ${error}`)
-      throw new Error('Failed to create link token')
+      console.error(`Failed to create Plaid link token: ${error}`);
+      throw new Error('Failed to create link token');
     }
   }),
 
@@ -44,22 +46,22 @@ export const plaidRouter = router({
         publicToken: z.string().min(1, 'Public token is required'),
         institutionId: z.string().min(1, 'Institution ID is required'),
         institutionName: z.string().min(1, 'Institution name is required'),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { publicToken, institutionId, institutionName } = input
+      const { publicToken, institutionId, institutionName } = input;
 
       try {
         // Exchange public token for access token
         const exchangeResponse = await plaidClient.itemPublicTokenExchange({
           public_token: publicToken,
-        })
+        });
 
-        const accessToken = exchangeResponse.data.access_token
-        const itemId = exchangeResponse.data.item_id
+        const accessToken = exchangeResponse.data.access_token;
+        const itemId = exchangeResponse.data.item_id;
 
         // Check if institution exists, create if not
-        await ensureInstitutionExists(institutionId, institutionName)
+        await ensureInstitutionExists(institutionId, institutionName);
 
         await upsertPlaidItem({
           userId: ctx.userId,
@@ -68,10 +70,10 @@ export const plaidRouter = router({
           institutionId,
           status: 'active',
           lastSyncedAt: null,
-        })
+        });
 
         // Queue sync job
-        const queues = ctx.queues
+        const queues = ctx.queues;
         await queues.plaidSync.add(
           QUEUE_NAMES.PLAID_SYNC,
           {
@@ -88,17 +90,17 @@ export const plaidRouter = router({
             },
             removeOnComplete: true,
             removeOnFail: 1000, // Keep the last 1000 failed jobs
-          }
-        )
+          },
+        );
 
         return {
           success: true,
           message: 'Successfully linked account. Your transactions will begin importing shortly.',
           institutionName,
-        }
+        };
       } catch (error) {
-        console.error(`Token exchange error: ${error}`)
-        throw new Error('Failed to exchange token')
+        console.error(`Token exchange error: ${error}`);
+        throw new Error('Failed to exchange token');
       }
     }),
 
@@ -106,18 +108,18 @@ export const plaidRouter = router({
   syncItem: protectedProcedure
     .input(z.object({ itemId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const { itemId } = input
+      const { itemId } = input;
 
       try {
         // Get the plaid item
-        const plaidItem = await getPlaidItemById(itemId, ctx.userId)
+        const plaidItem = await getPlaidItemById(itemId, ctx.userId);
 
         if (!plaidItem) {
-          throw new Error('Plaid item not found')
+          throw new Error('Plaid item not found');
         }
 
         // Queue sync job
-        const queues = ctx.queues
+        const queues = ctx.queues;
         await queues.plaidSync.add(
           QUEUE_NAMES.PLAID_SYNC,
           {
@@ -134,16 +136,16 @@ export const plaidRouter = router({
             },
             removeOnComplete: true,
             removeOnFail: 1000,
-          }
-        )
+          },
+        );
 
         return {
           success: true,
           message: 'Sync job queued successfully',
-        }
+        };
       } catch (error) {
-        console.error(`Sync error: ${error}`)
-        throw new Error('Failed to sync item')
+        console.error(`Sync error: ${error}`);
+        throw new Error('Failed to sync item');
       }
     }),
 
@@ -151,38 +153,41 @@ export const plaidRouter = router({
   removeConnection: protectedProcedure
     .input(z.object({ itemId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const { itemId } = input
+      const { itemId } = input;
 
       try {
         // Get the plaid item
         const plaidItem = await db.query.plaidItems.findFirst({
-          where: and(eq(plaidItems.id as any, itemId), eq(plaidItems.userId as any, ctx.userId)) as any,
-        })
+          where: and(
+            eq(plaidItems.id as any, itemId),
+            eq(plaidItems.userId as any, ctx.userId),
+          ) as any,
+        });
 
         if (!plaidItem) {
-          throw new Error('Plaid item not found')
+          throw new Error('Plaid item not found');
         }
 
         // Revoke access token with Plaid
         try {
           await plaidClient.itemAccessTokenInvalidate({
             access_token: plaidItem.accessToken,
-          })
+          });
         } catch (error) {
-          console.warn('Failed to revoke Plaid access token:', error)
+          console.warn('Failed to revoke Plaid access token:', error);
           // Continue with removal even if Plaid revocation fails
         }
 
         // Delete the plaid item
-        await deletePlaidItem(itemId, ctx.userId)
+        await deletePlaidItem(itemId, ctx.userId);
 
         return {
           success: true,
           message: 'Successfully removed Plaid connection',
-        }
+        };
       } catch (error) {
-        console.error(`Remove connection error: ${error}`)
-        throw new Error('Failed to remove connection')
+        console.error(`Remove connection error: ${error}`);
+        throw new Error('Failed to remove connection');
       }
     }),
-})
+});

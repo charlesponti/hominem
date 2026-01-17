@@ -1,35 +1,36 @@
-import { getSpendingCategories } from '@hominem/services/finance'
-import { Hono } from 'hono'
-import { protectedProcedure, router } from '../../procedures'
+import { getSpendingCategories } from '@hominem/finance-services';
+import { Hono } from 'hono';
+
+import { protectedProcedure, router } from '../../procedures';
 
 // Keep existing Hono route for backward compatibility
-export const financeCategoriesRoutes = new Hono()
+export const financeCategoriesRoutes = new Hono();
 
 // Get spending categories
 financeCategoriesRoutes.get('/', async (c) => {
-  const userId = c.get('userId')
+  const userId = c.get('userId');
   if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+    return c.json({ error: 'Not authorized' }, 401);
   }
 
   try {
-    const categories = await getSpendingCategories(userId)
-    return c.json(categories)
+    const categories = await getSpendingCategories(userId);
+    return c.json(categories);
   } catch (error) {
-    console.error('Error fetching spending categories:', error)
+    console.error('Error fetching spending categories:', error);
     return c.json(
       {
         error: 'Failed to fetch spending categories',
         details: error instanceof Error ? error.message : String(error),
       },
-      500
-    )
+      500,
+    );
   }
-})
+});
 
 // Export tRPC router
 export const categoriesRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
-    return await getSpendingCategories(ctx.userId)
+    return await getSpendingCategories(ctx.userId);
   }),
-})
+});

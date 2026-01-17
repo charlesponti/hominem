@@ -1,4 +1,4 @@
-import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/services/finance';
+import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/finance-services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
 import { z } from 'zod';

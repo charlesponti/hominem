@@ -1,7 +1,7 @@
 import {
   assessMentalWellnessInputSchema,
   assessMentalWellnessOutputSchema,
-} from '@hominem/services/health'
+} from '@hominem/health-services'
 import { toolDefinition } from '@tanstack/ai'
 
 export const assessMentalWellnessDef = toolDefinition({

@@ -7,9 +7,10 @@ import {
   getPlaceLists,
   removeUserFromList,
   updateList,
-} from '@hominem/services/lists';
+} from '@hominem/lists-services';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+
 import { safeAsync } from '../../errors';
 import { logger } from '../../logger';
 import { protectedProcedure, publicProcedure, router } from '../context';

@@ -1,36 +1,37 @@
-import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/services/finance'
-import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { zValidator } from '@hono/zod-validator'
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { plaidClient } from '@/lib/plaid.js'
+import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/finance-services';
+import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { z } from 'zod';
 
-export const financePlaidExchangeTokenRoutes = new Hono()
+import { plaidClient } from '@/lib/plaid.js';
+
+export const financePlaidExchangeTokenRoutes = new Hono();
 
 const exchangeTokenSchema = z.object({
   publicToken: z.string().min(1, 'Public token is required'),
   institutionId: z.string().min(1, 'Institution ID is required'),
   institutionName: z.string().min(1, 'Institution name is required'),
-})
+});
 // Exchange public token for access token and initiate account/transaction import
 financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema), async (c) => {
-  const userId = c.get('userId')
+  const userId = c.get('userId');
   if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+    return c.json({ error: 'Not authorized' }, 401);
   }
 
-  const { publicToken, institutionId, institutionName } = c.req.valid('json')
+  const { publicToken, institutionId, institutionName } = c.req.valid('json');
 
   try {
     // Exchange public token for access token
     const exchangeResponse = await plaidClient.itemPublicTokenExchange({
       public_token: publicToken,
-    })
+    });
 
-    const accessToken = exchangeResponse.data.access_token
-    const itemId = exchangeResponse.data.item_id
+    const accessToken = exchangeResponse.data.access_token;
+    const itemId = exchangeResponse.data.item_id;
 
-    await ensureInstitutionExists(institutionId, institutionName)
+    await ensureInstitutionExists(institutionId, institutionName);
 
     await upsertPlaidItem({
       userId,
@@ -39,10 +40,10 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
       institutionId,
       status: 'active',
       lastSyncedAt: null,
-    })
+    });
 
     // Queue sync job
-    const queues = c.get('queues')
+    const queues = c.get('queues');
     await queues.plaidSync.add(
       QUEUE_NAMES.PLAID_SYNC,
       {
@@ -59,16 +60,16 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
         },
         removeOnComplete: true,
         removeOnFail: 1000, // Keep the last 1000 failed jobs
-      }
-    )
+      },
+    );
 
     return c.json({
       success: true,
       message: 'Successfully linked account. Your transactions will begin importing shortly.',
       institutionName,
-    })
+    });
   } catch (error) {
-    console.error(`Token exchange error: ${error}`)
-    return c.json({ error: 'Failed to exchange token' }, 500)
+    console.error(`Token exchange error: ${error}`);
+    return c.json({ error: 'Failed to exchange token' }, 500);
   }
-})
+});

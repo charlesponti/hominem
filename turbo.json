@@ -20,13 +20,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        ".react-router/**",
-        "build/**",
-        "dist/**"
-      ]
+      "outputs": [".next/**", "!.next/cache/**", ".react-router/**", "build/**", "dist/**"]
     },
     "check": {
       "dependsOn": ["lint", "typecheck", "test"]

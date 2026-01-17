@@ -1,6 +1,6 @@
-export * from './company.service'
-export * from './job.service'
-export * from './job-application.service'
+export * from './company.service';
+export * from './job.service';
+export * from './job-application.service';
 
 export enum JobApplicationStatus {
   APPLIED = 'Applied',
