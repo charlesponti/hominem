@@ -4,8 +4,8 @@
   "private": true,
   "exports": {
     ".": {
-      "development": "./src/index.ts",
       "types": "./build/index.d.ts",
+      "development": "./src/index.ts",
       "default": "./build/index.js"
     },
     "./button": "./src/components/ui/button.tsx",

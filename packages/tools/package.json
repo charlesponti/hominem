@@ -7,38 +7,38 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "development": "./src/index.ts",
       "types": "./build/index.d.ts",
+      "development": "./src/index.ts",
       "default": "./build/index.js"
     },
     "./notes": {
-      "development": "./src/notes.ts",
       "types": "./build/notes.d.ts",
+      "development": "./src/notes.ts",
       "default": "./build/notes.js"
     },
     "./finance": {
-      "development": "./src/finance.ts",
       "types": "./build/finance.d.ts",
+      "development": "./src/finance.ts",
       "default": "./build/finance.js"
     },
     "./workout": {
-      "development": "./src/workout.ts",
       "types": "./build/workout.d.ts",
+      "development": "./src/workout.ts",
       "default": "./build/workout.js"
     },
     "./flights": {
-      "development": "./src/flights.ts",
       "types": "./build/flights.d.ts",
+      "development": "./src/flights.ts",
       "default": "./build/flights.js"
     },
     "./mental-health": {
-      "development": "./src/mental-health.ts",
       "types": "./build/mental-health.d.ts",
+      "development": "./src/mental-health.ts",
       "default": "./build/mental-health.js"
     },
     "./taxes": {
-      "development": "./src/taxes.ts",
       "types": "./build/taxes.d.ts",
+      "development": "./src/taxes.ts",
       "default": "./build/taxes.js"
     }
   },
