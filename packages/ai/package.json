@@ -5,9 +5,14 @@
   "sideEffects": false,
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    }
   },
   "scripts": {
+    "build": "tsc -b",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src"
   },

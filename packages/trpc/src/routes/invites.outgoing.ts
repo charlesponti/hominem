@@ -1,4 +1,4 @@
-import { getOutboundInvites } from '@hominem/data/lists'
+import { getOutboundInvites } from '@hominem/services/lists'
 import { Hono } from 'hono'
 export const invitesOutgoingRoutes = new Hono()
 

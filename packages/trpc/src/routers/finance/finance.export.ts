@@ -1,4 +1,4 @@
-import type { FinanceTransaction } from '@hominem/data/schema'
+import type { FinanceTransaction } from '@hominem/db/schema'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures'
 

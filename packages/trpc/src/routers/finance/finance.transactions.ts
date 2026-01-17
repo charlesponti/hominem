@@ -1,11 +1,11 @@
-import { insertTransactionSchema, updateTransactionSchema } from '@hominem/data/schema'
+import { insertTransactionSchema, updateTransactionSchema } from '@hominem/db/schema'
 import {
   createTransaction,
   deleteTransaction,
   getAccountById,
   queryTransactions,
   updateTransaction,
-} from '@hominem/data/finance'
+} from '@hominem/services/finance'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures'
 

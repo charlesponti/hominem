@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/data/user'
+import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/services/user'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import z from 'zod'

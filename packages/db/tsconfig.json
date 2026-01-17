@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "./build",
+    "composite": true,
+    "paths": {
+      "@hominem/db": ["./src/index.ts"],
+      "@hominem/db/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "drizzle.config.ts"],
+  "exclude": ["node_modules", "build", "dist"]
+}

@@ -5,7 +5,7 @@ import {
   getGoal,
   listGoals,
   updateGoal,
-} from '@hominem/data/services'
+} from '@hominem/services/services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

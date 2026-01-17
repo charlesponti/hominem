@@ -1,5 +1,5 @@
 import type { HominemUser } from '@hominem/auth/server'
-import type { Queues } from '@hominem/data/types'
+import type { Queues } from '@hominem/services/types'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { HonoRequest } from 'hono'

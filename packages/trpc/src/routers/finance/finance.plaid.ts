@@ -3,14 +3,14 @@ import {
   getPlaidItemById,
   upsertPlaidItem,
   deletePlaidItem,
-} from '@hominem/data/finance'
-import { db } from '@hominem/data/db'
-import { plaidItems } from '@hominem/data/schema'
+} from '@hominem/services/finance'
+import { db } from '@hominem/db'
+import { plaidItems } from '@hominem/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { z } from 'zod'
-import { env } from '../../../lib/env.js'
-import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid.js'
+import { env } from '@/lib/env.js'
+import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '@/lib/plaid.js'
 import { protectedProcedure, router } from '../../procedures'
 
 export const plaidRouter = router({

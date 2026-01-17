@@ -1,9 +1,9 @@
 import type { IncomingMessage } from 'node:http'
 import type { Duplex } from 'node:stream'
-import { getOrCreateQueues } from '@hominem/data/queues'
+import { getOrCreateQueues } from '@hominem/services/queues'
 import { REDIS_CHANNELS } from '@hominem/utils/consts'
 import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/data/redis'
+import { redis } from '@hominem/services/redis'
 import type Redis from 'ioredis'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
@@ -45,7 +45,7 @@ export function createWebSocketManager(): WebSocketManager {
     logger.info('WebSocket client connected')
 
     // Attach shared queues to the connection (singleton per process) so handlers can access them
-    ;(ws as unknown as { queues?: import('@hominem/data/types').Queues }).queues =
+    ;(ws as unknown as { queues?: import('@hominem/services/types').Queues }).queues =
       getOrCreateQueues()
 
     // Send welcome message

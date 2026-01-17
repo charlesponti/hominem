@@ -1,9 +1,9 @@
-import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/data/finance'
+import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/services/finance'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { plaidClient } from '../../../../lib/plaid.js'
+import { plaidClient } from '@/lib/plaid.js'
 
 export const financePlaidExchangeTokenRoutes = new Hono()
 

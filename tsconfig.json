@@ -3,8 +3,9 @@
   "references": [
     { "path": "packages/ai" },
     { "path": "packages/auth" },
-    { "path": "packages/data" },
-    { "path": "packages/trpc-types" },
+    { "path": "packages/services" },
+    { "path": "packages/db" },
+    { "path": "packages/trpc" },
     { "path": "packages/tools" },
     { "path": "packages/ui" },
     { "path": "packages/utils" },

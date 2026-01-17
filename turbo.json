@@ -23,7 +23,9 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
-        ".react-router/**"
+        ".react-router/**",
+        "build/**",
+        "dist/**"
       ]
     },
     "check": {
@@ -38,7 +40,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["types:watch"]
+      "dependsOn": ["^dev"]
     },
     "format": {
       "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
@@ -64,18 +66,9 @@
       "outputs": [".react-router/**", "app/routes/+types/**/*"]
     },
     "typecheck": {
-      "dependsOn": ["types:build", "^build", "typegen"],
+      "dependsOn": ["^build", "typegen"],
       "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"],
       "outputs": ["*.tsbuildinfo"]
-    },
-    "types:build": {
-      "dependsOn": ["^types:build"],
-      "outputs": ["build-types/**", "build/**", "*.tsbuildinfo"]
-    },
-    "types:watch": {
-      "cache": false,
-      "persistent": true,
-      "dependsOn": ["^types:watch"]
     }
   }
 }

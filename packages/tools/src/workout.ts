@@ -1,4 +1,4 @@
-import { recommendWorkoutInputSchema, recommendWorkoutOutputSchema } from '@hominem/data/health'
+import { recommendWorkoutInputSchema, recommendWorkoutOutputSchema } from '@hominem/services/health'
 import { toolDefinition } from '@tanstack/ai'
 
 export const recommendWorkoutDef = toolDefinition({

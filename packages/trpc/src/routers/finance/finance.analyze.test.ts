@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
-import { financeTestSeed } from '@hominem/data/finance'
+import { financeTestSeed } from '@hominem/services/finance'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { useApiTestLifecycle } from '../../../../test/api-test-utils.js'
-import { createTRPCTestClient } from '../../../../test/trpc-test-utils.js'
+import { useApiTestLifecycle } from '@/test/api-test-utils.js'
+import { createTRPCTestClient } from '@/test/trpc-test-utils.js'
 
 describe('Finance Analyze tRPC Router', () => {
   const { getServer } = useApiTestLifecycle()
@@ -109,7 +109,7 @@ describe('Finance Analyze tRPC Router', () => {
       expect(result.data[1].date).toBe('2023-03')
 
       // Should not include January data
-      expect(result.data.find((d) => d.date === '2023-01')).toBeUndefined()
+      expect(result.data.find((d: any) => d.date === '2023-01')).toBeUndefined()
     })
 
     test('should handle empty results for period with no data', async () => {

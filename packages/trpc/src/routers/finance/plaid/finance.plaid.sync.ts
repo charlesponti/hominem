@@ -1,4 +1,4 @@
-import { getPlaidItemByUserAndItemId } from '@hominem/data/finance'
+import { getPlaidItemByUserAndItemId } from '@hominem/services/finance'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
 import { Hono } from 'hono'
 export const financePlaidSyncRoutes = new Hono()

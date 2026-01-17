@@ -1,14 +1,14 @@
 import { randomUUID } from 'node:crypto'
-import { ContentService } from '@hominem/data/services'
+import { ContentService } from '@hominem/services/services'
 import {
   deleteAccountForUser,
   getAccountByUserAndProvider,
   listAccountsByProvider,
-} from '@hominem/data/user'
+} from '@hominem/services/user'
 import { logger } from '@hominem/utils/logger'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { env } from '../../lib/env'
+import { env } from '../lib/env'
 import {
   generateCodeChallenge,
   generateCodeVerifier,
@@ -18,7 +18,7 @@ import {
   TwitterPostSchema,
   type TwitterTweetResponse,
   type TwitterTweetsResponse,
-} from '../../lib/oauth.twitter.utils'
+} from '../lib/oauth.twitter.utils'
 import { protectedProcedure, router } from '../procedures'
 
 export const twitterRouter = router({
@@ -239,7 +239,7 @@ export const twitterRouter = router({
       )
 
       // Insert new tweets as content
-      const newTweets = tweetsData.data.filter((tweet) => !existingTweetIds.has(tweet.id))
+      const newTweets = tweetsData.data.filter((tweet): tweet is NonNullable<typeof tweetsData.data[number]> => !existingTweetIds.has(tweet.id))
       const contentToInsert = newTweets.map((tweet) => ({
         id: randomUUID(),
         type: 'tweet' as const,

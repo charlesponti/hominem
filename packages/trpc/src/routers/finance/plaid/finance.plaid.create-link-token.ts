@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
-import { env } from '../../../../lib/env.js'
-import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../../lib/plaid.js'
+import { env } from '@/lib/env.js'
+import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '@/lib/plaid.js'
 export const financePlaidCreateLinkTokenRoutes = new Hono()
 
 // Create a new Plaid link token

@@ -1,4 +1,4 @@
-import type { Goal, GoalMilestone, GoalStatus } from '@hominem/data/types'
+import type { Goal, GoalMilestone, GoalStatus } from '@hominem/services/types'
 import { Button } from '@hominem/ui/button'
 import { DatePicker } from '@hominem/ui/components/date-picker'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog'

@@ -20,6 +20,8 @@
   },
   "workspaces": [
     "apps/*",
+    "services/*",
+    "tools/*",
     "packages/*"
   ],
   "scripts": {
@@ -30,6 +32,7 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "turbo run format",
+    "precommit": "bunx lefthook run pre-commit",
     "prepush": "bun run test",
     "prerelease": "bun run test",
     "start:dev": "bun apps/api/src/index.ts",
@@ -39,6 +42,7 @@
   },
   "dependencies": {
     "@trpc/server": "^11.4.2",
+    "drizzle-orm": "0.45.1",
     "react": "^19.2.3",
     "react-dom": "^19.1.0",
     "react-router": "7.12.0"
@@ -59,6 +63,9 @@
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.0.3",
     "vitest": "4.0.16"
+  },
+  "overrides": {
+    "drizzle-orm": "0.45.1"
   },
   "engines": {
     "bun": ">=1.1.0",

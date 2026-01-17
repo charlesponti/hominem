@@ -4,7 +4,7 @@ import {
   getPeople,
   getPersonById,
   updatePerson,
-} from '@hominem/data/services'
+} from '@hominem/services/services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

@@ -1,13 +1,13 @@
+import { type EventTypeEnum } from '@hominem/db/schema'
 import {
   createEvent,
   deleteEvent,
-  type EventTypeEnum,
   GoogleCalendarService,
   getEventById,
   getEvents,
   getSyncStatus,
   updateEvent,
-} from '@hominem/data/events'
+} from '@hominem/services/events'
 import { z } from 'zod'
 import { protectedProcedure, publicProcedure, router } from '../procedures'
 

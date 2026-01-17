@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "../../tsconfig.base.json",
-    "../../tsconfig.paths.json"
-  ],
+  "extends": ["../../tsconfig.base.json", "../../tsconfig.paths.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
@@ -12,16 +9,31 @@
     "paths": {
       "~/*": ["./app/*"]
     },
-    "noEmit": true
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
   "references": [
     { "path": "../../packages/ai" },
     { "path": "../../packages/auth" },
-    { "path": "../../packages/data" },
+    { "path": "../../packages/services" },
     { "path": "../../packages/trpc" },
     { "path": "../../packages/ui" },
     { "path": "../../packages/utils" }
   ],
-  "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
-  "exclude": ["node_modules", "build", "dist", ".turbo", "**/*.test.ts", "**/*.test.tsx"]
+  "include": ["app/**/*.ts", "app/**/*.tsx", ".react-router/types/**/*"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".react-router/cache",
+    "tests",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

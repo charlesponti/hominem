@@ -1,67 +1,125 @@
 {
-	"name": "@hominem/utils",
-	"version": "0.0.0",
-	"description": "Random utilities",
-	"type": "module",
-	"sideEffects": false,
-	"exports": {
-		".": "./src/index.ts",
-		"./supabase": "./src/supabase/index.ts",
-		"./consts": "./src/consts.ts",
-		"./dates": "./src/dates.ts",
-		"./images": "./src/images.ts",
-		"./google": "./src/google.ts",
-		"./http": "./src/http.ts",
-		"./location": "./src/location/index.ts",
-		"./logger": "./src/logger.ts",
-		"./markdown": "./src/markdown/index.ts",
-		"./nlp": "./src/nlp/index.ts",
-		"./schemas": "./src/schemas/index.ts",
-		"./scraping": "./src/scraping/index.ts",
-		"./time": "./src/time.ts"
-	},
-	"scripts": {
-		"format": "bunx oxfmt ./src",
-		"lint": "bunx oxlint ./src",
-		"test": "vitest run --passWithNoTests",
-		"test:watch": "vitest"
-	},
-	"dependencies": {
-		"@ai-sdk/google": "^1.1.10",
-		"@ai-sdk/openai": "^1.1.9",
-		"@hominem/ai": "workspace:*",
-		"@supabase/storage-js": "^2.7.3",
-		"@supabase/supabase-js": "2.88.0",
-		"ai": "^4.3.16",
-		"axios": "1.12.0",
-		"cheerio": "^1.0.0",
-		"compromise": "^14.14.4",
-		"csvtojson": "^2.0.10",
-		"date-fns": "^3.6.0",
-		"dayjs": "^1.11.13",
-		"dotenv": "17.2.3",
-		"drizzle-zod": "^0.7.0",
-		"effect": "^3.16.10",
-		"ioredis": "^5.6.1",
-		"langchain": "^0.3.15",
-		"moment": "^2.30.1",
-		"ollama-ai-provider": "^1.2.0",
-		"pino": "^9.7.0",
-		"playwright": "^1.51.0",
-		"postgres": "^3.4.5",
-		"rehype-parse": "^9.0.1",
-		"rehype-remark": "^10.0.0",
-		"rehype-stringify": "^10.0.1",
-		"remark-parse": "^11.0.0",
-		"remark-rehype": "^11.1.2",
-		"remark-stringify": "^11.0.0",
-		"unified": "^11.0.5",
-		"zod": "4.2.1"
-	},
-	"devDependencies": {
-		"jsdom": "^26.0.0",
-		"typescript": "5.9.3",
-		"vfile": "^6.0.3",
-		"vitest": "4.0.16"
-	}
+  "name": "@hominem/utils",
+  "version": "0.0.0",
+  "description": "Random utilities",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "development": "./src/index.ts",
+      "default": "./build/index.js"
+    },
+    "./supabase": {
+      "types": "./build/supabase/index.d.ts",
+      "development": "./src/supabase/index.ts",
+      "default": "./build/supabase/index.js"
+    },
+    "./consts": {
+      "types": "./build/consts.d.ts",
+      "development": "./src/consts.ts",
+      "default": "./build/consts.js"
+    },
+    "./dates": {
+      "types": "./build/dates.d.ts",
+      "development": "./src/dates.ts",
+      "default": "./build/dates.js"
+    },
+    "./images": {
+      "types": "./build/images.d.ts",
+      "development": "./src/images.ts",
+      "default": "./build/images.js"
+    },
+    "./google": {
+      "types": "./build/google.d.ts",
+      "development": "./src/google.ts",
+      "default": "./build/google.js"
+    },
+    "./http": {
+      "types": "./build/http.d.ts",
+      "development": "./src/http.ts",
+      "default": "./build/http.js"
+    },
+    "./location": {
+      "types": "./build/location/index.d.ts",
+      "development": "./src/location/index.ts",
+      "default": "./build/location/index.js"
+    },
+    "./logger": {
+      "types": "./build/logger.d.ts",
+      "development": "./src/logger.ts",
+      "default": "./build/logger.js"
+    },
+    "./markdown": {
+      "types": "./build/markdown/index.d.ts",
+      "development": "./src/markdown/index.ts",
+      "default": "./build/markdown/index.js"
+    },
+    "./nlp": {
+      "types": "./build/nlp/index.d.ts",
+      "development": "./src/nlp/index.ts",
+      "default": "./build/nlp/index.js"
+    },
+    "./schemas": {
+      "types": "./build/schemas/index.d.ts",
+      "development": "./src/schemas/index.ts",
+      "default": "./build/schemas/index.js"
+    },
+    "./scraping": {
+      "types": "./build/scraping/index.d.ts",
+      "development": "./src/scraping/index.ts",
+      "default": "./build/scraping/index.js"
+    },
+    "./time": {
+      "types": "./build/time.d.ts",
+      "development": "./src/time.ts",
+      "default": "./build/time.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -d",
+    "typecheck": "tsc --noEmit",
+    "format": "bunx oxfmt ./src",
+    "lint": "bunx oxlint ./src",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^1.1.10",
+    "@ai-sdk/openai": "^1.1.9",
+    "@hominem/ai": "workspace:*",
+    "@supabase/storage-js": "^2.7.3",
+    "@supabase/supabase-js": "2.88.0",
+    "ai": "^4.3.16",
+    "axios": "1.12.0",
+    "cheerio": "^1.0.0",
+    "compromise": "^14.14.4",
+    "csvtojson": "^2.0.10",
+    "date-fns": "^3.6.0",
+    "dayjs": "^1.11.13",
+    "dotenv": "17.2.3",
+    "drizzle-zod": "^0.7.0",
+    "effect": "^3.16.10",
+    "ioredis": "^5.6.1",
+    "langchain": "^0.3.15",
+    "moment": "^2.30.1",
+    "ollama-ai-provider": "^1.2.0",
+    "pino": "^9.7.0",
+    "playwright": "^1.51.0",
+    "postgres": "^3.4.5",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "zod": "4.2.1"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0",
+    "typescript": "5.9.3",
+    "vfile": "^6.0.3",
+    "vitest": "4.0.16"
+  }
 }

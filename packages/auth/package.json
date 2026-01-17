@@ -3,11 +3,24 @@
   "version": "0.0.0",
   "description": "Unified authentication package for Hominem apps",
   "exports": {
-    ".": "./src/index.ts",
-    "./types": "./src/types.ts",
-    "./server": "./src/server-index.ts"
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./types": {
+      "development": "./src/types.ts",
+      "types": "./build/types.d.ts",
+      "default": "./build/types.js"
+    },
+    "./server": {
+      "development": "./src/server-index.ts",
+      "types": "./build/server-index.d.ts",
+      "default": "./build/server-index.js"
+    }
   },
   "scripts": {
+    "build": "tsc -b",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -15,6 +28,8 @@
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "better-auth": "^1.4.12",
+    "@supabase/ssr": "0.8.0",
+    "@supabase/supabase-js": "2.88.0",
     "zod": "4.2.1"
   },
   "devDependencies": {

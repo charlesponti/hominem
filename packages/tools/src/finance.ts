@@ -29,7 +29,7 @@ import {
   TransactionSchema,
   updateFinanceAccountInputSchema,
   updateTransactionInputSchema,
-} from '@hominem/data/finance'
+} from '@hominem/services/finance'
 import { toolDefinition } from '@tanstack/ai'
 
 // Account Tools

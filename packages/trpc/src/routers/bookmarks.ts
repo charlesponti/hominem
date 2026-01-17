@@ -3,9 +3,9 @@ import {
   deleteBookmarkForUser,
   listBookmarksByUser,
   updateBookmarkForUser,
-} from '@hominem/data/services'
+} from '@hominem/services/services'
 import { z } from 'zod'
-import { convertOGContentToBookmark, getOpenGraphData } from '../../lib/bookmarks.utils.js'
+import { convertOGContentToBookmark, getOpenGraphData } from '../lib/bookmarks.utils.js'
 import { protectedProcedure, router } from '../procedures'
 
 export const bookmarksRouter = router({

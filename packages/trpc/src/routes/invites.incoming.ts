@@ -1,4 +1,4 @@
-import { getInvitesForUser } from '@hominem/data/lists'
+import { getInvitesForUser } from '@hominem/services/lists'
 import { Hono } from 'hono'
 export const invitesIncomingRoutes = new Hono()
 

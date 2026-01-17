@@ -1,4 +1,4 @@
-import type { Priority } from '@hominem/data/types'
+import type { Priority } from '@hominem/services/types'
 import {
   Select,
   SelectContent,

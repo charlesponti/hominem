@@ -1,9 +1,10 @@
 import type { HominemUser, SupabaseAuthUser } from '@hominem/auth/server'
 import { toHominemUser } from '@hominem/auth/server'
-import { UserAuthService } from '@hominem/data/user'
+import { UserAuthService } from '@hominem/services/user'
 import { type CookieMethodsServer, createServerClient, parseCookieHeader } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'
+import type { Queue } from 'bullmq'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie } from 'hono/cookie'
 import { authConfig } from '../lib/auth'
@@ -14,6 +15,11 @@ declare module 'hono' {
     user?: HominemUser
     userId?: string
     supabaseId: string
+    queues: {
+      plaidSync: Queue
+      importTransactions: Queue
+      placePhotoEnrich: Queue
+    }
   }
 }
 

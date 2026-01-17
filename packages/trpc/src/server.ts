@@ -1,5 +1,6 @@
+import type { HominemUser } from '@hominem/auth/server'
 import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { redis } from '@hominem/data/redis'
+import { redis } from '@hominem/services/redis'
 import { trpcServer } from '@hono/trpc-server'
 import { Queue } from 'bullmq'
 import { Hono } from 'hono'
@@ -21,17 +22,15 @@ import { financeRoutes } from './routers/finance/index.js'
 import { plaidRoutes } from './routers/finance/plaid/index.js'
 
 export type AppEnv = {
-  Bindings: {
+  Variables: {
+    userId?: string
+    user?: HominemUser
+    supabaseId?: string
     queues: {
       plaidSync: Queue
       importTransactions: Queue
       placePhotoEnrich: Queue
     }
-  }
-  Variables: {
-    userId?: string
-    user?: unknown
-    supabaseId?: string
   }
 }
 

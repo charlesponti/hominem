@@ -9,7 +9,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "packages/data/**"
+      - "packages/db/**"
       - ".github/workflows/deploy-db.yml"
 
 jobs:

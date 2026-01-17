@@ -1,18 +1,14 @@
 {
-  "extends": [
-    "../../tsconfig.base.json"
-  ],
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "./build",
     "jsx": "react-jsx",
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node"],
+    "composite": true
   },
-  "references": [
-    { "path": "../auth" },
-    { "path": "../utils" }
-  ],
+  "references": [{ "path": "../auth" }, { "path": "../utils" }],
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "**/*.test.tsx"]
 }

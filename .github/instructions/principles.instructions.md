@@ -6,17 +6,20 @@ applyTo: '**'
 
 This file contains coding standards that apply to ALL files in the codebase.
 For specialized guidelines, see:
+
 - React components: `react.instructions.md`
 - API development: `api.instructions.md`
 - Database operations: `database.instructions.md`
 
 # Package References
+
 - Authentication: `@hominem/auth`
-- Data models and services: `@hominem/data`
+- Data models and services: `@hominem/db`
 - Utility functions: `@hominem/utils`
 - UI components: `@hominem/ui`
 
 # Code Style & Formatting (Biome)
+
 - **Indentation:** 2 spaces.
 - **Semicolons:** None (except where required).
 - **Quotes:** Single quotes for code, double quotes for JSX.
@@ -33,13 +36,14 @@ For specialized guidelines, see:
   - Always use curly braces for multi-line `if` statements.
 
 # TypeScript Standards
+
 - **Strictness:** NEVER use `any`. Prefer strict typing with `unknown` or specific types
 - **Imports:**
   - Import types separately
   - **Pattern:**
     ```typescript
-    import type { Foo } from 'bar'
-    import { foo } from 'bar'
+    import type { Foo } from 'bar';
+    import { foo } from 'bar';
     ```
 - **Utilities:** Use utility types like `PartialWithId<T>`, `Pick<T>`, `Omit<T>` to reduce redundancy
 - **Type Safety:**
@@ -49,6 +53,7 @@ For specialized guidelines, see:
   - Leverage discriminated unions for complex state
 
 # Error Handling
+
 - **Pattern:**
   - Handle errors early with guard clauses.
   - Put the "happy path" last.
@@ -57,12 +62,13 @@ For specialized guidelines, see:
 - **Callbacks:** Always handle the `err` parameter in callbacks.
 
 # Testing (Vitest)
+
 - Run with `bun run test`.
 - Focus on critical paths and security boundaries (input sanitization).
-
   - Put the "happy path" last
   - Avoid `else` blocks where an early return works
   - Use early returns for error conditions
+
 - **Specific Contexts:**
   - Server Actions: Model errors as return values
   - Callbacks: Always handle the `err` parameter
@@ -73,6 +79,7 @@ For specialized guidelines, see:
   - Log errors with sufficient context for debugging
 
 # Input Validation & Security
+
 - **Validation:** Use **Zod** schemas for all external inputs
 - **Sanitization:** Sanitize user-generated content, especially HTML
 - **SQL Safety:** Use parameterized queries only (Drizzle handles this)
@@ -80,6 +87,7 @@ For specialized guidelines, see:
 - **File Uploads:** Validate file types, sizes, and content
 
 # Testing (Vitest)
+
 - Run with `bun run test --force`
 - Focus on critical paths and security boundaries
 - Test input validation and sanitization

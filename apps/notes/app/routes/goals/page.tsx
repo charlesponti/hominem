@@ -1,4 +1,4 @@
-import type { Goal } from '@hominem/data/types'
+import type { Goal } from '@hominem/services/types'
 import { PageTitle } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { Checkbox } from '@hominem/ui/components/ui/checkbox'

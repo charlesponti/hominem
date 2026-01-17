@@ -1,16 +1,12 @@
 {
-  "extends": [
-    "../../tsconfig.base.json"
-  ],
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": ".",
-    "outDir": "./build"
+    "rootDir": "src",
+    "outDir": "./build",
+    "composite": true
   },
-  "references": [
-    { "path": "../data" },
-    { "path": "../utils" }
-  ],
+  "references": [{ "path": "../services" }, { "path": "../utils" }],
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"]
 }

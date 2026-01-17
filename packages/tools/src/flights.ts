@@ -1,4 +1,4 @@
-import { getFlightPricesInputSchema, getFlightPricesOutputSchema } from '@hominem/data/travel'
+import { getFlightPricesInputSchema, getFlightPricesOutputSchema } from '@hominem/services/travel'
 import { toolDefinition } from '@tanstack/ai'
 
 export const getFlightPricesDef = toolDefinition({

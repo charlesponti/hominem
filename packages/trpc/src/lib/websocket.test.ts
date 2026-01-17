@@ -58,7 +58,7 @@ vi.mock('ws', () => ({
   WebSocket: MockWebSocket,
 }))
 
-vi.mock('@hominem/data/redis', () => ({
+vi.mock('@hominem/services/redis', () => ({
   redis: mockRedis,
 }))
 

@@ -1,4 +1,4 @@
-import type { Note } from '@hominem/data/types'
+import type { Note } from '@hominem/services/types'
 import { Button } from '@hominem/ui/button'
 import { Badge } from '@hominem/ui/components/ui/badge'
 import { Edit, Trash2, X } from 'lucide-react'

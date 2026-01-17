@@ -1,15 +1,17 @@
 {
-  "extends": [
-    "../../tsconfig.base.json"
-  ],
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": "./src",
     "outDir": "./build",
     "declaration": true,
-    "sourceMap": false, 
-    "noEmit": false
+    "sourceMap": false,
+    "noEmit": false,
+    "composite": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "build"]
+  "exclude": ["node_modules", "dist", "build", "src/test/**", "**/*.test.ts", "**/*.spec.ts"]
 }

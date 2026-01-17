@@ -1,12 +1,12 @@
 import crypto from 'node:crypto'
-import { financeTestSeed } from '@hominem/data/finance'
+import { financeTestSeed } from '@hominem/services/finance'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 import {
   assertErrorResponse,
   assertSuccessResponse,
   makeAuthenticatedRequest,
   useApiTestLifecycle,
-} from '../../../../../test/api-test-utils'
+} from '@/test/api-test-utils.js'
 
 // Mock BullMQ Queue
 const { mockQueueAdd, mockQueueClose } = vi.hoisted(() => {
@@ -40,7 +40,7 @@ vi.mock('plaid', () => {
   }
 })
 
-vi.mock('../../lib/plaid.js', () => ({
+vi.mock('@/lib/plaid.js', () => ({
   plaidClient: {
     linkTokenCreate: vi.fn(),
     itemPublicTokenExchange: vi.fn(),
@@ -101,7 +101,7 @@ describe('Plaid Router', () => {
 
   describe('POST /api/finance/plaid/create-link-token', () => {
     test('creates link token successfully', async () => {
-      const { plaidClient } = await import('../../../../lib/plaid.js')
+      const { plaidClient } = await import('@/lib/plaid.js')
 
       vi.mocked(plaidClient.linkTokenCreate).mockResolvedValue({
         data: {
@@ -125,7 +125,7 @@ describe('Plaid Router', () => {
     })
 
     test('handles plaid client error', async () => {
-      const { plaidClient } = await import('../../../../lib/plaid.js')
+      const { plaidClient } = await import('@/lib/plaid.js')
 
       vi.mocked(plaidClient.linkTokenCreate).mockRejectedValue(new Error('Plaid error'))
 
@@ -143,7 +143,7 @@ describe('Plaid Router', () => {
 
   describe('POST /api/finance/plaid/exchange-token', () => {
     test.skip('exchanges token successfully for new institution', async () => {
-      const { plaidClient } = await import('../../../../lib/plaid.js')
+      const { plaidClient } = await import('@/lib/plaid.js')
 
       vi.mocked(plaidClient.itemPublicTokenExchange).mockResolvedValue({
         data: {

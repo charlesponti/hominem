@@ -1,6 +1,6 @@
-import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem/data/finance'
+import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem/services/finance'
 import { Hono } from 'hono'
-import { plaidClient } from '../../../../lib/plaid.js'
+import { plaidClient } from '@/lib/plaid.js'
 export const financePlaidDisconnectRoutes = new Hono()
 
 // Disconnect a Plaid connection

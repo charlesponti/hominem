@@ -1,4 +1,4 @@
-import { UserAuthService } from '@hominem/data/user'
+import { UserAuthService } from '@hominem/services/user'
 import { logger } from '@hominem/utils/logger'
 import {
   type CookieMethodsServer,

@@ -1,0 +1,20 @@
+{
+  "extends": ["../../tsconfig.base.json", "../../tsconfig.paths.json"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
+    "types": ["node"],
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
+  },
+  "references": [
+    { "path": "../../packages/ai" },
+    { "path": "../../packages/auth" },
+    { "path": "../../packages/services" },
+    { "path": "../../packages/tools" },
+    { "path": "../../packages/utils" }
+  ],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "build", ".turbo", "test", "**/*.test.ts", "**/*.spec.ts"]
+}

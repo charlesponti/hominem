@@ -3,7 +3,7 @@ import {
   ListNotesInputSchema,
   ListNotesOutputSchema,
   NoteOutputSchema,
-} from '@hominem/data/notes'
+} from '@hominem/services/notes'
 import { toolDefinition } from '@tanstack/ai'
 
 // Tool Definition 1: Create Note

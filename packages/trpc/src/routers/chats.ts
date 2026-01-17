@@ -1,9 +1,9 @@
-import { ChatService, MessageService } from '@hominem/data/chat'
+import { ChatService, MessageService } from '@hominem/services/chat'
 import { chat } from '@tanstack/ai'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { getLMStudioAdapter } from '../../utils/llm'
-import { getAvailableTools } from '../../utils/tools'
+import { getLMStudioAdapter } from '../utils/llm'
+import { getAvailableTools } from '../utils/tools'
 import { protectedProcedure, router } from '../procedures'
 
 const chatService = new ChatService()

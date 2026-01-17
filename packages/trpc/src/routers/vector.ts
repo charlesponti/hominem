@@ -1,7 +1,7 @@
-import { VectorService } from '@hominem/data/vector'
+import { VectorService } from '@hominem/services/vector'
 import { fileStorageService } from '@hominem/utils/supabase'
 import { z } from 'zod'
-import { handleFileUploadBuffer } from '../../middleware/file-upload.js'
+import { handleFileUploadBuffer } from '../middleware/file-upload.js'
 import { protectedProcedure, router } from '../procedures'
 
 export const vectorRouter = router({

@@ -5,7 +5,7 @@ import {
   generateTimeSeriesData,
   getMonthlyStats,
   summarizeByCategory,
-} from '@hominem/data/finance'
+} from '@hominem/services/finance'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../procedures'
 

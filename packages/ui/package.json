@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    ".": "./src/index.ts",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
     "./button": "./src/components/ui/button.tsx",
     "./components/*": "./src/components/*",
     "./components/ui/badge": "./src/components/ui/badge.tsx",
@@ -28,6 +32,7 @@
     "./styles/animations.css": "./src/styles/animations.css"
   },
   "scripts": {
+    "build": "tsc -b",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "typecheck": "tsc --noEmit",

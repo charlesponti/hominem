@@ -6,16 +6,17 @@
   "types": "./build/index.d.ts",
   "exports": {
     ".": {
-      "types": "./build/main.d.ts",
-      "default": "./main.ts"
+      "development": "./src/index.ts",
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
     },
     "./lib/*": "./src/lib/*.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "typecheck": "tsc -b",
-    "types:build": "tsc -b tsconfig.json",
-    "types:watch": "tsc -b tsconfig.json -w"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -b tsconfig.json",
+    "dev": "tsc -b tsconfig.json -w"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",
@@ -23,7 +24,8 @@
     "@browserbasehq/stagehand": "^2.4.0",
     "@hominem/ai": "workspace:*",
     "@hominem/auth": "workspace:*",
-    "@hominem/data": "workspace:*",
+    "@hominem/db": "workspace:*",
+    "@hominem/services": "workspace:*",
     "@hominem/tools": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/node-server": "^1.19.2",
@@ -50,7 +52,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dotenv": "17.2.3",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "0.45.1",
     "drizzle-zod": "^0.7.0",
     "effect": "^3.16.10",
     "googleapis": "^170.0.0",
@@ -75,6 +77,7 @@
     "zod-to-json-schema": "^3.24.1"
   },
   "devDependencies": {
+    "@types/ws": "^8.5.10",
     "typescript": "5.9.3"
   }
 }

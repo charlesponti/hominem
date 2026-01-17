@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createTestUser } from '../../test/db-test-utils.js'
-import { createTRPCTestClient } from '../../test/trpc-test-utils.js'
+import { createTestUser } from '@/test/db-test-utils.js'
+import { createTRPCTestClient } from '@/test/trpc-test-utils.js'
 import { createServer } from '../server.js'
 
-vi.mock('@hominem/data/vector', () => ({
+vi.mock('@hominem/services/vector', () => ({
   VectorService: {
     query: vi.fn(),
     searchDocumentsByUser: vi.fn(),
@@ -45,7 +45,7 @@ describe('Vector System', () => {
         ],
       }
 
-      const { VectorService } = await import('@hominem/data/vector')
+      const { VectorService } = await import('@hominem/services/vector')
       vi.mocked(VectorService.query).mockResolvedValue(mockResponse)
 
       const result = await trpc.vector.searchVectors.query({
@@ -72,7 +72,7 @@ describe('Vector System', () => {
         ],
       }
 
-      const { VectorService } = await import('@hominem/data/vector')
+      const { VectorService } = await import('@hominem/services/vector')
       vi.mocked(VectorService.searchDocumentsByUser).mockResolvedValue(mockResponse)
 
       const result = await trpc.vector.searchUserVectors.query({
@@ -102,7 +102,7 @@ describe('Vector System', () => {
         },
       ]
 
-      const { VectorService } = await import('@hominem/data/vector')
+      const { VectorService } = await import('@hominem/services/vector')
       vi.mocked(VectorService.getUserDocuments).mockResolvedValue(mockDocuments)
 
       const result = await trpc.vector.getUserVectors.query({
@@ -149,7 +149,7 @@ describe('Vector System', () => {
     })
 
     it('should delete user documents', async () => {
-      const { VectorService } = await import('@hominem/data/vector')
+      const { VectorService } = await import('@hominem/services/vector')
       vi.mocked(VectorService.deleteUserDocuments).mockResolvedValue({ success: true })
 
       const result = await trpc.vector.deleteUserVectors.mutate({
