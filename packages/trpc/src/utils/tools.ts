@@ -4,10 +4,10 @@
  */
 
 import { financeService } from '@hominem/finance-services';
-import { notesService } from '@hominem/notes-services';
 import { mentalHealthService, workoutService } from '@hominem/health-services';
+import { recommendWorkoutDef, assessMentalWellnessDef } from '@hominem/health-services/tools';
+import { notesService } from '@hominem/notes-services';
 import {
-  assessMentalWellnessDef,
   calculateBudgetBreakdownDef,
   calculateLoanDetailsDef,
   calculateRunwayDef,
@@ -24,7 +24,6 @@ import {
   getTopMerchantsDef,
   getTransactionsDef,
   listNotesDef,
-  recommendWorkoutDef,
   updateFinanceAccountDef,
   updateTransactionDef,
 } from '@hominem/tools';

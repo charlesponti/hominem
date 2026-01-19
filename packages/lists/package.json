@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@hominem/db": "workspace:*",
+    "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",
     "drizzle-orm": "0.45.1",

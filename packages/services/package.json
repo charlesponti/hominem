@@ -30,15 +30,25 @@
       "development": "./src/logger.ts",
       "default": "./build/logger.js"
     },
-    "./places": {
-      "types": "./build/places.d.ts",
-      "development": "./src/places.ts",
-      "default": "./build/places.js"
+    "./google-places": {
+      "types": "./build/google-places.service.d.ts",
+      "development": "./src/google-places.service.ts",
+      "default": "./build/google-places.service.js"
     },
-    "./services": {
-      "types": "./build/services/index.d.ts",
-      "development": "./src/services/index.ts",
-      "default": "./build/services/index.js"
+    "./people": {
+      "types": "./build/people.service.d.ts",
+      "development": "./src/people.service.ts",
+      "default": "./build/people.service.js"
+    },
+    "./tags": {
+      "types": "./build/tags.service.d.ts",
+      "development": "./src/tags.service.ts",
+      "default": "./build/tags.service.js"
+    },
+    "./env": {
+      "types": "./build/env.d.ts",
+      "development": "./src/env.ts",
+      "default": "./build/env.js"
     },
     "./queues": {
       "types": "./build/queues.d.ts",
@@ -88,9 +98,8 @@
     "dotenv": "17.2.3",
     "drizzle-orm": "0.45.1",
     "drizzle-zod": "^0.7.0",
-    "effect": "^3.16.10",
     "googleapis": "^170.0.0",
-    "ioredis": "^5.9.1",
+    "ioredis": "5.9.1",
     "langchain": "^0.3.15",
     "mammoth": "^1.9.1",
     "openai": "4.83.0",

@@ -1,26 +1,28 @@
-import { logger } from '@hominem/utils/logger'
-import { parse } from 'csv-parse'
-import { Effect, Stream } from 'effect'
-import type { FinanceTransactionInsert } from '@hominem/db/schema'
-import { getAndCreateAccountsInBulk } from '../core/account.service'
+import type { FinanceTransactionInsert } from '@hominem/db/schema';
+
+import { logger } from '@hominem/utils/logger';
+import { parse } from 'csv-parse';
+import { Effect, Stream } from 'effect';
+
+import { getAndCreateAccountsInBulk } from '../core/account.service';
 import {
   type CapitalOneTransaction,
   type CopilotTransaction,
   convertCapitalOneTransaction,
   convertCopilotTransaction,
-} from './bank-adapters'
-import { processTransactionsInBulk } from './transaction-processor'
+} from './bank-adapters';
+import { processTransactionsInBulk } from './transaction-processor';
 
-export type ParsedTransactions = [string, Omit<FinanceTransactionInsert, 'accountId'>][]
+export type ParsedTransactions = [string, Omit<FinanceTransactionInsert, 'accountId'>][];
 
 class CsvParseError {
-  readonly _tag = 'CsvParseError'
+  readonly _tag = 'CsvParseError';
   constructor(readonly error: Error) {}
 }
 
 export function parseTransactionStream(
   csvStream: NodeJS.ReadableStream,
-  userId: string
+  userId: string,
 ): Stream.Stream<ParsedTransactions, CsvParseError> {
   return Stream.async<ParsedTransactions, CsvParseError>((emit) => {
     const parser = parse({
@@ -28,54 +30,54 @@ export function parseTransactionStream(
       columns: true,
       skip_empty_lines: true,
       trim: true,
-    })
+    });
 
     parser.on('readable', () => {
       let record:
         | (CopilotTransaction & { bankFormat: 'copilot' })
         | (CapitalOneTransaction & { bankFormat: 'capital-one' })
-        | { bankFormat: 'unknown' }
+        | { bankFormat: 'unknown' };
 
       while (true) {
-        record = parser.read()
+        record = parser.read();
         if (record === null) {
-          break
+          break;
         }
         try {
-          const bankFormat = detectBankFormat(Object.keys(record))
+          const bankFormat = detectBankFormat(Object.keys(record));
           if (bankFormat === 'copilot') {
-            const copilotTx = record as CopilotTransaction
-            const accountName = copilotTx.account
-            const convertedTx = convertCopilotTransaction(copilotTx, userId)
-            emit.single([[accountName, convertedTx]])
+            const copilotTx = record as CopilotTransaction;
+            const accountName = copilotTx.account;
+            const convertedTx = convertCopilotTransaction(copilotTx, userId);
+            emit.single([[accountName, convertedTx]]);
           } else if (bankFormat === 'capital-one') {
-            const capitalOneTx = record as CapitalOneTransaction
-            const accountName = `Capital One ${capitalOneTx['Account Number']}`
-            const convertedTx = convertCapitalOneTransaction(capitalOneTx, '', userId)
-            emit.single([[accountName, convertedTx]])
+            const capitalOneTx = record as CapitalOneTransaction;
+            const accountName = `Capital One ${capitalOneTx['Account Number']}`;
+            const convertedTx = convertCapitalOneTransaction(capitalOneTx, '', userId);
+            emit.single([[accountName, convertedTx]]);
           } else {
-            logger.warn('Unknown bank format, skipping row:', record)
+            logger.warn('Unknown bank format, skipping row:', record);
           }
         } catch (error) {
-          logger.error('Error processing transaction row:', { error, record })
+          logger.error('Error processing transaction row:', { error, record });
         }
       }
-    })
+    });
 
     parser.on('error', (err) => {
-      emit.fail(new CsvParseError(err))
-    })
+      emit.fail(new CsvParseError(err));
+    });
 
     parser.on('end', () => {
-      emit.end()
-    })
+      emit.end();
+    });
 
-    csvStream.pipe(parser)
-  })
+    csvStream.pipe(parser);
+  });
 }
 
 function detectBankFormat(headers: string[]): 'copilot' | 'capital-one' | 'unknown' {
-  const headerSet = new Set(headers.map((h) => h.toLowerCase()))
+  const headerSet = new Set(headers.map((h) => h.toLowerCase()));
 
   if (
     headerSet.has('date') &&
@@ -83,7 +85,7 @@ function detectBankFormat(headers: string[]): 'copilot' | 'capital-one' | 'unkno
     headerSet.has('amount') &&
     headerSet.has('type')
   ) {
-    return 'copilot'
+    return 'copilot';
   }
 
   if (
@@ -91,10 +93,10 @@ function detectBankFormat(headers: string[]): 'copilot' | 'capital-one' | 'unkno
     headerSet.has('transaction amount') &&
     headerSet.has('transaction description')
   ) {
-    return 'capital-one'
+    return 'capital-one';
   }
 
-  return 'unknown'
+  return 'unknown';
 }
 
 /**
@@ -104,32 +106,32 @@ export function processTransactionsFromCSVBuffer({
   csvBuffer,
   userId,
 }: {
-  csvBuffer: Buffer
-  userId: string
+  csvBuffer: Buffer;
+  userId: string;
 }) {
   return Effect.gen(function* ($) {
-    const { Readable } = yield* $(Effect.tryPromise(() => import('node:stream')))
-    const csvStream = Readable.from(csvBuffer)
+    const { Readable } = yield* $(Effect.tryPromise(() => import('node:stream')));
+    const csvStream = Readable.from(csvBuffer);
     const parsedTransactions = yield* $(
-      Stream.runCollect(parseTransactionStream(csvStream, userId))
-    ).pipe(Effect.map((chunk) => Array.from(chunk)))
+      Stream.runCollect(parseTransactionStream(csvStream, userId)),
+    ).pipe(Effect.map((chunk) => Array.from(chunk)));
     const uniqueAccountNames = [
       ...new Set(parsedTransactions.flatMap((tx) => tx.map(([accountName]) => accountName))),
-    ]
+    ];
     const accountsMap = yield* $(
-      Effect.tryPromise(() => getAndCreateAccountsInBulk(uniqueAccountNames, userId))
-    )
+      Effect.tryPromise(() => getAndCreateAccountsInBulk(uniqueAccountNames, userId)),
+    );
 
     const transactionsToProcess: FinanceTransactionInsert[] = parsedTransactions
       .flat()
       .map(([accountName, transactionData]) => {
-        const account = accountsMap.get(accountName)
+        const account = accountsMap.get(accountName);
         return {
           ...transactionData,
           accountId: account!.id,
-        }
-      })
+        };
+      });
 
-    return yield* $(Effect.tryPromise(() => processTransactionsInBulk(transactionsToProcess)))
-  })
+    return yield* $(Effect.tryPromise(() => processTransactionsInBulk(transactionsToProcess)));
+  });
 }

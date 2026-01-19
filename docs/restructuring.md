@@ -65,7 +65,7 @@ AI tools (Vercel AI SDK) now live with their respective domains instead of a cen
 - `@hominem/auth/tools` - User profile tools
 - `@hominem/services/health` - Health and workout tools
 - `@hominem/services/career` - Career and job application tools
-- `@hominem/services/services` - Bookmarks and content strategy tools
+- `@hominem/services` - Bookmarks and content strategy tools
 
 **Important - Type Imports:**
 All domain types (Note, Content, Goal, etc.) should be imported directly from `@hominem/db/schema`, not from service packages:

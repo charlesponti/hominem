@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google';
-import { ContentStrategiesService } from '@hominem/services/services';
+import { ContentStrategiesService } from '@hominem/services';
 import { generateText } from 'ai';
 import { z } from 'zod';
 

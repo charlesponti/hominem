@@ -1145,7 +1145,7 @@ export declare const createTRPCTestClient: (server: Hono<AppEnv>, userId: string
                 timeMin?: string | undefined;
                 timeMax?: string | undefined;
             };
-            output: import("@hominem/services/services").SyncResult;
+            output: import("@hominem/services").SyncResult;
             meta: object;
         }>;
         getSyncStatus: import("@trpc/server").TRPCQueryProcedure<{
@@ -1426,19 +1426,19 @@ export declare const createTRPCTestClient: (server: Hono<AppEnv>, userId: string
         }, import("@trpc/server").TRPCDecorateCreateRouterOptions<{
             connections: import("@trpc/server").TRPCQueryProcedure<{
                 input: void;
-                output: import("@hominem/services/finance").InstitutionConnection[];
+                output: import("@hominem/finance-services").InstitutionConnection[];
                 meta: object;
             }>;
             accounts: import("@trpc/server").TRPCQueryProcedure<{
                 input: void;
-                output: import("@hominem/services/finance").InstitutionAccount[];
+                output: import("@hominem/finance-services").InstitutionAccount[];
                 meta: object;
             }>;
             institutionAccounts: import("@trpc/server").TRPCQueryProcedure<{
                 input: {
                     institutionId: string;
                 };
-                output: import("@hominem/services/finance").InstitutionAccount[];
+                output: import("@hominem/finance-services").InstitutionAccount[];
                 meta: object;
             }>;
             get: import("@trpc/server").TRPCQueryProcedure<{
@@ -1915,7 +1915,7 @@ export declare const createTRPCTestClient: (server: Hono<AppEnv>, userId: string
                     input: {
                         monthYear: string;
                     };
-                    output: import("@hominem/services/finance").BudgetCategoryWithSpending[];
+                    output: import("@hominem/finance-services").BudgetCategoryWithSpending[];
                     meta: object;
                 }>;
                 get: import("@trpc/server").TRPCQueryProcedure<{
@@ -1987,7 +1987,7 @@ export declare const createTRPCTestClient: (server: Hono<AppEnv>, userId: string
                 input: {
                     monthYear: string;
                 };
-                output: import("@hominem/services/finance").BudgetTrackingData;
+                output: import("@hominem/finance-services").BudgetTrackingData;
                 meta: object;
             }>;
             history: import("@trpc/server").TRPCQueryProcedure<{
@@ -2108,7 +2108,7 @@ export declare const createTRPCTestClient: (server: Hono<AppEnv>, userId: string
                     includeStats?: boolean | undefined;
                     compareToPrevious?: boolean | undefined;
                 };
-                output: import("@hominem/services/finance").TimeSeriesResponse;
+                output: import("@hominem/finance-services").TimeSeriesResponse;
                 meta: object;
             }>;
             topMerchants: import("@trpc/server").TRPCQueryProcedure<{
@@ -2119,7 +2119,7 @@ export declare const createTRPCTestClient: (server: Hono<AppEnv>, userId: string
                     category?: string | undefined;
                     limit?: number | undefined;
                 };
-                output: import("@hominem/services/finance").TopMerchant[];
+                output: import("@hominem/finance-services").TopMerchant[];
                 meta: object;
             }>;
             categoryBreakdown: import("@trpc/server").TRPCQueryProcedure<{
@@ -2129,7 +2129,7 @@ export declare const createTRPCTestClient: (server: Hono<AppEnv>, userId: string
                     account?: string | undefined;
                     limit?: string | undefined;
                 };
-                output: import("@hominem/services/finance").CategorySummary[];
+                output: import("@hominem/finance-services").CategorySummary[];
                 meta: object;
             }>;
             calculate: import("@trpc/server").TRPCMutationProcedure<{
@@ -4439,7 +4439,7 @@ export declare const createTRPCTestClientWithContext: (server: Hono<AppEnv>, con
                 timeMin?: string | undefined;
                 timeMax?: string | undefined;
             };
-            output: import("@hominem/services/services").SyncResult;
+            output: import("@hominem/services").SyncResult;
             meta: object;
         }>;
         getSyncStatus: import("@trpc/server").TRPCQueryProcedure<{
@@ -4720,19 +4720,19 @@ export declare const createTRPCTestClientWithContext: (server: Hono<AppEnv>, con
         }, import("@trpc/server").TRPCDecorateCreateRouterOptions<{
             connections: import("@trpc/server").TRPCQueryProcedure<{
                 input: void;
-                output: import("@hominem/services/finance").InstitutionConnection[];
+                output: import("@hominem/finance-services").InstitutionConnection[];
                 meta: object;
             }>;
             accounts: import("@trpc/server").TRPCQueryProcedure<{
                 input: void;
-                output: import("@hominem/services/finance").InstitutionAccount[];
+                output: import("@hominem/finance-services").InstitutionAccount[];
                 meta: object;
             }>;
             institutionAccounts: import("@trpc/server").TRPCQueryProcedure<{
                 input: {
                     institutionId: string;
                 };
-                output: import("@hominem/services/finance").InstitutionAccount[];
+                output: import("@hominem/finance-services").InstitutionAccount[];
                 meta: object;
             }>;
             get: import("@trpc/server").TRPCQueryProcedure<{
@@ -5209,7 +5209,7 @@ export declare const createTRPCTestClientWithContext: (server: Hono<AppEnv>, con
                     input: {
                         monthYear: string;
                     };
-                    output: import("@hominem/services/finance").BudgetCategoryWithSpending[];
+                    output: import("@hominem/finance-services").BudgetCategoryWithSpending[];
                     meta: object;
                 }>;
                 get: import("@trpc/server").TRPCQueryProcedure<{
@@ -5281,7 +5281,7 @@ export declare const createTRPCTestClientWithContext: (server: Hono<AppEnv>, con
                 input: {
                     monthYear: string;
                 };
-                output: import("@hominem/services/finance").BudgetTrackingData;
+                output: import("@hominem/finance-services").BudgetTrackingData;
                 meta: object;
             }>;
             history: import("@trpc/server").TRPCQueryProcedure<{
@@ -5402,7 +5402,7 @@ export declare const createTRPCTestClientWithContext: (server: Hono<AppEnv>, con
                     includeStats?: boolean | undefined;
                     compareToPrevious?: boolean | undefined;
                 };
-                output: import("@hominem/services/finance").TimeSeriesResponse;
+                output: import("@hominem/finance-services").TimeSeriesResponse;
                 meta: object;
             }>;
             topMerchants: import("@trpc/server").TRPCQueryProcedure<{
@@ -5413,7 +5413,7 @@ export declare const createTRPCTestClientWithContext: (server: Hono<AppEnv>, con
                     category?: string | undefined;
                     limit?: number | undefined;
                 };
-                output: import("@hominem/services/finance").TopMerchant[];
+                output: import("@hominem/finance-services").TopMerchant[];
                 meta: object;
             }>;
             categoryBreakdown: import("@trpc/server").TRPCQueryProcedure<{
@@ -5423,7 +5423,7 @@ export declare const createTRPCTestClientWithContext: (server: Hono<AppEnv>, con
                     account?: string | undefined;
                     limit?: string | undefined;
                 };
-                output: import("@hominem/services/finance").CategorySummary[];
+                output: import("@hominem/finance-services").CategorySummary[];
                 meta: object;
             }>;
             calculate: import("@trpc/server").TRPCMutationProcedure<{

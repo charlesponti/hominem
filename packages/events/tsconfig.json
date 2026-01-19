@@ -7,5 +7,5 @@
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "**/*.test.ts", "**/*.spec.ts"],
-  "references": [{ "path": "../db" }]
+  "references": [{ "path": "../db" }, { "path": "../services" }]
 }

@@ -3,7 +3,7 @@ import {
   deleteBookmarkForUser,
   listBookmarksByUser,
   updateBookmarkForUser,
-} from '@hominem/services/services'
+} from '@hominem/services'
 import { z } from 'zod'
 import { convertOGContentToBookmark, getOpenGraphData } from '../lib/bookmarks.utils.js'
 import { protectedProcedure, router } from '../procedures'

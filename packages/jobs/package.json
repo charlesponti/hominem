@@ -26,7 +26,7 @@
     "@hominem/utils": "workspace:*",
     "bullmq": "5.66.4",
     "drizzle-orm": "0.45.1",
-    "ioredis": "^5.9.1",
+    "ioredis": "5.9.1",
     "zod": "4.2.1"
   },
   "devDependencies": {

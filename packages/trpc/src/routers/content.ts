@@ -1,5 +1,5 @@
 import { PublishingContentTypeSchema } from '@hominem/db/schema'
-import { ContentService } from '@hominem/services/services'
+import { ContentService } from '@hominem/services'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../procedures'
 

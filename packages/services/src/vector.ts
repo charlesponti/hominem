@@ -1,2 +1,2 @@
-export * from './services/vector.service'
-export * from './services/vector-file-integration.service'
+export * from './vector.service';
+export * from './vector-file-integration.service';

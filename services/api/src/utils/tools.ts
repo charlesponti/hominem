@@ -3,11 +3,11 @@
  * Uses TanStack AI tool definitions exclusively
  */
 
-import { financeService } from '@hominem/finance';
-import { notesService } from '@hominem/notes-services';
+import { financeService } from '@hominem/finance-services';
 import { mentalHealthService, workoutService } from '@hominem/health-services';
+import { recommendWorkoutDef, assessMentalWellnessDef } from '@hominem/health-services/tools';
+import { notesService } from '@hominem/notes-services';
 import {
-  assessMentalWellnessDef,
   calculateBudgetBreakdownDef,
   calculateLoanDetailsDef,
   calculateRunwayDef,
@@ -24,7 +24,6 @@ import {
   getTopMerchantsDef,
   getTransactionsDef,
   listNotesDef,
-  recommendWorkoutDef,
   updateFinanceAccountDef,
   updateTransactionDef,
 } from '@hominem/tools';

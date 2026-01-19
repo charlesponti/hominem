@@ -1,0 +1,36 @@
+{
+  "name": "@hominem/places-services",
+  "version": "0.0.0",
+  "description": "Places and travel related services",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "development": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsc -b -w",
+    "format": "bunx oxfmt ./src",
+    "lint": "bunx oxlint ./src",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@hominem/db": "workspace:*",
+    "@hominem/services": "workspace:*",
+    "@hominem/utils": "workspace:*",
+    "drizzle-orm": "0.45.1",
+    "googleapis": "^170.0.0",
+    "sharp": "^0.32.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.13",
+    "typescript": "5.9.3",
+    "vitest": "4.0.16"
+  }
+}

@@ -1,18 +1,18 @@
-import { env } from '../src/env';
+import {
+  createPlaceImagesService,
+  isGooglePhotosUrl,
+  processPlacePhotos,
+  googlePlaces,
+} from '@hominem/places-services';
+import { eq, sql } from 'drizzle-orm';
 
 /**
  * Migration script to download Google Photos images for existing places
  * and store them in Supabase Storage
  */
 import { db } from '../src/db';
-import {
-  createPlaceImagesService,
-  isGooglePhotosUrl,
-  processPlacePhotos,
-  googlePlaces
-} from '../src/places';
 import { place } from '../src/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { env } from '../src/env';
 
 const GOOGLE_API_KEY = env.GOOGLE_API_KEY;
 
@@ -33,7 +33,7 @@ interface MigrationStats {
   skipped: number;
 }
 
-// downloadAndStoreImage removed in favor of downloadAndStorePlaceImage from @hominem/services/places
+// downloadAndStoreImage removed in favor of downloadAndStorePlaceImage from @hominem/places-services
 
 /**
  * Main migration function

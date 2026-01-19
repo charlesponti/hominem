@@ -33,6 +33,9 @@ Hominem is a monorepo full-stack application with local-first architecture. It u
   - Modify schema: Edit `packages/db/src/db/schema/*`
   - Generate migrations: `bun run db:generate`
   - Apply migrations: `bun run db:migrate`
+- **scripts**
+  - Use `bun run -f <package> <script>` to run package-specific scripts.
+  - Do not `cd` into packages; use Turbo commands from the monorepo root.
 
 ## Quick Reference
 

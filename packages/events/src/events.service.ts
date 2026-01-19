@@ -1,5 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from 'drizzle-orm'
-import { db } from '@hominem/db'
+import { db } from '@hominem/db';
 import {
   type CalendarEventInsert,
   contacts,
@@ -9,12 +8,12 @@ import {
   eventsUsers,
   place,
   tags,
-} from '@hominem/db/schema'
+} from '@hominem/db/schema';
 import {
   getPeopleForEvent,
   getPeopleForEvents,
   replacePeopleForEvent,
-} from '../services/people.service'
+} from '@hominem/services/people';
 import {
   addTagsToEvent,
   findOrCreateTagsByNames,
@@ -22,40 +21,41 @@ import {
   getTagsForEvents,
   removeTagsFromEvent,
   syncTagsForEvent,
-} from '../services/tags.service'
+} from '@hominem/services/tags';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from 'drizzle-orm';
 
 export interface EventFilters {
-  tagNames?: string[]
-  companion?: string
-  sortBy?: 'date-asc' | 'date-desc' | 'summary'
+  tagNames?: string[];
+  companion?: string;
+  sortBy?: 'date-asc' | 'date-desc' | 'summary';
 }
 
 export async function getEvents(filters: EventFilters = {}) {
-  const conditions = []
+  const conditions = [];
 
   if (filters.tagNames && filters.tagNames.length > 0) {
     const tagResults = await db
       .select({ id: tags.id })
       .from(tags)
-      .where(inArray(tags.name, filters.tagNames))
+      .where(inArray(tags.name, filters.tagNames));
 
-    const tagIds = tagResults.map((t) => t.id)
+    const tagIds = tagResults.map((t) => t.id);
 
     if (tagIds.length > 0) {
       const eventIds = await db
         .select({ eventId: eventsTags.eventId })
         .from(eventsTags)
-        .where(inArray(eventsTags.tagId, tagIds))
+        .where(inArray(eventsTags.tagId, tagIds));
 
-      const eventIdsList = eventIds.map((e) => e.eventId).filter((id): id is string => id !== null)
+      const eventIdsList = eventIds.map((e) => e.eventId).filter((id): id is string => id !== null);
 
       if (eventIdsList.length > 0) {
-        conditions.push(inArray(events.id, eventIdsList))
+        conditions.push(inArray(events.id, eventIdsList));
       } else {
-        return []
+        return [];
       }
     } else {
-      return []
+      return [];
     }
   }
 
@@ -66,43 +66,43 @@ export async function getEvents(filters: EventFilters = {}) {
       .where(
         or(
           like(contacts.firstName, `%${filters.companion}%`),
-          like(contacts.lastName, `%${filters.companion}%`)
-        )
-      )
+          like(contacts.lastName, `%${filters.companion}%`),
+        ),
+      );
 
-    const contactIds = contactResults.map((c) => c.id)
+    const contactIds = contactResults.map((c) => c.id);
 
     if (contactIds.length > 0) {
       const eventIds = await db
         .select({ eventId: eventsUsers.eventId })
         .from(eventsUsers)
-        .where(inArray(eventsUsers.personId, contactIds))
+        .where(inArray(eventsUsers.personId, contactIds));
 
-      const eventIdsList = eventIds.map((e) => e.eventId).filter((id): id is string => id !== null)
+      const eventIdsList = eventIds.map((e) => e.eventId).filter((id): id is string => id !== null);
 
       if (eventIdsList.length > 0) {
-        conditions.push(inArray(events.id, eventIdsList))
+        conditions.push(inArray(events.id, eventIdsList));
       } else {
-        return []
+        return [];
       }
     } else {
-      return []
+      return [];
     }
   }
 
-  let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>
+  let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>;
   switch (filters.sortBy) {
     case 'date-asc':
-      orderByClause = asc(events.date)
-      break
+      orderByClause = asc(events.date);
+      break;
     case 'date-desc':
-      orderByClause = desc(events.date)
-      break
+      orderByClause = desc(events.date);
+      break;
     case 'summary':
-      orderByClause = asc(events.title)
-      break
+      orderByClause = asc(events.title);
+      break;
     default:
-      orderByClause = desc(events.date)
+      orderByClause = desc(events.date);
   }
 
   const eventsList =
@@ -112,26 +112,26 @@ export async function getEvents(filters: EventFilters = {}) {
           .from(events)
           .where(and(...conditions))
           .orderBy(orderByClause)
-      : await db.select().from(events).orderBy(orderByClause)
+      : await db.select().from(events).orderBy(orderByClause);
 
-  const eventIds = eventsList.map((event) => event.id)
+  const eventIds = eventsList.map((event) => event.id);
   const [peopleMap, tagsMap] = await Promise.all([
     getPeopleForEvents(eventIds),
     getTagsForEvents(eventIds),
-  ])
+  ]);
 
   return eventsList.map((eventItem) => ({
     ...eventItem,
     tags: tagsMap.get(eventItem.id) || [],
     people: peopleMap.get(eventItem.id) || [],
-  }))
+  }));
 }
 
 export async function createEvent(
   event: Omit<CalendarEventInsert, 'id'> & {
-    tags?: string[]
-    people?: string[]
-  }
+    tags?: string[];
+    people?: string[];
+  },
 ) {
   const [result] = await db
     .insert(events)
@@ -148,98 +148,98 @@ export async function createEvent(
       visitReview: event.visitReview || null,
       visitPeople: event.visitPeople || null,
     })
-    .returning()
+    .returning();
 
   if (!result) {
-    throw new Error('Failed to create event')
+    throw new Error('Failed to create event');
   }
 
   if (event.people) {
-    await replacePeopleForEvent(result.id, event.people)
+    await replacePeopleForEvent(result.id, event.people);
   }
 
   if (event.tags) {
-    const tagObjects = await findOrCreateTagsByNames(event.tags)
-    const tagIds = tagObjects.map((tag) => tag.id)
-    await addTagsToEvent(result.id, tagIds)
+    const tagObjects = await findOrCreateTagsByNames(event.tags);
+    const tagIds = tagObjects.map((tag) => tag.id);
+    await addTagsToEvent(result.id, tagIds);
   }
 
   const [people, tagsList] = await Promise.all([
     getPeopleForEvent(result.id),
     getTagsForEvent(result.id),
-  ])
+  ]);
 
   return {
     ...result,
     tags: tagsList,
     people,
-  }
+  };
 }
 
 export type UpdateEventInput = Partial<
   Omit<typeof events.$inferInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 > & {
-  tags?: string[]
-  people?: string[]
-}
+  tags?: string[];
+  people?: string[];
+};
 
 export async function updateEvent(id: string, event: UpdateEventInput) {
-  const updateData: Partial<typeof events.$inferInsert> = {}
+  const updateData: Partial<typeof events.$inferInsert> = {};
 
-  Object.assign(updateData, { ...event, updatedAt: new Date() })
+  Object.assign(updateData, { ...event, updatedAt: new Date() });
 
-  const result = await db.update(events).set(updateData).where(eq(events.id, id)).returning()
+  const result = await db.update(events).set(updateData).where(eq(events.id, id)).returning();
 
   if (result.length === 0) {
-    return null
+    return null;
   }
 
-  const updatedEvent = result[0]
+  const updatedEvent = result[0];
 
   if (event.people !== undefined) {
-    await replacePeopleForEvent(id, event.people)
+    await replacePeopleForEvent(id, event.people);
   }
 
   if (event.tags !== undefined) {
-    const tagObjects = await findOrCreateTagsByNames(event.tags)
-    const tagIds = tagObjects.map((tag) => tag.id)
-    await syncTagsForEvent(id, tagIds)
+    const tagObjects = await findOrCreateTagsByNames(event.tags);
+    const tagIds = tagObjects.map((tag) => tag.id);
+    await syncTagsForEvent(id, tagIds);
   }
 
-  const [people, tagsList] = await Promise.all([getPeopleForEvent(id), getTagsForEvent(id)])
+  const [people, tagsList] = await Promise.all([getPeopleForEvent(id), getTagsForEvent(id)]);
 
   return {
     ...updatedEvent,
     tags: tagsList,
     people,
-  }
+  };
 }
 
 export async function deleteEvent(id: string) {
   await Promise.all([
     db.delete(eventsUsers).where(eq(eventsUsers.eventId, id)),
     removeTagsFromEvent(id),
-  ])
+  ]);
 
-  const result = await db.delete(events).where(eq(events.id, id)).returning()
+  const result = await db.delete(events).where(eq(events.id, id)).returning();
 
-  return result.length > 0
+  return result.length > 0;
 }
 
 export async function getEventById(id: string) {
-  const [result] = await db.select().from(events).where(eq(events.id, id)).limit(1)
+  const [result] = await db.select().from(events).where(eq(events.id, id)).limit(1);
 
   if (!result) {
-    return null
+    return null;
   }
 
-  const [people, tagsList] = await Promise.all([getPeopleForEvent(id), getTagsForEvent(id)])
+  const [people, tagsList] = await Promise.all([getPeopleForEvent(id), getTagsForEvent(id)]);
 
   return {
     ...result,
     tags: tagsList,
     people,
-  }
+  };
 }
 
 export async function getEventByExternalId(externalId: string, calendarId: string) {
@@ -247,28 +247,28 @@ export async function getEventByExternalId(externalId: string, calendarId: strin
     .select()
     .from(events)
     .where(and(eq(events.externalId, externalId), eq(events.calendarId, calendarId)))
-    .limit(1)
+    .limit(1);
 
   if (!result) {
-    return null
+    return null;
   }
 
   const [people, tagsList] = await Promise.all([
     getPeopleForEvent(result.id),
     getTagsForEvent(result.id),
-  ])
+  ]);
 
   return {
     ...result,
     tags: tagsList,
     people,
-  }
+  };
 }
 
 export interface SyncStatus {
-  lastSyncedAt: Date | null
-  syncError: string | null
-  eventCount: number
+  lastSyncedAt: Date | null;
+  syncError: string | null;
+  eventCount: number;
 }
 
 export async function getSyncStatus(userId: string): Promise<SyncStatus> {
@@ -276,21 +276,21 @@ export async function getSyncStatus(userId: string): Promise<SyncStatus> {
     .select()
     .from(events)
     .where(and(eq(events.userId, userId), eq(events.source, 'google_calendar')))
-    .orderBy(events.lastSyncedAt)
+    .orderBy(events.lastSyncedAt);
 
-  const lastEvent = syncedEvents[syncedEvents.length - 1]
+  const lastEvent = syncedEvents[syncedEvents.length - 1];
 
   return {
     lastSyncedAt: lastEvent?.lastSyncedAt || null,
     syncError: lastEvent?.syncError || null,
     eventCount: syncedEvents.length,
-  }
+  };
 }
 
 export interface VisitFilters {
-  placeId?: string
-  startDate?: Date
-  endDate?: Date
+  placeId?: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export async function getVisitsByUser(userId: string, filters?: VisitFilters) {
@@ -298,18 +298,18 @@ export async function getVisitsByUser(userId: string, filters?: VisitFilters) {
     eq(events.userId, userId),
     isNull(events.deletedAt),
     isNotNull(events.placeId), // Only events with a placeId (visits)
-  ]
+  ];
 
   if (filters?.placeId) {
-    conditions.push(eq(events.placeId, filters.placeId))
+    conditions.push(eq(events.placeId, filters.placeId));
   }
 
   if (filters?.startDate) {
-    conditions.push(gte(events.date, filters.startDate))
+    conditions.push(gte(events.date, filters.startDate));
   }
 
   if (filters?.endDate) {
-    conditions.push(lte(events.date, filters.endDate))
+    conditions.push(lte(events.date, filters.endDate));
   }
 
   const visits = await db
@@ -320,27 +320,27 @@ export async function getVisitsByUser(userId: string, filters?: VisitFilters) {
     .from(events)
     .leftJoin(place, eq(events.placeId, place.id))
     .where(and(...conditions))
-    .orderBy(desc(events.date))
+    .orderBy(desc(events.date));
 
-  const eventIds = visits.map((v) => v.event.id)
+  const eventIds = visits.map((v) => v.event.id);
   const [peopleMap, tagsMap] = await Promise.all([
     getPeopleForEvents(eventIds),
     getTagsForEvents(eventIds),
-  ])
+  ]);
 
   return visits.map((row) => ({
     ...row.event,
     place: row.place,
     tags: tagsMap.get(row.event.id) || [],
     people: peopleMap.get(row.event.id) || [],
-  }))
+  }));
 }
 
 export async function getVisitsByPlace(placeId: string, userId?: string) {
-  const conditions = [eq(events.placeId, placeId), isNull(events.deletedAt)]
+  const conditions = [eq(events.placeId, placeId), isNull(events.deletedAt)];
 
   if (userId) {
-    conditions.push(eq(events.userId, userId))
+    conditions.push(eq(events.userId, userId));
   }
 
   const visits = await db
@@ -351,26 +351,26 @@ export async function getVisitsByPlace(placeId: string, userId?: string) {
     .from(events)
     .leftJoin(place, eq(events.placeId, place.id))
     .where(and(...conditions))
-    .orderBy(desc(events.date))
+    .orderBy(desc(events.date));
 
-  const eventIds = visits.map((v) => v.event.id)
+  const eventIds = visits.map((v) => v.event.id);
   const [peopleMap, tagsMap] = await Promise.all([
     getPeopleForEvents(eventIds),
     getTagsForEvents(eventIds),
-  ])
+  ]);
 
   return visits.map((row) => ({
     ...row.event,
     place: row.place,
     tags: tagsMap.get(row.event.id) || [],
     people: peopleMap.get(row.event.id) || [],
-  }))
+  }));
 }
 
 export interface VisitStats {
-  visitCount: number
-  lastVisitDate: Date | null
-  averageRating: number | null
+  visitCount: number;
+  lastVisitDate: Date | null;
+  averageRating: number | null;
 }
 
 export async function getVisitStatsByPlace(placeId: string, userId: string): Promise<VisitStats> {
@@ -381,20 +381,20 @@ export async function getVisitStatsByPlace(placeId: string, userId: string): Pro
     })
     .from(events)
     .where(and(eq(events.placeId, placeId), eq(events.userId, userId), isNull(events.deletedAt)))
-    .orderBy(desc(events.date))
+    .orderBy(desc(events.date));
 
-  const visitCount = visits.length
-  const lastVisitDate = visits[0]?.date || null
+  const visitCount = visits.length;
+  const lastVisitDate = visits[0]?.date || null;
 
   const ratings = visits
     .map((v) => v.visitRating)
-    .filter((r): r is number => r !== null && r !== undefined)
+    .filter((r): r is number => r !== null && r !== undefined);
   const averageRating =
-    ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null
+    ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null;
 
   return {
     visitCount,
     lastVisitDate,
     averageRating,
-  }
+  };
 }

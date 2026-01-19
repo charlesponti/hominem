@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@hominem/db": "workspace:*",
+    "@tanstack/ai": "0.2.0",
     "ai": "^4.3.16",
     "drizzle-orm": "0.45.1",
     "zod": "4.2.1"

@@ -1,1 +1,1 @@
-export * from './services/file-processor.service'
+export * from './file-processor.service';
