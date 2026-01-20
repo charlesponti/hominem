@@ -1,2 +1,2 @@
-export * from './capital-one'
-export * from './copilot'
+export * from './capital-one';
+export * from './copilot';

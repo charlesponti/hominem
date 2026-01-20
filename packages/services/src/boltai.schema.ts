@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const BoltMessageSchema = z.object({
   isImage: z.boolean().default(false),
@@ -11,7 +11,7 @@ export const BoltMessageSchema = z.object({
   createdAt: z.number(),
   imageURLs: z.array(z.string()).default([]),
   toolUseId: z.string(),
-})
+});
 
 export const BoltConversationSchema = z.object({
   contextSince: z.number().default(-978307200),
@@ -35,7 +35,7 @@ export const BoltConversationSchema = z.object({
   languageCode: z.string().default(''),
   presencePenalty: z.number().default(0),
   plugins: z.array(z.string()).default([]),
-})
+});
 
 export const BoltExportSchema = z.object({
   chats: z.array(BoltConversationSchema),
@@ -55,7 +55,7 @@ export const BoltExportSchema = z.object({
         languageCode: z.string().default('en-us'),
         presencePenalty: z.number().default(0),
         label: z.string(),
-      })
+      }),
     )
     .default([]),
   folders: z
@@ -63,7 +63,7 @@ export const BoltExportSchema = z.object({
       z.object({
         name: z.string(),
         id: z.number(),
-      })
+      }),
     )
     .default([]),
   version: z.number().default(3),
@@ -96,12 +96,12 @@ export const BoltExportSchema = z.object({
           provider: z.string(),
           apiEndpoint: z.string(),
         })
-        .passthrough()
+        .passthrough(),
     )
     .default([]),
   prompts: z.array(z.any()).default([]),
-})
+});
 
-export type BoltMessage = z.infer<typeof BoltMessageSchema>
-export type BoltConversation = z.infer<typeof BoltConversationSchema>
-export type BoltExport = z.infer<typeof BoltExportSchema>
+export type BoltMessage = z.infer<typeof BoltMessageSchema>;
+export type BoltConversation = z.infer<typeof BoltConversationSchema>;
+export type BoltExport = z.infer<typeof BoltExportSchema>;

@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from 'react';
+
 import { cn } from '~/lib/utils';
 
 const EXCLUDED_TYPES = ['establishment', 'food', 'point_of_interest', 'political'];

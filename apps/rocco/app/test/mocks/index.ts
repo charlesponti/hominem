@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js';
+
 import type { List, Place } from '~/lib/types';
 
 export * from './place';

@@ -1,66 +1,66 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { chat } from '@tanstack/ai'
-import { createOllamaChat } from '@tanstack/ai-ollama'
-import { Command } from 'commander'
+import { chat } from '@tanstack/ai';
+import { createOllamaChat } from '@tanstack/ai-ollama';
+import { Command } from 'commander';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const adapter = createOllamaChat()
+const adapter = createOllamaChat();
 
 type Options = {
-  dir: string
-  glob?: string
-  instruction?: string
-  model?: string
-  dryRun?: boolean
-  backup?: boolean
-}
+  dir: string;
+  glob?: string;
+  instruction?: string;
+  model?: string;
+  dryRun?: boolean;
+  backup?: boolean;
+};
 
 const SYSTEM_PROMPT =
-  'You are a markdown editor assistant that rewrites files while preserving frontmatter, code blocks, and structural intent.'
+  'You are a markdown editor assistant that rewrites files while preserving frontmatter, code blocks, and structural intent.';
 
 function isMarkdownFile(file: string) {
-  return file.endsWith('.md') || file.endsWith('.mdx')
+  return file.endsWith('.md') || file.endsWith('.mdx');
 }
 
 async function collectMarkdownFiles(dir: string): Promise<string[]> {
-  const results: string[] = []
+  const results: string[] = [];
 
   async function walk(current: string) {
-    const entries = await fs.promises.readdir(current, { withFileTypes: true })
+    const entries = await fs.promises.readdir(current, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.name === 'node_modules' || entry.name === '.git') {
-        continue
+        continue;
       }
-      const resolved = path.join(current, entry.name)
+      const resolved = path.join(current, entry.name);
       if (entry.isDirectory()) {
-        await walk(resolved)
+        await walk(resolved);
       } else if (entry.isFile() && isMarkdownFile(entry.name)) {
-        results.push(resolved)
+        results.push(resolved);
       }
     }
   }
 
-  await walk(dir)
-  return results
+  await walk(dir);
+  return results;
 }
 
 function extractFrontmatter(content: string) {
   if (content.startsWith('---')) {
-    const end = content.indexOf('\n---', 3)
+    const end = content.indexOf('\n---', 3);
     if (end !== -1) {
-      const fm = content.slice(0, end + 4) // include trailing newline
-      const body = content.slice(end + 4)
-      return { frontmatter: fm, body }
+      const fm = content.slice(0, end + 4); // include trailing newline
+      const body = content.slice(end + 4);
+      return { frontmatter: fm, body };
     }
   }
-  return { frontmatter: '', body: content }
+  return { frontmatter: '', body: content };
 }
 
 function preserveFrontmatterPromptInstruction(frontmatter: string, instruction: string) {
   if (!frontmatter) {
-    return instruction
+    return instruction;
   }
-  return `${instruction}\n\nImportant: this file contains the following YAML frontmatter which must be preserved exactly (do not change it):\n${frontmatter}`
+  return `${instruction}\n\nImportant: this file contains the following YAML frontmatter which must be preserved exactly (do not change it):\n${frontmatter}`;
 }
 
 // Using the official @tanstack/ai-ollama adapter (`ollamaText`) below —
@@ -75,34 +75,34 @@ export const rewriteCommand = new Command('rewrite')
   .option('--dry-run', "Don't write files, only show diffs")
   .option('--backup', 'Save a .bak copy of the original file before overwriting')
   .action(async (opts: Options) => {
-    const dir = path.resolve(opts.dir)
+    const dir = path.resolve(opts.dir);
     if (!(fs.existsSync(dir) && fs.statSync(dir).isDirectory())) {
-      console.error('Provided path is not a directory:', opts.dir)
-      process.exit(1)
+      console.error('Provided path is not a directory:', opts.dir);
+      process.exit(1);
     }
 
-    const files = await collectMarkdownFiles(dir)
-    console.log(`Found ${files.length} markdown files in ${dir}`)
+    const files = await collectMarkdownFiles(dir);
+    console.log(`Found ${files.length} markdown files in ${dir}`);
 
     if (files.length === 0) {
-      return
+      return;
     }
 
     const instruction =
       opts.instruction ||
-      'Rewrite the markdown to improve clarity, fix grammar, and preserve original meaning and structure. Keep code blocks and frontmatter unchanged unless the instruction explicitly asks to alter them.'
+      'Rewrite the markdown to improve clarity, fix grammar, and preserve original meaning and structure. Keep code blocks and frontmatter unchanged unless the instruction explicitly asks to alter them.';
 
     for (const file of files) {
       try {
-        const content = await fs.promises.readFile(file, 'utf-8')
-        const { frontmatter, body } = extractFrontmatter(content)
+        const content = await fs.promises.readFile(file, 'utf-8');
+        const { frontmatter, body } = extractFrontmatter(content);
 
-        const fullInstruction = preserveFrontmatterPromptInstruction(frontmatter, instruction)
+        const fullInstruction = preserveFrontmatterPromptInstruction(frontmatter, instruction);
 
-        const prompt = `${fullInstruction}\n\nFile content:\n${body}`
+        const prompt = `${fullInstruction}\n\nFile content:\n${body}`;
 
-        process.stdout.write(`Rewriting ${path.relative(process.cwd(), file)} ... `)
-        const start = Date.now()
+        process.stdout.write(`Rewriting ${path.relative(process.cwd(), file)} ... `);
+        const start = Date.now();
 
         const stream = chat({
           adapter,
@@ -110,39 +110,39 @@ export const rewriteCommand = new Command('rewrite')
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: prompt },
           ],
-        })
+        });
 
-        let accumulated = ''
+        let accumulated = '';
         for await (const event of stream as AsyncIterable<any>) {
-          console.log(event.content)
+          console.log(event.content);
           if (event.type === 'content') {
-            accumulated += event.content
+            accumulated += event.content;
           }
         }
 
-        const rewritten = accumulated
-        const duration = Date.now() - start
+        const rewritten = accumulated;
+        const duration = Date.now() - start;
 
         if (!rewritten || rewritten.trim().length === 0) {
-          console.log('no output')
-          continue
+          console.log('no output');
+          continue;
         }
 
-        const finalContent = `${frontmatter}${rewritten.trim()}\n`
+        const finalContent = `${frontmatter}${rewritten.trim()}\n`;
 
         if (opts.dryRun) {
-          console.log(`(dry-run) ${finalContent.slice(0, 200).replace(/\n/g, ' ')}...`)
+          console.log(`(dry-run) ${finalContent.slice(0, 200).replace(/\n/g, ' ')}...`);
         } else {
           if (opts.backup) {
-            await fs.promises.copyFile(file, `${file}.bak`)
+            await fs.promises.copyFile(file, `${file}.bak`);
           }
-          await fs.promises.writeFile(file, finalContent, 'utf-8')
-          console.log(`updated (${duration}ms)`)
+          await fs.promises.writeFile(file, finalContent, 'utf-8');
+          console.log(`updated (${duration}ms)`);
         }
       } catch (err) {
-        console.error('Error rewriting', file, err)
+        console.error('Error rewriting', file, err);
       }
     }
-  })
+  });
 
-export default rewriteCommand
+export default rewriteCommand;

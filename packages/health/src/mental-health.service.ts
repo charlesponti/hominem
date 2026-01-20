@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const assessMentalWellnessInputSchema = z.object({
   stressDescription: z.string().describe('Description of current stressors or concerns'),
@@ -12,7 +12,7 @@ export const assessMentalWellnessInputSchema = z.object({
     .array(z.string())
     .optional()
     .describe('Coping strategies currently being used'),
-})
+});
 
 export const assessMentalWellnessOutputSchema = z.object({
   overallAssessment: z.string(),
@@ -20,7 +20,7 @@ export const assessMentalWellnessOutputSchema = z.object({
   copingStrategies: z.array(z.string()),
   recommendations: z.array(z.string()),
   positiveAffirmation: z.string(),
-})
+});
 
 export class MentalHealthService {
   async assess(_: z.infer<typeof assessMentalWellnessInputSchema>) {
@@ -30,8 +30,8 @@ export class MentalHealthService {
       copingStrategies: [],
       recommendations: [],
       positiveAffirmation: 'You are doing fine',
-    }
+    };
   }
 }
 
-export const mentalHealthService = new MentalHealthService()
+export const mentalHealthService = new MentalHealthService();

@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { googlePlaces, getNeighborhoodFromAddressComponents, googlePlacesTestUtils } from './google-places.service';
+
 import { redis } from '../redis';
-import { mockPlaces } from '../test-utils/google-api-mocks';
+import {
+  googlePlaces,
+  getNeighborhoodFromAddressComponents,
+  googlePlacesTestUtils,
+} from './google-places.service';
+import { mockPlaces } from './test-utils/google-api-mocks';
 
 // Mock googleapis
-vi.mock('googleapis', () => import('../test-utils/google-api-mocks').then((m) => m.googleapi));
+vi.mock('googleapis', () => import('./test-utils/google-api-mocks').then((m) => m.googleapi));
 
 // Mock Redis
 vi.mock('../redis', () => ({
@@ -170,10 +175,7 @@ describe('googlePlaces', () => {
 
       const results = await googlePlaces.getPhotos({ placeId: mockPlaceId });
 
-      expect(results).toEqual([
-        'places/place123/photos/photo1',
-        'places/place123/photos/photo2',
-      ]);
+      expect(results).toEqual(['places/place123/photos/photo1', 'places/place123/photos/photo2']);
     });
 
     it('should respect the limit', async () => {
@@ -199,9 +201,7 @@ describe('getNeighborhoodFromAddressComponents', () => {
   });
 
   it('should return null if no neighborhood component is found', () => {
-    const components = [
-      { longText: 'Manhattan', types: ['sublocality'] },
-    ];
+    const components = [{ longText: 'Manhattan', types: ['sublocality'] }];
 
     const result = getNeighborhoodFromAddressComponents(components);
     expect(result).toBeNull();

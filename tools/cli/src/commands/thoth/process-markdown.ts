@@ -1,22 +1,23 @@
-import { createReadStream } from 'node:fs'
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import process from 'node:process'
-import readline from 'node:readline'
-import { detectTask } from '@hominem/utils/markdown'
-import { Command } from 'commander'
-import { consola } from 'consola'
-import { trpc } from '../../lib/trpc'
+import { detectTask } from '@hominem/utils/markdown';
+import { Command } from 'commander';
+import { consola } from 'consola';
+import { createReadStream } from 'node:fs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import process from 'node:process';
+import readline from 'node:readline';
+
+import { trpc } from '../../lib/trpc';
 
 interface NoteData {
-  type: 'note' | 'task' | 'timer' | 'journal' | 'document'
-  title?: string
-  content: string
-  tags?: Array<{ value: string }>
+  type: 'note' | 'task' | 'timer' | 'journal' | 'document';
+  title?: string;
+  content: string;
+  tags?: Array<{ value: string }>;
   taskMetadata?: {
-    status: 'todo' | 'in-progress' | 'done' | 'archived'
-    priority?: 'low' | 'medium' | 'high' | 'urgent'
-  }
+    status: 'todo' | 'in-progress' | 'done' | 'archived';
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+  };
 }
 
 export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-heading')
@@ -28,44 +29,44 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
   .action(
     async (
       dir: string,
-      options: { output: string; preserveStructure: boolean; combineParagraphs: boolean }
+      options: { output: string; preserveStructure: boolean; combineParagraphs: boolean },
     ) => {
       try {
-        const inputDir = path.resolve(process.cwd(), dir)
-        const outputDir = path.resolve(process.cwd(), options.output)
+        const inputDir = path.resolve(process.cwd(), dir);
+        const outputDir = path.resolve(process.cwd(), options.output);
 
         // Ensure output directory exists
-        await fs.mkdir(outputDir, { recursive: true })
+        await fs.mkdir(outputDir, { recursive: true });
 
-        const files = await fs.readdir(inputDir)
-        const markdownFiles = files.filter((file) => file.endsWith('.md'))
+        const files = await fs.readdir(inputDir);
+        const markdownFiles = files.filter((file) => file.endsWith('.md'));
 
         if (markdownFiles.length === 0) {
-          consola.warn('No markdown files found in the specified directory.')
-          return
+          consola.warn('No markdown files found in the specified directory.');
+          return;
         }
 
-        consola.info(`Found ${markdownFiles.length} markdown files to process`)
+        consola.info(`Found ${markdownFiles.length} markdown files to process`);
 
         for (const fileName of markdownFiles) {
-          consola.info(`Processing ${fileName}...`)
-          const filePath = path.join(inputDir, fileName)
-          const baseName = path.basename(fileName, '.md')
+          consola.info(`Processing ${fileName}...`);
+          const filePath = path.join(inputDir, fileName);
+          const baseName = path.basename(fileName, '.md');
 
           const rl = readline.createInterface({
             input: createReadStream(filePath),
             crlfDelay: Number.POSITIVE_INFINITY,
-          })
+          });
 
-          let currentHeading = ''
-          let currentHeadingLevel = 0
-          let paragraphBuffer: string[] = []
-          let notesCreated = 0
+          let currentHeading = '';
+          let currentHeadingLevel = 0;
+          let paragraphBuffer: string[] = [];
+          let notesCreated = 0;
 
           async function flushParagraphBuffer() {
-            if (!paragraphBuffer.length) return
+            if (!paragraphBuffer.length) return;
 
-            const content = paragraphBuffer.join('\n\n')
+            const content = paragraphBuffer.join('\n\n');
             const noteData: NoteData = {
               type: 'note',
               title: currentHeading || `${baseName} - Section ${notesCreated + 1}`,
@@ -75,21 +76,21 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
                 { value: 'file-section' },
                 { value: baseName.toLowerCase() },
               ],
-            }
+            };
 
             try {
-              const result = await trpc.notes.create.mutate(noteData)
-              consola.success(`Created note: ${result.title || 'Untitled'}`)
-              notesCreated++
+              const result = await trpc.notes.create.mutate(noteData);
+              consola.success(`Created note: ${result.title || 'Untitled'}`);
+              notesCreated++;
             } catch (error) {
-              consola.error(`Failed to create note: ${error}`)
+              consola.error(`Failed to create note: ${error}`);
             }
 
-            paragraphBuffer = []
+            paragraphBuffer = [];
           }
 
           async function processBulletPoint(line: string) {
-            const { isTask, isComplete } = detectTask(line)
+            const { isTask, isComplete } = detectTask(line);
             const noteData: NoteData = {
               type: isTask ? 'task' : 'note',
               title: currentHeading || baseName,
@@ -105,26 +106,26 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
                   priority: 'medium',
                 },
               }),
-            }
+            };
 
             try {
-              const _result = await trpc.notes.create.mutate(noteData)
-              consola.success(`Created ${isTask ? 'task' : 'note'}: ${line.substring(0, 50)}...`)
-              notesCreated++
+              const _result = await trpc.notes.create.mutate(noteData);
+              consola.success(`Created ${isTask ? 'task' : 'note'}: ${line.substring(0, 50)}...`);
+              notesCreated++;
             } catch (error) {
-              consola.error(`Failed to create bullet point note: ${error}`)
+              consola.error(`Failed to create bullet point note: ${error}`);
             }
           }
 
           for await (const line of rl) {
-            const trimmed = line.trim()
+            const trimmed = line.trim();
 
             // Check for headings
-            const headingMatch = /^(#{1,6})\s+(.*)/.exec(trimmed)
+            const headingMatch = /^(#{1,6})\s+(.*)/.exec(trimmed);
             if (headingMatch) {
-              await flushParagraphBuffer()
-              currentHeading = headingMatch[2].trim()
-              currentHeadingLevel = headingMatch[1].length
+              await flushParagraphBuffer();
+              currentHeading = headingMatch[2].trim();
+              currentHeadingLevel = headingMatch[1].length;
 
               // If preserve structure is enabled, create a note for the heading itself
               if (options.preserveStructure) {
@@ -138,31 +139,31 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
                     { value: `h${currentHeadingLevel}` },
                     { value: baseName.toLowerCase() },
                   ],
-                }
+                };
 
                 try {
-                  const _result = await trpc.notes.create.mutate(headingNoteData)
-                  consola.success(`Created heading note: ${currentHeading}`)
-                  notesCreated++
+                  const _result = await trpc.notes.create.mutate(headingNoteData);
+                  consola.success(`Created heading note: ${currentHeading}`);
+                  notesCreated++;
                 } catch (error) {
-                  consola.error(`Failed to create heading note: ${error}`)
+                  consola.error(`Failed to create heading note: ${error}`);
                 }
               }
             }
             // Check for bullet points
             else if (/^[-*]\s+/.test(trimmed)) {
-              await flushParagraphBuffer()
-              await processBulletPoint(trimmed)
+              await flushParagraphBuffer();
+              await processBulletPoint(trimmed);
             }
             // Check for numbered lists
             else if (/^\d+\.\s+/.test(trimmed)) {
-              await flushParagraphBuffer()
-              await processBulletPoint(trimmed)
+              await flushParagraphBuffer();
+              await processBulletPoint(trimmed);
             }
             // Regular content
             else if (trimmed) {
               if (options.combineParagraphs) {
-                paragraphBuffer.push(trimmed)
+                paragraphBuffer.push(trimmed);
               } else {
                 // Create individual notes for each paragraph
                 const noteData: NoteData = {
@@ -174,37 +175,37 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
                     { value: 'paragraph' },
                     { value: baseName.toLowerCase() },
                   ],
-                }
+                };
 
                 try {
-                  const _result = await trpc.notes.create.mutate(noteData)
-                  consola.success(`Created paragraph note: ${trimmed.substring(0, 50)}...`)
-                  notesCreated++
+                  const _result = await trpc.notes.create.mutate(noteData);
+                  consola.success(`Created paragraph note: ${trimmed.substring(0, 50)}...`);
+                  notesCreated++;
                 } catch (error) {
-                  consola.error(`Failed to create paragraph note: ${error}`)
+                  consola.error(`Failed to create paragraph note: ${error}`);
                 }
               }
             } else {
               // Empty line - flush buffer if combining paragraphs
               if (options.combineParagraphs) {
-                await flushParagraphBuffer()
+                await flushParagraphBuffer();
               }
             }
           }
 
           // Flush any remaining content
-          await flushParagraphBuffer()
-          rl.close()
+          await flushParagraphBuffer();
+          rl.close();
 
-          consola.success(`Completed processing ${fileName}. Created ${notesCreated} notes.`)
+          consola.success(`Completed processing ${fileName}. Created ${notesCreated} notes.`);
         }
 
-        consola.success('Successfully processed all markdown files!')
+        consola.success('Successfully processed all markdown files!');
       } catch (err) {
-        consola.error('Error processing markdown files:', err)
-        process.exit(1)
+        consola.error('Error processing markdown files:', err);
+        process.exit(1);
       }
-    }
-  )
+    },
+  );
 
-export default groupMarkdownByHeadingCommand
+export default groupMarkdownByHeadingCommand;

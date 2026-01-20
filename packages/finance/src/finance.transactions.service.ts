@@ -1,13 +1,78 @@
-import { logger } from '@hominem/utils/logger'
-import { and, asc, desc, eq, gte, like, lte, type SQL, sql } from 'drizzle-orm'
-import { db } from '@hominem/db'
+import { db } from '@hominem/db';
 import {
   type FinanceTransaction,
   type FinanceTransactionInsert,
   financeAccounts,
   transactions,
-} from '@hominem/db/schema'
-import type { QueryOptions } from './finance.types'
+} from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, asc, desc, eq, gte, like, lte, type SQL, sql } from 'drizzle-orm';
+import { z } from 'zod';
+
+import type { QueryOptions } from './finance.types';
+
+// Transaction service schemas
+export const createTransactionInputSchema = z.object({
+  accountId: z.string(),
+  amount: z.string(),
+  type: z.enum(['credit', 'investment', 'income', 'expense', 'debit', 'transfer']),
+  date: z.date(),
+  description: z.string(),
+  category: z.string(),
+  userId: z.string(),
+});
+
+export const createTransactionOutputSchema = z.object({
+  id: z.string(),
+  accountId: z.string(),
+  amount: z.string(),
+  type: z.string(),
+  date: z.date(),
+  userId: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  description: z.string().nullable(),
+  category: z.string().nullable(),
+  parentCategory: z.string().nullable(),
+  merchantName: z.string().nullable(),
+  status: z.string().nullable(),
+  accountMask: z.string().nullable(),
+  note: z.string().nullable(),
+  pending: z.boolean(),
+  recurring: z.boolean(),
+  excluded: z.boolean(),
+  paymentChannel: z.string().nullable(),
+  location: z.any().nullable(),
+  source: z.string(),
+  tags: z.any().nullable(),
+  fromAccountId: z.string().nullable(),
+  toAccountId: z.string().nullable(),
+  account: z.any().nullable(),
+  eventId: z.string().nullable(),
+  plaidTransactionId: z.string().nullable(),
+  investmentDetails: z.any().nullable(),
+});
+
+export const queryTransactionsOutputSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.string(),
+      date: z.date(),
+      description: z.string().nullable(),
+      amount: z.string(),
+      status: z.string().nullable(),
+      category: z.string().nullable(),
+      parentCategory: z.string().nullable(),
+      type: z.string(),
+      accountMask: z.string().nullable(),
+      note: z.string().nullable(),
+      accountId: z.string(),
+      account: z.any(),
+    }),
+  ),
+  filteredCount: z.number(),
+  totalUserCount: z.number(),
+});
 
 /**
  * Builds standardized WHERE conditions for transaction queries.
@@ -27,34 +92,34 @@ import type { QueryOptions } from './finance.types'
  * @returns Combined WHERE conditions or undefined if no conditions
  */
 export function buildWhereConditions(options: QueryOptions) {
-  const conditions = []
+  const conditions = [];
 
   // User ID filter - required for most operations
   if (options.userId) {
-    conditions.push(eq(transactions.userId, options.userId))
+    conditions.push(eq(transactions.userId, options.userId));
   }
 
   // Transaction type filter
   if (options.type && typeof options.type === 'string') {
-    conditions.push(eq(transactions.type, options.type))
+    conditions.push(eq(transactions.type, options.type));
   }
 
   // Default filters to exclude test/invalid transactions
   if (!options.includeExcluded) {
-    conditions.push(eq(transactions.excluded, false))
+    conditions.push(eq(transactions.excluded, false));
   }
 
-  conditions.push(eq(transactions.pending, false))
+  conditions.push(eq(transactions.pending, false));
 
   // Date range filters - support both new and legacy format
-  const fromDate = options.from ? new Date(options.from) : options.dateFrom
+  const fromDate = options.from ? new Date(options.from) : options.dateFrom;
   if (fromDate) {
-    conditions.push(gte(transactions.date, fromDate))
+    conditions.push(gte(transactions.date, fromDate));
   }
 
-  const toDate = options.to ? new Date(options.to) : options.dateTo
+  const toDate = options.to ? new Date(options.to) : options.dateTo;
   if (toDate) {
-    conditions.push(lte(transactions.date, toDate))
+    conditions.push(lte(transactions.date, toDate));
   }
 
   // Category filter with fuzzy search support
@@ -62,48 +127,48 @@ export function buildWhereConditions(options: QueryOptions) {
     if (Array.isArray(options.category)) {
       // Handle array of categories
       const categoryConditions = options.category.map((cat) => {
-        const categoryPattern = `%${cat}%`
-        return sql`(${transactions.category} ILIKE ${categoryPattern} OR ${transactions.parentCategory} ILIKE ${categoryPattern})`
-      })
-      conditions.push(sql`(${sql.join(categoryConditions, sql` OR `)})`)
+        const categoryPattern = `%${cat}%`;
+        return sql`(${transactions.category} ILIKE ${categoryPattern} OR ${transactions.parentCategory} ILIKE ${categoryPattern})`;
+      });
+      conditions.push(sql`(${sql.join(categoryConditions, sql` OR `)})`);
     } else {
       // Handle single category with fuzzy search
-      const categoryPattern = `%${options.category}%`
+      const categoryPattern = `%${options.category}%`;
       conditions.push(
-        sql`(${transactions.category} ILIKE ${categoryPattern} OR ${transactions.parentCategory} ILIKE ${categoryPattern})`
-      )
+        sql`(${transactions.category} ILIKE ${categoryPattern} OR ${transactions.parentCategory} ILIKE ${categoryPattern})`,
+      );
     }
   }
 
   // Amount range filters - support both new and legacy format
-  const minAmount = options.min ? options.min : options.amountMin?.toString()
+  const minAmount = options.min ? options.min : options.amountMin?.toString();
   if (minAmount) {
-    conditions.push(gte(transactions.amount, minAmount))
+    conditions.push(gte(transactions.amount, minAmount));
   }
 
-  const maxAmount = options.max ? options.max : options.amountMax?.toString()
+  const maxAmount = options.max ? options.max : options.amountMax?.toString();
   if (maxAmount) {
-    conditions.push(lte(transactions.amount, maxAmount))
+    conditions.push(lte(transactions.amount, maxAmount));
   }
 
   if (options.account) {
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        options.account
-      )
+        options.account,
+      );
     if (isUuid) {
-      conditions.push(eq(transactions.accountId, options.account))
+      conditions.push(eq(transactions.accountId, options.account));
     } else {
-      conditions.push(like(financeAccounts.name, `%${options.account}%`))
+      conditions.push(like(financeAccounts.name, `%${options.account}%`));
     }
   }
 
   if (options.description) {
-    conditions.push(like(transactions.description, `%${options.description}%`))
+    conditions.push(like(transactions.description, `%${options.description}%`));
   }
 
   if (options.search && typeof options.search === 'string' && options.search.trim() !== '') {
-    const searchTerm = options.search.trim()
+    const searchTerm = options.search.trim();
     const tsVector = sql`to_tsvector('english', 
       coalesce(${transactions.description}, '') || ' ' || 
       coalesce(${transactions.merchantName}, '') || ' ' || 
@@ -113,12 +178,12 @@ export function buildWhereConditions(options: QueryOptions) {
       coalesce(${transactions.note}, '') || ' ' || 
       coalesce(${transactions.paymentChannel}, '') || ' ' || 
       coalesce(${transactions.source}, '')
-    )`
-    const tsQuery = sql`websearch_to_tsquery('english', ${searchTerm})`
-    conditions.push(sql`${tsVector} @@ ${tsQuery}`)
+    )`;
+    const tsQuery = sql`websearch_to_tsquery('english', ${searchTerm})`;
+    conditions.push(sql`${tsVector} @@ ${tsQuery}`);
   }
 
-  return conditions.length > 0 ? and(...conditions) : undefined
+  return conditions.length > 0 ? and(...conditions) : undefined;
 }
 
 export async function queryTransactions(options: QueryOptions) {
@@ -127,20 +192,20 @@ export async function queryTransactions(options: QueryOptions) {
     ? options.sortBy
     : options.sortBy
       ? [options.sortBy]
-      : ['date']
+      : ['date'];
   const sortDirectionArray = Array.isArray(options.sortDirection)
     ? options.sortDirection
     : options.sortDirection
       ? [options.sortDirection]
-      : ['desc']
+      : ['desc'];
 
-  const { userId, limit = 100, offset = 0 } = options
+  const { userId, limit = 100, offset = 0 } = options;
 
   if (!userId) {
-    return { data: [], filteredCount: 0, totalUserCount: 0 }
+    return { data: [], filteredCount: 0, totalUserCount: 0 };
   }
 
-  const whereConditions = buildWhereConditions(options)
+  const whereConditions = buildWhereConditions(options);
 
   const baseFilteredQuery = db
     .select({
@@ -159,69 +224,69 @@ export async function queryTransactions(options: QueryOptions) {
     })
     .from(transactions)
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
-    .where(whereConditions)
+    .where(whereConditions);
 
-  const orderByClauses: SQL[] = []
+  const orderByClauses: SQL[] = [];
 
   for (let i = 0; i < sortByArray.length; i++) {
-    const field = sortByArray[i]
+    const field = sortByArray[i];
     // Ensure sortDirectionArray has a corresponding entry or default to 'desc'
     const direction =
       sortDirectionArray[i] ||
-      (sortDirectionArray.length === 1 && i > 0 ? sortDirectionArray[0] : 'desc')
+      (sortDirectionArray.length === 1 && i > 0 ? sortDirectionArray[0] : 'desc');
 
     switch (field) {
       case 'date':
-        orderByClauses.push(direction === 'asc' ? asc(transactions.date) : desc(transactions.date))
-        break
+        orderByClauses.push(direction === 'asc' ? asc(transactions.date) : desc(transactions.date));
+        break;
       case 'amount':
         orderByClauses.push(
-          direction === 'asc' ? asc(transactions.amount) : desc(transactions.amount)
-        )
-        break
+          direction === 'asc' ? asc(transactions.amount) : desc(transactions.amount),
+        );
+        break;
       case 'description':
         orderByClauses.push(
-          direction === 'asc' ? asc(transactions.description) : desc(transactions.description)
-        )
-        break
+          direction === 'asc' ? asc(transactions.description) : desc(transactions.description),
+        );
+        break;
       case 'category':
         orderByClauses.push(
-          direction === 'asc' ? asc(transactions.category) : desc(transactions.category)
-        )
-        break
+          direction === 'asc' ? asc(transactions.category) : desc(transactions.category),
+        );
+        break;
       // Add other sortable fields here
       default:
         // Optionally log an unrecognized sort field or handle as an error
-        logger.warn(`Unrecognized sort field: ${field}`)
+        logger.warn(`Unrecognized sort field: ${field}`);
         // If it's the first sort field and it's not recognized, apply a default sort to prevent errors
         if (orderByClauses.length === 0) {
-          orderByClauses.push(desc(transactions.date))
+          orderByClauses.push(desc(transactions.date));
         }
-        break
+        break;
     }
   }
 
   // Add a final default sort by ID to ensure stable pagination if 'id' is not already a sort field
   // and to ensure consistent ordering when other sort fields have identical values.
   if (!sortByArray.includes('id')) {
-    orderByClauses.push(desc(transactions.id))
+    orderByClauses.push(desc(transactions.id));
   }
 
-  let sortedQuery = baseFilteredQuery
+  let sortedQuery = baseFilteredQuery;
   if (orderByClauses.length > 0) {
     // @ts-expect-error Drizzle's orderBy can take an array of SQL objects
-    sortedQuery = baseFilteredQuery.orderBy(...orderByClauses)
+    sortedQuery = baseFilteredQuery.orderBy(...orderByClauses);
   }
 
-  const paginatedTransactions = await sortedQuery.limit(limit).offset(offset)
+  const paginatedTransactions = await sortedQuery.limit(limit).offset(offset);
 
   // Get count of filtered transactions (for pagination)
   const filteredCountResult = await db
     .select({ count: sql<number>`COUNT(*)::int` })
     .from(transactions)
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id)) // Join needed if it affects 'whereConditions'
-    .where(whereConditions)
-  const filteredCount = Number(filteredCountResult[0]?.count || 0)
+    .where(whereConditions);
+  const filteredCount = Number(filteredCountResult[0]?.count || 0);
 
   // Get total count of transactions for the user (respecting base filters like excluded/pending)
   const totalUserCountResult = await db
@@ -231,81 +296,81 @@ export async function queryTransactions(options: QueryOptions) {
       and(
         eq(transactions.userId, userId),
         eq(transactions.excluded, false),
-        eq(transactions.pending, false)
-      )
-    )
-  const totalUserCount = Number(totalUserCountResult[0]?.count || 0)
+        eq(transactions.pending, false),
+      ),
+    );
+  const totalUserCount = Number(totalUserCountResult[0]?.count || 0);
 
   return {
     data: paginatedTransactions,
     filteredCount,
     totalUserCount,
-  }
+  };
 }
 
 export function findExistingTransaction(tx: {
-  date: Date
-  accountMask?: string | null
-  amount: string
-  type: string
-}): Promise<FinanceTransaction | undefined>
+  date: Date;
+  accountMask?: string | null;
+  amount: string;
+  type: string;
+}): Promise<FinanceTransaction | undefined>;
 export function findExistingTransaction(
   txs: Array<{
-    date: Date
-    accountMask?: string | null
-    amount: string
-    type: string
-  }>
-): Promise<FinanceTransaction[]>
+    date: Date;
+    accountMask?: string | null;
+    amount: string;
+    type: string;
+  }>,
+): Promise<FinanceTransaction[]>;
 export async function findExistingTransaction(
   txOrTxs:
     | {
-        date: Date
-        accountMask?: string | null
-        amount: string
-        type: string
+        date: Date;
+        accountMask?: string | null;
+        amount: string;
+        type: string;
       }
     | Array<{
-        date: Date
-        accountMask?: string | null
-        amount: string
-        type: string
-      }>
+        date: Date;
+        accountMask?: string | null;
+        amount: string;
+        type: string;
+      }>,
 ): Promise<FinanceTransaction | FinanceTransaction[] | undefined> {
   if (Array.isArray(txOrTxs)) {
     if (txOrTxs.length === 0) {
-      return []
+      return [];
     }
     const conditions = txOrTxs.map((tx) =>
       and(
         eq(transactions.date, tx.date),
         eq(transactions.amount, tx.amount),
         eq(transactions.type, tx.type as FinanceTransaction['type']),
-        tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined
-      )
-    )
+        tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined,
+      ),
+    );
     // @ts-expect-error - drizzle-orm `or` supports array of conditions
-    return db.query.transactions.findMany({ where: or(...conditions) })
+    return db.query.transactions.findMany({ where: or(...conditions) });
   }
   return db.query.transactions.findFirst({
     where: and(
       eq(transactions.date, txOrTxs.date),
       eq(transactions.amount, txOrTxs.amount),
       eq(transactions.type, txOrTxs.type as FinanceTransaction['type']),
-      txOrTxs.accountMask ? eq(transactions.accountMask, txOrTxs.accountMask) : undefined
+      txOrTxs.accountMask ? eq(transactions.accountMask, txOrTxs.accountMask) : undefined,
     ),
-  })
+  });
 }
 
-export function createTransaction(tx: FinanceTransactionInsert): Promise<FinanceTransaction>
-export function createTransaction(txs: FinanceTransactionInsert[]): Promise<FinanceTransaction[]>
+export function createTransaction(tx: FinanceTransactionInsert): Promise<FinanceTransaction>;
+export function createTransaction(txs: FinanceTransactionInsert[]): Promise<FinanceTransaction[]>;
 export async function createTransaction(
-  txOrTxs: FinanceTransactionInsert | FinanceTransactionInsert[]
+  txOrTxs: FinanceTransactionInsert | FinanceTransactionInsert[],
 ): Promise<FinanceTransaction | FinanceTransaction[]> {
   try {
-    const transactionsToInsert = Array.isArray(txOrTxs) ? txOrTxs : [txOrTxs]
+    const transactionsToInsert = Array.isArray(txOrTxs) ? txOrTxs : [txOrTxs];
     if (transactionsToInsert.length === 0) {
-      return []
+      return [];
     }
 
     const values = transactionsToInsert.map((tx) => ({
@@ -324,80 +389,80 @@ export async function createTransaction(
       tags: tx.tags,
       type: tx.type,
       userId: tx.userId,
-    }))
+    }));
 
-    const result = await db.insert(transactions).values(values).returning()
+    const result = await db.insert(transactions).values(values).returning();
 
     if (!result || result.length === 0) {
-      throw new Error('Failed to insert transaction(s)')
+      throw new Error('Failed to insert transaction(s)');
     }
 
-    return Array.isArray(txOrTxs) ? result : result[0]!
+    return Array.isArray(txOrTxs) ? result : result[0]!;
   } catch (error: unknown) {
-    logger.error(`Error inserting transaction(s): ${JSON.stringify(txOrTxs)}`, error as Error)
+    logger.error(`Error inserting transaction(s): ${JSON.stringify(txOrTxs)}`, error as Error);
     throw new Error(
-      `Failed to insert transaction(s): ${error instanceof Error ? error.message : error}`
-    )
+      `Failed to insert transaction(s): ${error instanceof Error ? error.message : error}`,
+    );
   }
 }
 
 export async function updateTransactionIfNeeded(
   tx: FinanceTransactionInsert,
-  existingTx: FinanceTransaction
+  existingTx: FinanceTransaction,
 ): Promise<boolean> {
-  const updates: Partial<FinanceTransactionInsert> = {}
+  const updates: Partial<FinanceTransactionInsert> = {};
 
   // Only update empty or null fields if the new transaction has data
   if ((!existingTx.category || existingTx.category === '') && tx.category) {
-    updates.category = tx.category
+    updates.category = tx.category;
   }
 
   if ((!existingTx.parentCategory || existingTx.parentCategory === '') && tx.parentCategory) {
-    updates.parentCategory = tx.parentCategory
+    updates.parentCategory = tx.parentCategory;
   }
 
   if (!existingTx.note && tx.note) {
-    updates.note = tx.note
+    updates.note = tx.note;
   }
 
   if (!existingTx.tags && tx.tags) {
-    updates.tags = tx.tags
+    updates.tags = tx.tags;
   }
 
   if (Object.keys(updates).length > 0) {
     try {
-      await db.update(transactions).set(updates).where(eq(transactions.id, existingTx.id))
-      logger.debug(`Updated transaction ${existingTx.id} with additional metadata`)
-      return true
+      await db.update(transactions).set(updates).where(eq(transactions.id, existingTx.id));
+      logger.debug(`Updated transaction ${existingTx.id} with additional metadata`);
+      return true;
     } catch (error: unknown) {
-      logger.error(`Failed to update transaction ${existingTx.id}:`, error as Error)
-      return false
+      logger.error(`Failed to update transaction ${existingTx.id}:`, error as Error);
+      return false;
     }
   }
 
-  return false
+  return false;
 }
 
 export async function updateTransaction(
   transactionId: string,
   userId: string,
-  updates: Partial<FinanceTransactionInsert>
+  updates: Partial<FinanceTransactionInsert>,
 ): Promise<FinanceTransaction> {
   try {
     const [updated] = await db
       .update(transactions)
       .set(updates)
       .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
-      .returning()
+      .returning();
 
     if (!updated) {
-      throw new Error(`Transaction not found or not updated: ${transactionId}`)
+      throw new Error(`Transaction not found or not updated: ${transactionId}`);
     }
 
-    return updated
+    return updated;
   } catch (error: unknown) {
-    logger.error(`Error updating transaction ${transactionId}:`, error as Error)
-    throw error
+    logger.error(`Error updating transaction ${transactionId}:`, error as Error);
+    throw error;
   }
 }
 
@@ -405,9 +470,9 @@ export async function deleteTransaction(transactionId: string, userId: string): 
   try {
     await db
       .delete(transactions)
-      .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
+      .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)));
   } catch (error: unknown) {
-    logger.error(`Error deleting transaction ${transactionId}:`, error as Error)
-    throw error
+    logger.error(`Error deleting transaction ${transactionId}:`, error as Error);
+    throw error;
   }
 }

@@ -1,14 +1,14 @@
-import { randomUUID } from 'node:crypto'
-import { db } from '@hominem/db'
+import { db } from '@hominem/db';
 import {
   type FinanceAccountInsert,
   type FinanceTransaction,
   financeAccounts,
   plaidItems,
   transactions,
-} from '@hominem/db/schema'
-import { logger } from '@hominem/utils/logger'
-import { and, eq } from 'drizzle-orm'
+} from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, eq } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 
 export class PlaidService {
   /**
@@ -17,31 +17,31 @@ export class PlaidService {
   async getPlaidItem(userId: string, itemId: string) {
     return await db.query.plaidItems.findFirst({
       where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
-    })
+    });
   }
 
   /**
    * Upsert a finance account (insert or update based on existence)
    */
   async upsertAccount(accountData: {
-    name: string
-    officialName: string | null
-    type: string
-    subtype: string | null
-    mask: string | null
-    balance: number
-    availableBalance: number | null
-    limit: number | null
-    isoCurrencyCode: string
-    plaidAccountId: string
-    plaidItemId: string
-    institutionId: string
-    userId: string
+    name: string;
+    officialName: string | null;
+    type: string;
+    subtype: string | null;
+    mask: string | null;
+    balance: number;
+    availableBalance: number | null;
+    limit: number | null;
+    isoCurrencyCode: string;
+    plaidAccountId: string;
+    plaidItemId: string;
+    institutionId: string;
+    userId: string;
   }) {
     // Check if account already exists
     const existingAccount = await db.query.financeAccounts.findFirst({
       where: eq(financeAccounts.plaidAccountId, accountData.plaidAccountId),
-    })
+    });
 
     if (existingAccount) {
       // Update existing account
@@ -51,18 +51,18 @@ export class PlaidService {
           balance: accountData.balance.toFixed(2),
           lastUpdated: new Date(),
         })
-        .where(eq(financeAccounts.id, existingAccount.id))
+        .where(eq(financeAccounts.id, existingAccount.id));
 
       logger.info({
         message: 'Updated existing account',
         accountId: existingAccount.id,
         plaidAccountId: accountData.plaidAccountId,
-      })
+      });
 
-      return existingAccount.id
+      return existingAccount.id;
     }
     // Insert new account
-    const newAccountId = randomUUID()
+    const newAccountId = randomUUID();
     await db.insert(financeAccounts).values({
       id: newAccountId,
       ...accountData,
@@ -74,14 +74,14 @@ export class PlaidService {
       meta: {},
       createdAt: new Date(),
       updatedAt: new Date(),
-    })
+    });
 
     logger.info({
       message: 'Created new account',
       plaidAccountId: accountData.plaidAccountId,
-    })
+    });
 
-    return newAccountId
+    return newAccountId;
   }
 
   /**
@@ -90,37 +90,37 @@ export class PlaidService {
   async getUserAccounts(userId: string, plaidItemId: string) {
     return await db.query.financeAccounts.findMany({
       where: and(eq(financeAccounts.userId, userId), eq(financeAccounts.plaidItemId, plaidItemId)),
-    })
+    });
   }
 
   /**
    * Insert a new transaction
    */
   async insertTransaction(transactionData: {
-    type: FinanceTransaction['type']
-    amount: string
-    date: Date
-    description: string
-    merchantName: string | null
-    accountId: string
-    category: string | null
-    parentCategory: string | null
-    pending: boolean
-    paymentChannel: string
-    location: any
-    plaidTransactionId: string
-    userId: string
+    type: FinanceTransaction['type'];
+    amount: string;
+    date: Date;
+    description: string;
+    merchantName: string | null;
+    accountId: string;
+    category: string | null;
+    parentCategory: string | null;
+    pending: boolean;
+    paymentChannel: string;
+    location: any;
+    plaidTransactionId: string;
+    userId: string;
   }) {
-    const transactionId = randomUUID()
+    const transactionId = randomUUID();
     await db.insert(transactions).values({
       id: transactionId,
       ...transactionData,
       source: 'plaid',
       createdAt: new Date(),
       updatedAt: new Date(),
-    })
+    });
 
-    return transactionId
+    return transactionId;
   }
 
   /**
@@ -129,7 +129,7 @@ export class PlaidService {
   async getTransactionByPlaidId(plaidTransactionId: string) {
     return await db.query.transactions.findFirst({
       where: eq(transactions.plaidTransactionId, plaidTransactionId),
-    })
+    });
   }
 
   /**
@@ -138,15 +138,15 @@ export class PlaidService {
   async updateTransaction(
     transactionId: string,
     updateData: {
-      type: FinanceTransaction['type']
-      amount: string
-      date: Date
-      description: string
-      merchantName: string | null
-      category: string | null
-      parentCategory: string | null
-      pending: boolean
-    }
+      type: FinanceTransaction['type'];
+      amount: string;
+      date: Date;
+      description: string;
+      merchantName: string | null;
+      category: string | null;
+      parentCategory: string | null;
+      pending: boolean;
+    },
   ) {
     await db
       .update(transactions)
@@ -154,19 +154,19 @@ export class PlaidService {
         ...updateData,
         updatedAt: new Date(),
       })
-      .where(eq(transactions.id, transactionId))
+      .where(eq(transactions.id, transactionId));
   }
 
   /**
    * Delete a transaction by Plaid transaction ID
    */
   async deleteTransaction(plaidTransactionId: string) {
-    const existingTransaction = await this.getTransactionByPlaidId(plaidTransactionId)
+    const existingTransaction = await this.getTransactionByPlaidId(plaidTransactionId);
     if (existingTransaction) {
-      await db.delete(transactions).where(eq(transactions.id, existingTransaction.id))
-      return true
+      await db.delete(transactions).where(eq(transactions.id, existingTransaction.id));
+      return true;
     }
-    return false
+    return false;
   }
 
   /**
@@ -178,7 +178,7 @@ export class PlaidService {
       .set({
         transactionsCursor: cursor,
       })
-      .where(eq(plaidItems.id, itemId))
+      .where(eq(plaidItems.id, itemId));
   }
 
   /**
@@ -193,7 +193,7 @@ export class PlaidService {
         error,
         updatedAt: new Date(),
       })
-      .where(eq(plaidItems.id, itemId))
+      .where(eq(plaidItems.id, itemId));
   }
 
   /**
@@ -202,6 +202,6 @@ export class PlaidService {
   async getAccountByPlaidId(plaidAccountId: string) {
     return await db.query.financeAccounts.findFirst({
       where: eq(financeAccounts.plaidAccountId, plaidAccountId),
-    })
+    });
   }
 }

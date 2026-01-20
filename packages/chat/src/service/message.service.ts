@@ -1,37 +1,42 @@
-import { logger } from '@hominem/utils/logger'
-import { and, desc, eq, gt } from 'drizzle-orm'
-import { v4 as uuidv4 } from 'uuid'
-import { db } from '@hominem/db'
-import { type ChatMessageInsert, type ChatMessageSelect, chat, chatMessage } from '@hominem/db/schema'
-import { ChatError } from './chat.service'
+import { db } from '@hominem/db';
+import {
+  type ChatMessageInsert,
+  type ChatMessageSelect,
+  chat,
+  chatMessage,
+} from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, desc, eq, gt } from 'drizzle-orm';
+
+import { ChatError } from './chat.service';
 
 export type CreateMessageParams = {
-  chatId: ChatMessageSelect['chatId']
-  userId: ChatMessageSelect['userId']
-  role: ChatMessageSelect['role']
-  content: ChatMessageSelect['content']
+  chatId: ChatMessageSelect['chatId'];
+  userId: ChatMessageSelect['userId'];
+  role: ChatMessageSelect['role'];
+  content: ChatMessageSelect['content'];
   files?: Array<{
-    type: 'image' | 'file'
-    filename?: string
-    mimeType?: string
-    size?: number
-    [key: string]: unknown
-  }>
-  toolCalls?: ChatMessageSelect['toolCalls']
-  reasoning?: string
-  parentMessageId?: string | null
-}
+    type: 'image' | 'file';
+    filename?: string;
+    mimeType?: string;
+    size?: number;
+    [key: string]: unknown;
+  }>;
+  toolCalls?: ChatMessageSelect['toolCalls'];
+  reasoning?: string;
+  parentMessageId?: string | null;
+};
 
 export interface ChatMessagesOptions {
-  limit?: number
-  offset?: number
-  orderBy?: 'asc' | 'desc'
+  limit?: number;
+  offset?: number;
+  orderBy?: 'asc' | 'desc';
 }
 
 export class MessageService {
   async addMessage(params: CreateMessageParams): Promise<ChatMessageSelect | null> {
     try {
-      const messageId = uuidv4()
+      const messageId = crypto.randomUUID();
 
       const [newMessage] = await db
         .insert(chatMessage)
@@ -46,21 +51,21 @@ export class MessageService {
           reasoning: params.reasoning,
           parentMessageId: params.parentMessageId,
         })
-        .returning()
+        .returning();
 
       if (!newMessage) {
-        throw new ChatError('DATABASE_ERROR', 'Failed to create message - no record returned')
+        throw new ChatError('DATABASE_ERROR', 'Failed to create message - no record returned');
       }
 
       await db
         .update(chat)
         .set({ updatedAt: new Date().toISOString() })
-        .where(eq(chat.id, params.chatId))
+        .where(eq(chat.id, params.chatId));
 
-      return newMessage
+      return newMessage;
     } catch (error) {
-      logger.error(`Failed to add message: ${error}`)
-      throw new ChatError('DATABASE_ERROR', 'Failed to add message to conversation')
+      logger.error(`Failed to add message: ${error}`);
+      throw new ChatError('DATABASE_ERROR', 'Failed to add message to conversation');
     }
   }
 
@@ -69,7 +74,7 @@ export class MessageService {
    */
   async getChatMessages(
     chatId: string,
-    options: ChatMessagesOptions = { limit: 10, offset: 0, orderBy: 'asc' }
+    options: ChatMessagesOptions = { limit: 10, offset: 0, orderBy: 'asc' },
   ): Promise<ChatMessageSelect[]> {
     try {
       const query = db
@@ -78,13 +83,13 @@ export class MessageService {
         .where(eq(chatMessage.chatId, chatId))
         .limit(options.limit ?? 50)
         .offset(options.offset ?? 0)
-        .orderBy(options.orderBy === 'desc' ? desc(chatMessage.createdAt) : chatMessage.createdAt)
+        .orderBy(options.orderBy === 'desc' ? desc(chatMessage.createdAt) : chatMessage.createdAt);
 
-      const results = await query
-      return results
+      const results = await query;
+      return results;
     } catch (error) {
-      logger.error(`Failed to get chat messages: ${error}`)
-      return []
+      logger.error(`Failed to get chat messages: ${error}`);
+      return [];
     }
   }
 
@@ -93,17 +98,17 @@ export class MessageService {
    */
   async getMessageById(messageId: string, userId: string): Promise<ChatMessageSelect | null> {
     try {
-      const whereClause = and(eq(chatMessage.id, messageId), eq(chatMessage.userId, userId))
-      const [message] = await db.select().from(chatMessage).where(whereClause).limit(1)
+      const whereClause = and(eq(chatMessage.id, messageId), eq(chatMessage.userId, userId));
+      const [message] = await db.select().from(chatMessage).where(whereClause).limit(1);
 
       if (!message) {
-        throw new ChatError('AUTH_ERROR', 'Message not found or access denied')
+        throw new ChatError('AUTH_ERROR', 'Message not found or access denied');
       }
 
-      return message
+      return message;
     } catch (error) {
-      logger.error(`Failed to get message by ID: ${error}`)
-      return null
+      logger.error(`Failed to get message by ID: ${error}`);
+      return null;
     }
   }
 
@@ -115,9 +120,9 @@ export class MessageService {
     content,
     toolCalls,
   }: {
-    messageId: string
-    content: string
-    toolCalls?: ChatMessageInsert['toolCalls']
+    messageId: string;
+    content: string;
+    toolCalls?: ChatMessageInsert['toolCalls'];
   }): Promise<ChatMessageSelect | null> {
     try {
       const [updatedMessage] = await db
@@ -128,16 +133,16 @@ export class MessageService {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(chatMessage.id, messageId))
-        .returning()
+        .returning();
 
       if (!updatedMessage) {
-        throw new ChatError('DATABASE_ERROR', 'Failed to update message - no record returned')
+        throw new ChatError('DATABASE_ERROR', 'Failed to update message - no record returned');
       }
 
-      return updatedMessage
+      return updatedMessage;
     } catch (error) {
-      logger.error(`Failed to update message: ${error}`)
-      return null
+      logger.error(`Failed to update message: ${error}`);
+      return null;
     }
   }
 
@@ -148,12 +153,12 @@ export class MessageService {
     try {
       await db
         .delete(chatMessage)
-        .where(and(eq(chatMessage.id, messageId), eq(chatMessage.userId, userId)))
+        .where(and(eq(chatMessage.id, messageId), eq(chatMessage.userId, userId)));
 
-      return true
+      return true;
     } catch (error) {
-      logger.error(`Failed to delete message: ${error}`)
-      return false
+      logger.error(`Failed to delete message: ${error}`);
+      return false;
     }
   }
 
@@ -163,7 +168,7 @@ export class MessageService {
   async deleteMessagesAfter(
     chatId: string,
     afterTimestamp: string,
-    userId: string
+    userId: string,
   ): Promise<number> {
     try {
       // Verify chat ownership first
@@ -171,26 +176,26 @@ export class MessageService {
         .select()
         .from(chat)
         .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
-        .limit(1)
+        .limit(1);
 
       if (!chatData) {
-        throw new ChatError('AUTH_ERROR', 'Chat not found or access denied')
+        throw new ChatError('AUTH_ERROR', 'Chat not found or access denied');
       }
 
       // Delete all messages created after the timestamp
       const deletedMessages = await db
         .delete(chatMessage)
         .where(and(eq(chatMessage.chatId, chatId), gt(chatMessage.createdAt, afterTimestamp)))
-        .returning()
+        .returning();
 
-      const deletedCount = deletedMessages.length
-      return deletedCount
+      const deletedCount = deletedMessages.length;
+      return deletedCount;
     } catch (error) {
-      logger.error(`Failed to delete messages after timestamp: ${error}`)
+      logger.error(`Failed to delete messages after timestamp: ${error}`);
       if (error instanceof ChatError) {
-        throw error
+        throw error;
       }
-      throw new ChatError('DATABASE_ERROR', 'Failed to delete subsequent messages')
+      throw new ChatError('DATABASE_ERROR', 'Failed to delete subsequent messages');
     }
   }
 }

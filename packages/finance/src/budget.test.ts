@@ -1,30 +1,37 @@
-import crypto from 'node:crypto'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { db } from '@hominem/db'
-import { budgetCategories, users } from '@hominem/db/schema'
-import { createTestUser } from '../fixtures'
+import { db } from '@hominem/db';
+import { budgetCategories, users } from '@hominem/db/schema';
+import { createTestUser } from '@hominem/db/test/fixtures';
+import { eq, or } from 'drizzle-orm';
+import crypto from 'node:crypto';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 // Helper to check if DB is available
 async function isDatabaseAvailable(): Promise<boolean> {
   try {
-    await db.select().from(users).limit(1)
-    return true
+    await db.select().from(users).limit(1);
+    return true;
   } catch {
-    console.warn('Database not available, skipping budget tests. Start test database on port 4433.')
-    return false
+    console.warn(
+      'Database not available, skipping budget tests. Start test database on port 4433.',
+    );
+    return false;
   }
 }
 
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isDatabaseAvailable();
 
 describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
-  const testUserId = crypto.randomUUID()
-  const testUserId2 = crypto.randomUUID()
+  const testUserId = crypto.randomUUID();
+  const testUserId2 = crypto.randomUUID();
 
   beforeEach(async () => {
-    await createTestUser({ id: testUserId, name: 'Test User 1' })
-    await createTestUser({ id: testUserId2, name: 'Test User 2' })
-  })
+    // Clean up existing categories before each test
+    await db
+      .delete(budgetCategories)
+      .where(or(eq(budgetCategories.userId, testUserId), eq(budgetCategories.userId, testUserId2)));
+    await createTestUser({ id: testUserId, name: 'Test User 1' });
+    await createTestUser({ id: testUserId2, name: 'Test User 2' });
+  });
 
   it('should allow creating categories with unique names for the same user', async () => {
     // Create first category
@@ -37,10 +44,10 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
         averageMonthlyExpense: '2000',
         userId: testUserId,
       })
-      .returning()
+      .returning();
 
-    expect(category1).toHaveLength(1)
-    expect(category1?.[0]?.name).toBe('Housing')
+    expect(category1).toHaveLength(1);
+    expect(category1?.[0]?.name).toBe('Housing');
 
     // Create second category with different name
     const category2 = await db
@@ -52,11 +59,11 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
         averageMonthlyExpense: '500',
         userId: testUserId,
       })
-      .returning()
+      .returning();
 
-    expect(category2).toHaveLength(1)
-    expect(category2?.[0]?.name).toBe('Food')
-  })
+    expect(category2).toHaveLength(1);
+    expect(category2?.[0]?.name).toBe('Food');
+  });
 
   it('should prevent creating categories with duplicate names for the same user', async () => {
     // Create first category
@@ -66,7 +73,7 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
       type: 'expense',
       averageMonthlyExpense: '2000',
       userId: testUserId,
-    })
+    });
 
     // Attempt to create duplicate should fail
     await expect(
@@ -76,9 +83,9 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
         type: 'income',
         averageMonthlyExpense: '1000',
         userId: testUserId, // Same user
-      })
-    ).rejects.toThrow()
-  })
+      }),
+    ).rejects.toThrow();
+  });
 
   it('should allow different users to have categories with the same name', async () => {
     // User 1 creates Housing category
@@ -91,9 +98,9 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
         averageMonthlyExpense: '2000',
         userId: testUserId,
       })
-      .returning()
+      .returning();
 
-    expect(category1).toHaveLength(1)
+    expect(category1).toHaveLength(1);
 
     // User 2 creates Housing category (should succeed)
     const category2 = await db
@@ -105,12 +112,12 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
         averageMonthlyExpense: '1500',
         userId: testUserId2, // Different user
       })
-      .returning()
+      .returning();
 
-    expect(category2).toHaveLength(1)
-    expect(category2?.[0]?.name).toBe('Housing')
-    expect(category2?.[0]?.userId).toBe(testUserId2)
-  })
+    expect(category2).toHaveLength(1);
+    expect(category2?.[0]?.name).toBe('Housing');
+    expect(category2?.[0]?.userId).toBe(testUserId2);
+  });
 
   it('should handle case sensitivity correctly', async () => {
     // Create category with lowercase
@@ -120,7 +127,7 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
       type: 'expense',
       averageMonthlyExpense: '2000',
       userId: testUserId,
-    })
+    });
 
     // Creating with different case should succeed (constraint is case-sensitive)
     const category = await db
@@ -132,9 +139,9 @@ describe.skipIf(!dbAvailable)('Budget Categories Unique Constraint', () => {
         averageMonthlyExpense: '2000',
         userId: testUserId,
       })
-      .returning()
+      .returning();
 
-    expect(category).toHaveLength(1)
-    expect(category?.[0]?.name).toBe('Housing')
-  })
-})
+    expect(category).toHaveLength(1);
+    expect(category?.[0]?.name).toBe('Housing');
+  });
+});

@@ -1,5 +1,6 @@
-import { getVisitsByPlace } from '@hominem/services/events';
+import { getVisitsByPlace } from '@hominem/events-services';
 import { z } from 'zod';
+
 import { protectedProcedure } from '../context';
 
 export const getPlaceVisits = protectedProcedure

@@ -13,6 +13,16 @@
       "types": "./build/schema/index.d.ts",
       "development": "./src/schema/index.ts",
       "default": "./build/schema/index.js"
+    },
+    "./test/fixtures": {
+      "types": "./build/test/fixtures.d.ts",
+      "development": "./src/test/fixtures.ts",
+      "default": "./build/test/fixtures.js"
+    },
+    "./test/utils": {
+      "types": "./build/test/utils.d.ts",
+      "development": "./src/test/utils.ts",
+      "default": "./build/test/utils.js"
     }
   },
   "scripts": {
@@ -34,6 +44,7 @@
     "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.16"
   }
 }

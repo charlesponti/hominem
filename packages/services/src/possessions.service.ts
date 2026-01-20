@@ -1,24 +1,24 @@
-import { db } from '@hominem/db'
-import { type PossessionInsert, possessions } from '@hominem/db/schema'
-import { and, desc, eq } from 'drizzle-orm'
+import { db } from '@hominem/db';
+import { type PossessionInsert, possessions } from '@hominem/db/schema';
+import { and, desc, eq } from 'drizzle-orm';
 
 type CreatePossessionInput = Omit<PossessionInsert, 'createdAt' | 'updatedAt'> & {
-  userId: string
-}
+  userId: string;
+};
 
 type UpdatePossessionInput = Partial<
   Omit<PossessionInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 > & {
-  id: string
-  userId: string
-}
+  id: string;
+  userId: string;
+};
 
 export async function listPossessions(userId: string) {
   return db
     .select()
     .from(possessions)
     .where(eq(possessions.userId, userId))
-    .orderBy(desc(possessions.createdAt))
+    .orderBy(desc(possessions.createdAt));
 }
 
 export async function createPossession(input: CreatePossessionInput) {
@@ -28,13 +28,13 @@ export async function createPossession(input: CreatePossessionInput) {
       ...input,
       dateAcquired: new Date(input.dateAcquired),
     })
-    .returning()
+    .returning();
 
-  return created
+  return created;
 }
 
 export async function updatePossession(input: UpdatePossessionInput) {
-  const { id, userId, ...updates } = input
+  const { id, userId, ...updates } = input;
   const [updated] = await db
     .update(possessions)
     .set({
@@ -42,11 +42,11 @@ export async function updatePossession(input: UpdatePossessionInput) {
       dateAcquired: updates.dateAcquired ? new Date(updates.dateAcquired) : undefined,
     })
     .where(and(eq(possessions.id, id), eq(possessions.userId, userId)))
-    .returning()
+    .returning();
 
-  return updated
+  return updated;
 }
 
 export async function deletePossession(id: string, userId: string) {
-  await db.delete(possessions).where(and(eq(possessions.id, id), eq(possessions.userId, userId)))
+  await db.delete(possessions).where(and(eq(possessions.id, id), eq(possessions.userId, userId)));
 }

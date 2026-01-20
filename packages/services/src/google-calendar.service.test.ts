@@ -31,7 +31,7 @@ vi.mock('../db', () => ({
 }));
 
 describe('GoogleCalendarService', () => {
-  const mockUserId = 'user-123';
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockTokens = {
     accessToken: 'mock-access-token',
     refreshToken: 'mock-refresh-token',
@@ -162,15 +162,14 @@ describe('GoogleCalendarService', () => {
       service.calendar.events.list = mockList;
 
       const { db } = await import('@hominem/db');
-      vi.mocked(db.select).mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi
-            .fn()
-            .mockResolvedValue([
-              { id: 'old-event-id', externalId: 'event-removed', calendarId: 'primary' },
-            ]),
-        }),
-      } as any);
+      const mockWhere = vi
+        .fn()
+        .mockResolvedValue([
+          { id: 'old-event-id', externalId: 'event-removed', calendarId: 'primary' },
+        ]);
+      const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
+      const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
+      vi.mocked(db.select).mockImplementation(mockSelect as any);
 
       const result = await service.syncGoogleCalendarEvents();
 

@@ -1,5 +1,5 @@
 export const placeCache = new (class LocalCache<T> {
-  private map = new Map<string, { value: T; expiresAt?: number }>();
+  public map = new Map<string, { value: T; expiresAt?: number }>();
   TTL_SHORT_MS = 1000 * 60 * 5;
 
   get(key: string): T | undefined {

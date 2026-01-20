@@ -1,14 +1,9 @@
-import crypto from 'node:crypto'
-import { eq } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import {
-  financeAccounts,
-  financialInstitutions,
-  plaidItems,
-  transactions,
-  users,
-} from '@hominem/db/schema'
-import { createTestUser } from '../fixtures'
+import { eq } from 'drizzle-orm';
+import crypto from 'node:crypto';
+
+import { db } from '../index';
+import { financeAccounts, financialInstitutions, plaidItems, transactions, users } from '../schema';
+import { createTestUser } from './fixtures';
 
 export async function seedFinanceTestData({
   userId,
@@ -16,15 +11,15 @@ export async function seedFinanceTestData({
   institutionId,
   plaid = false,
 }: {
-  userId: string
-  accountId: string
-  institutionId: string
-  plaid?: boolean
+  userId: string;
+  accountId: string;
+  institutionId: string;
+  plaid?: boolean;
 }) {
   // Use a more robust approach for parallel test execution
   // First, try to clean up any existing data to avoid conflicts
   try {
-    await cleanupFinanceTestData({ userId, accountId, institutionId })
+    await cleanupFinanceTestData({ userId, accountId, institutionId });
   } catch (_error) {
     // Ignore cleanup errors - data might not exist
   }
@@ -35,10 +30,10 @@ export async function seedFinanceTestData({
       id: userId,
       email: `test-${userId.slice(0, 8)}@example.com`,
       supabaseId: `supabase-${userId}`,
-    })
+    });
   } catch (error) {
-    console.error('Failed to create user:', error)
-    throw error
+    console.error('Failed to create user:', error);
+    throw error;
   }
 
   // Create test financial institution
@@ -53,10 +48,10 @@ export async function seedFinanceTestData({
         primaryColor: '#0066cc',
         country: 'US',
       })
-      .onConflictDoNothing()
+      .onConflictDoNothing();
   } catch (error) {
-    console.error('Failed to create institution:', error)
-    throw error
+    console.error('Failed to create institution:', error);
+    throw error;
   }
 
   // Create test finance account
@@ -74,10 +69,10 @@ export async function seedFinanceTestData({
         minimumPayment: null,
         meta: null,
       })
-      .onConflictDoNothing()
+      .onConflictDoNothing();
   } catch (error) {
-    console.error('Failed to create account:', error)
-    throw error
+    console.error('Failed to create account:', error);
+    throw error;
   }
 
   // Create test transactions
@@ -205,14 +200,14 @@ export async function seedFinanceTestData({
       pending: false,
       status: 'posted',
     },
-  ]
+  ];
 
-  await db.insert(transactions).values(testTransactions)
+  await db.insert(transactions).values(testTransactions);
 
   // If plaid is requested, create plaid items and related accounts
   if (plaid) {
-    const testPlaidItemId = crypto.randomUUID()
-    const testPlaidAccountId = crypto.randomUUID()
+    const testPlaidItemId = crypto.randomUUID();
+    const testPlaidAccountId = crypto.randomUUID();
     await db
       .insert(plaidItems)
       .values({
@@ -227,7 +222,7 @@ export async function seedFinanceTestData({
         lastSyncedAt: null,
         userId,
       })
-      .onConflictDoNothing()
+      .onConflictDoNothing();
 
     // Create test finance accounts for Plaid
     const testPlaidAccounts = [
@@ -269,8 +264,8 @@ export async function seedFinanceTestData({
         meta: null,
         lastUpdated: new Date(),
       },
-    ]
-    await db.insert(financeAccounts).values(testPlaidAccounts)
+    ];
+    await db.insert(financeAccounts).values(testPlaidAccounts);
   }
 }
 
@@ -279,9 +274,9 @@ export async function cleanupFinanceTestData({
   accountId: _accountId,
   institutionId,
 }: {
-  userId: string
-  accountId: string
-  institutionId: string
+  userId: string;
+  accountId: string;
+  institutionId: string;
 }) {
   // Delete in order of dependencies (child records first, then parent records)
   // Based on foreign key constraints:
@@ -294,35 +289,35 @@ export async function cleanupFinanceTestData({
 
   try {
     // 1. Delete transactions first (depends on finance_accounts)
-    await db.delete(transactions).where(eq(transactions.userId, userId))
+    await db.delete(transactions).where(eq(transactions.userId, userId));
   } catch (_error) {
     // No transactions to delete
   }
 
   try {
     // 2. Delete finance accounts (depends on users, plaid_items, and institutions)
-    await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId))
+    await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId));
   } catch (_error) {
     // No finance accounts to delete
   }
 
   try {
     // 3. Delete plaid items (depends on users and institutions)
-    await db.delete(plaidItems).where(eq(plaidItems.userId, userId))
+    await db.delete(plaidItems).where(eq(plaidItems.userId, userId));
   } catch (_error) {
     // No plaid items to delete
   }
 
   try {
     // 4. Delete financial institutions (parent table)
-    await db.delete(financialInstitutions).where(eq(financialInstitutions.id, institutionId))
+    await db.delete(financialInstitutions).where(eq(financialInstitutions.id, institutionId));
   } catch (_error) {
     // No financial institution to delete
   }
 
   try {
     // 5. Delete users (parent table) - must be last since other tables reference it
-    await db.delete(users).where(eq(users.id, userId))
+    await db.delete(users).where(eq(users.id, userId));
   } catch (_error) {
     // No user to delete
   }

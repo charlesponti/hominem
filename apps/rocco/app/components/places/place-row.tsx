@@ -1,7 +1,9 @@
-import { Star } from 'lucide-react';
 import type { ReactNode } from 'react';
+
+import { Star } from 'lucide-react';
 import { Link } from 'react-router';
 import z from 'zod';
+
 import { trpc } from '~/lib/trpc/client';
 import { buildImageUrl, cn } from '~/lib/utils';
 

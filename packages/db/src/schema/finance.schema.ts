@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -10,9 +10,10 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+
+import { users } from './users.schema';
 
 // Enums
 export const transactionTypeEnum = pgEnum('transaction_type', [
@@ -22,15 +23,15 @@ export const transactionTypeEnum = pgEnum('transaction_type', [
   'debit',
   'transfer',
   'investment',
-])
-export type TransactionType = (typeof transactionTypeEnum.enumValues)[number]
+]);
+export type TransactionType = (typeof transactionTypeEnum.enumValues)[number];
 export const TransactionTypes = transactionTypeEnum.enumValues.reduce(
   (acc, val) => {
-    acc[val] = val
-    return acc
+    acc[val] = val;
+    return acc;
   },
-  {} as Record<TransactionType, TransactionType>
-)
+  {} as Record<TransactionType, TransactionType>,
+);
 
 export const accountTypeEnum = pgEnum('account_type', [
   'checking',
@@ -42,17 +43,17 @@ export const accountTypeEnum = pgEnum('account_type', [
   'depository',
   'brokerage',
   'other',
-])
+]);
 
 export const institutionStatusEnum = pgEnum('institution_status', [
   'active',
   'error',
   'pending_expiration',
   'revoked',
-])
+]);
 
-export const budgetCategoryTypeEnum = pgEnum('budget_category_type', ['income', 'expense'])
-export type BudgetCategoryType = (typeof budgetCategoryTypeEnum.enumValues)[number]
+export const budgetCategoryTypeEnum = pgEnum('budget_category_type', ['income', 'expense']);
+export type BudgetCategoryType = (typeof budgetCategoryTypeEnum.enumValues)[number];
 
 // Financial institutions table
 export const financialInstitutions = pgTable(
@@ -70,12 +71,12 @@ export const financialInstitutions = pgTable(
   (table) => [
     index('financial_institutions_search_idx').using(
       'gin',
-      sql`to_tsvector('english', ${table.name})`
+      sql`to_tsvector('english', ${table.name})`,
     ),
-  ]
-)
-export type FinancialInstitution = typeof financialInstitutions.$inferSelect
-export type FinancialInstitutionInsert = typeof financialInstitutions.$inferInsert
+  ],
+);
+export type FinancialInstitution = typeof financialInstitutions.$inferSelect;
+export type FinancialInstitutionInsert = typeof financialInstitutions.$inferInsert;
 
 // Plaid items table to track connected institutions
 export const plaidItems = pgTable('plaid_items', {
@@ -95,9 +96,9 @@ export const plaidItems = pgTable('plaid_items', {
   userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-})
-export type PlaidItem = typeof plaidItems.$inferSelect
-export type PlaidItemInsert = typeof plaidItems.$inferInsert
+});
+export type PlaidItem = typeof plaidItems.$inferSelect;
+export type PlaidItemInsert = typeof plaidItems.$inferInsert;
 
 // Tables
 export const financeAccounts = pgTable(
@@ -129,12 +130,12 @@ export const financeAccounts = pgTable(
   (table) => [
     index('finance_accounts_search_idx').using(
       'gin',
-      sql`to_tsvector('english', ${table.name} || ' ' || coalesce(${table.officialName}, ''))`
+      sql`to_tsvector('english', ${table.name} || ' ' || coalesce(${table.officialName}, ''))`,
     ),
-  ]
-)
-export type FinanceAccountInsert = typeof financeAccounts.$inferInsert
-export type FinanceAccount = typeof financeAccounts.$inferSelect
+  ],
+);
+export type FinanceAccountInsert = typeof financeAccounts.$inferInsert;
+export type FinanceAccount = typeof financeAccounts.$inferSelect;
 
 export const transactions = pgTable(
   'transactions',
@@ -171,14 +172,14 @@ export const transactions = pgTable(
   (table) => [
     index('transactions_search_idx').using(
       'gin',
-      sql`to_tsvector('english', coalesce(${table.description}, '') || ' ' || coalesce(${table.merchantName}, '') || ' ' || coalesce(${table.category}, '') || ' ' || coalesce(${table.parentCategory}, '') || ' ' || coalesce(${table.tags}, '') || ' ' || coalesce(${table.note}, '') || ' ' || coalesce(${table.paymentChannel}, '') || ' ' || coalesce(${table.source}, ''))`
+      sql`to_tsvector('english', coalesce(${table.description}, '') || ' ' || coalesce(${table.merchantName}, '') || ' ' || coalesce(${table.category}, '') || ' ' || coalesce(${table.parentCategory}, '') || ' ' || coalesce(${table.tags}, '') || ' ' || coalesce(${table.note}, '') || ' ' || coalesce(${table.paymentChannel}, '') || ' ' || coalesce(${table.source}, ''))`,
     ),
-  ]
-)
-export type FinanceTransaction = typeof transactions.$inferSelect
-export type FinanceTransactionInsert = typeof transactions.$inferInsert
-export const insertTransactionSchema = createInsertSchema(transactions)
-export const updateTransactionSchema = createSelectSchema(transactions)
+  ],
+);
+export type FinanceTransaction = typeof transactions.$inferSelect;
+export type FinanceTransactionInsert = typeof transactions.$inferInsert;
+export const insertTransactionSchema = createInsertSchema(transactions);
+export const updateTransactionSchema = createSelectSchema(transactions);
 
 export const budgetCategories = pgTable(
   'budget_categories',
@@ -197,8 +198,8 @@ export const budgetCategories = pgTable(
     index('budget_categories_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
     // Ensure each user can only have one budget category with a given name
     uniqueIndex('budget_categories_name_user_id_unique').on(table.name, table.userId),
-  ]
-)
+  ],
+);
 
 export const budgetGoals = pgTable(
   'budget_goals',
@@ -216,14 +217,14 @@ export const budgetGoals = pgTable(
   },
   (table) => [
     index('budget_goals_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
-  ]
-)
+  ],
+);
 
 // Relations
 export const financialInstitutionRelations = relations(financialInstitutions, ({ many }) => ({
   plaidItems: many(plaidItems),
   accounts: many(financeAccounts),
-}))
+}));
 
 export const plaidItemRelations = relations(plaidItems, ({ one, many }) => ({
   institution: one(financialInstitutions, {
@@ -235,7 +236,7 @@ export const plaidItemRelations = relations(plaidItems, ({ one, many }) => ({
     fields: [plaidItems.userId],
     references: [users.id],
   }),
-}))
+}));
 
 export const financeAccountRelations = relations(financeAccounts, ({ one, many }) => ({
   fromTransactions: many(transactions, { relationName: 'fromAccount' }),
@@ -252,7 +253,7 @@ export const financeAccountRelations = relations(financeAccounts, ({ one, many }
     fields: [financeAccounts.userId],
     references: [users.id],
   }),
-}))
+}));
 
 export const transactionRelations = relations(transactions, ({ one }) => ({
   fromAccount: one(financeAccounts, {
@@ -277,12 +278,23 @@ export const transactionRelations = relations(transactions, ({ one }) => ({
     fields: [transactions.userId],
     references: [users.id],
   }),
-}))
+}));
 
 export const budgetCategoryRelations = relations(budgetCategories, ({ many }) => ({
   goals: many(budgetGoals),
   transactions: many(transactions),
-}))
+}));
 
-export type BudgetCategory = typeof budgetCategories.$inferSelect
-export type BudgetGoal = typeof budgetGoals.$inferSelect
+export type BudgetCategory = typeof budgetCategories.$inferSelect;
+export type BudgetGoal = typeof budgetGoals.$inferSelect;
+
+// Zod schemas generated from Drizzle
+import { z } from 'zod';
+
+export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
+export const TransactionTypeEnum = z.enum(transactionTypeEnum.enumValues as [string, ...string[]]);
+
+export const FinanceAccountSchema = createSelectSchema(financeAccounts);
+export const FinanceAccountInsertSchema = createInsertSchema(financeAccounts);
+export const TransactionSchema = createSelectSchema(transactions);
+export const TransactionInsertSchema = createInsertSchema(transactions);

@@ -1,23 +1,24 @@
-import { useId } from 'react'
-import { cn } from '../../lib/utils'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { useId } from 'react';
+
+import { cn } from '../../lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface FilterSelectOption<T extends string> {
-  value: T
-  label: string
+  value: T;
+  label: string;
 }
 
 interface FilterSelectProps<T extends string> {
-  label: string
-  value: T | ''
-  options: Array<FilterSelectOption<T>>
-  onChange: (value: T | '') => void
-  placeholder?: string
-  className?: string
-  id?: string
+  label: string;
+  value: T | '';
+  options: Array<FilterSelectOption<T>>;
+  onChange: (value: T | '') => void;
+  placeholder?: string;
+  className?: string;
+  id?: string;
 }
 
-const ALL_VALUE = '__all__' as const
+const ALL_VALUE = '__all__' as const;
 
 export function FilterSelect<T extends string>({
   label,
@@ -28,16 +29,16 @@ export function FilterSelect<T extends string>({
   className,
   id,
 }: FilterSelectProps<T>) {
-  const generatedId = useId()
-  const selectId = id ?? generatedId
+  const generatedId = useId();
+  const selectId = id ?? generatedId;
 
   // Convert empty string to special value for Radix UI Select
-  const selectValue = value === '' ? ALL_VALUE : value
+  const selectValue = value === '' ? ALL_VALUE : value;
 
   const handleValueChange = (val: string) => {
     // Convert special value back to empty string
-    onChange((val === ALL_VALUE ? '' : val) as T | '')
-  }
+    onChange((val === ALL_VALUE ? '' : val) as T | '');
+  };
 
   return (
     <div className={cn('flex-1', className)}>
@@ -61,5 +62,5 @@ export function FilterSelect<T extends string>({
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }

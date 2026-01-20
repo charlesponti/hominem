@@ -1,2 +1,2 @@
-export * from './use-sort'
-export * from './use-url-filters'
+export * from './use-sort';
+export * from './use-url-filters';

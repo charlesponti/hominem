@@ -1,26 +1,32 @@
+import {
+  FinanceAccountSchema,
+  FinanceAccountInsertSchema,
+  TransactionSchema,
+  TransactionInsertSchema,
+  AccountTypeEnum,
+  TransactionTypeEnum,
+} from '@hominem/db';
 import { z } from 'zod';
 
-// Finance schemas exported for cross-package consumption
-export const FinanceAccountSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  type: z.enum(['checking', 'savings', 'credit', 'investment', 'loan']),
-  balance: z.number(),
-  currency: z.string().default('USD'),
-  lastUpdated: z.string(),
+// Generic success response schema
+export const SuccessResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
 });
 
-export const createFinanceAccountInputSchema = z.object({
-  name: z.string().describe('Name of the account (e.g., "Checking", "Savings")'),
-  type: z
-    .enum(['checking', 'savings', 'credit', 'investment', 'loan'])
-    .describe('Type of financial account'),
+// Account schemas
+export const createFinanceAccountInputSchema = FinanceAccountInsertSchema.pick({
+  name: true,
+  type: true,
+}).extend({
   balance: z.number().optional().describe('Initial account balance'),
-  currency: z.string().optional().default('USD').describe('Currency code'),
+  currency: z.string().optional().describe('Currency code'),
 });
+
+export const createFinanceAccountOutputSchema = FinanceAccountSchema;
 
 export const getFinanceAccountsInputSchema = z.object({
-  type: z.enum(['checking', 'savings', 'credit', 'investment', 'loan']).optional(),
+  type: AccountTypeEnum.optional(),
 });
 
 export const getFinanceAccountsOutputSchema = z.object({
@@ -28,40 +34,45 @@ export const getFinanceAccountsOutputSchema = z.object({
   total: z.number(),
 });
 
-export const updateFinanceAccountInputSchema = z.object({
-  accountId: z.string().describe('The ID of the account to update'),
-  name: z.string().optional(),
-  balance: z.number().optional(),
+export const updateFinanceAccountInputSchema = z
+  .object({
+    accountId: z.string().describe('ID of the account to update'),
+  })
+  .extend(
+    FinanceAccountInsertSchema.pick({
+      name: true,
+      balance: true,
+      interestRate: true,
+      minimumPayment: true,
+    }).partial().shape,
+  );
+
+export const updateFinanceAccountOutputSchema = FinanceAccountSchema.pick({
+  id: true,
+  name: true,
+  type: true,
+  balance: true,
+  updatedAt: true,
 });
 
 export const deleteFinanceAccountInputSchema = z.object({
-  accountId: z.string().describe('The ID of the account to delete'),
+  accountId: z.string().describe('ID of the account to delete'),
 });
 
-export const deleteFinanceAccountOutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
+export const deleteFinanceAccountOutputSchema = SuccessResponseSchema;
 
 // Transaction schemas
-export const TransactionSchema = z.object({
-  id: z.string(),
-  accountId: z.string(),
-  amount: z.number(),
-  description: z.string(),
-  category: z.string().optional(),
-  date: z.string(),
-  type: z.enum(['income', 'expense']),
-});
-
-export const createTransactionInputSchema = z.object({
-  accountId: z.string().describe('The account ID for this transaction'),
-  amount: z.number().describe('Transaction amount'),
-  description: z.string().describe('Transaction description'),
-  type: z.enum(['income', 'expense']).describe('Type of transaction'),
-  category: z.string().optional().describe('Transaction category'),
+export const createTransactionInputSchema = TransactionInsertSchema.pick({
+  accountId: true,
+  amount: true,
+  description: true,
+  type: true,
+  category: true,
+}).extend({
   date: z.string().optional().describe('Transaction date (ISO format)'),
 });
+
+export const createTransactionToolOutputSchema = TransactionSchema;
 
 export const getTransactionsInputSchema = z.object({
   accountId: z.string().describe('The account ID'),
@@ -76,38 +87,32 @@ export const getTransactionsOutputSchema = z.object({
   total: z.number(),
 });
 
-export const updateTransactionInputSchema = z.object({
-  transactionId: z.string().describe('The transaction ID'),
-  amount: z.number().optional(),
-  description: z.string().optional(),
-  category: z.string().optional(),
-});
+export const updateTransactionInputSchema = z
+  .object({
+    transactionId: z.string().describe('The transaction ID'),
+  })
+  .extend(
+    TransactionInsertSchema.pick({
+      amount: true,
+      description: true,
+      category: true,
+    }).partial().shape,
+  );
+
+export const updateTransactionOutputSchema = TransactionSchema;
 
 export const deleteTransactionInputSchema = z.object({
-  transactionId: z.string().describe('The transaction ID to delete'),
+  transactionId: z.string().describe('The transaction ID'),
 });
 
-export const deleteTransactionOutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
+export const deleteTransactionOutputSchema = SuccessResponseSchema;
 
-// Analytics & Calculators (shapes)
+// Analytics & Reporting schemas
 export const CategoryBreakdownSchema = z.object({
   category: z.string(),
   amount: z.number(),
   percentage: z.number(),
   transactionCount: z.number(),
-});
-
-export const getSpendingCategoriesInputSchema = z.object({
-  from: z.string().optional().describe('Start date (ISO format)'),
-  to: z.string().optional().describe('End date (ISO format)'),
-});
-
-export const getSpendingCategoriesOutputSchema = z.object({
-  categories: z.array(CategoryBreakdownSchema),
-  total: z.number(),
 });
 
 export const getCategoryBreakdownInputSchema = z.object({
@@ -125,17 +130,16 @@ export const getCategoryBreakdownOutputSchema = z.object({
 export const getSpendingTimeSeriesInputSchema = z.object({
   from: z.string().optional().describe('Start date'),
   to: z.string().optional().describe('End date'),
-  groupBy: z.enum(['month', 'week', 'day']).optional().default('month'),
-  includeStats: z.boolean().optional().default(false),
-  compareToPrevious: z.boolean().optional().default(false),
 });
 
 export const getSpendingTimeSeriesOutputSchema = z.object({
   series: z.array(
     z.object({
-      period: z.string(),
-      amount: z.number(),
-      transactions: z.number(),
+      month: z.string(),
+      count: z.number(),
+      income: z.string(),
+      expenses: z.string(),
+      average: z.string(),
     }),
   ),
   total: z.number(),
@@ -143,7 +147,7 @@ export const getSpendingTimeSeriesOutputSchema = z.object({
 });
 
 export const getTopMerchantsInputSchema = z.object({
-  limit: z.number().optional().default(10),
+  limit: z.number().optional().describe('Number of top merchants to return'),
 });
 
 export const getTopMerchantsOutputSchema = z.object({
@@ -156,7 +160,7 @@ export const getTopMerchantsOutputSchema = z.object({
   ),
 });
 
-// Financial Calculators
+// Financial Calculators schemas
 export const calculateBudgetBreakdownInputSchema = z.object({
   monthlyIncome: z.number().describe('Monthly income'),
   savingsTarget: z.number().optional().describe('Monthly savings goal'),

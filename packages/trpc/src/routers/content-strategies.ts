@@ -1,6 +1,6 @@
 import { google } from '@ai-sdk/google';
 import { ContentStrategySchema } from '@hominem/db/schema';
-import { ContentStrategiesService } from '@hominem/services';
+import { ContentStrategiesService, content_generator } from '@hominem/services';
 import { generateText } from 'ai';
 import { z } from 'zod';
 

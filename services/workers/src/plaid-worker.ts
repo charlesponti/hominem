@@ -1,25 +1,25 @@
-import './env.ts'
+import './env.ts';
+import { redis } from '@hominem/services/redis';
+import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
+import { type Job, Worker } from 'bullmq';
 
-import { QUEUE_NAMES } from '@hominem/utils/consts'
-import { logger } from '@hominem/utils/logger'
-import { redis } from '@hominem/services/redis'
-import { type Job, Worker } from 'bullmq'
-import { HealthService } from './health.service'
-import { processSyncJob } from './plaid-sync.processor'
+import { HealthService } from './health.service';
+import { processSyncJob } from './plaid-sync.processor';
 
 // Configuration
-const CONCURRENCY = 3
+const CONCURRENCY = 3;
 
 const processPlaidSyncJob = async (job: Job): Promise<ReturnType<typeof processSyncJob>> => {
-  logger.info(`Processing Plaid sync job ${job.id} for user ${job.data.userId}`)
+  logger.info(`Processing Plaid sync job ${job.id} for user ${job.data.userId}`);
 
   try {
-    return await processSyncJob(job)
+    return await processSyncJob(job);
   } catch (error) {
-    logger.error(`Error processing Plaid sync job ${job.id}`, { error, jobId: job.id })
-    throw error
+    logger.error(`Error processing Plaid sync job ${job.id}`, { error, jobId: job.id });
+    throw error;
   }
-}
+};
 
 const plaidWorker = new Worker(QUEUE_NAMES.PLAID_SYNC, processPlaidSyncJob, {
   connection: redis,
@@ -28,66 +28,66 @@ const plaidWorker = new Worker(QUEUE_NAMES.PLAID_SYNC, processPlaidSyncJob, {
   stalledInterval: 1000 * 60 * 5, // Check for stalled jobs every 5 minutes
   removeOnComplete: { count: 100 },
   removeOnFail: { count: 50 },
-})
+});
 
-const plaidHealthService = new HealthService(plaidWorker, 'Plaid Sync Worker')
+const plaidHealthService = new HealthService(plaidWorker, 'Plaid Sync Worker');
 
-let isPlaidShuttingDown = false
+let isPlaidShuttingDown = false;
 
 plaidWorker.on('completed', (job) => {
   if (isPlaidShuttingDown) {
-    logger.warn(`Plaid sync job ${job.id}: Worker shutting down, skipping completion handling`)
-    return
+    logger.warn(`Plaid sync job ${job.id}: Worker shutting down, skipping completion handling`);
+    return;
   }
-  logger.info(`Plaid sync job ${job.id} completed successfully`)
-})
+  logger.info(`Plaid sync job ${job.id} completed successfully`);
+});
 
 plaidWorker.on('failed', (job, error) => {
   if (isPlaidShuttingDown) {
-    logger.warn(`Plaid sync job ${job?.id}: Worker shutting down, skipping failure handling`)
-    return
+    logger.warn(`Plaid sync job ${job?.id}: Worker shutting down, skipping failure handling`);
+    return;
   }
-  logger.error(`Plaid sync job ${job?.id} failed`, { error, jobId: job?.id })
-})
+  logger.error(`Plaid sync job ${job?.id} failed`, { error, jobId: job?.id });
+});
 
 plaidWorker.on('error', (error) => {
   if (isPlaidShuttingDown) {
-    logger.warn('Plaid sync worker: Ignoring error during shutdown')
-    return
+    logger.warn('Plaid sync worker: Ignoring error during shutdown');
+    return;
   }
-  logger.error('Plaid sync worker error', { error })
-})
+  logger.error('Plaid sync worker error', { error });
+});
 
 plaidWorker.on('stalled', (jobId) => {
   if (isPlaidShuttingDown) {
-    return
+    return;
   }
-  logger.warn(`Plaid sync job ${jobId} stalled`)
-})
+  logger.warn(`Plaid sync job ${jobId} stalled`);
+});
 
 const handleShutdown = async () => {
   if (isPlaidShuttingDown) {
-    return
+    return;
   }
 
-  isPlaidShuttingDown = true
-  logger.info('Starting graceful shutdown of Plaid sync worker...')
+  isPlaidShuttingDown = true;
+  logger.info('Starting graceful shutdown of Plaid sync worker...');
 
   try {
-    await plaidWorker.close()
-    logger.info('Plaid sync worker closed successfully')
-    logger.info(plaidHealthService.getHealthSummary())
+    await plaidWorker.close();
+    logger.info('Plaid sync worker closed successfully');
+    logger.info(plaidHealthService.getHealthSummary());
   } catch (error) {
-    logger.error('Error during Plaid sync worker shutdown', { error })
+    logger.error('Error during Plaid sync worker shutdown', { error });
   }
-}
+};
 
 process.on('SIGTERM', async () => {
-  logger.info('Plaid sync worker received SIGTERM, cleaning up...')
-  await handleShutdown()
-})
+  logger.info('Plaid sync worker received SIGTERM, cleaning up...');
+  await handleShutdown();
+});
 
 process.on('SIGINT', async () => {
-  logger.info('Plaid sync worker received SIGINT, cleaning up...')
-  await handleShutdown()
-})
+  logger.info('Plaid sync worker received SIGINT, cleaning up...');
+  await handleShutdown();
+});

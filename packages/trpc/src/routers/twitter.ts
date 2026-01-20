@@ -3,7 +3,7 @@ import {
   getAccountByUserAndProvider,
   listAccountsByProvider,
 } from '@hominem/auth';
-import { ContentService } from '@hominem/services';
+import { ContentService } from '@hominem/notes-services';
 import { logger } from '@hominem/utils/logger';
 import { TRPCError } from '@trpc/server';
 import { randomUUID } from 'node:crypto';

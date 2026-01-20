@@ -2,12 +2,14 @@ import { Alert } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { Check, MapPin, Search } from 'lucide-react';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
+
 import { useGeolocation } from '~/hooks/useGeolocation';
 import {
   type GooglePlacePrediction,
   useGooglePlacesAutocomplete,
 } from '~/hooks/useGooglePlacesAutocomplete';
 import { cn } from '~/lib/utils';
+
 import styles from './places-autocomplete.module.css';
 
 function PlacesAutocomplete({

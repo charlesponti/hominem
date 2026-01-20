@@ -13,5 +13,5 @@
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "build", "src/test/**", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "build", "src/test/**", "**/*.test.ts", "**/*.spec.ts", "src/routers/finance/**"]
 }

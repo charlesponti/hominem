@@ -1,5 +1,6 @@
-import { z } from 'zod'
-import { healthProfileSchema } from './health-and-fitness.schema'
+import { z } from 'zod';
+
+import { healthProfileSchema } from './health-and-fitness.schema';
 
 // Fundamental Personal Identification
 export const personalIdentitySchema = z.object({
@@ -15,9 +16,9 @@ export const personalIdentitySchema = z.object({
     z.object({
       language: z.string(),
       proficiencyLevel: z.enum(['native', 'fluent', 'intermediate', 'basic']),
-    })
+    }),
   ),
-})
+});
 
 // Demographic Information
 export const demographicProfileSchema = z.object({
@@ -34,7 +35,7 @@ export const demographicProfileSchema = z.object({
       familyDynamics: z.string().optional(),
     })
     .optional(),
-})
+});
 
 // Educational Background
 export const educationalProfileSchema = z.object({
@@ -55,7 +56,7 @@ export const educationalProfileSchema = z.object({
       degree: z.string().optional(),
       fieldOfStudy: z.string().optional(),
       graduationYear: z.number().optional(),
-    })
+    }),
   ),
   academicInterests: z.array(z.string()).optional(),
   learningStyles: z
@@ -63,10 +64,10 @@ export const educationalProfileSchema = z.object({
       z.object({
         type: z.enum(['visual', 'auditory', 'kinesthetic', 'reading/writing']),
         preference: z.number(), // 0-100 scale
-      })
+      }),
     )
     .optional(),
-})
+});
 
 // Professional Information
 export const professionalProfileSchema = z.object({
@@ -78,7 +79,7 @@ export const professionalProfileSchema = z.object({
       skill: z.string(),
       proficiencyLevel: z.number(), // 0-100 scale
       yearsOfExperience: z.number().optional(),
-    })
+    }),
   ),
   employmentHistory: z
     .array(
@@ -88,7 +89,7 @@ export const professionalProfileSchema = z.object({
         startDate: z.string().describe('YYYY-MM-DD'),
         endDate: z.string().optional().describe('YYYY-MM-DD'),
         responsibilities: z.array(z.string()).optional(),
-      })
+      }),
     )
     .optional(),
   professionalCertifications: z
@@ -97,10 +98,10 @@ export const professionalProfileSchema = z.object({
         name: z.string(),
         issuingAuthority: z.string(),
         dateAcquired: z.string().describe('YYYY-MM-DD'),
-      })
+      }),
     )
     .optional(),
-})
+});
 
 // Psychological Profile
 export const psychologicalProfileSchema = z.object({
@@ -148,7 +149,7 @@ export const psychologicalProfileSchema = z.object({
       memoryType: z.enum(['photographic', 'auditory', 'visual', 'kinesthetic']).optional(),
     })
     .optional(),
-})
+});
 
 // Personal Interests and Preferences
 export const interestsProfileSchema = z.object({
@@ -178,7 +179,7 @@ export const interestsProfileSchema = z.object({
       dreamDestinations: z.array(z.string()).optional(),
     })
     .optional(),
-})
+});
 
 // Social and Relational Dynamics
 export const socialProfileSchema = z.object({
@@ -204,12 +205,12 @@ export const socialProfileSchema = z.object({
           z.object({
             type: z.enum(['family', 'friends', 'professional', 'community']),
             strength: z.number(), // 0-100 scale
-          })
+          }),
         )
         .optional(),
     })
     .optional(),
-})
+});
 
 // Financial Profile
 export const financialProfileSchema = z.object({
@@ -229,7 +230,7 @@ export const financialProfileSchema = z.object({
     })
     .optional(),
   financialGoals: z.array(z.string()).optional(),
-})
+});
 
 // Technological Engagement
 export const technologicalProfileSchema = z.object({
@@ -258,7 +259,7 @@ export const technologicalProfileSchema = z.object({
       aiAssistantPreferences: z.array(z.string()).optional(),
     })
     .optional(),
-})
+});
 
 // Comprehensive User Interaction Metadata
 export const interactionMetadataSchema = z.object({
@@ -268,7 +269,7 @@ export const interactionMetadataSchema = z.object({
   averageResponseLength: z.number().optional(),
   communicationTones: z.array(z.string()).optional(),
   topicInterests: z.array(z.string()).optional(),
-})
+});
 
 // Comprehensive User Profile
 export const comprehensiveUserProfileSchema = z.object({
@@ -303,20 +304,20 @@ export const comprehensiveUserProfileSchema = z.object({
       z.object({
         timestamp: z.date(),
         updatedFields: z.array(z.string()).optional(),
-      })
+      }),
     )
     .optional(),
-})
+});
 
 // Export inferred types from schemas
-export type PersonalIdentity = z.infer<typeof personalIdentitySchema>
-export type DemographicProfile = z.infer<typeof demographicProfileSchema>
-export type EducationalProfile = z.infer<typeof educationalProfileSchema>
-export type ProfessionalProfile = z.infer<typeof professionalProfileSchema>
-export type PsychologicalProfile = z.infer<typeof psychologicalProfileSchema>
-export type InterestsProfile = z.infer<typeof interestsProfileSchema>
-export type SocialProfile = z.infer<typeof socialProfileSchema>
-export type FinancialProfile = z.infer<typeof financialProfileSchema>
-export type TechnologicalProfile = z.infer<typeof technologicalProfileSchema>
-export type InteractionMetadata = z.infer<typeof interactionMetadataSchema>
-export type ComprehensiveUserProfile = z.infer<typeof comprehensiveUserProfileSchema>
+export type PersonalIdentity = z.infer<typeof personalIdentitySchema>;
+export type DemographicProfile = z.infer<typeof demographicProfileSchema>;
+export type EducationalProfile = z.infer<typeof educationalProfileSchema>;
+export type ProfessionalProfile = z.infer<typeof professionalProfileSchema>;
+export type PsychologicalProfile = z.infer<typeof psychologicalProfileSchema>;
+export type InterestsProfile = z.infer<typeof interestsProfileSchema>;
+export type SocialProfile = z.infer<typeof socialProfileSchema>;
+export type FinancialProfile = z.infer<typeof financialProfileSchema>;
+export type TechnologicalProfile = z.infer<typeof technologicalProfileSchema>;
+export type InteractionMetadata = z.infer<typeof interactionMetadataSchema>;
+export type ComprehensiveUserProfile = z.infer<typeof comprehensiveUserProfileSchema>;

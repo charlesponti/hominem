@@ -1,5 +1,6 @@
 import type { inferRouterOutputs } from '@trpc/server';
 import type { places_v1 } from 'googleapis';
+
 import type { AppRouter } from './trpc/router';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;

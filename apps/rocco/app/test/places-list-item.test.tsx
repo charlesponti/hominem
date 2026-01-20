@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import PlacesList from '~/components/places/places-list';
 import { MapInteractionProvider } from '~/contexts/map-interaction-context';
 import { getMockListPlace } from '~/test/mocks';

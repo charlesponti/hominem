@@ -1,6 +1,8 @@
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';
-import { trpc } from './trpc/client';
+
 import type { List, Place } from './types';
+
+import { trpc } from './trpc/client';
 
 export const useRemoveListItem = (
   options?: Partial<Parameters<typeof trpc.items.removeFromList.useMutation>[0]>,

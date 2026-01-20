@@ -1,5 +1,6 @@
-import { ChatError } from '../service/chat.service'
-import { env } from '../../env'
+import { env } from '@hominem/services/env';
+
+import { ChatError } from '../service/chat.service';
 
 /**
  * Authentication utilities for chat service
@@ -10,9 +11,9 @@ export class AuthUtils {
    */
   static validateUserId(userId: string | undefined | null) {
     if (!userId || userId === 'anonymous') {
-      throw new ChatError('AUTH_ERROR', 'User ID is required')
+      throw new ChatError('AUTH_ERROR', 'User ID is required');
     }
-    return userId
+    return userId;
   }
 
   /**
@@ -20,7 +21,7 @@ export class AuthUtils {
    */
   static validateChatOwnership(chatUserId: string, requestingUserId: string) {
     if (chatUserId !== requestingUserId) {
-      throw new ChatError('AUTH_ERROR', 'Access denied to this chat')
+      throw new ChatError('AUTH_ERROR', 'Access denied to this chat');
     }
   }
 
@@ -29,7 +30,7 @@ export class AuthUtils {
    */
   static validateMessageOwnership(messageUserId: string, requestingUserId: string) {
     if (messageUserId !== requestingUserId) {
-      throw new ChatError('AUTH_ERROR', 'Access denied to this message')
+      throw new ChatError('AUTH_ERROR', 'Access denied to this message');
     }
   }
 
@@ -37,7 +38,7 @@ export class AuthUtils {
    * Check if user is anonymous
    */
   static isAnonymousUser(userId: string | undefined | null): boolean {
-    return !userId || userId === 'anonymous'
+    return !userId || userId === 'anonymous';
   }
 
   /**
@@ -46,18 +47,18 @@ export class AuthUtils {
   static extractUserIdFromHeaders(headers: Record<string, string>) {
     // Check for test mode header
     if (env.NODE_ENV === 'test') {
-      return headers['x-user-id'] || null
+      return headers['x-user-id'] || null;
     }
 
     // Check for authorization header
-    const authHeader = headers.authorization
-    if (!(authHeader?.startsWith('Bearer '))) {
-      return null
+    const authHeader = headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return null;
     }
 
     // In a real implementation, you would validate the token here
     // For now, we'll return null to indicate no valid user
-    return null
+    return null;
   }
 
   /**
@@ -65,15 +66,15 @@ export class AuthUtils {
    */
   static validateRequest(
     headers: Record<string, string>,
-    requireAuth = true
+    requireAuth = true,
   ): { userId: string | null; isAuthenticated: boolean } {
-    const userId = AuthUtils.extractUserIdFromHeaders(headers)
-    const isAuthenticated = !!userId
+    const userId = AuthUtils.extractUserIdFromHeaders(headers);
+    const isAuthenticated = !!userId;
 
     if (requireAuth && !isAuthenticated) {
-      throw new ChatError('AUTH_ERROR', 'Authentication required')
+      throw new ChatError('AUTH_ERROR', 'Authentication required');
     }
 
-    return { userId, isAuthenticated }
+    return { userId, isAuthenticated };
   }
 }

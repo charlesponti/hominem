@@ -1,5 +1,6 @@
-import { updateEvent } from '@hominem/services/events';
+import { updateEvent } from '@hominem/events-services';
 import { z } from 'zod';
+
 import { protectedProcedure } from '../context';
 
 export const updateVisit = protectedProcedure

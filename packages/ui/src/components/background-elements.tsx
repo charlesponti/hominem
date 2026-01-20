@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
 export function BackgroundElements() {
   return (
@@ -10,23 +10,23 @@ export function BackgroundElements() {
         />
       ))}
     </div>
-  )
+  );
 }
 
 const BackgroundElement = ({ icon }: { icon: string }) => {
-  const [left, setLeft] = useState(100)
-  const [top, setTop] = useState(100)
-  const [animationDelay, setAnimationDelay] = useState(0)
+  const [left, setLeft] = useState(100);
+  const [top, setTop] = useState(100);
+  const [animationDelay, setAnimationDelay] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setLeft(Math.random() * 100)
-      setTop(Math.random() * 100)
-      setAnimationDelay(Math.random() * 5)
-    }, 2000)
+      setLeft(Math.random() * 100);
+      setTop(Math.random() * 100);
+      setAnimationDelay(Math.random() * 5);
+    }, 2000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div
@@ -40,5 +40,5 @@ const BackgroundElement = ({ icon }: { icon: string }) => {
     >
       {icon}
     </div>
-  )
-}
+  );
+};

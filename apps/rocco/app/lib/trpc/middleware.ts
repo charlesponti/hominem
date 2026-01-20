@@ -1,6 +1,8 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import { logger } from '../logger';
+
 import type { Context } from './context';
+
+import { logger } from '../logger';
 
 const t = initTRPC.context<Context>().create();
 const { middleware } = t;

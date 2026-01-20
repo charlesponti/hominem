@@ -1,5 +1,5 @@
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool } from 'ai';
+import { z } from 'zod';
 
 export const create_job_application = tool({
   description: 'Create a new job application',
@@ -15,9 +15,9 @@ export const create_job_application = tool({
   async execute(args) {
     return {
       message: `Created job application for ${args.position} at ${args.company}`,
-    }
+    };
   },
-})
+});
 
 export const update_job_application = tool({
   description: 'Update a job application',
@@ -45,9 +45,9 @@ export const update_job_application = tool({
   async execute(args) {
     return {
       message: `Updated job application ${args.applicationId}`,
-    }
+    };
   },
-})
+});
 
 export const get_job_applications = tool({
   description: 'Get job applications',
@@ -63,9 +63,9 @@ export const get_job_applications = tool({
       message: `Retrieved job applications${args.status ? ` with status ${args.status}` : ''}${
         args.company ? ` at ${args.company}` : ''
       }`,
-    }
+    };
   },
-})
+});
 
 export const delete_job_application = tool({
   description: 'Delete a job application',
@@ -75,6 +75,6 @@ export const delete_job_application = tool({
   async execute(args) {
     return {
       message: `Deleted job application ${args.applicationId}`,
-    }
+    };
   },
-})
+});

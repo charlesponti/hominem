@@ -1,30 +1,30 @@
-import crypto from 'node:crypto'
-import { logger } from '@hominem/utils/logger'
-import { and, eq, like } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { budgetCategories, transactions } from '@hominem/db/schema'
+import { db } from '@hominem/db';
+import { budgetCategories, transactions } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, eq, like } from 'drizzle-orm';
+import crypto from 'node:crypto';
 
-export type BudgetCategoryType = (typeof budgetCategories.type.enumValues)[number]
+export type BudgetCategoryType = (typeof budgetCategories.type.enumValues)[number];
 
 /**
  * Get budget categories for a user
  */
 export async function getBudgetCategories(options: {
-  userId: string
-  name?: string
-  type?: BudgetCategoryType
+  userId: string;
+  name?: string;
+  type?: BudgetCategoryType;
 }) {
   if (!options.userId) {
-    throw new Error('User ID is required to fetch budget categories.')
+    throw new Error('User ID is required to fetch budget categories.');
   }
 
   const categoryType =
     options.type && budgetCategories.type.enumValues.includes(options.type)
       ? options.type
-      : undefined
+      : undefined;
 
   if (options.type && !categoryType) {
-    throw new Error(`Invalid budget category type: ${options.type}`)
+    throw new Error(`Invalid budget category type: ${options.type}`);
   }
 
   const categories = await db
@@ -34,24 +34,24 @@ export async function getBudgetCategories(options: {
       and(
         eq(budgetCategories.userId, options.userId),
         options.name ? like(budgetCategories.name, `%${options.name}%`) : undefined,
-        categoryType ? eq(budgetCategories.type, categoryType) : undefined
-      )
+        categoryType ? eq(budgetCategories.type, categoryType) : undefined,
+      ),
     )
-    .orderBy(budgetCategories.name)
+    .orderBy(budgetCategories.name);
 
-  return categories
+  return categories;
 }
 
 /**
  * Get budget category suggestions based on transaction description
  */
 export async function getBudgetCategorySuggestions(options: {
-  userId: string
-  description: string
-  amount?: number
+  userId: string;
+  description: string;
+  amount?: number;
 }) {
   if (!options.userId) {
-    throw new Error('User ID is required to get budget category suggestions.')
+    throw new Error('User ID is required to get budget category suggestions.');
   }
 
   // Basic suggestion logic: Find categories from past transactions with similar descriptions
@@ -62,24 +62,24 @@ export async function getBudgetCategorySuggestions(options: {
       and(
         eq(transactions.userId, options.userId),
         like(transactions.description, `%${options.description}%`),
-        transactions.category // Ensure category is not null or empty
-      )
+        transactions.category, // Ensure category is not null or empty
+      ),
     )
-    .limit(5)
+    .limit(5);
 
-  const suggestions = similarTransactions.map((tx) => tx.category).filter(Boolean) as string[]
+  const suggestions = similarTransactions.map((tx) => tx.category).filter(Boolean) as string[];
 
   // Fallback or additional suggestions (could be expanded)
   if (suggestions.length === 0) {
     if (options.amount && options.amount > 0) {
-      suggestions.push('Income') // Suggest 'Income' for positive amounts
+      suggestions.push('Income'); // Suggest 'Income' for positive amounts
     } else {
-      suggestions.push('Miscellaneous') // Default suggestion
+      suggestions.push('Miscellaneous'); // Default suggestion
     }
   }
 
   // You could add more sophisticated logic here, e.g., using ML or keyword mapping
-  return { suggestions: [...new Set(suggestions)] }
+  return { suggestions: [...new Set(suggestions)] };
 }
 
 /**
@@ -94,10 +94,10 @@ export async function getSpendingCategories(userId: string) {
       .from(transactions)
       .where(and(eq(transactions.userId, userId), eq(transactions.type, 'expense')))
       .groupBy(transactions.category)
-      .orderBy(transactions.category)
+      .orderBy(transactions.category);
   } catch (error) {
-    logger.error('Error fetching spending categories:', { error })
-    throw error
+    logger.error('Error fetching spending categories:', { error });
+    throw error;
   }
 }
 
@@ -105,12 +105,12 @@ export async function getSpendingCategories(userId: string) {
  * Create a new budget category
  */
 export async function createBudgetCategory(data: {
-  userId: string
-  name: string
-  type?: 'income' | 'expense'
-  budgetId?: string
-  averageMonthlyExpense?: string
-  color?: string
+  userId: string;
+  name: string;
+  type?: 'income' | 'expense';
+  budgetId?: string;
+  averageMonthlyExpense?: string;
+  color?: string;
 }) {
   try {
     const [category] = await db
@@ -124,12 +124,12 @@ export async function createBudgetCategory(data: {
         averageMonthlyExpense: data.averageMonthlyExpense || null,
         color: data.color || null,
       })
-      .returning()
+      .returning();
 
-    return category
+    return category;
   } catch (error) {
-    logger.error('Error creating budget category:', { error })
-    throw error
+    logger.error('Error creating budget category:', { error });
+    throw error;
   }
 }
 
@@ -140,28 +140,28 @@ export async function updateBudgetCategory(
   categoryId: string,
   userId: string,
   updates: Partial<{
-    name: string
-    type: 'income' | 'expense'
-    budgetId: string | null
-    averageMonthlyExpense: string | null
-    color: string | null
-  }>
+    name: string;
+    type: 'income' | 'expense';
+    budgetId: string | null;
+    averageMonthlyExpense: string | null;
+    color: string | null;
+  }>,
 ) {
   try {
     const [updated] = await db
       .update(budgetCategories)
       .set(updates)
       .where(and(eq(budgetCategories.id, categoryId), eq(budgetCategories.userId, userId)))
-      .returning()
+      .returning();
 
     if (!updated) {
-      throw new Error(`Budget category not found or not updated: ${categoryId}`)
+      throw new Error(`Budget category not found or not updated: ${categoryId}`);
     }
 
-    return updated
+    return updated;
   } catch (error) {
-    logger.error(`Error updating budget category ${categoryId}:`, { error })
-    throw error
+    logger.error(`Error updating budget category ${categoryId}:`, { error });
+    throw error;
   }
 }
 
@@ -172,10 +172,10 @@ export async function deleteBudgetCategory(categoryId: string, userId: string): 
   try {
     await db
       .delete(budgetCategories)
-      .where(and(eq(budgetCategories.id, categoryId), eq(budgetCategories.userId, userId)))
+      .where(and(eq(budgetCategories.id, categoryId), eq(budgetCategories.userId, userId)));
   } catch (error) {
-    logger.error(`Error deleting budget category ${categoryId}:`, { error })
-    throw error
+    logger.error(`Error deleting budget category ${categoryId}:`, { error });
+    throw error;
   }
 }
 
@@ -188,16 +188,16 @@ export async function getBudgetCategoryById(categoryId: string, userId: string) 
       .select()
       .from(budgetCategories)
       .where(and(eq(budgetCategories.id, categoryId), eq(budgetCategories.userId, userId)))
-      .limit(1)
+      .limit(1);
 
     if (category.length === 0) {
-      throw new Error('Budget category not found')
+      throw new Error('Budget category not found');
     }
 
-    return category[0]
+    return category[0];
   } catch (error) {
-    logger.error(`Error fetching budget category ${categoryId}:`, { error })
-    throw error
+    logger.error(`Error fetching budget category ${categoryId}:`, { error });
+    throw error;
   }
 }
 
@@ -206,19 +206,19 @@ export async function getBudgetCategoryById(categoryId: string, userId: string) 
  */
 export async function checkBudgetCategoryNameExists(
   name: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   try {
     const existing = await db
       .select({ id: budgetCategories.id })
       .from(budgetCategories)
       .where(and(eq(budgetCategories.name, name), eq(budgetCategories.userId, userId)))
-      .limit(1)
+      .limit(1);
 
-    return existing.length > 0
+    return existing.length > 0;
   } catch (error) {
-    logger.error('Error checking budget category name existence:', { error })
-    throw error
+    logger.error('Error checking budget category name existence:', { error });
+    throw error;
   }
 }
 
@@ -231,10 +231,10 @@ export async function getUserExpenseCategories(userId: string) {
       .select()
       .from(budgetCategories)
       .where(and(eq(budgetCategories.userId, userId), eq(budgetCategories.type, 'expense')))
-      .orderBy(budgetCategories.name)
+      .orderBy(budgetCategories.name);
   } catch (error) {
-    logger.error(`Error fetching expense categories for user ${userId}:`, { error })
-    throw error
+    logger.error(`Error fetching expense categories for user ${userId}:`, { error });
+    throw error;
   }
 }
 
@@ -247,9 +247,9 @@ export async function getAllBudgetCategories(userId: string) {
       .select()
       .from(budgetCategories)
       .where(eq(budgetCategories.userId, userId))
-      .orderBy(budgetCategories.name)
+      .orderBy(budgetCategories.name);
   } catch (error) {
-    logger.error(`Error fetching all budget categories for user ${userId}:`, { error })
-    throw error
+    logger.error(`Error fetching all budget categories for user ${userId}:`, { error });
+    throw error;
   }
 }

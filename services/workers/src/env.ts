@@ -1,5 +1,5 @@
-import 'dotenv/config'
-import { z } from 'zod'
+import 'dotenv/config';
+import { z } from 'zod';
 
 const envSchema = z.object({
   APP_BASE_URL: z.url(),
@@ -13,6 +13,6 @@ const envSchema = z.object({
   // Supabase configuration for file storage
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string(),
-})
+});
 
-export const env = envSchema.parse(process.env)
+export const env = envSchema.parse(process.env);

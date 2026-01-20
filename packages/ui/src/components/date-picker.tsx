@@ -1,23 +1,24 @@
-import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
-import { cn } from '../lib/utils'
-import { Button } from './ui/button'
-import { Calendar } from './ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+
+import { cn } from '../lib/utils';
+import { Button } from './ui/button';
+import { Calendar } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 interface DatePickerProps {
-  value: Date | undefined
-  onSelect: (date: Date | undefined) => void
-  disabled?: boolean
-  className?: string
-  id?: string
-  placeholder?: string
-  label?: string
-  dateFormat?: string
-  showLabel?: boolean
-  containerClassName?: string
-  popoverAlign?: 'start' | 'center' | 'end'
-  variant?: 'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link'
+  value: Date | undefined;
+  onSelect: (date: Date | undefined) => void;
+  disabled?: boolean;
+  className?: string;
+  id?: string;
+  placeholder?: string;
+  label?: string;
+  dateFormat?: string;
+  showLabel?: boolean;
+  containerClassName?: string;
+  popoverAlign?: 'start' | 'center' | 'end';
+  variant?: 'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link';
 }
 
 export function DatePicker({
@@ -61,5 +62,5 @@ export function DatePicker({
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }

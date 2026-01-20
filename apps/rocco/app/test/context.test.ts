@@ -1,6 +1,7 @@
+import { createTestUser } from '@hominem/db/test/fixtures';
 import crypto from 'node:crypto';
-import { createTestUser } from '@hominem/services/fixtures';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createContext } from '../lib/trpc/context';
 
 // Mock the dependencies

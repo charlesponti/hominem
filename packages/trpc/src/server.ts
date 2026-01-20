@@ -18,8 +18,8 @@ import { oauthRoutes } from './routes/oauth/index.js'
 import { possessionsRoutes } from './routes/possessions.js'
 import { statusRoutes } from './routes/status'
 import { appRouter } from './index.js'
-import { financeRoutes } from './routers/finance/index.js'
-import { plaidRoutes } from './routers/finance/plaid/index.js'
+// import { financeRoutes } from './routers/finance/index.js'
+// import { plaidRoutes } from './routers/finance/plaid/index.js'
 
 export type AppEnv = {
   Variables: {
@@ -115,8 +115,8 @@ export function createServer() {
   app.route('/api/invites', invitesRoutes)
   app.route('/api/images', imagesRoutes)
   app.route('/components', componentsRoutes)
-  app.route('/api/finance', financeRoutes)
-  app.route('/api/finance/plaid', plaidRoutes)
+  // app.route('/api/finance', financeRoutes)
+  // app.route('/api/finance/plaid', plaidRoutes)
 
   // Root health check
   app.get('/', (c) => {

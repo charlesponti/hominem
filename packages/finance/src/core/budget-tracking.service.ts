@@ -1,42 +1,44 @@
-import { and, eq, gte, lte, sql } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { budgetCategories, transactions } from '@hominem/db/schema'
+import { db } from '@hominem/db';
+import { budgetCategories, transactions } from '@hominem/db/schema';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
+
 import type {
   BudgetCategoryWithSpending,
   BudgetChartData,
   BudgetPieData,
   BudgetSummary,
   BudgetTrackingData,
-} from '../budget.types'
-import { getBudgetStatus, getChartColor, getStatusColor } from './budget.utils'
+} from '../budget.types';
+
+import { getBudgetStatus, getChartColor, getStatusColor } from './budget.utils';
 
 /**
  * Get budget categories with spending data for a specific month
  */
 export async function getBudgetCategoriesWithSpending(options: {
-  userId: string
-  monthYear: string // Format: "YYYY-MM"
+  userId: string;
+  monthYear: string; // Format: "YYYY-MM"
 }): Promise<BudgetCategoryWithSpending[]> {
-  const { userId, monthYear } = options
+  const { userId, monthYear } = options;
 
   // Parse month/year
-  const [yearStr, monthStr] = monthYear.split('-')
-  const year = Number(yearStr)
-  const month = Number(monthStr)
+  const [yearStr, monthStr] = monthYear.split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr);
 
   if (Number.isNaN(year) || Number.isNaN(month)) {
-    throw new Error(`Invalid monthYear format: ${monthYear}. Expected format: YYYY-MM`)
+    throw new Error(`Invalid monthYear format: ${monthYear}. Expected format: YYYY-MM`);
   }
 
-  const startDate = new Date(year, month - 1, 1)
-  const endDate = new Date(year, month, 0) // Last day of the month
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0); // Last day of the month
 
   // Get budget categories
   const categories = await db
     .select()
     .from(budgetCategories)
     .where(eq(budgetCategories.userId, userId))
-    .orderBy(budgetCategories.name)
+    .orderBy(budgetCategories.name);
 
   // Get spending data for the month
   const spendingData = await db
@@ -51,24 +53,24 @@ export async function getBudgetCategoriesWithSpending(options: {
         gte(transactions.date, startDate),
         lte(transactions.date, endDate),
         eq(transactions.type, 'expense'),
-        eq(transactions.excluded, false)
-      )
+        eq(transactions.excluded, false),
+      ),
     )
-    .groupBy(transactions.category)
+    .groupBy(transactions.category);
 
   // Create a map for quick lookup
   const spendingMap = new Map(
-    spendingData.map((item) => [item.category?.toLowerCase(), Number(item.amount)])
-  )
+    spendingData.map((item) => [item.category?.toLowerCase(), Number(item.amount)]),
+  );
 
   // Transform categories with spending data and UI properties
   return categories.map((category, index) => {
-    const budgetAmount = Number.parseFloat(category.averageMonthlyExpense || '0')
-    const actualSpending = spendingMap.get(category.name.toLowerCase()) || 0
-    const percentageSpent = budgetAmount > 0 ? (actualSpending / budgetAmount) * 100 : 0
-    const variance = budgetAmount - actualSpending
+    const budgetAmount = Number.parseFloat(category.averageMonthlyExpense || '0');
+    const actualSpending = spendingMap.get(category.name.toLowerCase()) || 0;
+    const percentageSpent = budgetAmount > 0 ? (actualSpending / budgetAmount) * 100 : 0;
+    const variance = budgetAmount - actualSpending;
 
-    const status = getBudgetStatus(percentageSpent)
+    const status = getBudgetStatus(percentageSpent);
 
     return {
       ...category,
@@ -81,18 +83,18 @@ export async function getBudgetCategoriesWithSpending(options: {
       color: category.color || getChartColor(index),
       status,
       statusColor: getStatusColor(status),
-    }
-  })
+    };
+  });
 }
 
 /**
  * Calculate budget summary from categories
  */
 export function calculateBudgetSummary(categories: BudgetCategoryWithSpending[]): BudgetSummary {
-  const totalBudgeted = categories.reduce((sum, cat) => sum + cat.budgetAmount, 0)
-  const totalActual = categories.reduce((sum, cat) => sum + cat.actualSpending, 0)
-  const totalVariance = totalBudgeted - totalActual
-  const budgetUsagePercentage = totalBudgeted > 0 ? (totalActual / totalBudgeted) * 100 : 0
+  const totalBudgeted = categories.reduce((sum, cat) => sum + cat.budgetAmount, 0);
+  const totalActual = categories.reduce((sum, cat) => sum + cat.actualSpending, 0);
+  const totalVariance = totalBudgeted - totalActual;
+  const budgetUsagePercentage = totalBudgeted > 0 ? (totalActual / totalBudgeted) * 100 : 0;
 
   return {
     totalBudgeted,
@@ -101,7 +103,7 @@ export function calculateBudgetSummary(categories: BudgetCategoryWithSpending[])
     budgetUsagePercentage,
     isOverBudget: totalActual > totalBudgeted,
     categories,
-  }
+  };
 }
 
 /**
@@ -114,7 +116,7 @@ export function generateChartData(categories: BudgetCategoryWithSpending[]): Bud
     budgeted: category.budgetAmount,
     actual: category.actualSpending,
     variance: category.variance,
-  }))
+  }));
 }
 
 /**
@@ -127,20 +129,20 @@ export function generatePieData(categories: BudgetCategoryWithSpending[]): Budge
       name: category.name,
       value: category.actualSpending,
       fill: getChartColor(index),
-    }))
+    }));
 }
 
 /**
  * Get budget tracking data for a specific month
  */
 export async function getBudgetTrackingData(options: {
-  userId: string
-  monthYear: string
+  userId: string;
+  monthYear: string;
 }): Promise<BudgetTrackingData> {
-  const categories = await getBudgetCategoriesWithSpending(options)
-  const summary = calculateBudgetSummary(categories)
-  const chartData = generateChartData(categories)
-  const pieData = generatePieData(categories)
+  const categories = await getBudgetCategoriesWithSpending(options);
+  const summary = calculateBudgetSummary(categories);
+  const chartData = generateChartData(categories);
+  const pieData = generatePieData(categories);
 
   return {
     monthYear: options.monthYear,
@@ -148,5 +150,5 @@ export async function getBudgetTrackingData(options: {
     categories,
     chartData,
     pieData,
-  }
+  };
 }

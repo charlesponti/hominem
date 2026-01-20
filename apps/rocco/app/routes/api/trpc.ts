@@ -1,8 +1,10 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+
+import type { Route } from './+types/trpc';
+
 import { logger } from '../../lib/logger';
 import { createContext } from '../../lib/trpc/context';
 import { appRouter } from '../../lib/trpc/router';
-import type { Route } from './+types/trpc';
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const startTime = Date.now();

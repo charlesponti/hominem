@@ -4,10 +4,10 @@ Hominem is a monorepo full-stack application with local-first architecture.
 
 For detailed coding guidelines, see specialized instruction files in `.github/instructions/`:
 
-- **All files:** [principles.instructions.md](instructions/principles.instructions.md) - Universal coding standards
-- **React components:** [react.instructions.md](instructions/react.instructions.md) - Component patterns & state management
-- **API development:** [api.instructions.md](instructions/api.instructions.md) - tRPC, authentication, endpoints
-- **Database code:** [database.instructions.md](instructions/database.instructions.md) - Drizzle ORM, migrations, queries
+- **All files:** [principles.instructions.md](instructions/principles.instructions.md)
+- **React components:** [react.instructions.md](instructions/react.instructions.md)
+- **API development:** [api.instructions.md](instructions/api.instructions.md)
+- **Database code:** [database.instructions.md](instructions/database.instructions.md)
 
 ## Project Overview
 
@@ -25,10 +25,11 @@ Hominem is a monorepo full-stack application with local-first architecture. It u
 ## Key Workflows
 
 - **Install:** `bun install`
-- **Dev:** `bun run dev` (Turbo)
-- **Build:** `bun run build --force` (Turbo)
-- **Test:** `bun run test --force` (Vitest)
-- **Lint:** `bun run lint --parallel` (Biome)
+- **Dev:** `bun run dev` (turbo)
+- **Build:** `bun run build --force` (turbo)
+- **Test:** `bun run test --force` (turbo)
+  - Test specific package: `bun run test --filter <package_name>` (eg. `bun run test --filter @hominem/finance`)
+- **Lint:** `bun run lint --parallel` (oxlint)
 - **Database:**
   - Modify schema: Edit `packages/db/src/db/schema/*`
   - Generate migrations: `bun run db:generate`
@@ -54,11 +55,11 @@ Hominem is a monorepo full-stack application with local-first architecture. It u
 ### Tech Stack Summary
 
 - **Runtime:** Bun
-- **Framework:** React Router (rocco, florin, notes)
-- **API:** Hono + tRPC
-- **Database:** Drizzle ORM + PostgreSQL (Supabase)
-- **Auth:** Supabase Auth
-- **State:** Zustand (global), React Query + IndexedDB (server/local-first)
+- **web framework:** React Router (`apps/*`)
+- **server:** Hono + tRPC (`services/api`)
+- **Database:** Drizzle ORM + PostgreSQL (`packages/db`)
+- **Auth:** Supabase Auth (`packages/auth`)
+- **State:** React Query + IndexedDB (server/local-first)
 - **UI:** Tailwind CSS, Shadcn UI, Radix UI
 - **Validation:** Zod
 - **Testing:** Vitest, React Testing Library

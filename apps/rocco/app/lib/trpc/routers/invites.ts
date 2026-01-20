@@ -1,3 +1,4 @@
+import { UserAuthService } from '@hominem/auth';
 import {
   acceptListInvite as acceptListInviteService,
   deleteInviteByListAndToken,
@@ -11,7 +12,6 @@ import {
   isUserMemberOfList,
   sendListInvite,
 } from '@hominem/lists-services';
-import { UserAuthService } from '@hominem/auth';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 

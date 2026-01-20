@@ -4,8 +4,13 @@ import { z } from 'zod';
 import {
   assessMentalWellnessInputSchema,
   assessMentalWellnessOutputSchema,
+  mentalHealthService,
 } from './mental-health.service';
-import { recommendWorkoutInputSchema, recommendWorkoutOutputSchema } from './workout.service';
+import {
+  recommendWorkoutInputSchema,
+  recommendWorkoutOutputSchema,
+  workoutService,
+} from './workout.service';
 
 // Activity schema used across inputs/outputs
 export const ActivitySchema = z.object({
@@ -31,13 +36,31 @@ export const logHealthActivityDef = toolDefinition({
   outputSchema: logHealthActivityOutputSchema,
 });
 
-export const logHealthActivityServer = async (input: unknown) => {
-  const args = input as z.infer<typeof logHealthActivityInputSchema>;
+export const logHealthActivityServer = async (
+  input: z.infer<typeof logHealthActivityInputSchema>,
+) => {
+  const args = input;
   return {
     message: `Logged ${args.activityType} activity for ${args.duration} minutes on ${args.date}`,
     activityId: `activity_${Date.now()}`,
   };
 };
+
+export const getHealthActivitiesServer = async (
+  input: z.infer<typeof getHealthActivitiesInputSchema>,
+) => {
+  return { activities: [] as z.infer<typeof ActivitySchema>[] };
+};
+
+export const updateHealthActivityServer = async (
+  input: z.infer<typeof updateHealthActivityInputSchema>,
+) => {
+  return { message: `Updated health activity ${input.activityId}`, updatedActivity: { ...input } };
+};
+
+export const deleteHealthActivityServer = async (
+  input: z.infer<typeof deleteHealthActivityInputSchema>,
+) => ({ message: `Deleted health activity ${input.activityId}`, deleted: true });
 
 // Get activities
 export const getHealthActivitiesInputSchema = z.object({
@@ -103,3 +126,10 @@ export const assessMentalWellnessDef = toolDefinition({
   inputSchema: assessMentalWellnessInputSchema,
   outputSchema: assessMentalWellnessOutputSchema,
 });
+
+export const recommendWorkoutServer = async (input: z.infer<typeof recommendWorkoutInputSchema>) =>
+  workoutService.recommend(input);
+
+export const assessMentalWellnessServer = async (
+  input: z.infer<typeof assessMentalWellnessInputSchema>,
+) => mentalHealthService.assess(input);

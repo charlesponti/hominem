@@ -1,12 +1,12 @@
 import '@testing-library/jest-dom';
-import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, vi } from 'vitest';
-import './utils';
-
 // Polyfill Web APIs for React Router v7 compatibility
 // React Router v7 uses Request/Response internally and needs them
 // to be from a consistent implementation to avoid AbortSignal errors
 import { fetch, Headers, Request, Response } from '@remix-run/web-fetch';
+import { cleanup } from '@testing-library/react';
+
+import './utils';
+import { afterEach, beforeAll, vi } from 'vitest';
 
 // @ts-expect-error - Polyfilling globals for test environment
 globalThis.fetch = fetch;

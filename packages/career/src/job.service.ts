@@ -1,15 +1,15 @@
-import { db } from '@hominem/db'
-import { companies, type Job, jobs, type NewJob } from '@hominem/db/schema'
-import { eq, type SQL } from 'drizzle-orm'
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { db } from '@hominem/db';
+import { companies, type Job, jobs, type NewJob } from '@hominem/db/schema';
+import { eq, type SQL } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
-export const JobInsertSchema = createInsertSchema(jobs)
-export const JobSchema = createSelectSchema(jobs)
+export const JobInsertSchema = createInsertSchema(jobs);
+export const JobSchema = createSelectSchema(jobs);
 
 export class JobService {
   async create(data: Omit<NewJob, 'id' | 'version' | 'createdAt' | 'updatedAt'>) {
-    const [result] = await db.insert(jobs).values(data).returning()
-    return result
+    const [result] = await db.insert(jobs).values(data).returning();
+    return result;
   }
 
   async update(id: string, data: Partial<NewJob>) {
@@ -21,8 +21,8 @@ export class JobService {
         version: data.version ? data.version + 1 : 1,
       })
       .where(eq(jobs.id, id))
-      .returning()
-    return result
+      .returning();
+    return result;
   }
 
   async findById(id: string) {
@@ -31,17 +31,17 @@ export class JobService {
       .from(jobs)
       .where(eq(jobs.id, id))
       .leftJoin(companies, eq(jobs.companyId, companies.id))
-      .limit(1)
+      .limit(1);
 
-    return result[0]
+    return result[0];
   }
 
   async findMany(query: SQL<Job>) {
-    return await db.select().from(jobs).where(query)
+    return await db.select().from(jobs).where(query);
   }
 
   async delete(id: string) {
-    const [result] = await db.delete(jobs).where(eq(jobs.id, id)).returning()
-    return result
+    const [result] = await db.delete(jobs).where(eq(jobs.id, id)).returning();
+    return result;
   }
 }

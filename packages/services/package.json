@@ -5,7 +5,16 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
     "./emails": {
+      "types": "./build/resend.d.ts",
+      "development": "./src/resend.ts",
+      "default": "./build/resend.js"
+    },
+    "./resend": {
       "types": "./build/resend.d.ts",
       "development": "./src/resend.ts",
       "default": "./build/resend.js"
@@ -78,7 +87,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc -d",
+    "build": "tsc -b",
     "typecheck": "tsc --noEmit",
     "dev": "tsc -d -w",
     "format": "bunx oxfmt ./src",

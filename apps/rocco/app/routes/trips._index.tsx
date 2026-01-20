@@ -1,8 +1,10 @@
 import { PageTitle } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Link } from 'react-router';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
 import { createCaller } from '~/lib/trpc/server';
+
 import type { Route } from './+types/trips._index';
 
 export async function loader({ request }: Route.LoaderArgs) {

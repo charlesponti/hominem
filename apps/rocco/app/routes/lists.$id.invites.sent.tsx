@@ -2,9 +2,11 @@ import { useSupabaseAuthContext } from '@hominem/auth';
 import { PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { redirect } from 'react-router';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
 import { trpc } from '~/lib/trpc/client';
 import { createCaller } from '~/lib/trpc/server';
+
 import type { Route } from './+types/lists.$id.invites.sent';
 
 export async function loader({ request }: Route.LoaderArgs) {

@@ -1,5 +1,5 @@
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool } from 'ai';
+import { z } from 'zod';
 
 export const create_bookmark = tool({
   description: 'Create a new bookmark',
@@ -12,11 +12,11 @@ export const create_bookmark = tool({
   async execute(args) {
     const result = {
       message: `Created bookmark: ${args.title} (${args.url})`,
-    }
+    };
 
-    return result
+    return result;
   },
-})
+});
 
 export const get_bookmarks = tool({
   description: 'Get all bookmarks or search for specific bookmarks',
@@ -29,9 +29,9 @@ export const get_bookmarks = tool({
       message: `Retrieved bookmarks${args.query ? ` with query: ${args.query}` : ''}${
         args.siteName ? ` from ${args.siteName}` : ''
       }`,
-    }
+    };
   },
-})
+});
 
 export const update_bookmark = tool({
   description: 'Update a bookmark',
@@ -43,9 +43,9 @@ export const update_bookmark = tool({
   async execute(args) {
     return {
       message: `Updated bookmark ${args.bookmarkId}`,
-    }
+    };
   },
-})
+});
 
 export const delete_bookmark = tool({
   description: 'Delete a bookmark',
@@ -55,6 +55,6 @@ export const delete_bookmark = tool({
   async execute(args) {
     return {
       message: `Deleted bookmark ${args.bookmarkId}`,
-    }
+    };
   },
-})
+});

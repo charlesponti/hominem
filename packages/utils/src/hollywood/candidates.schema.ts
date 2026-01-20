@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 const CreditSchema = z.object({
   role: z.string().describe('The role the candidate had in the production'),
@@ -8,24 +8,24 @@ const CreditSchema = z.object({
     .nullable()
     .describe('The network associated with the production, if applicable'),
   type: z.enum(['tv', 'movie']).describe('The type of production'),
-})
+});
 
 const LinkSchema = z.object({
   url: z.string().url().describe("The URL to the candidate's profile or relevant link"),
   type: z.string().describe('The type of link, e.g., IMDB, Twitter, etc.'),
-})
+});
 
 const OrganizationSchema = z.object({
   name: z.string().describe('The name of the organization'),
   type: z
     .string()
     .describe('The type of organization, e.g., production company, streaming service'),
-})
+});
 
 const AssociateSchema = z.object({
   name: z.string().describe('The name of the associate'),
   production: z.string().describe('The production associated with the associate'),
-})
+});
 
 const RepresentativeSchema = z.object({
   name: z.string().describe('The name of the representative'),
@@ -33,7 +33,7 @@ const RepresentativeSchema = z.object({
   organization: z.string().describe('The organization the representative is associated with'),
   email: z.string().email().optional().describe("The representative's email address"),
   phone_number: z.string().optional().describe("The representative's phone number"),
-})
+});
 
 const CandidateSchema = z.object({
   name: z.string().describe('The full name of the candidate'),
@@ -52,10 +52,10 @@ const CandidateSchema = z.object({
   representatives: z
     .array(RepresentativeSchema)
     .describe('A list of representatives for the candidate'),
-})
+});
 
 const CandidatesSchema = z.object({
   candidates: z.array(CandidateSchema).describe('A list of candidates'),
-})
+});
 
-export { CandidatesSchema }
+export { CandidatesSchema };

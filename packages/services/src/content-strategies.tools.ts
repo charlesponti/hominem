@@ -1,7 +1,7 @@
-import { google } from '@ai-sdk/google'
-import { ContentStrategySchema } from '@hominem/db/schema' 
-import { generateObject, tool } from 'ai'
-import { z } from 'zod'
+import { google } from '@ai-sdk/google';
+import { ContentStrategySchema } from '@hominem/db/schema';
+import { generateObject, tool } from 'ai';
+import { z } from 'zod';
 
 export const content_generator = tool({
   description: 'Generate comprehensive content strategy from a simple topic idea',
@@ -14,7 +14,7 @@ export const content_generator = tool({
       .describe('List of platforms to generate content for (e.g., blog, twitter, instagram)'),
   }),
   async execute(args: { topic: string; audience?: string; platforms?: string[] }) {
-    const { topic, audience = 'general', platforms = ['blog', 'twitter', 'instagram'] } = args
+    const { topic, audience = 'general', platforms = ['blog', 'twitter', 'instagram'] } = args;
 
     // Build a detailed prompt for the LLM
     const prompt = `
@@ -22,7 +22,7 @@ export const content_generator = tool({
       Be creative, strategic, and ensure all content ideas are tailored to both the topic and audience.
       Target audience: ${audience}
       Platforms to focus on: ${platforms.join(', ')}
-    `
+    `;
 
     try {
       const result = await generateObject({
@@ -31,11 +31,11 @@ export const content_generator = tool({
           'You are a professional content strategist who helps create comprehensive content plans tailored to specific topics and audiences.',
         prompt,
         schema: ContentStrategySchema,
-      })
+      });
 
-      return result.object
+      return result.object;
     } catch (error) {
-      console.error('Error generating content strategy:', error)
+      console.error('Error generating content strategy:', error);
 
       // Fallback to a basic structure if the LLM call fails
       return {
@@ -66,7 +66,7 @@ export const content_generator = tool({
           gaps: `Content gap for ${topic}`,
           opportunities: `Opportunity for ${topic}`,
         },
-      }
+      };
     }
   },
-})
+});

@@ -1,4 +1,3 @@
-import { db } from '@hominem/db';
 import { users } from '@hominem/db/schema';
 import { eq, or } from 'drizzle-orm';
 
@@ -9,6 +8,7 @@ export class UserAuthService {
    * Find an existing user by id, email or supabaseId, or create one from Supabase user data.
    */
   static async findOrCreateUser(supabaseUser: SupabaseAuthUser) {
+    const { db } = await import('@hominem/db');
     const supabaseId = supabaseUser.id;
     const email = supabaseUser.email ?? '';
 
@@ -63,6 +63,7 @@ export class UserAuthService {
   }
 
   static async findByIdOrEmail(opts: { id?: string; email?: string; supabaseId?: string }) {
+    const { db } = await import('@hominem/db');
     const { id, email, supabaseId } = opts;
     if (!id && !email && !supabaseId) {
       return null;
@@ -83,16 +84,19 @@ export class UserAuthService {
   }
 
   static async getUserByEmail(email: string) {
+    const { db } = await import('@hominem/db');
     const [result] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     return result ?? null;
   }
 
   static async getUserById(id: string) {
+    const { db } = await import('@hominem/db');
     const [result] = await db.select().from(users).where(eq(users.id, id)).limit(1);
     return result ?? null;
   }
 
   static async deleteUser(id: string) {
+    const { db } = await import('@hominem/db');
     const result = await db.delete(users).where(eq(users.id, id)).returning();
     return result.length > 0;
   }
@@ -101,6 +105,7 @@ export class UserAuthService {
     supabaseId: string,
     updates: Partial<Record<string, unknown>>,
   ) {
+    const { db } = await import('@hominem/db');
     const [updated] = await db
       .update(users)
       .set({ ...updates, updatedAt: new Date().toISOString() })

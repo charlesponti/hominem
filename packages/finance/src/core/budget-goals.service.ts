@@ -1,8 +1,8 @@
-import crypto from 'node:crypto'
-import { logger } from '@hominem/utils/logger'
-import { and, eq } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { budgetGoals } from '@hominem/db/schema'
+import { db } from '@hominem/db';
+import { budgetGoals } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, eq } from 'drizzle-orm';
+import crypto from 'node:crypto';
 
 /**
  * Get budget goals for a user
@@ -13,10 +13,10 @@ export async function getBudgetGoals(userId: string) {
       .select()
       .from(budgetGoals)
       .where(eq(budgetGoals.userId, userId))
-      .orderBy(budgetGoals.startDate)
+      .orderBy(budgetGoals.startDate);
   } catch (error) {
-    logger.error(`Error fetching budget goals for user ${userId}:`, { error })
-    throw error
+    logger.error(`Error fetching budget goals for user ${userId}:`, { error });
+    throw error;
   }
 }
 
@@ -24,13 +24,13 @@ export async function getBudgetGoals(userId: string) {
  * Create a new budget goal
  */
 export async function createBudgetGoal(data: {
-  userId: string
-  name: string
-  targetAmount: string
-  currentAmount?: string
-  startDate: Date
-  endDate?: Date | null
-  categoryId?: string | null
+  userId: string;
+  name: string;
+  targetAmount: string;
+  currentAmount?: string;
+  startDate: Date;
+  endDate?: Date | null;
+  categoryId?: string | null;
 }) {
   try {
     const [goal] = await db
@@ -45,12 +45,12 @@ export async function createBudgetGoal(data: {
         endDate: data.endDate || null,
         categoryId: data.categoryId || null,
       })
-      .returning()
+      .returning();
 
-    return goal
+    return goal;
   } catch (error) {
-    logger.error('Error creating budget goal:', { error })
-    throw error
+    logger.error('Error creating budget goal:', { error });
+    throw error;
   }
 }
 
@@ -61,29 +61,29 @@ export async function updateBudgetGoal(
   goalId: string,
   userId: string,
   updates: Partial<{
-    name: string
-    targetAmount: string
-    currentAmount: string
-    startDate: Date
-    endDate: Date | null
-    categoryId: string | null
-  }>
+    name: string;
+    targetAmount: string;
+    currentAmount: string;
+    startDate: Date;
+    endDate: Date | null;
+    categoryId: string | null;
+  }>,
 ) {
   try {
     const [updated] = await db
       .update(budgetGoals)
       .set(updates)
       .where(and(eq(budgetGoals.id, goalId), eq(budgetGoals.userId, userId)))
-      .returning()
+      .returning();
 
     if (!updated) {
-      throw new Error(`Budget goal not found or not updated: ${goalId}`)
+      throw new Error(`Budget goal not found or not updated: ${goalId}`);
     }
 
-    return updated
+    return updated;
   } catch (error) {
-    logger.error(`Error updating budget goal ${goalId}:`, { error })
-    throw error
+    logger.error(`Error updating budget goal ${goalId}:`, { error });
+    throw error;
   }
 }
 
@@ -94,9 +94,9 @@ export async function deleteBudgetGoal(goalId: string, userId: string): Promise<
   try {
     await db
       .delete(budgetGoals)
-      .where(and(eq(budgetGoals.id, goalId), eq(budgetGoals.userId, userId)))
+      .where(and(eq(budgetGoals.id, goalId), eq(budgetGoals.userId, userId)));
   } catch (error) {
-    logger.error(`Error deleting budget goal ${goalId}:`, { error })
-    throw error
+    logger.error(`Error deleting budget goal ${goalId}:`, { error });
+    throw error;
   }
 }

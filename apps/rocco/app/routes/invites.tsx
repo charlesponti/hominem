@@ -5,12 +5,15 @@ import { Loading } from '@hominem/ui/loading';
 import { Mail } from 'lucide-react';
 import { useCallback } from 'react';
 import { data } from 'react-router';
+
+import type { ReceivedInvite } from '~/lib/types';
+
 import ReceivedInviteItem from '~/components/ReceivedInviteItem';
 import { getAuthState } from '~/lib/auth.server';
 import { env } from '~/lib/env';
 import { buildInvitePreview } from '~/lib/services/invite-preview.service';
 import { createCaller } from '~/lib/trpc/server';
-import type { ReceivedInvite } from '~/lib/types';
+
 import type { Route } from './+types/invites';
 
 export async function loader({ request }: Route.LoaderArgs) {

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const EventSchema = z
   .object({
@@ -7,7 +7,7 @@ export const EventSchema = z
     raw: z.string().describe('Raw event content'),
     timestamp: z.string().nullable(),
   })
-  .describe('Activity mentioned in the text')
+  .describe('Activity mentioned in the text');
 
-export const EventsSchema = z.array(EventSchema).describe('Activities mentioned in the text')
-export type Events = z.infer<typeof EventsSchema>
+export const EventsSchema = z.array(EventSchema).describe('Activities mentioned in the text');
+export type Events = z.infer<typeof EventsSchema>;

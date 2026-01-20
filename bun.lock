@@ -197,6 +197,7 @@
         "@headlessui/react": "^2.2.9",
         "@hominem/auth": "workspace:*",
         "@hominem/db": "workspace:*",
+        "@hominem/events-services": "workspace:*",
         "@hominem/services": "workspace:*",
         "@hominem/ui": "workspace:*",
         "@hominem/utils": "workspace:*",
@@ -308,6 +309,7 @@
         "@hominem/utils": "workspace:*",
         "ai": "^4.3.16",
         "drizzle-orm": "0.45.1",
+        "drizzle-zod": "^0.7.0",
         "zod": "4.2.1",
       },
       "devDependencies": {
@@ -371,6 +373,7 @@
         "@hominem/db": "workspace:*",
         "@hominem/services": "workspace:*",
         "@hominem/utils": "workspace:*",
+        "ai": "^4.3.16",
         "csv-parse": "^5.6.0",
         "drizzle-orm": "0.45.1",
         "effect": "^3.16.10",
@@ -387,6 +390,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@hominem/db": "workspace:*",
+        "@tanstack/ai": "0.2.0",
         "ai": "^4.3.16",
         "drizzle-orm": "0.45.1",
         "zod": "4.2.1",
@@ -456,6 +460,7 @@
         "drizzle-orm": "0.45.1",
         "googleapis": "^170.0.0",
         "sharp": "^0.32.4",
+        "zod": "4.2.1",
       },
       "devDependencies": {
         "@types/node": "^22.18.13",
@@ -497,19 +502,6 @@
         "vitest": "4.0.16",
       },
     },
-    "packages/tools": {
-      "name": "@hominem/tools",
-      "version": "0.1.0",
-      "dependencies": {
-        "@hominem/services": "workspace:*",
-        "@hominem/utils": "workspace:*",
-        "@tanstack/ai": "latest",
-        "zod": "4.2.1",
-      },
-      "devDependencies": {
-        "typescript": "^5.3.3",
-      },
-    },
     "packages/trpc": {
       "name": "@hominem/trpc",
       "version": "0.0.0",
@@ -519,9 +511,15 @@
         "@browserbasehq/stagehand": "^2.4.0",
         "@hominem/ai": "workspace:*",
         "@hominem/auth": "workspace:*",
+        "@hominem/chat-services": "workspace:*",
         "@hominem/db": "workspace:*",
+        "@hominem/events-services": "workspace:*",
+        "@hominem/finance-services": "workspace:*",
+        "@hominem/health-services": "workspace:*",
+        "@hominem/jobs-services": "workspace:*",
+        "@hominem/lists-services": "workspace:*",
+        "@hominem/notes-services": "workspace:*",
         "@hominem/services": "workspace:*",
-        "@hominem/tools": "workspace:*",
         "@hominem/utils": "workspace:*",
         "@hono/node-server": "^1.19.2",
         "@hono/trpc-server": "^0.4.0",
@@ -690,7 +688,6 @@
         "@browserbasehq/stagehand": "^2.4.0",
         "@hominem/ai": "workspace:*",
         "@hominem/auth": "workspace:*",
-        "@hominem/tools": "workspace:*",
         "@hominem/trpc": "workspace:*",
         "@hominem/utils": "workspace:*",
         "@hono/node-server": "^1.19.2",
@@ -1175,8 +1172,6 @@
     "@hominem/rocco": ["@hominem/rocco@workspace:apps/rocco"],
 
     "@hominem/services": ["@hominem/services@workspace:packages/services"],
-
-    "@hominem/tools": ["@hominem/tools@workspace:packages/tools"],
 
     "@hominem/trpc": ["@hominem/trpc@workspace:packages/trpc"],
 
@@ -4179,6 +4174,8 @@
     "@hominem/finance/date-fns": ["date-fns@3.6.0", "", {}, "sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww=="],
 
     "@hominem/finance/recharts": ["recharts@2.15.4", "", { "dependencies": { "clsx": "^2.0.0", "eventemitter3": "^4.0.1", "lodash": "^4.17.21", "react-is": "^18.3.1", "react-smooth": "^4.0.4", "recharts-scale": "^0.4.4", "tiny-invariant": "^1.3.1", "victory-vendor": "^36.6.8" }, "peerDependencies": { "react": "^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-UT/q6fwS3c1dHbXv2uFgYJ9BMFHu3fwnd7AYZaEQhXuYQ4hgsxLvsUXzGdKeZrW5xopzDCvuA2N41WJ88I7zIw=="],
+
+    "@hominem/health-services/@tanstack/ai": ["@tanstack/ai@0.2.0", "", { "dependencies": { "@tanstack/devtools-event-client": "^0.4.0", "partial-json": "^0.1.7" } }, "sha512-liGeP7pa7YsgDbUQZOSBHSunWXTQ9FdzDeBGFnDXt9iXF8Fa/GyYu+x2w8IwjK9aWaKLd4CNpULRbzwHP5SzYA=="],
 
     "@hominem/notes/@trpc/server": ["@trpc/server@11.8.0", "", { "peerDependencies": { "typescript": ">=5.7.2" } }, "sha512-DphyQnLuyX2nwJCQGWQ9zYz4hZGvRhSBqDhQ0SH3tDhQ3PU4u68xofA0pJ741Ir4InEAFD+TtJVLAQy+wVOkiQ=="],
 

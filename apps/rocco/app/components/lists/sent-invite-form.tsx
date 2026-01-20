@@ -3,8 +3,10 @@ import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
 import { Label } from '@hominem/ui/label';
 import { type SyntheticEvent, useCallback, useId, useState } from 'react';
-import { trpc } from '~/lib/trpc/client';
+
 import type { SentInvite } from '~/lib/types';
+
+import { trpc } from '~/lib/trpc/client';
 
 type SentInviteFormProps = {
   listId: string;

@@ -1,10 +1,12 @@
-import { logger } from '@hominem/utils/logger';
-import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { db } from '@hominem/db';
 import { item, type ListSelect, list, place, userLists, users } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
+
+import type { List, ListUser, ListWithSpreadOwner } from './types';
+
 import { formatList } from './list-crud.service';
 import { getListPlaces, getListPlacesMap } from './list-items.service';
-import type { List, ListUser, ListWithSpreadOwner } from './types';
 
 /**
  * Get lists that the user is explicitly a member of (shared with them)

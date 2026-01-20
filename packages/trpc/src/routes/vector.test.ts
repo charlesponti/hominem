@@ -1,7 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createTestUser } from '@/test/db-test-utils.js'
-import { createTRPCTestClient } from '@/test/trpc-test-utils.js'
-import { createServer } from '../server.js'
+import { createTestUser } from '@hominem/db/test/utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { createTRPCTestClient } from '@/test/trpc-test-utils.js';
+
+import { createServer } from '../server.js';
 
 vi.mock('@hominem/services/vector', () => ({
   VectorService: {
@@ -10,26 +12,26 @@ vi.mock('@hominem/services/vector', () => ({
     getUserDocuments: vi.fn(),
     deleteUserDocuments: vi.fn(),
   },
-}))
+}));
 
 vi.mock('@hominem/utils/supabase', () => ({
   fileStorageService: {
     listUserFiles: vi.fn(),
     deleteFile: vi.fn(),
   },
-}))
+}));
 
 describe('Vector System', () => {
-  let testUserId: string
-  let trpc: ReturnType<typeof createTRPCTestClient>
-  let server: ReturnType<typeof createServer>
+  let testUserId: string;
+  let trpc: ReturnType<typeof createTRPCTestClient>;
+  let server: ReturnType<typeof createServer>;
 
   beforeEach(async () => {
-    server = createServer()
-    testUserId = await createTestUser()
+    server = createServer();
+    testUserId = await createTestUser();
     // Set up tRPC client
-    trpc = createTRPCTestClient(server, testUserId)
-  })
+    trpc = createTRPCTestClient(server, testUserId);
+  });
 
   describe('tRPC Vector Router', () => {
     it('should search vectors', async () => {
@@ -43,21 +45,21 @@ describe('Vector System', () => {
             sourceType: 'markdown',
           },
         ],
-      }
+      };
 
-      const { VectorService } = await import('@hominem/services/vector')
-      vi.mocked(VectorService.query).mockResolvedValue(mockResponse)
+      const { VectorService } = await import('@hominem/services/vector');
+      vi.mocked(VectorService.query).mockResolvedValue(mockResponse);
 
       const result = await trpc.vector.searchVectors.query({
         query: 'test search',
         source: 'test-source',
         limit: 10,
-      })
+      });
 
-      expect(result).toBeDefined()
-      expect(result.results).toBeInstanceOf(Array)
-      expect(result.results).toHaveLength(1)
-    })
+      expect(result).toBeDefined();
+      expect(result.results).toBeInstanceOf(Array);
+      expect(result.results).toHaveLength(1);
+    });
 
     it('should search user documents', async () => {
       const mockResponse = {
@@ -70,21 +72,21 @@ describe('Vector System', () => {
             sourceType: 'markdown',
           },
         ],
-      }
+      };
 
-      const { VectorService } = await import('@hominem/services/vector')
-      vi.mocked(VectorService.searchDocumentsByUser).mockResolvedValue(mockResponse)
+      const { VectorService } = await import('@hominem/services/vector');
+      vi.mocked(VectorService.searchDocumentsByUser).mockResolvedValue(mockResponse);
 
       const result = await trpc.vector.searchUserVectors.query({
         query: 'test search',
         limit: 10,
         threshold: 0.7,
-      })
+      });
 
-      expect(result).toBeDefined()
-      expect(result.results).toBeInstanceOf(Array)
-      expect(result.results).toHaveLength(1)
-    })
+      expect(result).toBeDefined();
+      expect(result.results).toBeInstanceOf(Array);
+      expect(result.results).toHaveLength(1);
+    });
 
     it('should get user documents', async () => {
       const mockDocuments = [
@@ -100,20 +102,20 @@ describe('Vector System', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ]
+      ];
 
-      const { VectorService } = await import('@hominem/services/vector')
-      vi.mocked(VectorService.getUserDocuments).mockResolvedValue(mockDocuments)
+      const { VectorService } = await import('@hominem/services/vector');
+      vi.mocked(VectorService.getUserDocuments).mockResolvedValue(mockDocuments);
 
       const result = await trpc.vector.getUserVectors.query({
         limit: 20,
         offset: 0,
-      })
+      });
 
-      expect(result).toBeDefined()
-      expect(result.vectors).toBeInstanceOf(Array)
-      expect(result.vectors).toHaveLength(1)
-    })
+      expect(result).toBeDefined();
+      expect(result.vectors).toBeInstanceOf(Array);
+      expect(result.vectors).toHaveLength(1);
+    });
 
     it('should get user files', async () => {
       const mockFiles = [
@@ -136,42 +138,42 @@ describe('Vector System', () => {
             last_accessed_at: new Date().toISOString(),
           },
         },
-      ]
+      ];
 
-      const { fileStorageService } = await import('@hominem/utils/supabase')
-      vi.mocked(fileStorageService.listUserFiles).mockResolvedValue(mockFiles)
+      const { fileStorageService } = await import('@hominem/utils/supabase');
+      vi.mocked(fileStorageService.listUserFiles).mockResolvedValue(mockFiles);
 
-      const result = await trpc.vector.getUserFiles.query()
+      const result = await trpc.vector.getUserFiles.query();
 
-      expect(result).toBeDefined()
-      expect(result.files).toBeInstanceOf(Array)
-      expect(result.files).toHaveLength(1)
-    })
+      expect(result).toBeDefined();
+      expect(result.files).toBeInstanceOf(Array);
+      expect(result.files).toHaveLength(1);
+    });
 
     it('should delete user documents', async () => {
-      const { VectorService } = await import('@hominem/services/vector')
-      vi.mocked(VectorService.deleteUserDocuments).mockResolvedValue({ success: true })
+      const { VectorService } = await import('@hominem/services/vector');
+      vi.mocked(VectorService.deleteUserDocuments).mockResolvedValue({ success: true });
 
       const result = await trpc.vector.deleteUserVectors.mutate({
         source: 'test-source',
-      })
+      });
 
-      expect(result).toBeDefined()
-      expect(result.success).toBe(true)
-      expect(result.message).toBe('Vector documents deleted successfully')
-    })
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Vector documents deleted successfully');
+    });
 
     it('should delete user file', async () => {
-      const { fileStorageService } = await import('@hominem/utils/supabase')
-      vi.mocked(fileStorageService.deleteFile).mockResolvedValue(true)
+      const { fileStorageService } = await import('@hominem/utils/supabase');
+      vi.mocked(fileStorageService.deleteFile).mockResolvedValue(true);
 
       const result = await trpc.vector.deleteUserFile.mutate({
         fileId: 'test-file-id',
-      })
+      });
 
-      expect(result).toBeDefined()
-      expect(result.success).toBe(true)
-      expect(result.message).toBe('File deleted successfully')
-    })
-  })
-})
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('File deleted successfully');
+    });
+  });
+});

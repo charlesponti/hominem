@@ -1,16 +1,34 @@
-import { createTestUser as createTestUserShared } from '@hominem/services/fixtures'
-import { UserAuthService } from '@hominem/auth'
-import { vi } from 'vitest'
+import { vi } from 'vitest';
+
+import { createTestUser as createTestUserShared } from './fixtures';
+
+// Import UserAuthService dynamically to avoid circular dependencies during build
+let UserAuthService: any;
+try {
+  UserAuthService = require('@hominem/auth').UserAuthService;
+} catch {
+  // Fallback for when auth package is not available
+  UserAuthService = {
+    deleteUser: async () => {},
+  };
+}
 
 // Track created test users for cleanup
-const createdTestUsers: string[] = []
+const createdTestUsers: string[] = [];
 
 /**
  * Database mock factory for different table operations
  */
-export const createDbMocks = () => {
-  const mockQueryResult = <T>(data: T[] | T | null = null) => Promise.resolve(data)
-  const mockMutationResult = (count = 1) => Promise.resolve({ rowCount: count, rows: [] })
+export const createDbMocks = (): {
+  db: any;
+  client: any;
+  mockQueryResult: <T>(data: T[] | T | null) => Promise<T[] | T | null>;
+  mockMutationResult: (count?: number) => Promise<{ rowCount: number; rows: any[] }>;
+  tableQueries: any;
+  mutations: any;
+} => {
+  const mockQueryResult = <T>(data: T[] | T | null = null) => Promise.resolve(data);
+  const mockMutationResult = (count = 1) => Promise.resolve({ rowCount: count, rows: [] });
 
   // Table-specific query mocks
   const tableQueries = {
@@ -49,7 +67,7 @@ export const createDbMocks = () => {
       findMany: vi.fn(),
       findUnique: vi.fn(),
     },
-  }
+  };
 
   // Mutation mocks
   const mutations = {
@@ -64,17 +82,17 @@ export const createDbMocks = () => {
     delete: vi.fn(() => ({
       where: vi.fn(),
     })),
-  }
+  };
 
   const db = {
     query: tableQueries,
     ...mutations,
-  }
+  };
 
   const client = {
     end: vi.fn(() => Promise.resolve()),
     connect: vi.fn(() => Promise.resolve()),
-  }
+  };
 
   return {
     db,
@@ -83,13 +101,13 @@ export const createDbMocks = () => {
     mockMutationResult,
     tableQueries,
     mutations,
-  }
-}
+  };
+};
 
 /**
  * Global database mocks - use this with top-level vi.mock
  */
-export const globalDbMocks = createDbMocks()
+export const globalDbMocks: ReturnType<typeof createDbMocks> = createDbMocks();
 
 /**
  * Test data factory for common database entities
@@ -205,7 +223,7 @@ export const createTestData = {
     updatedAt: new Date(),
     ...overrides,
   }),
-}
+};
 
 // Define table names type separately to avoid circular reference
 type TableName =
@@ -215,7 +233,7 @@ type TableName =
   | 'financeAccounts'
   | 'transactions'
   | 'subscriptions'
-  | 'places'
+  | 'places';
 
 /**
  * Common database operation patterns for tests
@@ -226,9 +244,9 @@ export const mockDbOperations = {
    * Mock a successful find operation
    */
   mockFindSuccess: <T>(table: TableName, method: string, data: T) => {
-    const tableMock = globalDbMocks.tableQueries[table]
+    const tableMock = globalDbMocks.tableQueries[table];
     if (tableMock?.[method as keyof typeof tableMock]) {
-      vi.mocked(tableMock[method as keyof typeof tableMock]).mockResolvedValue(data)
+      vi.mocked(tableMock[method as keyof typeof tableMock]).mockResolvedValue(data);
     }
   },
 
@@ -236,9 +254,9 @@ export const mockDbOperations = {
    * Mock a not found result
    */
   mockFindNotFound: (table: TableName, method: string) => {
-    const tableMock = globalDbMocks.tableQueries[table]
+    const tableMock = globalDbMocks.tableQueries[table];
     if (tableMock?.[method as keyof typeof tableMock]) {
-      vi.mocked(tableMock[method as keyof typeof tableMock]).mockResolvedValue(null)
+      vi.mocked(tableMock[method as keyof typeof tableMock]).mockResolvedValue(null);
     }
   },
 
@@ -246,9 +264,9 @@ export const mockDbOperations = {
    * Mock a database error
    */
   mockDbError: (table: TableName, method: string, error = new Error('Database error')) => {
-    const tableMock = globalDbMocks.tableQueries[table]
+    const tableMock = globalDbMocks.tableQueries[table];
     if (tableMock?.[method as keyof typeof tableMock]) {
-      vi.mocked(tableMock[method as keyof typeof tableMock]).mockRejectedValue(error)
+      vi.mocked(tableMock[method as keyof typeof tableMock]).mockRejectedValue(error);
     }
   },
 
@@ -258,7 +276,7 @@ export const mockDbOperations = {
   mockInsertSuccess: <T>(data: T) => {
     vi.mocked(globalDbMocks.mutations.insert).mockReturnValue({
       values: vi.fn().mockResolvedValue(data),
-    } as never)
+    } as never);
   },
 
   /**
@@ -269,7 +287,7 @@ export const mockDbOperations = {
       set: vi.fn().mockReturnValue({
         where: vi.fn().mockResolvedValue(data),
       }),
-    } as never)
+    } as never);
   },
 
   /**
@@ -278,18 +296,18 @@ export const mockDbOperations = {
   mockDeleteSuccess: (count = 1) => {
     vi.mocked(globalDbMocks.mutations.delete).mockReturnValue({
       where: vi.fn().mockResolvedValue({ rowCount: count }),
-    } as never)
+    } as never);
   },
-}
+};
 
 /**
  * Creates a test user in the database and returns the user ID
  */
 export const createTestUser = async (overrides = {}): Promise<string> => {
-  const user = await createTestUserShared(overrides)
-  createdTestUsers.push(user.id)
-  return user.id
-}
+  const user = await createTestUserShared(overrides);
+  createdTestUsers.push(user.id);
+  return user.id;
+};
 
 /**
  * Cleans up test data from the database
@@ -297,9 +315,15 @@ export const createTestUser = async (overrides = {}): Promise<string> => {
 export const cleanupTestData = async (): Promise<void> => {
   // Clean up test data
   for (const userId of createdTestUsers) {
-    await UserAuthService.deleteUser(userId)
+    try {
+      await UserAuthService.deleteUser(userId);
+    } catch (error) {
+      console.warn(`Failed to delete test user ${userId}:`, error);
+    }
   }
 
   // Clear the tracking array
-  createdTestUsers.length = 0
-}
+  createdTestUsers.length = 0;
+};
+
+export * from './finance.utils';

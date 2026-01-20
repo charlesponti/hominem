@@ -3,6 +3,7 @@ import { Button } from '@hominem/ui/button';
 import { motion, type Variants } from 'framer-motion';
 import { Home, ListIcon, MapPin, Search } from 'lucide-react';
 import { Link } from 'react-router';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
 
 const fadeIn: Variants = {

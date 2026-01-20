@@ -6,8 +6,10 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useDeleteList, useUpdateList } from '~/lib/lists';
+
 import type { List } from '~/lib/types';
+
+import { useDeleteList, useUpdateList } from '~/lib/lists';
 
 type ListEditDialogProps = {
   list: List;

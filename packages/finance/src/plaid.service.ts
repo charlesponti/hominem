@@ -1,22 +1,22 @@
-import { randomUUID } from 'node:crypto'
-import { and, eq } from 'drizzle-orm'
-import { db } from '@hominem/db'
+import { db } from '@hominem/db';
 import {
   financialInstitutions,
   type PlaidItem,
   type PlaidItemInsert,
   plaidItems,
-} from '@hominem/db/schema' 
+} from '@hominem/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 
 export async function getPlaidItemByUserAndItemId(
   userId: string,
-  itemId: string
+  itemId: string,
 ): Promise<PlaidItem | null> {
   return (
     (await db.query.plaidItems.findFirst({
       where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
     })) ?? null
-  )
+  );
 }
 
 export async function getPlaidItemById(id: string, userId: string): Promise<PlaidItem | null> {
@@ -24,7 +24,7 @@ export async function getPlaidItemById(id: string, userId: string): Promise<Plai
     (await db.query.plaidItems.findFirst({
       where: and(eq(plaidItems.id, id), eq(plaidItems.userId, userId)),
     })) ?? null
-  )
+  );
 }
 
 export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | null> {
@@ -32,16 +32,16 @@ export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | 
     (await db.query.plaidItems.findFirst({
       where: eq(plaidItems.itemId, itemId),
     })) ?? null
-  )
+  );
 }
 
 export async function ensureInstitutionExists(id: string, name: string) {
   const existing = await db.query.financialInstitutions.findFirst({
     where: eq(financialInstitutions.id, id),
-  })
+  });
 
   if (existing) {
-    return existing
+    return existing;
   }
 
   const [created] = await db
@@ -52,18 +52,18 @@ export async function ensureInstitutionExists(id: string, name: string) {
       createdAt: new Date(),
       updatedAt: new Date(),
     })
-    .returning()
+    .returning();
 
-  return created
+  return created;
 }
 
 export async function upsertPlaidItem(params: {
-  userId: string
-  itemId: string
-  accessToken: string
-  institutionId: string
-  status?: PlaidItem['status']
-  lastSyncedAt?: Date | null
+  userId: string;
+  itemId: string;
+  accessToken: string;
+  institutionId: string;
+  status?: PlaidItem['status'];
+  lastSyncedAt?: Date | null;
 }): Promise<PlaidItem> {
   const {
     userId,
@@ -72,9 +72,9 @@ export async function upsertPlaidItem(params: {
     institutionId,
     status = 'active',
     lastSyncedAt = null,
-  } = params
+  } = params;
 
-  const existingItem = await getPlaidItemByUserAndItemId(userId, itemId)
+  const existingItem = await getPlaidItemByUserAndItemId(userId, itemId);
 
   if (existingItem) {
     const [updated] = await db
@@ -87,9 +87,9 @@ export async function upsertPlaidItem(params: {
         updatedAt: new Date(),
       })
       .where(eq(plaidItems.id, existingItem.id))
-      .returning()
+      .returning();
 
-    return updated!
+    return updated!;
   }
 
   const [created] = await db
@@ -105,14 +105,14 @@ export async function upsertPlaidItem(params: {
       updatedAt: new Date(),
       userId,
     })
-    .returning()
+    .returning();
 
-  return created!
+  return created!;
 }
 
 export async function updatePlaidItemStatusByItemId(
   itemId: string,
-  updates: Partial<Pick<PlaidItemInsert, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>
+  updates: Partial<Pick<PlaidItemInsert, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>,
 ) {
   await db
     .update(plaidItems)
@@ -120,12 +120,12 @@ export async function updatePlaidItemStatusByItemId(
       ...updates,
       updatedAt: updates.updatedAt ?? new Date(),
     })
-    .where(eq(plaidItems.itemId, itemId))
+    .where(eq(plaidItems.itemId, itemId));
 }
 
 export async function updatePlaidItemStatusById(
   id: string,
-  updates: Partial<Pick<PlaidItemInsert, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>
+  updates: Partial<Pick<PlaidItemInsert, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>,
 ) {
   await db
     .update(plaidItems)
@@ -133,9 +133,9 @@ export async function updatePlaidItemStatusById(
       ...updates,
       updatedAt: updates.updatedAt ?? new Date(),
     })
-    .where(eq(plaidItems.id, id))
+    .where(eq(plaidItems.id, id));
 }
 
 export async function deletePlaidItem(id: string, userId: string) {
-  await db.delete(plaidItems).where(and(eq(plaidItems.id, id), eq(plaidItems.userId, userId)))
+  await db.delete(plaidItems).where(and(eq(plaidItems.id, id), eq(plaidItems.userId, userId)));
 }

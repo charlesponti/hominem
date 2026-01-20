@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 // Side Project schema
 const SideProjectSchema = z.object({
@@ -11,7 +11,7 @@ const SideProjectSchema = z.object({
     .optional()
     .describe('The URL of an associated media file (e.g., video).'),
   status: z.enum(['Ongoing', 'Completed', 'Planned']).describe('The status of the side project.'),
-})
+});
 
 // Work Experience schema
 const WorkExperienceSchema = z.object({
@@ -27,7 +27,7 @@ const WorkExperienceSchema = z.object({
     .array(z.string().url())
     .optional()
     .describe("An array of URLs of colleagues' profiles."),
-})
+});
 
 // Award schema
 const AwardSchema = z.object({
@@ -36,7 +36,7 @@ const AwardSchema = z.object({
   year: z.number().int().describe('The year the award was received.'),
   description: z.string().optional().describe('Description of the award'),
   url: z.string().url().optional().describe('URL relating to award, or the awarder.'),
-})
+});
 
 // Education schema
 const EducationSchema = z.object({
@@ -51,19 +51,19 @@ const EducationSchema = z.object({
     .string()
     .optional()
     .describe("A description of the person's experience at the institution."),
-})
+});
 
 // Team schema
 const TeamSchema = z.object({
   name: z.string().describe('The name of the team.'),
   profile_url: z.string().url().describe("The URL of the team's profile."),
   logo_url: z.string().url().describe("The URL of the team's logo."),
-})
+});
 
 // Contact schema
 const ContactSchema = z.object({
   email: z.array(z.string().email()).describe('An array of email addresses.'),
-})
+});
 
 // Main Profile schema
 export const ReadCVProfileSchema = z.object({
@@ -88,6 +88,6 @@ export const ReadCVProfileSchema = z.object({
   education: z.array(EducationSchema).optional().describe("An array of the person's education."),
   teams: z.array(TeamSchema).optional().describe('An array of teams the person is a member of.'),
   contact: ContactSchema.optional().describe('Contact information for the person.'),
-})
+});
 
-export type ReadCVProfile = z.infer<typeof ReadCVProfileSchema>
+export type ReadCVProfile = z.infer<typeof ReadCVProfileSchema>;

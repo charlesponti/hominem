@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { memo, useMemo } from 'react';
+
 import { cn } from '~/lib/utils';
 
 interface UserAvatarProps {

@@ -1,17 +1,17 @@
-import type { LinkDescriptor } from 'react-router'
+import type { LinkDescriptor } from 'react-router';
 
-export * from './components/layout'
-export * from './components/location-select'
-export * from './components/page-title'
-export * from './components/ui'
-export * from './components/update-guard'
-export * from './hooks/use-api-client'
-export * from './hooks/use-debounce'
-export * from './hooks/use-filter-state'
-export * from './hooks/use-media-query'
-export * from './hooks/use-mobile'
-export * from './hooks/use-sort'
-export * from './hooks/use-url-filters'
+export * from './components/layout';
+export * from './components/location-select';
+export * from './components/page-title';
+export * from './components/ui';
+export * from './components/update-guard';
+export * from './hooks/use-api-client';
+export * from './hooks/use-debounce';
+export * from './hooks/use-filter-state';
+export * from './hooks/use-media-query';
+export * from './hooks/use-mobile';
+export * from './hooks/use-sort';
+export * from './hooks/use-url-filters';
 
 // Common <head> link objects for all apps
 export const COMMON_FONT_LINKS: LinkDescriptor[] = [
@@ -29,7 +29,7 @@ export const COMMON_FONT_LINKS: LinkDescriptor[] = [
     rel: 'stylesheet',
     href: 'https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400..800;1,400..800&family=Geist+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
   },
-]
+];
 
 export const COMMON_ICON_LINKS: LinkDescriptor[] = [
   // Favicon
@@ -63,4 +63,4 @@ export const COMMON_ICON_LINKS: LinkDescriptor[] = [
 
   // Safari Pinned Tab Icon
   { rel: 'mask-icon', href: '/icons/safari-pinned-tab.svg', color: '#ffffff' },
-]
+];

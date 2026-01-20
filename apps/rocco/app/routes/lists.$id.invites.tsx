@@ -1,13 +1,17 @@
-import { Alert, PageTitle } from '@hominem/ui';
 import type { inferRouterOutputs } from '@trpc/server';
+
+import { Alert, PageTitle } from '@hominem/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useRevalidator } from 'react-router';
+
+import type { AppRouter } from '~/lib/trpc/router';
+import type { SentInvite } from '~/lib/types';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
 import SentInviteForm from '~/components/lists/sent-invite-form';
 import SentInvites from '~/components/lists/sent-invites';
-import type { AppRouter } from '~/lib/trpc/router';
 import { createCaller } from '~/lib/trpc/server';
-import type { SentInvite } from '~/lib/types';
+
 import type { Route } from './+types/lists.$id.invites';
 
 type RouterOutput = inferRouterOutputs<AppRouter>;

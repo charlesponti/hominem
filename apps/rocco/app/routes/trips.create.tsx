@@ -3,8 +3,10 @@ import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
 import { useId } from 'react';
 import { Form, Link, useNavigation } from 'react-router';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
 import { createCaller } from '~/lib/trpc/server';
+
 import type { Route } from './+types/trips.create';
 
 export async function action({ request }: Route.ActionArgs) {

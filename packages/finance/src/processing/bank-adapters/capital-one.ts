@@ -1,17 +1,17 @@
-import crypto from 'node:crypto'
 import {
   type FinanceTransactionInsert,
   type TransactionType,
   TransactionTypes,
-} from '@hominem/db/schema'
+} from '@hominem/db/schema';
+import crypto from 'node:crypto';
 
 export interface CapitalOneTransaction {
-  'Account Number': string
-  'Transaction Date': string
-  'Transaction Amount': string
-  'Transaction Type': string
-  'Transaction Description': string
-  Balance: string
+  'Account Number': string;
+  'Transaction Date': string;
+  'Transaction Amount': string;
+  'Transaction Type': string;
+  'Transaction Description': string;
+  Balance: string;
 }
 
 /**
@@ -20,20 +20,20 @@ export interface CapitalOneTransaction {
 export function getCapitalOneTransactionType(type: string): TransactionType {
   switch (type.toLowerCase()) {
     case 'credit':
-      return TransactionTypes.credit
+      return TransactionTypes.credit;
     case 'debit':
-      return TransactionTypes.debit
+      return TransactionTypes.debit;
     case 'transfer':
-      return TransactionTypes.transfer
+      return TransactionTypes.transfer;
     default:
-      return TransactionTypes.debit
+      return TransactionTypes.debit;
   }
 }
 
 export function convertCapitalOneTransaction(
   t: CapitalOneTransaction,
   accountId: string,
-  userId: string
+  userId: string,
 ): FinanceTransactionInsert {
   return {
     id: crypto.randomUUID(),
@@ -49,5 +49,5 @@ export function convertCapitalOneTransaction(
     createdAt: new Date(),
     updatedAt: new Date(),
     userId,
-  }
+  };
 }

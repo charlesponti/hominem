@@ -1,7 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { List } from '~/lib/types';
+
 import ListPage from '~/routes/lists.$id';
 import { getMockUser, USER_ID } from '~/test/mocks/index';
 import { getMockListPlace } from '~/test/mocks/place';

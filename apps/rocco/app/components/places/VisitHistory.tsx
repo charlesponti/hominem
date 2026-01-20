@@ -3,7 +3,9 @@ import { List } from '@hominem/ui/list';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { Edit2, Star, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+
 import { trpc } from '~/lib/trpc/client';
+
 import { LogVisit } from './LogVisit';
 
 interface VisitHistoryProps {

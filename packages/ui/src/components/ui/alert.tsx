@@ -1,10 +1,10 @@
-import { cva, type VariantProps } from 'class-variance-authority'
-import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react'
-import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority';
+import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react';
+import * as React from 'react';
 
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
-export type AlertType = 'success' | 'error' | 'warning' | 'info'
+export type AlertType = 'success' | 'error' | 'warning' | 'info';
 
 const alertVariants = cva(
   'relative w-full rounded-lg border p-4 backdrop-blur-sm animate-in fade-in duration-300',
@@ -24,25 +24,24 @@ const alertVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  }
-)
+  },
+);
 
 export interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
-  type?: AlertType
-  dismissible?: boolean
-  onDismiss?: () => void
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
+  type?: AlertType;
+  dismissible?: boolean;
+  onDismiss?: () => void;
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   ({ className, variant, type, dismissible = false, onDismiss, children, ...props }, ref) => {
-    const [isVisible, setIsVisible] = React.useState(true)
+    const [isVisible, setIsVisible] = React.useState(true);
 
     const handleDismiss = () => {
-      setIsVisible(false)
-      onDismiss?.()
-    }
+      setIsVisible(false);
+      onDismiss?.();
+    };
 
     // Determine variant from type if provided
     const alertVariant =
@@ -55,44 +54,44 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
             ? 'warning'
             : type === 'info'
               ? 'info'
-              : 'default')
+              : 'default');
 
     const getIcon = () => {
       switch (type) {
         case 'success':
-          return <CheckCircle size={20} />
+          return <CheckCircle size={20} />;
         case 'error':
-          return <XCircle size={20} />
+          return <XCircle size={20} />;
         case 'warning':
-          return <AlertCircle size={20} />
+          return <AlertCircle size={20} />;
         case 'info':
-          return <Info size={20} />
+          return <Info size={20} />;
         default:
-          return null
+          return null;
       }
-    }
+    };
 
     const getIconColor = () => {
       switch (type) {
         case 'success':
-          return 'text-green-600 dark:text-green-400'
+          return 'text-green-600 dark:text-green-400';
         case 'error':
-          return 'text-destructive'
+          return 'text-destructive';
         case 'warning':
-          return 'text-yellow-600 dark:text-yellow-400'
+          return 'text-yellow-600 dark:text-yellow-400';
         case 'info':
-          return 'text-blue-600 dark:text-blue-400'
+          return 'text-blue-600 dark:text-blue-400';
         default:
-          return ''
+          return '';
       }
-    }
+    };
 
     if (!isVisible) {
-      return null
+      return null;
     }
 
-    const icon = getIcon()
-    const iconColor = getIconColor()
+    const icon = getIcon();
+    const iconColor = getIconColor();
 
     return (
       <div
@@ -116,10 +115,10 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
           )}
         </div>
       </div>
-    )
-  }
-)
-Alert.displayName = 'Alert'
+    );
+  },
+);
+Alert.displayName = 'Alert';
 
 const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
@@ -128,16 +127,16 @@ const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<H
       className={cn('mb-1 font-medium leading-none tracking-tight', className)}
       {...props}
     />
-  )
-)
-AlertTitle.displayName = 'AlertTitle'
+  ),
+);
+AlertTitle.displayName = 'AlertTitle';
 
 const AlertDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <div ref={ref} className={cn('text-sm [&_p]:leading-relaxed', className)} {...props} />
-))
-AlertDescription.displayName = 'AlertDescription'
+));
+AlertDescription.displayName = 'AlertDescription';
 
-export { Alert, AlertDescription, AlertTitle }
+export { Alert, AlertDescription, AlertTitle };

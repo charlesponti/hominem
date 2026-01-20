@@ -26,7 +26,8 @@
     "@hominem/utils": "workspace:*",
     "drizzle-orm": "0.45.1",
     "googleapis": "^170.0.0",
-    "sharp": "^0.32.4"
+    "sharp": "^0.32.4",
+    "zod": "4.2.1"
   },
   "devDependencies": {
     "@types/node": "^22.18.13",

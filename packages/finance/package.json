@@ -9,6 +9,11 @@
       "types": "./build/index.d.ts",
       "development": "./src/index.ts",
       "default": "./build/index.js"
+    },
+    "./tools": {
+      "types": "./build/tools.d.ts",
+      "development": "./src/tools.ts",
+      "default": "./build/tools.js"
     }
   },
   "scripts": {
@@ -24,6 +29,7 @@
     "@hominem/db": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
+    "ai": "^4.3.16",
     "csv-parse": "^5.6.0",
     "drizzle-orm": "0.45.1",
     "effect": "^3.16.10",

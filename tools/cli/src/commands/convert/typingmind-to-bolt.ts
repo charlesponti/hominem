@@ -1,8 +1,9 @@
-import { readFileSync, writeFileSync } from 'node:fs'
-import { BoltExportSchema, TypingMindExportSchema } from '@hominem/services'
-import { Command } from 'commander'
-import { consola } from 'consola'
-import type { z } from 'zod'
+import type { z } from 'zod';
+
+import { BoltExportSchema, TypingMindExportSchema } from '@hominem/services';
+import { Command } from 'commander';
+import { consola } from 'consola';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 export const command = new Command('convert-typingmind-to-bolt')
   .description('Convert TypingMind export to Bolt-AI format')
@@ -10,18 +11,18 @@ export const command = new Command('convert-typingmind-to-bolt')
   .option('-o, --output <output>', 'Output file path')
   .action(async (input, options) => {
     try {
-      consola.info(`Reading file: ${input}`)
-      const inputData = JSON.parse(readFileSync(input, 'utf-8'))
+      consola.info(`Reading file: ${input}`);
+      const inputData = JSON.parse(readFileSync(input, 'utf-8'));
 
       // Validate input against TypingMind schema
-      const parsedInput = TypingMindExportSchema.parse(inputData)
-      const { chats } = parsedInput.data
+      const parsedInput = TypingMindExportSchema.parse(inputData);
+      const { chats } = parsedInput.data;
 
       // Convert each chat to Bolt format
       const boltConversations: z.infer<typeof BoltExportSchema>['chats'] = chats.map(
         (chat, index) => {
           // Generate a unique conversation ID
-          const conversationId = index + 1
+          const conversationId = index + 1;
 
           // Convert messages
           const messages: z.infer<typeof BoltExportSchema>['chats'][number]['messages'] =
@@ -29,16 +30,16 @@ export const command = new Command('convert-typingmind-to-bolt')
               .filter((m) => m.role !== 'system')
               .map((message, msgIndex) => {
                 // Handle content
-                let content = ''
+                let content = '';
                 if (typeof message.content === 'string') {
-                  content = message.content
+                  content = message.content;
                 } else if (Array.isArray(message.content)) {
                   // Concatenate text parts
                   content = message.content
                     .filter((item) => item.type === 'text')
                     .map((item) => (item.type === 'text' ? item.text : ''))
                     .filter(Boolean)
-                    .join('\n')
+                    .join('\n');
                 }
 
                 // Convert timestamp
@@ -46,7 +47,7 @@ export const command = new Command('convert-typingmind-to-bolt')
                   ? Math.floor(new Date(message.createdAt).getTime() / 1000)
                   : Math.floor(Date.now() / 1000) -
                     (chats.length - index) * 100000 -
-                    msgIndex * 1000
+                    msgIndex * 1000;
 
                 return {
                   isImage: false,
@@ -59,17 +60,17 @@ export const command = new Command('convert-typingmind-to-bolt')
                   createdAt,
                   imageURLs: [],
                   toolUseId: `toolu_${1000 + conversationId * 10 + msgIndex}`,
-                }
+                };
               })
-              .filter(Boolean)
+              .filter(Boolean);
 
           // Find system message for system instruction
-          const systemMessage = chat.messages.find((m) => m.role === 'system')
+          const systemMessage = chat.messages.find((m) => m.role === 'system');
           const systemInstruction =
-            systemMessage && typeof systemMessage.content === 'string' ? systemMessage.content : ''
+            systemMessage && typeof systemMessage.content === 'string' ? systemMessage.content : '';
 
           // Convert chat params
-          const _chatParams = chat.chatParams || {}
+          const _chatParams = chat.chatParams || {};
 
           return {
             contextSince: -978307200, // Default value from Bolt sample
@@ -93,9 +94,9 @@ export const command = new Command('convert-typingmind-to-bolt')
             languageCode: '',
             presencePenalty: 0,
             plugins: [],
-          }
-        }
-      )
+          };
+        },
+      );
 
       // Create full Bolt export structure
       const boltExport = {
@@ -150,71 +151,71 @@ export const command = new Command('convert-typingmind-to-bolt')
           },
         ],
         prompts: [],
-      }
+      };
 
       // Validate against Bolt schema
-      BoltExportSchema.parse(boltExport)
+      BoltExportSchema.parse(boltExport);
 
       // Write output
-      const outputPath = options.output || input.replace(/\.json$/, '-bolt.json')
-      writeFileSync(outputPath, JSON.stringify(boltExport, null, 2))
-      consola.success(`Successfully converted to Bolt format: ${outputPath}`)
+      const outputPath = options.output || input.replace(/\.json$/, '-bolt.json');
+      writeFileSync(outputPath, JSON.stringify(boltExport, null, 2));
+      consola.success(`Successfully converted to Bolt format: ${outputPath}`);
     } catch (error) {
-      consola.error('Error during conversion:', error)
+      consola.error('Error during conversion:', error);
       if (error instanceof Error) {
-        consola.error(error.message)
+        consola.error(error.message);
       }
-      process.exit(1)
+      process.exit(1);
     }
-  })
+  });
 
 // Helper function to guess provider based on model name
 export function guessProvider(model: string) {
-  if (!model) return 'Unknown'
+  if (!model) return 'Unknown';
 
-  const modelLower = model.toLowerCase()
+  const modelLower = model.toLowerCase();
   if (
     modelLower.includes('gpt') ||
     modelLower.includes('davinci') ||
     modelLower.includes('text-embedding')
   ) {
-    return 'OpenAI'
+    return 'OpenAI';
   }
   if (modelLower.includes('claude')) {
-    return 'AnthropicAI'
+    return 'AnthropicAI';
   }
 
   if (modelLower.includes('gemini') || modelLower.includes('palm')) {
-    return 'GoogleAI'
+    return 'GoogleAI';
   }
 
   if (modelLower.includes('llama') || modelLower.includes('mistral')) {
-    return 'Meta'
+    return 'Meta';
   }
 
   if (modelLower.includes('dall-e')) {
-    return 'OpenAI'
+    return 'OpenAI';
   }
 
-  return 'Unknown'
+  return 'Unknown';
 }
 
 // Helper function to assign custom model IDs based on model name
 export function getCustomModelId(model: string) {
-  if (!model) return 0
+  if (!model) return 0;
 
-  const modelLower = model.toLowerCase()
+  const modelLower = model.toLowerCase();
   if (modelLower.includes('gpt-4')) {
-    return 3
+    return 3;
   }
 
   if (modelLower.includes('claude')) {
-    return 2
+    return 2;
   }
 
   if (modelLower.includes('gemini')) {
-    return 1
+    return 1;
   }
 
-  return 0
+  return 0;
 }

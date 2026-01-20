@@ -1,4 +1,5 @@
 import { Trash } from 'lucide-react';
+
 import { useDeleteList } from '~/lib/lists';
 
 const ListDeleteButton = ({ listId, onDelete }: { listId: string; onDelete: () => void }) => {

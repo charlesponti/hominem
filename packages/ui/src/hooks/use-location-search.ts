@@ -1,32 +1,33 @@
-import type { GeocodeFeature } from '@hominem/utils/location'
-import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import type { GeocodeFeature } from '@hominem/utils/location';
+
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
 interface UseLocationSearchOptions {
-  initialValue?: string
+  initialValue?: string;
 }
 export function useLocationSearch({ initialValue }: UseLocationSearchOptions) {
-  const [query, setQuery] = useState<string>(initialValue || '')
+  const [query, setQuery] = useState<string>(initialValue || '');
 
   const locationSearch = useQuery<GeocodeFeature[]>({
     queryKey: ['locations', query],
     queryFn: async () => {
       if (!query) {
-        return []
+        return [];
       }
 
       try {
-        const response = await fetch(`/api/location?query=${encodeURIComponent(query)}`)
-        const features = (await response.json()) as GeocodeFeature[]
+        const response = await fetch(`/api/location?query=${encodeURIComponent(query)}`);
+        const features = (await response.json()) as GeocodeFeature[];
 
-        return features
+        return features;
       } catch (error) {
-        console.error('Error searching locations:', error)
-        return []
+        console.error('Error searching locations:', error);
+        return [];
       }
     },
     enabled: !!query,
-  })
+  });
 
-  return { query, setQuery, locationSearch }
+  return { query, setQuery, locationSearch };
 }

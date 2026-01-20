@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server';
+
 import { logger } from './logger';
 
 // Custom error classes for different types of errors

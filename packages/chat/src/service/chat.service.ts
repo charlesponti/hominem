@@ -1,25 +1,24 @@
-import { logger } from '@hominem/utils/logger'
-import { and, desc, eq } from 'drizzle-orm'
-import { v4 as uuidv4 } from 'uuid'
-import { db, takeUniqueOrThrow } from '@hominem/db'
-import { type Chat, type ChatMessageSelect, chat, chatMessage } from '@hominem/db/schema'
+import { db, takeUniqueOrThrow } from '@hominem/db';
+import { type Chat, type ChatMessageSelect, chat, chatMessage } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, desc, eq } from 'drizzle-orm';
 
 export interface CreateChatParams {
-  title: string
-  userId: string
+  title: string;
+  userId: string;
 }
 
 export interface SearchChatsParams {
-  userId: string
-  query: string
-  limit?: number
+  userId: string;
+  query: string;
+  limit?: number;
 }
 
 export interface ChatStats {
-  totalChats: number
-  totalMessages: number
-  averageMessagesPerChat: number
-  recentActivity: Date | null
+  totalChats: number;
+  totalMessages: number;
+  averageMessagesPerChat: number;
+  recentActivity: Date | null;
 }
 
 export class ChatError extends Error {
@@ -31,18 +30,18 @@ export class ChatError extends Error {
       | 'MESSAGE_NOT_FOUND'
       | 'AUTH_ERROR',
     message: string,
-    cause?: unknown
+    cause?: unknown,
   ) {
-    super(message, { cause })
-    this.name = 'ChatError'
+    super(message, { cause });
+    this.name = 'ChatError';
   }
 }
 
 export class ChatService {
   async createChat(params: CreateChatParams) {
     try {
-      const chatId = uuidv4()
-      const now = new Date().toISOString()
+      const chatId = crypto.randomUUID();
+      const now = new Date().toISOString();
 
       const [newChat] = await db
         .insert(chat)
@@ -53,12 +52,12 @@ export class ChatService {
           createdAt: now,
           updatedAt: now,
         })
-        .returning()
+        .returning();
 
-      return newChat
+      return newChat;
     } catch (error) {
-      logger.error('Failed to create chat', { error })
-      throw new ChatError('DATABASE_ERROR', 'Failed to create chat conversation')
+      logger.error('Failed to create chat', { error });
+      throw new ChatError('DATABASE_ERROR', 'Failed to create chat conversation');
     }
   }
 
@@ -68,15 +67,15 @@ export class ChatService {
         .select()
         .from(chat)
         .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
-        .limit(1)
+        .limit(1);
 
-      return chatData
+      return chatData;
     } catch (error) {
-      logger.error(`Failed to get chat:: ${error}`)
+      logger.error(`Failed to get chat:: ${error}`);
       if (error instanceof Error && error.message.includes('Access denied')) {
-        throw error
+        throw error;
       }
-      return null
+      return null;
     }
   }
 
@@ -86,7 +85,7 @@ export class ChatService {
   async getOrCreateActiveChat(
     userId: string,
     chatId?: string,
-    onChatDoesNotExist?: (chatId: string) => Promise<void>
+    onChatDoesNotExist?: (chatId: string) => Promise<void>,
   ): Promise<Chat> {
     try {
       if (chatId) {
@@ -96,14 +95,14 @@ export class ChatService {
           .where(eq(chat.id, chatId))
           .limit(1)
           .then(takeUniqueOrThrow)
-          .catch(() => null)
+          .catch(() => null);
 
         if (!existingChat) {
-          await onChatDoesNotExist?.(chatId)
+          await onChatDoesNotExist?.(chatId);
         }
 
         if (existingChat) {
-          return existingChat
+          return existingChat;
         }
       }
 
@@ -116,13 +115,13 @@ export class ChatService {
           userId: userId,
         })
         .returning()
-        .then(takeUniqueOrThrow)
+        .then(takeUniqueOrThrow);
 
-      logger.info(`Active chat created: ${newChat.id} for user ${userId}`)
-      return newChat
+      logger.info(`Active chat created: ${newChat.id} for user ${userId}`);
+      return newChat;
     } catch (error) {
-      logger.error(`Error creating or fetching chat:: ${error}`)
-      throw new ChatError('DATABASE_ERROR', 'Failed to get or create active chat')
+      logger.error(`Error creating or fetching chat:: ${error}`);
+      throw new ChatError('DATABASE_ERROR', 'Failed to get or create active chat');
     }
   }
 
@@ -136,12 +135,12 @@ export class ChatService {
         .from(chat)
         .where(eq(chat.userId, userId))
         .orderBy(desc(chat.updatedAt))
-        .limit(limit)
+        .limit(limit);
 
-      return chats
+      return chats;
     } catch (error) {
-      logger.error(`Failed to get user chats:: ${error}`)
-      return []
+      logger.error(`Failed to get user chats:: ${error}`);
+      return [];
     }
   }
 
@@ -152,9 +151,9 @@ export class ChatService {
     try {
       // Get chat to validate ownership if userId is provided
       if (userId) {
-        const existingChat = await this.getChatById(chatId, userId)
+        const existingChat = await this.getChatById(chatId, userId);
         if (!existingChat) {
-          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
+          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
         }
       }
 
@@ -165,20 +164,20 @@ export class ChatService {
           updatedAt: new Date().toISOString(),
         })
         .where(eq(chat.id, chatId))
-        .returning()
+        .returning();
 
       if (!updatedChat) {
-        throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
+        throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
       }
 
-      logger.info(`Chat title updated: ${chatId} - "${title}"`)
-      return updatedChat
+      logger.info(`Chat title updated: ${chatId} - "${title}"`);
+      return updatedChat;
     } catch (error) {
-      logger.error(`Failed to update chat title:: ${error}`)
+      logger.error(`Failed to update chat title:: ${error}`);
       if (error instanceof Error && error.message.includes('Chat not found')) {
-        throw error
+        throw error;
       }
-      throw new ChatError('DATABASE_ERROR', 'Failed to update chat title')
+      throw new ChatError('DATABASE_ERROR', 'Failed to update chat title');
     }
   }
 
@@ -193,33 +192,33 @@ export class ChatService {
         .from(chat)
         .where(eq(chat.id, chatId))
         .limit(1)
-        .then((rows) => rows[0])
+        .then((rows) => rows[0]);
 
       if (!currentChat?.title.startsWith('New Chat')) {
-        return currentChat
+        return currentChat;
       }
 
       // Generate a more descriptive title
-      const lastMessages = messages.slice(-3)
+      const lastMessages = messages.slice(-3);
       if (lastMessages.length > 0) {
-        const messageSummary = lastMessages.map((m) => m.content.slice(0, 30)).join(' ... ')
+        const messageSummary = lastMessages.map((m) => m.content.slice(0, 30)).join(' ... ');
         const title =
-          messageSummary.length > 50 ? `${messageSummary.slice(0, 47)}...` : messageSummary
+          messageSummary.length > 50 ? `${messageSummary.slice(0, 47)}...` : messageSummary;
 
         const [updatedChat] = await db
           .update(chat)
           .set({ title })
           .where(eq(chat.id, chatId))
-          .returning()
+          .returning();
 
-        logger.info(`Chat title auto-updated: ${chatId} - "${title}"`)
-        return updatedChat
+        logger.info(`Chat title auto-updated: ${chatId} - "${title}"`);
+        return updatedChat;
       }
     } catch (error) {
-      logger.error(`Failed to update chat title from conversation: ${error}`)
+      logger.error(`Failed to update chat title from conversation: ${error}`);
     }
 
-    return null
+    return null;
   }
 
   /**
@@ -229,26 +228,26 @@ export class ChatService {
     try {
       // Get chat to validate ownership if userId is provided
       if (userId) {
-        const existingChat = await this.getChatById(chatId, userId)
+        const existingChat = await this.getChatById(chatId, userId);
         if (!existingChat) {
-          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
+          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
         }
       }
 
       // First, delete all messages associated with the chat
-      await db.delete(chatMessage).where(eq(chatMessage.chatId, chatId))
+      await db.delete(chatMessage).where(eq(chatMessage.chatId, chatId));
 
       // Then, delete the chat itself
-      await db.delete(chat).where(eq(chat.id, chatId))
+      await db.delete(chat).where(eq(chat.id, chatId));
 
-      logger.info(`Chat deleted: ${chatId}`)
-      return true
+      logger.info(`Chat deleted: ${chatId}`);
+      return true;
     } catch (error) {
-      logger.error(`Failed to delete chat:: ${error}`)
+      logger.error(`Failed to delete chat:: ${error}`);
       if (error instanceof Error && error.message.includes('Chat not found')) {
-        throw error
+        throw error;
       }
-      return false
+      return false;
     }
   }
 
@@ -262,12 +261,12 @@ export class ChatService {
         .from(chat)
         .where(eq(chat.userId, params.userId))
         .orderBy(desc(chat.updatedAt))
-        .limit(params.limit || 20)
+        .limit(params.limit || 20);
 
-      return chats.filter((c) => c.title.toLowerCase().includes(params.query.toLowerCase()))
+      return chats.filter((c) => c.title.toLowerCase().includes(params.query.toLowerCase()));
     } catch (error) {
-      logger.error(`Failed to search chats:: ${error}`)
-      return []
+      logger.error(`Failed to search chats:: ${error}`);
+      return [];
     }
   }
 
@@ -278,22 +277,22 @@ export class ChatService {
     try {
       // Get chat to validate ownership if userId is provided
       if (userId) {
-        const existingChat = await this.getChatById(chatId, userId)
+        const existingChat = await this.getChatById(chatId, userId);
         if (!existingChat) {
-          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found')
+          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
         }
       }
 
-      await db.delete(chatMessage).where(eq(chatMessage.chatId, chatId))
+      await db.delete(chatMessage).where(eq(chatMessage.chatId, chatId));
 
-      logger.info(`Chat messages cleared: ${chatId}`)
-      return true
+      logger.info(`Chat messages cleared: ${chatId}`);
+      return true;
     } catch (error) {
-      logger.error(`Failed to clear chat messages:: ${error}`)
+      logger.error(`Failed to clear chat messages:: ${error}`);
       if (error instanceof Error && error.message.includes('Chat not found')) {
-        throw error
+        throw error;
       }
-      return false
+      return false;
     }
   }
 }

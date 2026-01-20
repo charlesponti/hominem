@@ -1,17 +1,17 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 // Author schema
 const authorSchema = z.object({
   role: z.enum(['system', 'user', 'assistant', 'tool']),
   name: z.null(),
   metadata: z.record(z.string(), z.any()).default({}),
-})
+});
 
 // Content schema
 const contentSchema = z.object({
   content_type: z.enum(['text']),
   parts: z.array(z.string()),
-})
+});
 
 // Message schema
 const messageSchema = z.object({
@@ -26,7 +26,7 @@ const messageSchema = z.object({
   metadata: z.record(z.string(), z.any()),
   recipient: z.string(),
   channel: z.null(),
-})
+});
 
 // Node schema
 export const nodeSchema = z.object({
@@ -34,7 +34,7 @@ export const nodeSchema = z.object({
   message: messageSchema.nullable(),
   parent: z.string().nullable(),
   children: z.array(z.string()),
-})
+});
 
 // Conversation schema
 export const conversationSchema = z.object({
@@ -57,7 +57,7 @@ export const conversationSchema = z.object({
   voice: z.null(),
   async_status: z.null(),
   disabled_tool_ids: z.array(z.string()),
-})
+});
 
 // Type for the conversation
-export type Conversation = z.infer<typeof conversationSchema>
+export type Conversation = z.infer<typeof conversationSchema>;

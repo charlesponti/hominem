@@ -1,6 +1,7 @@
-import crypto from 'node:crypto'
-import { z } from 'zod'
-import type { TransactionInsert } from '../../finance.types'
+import crypto from 'node:crypto';
+import { z } from 'zod';
+
+import type { TransactionInsert } from '../../finance.types';
 
 export const CopilotTransactionSchema = z.object({
   date: z.string(),
@@ -18,70 +19,70 @@ export const CopilotTransactionSchema = z.object({
   'account mask': z.string(),
   note: z.string(),
   recurring: z.string(),
-})
-export type CopilotTransaction = z.infer<typeof CopilotTransactionSchema>
+});
+export type CopilotTransaction = z.infer<typeof CopilotTransactionSchema>;
 
 export function translateTransactionType(type: string): TransactionInsert['type'] {
   if (type === 'income') {
-    return 'income'
+    return 'income';
   }
 
   if (type === 'internal transfer') {
-    return 'transfer'
+    return 'transfer';
   }
 
   if (type === 'regular') {
-    return 'expense'
+    return 'expense';
   }
 
-  return 'expense'
+  return 'expense';
 }
 
 export function convertCopilotTransaction(
   data: CopilotTransaction,
-  userId: string
+  userId: string,
 ): Omit<TransactionInsert, 'accountId'> {
   // Validate required fields exist
   if (!data.amount) {
-    throw new Error('Missing required field: amount')
+    throw new Error('Missing required field: amount');
   }
   if (!data.date) {
-    throw new Error('Missing required field: date')
+    throw new Error('Missing required field: date');
   }
   if (!data.name) {
-    throw new Error('Missing required field: name (description)')
+    throw new Error('Missing required field: name (description)');
   }
   if (!data.type) {
-    throw new Error('Missing required field: type')
+    throw new Error('Missing required field: type');
   }
 
   // Clean the amount field
-  const cleanAmountString = data.amount.toString().replace(/[^0-9.-]/g, '')
-  const type = translateTransactionType(data.type)
+  const cleanAmountString = data.amount.toString().replace(/[^0-9.-]/g, '');
+  const type = translateTransactionType(data.type);
 
   // Validate that amount is a valid number
-  const parsedAmount = Number.parseFloat(cleanAmountString)
+  const parsedAmount = Number.parseFloat(cleanAmountString);
   if (Number.isNaN(parsedAmount)) {
-    throw new Error(`Invalid amount: "${data.amount}" could not be converted to a number`)
+    throw new Error(`Invalid amount: "${data.amount}" could not be converted to a number`);
   }
 
   // Validate date
-  const parsedDate = new Date(data.date)
+  const parsedDate = new Date(data.date);
   if (Number.isNaN(parsedDate.getTime())) {
-    throw new Error(`Invalid date: "${data.date}" could not be converted to a valid date`)
+    throw new Error(`Invalid date: "${data.date}" could not be converted to a valid date`);
   }
 
-  let finalAmount = parsedAmount
+  let finalAmount = parsedAmount;
 
   if (type === 'income') {
     // If Copilot income is negative (as expected), make it positive
     if (finalAmount < 0) {
-      finalAmount *= -1
+      finalAmount *= -1;
     }
   } else if (finalAmount > 0) {
     // 'expense' or 'transfer'
     // If Copilot expense/transfer is positive (as expected), make it negative
-    finalAmount *= -1
+    finalAmount *= -1;
   }
 
   return {
@@ -101,5 +102,5 @@ export function convertCopilotTransaction(
     userId,
     createdAt: new Date(),
     updatedAt: new Date(),
-  }
+  };
 }

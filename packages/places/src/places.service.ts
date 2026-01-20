@@ -116,14 +116,14 @@ export async function getPlaceById(id: string): Promise<PlaceSelect | undefined>
   const cacheKey = `place:id:${id}`;
   const cached = placeCache.get(cacheKey);
   if (cached) {
-    return cached;
+    return cached as PlaceSelect;
   }
 
   const result = await db.query.place.findFirst({ where: eq(place.id, id) });
   if (result) {
     placeCache.set(cacheKey, result, placeCache.TTL_SHORT_MS);
   }
-  return result;
+  return result as unknown as PlaceSelect | undefined;
 }
 
 export async function getPlaceByGoogleMapsId(
@@ -132,16 +132,16 @@ export async function getPlaceByGoogleMapsId(
   const cacheKey = `place:googleMapsId:${googleMapsId}`;
   const cached = placeCache.get(cacheKey);
   if (cached) {
-    return cached;
+    return cached as PlaceSelect;
   }
 
   const result = await db.query.place.findFirst({
     where: eq(place.googleMapsId, googleMapsId),
   });
   if (result) {
-    placeCache.set(cacheKey, result);
+    placeCache.set(cacheKey, result, placeCache.TTL_SHORT_MS);
   }
-  return result;
+  return result as unknown as PlaceSelect | undefined;
 }
 
 export async function getPlacesByIds(ids: string[]): Promise<PlaceSelect[]> {

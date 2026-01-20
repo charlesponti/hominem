@@ -4,8 +4,10 @@ import { LoadingScreen } from '@hominem/ui/loading';
 import { UserCircle } from 'lucide-react';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
+
 import { requireAuth } from '~/lib/guards';
 import { trpc } from '~/lib/trpc/client';
+
 import type { Route } from './+types/account';
 
 export async function loader(args: Route.LoaderArgs) {

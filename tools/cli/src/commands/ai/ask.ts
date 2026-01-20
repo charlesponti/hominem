@@ -1,9 +1,10 @@
-import { generateText } from 'ai'
-import chalk from 'chalk'
-import { Command } from 'commander'
-import { consola } from 'consola'
-import ora from 'ora'
-import { lmstudio } from '@/utils/lmstudio'
+import { generateText } from 'ai';
+import chalk from 'chalk';
+import { Command } from 'commander';
+import { consola } from 'consola';
+import ora from 'ora';
+
+import { lmstudio } from '@/utils/lmstudio';
 
 export const askCommand = new Command()
   .command('ask')
@@ -11,7 +12,7 @@ export const askCommand = new Command()
   .argument('<question>', 'The question the LLM should answer.')
   .option('-t, --show-thinking', 'Show the LLM thinking process')
   .action(async (question, options) => {
-    const spinner = ora(`Asking: ${chalk.blue(question)}`).start()
+    const spinner = ora(`Asking: ${chalk.blue(question)}`).start();
 
     const response = await generateText({
       model: lmstudio('qwen3-14b'),
@@ -23,19 +24,19 @@ export const askCommand = new Command()
         
         **User question:** \n${question}
       `,
-    })
+    });
 
-    spinner.succeed(chalk.green('Answer received successfully'))
-    const [thinking, answer] = response.text.split('</think>')
-    consola.log(`${chalk.bold.blue('Question:')} ${chalk.cyan(question)}`)
+    spinner.succeed(chalk.green('Answer received successfully'));
+    const [thinking, answer] = response.text.split('</think>');
+    consola.log(`${chalk.bold.blue('Question:')} ${chalk.cyan(question)}`);
 
-    let responseText = '\n'
+    let responseText = '\n';
 
     if (options.showThinking) {
-      responseText += `${chalk.bold.green('thinking:')} ${chalk.white(thinking.replace(/<think>/g, '').trim())}\n\n`
+      responseText += `${chalk.bold.green('thinking:')} ${chalk.white(thinking.replace(/<think>/g, '').trim())}\n\n`;
     }
 
-    responseText += `${chalk.bold.blue('Answer:')} ${chalk.white(answer.trim())}`
+    responseText += `${chalk.bold.blue('Answer:')} ${chalk.white(answer.trim())}`;
 
-    consola.log(responseText)
-  })
+    consola.log(responseText);
+  });

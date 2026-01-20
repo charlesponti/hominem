@@ -1,7 +1,7 @@
-import { logger } from '@hominem/utils/logger'
-import { eq } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { budgetGoals, financeAccounts, plaidItems, transactions } from '@hominem/db/schema' 
+import { db } from '@hominem/db';
+import { budgetGoals, financeAccounts, plaidItems, transactions } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { eq } from 'drizzle-orm';
 
 /**
  * Delete all finance data for a user
@@ -10,14 +10,14 @@ import { budgetGoals, financeAccounts, plaidItems, transactions } from '@hominem
 export async function deleteAllFinanceData(userId: string) {
   try {
     // Delete all finance-related data for the user
-    await db.delete(transactions).where(eq(transactions.userId, userId))
-    await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId))
-    await db.delete(budgetGoals).where(eq(budgetGoals.userId, userId))
-    await db.delete(plaidItems).where(eq(plaidItems.userId, userId))
+    await db.delete(transactions).where(eq(transactions.userId, userId));
+    await db.delete(financeAccounts).where(eq(financeAccounts.userId, userId));
+    await db.delete(budgetGoals).where(eq(budgetGoals.userId, userId));
+    await db.delete(plaidItems).where(eq(plaidItems.userId, userId));
 
-    logger.info(`Deleted all finance data for user ${userId}`)
+    logger.info(`Deleted all finance data for user ${userId}`);
   } catch (error) {
-    logger.error(`Error deleting finance data for user ${userId}:`, { error })
-    throw error
+    logger.error(`Error deleting finance data for user ${userId}:`, { error });
+    throw error;
   }
 }

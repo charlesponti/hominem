@@ -2,8 +2,10 @@ import { List } from '@hominem/ui/list';
 import { Loading } from '@hominem/ui/loading';
 import { MapPin } from 'lucide-react';
 import { href } from 'react-router';
+
 import { useGeolocation } from '~/hooks/useGeolocation';
 import { trpc } from '~/lib/trpc/client';
+
 import PlaceRow from './place-row';
 
 type Props = {

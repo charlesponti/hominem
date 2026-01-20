@@ -1,27 +1,28 @@
-import crypto from 'node:crypto'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { cleanupFinanceTestData, seedFinanceTestData } from '../finance-test-seed'
+import { cleanupFinanceTestData, seedFinanceTestData } from '@hominem/db/test/utils';
+import crypto from 'node:crypto';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
   calculateTimeSeriesStats,
   generateTimeSeriesData,
   type TimeSeriesDataPoint,
-} from './time-series.service'
+} from './time-series.service';
 
 describe.skip('Finance Analyze Service Integration Tests', () => {
-  let testUserId: string
-  let testAccountId: string
-  let testInstitutionId: string
+  let testUserId: string;
+  let testAccountId: string;
+  let testInstitutionId: string;
 
   beforeEach(async () => {
-    testUserId = crypto.randomUUID()
-    testAccountId = crypto.randomUUID()
-    testInstitutionId = crypto.randomUUID()
+    testUserId = crypto.randomUUID();
+    testAccountId = crypto.randomUUID();
+    testInstitutionId = crypto.randomUUID();
     await seedFinanceTestData({
       userId: testUserId,
       accountId: testAccountId,
       institutionId: testInstitutionId,
-    })
-  })
+    });
+  });
 
   // Clean up test data after each test
   afterEach(async () => {
@@ -29,8 +30,8 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
       userId: testUserId,
       accountId: testAccountId,
       institutionId: testInstitutionId,
-    })
-  })
+    });
+  });
 
   describe('generateTimeSeriesData', () => {
     it('should generate correct time series data from real database queries', async () => {
@@ -39,9 +40,9 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         from: '2023-01-01',
         to: '2023-03-31',
         includeStats: true,
-      })
+      });
 
-      expect(result.data).toHaveLength(3)
+      expect(result.data).toHaveLength(3);
 
       // Data is ordered by date ASC, so January (2023-01) comes first
       // January 2023: Income 1000, Expenses 400 (300+100), Net -600 (expenses - income)
@@ -51,7 +52,7 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         expenses: 400,
         amount: -600, // expenses - income (400 - 1000)
         count: '3', // count comes back as string from SQL
-      })
+      });
 
       // February 2023: Income 1200, Expenses 500 (350+150), Net -700
       expect(result.data[1]).toMatchObject({
@@ -60,7 +61,7 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         expenses: 500,
         amount: -700, // expenses - income (500 - 1200)
         count: '3', // count comes back as string from SQL
-      })
+      });
 
       // March 2023: Income 1100, Expenses 600 (400+200), Net -500
       expect(result.data[2]).toMatchObject({
@@ -69,13 +70,13 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         expenses: 600,
         amount: -500,
         count: '3',
-      })
+      });
 
-      expect(result.stats).not.toBeNull()
-      expect(result.stats?.totalIncome).toBe(3300) // 1000 + 1200 + 1100
-      expect(result.stats?.totalExpenses).toBe(1500) // 400 + 500 + 600
-      expect(result.stats?.total).toBe(-1800) // -600 + -700 + -500
-    })
+      expect(result.stats).not.toBeNull();
+      expect(result.stats?.totalIncome).toBe(3300); // 1000 + 1200 + 1100
+      expect(result.stats?.totalExpenses).toBe(1500); // 400 + 500 + 600
+      expect(result.stats?.total).toBe(-1800); // -600 + -700 + -500
+    });
 
     it('should calculate trend data correctly when compareToPrevious is true', async () => {
       const result = await generateTimeSeriesData({
@@ -83,32 +84,32 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         from: '2023-01-01',
         to: '2023-03-31',
         compareToPrevious: true,
-      })
+      });
 
-      expect(result.data[0]!.trend).toBeUndefined() // January has no previous month
-      expect(result.data[1]!.trend).toBeDefined() // February has trend (compared to January)
-      expect(result.data[2]!.trend).toBeDefined() // March has trend (compared to February)
+      expect(result.data[0]!.trend).toBeUndefined(); // January has no previous month
+      expect(result.data[1]!.trend).toBeDefined(); // February has trend (compared to January)
+      expect(result.data[2]!.trend).toBeDefined(); // March has trend (compared to February)
 
       // February vs January trend
-      const febTrend = result.data[1]!.trend
-      expect(febTrend).toBeDefined()
+      const febTrend = result.data[1]!.trend;
+      expect(febTrend).toBeDefined();
       if (febTrend) {
-        expect(febTrend.direction).toBe('up') // Feb income (1200) > Jan income (1000)
-        expect(febTrend.previousAmount).toBe(1000) // Jan income
-        expect(febTrend.directionExpenses).toBe('up') // Feb expenses (500) > Jan expenses (400)
-        expect(febTrend.previousExpenses).toBe(400) // Jan expenses
+        expect(febTrend.direction).toBe('up'); // Feb income (1200) > Jan income (1000)
+        expect(febTrend.previousAmount).toBe(1000); // Jan income
+        expect(febTrend.directionExpenses).toBe('up'); // Feb expenses (500) > Jan expenses (400)
+        expect(febTrend.previousExpenses).toBe(400); // Jan expenses
       }
 
       // March vs February trend
-      const marTrend = result.data[2]!.trend
-      expect(marTrend).toBeDefined()
+      const marTrend = result.data[2]!.trend;
+      expect(marTrend).toBeDefined();
       if (marTrend) {
-        expect(marTrend.direction).toBe('down') // Mar income (1100) < Feb income (1200)
-        expect(marTrend.previousAmount).toBe(1200) // Feb income
-        expect(marTrend.directionExpenses).toBe('up') // Mar expenses (600) > Feb expenses (500)
-        expect(marTrend.previousExpenses).toBe(500) // Feb expenses
+        expect(marTrend.direction).toBe('down'); // Mar income (1100) < Feb income (1200)
+        expect(marTrend.previousAmount).toBe(1200); // Feb income
+        expect(marTrend.directionExpenses).toBe('up'); // Mar expenses (600) > Feb expenses (500)
+        expect(marTrend.previousExpenses).toBe(500); // Feb expenses
       }
-    })
+    });
 
     it('should handle filtering by date range correctly', async () => {
       const result = await generateTimeSeriesData({
@@ -116,14 +117,14 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         from: '2023-02-01',
         to: '2023-03-31',
         includeStats: true,
-      })
+      });
 
-      expect(result.data).toHaveLength(2)
-      expect(result.data[0]!.date).toBe('2023-02') // February comes first (ASC order)
-      expect(result.data[1]!.date).toBe('2023-03') // March comes second
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]!.date).toBe('2023-02'); // February comes first (ASC order)
+      expect(result.data[1]!.date).toBe('2023-03'); // March comes second
 
-      expect(result.data.find((d) => d.date === '2023-01')).toBeUndefined()
-    })
+      expect(result.data.find((d) => d.date === '2023-01')).toBeUndefined();
+    });
 
     it('should handle empty results gracefully', async () => {
       const result = await generateTimeSeriesData({
@@ -131,11 +132,11 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         from: '2024-01-01',
         to: '2024-03-31',
         includeStats: true,
-      })
+      });
 
-      expect(result.data).toHaveLength(0)
-      expect(result.stats).toBeNull()
-    })
+      expect(result.data).toHaveLength(0);
+      expect(result.stats).toBeNull();
+    });
 
     it('should respect groupBy parameter', async () => {
       const result = await generateTimeSeriesData({
@@ -144,11 +145,11 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         to: '2023-03-31',
         groupBy: 'week',
         includeStats: false,
-      })
+      });
 
-      expect(result.query.groupBy).toBe('week')
-    })
-  })
+      expect(result.query.groupBy).toBe('week');
+    });
+  });
 
   describe('calculateTimeSeriesStats', () => {
     it('should calculate correct statistics for real time series data', () => {
@@ -186,9 +187,9 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
           formattedIncome: '$1,000.00',
           formattedExpenses: '$400.00',
         },
-      ]
+      ];
 
-      const stats = calculateTimeSeriesStats(timeSeriesData)
+      const stats = calculateTimeSeriesStats(timeSeriesData);
 
       expect(stats).toEqual({
         total: 1800, // 500 + 700 + 600
@@ -211,7 +212,7 @@ describe.skip('Finance Analyze Service Integration Tests', () => {
         maxExpenses: 600,
         formattedTotalExpenses: '$1,500.00',
         periodCovered: '2023-01 to 2023-03',
-      })
-    })
-  })
-})
+      });
+    });
+  });
+});

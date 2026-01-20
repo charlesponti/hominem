@@ -1,4 +1,5 @@
 import type { LogContext, LogEntry, LogLevel } from '../logger';
+
 import { logger } from '../logger';
 
 // PostHog integration for analytics and error tracking

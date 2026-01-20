@@ -1,19 +1,21 @@
-import { count, desc, eq, type SQL, sql } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { financeAccounts, transactions } from '@hominem/db/schema'
-import { buildWhereConditions } from '../finance.transactions.service'
-import type { CategorySummary, QueryOptions, TopMerchant } from '../finance.types'
+import { db } from '@hominem/db';
+import { financeAccounts, transactions } from '@hominem/db/schema';
+import { count, desc, eq, type SQL, sql } from 'drizzle-orm';
+
+import type { CategorySummary, QueryOptions, TopMerchant } from '../finance.types';
+
+import { buildWhereConditions } from '../finance.transactions.service';
 
 const formatCurrency = (amount: number): string => {
-  return Number.parseFloat(amount.toString() || '0').toFixed(2)
-}
+  return Number.parseFloat(amount.toString() || '0').toFixed(2);
+};
 
 /**
  * Summarize transactions by category
  */
 export async function summarizeByCategory(options: QueryOptions): Promise<CategorySummary[]> {
-  const whereConditions = buildWhereConditions(options)
-  const limit = options.limit || 10
+  const whereConditions = buildWhereConditions(options);
+  const limit = options.limit || 10;
 
   const result = await db
     .select({
@@ -30,7 +32,7 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
     .groupBy(sql`COALESCE(${transactions.category}, 'Uncategorized')`)
     .having(sql`SUM(${transactions.amount}) < 0`)
     .orderBy(sql`SUM(${transactions.amount}) ASC`)
-    .limit(limit)
+    .limit(limit);
 
   return result.map((row) => ({
     category: row.category,
@@ -39,14 +41,14 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
     average: formatCurrency(row.average),
     minimum: formatCurrency(row.minimum),
     maximum: formatCurrency(row.maximum),
-  }))
+  }));
 }
 
 /**
  * Summarize transactions by month
  */
 export async function summarizeByMonth(options: QueryOptions) {
-  const whereConditions = buildWhereConditions({ ...options, includeExcluded: true })
+  const whereConditions = buildWhereConditions({ ...options, includeExcluded: true });
 
   const query = db
     .select({
@@ -60,9 +62,9 @@ export async function summarizeByMonth(options: QueryOptions) {
     .where(whereConditions)
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
     .groupBy(sql`SUBSTR(${transactions.date}::text, 1, 7)`)
-    .orderBy(sql`SUBSTR(${transactions.date}::text, 1, 7) ASC`)
+    .orderBy(sql`SUBSTR(${transactions.date}::text, 1, 7) ASC`);
 
-  const result = await query
+  const result = await query;
 
   // Format the numeric values
   return result.map((row) => ({
@@ -71,19 +73,19 @@ export async function summarizeByMonth(options: QueryOptions) {
     income: formatCurrency(row.income),
     expenses: formatCurrency(row.expenses),
     average: formatCurrency(row.average),
-  }))
+  }));
 }
 
 /**
  * Find top merchants by spending
  */
 export async function findTopMerchants(options: QueryOptions): Promise<TopMerchant[]> {
-  const whereConditions = buildWhereConditions({ ...options, limit: undefined, type: 'expense' })
-  const limit = options.limit || 10
+  const whereConditions = buildWhereConditions({ ...options, limit: undefined, type: 'expense' });
+  const limit = options.limit || 10;
 
   // Prefer merchantName, fallback to description, filter out empty/null
   // const merchantField = sql<string>`COALESCE(NULLIF(TRIM(${transactions.merchantName}), ''), NULLIF(TRIM(${transactions.description}), ''))`
-  const descriptionField = sql<string>`TRIM(${transactions.description})`
+  const descriptionField = sql<string>`TRIM(${transactions.description})`;
 
   const result = await db
     .select({
@@ -98,7 +100,7 @@ export async function findTopMerchants(options: QueryOptions): Promise<TopMercha
     .groupBy(descriptionField)
     .having(sql`SUM(${transactions.amount}) < 0`)
     .orderBy(sql`SUM(${transactions.amount}) ASC`)
-    .limit(limit)
+    .limit(limit);
 
   return (
     result
@@ -110,7 +112,7 @@ export async function findTopMerchants(options: QueryOptions): Promise<TopMercha
         firstTransaction: row.firstTransaction,
         lastTransaction: row.lastTransaction,
       }))
-  )
+  );
 }
 
 /**
@@ -118,9 +120,9 @@ export async function findTopMerchants(options: QueryOptions): Promise<TopMercha
  */
 export async function calculateTransactions(
   options: QueryOptions & {
-    calculationType?: 'sum' | 'average' | 'count' | 'stats'
-    descriptionLike?: string
-  }
+    calculationType?: 'sum' | 'average' | 'count' | 'stats';
+    descriptionLike?: string;
+  },
 ) {
   // Create a new options object that includes the descriptionLike in the description field
   // to leverage the standardized condition building
@@ -128,41 +130,41 @@ export async function calculateTransactions(
     ...options,
     // If descriptionLike is provided, use it as the description filter
     description: options.descriptionLike || options.description,
-  }
+  };
 
-  const whereConditions = buildWhereConditions(enhancedOptions)
+  const whereConditions = buildWhereConditions(enhancedOptions);
 
   // If calculationType is specified, return just that metric
   if (options.calculationType && options.calculationType !== 'stats') {
-    let aggregateSelection: Record<string, SQL<unknown>>
+    let aggregateSelection: Record<string, SQL<unknown>>;
 
     switch (options.calculationType) {
       case 'sum':
         aggregateSelection = {
           value: sql<number>`SUM(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
-        }
-        break
+        };
+        break;
       case 'average':
         aggregateSelection = {
           value: sql<number>`AVG(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
-        }
-        break
+        };
+        break;
       case 'count':
-        aggregateSelection = { value: sql<number>`COUNT(*)`.mapWith(Number) }
-        break
+        aggregateSelection = { value: sql<number>`COUNT(*)`.mapWith(Number) };
+        break;
       default:
-        throw new Error(`Unsupported calculation type: ${options.calculationType}`)
+        throw new Error(`Unsupported calculation type: ${options.calculationType}`);
     }
 
-    const result = await db.select(aggregateSelection).from(transactions).where(whereConditions)
+    const result = await db.select(aggregateSelection).from(transactions).where(whereConditions);
 
     return {
       value: result[0]?.value ?? 0,
       calculationType: options.calculationType,
     } as {
-      value: number
-      calculationType: 'sum' | 'average' | 'count'
-    }
+      value: number;
+      calculationType: 'sum' | 'average' | 'count';
+    };
   }
 
   // Otherwise return all stats (default behavior)
@@ -175,9 +177,9 @@ export async function calculateTransactions(
       maximum: sql<number>`MAX(${transactions.amount})`,
     })
     .from(transactions)
-    .where(whereConditions)
+    .where(whereConditions);
 
-  const stats = result[0] || { count: 0, total: 0, average: 0, minimum: 0, maximum: 0 }
+  const stats = result[0] || { count: 0, total: 0, average: 0, minimum: 0, maximum: 0 };
 
   return {
     count: stats.count,
@@ -185,44 +187,44 @@ export async function calculateTransactions(
     average: formatCurrency(stats.average),
     minimum: formatCurrency(stats.minimum),
     maximum: formatCurrency(stats.maximum),
-  }
+  };
 }
 
 export async function getMonthlyStats(params: { month: string; userId: string }) {
-  const { month, userId } = params
-  const startDate = new Date(`${month}-01T00:00:00.000Z`)
-  const endDate = new Date(startDate)
-  endDate.setMonth(startDate.getMonth() + 1)
+  const { month, userId } = params;
+  const startDate = new Date(`${month}-01T00:00:00.000Z`);
+  const endDate = new Date(startDate);
+  endDate.setMonth(startDate.getMonth() + 1);
 
   const monthFilter = buildWhereConditions({
     userId,
     from: startDate.toISOString().split('T')[0],
     to: endDate.toISOString().split('T')[0],
-  })
+  });
 
   const totalsResult = await db
     .select({
       totalIncome:
         sql<number>`sum(case when ${transactions.amount} > 0 then ${transactions.amount} else 0 end)`.mapWith(
-          Number
+          Number,
         ),
       totalExpenses:
         sql<number>`sum(case when ${transactions.amount} < 0 then abs(${transactions.amount}) else 0 end)`.mapWith(
-          Number
+          Number,
         ),
       transactionCount: count(),
     })
     .from(transactions)
-    .where(monthFilter)
+    .where(monthFilter);
 
-  const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {}
+  const { totalIncome = 0, totalExpenses = 0, transactionCount = 0 } = totalsResult[0] ?? {};
 
   const categorySpendingFilter = buildWhereConditions({
     userId,
     from: startDate.toISOString().split('T')[0],
     to: endDate.toISOString().split('T')[0],
     type: 'expense',
-  })
+  });
 
   const categorySpendingResult = await db
     .select({
@@ -232,7 +234,7 @@ export async function getMonthlyStats(params: { month: string; userId: string })
     .from(transactions)
     .where(categorySpendingFilter)
     .groupBy(transactions.category)
-    .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`))
+    .orderBy(desc(sql<number>`sum(abs(${transactions.amount}::numeric))`));
 
   return {
     month,
@@ -246,5 +248,5 @@ export async function getMonthlyStats(params: { month: string; userId: string })
       name: c.category,
       amount: c.amount,
     })),
-  }
+  };
 }

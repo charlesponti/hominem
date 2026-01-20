@@ -1,5 +1,6 @@
-import { deleteEvent } from '@hominem/services/events';
+import { deleteEvent } from '@hominem/events-services';
 import { z } from 'zod';
+
 import { protectedProcedure } from '../context';
 
 export const deleteVisit = protectedProcedure

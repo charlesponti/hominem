@@ -1,9 +1,11 @@
-import { sql } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { type Artist, artists } from '@hominem/db/schema'
+import { db } from '@hominem/db';
+import { type Artist, artists } from '@hominem/db/schema';
+import { sql } from 'drizzle-orm';
 
 export async function upsertArtists(records: Artist[]) {
-  if (records.length === 0) { return [] }
+  if (records.length === 0) {
+    return [];
+  }
 
   const result = await db
     .insert(artists)
@@ -20,7 +22,7 @@ export async function upsertArtists(records: Artist[]) {
         updatedAt: new Date(),
       },
     })
-    .returning()
+    .returning();
 
-  return result
+  return result;
 }

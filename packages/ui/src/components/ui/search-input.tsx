@@ -1,13 +1,14 @@
-import { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
-import { Input } from './input'
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+
+import { Input } from './input';
 
 interface SearchInputProps {
-  value?: string
-  onSearchChange: (searchTerm: string) => void
-  placeholder?: string
-  debounceMs?: number
-  className?: string
-  disabled?: boolean
+  value?: string;
+  onSearchChange: (searchTerm: string) => void;
+  placeholder?: string;
+  debounceMs?: number;
+  className?: string;
+  disabled?: boolean;
 }
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
@@ -20,27 +21,27 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
       className = '',
       disabled = false,
     },
-    ref
+    ref,
   ) => {
-    const [inputValue, setInputValue] = useState(value)
-    const [debouncedValue, setDebouncedValue] = useState(value)
-    const [isDebouncing, setIsDebouncing] = useState(false)
-    const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null) // To store timer ID
+    const [inputValue, setInputValue] = useState(value);
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    const [isDebouncing, setIsDebouncing] = useState(false);
+    const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null); // To store timer ID
 
     // Effect 1: Sync external 'value' prop changes to internal state
     useEffect(() => {
       // When the external 'value' prop changes, update internal states
       // to reflect this authoritative value.
-      setInputValue(value)
-      setDebouncedValue(value)
+      setInputValue(value);
+      setDebouncedValue(value);
       // Since this is an external update, it's not a "debouncing" state.
       // If a debounce was in progress, this external change supersedes it.
       if (timerIdRef.current) {
-        clearTimeout(timerIdRef.current)
-        timerIdRef.current = null
+        clearTimeout(timerIdRef.current);
+        timerIdRef.current = null;
       }
-      setIsDebouncing(false)
-    }, [value]) // Only depends on the external 'value' prop
+      setIsDebouncing(false);
+    }, [value]); // Only depends on the external 'value' prop
 
     // Effect 2: Debounce 'inputValue' (typically from user typing) and notify parent
     useEffect(() => {
@@ -52,43 +53,43 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
         // If we were debouncing but now they match (e.g. prop sync or debounce completed), ensure spinner is off.
         // This check is mostly for safety; setIsDebouncing(false) should be handled by Effect 1 or the timer callback.
         if (isDebouncing) {
-          setIsDebouncing(false)
+          setIsDebouncing(false);
         }
-        return
+        return;
       }
 
       // inputValue is different from debouncedValue, so a new debounce cycle is needed.
       // Clear any existing timer because inputValue has changed again.
       if (timerIdRef.current) {
-        clearTimeout(timerIdRef.current)
+        clearTimeout(timerIdRef.current);
       }
 
-      setIsDebouncing(true) // Indicate that debouncing has started
+      setIsDebouncing(true); // Indicate that debouncing has started
 
       timerIdRef.current = setTimeout(() => {
-        setDebouncedValue(inputValue) // Update the internal debouncedValue state
-        setIsDebouncing(false) // Debouncing finished
+        setDebouncedValue(inputValue); // Update the internal debouncedValue state
+        setIsDebouncing(false); // Debouncing finished
 
         // Notify parent if this new debounced value is different from the current 'value' prop
         if (inputValue !== value) {
-          onSearchChange(inputValue)
+          onSearchChange(inputValue);
         }
-        timerIdRef.current = null // Clear ref after execution
-      }, debounceMs)
+        timerIdRef.current = null; // Clear ref after execution
+      }, debounceMs);
 
       // Cleanup function: clear the timer if the component unmounts or dependencies change
       return () => {
         if (timerIdRef.current) {
-          clearTimeout(timerIdRef.current)
-          timerIdRef.current = null
+          clearTimeout(timerIdRef.current);
+          timerIdRef.current = null;
         }
-      }
+      };
       // Dependencies for debouncing and notification logic
-    }, [inputValue, debouncedValue, value, debounceMs, onSearchChange, isDebouncing])
+    }, [inputValue, debouncedValue, value, debounceMs, onSearchChange, isDebouncing]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value)
-    }, [])
+      setInputValue(e.target.value);
+    }, []);
 
     return (
       <div className={`relative ${className}`}>
@@ -106,8 +107,8 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           </div>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-SearchInput.displayName = 'SearchInput'
+SearchInput.displayName = 'SearchInput';

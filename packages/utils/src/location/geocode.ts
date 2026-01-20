@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const GeocodingSchema = z.object({
   geocoding: z.object({
@@ -81,25 +81,32 @@ export const GeocodingSchema = z.object({
         }),
       }),
       bbox: z.tuple([z.number(), z.number(), z.number(), z.number()]),
-    })
+    }),
   ),
-})
-export type Geocoding = z.infer<typeof GeocodingSchema>
+});
+export type Geocoding = z.infer<typeof GeocodingSchema>;
 
-export const LAYERS = ['locality', 'borough', 'neighbourhood', 'county', 'region', 'venue'] as const
+export const LAYERS = [
+  'locality',
+  'borough',
+  'neighbourhood',
+  'county',
+  'region',
+  'venue',
+] as const;
 
-type GeoProps = Geocoding['features'][0]['properties']
+type GeoProps = Geocoding['features'][0]['properties'];
 export type GeocodeFeature = {
-  id: string
-  name: GeoProps['name']
-  coordinates: Geocoding['features'][0]['geometry']['coordinates']
-  label: GeoProps['label']
-  locality: GeoProps['locality']
-  layer: GeoProps['layer']
-  street: GeoProps['street']
-  region: GeoProps['region']
-  address: string
-}
+  id: string;
+  name: GeoProps['name'];
+  coordinates: Geocoding['features'][0]['geometry']['coordinates'];
+  label: GeoProps['label'];
+  locality: GeoProps['locality'];
+  layer: GeoProps['layer'];
+  street: GeoProps['street'];
+  region: GeoProps['region'];
+  address: string;
+};
 
 export const formatGeocodeFeatures = (data: Geocoding): GeocodeFeature[] => {
   return data.features.map((loc) => ({
@@ -119,5 +126,5 @@ export const formatGeocodeFeatures = (data: Geocoding): GeocodeFeature[] => {
     ]
       .filter(Boolean)
       .join(', '),
-  }))
-}
+  }));
+};

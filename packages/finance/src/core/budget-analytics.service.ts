@@ -1,8 +1,8 @@
-import crypto from 'node:crypto'
-import { logger } from '@hominem/utils/logger'
-import { and, eq, gte, inArray, sql } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { budgetCategories, transactions } from '@hominem/db/schema'
+import { db } from '@hominem/db';
+import { budgetCategories, transactions } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, eq, gte, inArray, sql } from 'drizzle-orm';
+import crypto from 'node:crypto';
 
 /**
  * Get transaction categories analysis
@@ -10,8 +10,8 @@ import { budgetCategories, transactions } from '@hominem/db/schema'
 export async function getTransactionCategoriesAnalysis(userId: string) {
   try {
     // First, get the current date and calculate 6 months ago
-    const now = new Date()
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1)
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
 
     // Get categories that have transactions in each of the last 6 months
     const recentTransactionCategories = await db
@@ -23,25 +23,25 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
       .where(and(eq(transactions.userId, userId), gte(transactions.date, sixMonthsAgo)))
       .groupBy(
         sql`COALESCE(${transactions.category}, 'Uncategorized')`,
-        sql`DATE_TRUNC('month', ${transactions.date})`
-      )
+        sql`DATE_TRUNC('month', ${transactions.date})`,
+      );
 
     // Count how many months each category appears in
-    const categoryMonthCounts = new Map<string, number>()
+    const categoryMonthCounts = new Map<string, number>();
     recentTransactionCategories.forEach((row) => {
       if (row.category && row.category !== 'Uncategorized' && row.category.trim() !== '') {
-        const currentCount = categoryMonthCounts.get(row.category) || 0
-        categoryMonthCounts.set(row.category, currentCount + 1)
+        const currentCount = categoryMonthCounts.get(row.category) || 0;
+        categoryMonthCounts.set(row.category, currentCount + 1);
       }
-    })
+    });
 
     // Only include categories that appear in all 6 months (or at least 5 out of 6 for flexibility)
     const consistentCategories = Array.from(categoryMonthCounts.entries())
       .filter(([_, monthCount]) => monthCount >= 5)
-      .map(([category]) => category)
+      .map(([category]) => category);
 
     if (consistentCategories.length === 0) {
-      return []
+      return [];
     }
 
     // Now get the detailed analysis for only the consistent categories
@@ -59,27 +59,27 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
         and(
           eq(transactions.userId, userId),
           gte(transactions.date, sixMonthsAgo),
-          inArray(transactions.category, consistentCategories)
-        )
+          inArray(transactions.category, consistentCategories),
+        ),
       )
       .groupBy(sql`COALESCE(${transactions.category}, 'Uncategorized')`)
-      .orderBy(sql`COUNT(*) DESC`)
+      .orderBy(sql`COUNT(*) DESC`);
 
     // Format the response
     const categories = transactionCategories
       .filter(
-        (row) => row.category && row.category !== 'Uncategorized' && row.category.trim() !== ''
+        (row) => row.category && row.category !== 'Uncategorized' && row.category.trim() !== '',
       )
       .map((row) => {
-        const totalAmount = Number.parseFloat(row.totalAmount.toString())
-        const monthsWithTransactions = Number.parseFloat(row.monthsWithTransactions.toString())
+        const totalAmount = Number.parseFloat(row.totalAmount.toString());
+        const monthsWithTransactions = Number.parseFloat(row.monthsWithTransactions.toString());
 
         // Calculate monthly average: total amount / number of months with transactions
         // For consistent categories, this should be 6 months
         const suggestedBudget =
           monthsWithTransactions > 0
             ? Math.abs(totalAmount / monthsWithTransactions)
-            : Math.abs(Number.parseFloat(row.avgAmount.toString()))
+            : Math.abs(Number.parseFloat(row.avgAmount.toString()));
 
         return {
           name: row.category,
@@ -88,13 +88,13 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
           averageAmount: Number.parseFloat(row.avgAmount.toString()),
           suggestedBudget: suggestedBudget,
           monthsWithTransactions: monthsWithTransactions,
-        }
-      })
+        };
+      });
 
-    return categories
+    return categories;
   } catch (error) {
-    logger.error(`Error fetching transaction categories analysis for user ${userId}:`, { error })
-    throw error
+    logger.error(`Error fetching transaction categories analysis for user ${userId}:`, { error });
+    throw error;
   }
 }
 
@@ -104,27 +104,27 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
 export async function bulkCreateBudgetCategoriesFromTransactions(
   userId: string,
   categories: Array<{
-    name: string
-    type: 'income' | 'expense'
-    averageMonthlyExpense?: string
-    color?: string
-  }>
+    name: string;
+    type: 'income' | 'expense';
+    averageMonthlyExpense?: string;
+    color?: string;
+  }>,
 ) {
   try {
     if (categories.length === 0) {
-      throw new Error('No categories provided')
+      throw new Error('No categories provided');
     }
 
     // Get existing budget category names for this user
     const existingCategories = await db
       .select({ name: budgetCategories.name })
       .from(budgetCategories)
-      .where(eq(budgetCategories.userId, userId))
+      .where(eq(budgetCategories.userId, userId));
 
-    const existingNames = new Set(existingCategories.map((cat) => cat.name.toLowerCase()))
+    const existingNames = new Set(existingCategories.map((cat) => cat.name.toLowerCase()));
 
     // Filter out categories that already exist (case-insensitive comparison)
-    const newCategories = categories.filter((cat) => !existingNames.has(cat.name.toLowerCase()))
+    const newCategories = categories.filter((cat) => !existingNames.has(cat.name.toLowerCase()));
 
     if (newCategories.length === 0) {
       return {
@@ -132,7 +132,7 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
         message: 'All categories already exist',
         categories: [],
         skipped: categories.length,
-      }
+      };
     }
 
     // Create only the new categories
@@ -146,9 +146,9 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
           averageMonthlyExpense: cat.averageMonthlyExpense || '0',
           color: cat.color || null,
           userId,
-        }))
+        })),
       )
-      .returning()
+      .returning();
 
     return {
       success: true,
@@ -160,9 +160,9 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
       categories: createdCategories,
       created: createdCategories.length,
       skipped: categories.length - newCategories.length,
-    }
+    };
   } catch (error) {
-    logger.error(`Error bulk creating budget categories for user ${userId}:`, { error })
-    throw error
+    logger.error(`Error bulk creating budget categories for user ${userId}:`, { error });
+    throw error;
   }
 }

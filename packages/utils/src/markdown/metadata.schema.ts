@@ -1,11 +1,11 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const MetadataSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  created: z.string().datetime().optional(),
-  // modified: z.string().datetime().optional(),
+  created: z.iso.datetime().optional(),
+  // modified: z.iso.datetime().optional(),
   status: z.enum(['draft', 'review', 'published']).optional(),
   author: z.string().optional(),
   category: z.string().optional(),
@@ -18,11 +18,11 @@ export const MetadataSchema = z.object({
   license: z.string().optional(),
   wordCount: z.number().optional(),
   readingTime: z.number().optional(), // in minutes
-})
+});
 
-export type Metadata = z.infer<typeof MetadataSchema>
+export type Metadata = z.infer<typeof MetadataSchema>;
 
 export function extractMetadata(frontmatter: Record<string, unknown>): Metadata {
-  const result = MetadataSchema.safeParse(frontmatter)
-  return result.success ? result.data : {}
+  const result = MetadataSchema.safeParse(frontmatter);
+  return result.success ? result.data : {};
 }

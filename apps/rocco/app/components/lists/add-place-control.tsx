@@ -4,8 +4,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/
 import { Loading } from '@hominem/ui/loading';
 import { CheckCircle2, PlusCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import PlacesAutocomplete from '~/components/places/places-autocomplete';
+
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';
+
+import PlacesAutocomplete from '~/components/places/places-autocomplete';
 import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places';
 
 interface AddPlaceControlProps {

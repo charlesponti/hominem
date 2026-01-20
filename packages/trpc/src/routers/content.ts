@@ -1,7 +1,8 @@
-import { PublishingContentTypeSchema } from '@hominem/db/schema'
-import { ContentService } from '@hominem/services'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../procedures'
+import { PublishingContentTypeSchema } from '@hominem/db/schema';
+import { ContentService } from '@hominem/notes-services';
+import { z } from 'zod';
+
+import { protectedProcedure, router } from '../procedures';
 
 export const contentRouter = router({
   // Get all content for user (only publishable content types)
@@ -13,7 +14,7 @@ export const contentRouter = router({
           .optional()
           .transform(
             (val) =>
-              val?.split(',') as ('tweet' | 'essay' | 'blog_post' | 'social_post')[] | undefined
+              val?.split(',') as ('tweet' | 'essay' | 'blog_post' | 'social_post')[] | undefined,
           ),
         query: z.string().optional(),
         tags: z
@@ -21,16 +22,16 @@ export const contentRouter = router({
           .optional()
           .transform((val) => val?.split(',') as string[] | undefined),
         since: z.string().optional(),
-      })
+      }),
     )
     .query(async (opts) => {
-      const { input, ctx } = opts
-      const userId = ctx.userId
+      const { input, ctx } = opts;
+      const userId = ctx.userId;
       if (!userId) {
-        throw new Error('User ID is required')
+        throw new Error('User ID is required');
       }
 
-      const contentService = new ContentService()
+      const contentService = new ContentService();
 
       try {
         const content = await contentService.list(userId, {
@@ -38,13 +39,13 @@ export const contentRouter = router({
           query: input.query,
           tags: input.tags,
           since: input.since,
-        })
-        return { content }
+        });
+        return { content };
       } catch (error) {
-        console.error('Error fetching content:', error)
+        console.error('Error fetching content:', error);
         throw new Error(
-          `Failed to fetch content: ${error instanceof Error ? error.message : String(error)}`
-        )
+          `Failed to fetch content: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }),
 
@@ -83,28 +84,28 @@ export const contentRouter = router({
             inReplyTo: z.string().optional(),
           })
           .optional(),
-      })
+      }),
     )
     .mutation(async (opts) => {
-      const { input, ctx } = opts
-      const userId = ctx.userId
+      const { input, ctx } = opts;
+      const userId = ctx.userId;
       if (!userId) {
-        throw new Error('User ID is required')
+        throw new Error('User ID is required');
       }
 
-      const contentService = new ContentService()
+      const contentService = new ContentService();
 
       try {
         const newContent = await contentService.create({
           ...input,
           userId,
-        })
-        return { content: newContent }
+        });
+        return { content: newContent };
       } catch (error) {
-        console.error('Error creating content:', error)
+        console.error('Error creating content:', error);
         throw new Error(
-          `Failed to create content: ${error instanceof Error ? error.message : String(error)}`
-        )
+          `Failed to create content: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }),
 
@@ -112,25 +113,25 @@ export const contentRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid('Invalid content ID format') }))
     .query(async (opts) => {
-      const { input, ctx } = opts
-      const userId = ctx.userId
+      const { input, ctx } = opts;
+      const userId = ctx.userId;
       if (!userId) {
-        throw new Error('User ID is required')
+        throw new Error('User ID is required');
       }
 
-      const contentService = new ContentService()
+      const contentService = new ContentService();
 
       try {
-        const content = await contentService.getById(input.id, userId)
-        return { content }
+        const content = await contentService.getById(input.id, userId);
+        return { content };
       } catch (error) {
         if (error instanceof Error && error.message === 'Content not found') {
-          throw new Error('Content not found')
+          throw new Error('Content not found');
         }
-        console.error('Error fetching content:', error)
+        console.error('Error fetching content:', error);
         throw new Error(
-          `Failed to fetch content: ${error instanceof Error ? error.message : String(error)}`
-        )
+          `Failed to fetch content: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }),
 
@@ -164,36 +165,36 @@ export const contentRouter = router({
             inReplyTo: z.string().optional(),
           })
           .optional(),
-      })
+      }),
     )
     .mutation(async (opts) => {
-      const { input, ctx } = opts
-      const userId = ctx.userId
+      const { input, ctx } = opts;
+      const userId = ctx.userId;
       if (!userId) {
-        throw new Error('User ID is required')
+        throw new Error('User ID is required');
       }
 
-      const contentService = new ContentService()
+      const contentService = new ContentService();
 
       try {
-        const { id, ...updateData } = input
+        const { id, ...updateData } = input;
         const updatedContent = await contentService.update({
           id,
           userId,
           ...updateData,
-        })
-        return { content: updatedContent }
+        });
+        return { content: updatedContent };
       } catch (error) {
         if (
           error instanceof Error &&
           error.message === 'Content not found or not authorized to update'
         ) {
-          throw new Error('Content not found')
+          throw new Error('Content not found');
         }
-        console.error('Error updating content:', error)
+        console.error('Error updating content:', error);
         throw new Error(
-          `Failed to update content: ${error instanceof Error ? error.message : String(error)}`
-        )
+          `Failed to update content: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }),
 
@@ -201,25 +202,25 @@ export const contentRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid('Invalid content ID format') }))
     .mutation(async (opts) => {
-      const { input, ctx } = opts
-      const userId = ctx.userId
+      const { input, ctx } = opts;
+      const userId = ctx.userId;
       if (!userId) {
-        throw new Error('User ID is required')
+        throw new Error('User ID is required');
       }
 
-      const contentService = new ContentService()
+      const contentService = new ContentService();
 
       try {
-        await contentService.delete(input.id, userId)
-        return { success: true, message: 'Content deleted successfully' }
+        await contentService.delete(input.id, userId);
+        return { success: true, message: 'Content deleted successfully' };
       } catch (error) {
         if (error instanceof Error && error.message === 'Content not found') {
-          throw new Error('Content not found')
+          throw new Error('Content not found');
         }
-        console.error('Error deleting content:', error)
+        console.error('Error deleting content:', error);
         throw new Error(
-          `Failed to delete content: ${error instanceof Error ? error.message : String(error)}`
-        )
+          `Failed to delete content: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }),
-})
+});

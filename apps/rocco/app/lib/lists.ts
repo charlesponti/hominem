@@ -1,7 +1,9 @@
 import type { UseMutationOptions } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-import { trpc } from './trpc/client';
+
 import type { AppRouter } from './trpc/router';
+
+import { trpc } from './trpc/client';
 
 type RouterInputs = inferRouterInputs<AppRouter>;
 type RouterOutputs = inferRouterOutputs<AppRouter>;

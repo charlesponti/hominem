@@ -1,10 +1,11 @@
-import { X } from 'lucide-react'
-import { Button } from '../ui/button'
+import { X } from 'lucide-react';
+
+import { Button } from '../ui/button';
 
 interface FilterChipProps {
-  label: string
-  onRemove: () => void
-  onClick?: () => void // Reserved for future "edit filter" functionality
+  label: string;
+  onRemove: () => void;
+  onClick?: () => void; // Reserved for future "edit filter" functionality
 }
 
 export function FilterChip({ label, onRemove, onClick }: FilterChipProps) {
@@ -15,8 +16,8 @@ export function FilterChip({ label, onRemove, onClick }: FilterChipProps) {
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick?.()
+          e.preventDefault();
+          onClick?.();
         }
       }}
       role={onClick ? 'button' : undefined}
@@ -28,13 +29,13 @@ export function FilterChip({ label, onRemove, onClick }: FilterChipProps) {
         size="icon"
         className="size-4 rounded-full hover:bg-muted-foreground/20"
         onClick={(e) => {
-          e.stopPropagation()
-          onRemove()
+          e.stopPropagation();
+          onRemove();
         }}
         aria-label={`Remove filter: ${label}`}
       >
         <X className="size-3" />
       </Button>
     </div>
-  )
+  );
 }

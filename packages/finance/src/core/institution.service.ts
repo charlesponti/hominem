@@ -1,43 +1,43 @@
-import { logger } from '@hominem/utils/logger'
-import { and, eq, sql } from 'drizzle-orm'
-import { db } from '@hominem/db'
-import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/db/schema'
+import { db } from '@hominem/db';
+import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, eq, sql } from 'drizzle-orm';
 
 export interface InstitutionConnection {
-  institutionId: string
-  institutionName: string
-  institutionLogo: string | null
-  institutionUrl: string | null
-  status: 'active' | 'error' | 'pending_expiration' | 'revoked'
-  lastSyncedAt: Date | null
-  error: string | null
-  accountCount: number
-  isPlaidConnected: boolean
+  institutionId: string;
+  institutionName: string;
+  institutionLogo: string | null;
+  institutionUrl: string | null;
+  status: 'active' | 'error' | 'pending_expiration' | 'revoked';
+  lastSyncedAt: Date | null;
+  error: string | null;
+  accountCount: number;
+  isPlaidConnected: boolean;
 }
 
 export interface InstitutionAccount {
-  id: string
-  name: string
-  officialName: string | null
-  type: string
-  balance: string
-  mask: string | null
-  subtype: string | null
-  institutionId: string | null
-  institutionName: string | null
-  institutionLogo: string | null
-  isPlaidConnected: boolean
-  plaidAccountId: string | null
-  lastUpdated: Date | null
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  name: string;
+  officialName: string | null;
+  type: string;
+  balance: string;
+  mask: string | null;
+  subtype: string | null;
+  institutionId: string | null;
+  institutionName: string | null;
+  institutionLogo: string | null;
+  isPlaidConnected: boolean;
+  plaidAccountId: string | null;
+  lastUpdated: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
  * Aggregates all institution connections by user ID.
  */
 export async function getUserInstitutionConnections(
-  userId: string
+  userId: string,
 ): Promise<InstitutionConnection[]> {
   try {
     const connections = await db
@@ -55,14 +55,14 @@ export async function getUserInstitutionConnections(
       .from(financialInstitutions)
       .leftJoin(
         plaidItems,
-        and(eq(financialInstitutions.id, plaidItems.institutionId), eq(plaidItems.userId, userId))
+        and(eq(financialInstitutions.id, plaidItems.institutionId), eq(plaidItems.userId, userId)),
       )
       .leftJoin(
         financeAccounts,
         and(
           eq(financialInstitutions.id, financeAccounts.institutionId),
-          eq(financeAccounts.userId, userId)
-        )
+          eq(financeAccounts.userId, userId),
+        ),
       )
       .where(sql`${financeAccounts.userId} = ${userId} OR ${plaidItems.userId} = ${userId}`)
       .groupBy(
@@ -73,18 +73,18 @@ export async function getUserInstitutionConnections(
         plaidItems.status,
         plaidItems.lastSyncedAt,
         plaidItems.error,
-        plaidItems.id
-      )
+        plaidItems.id,
+      );
 
     return connections.map((conn) => ({
       ...conn,
       lastSyncedAt: conn.lastSyncedAt,
       status: conn.status || 'active', // Default to active for manual connections
       error: conn.error,
-    }))
+    }));
   } catch (error) {
-    logger.error('[getUserInstitutionConnections]:', { error })
-    throw error
+    logger.error('[getUserInstitutionConnections]:', { error });
+    throw error;
   }
 }
 
@@ -114,17 +114,17 @@ export async function getUserAccounts(userId: string): Promise<InstitutionAccoun
       })
       .from(financeAccounts)
       .leftJoin(financialInstitutions, eq(financeAccounts.institutionId, financialInstitutions.id))
-      .where(eq(financeAccounts.userId, userId))
+      .where(eq(financeAccounts.userId, userId));
 
     return accounts.map((account) => ({
       ...account,
       lastUpdated: account.lastUpdated,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
-    }))
+    }));
   } catch (error) {
-    logger.error('[getUserAccounts]:', { error })
-    throw error
+    logger.error('[getUserAccounts]:', { error });
+    throw error;
   }
 }
 
@@ -133,7 +133,7 @@ export async function getUserAccounts(userId: string): Promise<InstitutionAccoun
  */
 export async function getInstitutionAccounts(
   userId: string,
-  institutionId: string
+  institutionId: string,
 ): Promise<InstitutionAccount[]> {
   try {
     const accounts = await db
@@ -157,18 +157,18 @@ export async function getInstitutionAccounts(
       .from(financeAccounts)
       .leftJoin(financialInstitutions, eq(financeAccounts.institutionId, financialInstitutions.id))
       .where(
-        and(eq(financeAccounts.userId, userId), eq(financeAccounts.institutionId, institutionId))
-      )
+        and(eq(financeAccounts.userId, userId), eq(financeAccounts.institutionId, institutionId)),
+      );
 
     return accounts.map((account) => ({
       ...account,
       lastUpdated: account.lastUpdated,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
-    }))
+    }));
   } catch (error) {
-    logger.error('[getInstitutionAccounts]:', { error })
-    throw error
+    logger.error('[getInstitutionAccounts]:', { error });
+    throw error;
   }
 }
 
@@ -179,12 +179,12 @@ export async function getInstitution(institutionId: string) {
   try {
     const institution = await db.query.financialInstitutions.findFirst({
       where: eq(financialInstitutions.id, institutionId),
-    })
+    });
 
-    return institution
+    return institution;
   } catch (error) {
-    logger.error('[getInstitution]:', { error })
-    throw error
+    logger.error('[getInstitution]:', { error });
+    throw error;
   }
 }
 
@@ -195,12 +195,12 @@ export async function getAllInstitutions() {
   try {
     const institutions = await db.query.financialInstitutions.findMany({
       orderBy: (financialInstitutions, { asc }) => [asc(financialInstitutions.name)],
-    })
+    });
 
-    return institutions
+    return institutions;
   } catch (error) {
-    logger.error('[getAllInstitutions]:', { error })
-    throw error
+    logger.error('[getAllInstitutions]:', { error });
+    throw error;
   }
 }
 
@@ -208,12 +208,12 @@ export async function getAllInstitutions() {
  * Create a new institution (for manual accounts)
  */
 export async function createInstitution(data: {
-  id: string
-  name: string
-  url?: string
-  logo?: string
-  primaryColor?: string
-  country?: string
+  id: string;
+  name: string;
+  url?: string;
+  logo?: string;
+  primaryColor?: string;
+  country?: string;
 }) {
   try {
     const [institution] = await db
@@ -228,31 +228,31 @@ export async function createInstitution(data: {
         createdAt: new Date(),
         updatedAt: new Date(),
       })
-      .returning()
+      .returning();
 
-    return institution
+    return institution;
   } catch (error) {
-    logger.error('Error creating institution:', { error })
-    throw error
+    logger.error('Error creating institution:', { error });
+    throw error;
   }
 }
 
 export async function getInstitutionById(institutionId: string) {
   return db.query.financialInstitutions.findFirst({
     where: eq(financialInstitutions.id, institutionId),
-  })
+  });
 }
 
 export async function getUserPlaidItemForInstitution(
   plaidItemId: string,
   institutionId: string,
-  userId: string
+  userId: string,
 ) {
   return db.query.plaidItems.findFirst({
     where: and(
       eq(plaidItems.id, plaidItemId),
       eq(plaidItems.userId, userId),
-      eq(plaidItems.institutionId, institutionId)
+      eq(plaidItems.institutionId, institutionId),
     ),
-  })
+  });
 }

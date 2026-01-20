@@ -2,8 +2,10 @@ import { Button } from '@hominem/ui/button';
 import { ArrowRight, ListCheck } from 'lucide-react';
 import { useCallback } from 'react';
 import { Link } from 'react-router';
-import { trpc } from '~/lib/trpc/client';
+
 import type { ReceivedInvite } from '~/lib/types';
+
+import { trpc } from '~/lib/trpc/client';
 
 type ReceivedInviteItemProps =
   | {

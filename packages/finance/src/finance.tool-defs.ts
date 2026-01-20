@@ -1,3 +1,4 @@
+import { FinanceAccountSchema, TransactionSchema } from '@hominem/db';
 import { toolDefinition } from '@tanstack/ai';
 
 import {
@@ -15,23 +16,19 @@ import {
   deleteFinanceAccountOutputSchema,
   deleteTransactionInputSchema,
   deleteTransactionOutputSchema,
-  FinanceAccountSchema,
   getCategoryBreakdownInputSchema,
   getCategoryBreakdownOutputSchema,
   getFinanceAccountsInputSchema,
   getFinanceAccountsOutputSchema,
-  getSpendingCategoriesInputSchema,
-  getSpendingCategoriesOutputSchema,
   getSpendingTimeSeriesInputSchema,
   getSpendingTimeSeriesOutputSchema,
   getTopMerchantsInputSchema,
   getTopMerchantsOutputSchema,
   getTransactionsInputSchema,
   getTransactionsOutputSchema,
-  TransactionSchema,
   updateFinanceAccountInputSchema,
   updateTransactionInputSchema,
-} from './finance.service';
+} from './finance.schemas';
 
 // Account Tools
 export const createFinanceAccountDef = toolDefinition({
@@ -93,8 +90,8 @@ export const deleteTransactionDef = toolDefinition({
 export const getSpendingCategoriesDef = toolDefinition({
   name: 'get_spending_categories',
   description: 'Get spending breakdown by category',
-  inputSchema: getSpendingCategoriesInputSchema,
-  outputSchema: getSpendingCategoriesOutputSchema,
+  inputSchema: getSpendingTimeSeriesInputSchema,
+  outputSchema: getSpendingTimeSeriesOutputSchema,
 });
 
 export const getCategoryBreakdownDef = toolDefinition({

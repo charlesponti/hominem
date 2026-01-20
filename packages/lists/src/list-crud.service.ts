@@ -1,10 +1,12 @@
-import crypto from 'node:crypto'
-import { logger } from '@hominem/utils/logger'
-import { and, eq } from 'drizzle-orm'
-import { db, takeUniqueOrThrow } from '@hominem/db'
-import { list } from '@hominem/db/schema'
-import { getListById } from './list-queries.service'
-import type { List, ListPlace, ListUser, ListWithSpreadOwner } from './types'
+import { db, takeUniqueOrThrow } from '@hominem/db';
+import { list } from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, eq } from 'drizzle-orm';
+import crypto from 'node:crypto';
+
+import type { List, ListPlace, ListUser, ListWithSpreadOwner } from './types';
+
+import { getListById } from './list-queries.service';
 
 /**
  * Format a list with places to match the List interface
@@ -14,7 +16,7 @@ export function formatList(
   places: ListPlace[],
   isOwn: boolean,
   hasAccess?: boolean,
-  collaborators?: ListUser[]
+  collaborators?: ListUser[],
 ): List {
   return {
     id: listData.id,
@@ -35,7 +37,7 @@ export function formatList(
     users: collaborators,
     createdAt: listData.createdAt,
     updatedAt: listData.updatedAt,
-  }
+  };
 }
 
 /**
@@ -46,10 +48,10 @@ export function formatList(
  */
 export async function createList(name: string, userId: string): Promise<List | null> {
   try {
-    const start = Date.now()
-    logger.info('[lists.service] createList start', { start, name, userId })
+    const start = Date.now();
+    logger.info('[lists.service] createList start', { start, name, userId });
 
-    const insertStart = Date.now()
+    const insertStart = Date.now();
     const rawCreatedList = await db
       .insert(list)
       .values({
@@ -59,36 +61,36 @@ export async function createList(name: string, userId: string): Promise<List | n
         // description and isPublic will use DB defaults or be null
       })
       .returning()
-      .then(takeUniqueOrThrow)
-    const insertEnd = Date.now()
+      .then(takeUniqueOrThrow);
+    const insertEnd = Date.now();
     logger.info('[lists.service] createList insert done', {
       insertStart,
       insertEnd,
       durationMs: insertEnd - insertStart,
       name,
       userId,
-    })
+    });
 
-    const fetchStart = Date.now()
-    const result = await getListById(rawCreatedList.id, userId)
-    const fetchEnd = Date.now()
+    const fetchStart = Date.now();
+    const result = await getListById(rawCreatedList.id, userId);
+    const fetchEnd = Date.now();
     logger.info('[lists.service] createList fetch done', {
       fetchStart,
       fetchEnd,
       durationMs: fetchEnd - fetchStart,
       name,
       userId,
-    })
+    });
 
-    const end = Date.now()
+    const end = Date.now();
     logger.info('[lists.service] createList total duration', {
       start,
       end,
       durationMs: end - start,
       name,
       userId,
-    })
-    return result
+    });
+    return result;
   } catch (error) {
     logger.error('Failed to create list', {
       service: 'lists.service',
@@ -96,8 +98,8 @@ export async function createList(name: string, userId: string): Promise<List | n
       userId,
       input: { name },
       error: error instanceof Error ? error.message : String(error),
-    })
-    return null
+    });
+    return null;
   }
 }
 
@@ -111,7 +113,7 @@ export async function createList(name: string, userId: string): Promise<List | n
 export async function updateList(
   id: string,
   name: string,
-  userId: string
+  userId: string,
 ): Promise<typeof list.$inferSelect | null> {
   try {
     const updatedList = await db
@@ -119,11 +121,11 @@ export async function updateList(
       .set({ name })
       .where(and(eq(list.id, id), eq(list.userId, userId)))
       .returning()
-      .then((rows) => rows[0] ?? null)
-    return updatedList
+      .then((rows) => rows[0] ?? null);
+    return updatedList;
   } catch (error) {
-    console.error(`Error updating list ${id}:`, error)
-    return null
+    console.error(`Error updating list ${id}:`, error);
+    return null;
   }
 }
 
@@ -138,10 +140,10 @@ export async function deleteList(id: string, userId: string): Promise<boolean> {
     const result = await db
       .delete(list)
       .where(and(eq(list.id, id), eq(list.userId, userId)))
-      .returning({ id: list.id })
-    return result.length > 0 // Check if any row was actually deleted
+      .returning({ id: list.id });
+    return result.length > 0; // Check if any row was actually deleted
   } catch (error) {
-    console.error(`Error deleting list ${id} for user ${userId}:`, error)
-    return false
+    console.error(`Error deleting list ${id} for user ${userId}:`, error);
+    return false;
   }
 }

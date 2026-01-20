@@ -1,5 +1,5 @@
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool } from 'ai';
+import { z } from 'zod';
 
 export const create_list = tool({
   description: 'Create a new list',
@@ -10,9 +10,9 @@ export const create_list = tool({
   async execute(args) {
     return {
       message: `Created list: ${args.name}`,
-    }
+    };
   },
-})
+});
 
 export const get_lists = tool({
   description: 'Get all lists',
@@ -20,9 +20,9 @@ export const get_lists = tool({
   async execute() {
     return {
       message: 'Retrieved all lists',
-    }
+    };
   },
-})
+});
 
 export const update_list = tool({
   description: 'Update a list',
@@ -34,9 +34,9 @@ export const update_list = tool({
   async execute(args) {
     return {
       message: `Updated list ${args.listId}`,
-    }
+    };
   },
-})
+});
 
 export const delete_list = tool({
   description: 'Delete a list',
@@ -46,9 +46,9 @@ export const delete_list = tool({
   async execute(args) {
     return {
       message: `Deleted list ${args.listId}`,
-    }
+    };
   },
-})
+});
 
 export const invite_to_list = tool({
   description: 'Invite a user to a list',
@@ -59,9 +59,9 @@ export const invite_to_list = tool({
   async execute(args) {
     return {
       message: `Invited ${args.email} to list ${args.listId}`,
-    }
+    };
   },
-})
+});
 
 export const accept_list_invite = tool({
   description: 'Accept an invitation to a list',
@@ -72,6 +72,6 @@ export const accept_list_invite = tool({
   async execute(args) {
     return {
       message: `Accepted invitation to list ${args.listId} for ${args.invitedUserEmail}`,
-    }
+    };
   },
-})
+});

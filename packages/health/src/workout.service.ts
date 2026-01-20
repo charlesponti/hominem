@@ -1,11 +1,11 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const ExerciseSchema = z.object({
   name: z.string(),
   sets: z.number(),
   reps: z.string(),
   restTime: z.string(),
-})
+});
 
 export const recommendWorkoutInputSchema = z.object({
   fitnessLevel: z.enum(['beginner', 'intermediate', 'advanced']).describe('Current fitness level'),
@@ -21,19 +21,19 @@ export const recommendWorkoutInputSchema = z.object({
     .array(z.string())
     .optional()
     .describe('Physical limitations or injuries to consider'),
-})
+});
 
 export const recommendWorkoutOutputSchema = z.object({
   title: z.string(),
   duration: z.string(),
   exercises: z.array(ExerciseSchema),
   notes: z.array(z.string()),
-})
+});
 
 export class WorkoutService {
   async recommend(_: z.infer<typeof recommendWorkoutInputSchema>) {
-    return { title: 'Quick Workout', duration: '30 minutes', exercises: [], notes: [] }
+    return { title: 'Quick Workout', duration: '30 minutes', exercises: [], notes: [] };
   }
 }
 
-export const workoutService = new WorkoutService()
+export const workoutService = new WorkoutService();

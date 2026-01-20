@@ -4,6 +4,7 @@ import { Input } from '@hominem/ui/input';
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
+
 import { trpc } from '~/lib/trpc/client';
 import { buildImageUrl } from '~/lib/utils';
 

@@ -1,5 +1,5 @@
-import 'dotenv/config'
-import { z } from 'zod'
+import 'dotenv/config';
+import { z } from 'zod';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -19,13 +19,13 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
   RESEND_FROM_NAME: z.string().optional(),
-})
+});
 
-const parsedEnv = envSchema.parse(process.env)
+const parsedEnv = envSchema.parse(process.env);
 
 export const env = {
   ...parsedEnv,
   get NODE_ENV() {
-    return (process.env.NODE_ENV as 'development' | 'production' | 'test') || parsedEnv.NODE_ENV
+    return (process.env.NODE_ENV as 'development' | 'production' | 'test') || parsedEnv.NODE_ENV;
   },
-}
+};

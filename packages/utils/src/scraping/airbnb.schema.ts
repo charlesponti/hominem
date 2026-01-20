@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 const AirbnbListingSchema = z.object({
   title: z.string().optional(),
@@ -55,11 +55,11 @@ const AirbnbListingSchema = z.object({
           roomType: z.string().optional(),
           beds: z.array(z.string()).optional(),
         })
-        .optional()
+        .optional(),
     )
     .optional(),
   houseRules: z.array(z.string()).optional(),
   nearbyAttractions: z.array(z.string()).optional(),
-})
+});
 
-export default AirbnbListingSchema
+export default AirbnbListingSchema;

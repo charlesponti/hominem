@@ -4,6 +4,9 @@ import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, redirect } from 'react-router';
+
+import type { PlaceLocation } from '~/lib/types';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
 import ListEditButton from '~/components/lists/list-edit-button';
 import LazyMap from '~/components/map.lazy';
@@ -14,7 +17,7 @@ import { useGeolocation } from '~/hooks/useGeolocation';
 import { requireAuth } from '~/lib/guards';
 import { trpc } from '~/lib/trpc/client';
 import { createCaller } from '~/lib/trpc/server';
-import type { PlaceLocation } from '~/lib/types';
+
 import type { Route } from './+types/lists.$id';
 
 export async function loader({ request, params }: Route.LoaderArgs) {

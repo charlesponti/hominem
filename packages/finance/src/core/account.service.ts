@@ -1,7 +1,4 @@
-import crypto from 'node:crypto'
-import { logger } from '@hominem/utils/logger'
-import { and, eq, sql } from 'drizzle-orm'
-import { db } from '@hominem/db'
+import { db } from '@hominem/db';
 import {
   type FinanceAccount,
   type FinanceAccountInsert,
@@ -10,20 +7,54 @@ import {
   financialInstitutions,
   plaidItems,
   transactions,
-} from '@hominem/db/schema'
+} from '@hominem/db/schema';
+import { logger } from '@hominem/utils/logger';
+import { and, eq, sql } from 'drizzle-orm';
+import crypto from 'node:crypto';
+import { z } from 'zod';
 
-export async function getAccountsMap(): Promise<Map<string, FinanceAccount>> {
-  try {
-    const accounts = await db.select().from(financeAccounts)
-    return new Map(accounts.map((acc) => [acc.name, acc]))
-  } catch (error) {
-    logger.error('Failed to fetch accounts', { error })
-    throw error
-  }
-}
+import { AccountTypeEnum } from '../finance.schemas';
+
+// Account service schemas
+export const createAccountInputSchema = z.object({
+  name: z.string(),
+  type: AccountTypeEnum,
+  balance: z.string(),
+  isoCurrencyCode: z.string().default('USD'),
+  userId: z.string(),
+  interestRate: z.string().optional().nullable(),
+  minimumPayment: z.string().optional().nullable(),
+  mask: z.string().optional().nullable(),
+  subtype: z.string().optional().nullable(),
+  officialName: z.string().optional().nullable(),
+  limit: z.string().optional().nullable(),
+  institutionId: z.string().optional().nullable(),
+  plaidItemId: z.string().optional().nullable(),
+  plaidAccountId: z.string().optional().nullable(),
+});
+
+export const createAccountOutputSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.string(),
+  balance: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  userId: z.string(),
+  interestRate: z.string().nullable(),
+  minimumPayment: z.string().nullable(),
+  mask: z.string().nullable(),
+  isoCurrencyCode: z.string().nullable(),
+  subtype: z.string().nullable(),
+  officialName: z.string().nullable(),
+  limit: z.string().nullable(),
+  institutionId: z.string().nullable(),
+  plaidItemId: z.string().nullable(),
+  plaidAccountId: z.string().nullable(),
+});
 
 export async function createAccount(
-  account: Omit<FinanceAccountInsert, 'id'>
+  account: Omit<FinanceAccountInsert, 'id'>,
 ): Promise<FinanceAccount> {
   try {
     const [createdAccount] = await db
@@ -32,13 +63,13 @@ export async function createAccount(
         id: crypto.randomUUID(),
         ...account,
       })
-      .returning()
+      .returning();
 
     if (!createdAccount) {
-      throw new Error(`Failed to create account: ${account.name}`)
+      throw new Error(`Failed to create account: ${account.name}`);
     }
 
-    return createdAccount
+    return createdAccount;
   } catch (error) {
     logger.error('[createAccount]:', {
       error,
@@ -49,29 +80,29 @@ export async function createAccount(
         userId: account.userId,
         institutionId: account.institutionId,
       },
-    })
-    throw error
+    });
+    throw error;
   }
 }
 
 export async function createManyAccounts(
-  accounts: Array<Omit<FinanceAccountInsert, 'id'>>
+  accounts: Array<Omit<FinanceAccountInsert, 'id'>>,
 ): Promise<FinanceAccount[]> {
   if (accounts.length === 0) {
-    return []
+    return [];
   }
 
   try {
     const accountsWithIds = accounts.map((acc) => ({
       id: crypto.randomUUID(),
       ...acc,
-    }))
+    }));
 
-    const createdAccounts = await db.insert(financeAccounts).values(accountsWithIds).returning()
-    return createdAccounts
+    const createdAccounts = await db.insert(financeAccounts).values(accountsWithIds).returning();
+    return createdAccounts;
   } catch (error) {
-    logger.error('[createManyAccounts]:', { error })
-    throw error
+    logger.error('[createManyAccounts]:', { error });
+    throw error;
   }
 }
 
@@ -80,10 +111,10 @@ export async function listAccounts(userId: string): Promise<FinanceAccount[]> {
     return await db.query.financeAccounts.findMany({
       where: eq(financeAccounts.userId, userId),
       orderBy: (accounts) => accounts.name,
-    })
+    });
   } catch (error) {
-    logger.error('[listAccounts]:', { error })
-    throw error
+    logger.error('[listAccounts]:', { error });
+    throw error;
   }
 }
 
@@ -91,32 +122,32 @@ export async function getAccountById(id: string, userId: string): Promise<Financ
   try {
     const account = await db.query.financeAccounts.findFirst({
       where: and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)),
-    })
-    return account ?? null
+    });
+    return account ?? null;
   } catch (error) {
-    logger.error('[getAccountById]:', { error })
-    throw error
+    logger.error('[getAccountById]:', { error });
+    throw error;
   }
 }
 
 export async function updateAccount(
   id: string,
   userId: string,
-  updates: Partial<Omit<FinanceAccountInsert, 'id'>>
+  updates: Partial<Omit<FinanceAccountInsert, 'id'>>,
 ): Promise<FinanceAccount> {
   try {
     const [updated] = await db
       .update(financeAccounts)
       .set(updates)
       .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)))
-      .returning()
+      .returning();
     if (!updated) {
-      throw new Error(`Account not found or not updated: ${id}`)
+      throw new Error(`Account not found or not updated: ${id}`);
     }
-    return updated
+    return updated;
   } catch (error) {
-    logger.error('[updateAccount]:', { error })
-    throw error
+    logger.error('[updateAccount]:', { error });
+    throw error;
   }
 }
 
@@ -124,27 +155,40 @@ export async function deleteAccount(id: string, userId: string): Promise<void> {
   try {
     await db
       .delete(financeAccounts)
-      .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)))
+      .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)));
   } catch (error) {
-    logger.error('[deleteAccount]:', { error })
-    throw error
+    logger.error('[deleteAccount]:', { error });
+    throw error;
   }
 }
 
-export async function findAccountByNameForUser(
-  userId: string,
-  name: string
-): Promise<FinanceAccount | null> {
+export async function findAccountByNameForUser(userId: string, name: string) {
   const existingAccount = await db.query.financeAccounts.findFirst({
     where: and(eq(financeAccounts.userId, userId), eq(financeAccounts.name, name)),
-  })
-  return existingAccount ?? null
+  });
+  return existingAccount ?? null;
 }
+
+type AccountWithTransactions = FinanceAccount & {
+  transactions: FinanceTransaction[];
+};
+
+type AccountWithPlaidInfo = FinanceAccount & {
+  institutionName: string | null;
+  institutionLogo: string | null;
+  isPlaidConnected: boolean;
+  plaidItemStatus: string | null;
+  plaidItemError: unknown;
+  plaidLastSyncedAt: Date | null;
+  plaidItemInternalId: string | null;
+  plaidInstitutionId: string | null;
+  plaidInstitutionName: string | null;
+};
 
 export async function listAccountsWithRecentTransactions(
   userId: string,
-  transactionLimit = 5
-): Promise<Array<FinanceAccount & { transactions: FinanceTransaction[] }>> {
+  transactionLimit = 5,
+): Promise<AccountWithTransactions[]> {
   try {
     const query = sql`
       WITH ranked_transactions AS (
@@ -197,37 +241,23 @@ export async function listAccountsWithRecentTransactions(
       LEFT JOIN recent_transactions rt ON fa.id = rt.account_id
       WHERE fa.user_id = ${userId}
       ORDER BY fa.name;
-    `
-    const result: Array<FinanceAccount & { transactions: FinanceTransaction[] }> =
-      await db.execute(query)
+    `;
+    const result = (await db.execute(query)) as Array<AccountWithTransactions>;
 
     return result.map((account) => ({
       ...account,
       transactions: account.transactions || [],
-    }))
+    }));
   } catch (error) {
-    logger.error('[listAccountsWithRecentTransactions]:', { error })
-    throw error
+    logger.error('[listAccountsWithRecentTransactions]:', { error });
+    throw error;
   }
 }
 
 export async function getAccountWithPlaidInfo(
   accountId: string,
-  userId: string
-): Promise<
-  | (FinanceAccount & {
-      institutionName: string | null
-      institutionLogo: string | null
-      isPlaidConnected: boolean
-      plaidItemStatus: string | null
-      plaidItemError: unknown
-      plaidLastSyncedAt: Date | null
-      plaidItemInternalId: string | null
-      plaidInstitutionId: string | null
-      plaidInstitutionName: string | null
-    })
-  | null
-> {
+  userId: string,
+): Promise<AccountWithPlaidInfo | null> {
   const [account] = await db
     .select({
       id: financeAccounts.id,
@@ -262,12 +292,12 @@ export async function getAccountWithPlaidInfo(
     .from(financeAccounts)
     .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
     .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-    .where(and(eq(financeAccounts.id, accountId), eq(financeAccounts.userId, userId)))
+    .where(and(eq(financeAccounts.id, accountId), eq(financeAccounts.userId, userId)));
 
-  return account ?? null
+  return account ?? null;
 }
 
-export async function listAccountsWithPlaidInfo(userId: string) {
+export async function listAccountsWithPlaidInfo(userId: string): Promise<AccountWithPlaidInfo[]> {
   return db
     .select({
       id: financeAccounts.id,
@@ -302,7 +332,7 @@ export async function listAccountsWithPlaidInfo(userId: string) {
     .from(financeAccounts)
     .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
     .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-    .where(eq(financeAccounts.userId, userId))
+    .where(eq(financeAccounts.userId, userId));
 }
 
 export async function listPlaidConnectionsForUser(userId: string) {
@@ -319,7 +349,7 @@ export async function listPlaidConnectionsForUser(userId: string) {
     })
     .from(plaidItems)
     .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
-    .where(eq(plaidItems.userId, userId))
+    .where(eq(plaidItems.userId, userId));
 }
 
 export async function getAccountBalanceSummary(userId: string) {
@@ -332,31 +362,31 @@ export async function getAccountBalanceSummary(userId: string) {
         balance: financeAccounts.balance,
       })
       .from(financeAccounts)
-      .where(eq(financeAccounts.userId, userId))
+      .where(eq(financeAccounts.userId, userId));
 
     const totalBalance = accounts.reduce((sum, account) => {
-      return sum + Number.parseFloat(account.balance || '0')
-    }, 0)
+      return sum + Number.parseFloat(account.balance || '0');
+    }, 0);
 
     return {
       accounts,
       totalBalance: totalBalance.toFixed(2),
       accountCount: accounts.length,
-    }
+    };
   } catch (error) {
-    logger.error('[getAccountBalanceSummary]:', { error })
-    throw error
+    logger.error('[getAccountBalanceSummary]:', { error });
+    throw error;
   }
 }
 
 export async function getAndCreateAccountsInBulk(
   accountNames: string[],
-  userId: string
+  userId: string,
 ): Promise<Map<string, FinanceAccount>> {
-  const existingAccounts = await listAccounts(userId)
-  const existingAccountsMap = new Map(existingAccounts.map((acc) => [acc.name, acc]))
+  const existingAccounts = await listAccounts(userId);
+  const existingAccountsMap = new Map(existingAccounts.map((acc) => [acc.name, acc]));
 
-  const newAccountNames = accountNames.filter((name) => !existingAccountsMap.has(name))
+  const newAccountNames = accountNames.filter((name) => !existingAccountsMap.has(name));
 
   if (newAccountNames.length > 0) {
     const newAccounts = await createManyAccounts(
@@ -367,12 +397,12 @@ export async function getAndCreateAccountsInBulk(
         institutionId: null,
         meta: null,
         userId,
-      }))
-    )
+      })),
+    );
     for (const newAccount of newAccounts) {
-      existingAccountsMap.set(newAccount.name, newAccount)
+      existingAccountsMap.set(newAccount.name, newAccount);
     }
   }
 
-  return existingAccountsMap
+  return existingAccountsMap;
 }
