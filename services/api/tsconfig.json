@@ -12,7 +12,6 @@
     { "path": "../../packages/ai" },
     { "path": "../../packages/auth" },
     { "path": "../../packages/services" },
-    { "path": "../../packages/tools" },
     { "path": "../../packages/utils" }
   ],
   "include": ["src/**/*.ts"],

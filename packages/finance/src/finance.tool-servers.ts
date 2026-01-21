@@ -1,12 +1,14 @@
-import { FinanceAccountSchema } from '@hominem/db/schema';
 import { toolDefinition } from '@tanstack/ai';
 import { z } from 'zod';
 
-import type { FinanceAccountInsert } from './finance.types';
-
 import { calculateTransactions } from './analytics/transaction-analytics.service';
-import { createAccount, deleteAccount, listAccounts, updateAccount } from './core/account.service';
 import { type BudgetCategoryType, getBudgetCategories } from './core/budget-categories.service';
+import {
+  FinanceAccountSchema,
+  type CreateAccountInput,
+  type UpdateAccountInput,
+} from './features/accounts/accounts.domain';
+import { AccountsService } from './features/accounts/accounts.service';
 import {
   getCategoryBreakdown,
   getCategoryBreakdownInputSchema,
@@ -67,15 +69,15 @@ export const createFinanceAccountServer =
   (userId: string) =>
   async (
     input: z.infer<typeof createFinanceAccountInputSchema>,
-  ): Promise<Awaited<ReturnType<typeof createAccount>>> => {
-    const payload: Omit<FinanceAccountInsert, 'id'> = {
+  ): Promise<Awaited<ReturnType<typeof AccountsService.createAccount>>> => {
+    const payload: CreateAccountInput = {
       name: input.name,
       type: input.type,
       balance: input.balance !== undefined ? input.balance.toString() : '0',
       isoCurrencyCode: input.currency ?? 'USD',
       userId,
     };
-    return createAccount(payload);
+    return AccountsService.createAccount(payload);
   };
 
 export const getFinanceAccountsDef = toolDefinition({
@@ -89,8 +91,11 @@ export const getFinanceAccountsServer =
   (userId: string) =>
   async (
     input: z.infer<typeof getFinanceAccountsInputSchema>,
-  ): Promise<{ accounts: Awaited<ReturnType<typeof listAccounts>>; total: number }> => {
-    const accounts = await listAccounts(userId);
+  ): Promise<{
+    accounts: Awaited<ReturnType<typeof AccountsService.listAccounts>>;
+    total: number;
+  }> => {
+    const accounts = await AccountsService.listAccounts(userId);
     const filtered = input.type ? accounts.filter((a) => a.type === input.type) : accounts;
     return { accounts: filtered, total: filtered.length };
   };
@@ -104,12 +109,15 @@ export const updateFinanceAccountDef = toolDefinition({
 
 export const updateFinanceAccountServer =
   (userId: string) => async (input: z.infer<typeof updateFinanceAccountInputSchema>) => {
-    const { accountId, balance, ...updates } = input;
-    const payload: Parameters<typeof updateAccount>[2] = { ...updates };
+    const { accountId, balance, currency, ...updates } = input;
+    const payload: UpdateAccountInput = {
+      ...updates,
+      isoCurrencyCode: currency,
+    };
     if (balance !== undefined) {
       payload.balance = balance.toString();
     }
-    return updateAccount(accountId, userId, payload);
+    return AccountsService.updateAccount(accountId, userId, payload);
   };
 
 export const deleteFinanceAccountDef = toolDefinition({
@@ -124,7 +132,7 @@ export const deleteFinanceAccountServer =
   async (
     input: z.infer<typeof deleteFinanceAccountInputSchema>,
   ): Promise<z.infer<typeof deleteFinanceAccountOutputSchema>> => {
-    await deleteAccount(input.accountId, userId);
+    await AccountsService.deleteAccount(input.accountId, userId);
     return { success: true, message: 'Account deleted successfully' };
   };
 
@@ -342,7 +350,16 @@ export const calculateTransactionsInputSchema = z.object({
 });
 
 export const calculateTransactionsOutputSchema = z.object({
-  calculationResult: z.any(),
+  calculationResult: z.union([
+    z.number(),
+    z.object({
+      count: z.number(),
+      total: z.string(),
+      average: z.string(),
+      minimum: z.string(),
+      maximum: z.string(),
+    }),
+  ]),
   message: z.string(),
 });
 

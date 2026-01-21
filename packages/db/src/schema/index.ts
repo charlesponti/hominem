@@ -20,6 +20,7 @@ export * from './notes.schema';
 export * from './places.schema';
 export * from './possessions.schema';
 export * from './shared.schema';
+export type { Json } from './shared.schema';
 export * from './surveys.schema';
 export * from './tags.schema';
 export * from './travel.schema';

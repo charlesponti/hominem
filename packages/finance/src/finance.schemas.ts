@@ -1,4 +1,4 @@
-import { FinanceAccountSchema, accountTypeEnum } from '@hominem/db/schema';
+import { FinanceAccountSchema, AccountTypeEnum } from '@hominem/db/schema';
 import { z } from 'zod';
 
 // Generic success response schema
@@ -7,18 +7,16 @@ export const SuccessResponseSchema = z.object({
   message: z.string(),
 });
 
-const accountTypeSchema = z.enum(accountTypeEnum.enumValues);
-
 // Account Schemas
 export const createFinanceAccountInputSchema = z.object({
   name: z.string(),
-  type: accountTypeSchema,
+  type: AccountTypeEnum,
   balance: z.number().optional(),
   currency: z.string().optional(),
 });
 
 export const getFinanceAccountsInputSchema = z.object({
-  type: accountTypeSchema.optional(),
+  type: AccountTypeEnum.optional(),
 });
 
 export const getFinanceAccountsOutputSchema = z.object({
@@ -29,7 +27,7 @@ export const getFinanceAccountsOutputSchema = z.object({
 export const updateFinanceAccountInputSchema = z.object({
   accountId: z.string(),
   name: z.string().optional(),
-  type: accountTypeSchema.optional(),
+  type: AccountTypeEnum.optional(),
   balance: z.number().optional(),
   currency: z.string().optional(),
 });

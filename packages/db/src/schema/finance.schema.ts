@@ -13,6 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
+import { type Json, type TransactionLocation, TransactionLocationSchema } from './shared.schema';
 import { users } from './users.schema';
 
 // Enums
@@ -115,7 +116,7 @@ export const financeAccounts = pgTable(
     subtype: text('subtype'),
     officialName: text('official_name'),
     limit: numeric('limit'),
-    meta: jsonb('meta'),
+    meta: jsonb('meta').$type<Json>(),
     lastUpdated: timestamp('last_updated'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -161,7 +162,8 @@ export const transactions = pgTable(
     recurring: boolean('recurring').default(false),
     pending: boolean('pending').default(false),
     paymentChannel: text('payment_channel'),
-    location: jsonb('location'),
+    location: jsonb('location').$type<TransactionLocation>(),
+    plaidTransactionId: text('plaid_transaction_id').unique(),
     source: text('source').default('manual'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -170,6 +172,9 @@ export const transactions = pgTable(
       .notNull(),
   },
   (table) => [
+    index('transactions_user_id_idx').on(table.userId),
+    index('transactions_date_idx').on(table.date),
+    index('transactions_account_id_idx').on(table.accountId),
     index('transactions_search_idx').using(
       'gin',
       sql`to_tsvector('english', coalesce(${table.description}, '') || ' ' || coalesce(${table.merchantName}, '') || ' ' || coalesce(${table.category}, '') || ' ' || coalesce(${table.parentCategory}, '') || ' ' || coalesce(${table.tags}, '') || ' ' || coalesce(${table.note}, '') || ' ' || coalesce(${table.paymentChannel}, '') || ' ' || coalesce(${table.source}, ''))`,
@@ -294,7 +299,19 @@ import { z } from 'zod';
 export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
 export const TransactionTypeEnum = z.enum(transactionTypeEnum.enumValues as [string, ...string[]]);
 
-export const FinanceAccountSchema = createSelectSchema(financeAccounts);
-export const FinanceAccountInsertSchema = createInsertSchema(financeAccounts);
-export const TransactionSchema = createSelectSchema(transactions);
-export const TransactionInsertSchema = createInsertSchema(transactions);
+export const FinanceAccountSchema = createSelectSchema(financeAccounts, {
+  type: AccountTypeEnum,
+  meta: z.custom<Json>().optional().nullable(),
+});
+export const FinanceAccountInsertSchema = createInsertSchema(financeAccounts, {
+  type: AccountTypeEnum,
+  meta: z.custom<Json>().optional().nullable(),
+});
+export const TransactionSchema = createSelectSchema(transactions, {
+  type: TransactionTypeEnum,
+  location: TransactionLocationSchema.optional().nullable(),
+});
+export const TransactionInsertSchema = createInsertSchema(transactions, {
+  type: TransactionTypeEnum,
+  location: TransactionLocationSchema.optional().nullable(),
+});

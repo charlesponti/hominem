@@ -2,6 +2,8 @@ import { db } from '@hominem/db';
 import {
   type FinanceAccountInsert,
   type FinanceTransaction,
+  type PlaidItem,
+  type TransactionLocation,
   financeAccounts,
   plaidItems,
   transactions,
@@ -53,8 +55,7 @@ export class PlaidService {
         })
         .where(eq(financeAccounts.id, existingAccount.id));
 
-      logger.info({
-        message: 'Updated existing account',
+      logger.info('Updated existing account', {
         accountId: existingAccount.id,
         plaidAccountId: accountData.plaidAccountId,
       });
@@ -76,8 +77,7 @@ export class PlaidService {
       updatedAt: new Date(),
     });
 
-    logger.info({
-      message: 'Created new account',
+    logger.info('Created new account', {
       plaidAccountId: accountData.plaidAccountId,
     });
 
@@ -107,7 +107,7 @@ export class PlaidService {
     parentCategory: string | null;
     pending: boolean;
     paymentChannel: string;
-    location: any;
+    location: TransactionLocation | null;
     plaidTransactionId: string;
     userId: string;
   }) {
@@ -184,7 +184,11 @@ export class PlaidService {
   /**
    * Update the sync status and last synced timestamp for a Plaid item
    */
-  async updatePlaidItemSyncStatus(itemId: string, status: string, error?: string | null) {
+  async updatePlaidItemSyncStatus(
+    itemId: string,
+    status: PlaidItem['status'],
+    error?: string | null,
+  ) {
     await db
       .update(plaidItems)
       .set({
@@ -194,6 +198,20 @@ export class PlaidService {
         updatedAt: new Date(),
       })
       .where(eq(plaidItems.id, itemId));
+  }
+
+  /**
+   * Update the error for a Plaid item
+   */
+  async updatePlaidItemError(itemId: string, error: string) {
+    await db
+      .update(plaidItems)
+      .set({
+        status: 'error',
+        error,
+        updatedAt: new Date(),
+      })
+      .where(eq(plaidItems.itemId, itemId));
   }
 
   /**

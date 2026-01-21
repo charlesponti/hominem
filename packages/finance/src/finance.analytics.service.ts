@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import type { QueryOptions } from './finance.types';
-
 import { calculateAveragePerDay, calculateTimeSeriesTotals } from './analytics/analytics.utils';
 import {
   findTopMerchants,
@@ -70,29 +68,27 @@ export async function getCategoryBreakdown(
   userId: string,
   input: z.infer<typeof getCategoryBreakdownInputSchema>,
 ) {
-  const options: QueryOptions = { userId };
-  if (input.from) options.from = input.from;
-  if (input.to) options.to = input.to;
-  if (input.category) options.category = input.category;
-  if (input.limit) options.limit = input.limit;
-  const breakdown = await summarizeByCategory(options);
+  const breakdown = await summarizeByCategory({ userId, ...input });
   const totalSpending = breakdown.reduce((sum, cat) => sum + Number.parseFloat(cat.total), 0);
-  const mappedBreakdown = breakdown.map((cat) => ({
-    category: cat.category,
-    amount: Number.parseFloat(cat.total),
-    percentage: totalSpending > 0 ? (Number.parseFloat(cat.total) / totalSpending) * 100 : 0,
-    transactionCount: cat.count,
-  }));
   const averagePerDay = calculateAveragePerDay(totalSpending, input.from, input.to);
-  return { breakdown: mappedBreakdown, totalSpending, averagePerDay };
+
+  return {
+    breakdown: breakdown.map((cat) => ({
+      category: cat.category,
+      amount: Number.parseFloat(cat.total),
+      percentage: totalSpending > 0 ? (Number.parseFloat(cat.total) / totalSpending) * 100 : 0,
+      transactionCount: cat.count,
+    })),
+    totalSpending,
+    averagePerDay,
+  };
 }
 
 export async function getSpendingTimeSeries(
   userId: string,
   input: z.infer<typeof getSpendingTimeSeriesInputSchema>,
 ) {
-  const options: QueryOptions = { userId, from: input.from, to: input.to };
-  const result = await summarizeByMonth(options);
+  const result = await summarizeByMonth({ userId, ...input });
   const { total, average } = calculateTimeSeriesTotals(result);
   return { series: result, total, average };
 }
@@ -101,20 +97,12 @@ export async function getTopMerchants(
   userId: string,
   input: z.infer<typeof getTopMerchantsInputSchema>,
 ) {
-  const options: QueryOptions = {
-    userId,
-    limit: input.limit || 5,
-    from: input.from,
-    to: input.to,
-    account: input.account,
-    category: input.category,
-  };
-  const result = await findTopMerchants(options);
+  const result = await findTopMerchants({ userId, limit: 5, ...input });
   return {
-    merchants: result.map((merchant) => ({
-      name: merchant.merchant,
-      totalSpent: Number.parseFloat(merchant.totalSpent),
-      transactionCount: merchant.frequency,
+    merchants: result.map((m) => ({
+      name: m.merchant,
+      totalSpent: Number.parseFloat(m.totalSpent),
+      transactionCount: m.frequency,
     })),
   };
 }

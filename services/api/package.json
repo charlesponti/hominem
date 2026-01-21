@@ -20,6 +20,8 @@
     "@browserbasehq/stagehand": "^2.4.0",
     "@hominem/ai": "workspace:*",
     "@hominem/auth": "workspace:*",
+    "@hominem/db": "workspace:*",
+    "@hominem/services": "workspace:*",
     "@hominem/trpc": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/node-server": "^1.19.2",

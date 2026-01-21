@@ -4,7 +4,7 @@ export * from './analytics/time-series.service';
 export * from './analytics/transaction-analytics.service';
 export * from './budget.types';
 export * from './cleanup.service';
-export * from './core/account.service';
+export * from './features/accounts/accounts.service';
 export * from './core/budget.utils';
 export * from './core/budget-analytics.service';
 export * from './core/budget-categories.service';

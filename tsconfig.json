@@ -3,17 +3,25 @@
   "references": [
     { "path": "packages/ai" },
     { "path": "packages/auth" },
-    { "path": "packages/services" },
+    { "path": "packages/career" },
+    { "path": "packages/chat" },
     { "path": "packages/db" },
+    { "path": "packages/events" },
+    { "path": "packages/finance" },
+    { "path": "packages/health" },
+    { "path": "packages/jobs" },
+    { "path": "packages/lists" },
+    { "path": "packages/notes" },
+    { "path": "packages/places" },
+    { "path": "packages/services" },
     { "path": "packages/trpc" },
-    { "path": "packages/tools" },
     { "path": "packages/ui" },
     { "path": "packages/utils" },
-    { "path": "apps/api" },
-    { "path": "apps/cli" },
-    { "path": "apps/florin" },
+    { "path": "services/api" },
+    { "path": "services/workers" },
+    { "path": "tools/cli" },
+    { "path": "apps/finance" },
     { "path": "apps/notes" },
-    { "path": "apps/rocco" },
-    { "path": "apps/workers" }
+    { "path": "apps/rocco" }
   ]
 }

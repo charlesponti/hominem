@@ -10,8 +10,8 @@ import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { env } from '@/lib/env.js';
-import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '@/lib/plaid.js';
+import { env } from '../../lib/env';
+import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../lib/plaid';
 
 import { protectedProcedure, router } from '../../procedures';
 

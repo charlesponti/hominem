@@ -115,8 +115,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
         for (const transaction of added) {
           // Skip if we can't map to one of our accounts
           if (!accountMap.has(transaction.account_id)) {
-            logger.warn({
-              message: 'Cannot find matching account for transaction',
+            logger.warn('Cannot find matching account for transaction', {
               plaidAccountId: transaction.account_id,
               transactionId: transaction.transaction_id,
             });
@@ -152,7 +151,10 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
                 : null,
             pending: transaction.pending,
             paymentChannel: transaction.payment_channel,
-            location: transaction.location,
+            location:
+              transaction.location?.lat && transaction.location?.lon
+                ? { lat: transaction.location.lat, lon: transaction.location.lon }
+                : null,
             plaidTransactionId: transaction.transaction_id,
             userId,
           });
@@ -173,8 +175,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             const account = await plaidService.getAccountByPlaidId(transaction.account_id);
 
             if (!account) {
-              logger.warn({
-                message: 'Cannot find matching account for modified transaction',
+              logger.warn('Cannot find matching account for modified transaction', {
                 plaidAccountId: transaction.account_id,
                 transactionId: transaction.transaction_id,
               });
@@ -198,7 +199,10 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
                   : null,
               pending: transaction.pending,
               paymentChannel: transaction.payment_channel,
-              location: transaction.location,
+              location:
+                transaction.location?.lat && transaction.location?.lon
+                  ? { lat: transaction.location.lat, lon: transaction.location.lon }
+                  : null,
               plaidTransactionId: transaction.transaction_id,
               userId,
             });
@@ -228,8 +232,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
         for (const removed_transaction of removed) {
           // Find the transaction to delete
           if (removed_transaction.transaction_id === undefined) {
-            logger.warn({
-              message: 'Removed transaction does not have a transaction_id',
+            logger.warn('Removed transaction does not have a transaction_id', {
               removedTransaction: removed_transaction,
             });
             continue;
@@ -257,8 +260,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     // 3. Update the last synced timestamp for this Plaid item
     await plaidService.updatePlaidItemSyncStatus(plaidItem.id, 'active', null);
 
-    logger.info({
-      message: 'Completed Plaid sync job',
+    logger.info('Completed Plaid sync job', {
       jobId: job.id,
       userId,
       itemId,
@@ -279,8 +281,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       plaidErrorDetail = axiosError.response?.data; // Use optional chaining
     }
 
-    logger.error({
-      message: 'Error processing Plaid sync job',
+    logger.error('Error processing Plaid sync job', {
       jobId: job.id,
       userId,
       itemId,

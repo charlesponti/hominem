@@ -4,7 +4,7 @@ import { logger } from '@hominem/utils/logger';
 import { parse } from 'csv-parse';
 import { Effect, Stream } from 'effect';
 
-import { getAndCreateAccountsInBulk } from '../core/account.service';
+import { AccountsService } from '../features/accounts/accounts.service';
 import {
   type CapitalOneTransaction,
   type CopilotTransaction,
@@ -119,7 +119,9 @@ export function processTransactionsFromCSVBuffer({
       ...new Set(parsedTransactions.flatMap((tx) => tx.map(([accountName]) => accountName))),
     ];
     const accountsMap = yield* $(
-      Effect.tryPromise(() => getAndCreateAccountsInBulk(uniqueAccountNames, userId)),
+      Effect.tryPromise(() =>
+        AccountsService.getAndCreateAccountsInBulk(uniqueAccountNames, userId),
+      ),
     );
 
     const transactionsToProcess: FinanceTransactionInsert[] = parsedTransactions
