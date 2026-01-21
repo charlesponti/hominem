@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 
 import {
-  createTransaction,
+  createTransactions,
   findExistingTransaction,
   updateTransactionIfNeeded,
 } from '../finance.transactions.service';
@@ -47,14 +47,14 @@ export async function processTransactionsInBulk(
   }
 
   // 1. Find all existing transactions that could be duplicates.
-  const existingTransactions = await findExistingTransaction(
+  const existingTransactions = (await findExistingTransaction(
     transactions.map((t) => ({
       date: t.date,
       amount: t.amount,
       type: t.type,
       accountMask: t.accountMask,
     })),
-  );
+  )) as FinanceTransaction[];
 
   const existingTxMap = new Map(
     existingTransactions.map((t) => {
@@ -88,9 +88,9 @@ export async function processTransactionsInBulk(
   if (transactionsToCreate.length > 0) {
     const newTransactionsWithIds = transactionsToCreate.map((t) => ({
       ...t,
-      id: crypto.randomUUID(),
+      id: t.id ?? crypto.randomUUID(),
     }));
-    await createTransaction(newTransactionsWithIds);
+    await createTransactions(newTransactionsWithIds);
     for (const tx of newTransactionsWithIds) {
       results.push({ action: 'created', transaction: tx });
     }

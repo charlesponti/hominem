@@ -349,6 +349,7 @@
         "drizzle-kit": "^0.30.2",
         "tsx": "^4.19.2",
         "typescript": "^5.7.3",
+        "vitest": "^4.0.16",
       },
     },
     "packages/events": {

@@ -11,8 +11,11 @@ export * from './core/budget-categories.service';
 export * from './core/budget-goals.service';
 export * from './core/budget-tracking.service';
 export * from './core/institution.service';
-export * from './core/runway.service';
-export { tools } from './finance.tools';
+export { calculateRunwayProjection } from './core/runway.service';
+export * from './finance.analytics.service';
+export * from './finance.calculators.service';
+export * from './finance.schemas';
+export * from './finance.tool-servers';
 export * from './finance.transactions.service';
 export * from './finance.types';
 

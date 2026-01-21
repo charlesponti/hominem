@@ -1,4 +1,4 @@
-import { financeTestSeed } from '@hominem/finance-services';
+import { seedFinanceTestData, cleanupFinanceTestData } from '@hominem/db/test/utils';
 import crypto from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
@@ -17,7 +17,7 @@ describe('Finance Analyze tRPC Router', () => {
     testUserId = crypto.randomUUID();
     testAccountId = crypto.randomUUID();
     testInstitutionId = crypto.randomUUID();
-    await financeTestSeed.seedFinanceTestData({
+    await seedFinanceTestData({
       userId: testUserId,
       accountId: testAccountId,
       institutionId: testInstitutionId,
@@ -27,7 +27,7 @@ describe('Finance Analyze tRPC Router', () => {
   });
 
   afterAll(async () => {
-    await financeTestSeed.cleanupFinanceTestData({
+    await cleanupFinanceTestData({
       userId: testUserId,
       accountId: testAccountId,
       institutionId: testInstitutionId,

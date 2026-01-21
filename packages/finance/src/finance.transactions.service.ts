@@ -4,6 +4,8 @@ import {
   type FinanceTransactionInsert,
   financeAccounts,
   transactions,
+  TransactionSchema,
+  TransactionInsertSchema,
 } from '@hominem/db/schema';
 import { logger } from '@hominem/utils/logger';
 import { and, asc, desc, eq, gte, like, lte, type SQL, sql } from 'drizzle-orm';
@@ -12,45 +14,55 @@ import { z } from 'zod';
 import type { QueryOptions } from './finance.types';
 
 // Transaction service schemas
-export const createTransactionInputSchema = z.object({
-  accountId: z.string(),
-  amount: z.string(),
-  type: z.enum(['credit', 'investment', 'income', 'expense', 'debit', 'transfer']),
-  date: z.date(),
-  description: z.string(),
-  category: z.string(),
-  userId: z.string(),
+export const getTransactionsInputSchema = z.object({
+  accountId: z.string().describe('The account ID'),
+  from: z.string().optional().describe('Start date (ISO format)'),
+  to: z.string().optional().describe('End date (ISO format)'),
+  category: z.string().optional().describe('Filter by category'),
+  limit: z.number().optional().describe('Max results to return'),
 });
 
-export const createTransactionOutputSchema = z.object({
-  id: z.string(),
-  accountId: z.string(),
-  amount: z.string(),
-  type: z.string(),
-  date: z.date(),
-  userId: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  description: z.string().nullable(),
-  category: z.string().nullable(),
-  parentCategory: z.string().nullable(),
-  merchantName: z.string().nullable(),
-  status: z.string().nullable(),
-  accountMask: z.string().nullable(),
-  note: z.string().nullable(),
-  pending: z.boolean(),
-  recurring: z.boolean(),
-  excluded: z.boolean(),
-  paymentChannel: z.string().nullable(),
-  location: z.any().nullable(),
-  source: z.string(),
-  tags: z.any().nullable(),
-  fromAccountId: z.string().nullable(),
-  toAccountId: z.string().nullable(),
-  account: z.any().nullable(),
-  eventId: z.string().nullable(),
-  plaidTransactionId: z.string().nullable(),
-  investmentDetails: z.any().nullable(),
+export const getTransactionsOutputSchema = z.object({
+  transactions: z.array(
+    z.object({
+      id: z.string(),
+      date: z.date(),
+      description: z.string().nullable(),
+      amount: z.string(),
+      status: z.string().nullable(),
+      category: z.string().nullable(),
+      parentCategory: z.string().nullable(),
+      type: z.string(),
+      accountMask: z.string().nullable(),
+      note: z.string().nullable(),
+      accountId: z.string(),
+      account: z.any(), // FinanceAccount or null
+    }),
+  ),
+  total: z.number(),
+});
+
+export const updateTransactionInputSchema = z
+  .object({
+    transactionId: z.string().describe('The transaction ID'),
+  })
+  .extend(
+    TransactionInsertSchema.pick({
+      amount: true,
+      description: true,
+      category: true,
+    }).partial().shape,
+  );
+
+export const updateTransactionOutputSchema = TransactionSchema;
+
+export const deleteTransactionInputSchema = z.object({
+  transactionId: z.string().describe('The transaction ID'),
+});
+
+export const deleteTransactionOutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
 });
 
 export const queryTransactionsOutputSchema = z.object({
@@ -308,6 +320,18 @@ export async function queryTransactions(options: QueryOptions) {
   };
 }
 
+export async function getTransactions(
+  input: z.infer<typeof getTransactionsInputSchema>,
+  userId: string,
+): Promise<z.infer<typeof getTransactionsOutputSchema>> {
+  const options: QueryOptions = { userId, ...input };
+  const { data, filteredCount } = await queryTransactions(options);
+  return {
+    transactions: data,
+    total: filteredCount,
+  };
+}
+
 export function findExistingTransaction(tx: {
   date: Date;
   accountMask?: string | null;
@@ -349,8 +373,9 @@ export async function findExistingTransaction(
         tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined,
       ),
     );
-    // @ts-expect-error - drizzle-orm `or` supports array of conditions
-    return db.query.transactions.findMany({ where: or(...conditions) });
+    return db.query.transactions.findMany({
+      where: sql.join(conditions, sql` OR `),
+    }) as unknown as Promise<FinanceTransaction[]>;
   }
   return db.query.transactions.findFirst({
     where: and(
@@ -359,49 +384,80 @@ export async function findExistingTransaction(
       eq(transactions.type, txOrTxs.type as FinanceTransaction['type']),
       txOrTxs.accountMask ? eq(transactions.accountMask, txOrTxs.accountMask) : undefined,
     ),
-  });
+  }) as Promise<FinanceTransaction | undefined>;
 }
 
-export function createTransaction(tx: FinanceTransactionInsert): Promise<FinanceTransaction>;
-export function createTransaction(txs: FinanceTransactionInsert[]): Promise<FinanceTransaction[]>;
+export const createTransactionInputSchema = TransactionInsertSchema.pick({
+  accountId: true,
+  amount: true,
+  description: true,
+  type: true,
+  category: true,
+}).extend({
+  date: z.string().optional().describe('Transaction date (ISO format)'),
+});
+
+export const createTransactionOutputSchema = TransactionSchema;
 export async function createTransaction(
-  txOrTxs: FinanceTransactionInsert | FinanceTransactionInsert[],
-): Promise<FinanceTransaction | FinanceTransaction[]> {
+  input: z.infer<typeof createTransactionInputSchema> & { userId?: string },
+  userId?: string,
+): Promise<z.infer<typeof createTransactionOutputSchema>> {
+  const [result] = await createTransactions(
+    [
+      {
+        ...input,
+        type: input.type as any,
+        date: input.date ? new Date(input.date) : new Date(),
+      } as any,
+    ],
+    userId,
+  );
+  if (!result) {
+    throw new Error('Failed to insert transaction');
+  }
+  return result as any;
+}
+
+/**
+ * Create multiple transactions in a single batch.
+ */
+export async function createTransactions(
+  inputs: Array<Partial<FinanceTransactionInsert> & { userId?: string }>,
+  userId?: string,
+): Promise<FinanceTransaction[]> {
+  if (inputs.length === 0) {
+    return [];
+  }
+
+  const transactionData: FinanceTransactionInsert[] = inputs.map((input) => {
+    const effectiveUserId = userId ?? input.userId;
+    if (!effectiveUserId) {
+      throw new Error('User ID is required to create a transaction.');
+    }
+
+    const { date, ...rest } = input;
+
+    return {
+      ...rest,
+      id: rest.id ?? crypto.randomUUID(),
+      accountId: rest.accountId!,
+      amount: rest.amount!.toString(),
+      type: rest.type as any,
+      date: date instanceof Date ? date : new Date(),
+      description: rest.description ?? '',
+      category: rest.category ?? '',
+      userId: effectiveUserId,
+      location: rest.location as any,
+    } as any;
+  });
+
   try {
-    const transactionsToInsert = Array.isArray(txOrTxs) ? txOrTxs : [txOrTxs];
-    if (transactionsToInsert.length === 0) {
-      return [];
-    }
-
-    const values = transactionsToInsert.map((tx) => ({
-      id: crypto.randomUUID(),
-      accountId: tx.accountId,
-      accountMask: tx.accountMask,
-      amount: tx.amount,
-      category: tx.category || '',
-      date: tx.date,
-      description: tx.description,
-      excluded: tx.excluded,
-      note: tx.note,
-      parentCategory: tx.parentCategory || '',
-      recurring: tx.recurring,
-      status: tx.status,
-      tags: tx.tags,
-      type: tx.type,
-      userId: tx.userId,
-    }));
-
-    const result = await db.insert(transactions).values(values).returning();
-
-    if (!result || result.length === 0) {
-      throw new Error('Failed to insert transaction(s)');
-    }
-
-    return Array.isArray(txOrTxs) ? result : result[0]!;
+    const result = await db.insert(transactions).values(transactionData).returning();
+    return result as any;
   } catch (error: unknown) {
-    logger.error(`Error inserting transaction(s): ${JSON.stringify(txOrTxs)}`, error as Error);
+    logger.error(`Error bulk inserting transactions`, error as Error);
     throw new Error(
-      `Failed to insert transaction(s): ${error instanceof Error ? error.message : error}`,
+      `Failed to insert transactions: ${error instanceof Error ? error.message : error}`,
     );
   }
 }
@@ -444,35 +500,43 @@ export async function updateTransactionIfNeeded(
 }
 
 export async function updateTransaction(
-  transactionId: string,
+  input: z.infer<typeof updateTransactionInputSchema>,
   userId: string,
-  updates: Partial<FinanceTransactionInsert>,
-): Promise<FinanceTransaction> {
+): Promise<z.infer<typeof updateTransactionOutputSchema>> {
   try {
+    const updates: Partial<FinanceTransactionInsert> = {};
+    if (input.amount !== undefined) updates.amount = input.amount.toString();
+    if (input.description !== undefined) updates.description = input.description;
+    if (input.category !== undefined) updates.category = input.category;
+
     const [updated] = await db
       .update(transactions)
       .set(updates)
-      .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)))
+      .where(and(eq(transactions.id, input.transactionId), eq(transactions.userId, userId)))
       .returning();
 
     if (!updated) {
-      throw new Error(`Transaction not found or not updated: ${transactionId}`);
+      throw new Error(`Transaction not found or not updated: ${input.transactionId}`);
     }
 
-    return updated;
+    return updated as z.infer<typeof updateTransactionOutputSchema>;
   } catch (error: unknown) {
-    logger.error(`Error updating transaction ${transactionId}:`, error as Error);
+    logger.error(`Error updating transaction ${input.transactionId}:`, error as Error);
     throw error;
   }
 }
 
-export async function deleteTransaction(transactionId: string, userId: string): Promise<void> {
+export async function deleteTransaction(
+  input: z.infer<typeof deleteTransactionInputSchema>,
+  userId: string,
+): Promise<z.infer<typeof deleteTransactionOutputSchema>> {
   try {
     await db
       .delete(transactions)
-      .where(and(eq(transactions.id, transactionId), eq(transactions.userId, userId)));
+      .where(and(eq(transactions.id, input.transactionId), eq(transactions.userId, userId)));
+    return { success: true, message: 'Transaction deleted successfully' };
   } catch (error: unknown) {
-    logger.error(`Error deleting transaction ${transactionId}:`, error as Error);
+    logger.error(`Error deleting transaction ${input.transactionId}:`, error as Error);
     throw error;
   }
 }

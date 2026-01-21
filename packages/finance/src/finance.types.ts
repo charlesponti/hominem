@@ -26,15 +26,6 @@ export interface MonthAggregate {
   count: number;
 }
 
-export type CategorySummary = {
-  category: string;
-  count: number;
-  total: string;
-  average: string;
-  minimum: string;
-  maximum: string;
-};
-
 export type TopMerchant = {
   merchant: string;
   frequency: number;

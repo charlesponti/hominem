@@ -2,7 +2,7 @@ import { db } from '@hominem/db';
 import { financeAccounts, transactions } from '@hominem/db/schema';
 import { count, desc, eq, type SQL, sql } from 'drizzle-orm';
 
-import type { CategorySummary, QueryOptions, TopMerchant } from '../finance.types';
+import type { QueryOptions, TopMerchant } from '../finance.types';
 
 import { buildWhereConditions } from '../finance.transactions.service';
 
@@ -10,6 +10,14 @@ const formatCurrency = (amount: number): string => {
   return Number.parseFloat(amount.toString() || '0').toFixed(2);
 };
 
+export type CategorySummary = {
+  category: string;
+  count: number;
+  total: string;
+  average: string;
+  minimum: string;
+  maximum: string;
+};
 /**
  * Summarize transactions by category
  */

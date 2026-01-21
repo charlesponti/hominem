@@ -1,10 +1,9 @@
 import {
   calculateTransactions,
-  categoryBreakdownSchema,
-  findTopMerchants,
   generateTimeSeriesData,
+  getCategoryBreakdown,
   getMonthlyStats,
-  summarizeByCategory,
+  getTopMerchants,
 } from '@hominem/finance-services';
 import { z } from 'zod';
 
@@ -53,48 +52,38 @@ export const analyzeRouter = router({
         limit: z.number().optional().default(5),
       }),
     )
-    .query(async ({ input, ctx }) => {
-      const options = {
-        userId: ctx.userId,
-        from: input.from,
-        to: input.to,
-        account: input.account,
-        category: input.category,
-        limit: input.limit,
-      };
-      const result = await findTopMerchants(options);
-      return result;
-    }),
+    .query(async ({ input, ctx }) => getTopMerchants(ctx.userId, input)),
 
   // Category breakdown
   categoryBreakdown: protectedProcedure
-    .input(categoryBreakdownSchema)
-    .query(async ({ input, ctx }) => {
-      const result = await summarizeByCategory({
-        ...input,
-        userId: ctx.userId,
-      });
-      return result;
-    }),
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+        category: z.string().optional(),
+        limit: z.coerce.number().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => getCategoryBreakdown(ctx.userId, input)),
 
   // Calculate transactions
   calculate: protectedProcedure
     .input(
       z.object({
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
+        from: z.string().optional().describe('Start date'),
+        to: z.string().optional().describe('End date'),
         category: z.string().optional(),
-        accounts: z.array(z.string()).optional(),
-        type: z.enum(['income', 'expense']).optional(),
+        account: z.string().optional().describe('Account ID or name'),
+        type: z.enum(['income', 'expense', 'credit', 'debit', 'transfer', 'investment']).optional(),
+        calculationType: z.enum(['sum', 'average', 'count', 'stats']).optional(),
+        descriptionLike: z.string().optional(),
       }),
     )
-    .mutation(async ({ input, ctx }) => {
-      const result = await calculateTransactions({
+    .query(async ({ input, ctx }) => {
+      return calculateTransactions({
         ...input,
         userId: ctx.userId,
       });
-
-      return result;
     }),
 
   // Monthly stats

@@ -12,6 +12,7 @@
     "start": "bun src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "lint": "bunx oxlint ./src",
     "format": "bunx oxfmt ./src"
   },
   "dependencies": {
