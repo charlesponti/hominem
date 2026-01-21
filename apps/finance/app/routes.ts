@@ -1,4 +1,4 @@
-import { index, layout, type RouteConfig, route } from '@react-router/dev/routes'
+import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
 
 export default [
   layout('routes/layout.tsx', [
@@ -30,4 +30,4 @@ export default [
     // Catch-all 404 route
     route('*', 'routes/$.tsx'),
   ]),
-] as RouteConfig
+] as RouteConfig;

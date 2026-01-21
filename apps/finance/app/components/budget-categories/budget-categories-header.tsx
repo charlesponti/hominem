@@ -1,10 +1,10 @@
-import { Button } from '@hominem/ui/button'
-import { Plus } from 'lucide-react'
+import { Button } from '@hominem/ui/button';
+import { Plus } from 'lucide-react';
 
 interface BudgetCategoriesHeaderProps {
-  transactionCategoriesCount?: number
-  onAddCategory: () => void
-  onSetupFromTransactions: () => void
+  transactionCategoriesCount?: number;
+  onAddCategory: () => void;
+  onSetupFromTransactions: () => void;
 }
 
 export function BudgetCategoriesHeader({
@@ -34,5 +34,5 @@ export function BudgetCategoriesHeader({
         </Button>
       </div>
     </div>
-  )
+  );
 }

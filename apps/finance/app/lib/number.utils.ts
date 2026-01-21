@@ -4,23 +4,23 @@
  * @returns A formatted percentage string
  */
 export const formatPercent = (amount: number | string, fixed = 1) => {
-  const parsedAmount = Number.parseFloat(amount as string)
+  const parsedAmount = Number.parseFloat(amount as string);
 
   if (Number.isNaN(parsedAmount)) {
-    return '0.0%'
+    return '0.0%';
   }
 
-  return `${(parsedAmount * 100).toFixed(fixed)}%`
-}
+  return `${(parsedAmount * 100).toFixed(fixed)}%`;
+};
 
 /**
  * Helper function to format currency values consistently
  */
 export const formatCurrency = (
   value: number | string | undefined | null,
-  options?: Intl.NumberFormatOptions
+  options?: Intl.NumberFormatOptions,
 ) => {
-  const numericValue = typeof value === 'string' ? Number.parseFloat(value) : (value ?? 0)
+  const numericValue = typeof value === 'string' ? Number.parseFloat(value) : (value ?? 0);
 
   return numericValue.toLocaleString('en-US', {
     style: 'currency',
@@ -29,5 +29,5 @@ export const formatCurrency = (
     maximumFractionDigits: 2,
     useGrouping: true, // Ensures commas are used for thousands separators
     ...options,
-  })
-}
+  });
+};

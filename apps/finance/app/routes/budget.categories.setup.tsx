@@ -1,69 +1,71 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { ArrowLeft, Check, Plus } from 'lucide-react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import type { RouterOutput } from '~/lib/trpc'
-import { trpc } from '~/lib/trpc'
+} from '@hominem/ui/components/ui/card';
+import { ArrowLeft, Check, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
-export type TransactionCategory = RouterOutput['finance']['budget']['transactionCategories'][0]
+import type { RouterOutput } from '~/lib/trpc';
+
+import { trpc } from '~/lib/trpc';
+
+export type TransactionCategory = RouterOutput['finance']['budget']['transactionCategories'][0];
 
 export default function BudgetCategoriesSetup() {
-  const navigate = useNavigate()
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
+  const navigate = useNavigate();
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
 
   const { data: transactionCategories, isLoading: isLoadingTransactionCategories } =
-    trpc.finance.budget.transactionCategories.useQuery()
+    trpc.finance.budget.transactionCategories.useQuery();
 
-  const bulkCreateMutation = trpc.finance.budget.bulkCreateFromTransactions.useMutation()
+  const bulkCreateMutation = trpc.finance.budget.bulkCreateFromTransactions.useMutation();
 
-  const isAllSelected = selectedCategories.size === (transactionCategories?.length || 0)
+  const isAllSelected = selectedCategories.size === (transactionCategories?.length || 0);
 
   const handleSetupFromTransactions = async () => {
-    if (selectedCategories.size === 0) return
+    if (selectedCategories.size === 0) return;
 
     try {
       const categoriesToCreate = Array.from(selectedCategories).map((categoryName) => {
-        const transactionCategory = transactionCategories?.find((tc) => tc.name === categoryName)
+        const transactionCategory = transactionCategories?.find((tc) => tc.name === categoryName);
         return {
           name: categoryName,
           type: 'expense' as const,
           averageMonthlyExpense: (transactionCategory?.suggestedBudget || 0).toString(),
-        }
-      })
+        };
+      });
 
-      await bulkCreateMutation.mutateAsync({ categories: categoriesToCreate })
+      await bulkCreateMutation.mutateAsync({ categories: categoriesToCreate });
 
       // Navigate back to budget tracking after successful creation
-      navigate('/budget/tracking')
+      navigate('/budget/tracking');
     } catch (error) {
-      console.error('Failed to create categories from transactions:', error)
+      console.error('Failed to create categories from transactions:', error);
     }
-  }
+  };
 
   const toggleTransactionCategory = (categoryName: string) => {
-    const newSelected = new Set(selectedCategories)
+    const newSelected = new Set(selectedCategories);
     if (newSelected.has(categoryName)) {
-      newSelected.delete(categoryName)
+      newSelected.delete(categoryName);
     } else {
-      newSelected.add(categoryName)
+      newSelected.add(categoryName);
     }
-    setSelectedCategories(newSelected)
-  }
+    setSelectedCategories(newSelected);
+  };
 
   const handleSelectAll = () => {
-    setSelectedCategories(new Set(transactionCategories?.map((tc) => tc.name) || []))
-  }
+    setSelectedCategories(new Set(transactionCategories?.map((tc) => tc.name) || []));
+  };
 
   const handleDeselectAll = () => {
-    setSelectedCategories(new Set())
-  }
+    setSelectedCategories(new Set());
+  };
 
   if (isLoadingTransactionCategories) {
     return (
@@ -73,7 +75,7 @@ export default function BudgetCategoriesSetup() {
           <p className="mt-2 text-sm text-gray-600">Loading transaction categories...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -192,5 +194,5 @@ export default function BudgetCategoriesSetup() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

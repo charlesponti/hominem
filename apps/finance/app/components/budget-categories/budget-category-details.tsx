@@ -1,36 +1,38 @@
-import { Progress } from '@hominem/ui/components/ui/progress'
-import { useMemo } from 'react'
-import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
-import { formatCurrency } from '~/lib/number.utils'
-import { trpc } from '~/lib/trpc'
-import type { BudgetCategoryWithSpending } from '~/lib/types/budget.types'
+import { Progress } from '@hominem/ui/components/ui/progress';
+import { useMemo } from 'react';
+
+import type { BudgetCategoryWithSpending } from '~/lib/types/budget.types';
+
+import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
+import { formatCurrency } from '~/lib/number.utils';
+import { trpc } from '~/lib/trpc';
 
 // Utility functions for budget calculations
-const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 function getBudgetStatus(percentageSpent: number): 'on-track' | 'warning' | 'over-budget' {
-  if (percentageSpent > 100) return 'over-budget'
-  if (percentageSpent > 90) return 'warning'
-  return 'on-track'
+  if (percentageSpent > 100) return 'over-budget';
+  if (percentageSpent > 90) return 'warning';
+  return 'on-track';
 }
 
 function getStatusColor(status: 'on-track' | 'warning' | 'over-budget') {
   switch (status) {
     case 'on-track':
-      return '#10b981' // emerald-500
+      return '#10b981'; // emerald-500
     case 'warning':
-      return '#f59e0b' // amber-500
+      return '#f59e0b'; // amber-500
     case 'over-budget':
-      return '#ef4444' // red-500
+      return '#ef4444'; // red-500
   }
 }
 
 function getChartColor(index: number) {
-  return CHART_COLORS[index % CHART_COLORS.length] || '#0088FE'
+  return CHART_COLORS[index % CHART_COLORS.length] || '#0088FE';
 }
 
 interface BudgetCategoryDetailsProps {
-  selectedMonthYear: string
+  selectedMonthYear: string;
 }
 
 export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetailsProps) {
@@ -38,31 +40,35 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
     data: categories,
     isLoading: isLoadingCategories,
     error: errorCategories,
-  } = trpc.finance.budget.categories.list.useQuery()
+  } = trpc.finance.budget.categories.list.useQuery();
 
-  const { stats, isLoading: isLoadingStats, error: errorStats } = useMonthlyStats(selectedMonthYear)
+  const {
+    stats,
+    isLoading: isLoadingStats,
+    error: errorStats,
+  } = useMonthlyStats(selectedMonthYear);
 
   const budgetDataWithActuals: BudgetCategoryWithSpending[] = useMemo(() => {
-    if (!categories || !stats) return []
+    if (!categories || !stats) return [];
 
     // Calculate total expenses for allocation percentage (only expense categories)
     const totalExpenses = categories
       .filter((category) => category.type === 'expense')
       .reduce((sum, category) => {
-        return sum + Number.parseFloat(category.averageMonthlyExpense || '0')
-      }, 0)
+        return sum + Number.parseFloat(category.averageMonthlyExpense || '0');
+      }, 0);
 
     return categories.map((category, index) => {
       const actualSpending =
         stats.categorySpending.find(
-          (cat) => cat.name?.toLowerCase() === category.name.toLowerCase()
-        )?.amount || 0
+          (cat) => cat.name?.toLowerCase() === category.name.toLowerCase(),
+        )?.amount || 0;
 
-      const budgetAmount = Number.parseFloat(category.averageMonthlyExpense || '0')
-      const percentageSpent = budgetAmount > 0 ? (actualSpending / budgetAmount) * 100 : 0
-      const allocationPercentage = totalExpenses > 0 ? (budgetAmount / totalExpenses) * 100 : 0
-      const variance = budgetAmount - actualSpending
-      const status = getBudgetStatus(percentageSpent)
+      const budgetAmount = Number.parseFloat(category.averageMonthlyExpense || '0');
+      const percentageSpent = budgetAmount > 0 ? (actualSpending / budgetAmount) * 100 : 0;
+      const allocationPercentage = totalExpenses > 0 ? (budgetAmount / totalExpenses) * 100 : 0;
+      const variance = budgetAmount - actualSpending;
+      const status = getBudgetStatus(percentageSpent);
 
       return {
         ...category,
@@ -76,9 +82,9 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
         color: category.color || getChartColor(index),
         status,
         statusColor: getStatusColor(status),
-      }
-    })
-  }, [categories, stats])
+      };
+    });
+  }, [categories, stats]);
 
   if (isLoadingCategories || isLoadingStats) {
     return (
@@ -86,7 +92,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
         <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
         <p className="mt-2 text-sm text-gray-600">Loading category details...</p>
       </div>
-    )
+    );
   }
 
   if (errorCategories || errorStats) {
@@ -101,7 +107,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!categories || categories.length === 0) {
@@ -114,7 +120,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   if (budgetDataWithActuals.length === 0) {
@@ -127,7 +133,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -204,5 +210,5 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
         </div>
       ))}
     </div>
-  )
+  );
 }

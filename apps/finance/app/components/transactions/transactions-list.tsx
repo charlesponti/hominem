@@ -1,25 +1,27 @@
-import { CreditCard, DollarSign, Tag } from 'lucide-react'
+import { CreditCard, DollarSign, Tag } from 'lucide-react';
+
 import type {
   useFinanceAccountsWithMap,
   useFinanceTransactions,
-} from '~/lib/hooks/use-finance-data'
-import { cn } from '~/lib/utils'
+} from '~/lib/hooks/use-finance-data';
 
-type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number]
-type AccountsMap = ReturnType<typeof useFinanceAccountsWithMap>['accountsMap']
-type AccountFromMap = NonNullable<AccountsMap> extends Map<string, infer T> ? T : never
+import { cn } from '~/lib/utils';
+
+type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number];
+type AccountsMap = ReturnType<typeof useFinanceAccountsWithMap>['accountsMap'];
+type AccountFromMap = NonNullable<AccountsMap> extends Map<string, infer T> ? T : never;
 
 type TransactionsListProps = {
-  loading: boolean
-  error: string | null
-  transactions: TransactionFromAPI[]
-  accountsMap: AccountsMap
-}
+  loading: boolean;
+  error: string | null;
+  transactions: TransactionFromAPI[];
+  accountsMap: AccountsMap;
+};
 
 function TransactionAmount({ transaction }: { transaction: TransactionFromAPI }) {
-  const amount = Number.parseFloat(transaction.amount)
-  const isNegative = amount < 0
-  const displayAmount = Math.abs(amount).toFixed(2)
+  const amount = Number.parseFloat(transaction.amount);
+  const isNegative = amount < 0;
+  const displayAmount = Math.abs(amount).toFixed(2);
 
   return (
     <div className="text-right">
@@ -27,15 +29,15 @@ function TransactionAmount({ transaction }: { transaction: TransactionFromAPI })
         ${displayAmount}
       </div>
     </div>
-  )
+  );
 }
 
 function TransactionMetadata({
   transaction,
   account,
 }: {
-  transaction: TransactionFromAPI
-  account?: AccountFromMap
+  transaction: TransactionFromAPI;
+  account?: AccountFromMap;
 }) {
   return (
     <div className="flex justify-between text-xs text-muted-foreground">
@@ -52,15 +54,15 @@ function TransactionMetadata({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function TransactionListItem({
   transaction,
   account,
 }: {
-  transaction: TransactionFromAPI
-  account?: AccountFromMap
+  transaction: TransactionFromAPI;
+  account?: AccountFromMap;
 }) {
   return (
     <div className="group border-b border-gray-200 py-4 px-2 space-y-2">
@@ -72,7 +74,7 @@ function TransactionListItem({
       </div>
       <TransactionMetadata transaction={transaction} account={account} />
     </div>
-  )
+  );
 }
 
 export function TransactionsList({
@@ -105,7 +107,7 @@ export function TransactionsList({
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -113,7 +115,7 @@ export function TransactionsList({
       <div className="p-8 text-center border border-red-200 bg-red-50 rounded-lg max-w-4xl mx-auto">
         <div className="text-red-600 font-medium">{error}</div>
       </div>
-    )
+    );
   }
 
   if (transactions.length === 0) {
@@ -127,7 +129,7 @@ export function TransactionsList({
           <div className="text-sm text-gray-500">Try adjusting your filters or date range</div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -140,5 +142,5 @@ export function TransactionsList({
         />
       ))}
     </div>
-  )
+  );
 }

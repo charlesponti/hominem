@@ -1,91 +1,92 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { Label } from '@hominem/ui/components/ui/label'
+} from '@hominem/ui/components/ui/card';
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { Input } from '@hominem/ui/input'
-import { AlertCircle, Calendar, CheckCircle, Loader2 } from 'lucide-react'
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync'
+} from '@hominem/ui/components/ui/select';
+import { Input } from '@hominem/ui/input';
+import { AlertCircle, Calendar, CheckCircle, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+
+import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync';
 
 interface CalendarSyncProps {
-  userId: string
-  hasGoogleAccount: boolean
+  userId: string;
+  hasGoogleAccount: boolean;
 }
 
 export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
-  const [selectedCalendar, setSelectedCalendar] = useState('primary')
-  const [calendars, setCalendars] = useState<Array<{ id: string; summary: string }>>([])
+  const [selectedCalendar, setSelectedCalendar] = useState('primary');
+  const [calendars, setCalendars] = useState<Array<{ id: string; summary: string }>>([]);
   const [timeRange, setTimeRange] = useState({
     start: '',
     end: '',
-  })
-  const startDateId = useId()
-  const endDateId = useId()
-  const hasLoadedCalendars = useRef(false)
+  });
+  const startDateId = useId();
+  const endDateId = useId();
+  const hasLoadedCalendars = useRef(false);
 
-  const { syncCalendar, getCalendars, isLoading, result } = useGoogleCalendarSync()
+  const { syncCalendar, getCalendars, isLoading, result } = useGoogleCalendarSync();
 
   const loadCalendars = useCallback(async () => {
     if (hasLoadedCalendars.current) {
-      return
+      return;
     }
     try {
-      hasLoadedCalendars.current = true
-      const calendarList = await getCalendars()
-      setCalendars(calendarList)
+      hasLoadedCalendars.current = true;
+      const calendarList = await getCalendars();
+      setCalendars(calendarList);
     } catch (error) {
-      console.error('Error loading calendars:', error)
-      hasLoadedCalendars.current = false
+      console.error('Error loading calendars:', error);
+      hasLoadedCalendars.current = false;
     }
-  }, [getCalendars])
+  }, [getCalendars]);
 
   // Load available calendars when component mounts or when Google account is connected
   useEffect(() => {
     if (hasGoogleAccount) {
       if (!hasLoadedCalendars.current) {
-        loadCalendars()
+        loadCalendars();
       }
     } else {
       // Reset when Google account is disconnected
-      hasLoadedCalendars.current = false
-      setCalendars([])
+      hasLoadedCalendars.current = false;
+      setCalendars([]);
     }
-  }, [hasGoogleAccount, loadCalendars])
+  }, [hasGoogleAccount, loadCalendars]);
 
   const handleSync = async () => {
     if (!(hasGoogleAccount && userId)) {
-      return
+      return;
     }
 
     await syncCalendar({
       calendarId: selectedCalendar,
       timeMin: timeRange.start || undefined,
       timeMax: timeRange.end || undefined,
-    })
-  }
+    });
+  };
 
   const setDefaultTimeRange = () => {
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
     setTimeRange({
       start: startOfMonth.toISOString().split('T')[0] ?? '',
       end: endOfMonth.toISOString().split('T')[0] ?? '',
-    })
-  }
+    });
+  };
 
   return (
     <Card className="w-full max-w-2xl">
@@ -109,8 +110,8 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
               className="mt-4"
               onClick={() => {
                 window.location.href = `/auth/google?return_to=${encodeURIComponent(
-                  window.location.pathname
-                )}`
+                  window.location.pathname,
+                )}`;
               }}
             >
               Connect Google Account
@@ -232,5 +233,5 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

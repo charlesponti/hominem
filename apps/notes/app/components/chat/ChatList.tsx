@@ -1,22 +1,23 @@
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
-import { formatChatDate } from '@hominem/utils/dates'
-import { MessageSquare, Search, Trash2 } from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { Link as RouterLink, useNavigate, useParams } from 'react-router'
-import { useDeleteChat } from '~/lib/hooks/use-delete-chat'
-import { trpc } from '~/lib/trpc/client'
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/input';
+import { formatChatDate } from '@hominem/utils/dates';
+import { MessageSquare, Search, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router';
+
+import { useDeleteChat } from '~/lib/hooks/use-delete-chat';
+import { trpc } from '~/lib/trpc/client';
 
 interface ChatListProps {
-  userId: string
-  onChatSelect?: () => void
-  showSearch?: boolean
+  userId: string;
+  onChatSelect?: () => void;
+  showSearch?: boolean;
 }
 
 export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListProps) {
-  const navigate = useNavigate()
-  const { chatId: currentChatId } = useParams()
-  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate();
+  const { chatId: currentChatId } = useParams();
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Get chats for the user
   const chatsQuery = trpc.chats.getUserChats.useQuery(
@@ -25,46 +26,46 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
       enabled: !!userId && userId !== 'anonymous',
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-    }
-  )
-  const { deleteChat } = useDeleteChat(userId)
+    },
+  );
+  const { deleteChat } = useDeleteChat(userId);
 
-  const chats = chatsQuery.data || []
-  const isChatsLoading = chatsQuery.isLoading
+  const chats = chatsQuery.data || [];
+  const isChatsLoading = chatsQuery.isLoading;
 
   // Filter chats based on search query if search is enabled
   const filteredChats =
     showSearch && searchQuery
       ? chats.filter((chat) => chat.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      : chats
+      : chats;
 
   const handleDeleteChat = useCallback(
     async (chatId: string, e: React.MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault();
+      e.stopPropagation();
 
       if (window.confirm('Are you sure you want to delete this chat?')) {
-        deleteChat({ chatId })
+        deleteChat({ chatId });
         if (currentChatId === chatId) {
-          navigate('/chat')
+          navigate('/chat');
         }
       }
     },
-    [deleteChat, currentChatId, navigate]
-  )
+    [deleteChat, currentChatId, navigate],
+  );
 
   const handleChatSelect = useCallback(() => {
-    onChatSelect?.()
-  }, [onChatSelect])
+    onChatSelect?.();
+  }, [onChatSelect]);
 
   const renderChatList = () => {
     if (isChatsLoading) {
-      return <div className="p-4 text-center text-muted-foreground">Loading chats...</div>
+      return <div className="p-4 text-center text-muted-foreground">Loading chats...</div>;
     }
 
     if (filteredChats.length === 0) {
-      const message = showSearch && searchQuery ? 'No chats found' : 'No chats yet'
-      return <div className="p-4 text-center text-muted-foreground">{message}</div>
+      const message = showSearch && searchQuery ? 'No chats found' : 'No chats yet';
+      return <div className="p-4 text-center text-muted-foreground">{message}</div>;
     }
 
     return (
@@ -98,11 +99,11 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
           </RouterLink>
         ))}
       </div>
-    )
-  }
+    );
+  };
 
   if (!showSearch) {
-    return <div className="flex-1 overflow-y-auto">{renderChatList()}</div>
+    return <div className="flex-1 overflow-y-auto">{renderChatList()}</div>;
   }
 
   return (
@@ -123,5 +124,5 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
       {/* Chat List - Scrollable */}
       <div className="flex-1 overflow-y-auto">{renderChatList()}</div>
     </>
-  )
+  );
 }

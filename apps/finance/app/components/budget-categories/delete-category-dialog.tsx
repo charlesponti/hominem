@@ -7,14 +7,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@hominem/ui/components/ui/alert-dialog'
-import type { DisplayBudgetCategory } from './budget-category-card'
+} from '@hominem/ui/components/ui/alert-dialog';
+
+import type { DisplayBudgetCategory } from './budget-category-card';
 
 interface DeleteCategoryDialogProps {
-  deletingCategory: DisplayBudgetCategory | null
-  onOpenChange: (open: boolean) => void
-  onDelete: () => void
-  isLoading: boolean
+  deletingCategory: DisplayBudgetCategory | null;
+  onOpenChange: (open: boolean) => void;
+  onDelete: () => void;
+  isLoading: boolean;
 }
 
 export function DeleteCategoryDialog({
@@ -45,5 +46,5 @@ export function DeleteCategoryDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

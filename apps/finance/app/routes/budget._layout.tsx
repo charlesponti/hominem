@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router'
+import { Outlet } from 'react-router';
 
 export default function BudgetLayout() {
   return (
@@ -9,5 +9,5 @@ export default function BudgetLayout() {
         </div>
       </main>
     </div>
-  )
+  );
 }

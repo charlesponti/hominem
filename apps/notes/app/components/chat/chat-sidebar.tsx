@@ -1,54 +1,55 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { Button } from '@hominem/ui/button'
-import { Plus, User } from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
-import { ChatList } from '~/components/chat/ChatList'
-import { cn } from '~/lib/utils'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
+import { Plus, User } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
+
+import { ChatList } from '~/components/chat/ChatList';
+import { cn } from '~/lib/utils';
 
 interface ChatSidebarProps {
-  userId?: string
-  onNewChat?: () => void
-  isMobile?: boolean
-  onClose?: () => void
+  userId?: string;
+  onNewChat?: () => void;
+  isMobile?: boolean;
+  onClose?: () => void;
 }
 
 export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: ChatSidebarProps) {
-  const location = useLocation()
-  const pathname = location.pathname
-  const navigate = useNavigate()
-  const { signIn } = useSupabaseAuthContext()
-  const [isSigningIn, setIsSigningIn] = useState(false)
+  const location = useLocation();
+  const pathname = location.pathname;
+  const navigate = useNavigate();
+  const { signIn } = useSupabaseAuthContext();
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
-  const isLoggedIn = !!userId
+  const isLoggedIn = !!userId;
 
   const handleNewChatClick = useCallback(() => {
     if (onNewChat) {
-      onNewChat()
+      onNewChat();
     } else {
-      navigate('/chat')
+      navigate('/chat');
     }
     if (isMobile && onClose) {
-      onClose()
+      onClose();
     }
-  }, [onNewChat, navigate, isMobile, onClose])
+  }, [onNewChat, navigate, isMobile, onClose]);
 
   const handleSignIn = async () => {
     try {
-      setIsSigningIn(true)
-      await signIn()
+      setIsSigningIn(true);
+      await signIn();
     } catch (error) {
-      console.error('Sign in failed:', error)
+      console.error('Sign in failed:', error);
     } finally {
-      setIsSigningIn(false)
+      setIsSigningIn(false);
     }
-  }
+  };
 
   const handleNavigation = () => {
     if (isMobile && onClose) {
-      onClose()
+      onClose();
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-full bg-muted/10">
@@ -90,7 +91,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
                 to="/"
                 className={cn(
                   'block p-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted/50',
-                  pathname === '/' ? 'bg-muted text-foreground' : 'text-muted-foreground'
+                  pathname === '/' ? 'bg-muted text-foreground' : 'text-muted-foreground',
                 )}
                 onClick={handleNavigation}
               >
@@ -119,5 +120,5 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
         )}
       </div>
     </div>
-  )
+  );
 }

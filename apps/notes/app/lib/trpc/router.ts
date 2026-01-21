@@ -1,5 +1,5 @@
-import { router } from './context'
+import { router } from './context';
 
-export const appRouter = router({})
+export const appRouter = router({});
 
-export type AppRouter = typeof appRouter
+export type AppRouter = typeof appRouter;

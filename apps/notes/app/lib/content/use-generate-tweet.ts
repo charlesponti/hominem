@@ -1,47 +1,48 @@
-import { useState } from 'react'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
-import { trpc } from '~/lib/trpc'
+import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { useState } from 'react';
+
+import { trpc } from '~/lib/trpc';
 
 interface GenerateTweetParams {
-  content: string
-  strategyType: 'default' | 'custom'
-  strategy: string
+  content: string;
+  strategyType: 'default' | 'custom';
+  strategy: string;
 }
 
 export function useGenerateTweet() {
-  const [generatedTweet, setGeneratedTweet] = useState('')
-  const [isEditing, setIsEditing] = useState(false)
-  const { toast } = useToast()
+  const [generatedTweet, setGeneratedTweet] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
 
   const generateMutation = trpc.tweet.generate.useMutation({
     onSuccess: (data) => {
-      setGeneratedTweet(data.text)
+      setGeneratedTweet(data.text);
     },
     onError: (error) => {
       toast({
         title: 'Error generating tweet',
         description: error.message,
         variant: 'destructive',
-      })
+      });
     },
-  })
+  });
 
   const generateTweet = (params: GenerateTweetParams) => {
-    generateMutation.mutate(params)
-  }
+    generateMutation.mutate(params);
+  };
 
   const regenerateTweet = (params: GenerateTweetParams) => {
-    generateMutation.mutate(params)
-  }
+    generateMutation.mutate(params);
+  };
 
   const updateTweet = (text: string) => {
-    setGeneratedTweet(text)
-  }
+    setGeneratedTweet(text);
+  };
 
   const resetTweet = () => {
-    setGeneratedTweet('')
-    setIsEditing(false)
-  }
+    setGeneratedTweet('');
+    setIsEditing(false);
+  };
 
   return {
     generateTweet,
@@ -52,5 +53,5 @@ export function useGenerateTweet() {
     isEditing,
     setIsEditing,
     isGenerating: generateMutation.isPending,
-  }
+  };
 }

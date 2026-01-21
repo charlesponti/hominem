@@ -1,45 +1,46 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent } from '@hominem/ui/card'
-import { PageContainer } from '@hominem/ui/components/layout/page-container'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
-import { Eye, FileText, Plus, Trash2 } from 'lucide-react'
-import { Link } from 'react-router'
-import { Loading } from '~/components/loading'
-import { useContentStrategies, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
-import i18n from '~/lib/i18n'
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent } from '@hominem/ui/card';
+import { PageContainer } from '@hominem/ui/components/layout/page-container';
+import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { Eye, FileText, Plus, Trash2 } from 'lucide-react';
+import { Link } from 'react-router';
+
+import { Loading } from '~/components/loading';
+import { useContentStrategies, useDeleteContentStrategy } from '~/hooks/use-content-strategies';
+import i18n from '~/lib/i18n';
 
 export default function SavedContentStrategiesPage() {
-  const { toast } = useToast()
-  const { strategies: savedStrategies, isLoading: loadingStrategies } = useContentStrategies()
-  const { deleteStrategy, isLoading: isDeleting } = useDeleteContentStrategy()
+  const { toast } = useToast();
+  const { strategies: savedStrategies, isLoading: loadingStrategies } = useContentStrategies();
+  const { deleteStrategy, isLoading: isDeleting } = useDeleteContentStrategy();
 
   const handleDeleteStrategy = async (strategyId: string) => {
     if (!confirm('Are you sure you want to delete this strategy? This action cannot be undone.')) {
-      return
+      return;
     }
 
     try {
-      await deleteStrategy({ id: strategyId })
+      await deleteStrategy({ id: strategyId });
       toast({
         title: 'Strategy Deleted',
         description: 'The content strategy has been deleted successfully.',
-      })
+      });
     } catch (error) {
-      console.error('Failed to delete strategy:', error)
+      console.error('Failed to delete strategy:', error);
       toast({
         variant: 'destructive',
         title: 'Delete Failed',
         description: 'Unable to delete the strategy. Please try again.',
-      })
+      });
     }
-  }
+  };
 
   if (loadingStrategies) {
     return (
       <PageContainer>
         <Loading text="Loading saved strategies..." />
       </PageContainer>
-    )
+    );
   }
 
   return (
@@ -108,5 +109,5 @@ export default function SavedContentStrategiesPage() {
         )}
       </div>
     </PageContainer>
-  )
+  );
 }

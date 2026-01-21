@@ -1,17 +1,18 @@
-import { useEffect } from 'react'
-import { isMac } from '~/lib/utils/platform'
+import { useEffect } from 'react';
+
+import { isMac } from '~/lib/utils/platform';
 
 interface ChatKeyboardShortcutsOptions {
-  onFocusInput?: () => void
-  onScrollToTop?: () => void
-  onScrollToBottom?: () => void
-  onSearch?: () => void
-  enabled?: boolean
+  onFocusInput?: () => void;
+  onScrollToTop?: () => void;
+  onScrollToBottom?: () => void;
+  onSearch?: () => void;
+  enabled?: boolean;
 }
 
 const isInput = (target: HTMLElement) => {
-  return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
-}
+  return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+};
 
 export function useChatKeyboardShortcuts({
   onFocusInput,
@@ -21,59 +22,59 @@ export function useChatKeyboardShortcuts({
   enabled = true,
 }: ChatKeyboardShortcutsOptions) {
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Ignore if user is typing in an input, textarea, or contenteditable
-      const target = event.target as HTMLElement
+      const target = event.target as HTMLElement;
 
       if (isInput(target)) {
         // Allow Escape to work even in inputs
         if (event.key === 'Escape') {
-          target.blur()
+          target.blur();
         }
-        return
+        return;
       }
 
-      const modifier = isMac() ? event.metaKey : event.ctrlKey
-      const key = event.key.toLowerCase()
+      const modifier = isMac() ? event.metaKey : event.ctrlKey;
+      const key = event.key.toLowerCase();
 
-      event.preventDefault()
+      event.preventDefault();
 
       // Cmd/Ctrl + K: Focus input
       if (modifier && key === 'k') {
-        onFocusInput?.()
-        return
+        onFocusInput?.();
+        return;
       }
 
       // Cmd/Ctrl + /: Show shortcuts help
       if (modifier && key === '/') {
         // Could show a shortcuts modal here
-        return
+        return;
       }
 
       // Cmd/Ctrl + F: Search
       if (modifier && key === 'f') {
-        onSearch?.()
-        return
+        onSearch?.();
+        return;
       }
 
       // Cmd/Ctrl + Arrow Up Scroll to top
       if (modifier && key === 'arrowup') {
-        onScrollToTop?.()
-        return
+        onScrollToTop?.();
+        return;
       }
 
       // Cmd/Ctrl + Arrow Down: Scroll to bottom
       if (modifier && key === 'arrowdown') {
-        onScrollToBottom?.()
-        return
+        onScrollToBottom?.();
+        return;
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [enabled, onFocusInput, onScrollToTop, onScrollToBottom, onSearch])
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [enabled, onFocusInput, onScrollToTop, onScrollToBottom, onSearch]);
 }

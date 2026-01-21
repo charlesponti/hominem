@@ -1,9 +1,10 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { adjustDateRange, formatMonthYear } from '@hominem/utils/dates'
-import type { Dispatch, SetStateAction } from 'react'
-import { useId, useMemo } from 'react'
+import type { Dispatch, SetStateAction } from 'react';
+
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import { adjustDateRange, formatMonthYear } from '@hominem/utils/dates';
+import { useId, useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -15,22 +16,23 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
-import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
-import { formatCurrency } from '~/lib/number.utils'
+} from 'recharts';
 
-const INCOME_COLOR = '#ABF4B6'
-const EXPENSES_COLOR = '#ef4444'
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
+import { formatCurrency } from '~/lib/number.utils';
+
+const INCOME_COLOR = '#ABF4B6';
+const EXPENSES_COLOR = '#ef4444';
 
 interface AnalyticsChartDisplayProps {
-  chartType: 'area' | 'bar'
-  setChartType: Dispatch<SetStateAction<'area' | 'bar'>>
-  dateFrom?: Date
-  dateTo?: Date
-  selectedAccount?: string
-  selectedCategory?: string
-  groupBy?: 'month' | 'week' | 'day'
-  compareToPrevious?: boolean
+  chartType: 'area' | 'bar';
+  setChartType: Dispatch<SetStateAction<'area' | 'bar'>>;
+  dateFrom?: Date;
+  dateTo?: Date;
+  selectedAccount?: string;
+  selectedCategory?: string;
+  groupBy?: 'month' | 'week' | 'day';
+  compareToPrevious?: boolean;
 }
 
 export function AnalyticsChartDisplay({
@@ -44,11 +46,11 @@ export function AnalyticsChartDisplay({
   compareToPrevious = false,
 }: AnalyticsChartDisplayProps) {
   // Adjust date range to ensure full month is included
-  const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo)
+  const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo);
 
   // Generate unique IDs for gradient elements
-  const incomeGradientId = useId()
-  const expensesGradientId = useId()
+  const incomeGradientId = useId();
+  const expensesGradientId = useId();
 
   const {
     data: timeSeriesData,
@@ -62,18 +64,18 @@ export function AnalyticsChartDisplay({
     includeStats: false,
     compareToPrevious,
     groupBy,
-  })
+  });
 
   const incomeExpensesChartData = useMemo(() => {
     if (!timeSeriesData?.data) {
-      return []
+      return [];
     }
     return timeSeriesData.data.map((point) => ({
       name: formatMonthYear(point.date),
       Income: point.income,
       Expenses: Math.abs(point.expenses),
-    }))
-  }, [timeSeriesData?.data])
+    }));
+  }, [timeSeriesData?.data]);
 
   if (isLoading) {
     return (
@@ -95,7 +97,7 @@ export function AnalyticsChartDisplay({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -112,7 +114,7 @@ export function AnalyticsChartDisplay({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!incomeExpensesChartData.length) {
@@ -129,7 +131,7 @@ export function AnalyticsChartDisplay({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -219,5 +221,5 @@ export function AnalyticsChartDisplay({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

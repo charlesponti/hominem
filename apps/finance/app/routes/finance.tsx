@@ -1,44 +1,45 @@
-import { useSort } from '@hominem/ui/hooks'
-import { useEffect, useState } from 'react'
-import { PaginationControls } from '~/components/finance/pagination-controls'
-import { TransactionFilters } from '~/components/finance/transaction-filters'
-import { TransactionsList } from '~/components/transactions/transactions-list'
+import { useSort } from '@hominem/ui/hooks';
+import { useEffect, useState } from 'react';
+
+import { PaginationControls } from '~/components/finance/pagination-controls';
+import { TransactionFilters } from '~/components/finance/transaction-filters';
+import { TransactionsList } from '~/components/transactions/transactions-list';
 import {
   type FilterArgs,
   useFinanceAccountsWithMap,
   useFinanceTransactions,
-} from '~/lib/hooks/use-finance-data'
-import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
+} from '~/lib/hooks/use-finance-data';
+import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
 
 export default function TransactionsPage() {
-  const { selectedAccount } = useSelectedAccount()
-  const [currentFilters, setCurrentFilters] = useState<FilterArgs>({})
-  const [searchValue, setSearchValue] = useState('')
-  const [page, setPage] = useState(0)
-  const [limit] = useState(25)
+  const { selectedAccount } = useSelectedAccount();
+  const [currentFilters, setCurrentFilters] = useState<FilterArgs>({});
+  const [searchValue, setSearchValue] = useState('');
+  const [page, setPage] = useState(0);
+  const [limit] = useState(25);
 
   const { sortOptions, addSortOption, updateSortOption, removeSortOption } = useSort({
     initialSortOptions: [{ field: 'date', direction: 'desc' }],
-  })
+  });
 
   useEffect(() => {
     setCurrentFilters((prev: FilterArgs) => ({
       ...prev,
       description: searchValue || undefined,
-    }))
-  }, [searchValue])
+    }));
+  }, [searchValue]);
 
   const {
     accountsMap,
     isLoading: accountsLoading,
     error: accountsError,
     refetch: refetchAccounts,
-  } = useFinanceAccountsWithMap()
+  } = useFinanceAccountsWithMap();
 
   const filters = {
     ...currentFilters,
     accountId: selectedAccount === 'all' ? undefined : selectedAccount,
-  }
+  };
 
   const {
     transactions,
@@ -51,17 +52,17 @@ export default function TransactionsPage() {
     sortOptions,
     page,
     limit,
-  })
+  });
 
-  const loading = accountsLoading || transactionsLoading
-  const error = accountsError || transactionsError
+  const loading = accountsLoading || transactionsLoading;
+  const error = accountsError || transactionsError;
 
   const refreshData = () => {
-    refetchAccounts()
-    refetchTransactions()
-  }
+    refetchAccounts();
+    refetchTransactions();
+  };
 
-  const totalPages = limit > 0 ? Math.ceil(totalTransactions / limit) : 0
+  const totalPages = limit > 0 ? Math.ceil(totalTransactions / limit) : 0;
 
   return (
     <>
@@ -112,5 +113,5 @@ export default function TransactionsPage() {
         </>
       )}
     </>
-  )
+  );
 }

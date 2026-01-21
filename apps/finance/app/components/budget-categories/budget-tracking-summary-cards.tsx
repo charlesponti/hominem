@@ -1,19 +1,20 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Progress } from '@hominem/ui/components/ui/progress'
-import { Target, TrendingDown, TrendingUp } from 'lucide-react'
-import { formatCurrency } from '~/lib/number.utils'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Progress } from '@hominem/ui/components/ui/progress';
+import { Target, TrendingDown, TrendingUp } from 'lucide-react';
+
+import { formatCurrency } from '~/lib/number.utils';
 
 interface BudgetTrackingSummaryCardsProps {
-  totalAllocated: number
-  totalActual: number
+  totalAllocated: number;
+  totalActual: number;
 }
 
 export function BudgetTrackingSummaryCards({
   totalAllocated,
   totalActual,
 }: BudgetTrackingSummaryCardsProps) {
-  const variance = totalActual - totalAllocated
-  const budgetUsagePercentage = totalAllocated > 0 ? (totalActual / totalAllocated) * 100 : 0
+  const variance = totalActual - totalAllocated;
+  const budgetUsagePercentage = totalAllocated > 0 ? (totalActual / totalAllocated) * 100 : 0;
 
   return (
     <div className="grid gap-6 md:grid-cols-4">
@@ -74,5 +75,5 @@ export function BudgetTrackingSummaryCards({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,20 +1,22 @@
-import type { FileStatus } from '@hominem/utils/types'
-import { motion } from 'framer-motion'
-import { XIcon } from 'lucide-react'
-import { memo } from 'react'
-import { ProgressBar } from '~/components/progress-bar'
-import { cn } from '~/lib/utils'
+import type { FileStatus } from '@hominem/utils/types';
+
+import { motion } from 'framer-motion';
+import { XIcon } from 'lucide-react';
+import { memo } from 'react';
+
+import { ProgressBar } from '~/components/progress-bar';
+import { cn } from '~/lib/utils';
 
 export const FileUploadStatus = memo(function FileUploadStatus({
   uploadStatus,
 }: {
-  uploadStatus?: FileStatus
+  uploadStatus?: FileStatus;
 }) {
-  if (!uploadStatus) return null
-  const { status, error, stats } = uploadStatus
+  if (!uploadStatus) return null;
+  const { status, error, stats } = uploadStatus;
 
   if (status === 'uploading' || status === 'processing') {
-    const progress = stats?.progress
+    const progress = stats?.progress;
 
     return (
       <output className="w-full">
@@ -32,7 +34,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
               progress={progress}
               className={cn(
                 'h-2 bg-blue-100',
-                'before:bg-gradient-to-r before:from-blue-500 before:to-indigo-500'
+                'before:bg-gradient-to-r before:from-blue-500 before:to-indigo-500',
               )}
               aria-label={`${Math.round(progress)}% complete`}
             />
@@ -43,7 +45,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
           )}
         </div>
       </output>
-    )
+    );
   }
 
   if (status === 'queued') {
@@ -59,7 +61,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
           />
         </div>
       </output>
-    )
+    );
   }
 
   if (status === 'done') {
@@ -81,7 +83,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
           </motion.div>
         )}
       </output>
-    )
+    );
   }
 
   if (status === 'error') {
@@ -92,14 +94,14 @@ export const FileUploadStatus = memo(function FileUploadStatus({
           <span className="text-sm">{error}</span>
         </div>
       </output>
-    )
+    );
   }
 
-  return <output className="text-sm text-gray-500">{status}</output>
-})
+  return <output className="text-sm text-gray-500">{status}</output>;
+});
 
 const ProcessingStats = memo(function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
-  if (!stats || typeof stats !== 'object') return null
+  if (!stats || typeof stats !== 'object') return null;
 
   return (
     <dl className="mt-3 divide-y divide-gray-100">
@@ -135,21 +137,21 @@ const ProcessingStats = memo(function ProcessingStats({ stats }: { stats: FileSt
         </div>
       ) : null}
     </dl>
-  )
-})
+  );
+});
 
 const ProcessingStat = memo(function ProcessingStat({
   label,
   value,
 }: {
-  label: string
-  value?: number
+  label: string;
+  value?: number;
 }) {
-  if (value === undefined) return null
+  if (value === undefined) return null;
   return (
     <div>
       <dt className="text-sm font-medium text-gray-500">{label}</dt>
       <dd className="mt-1 text-sm text-gray-900">{value.toLocaleString()}</dd>
     </div>
-  )
-})
+  );
+});

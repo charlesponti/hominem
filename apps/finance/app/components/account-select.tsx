@@ -1,23 +1,24 @@
-import { useId } from 'react'
-import { Label } from '@hominem/ui/components/ui/label'
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
+} from '@hominem/ui/components/ui/select';
+import { useId } from 'react';
+
+import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 
 interface AccountSelectProps {
-  selectedAccount: string
-  setSelectedAccount?: (value: string) => void
-  onAccountChange?: (value: string) => void
-  isLoading?: boolean
-  placeholder?: string
-  label?: string
-  className?: string
-  showLabel?: boolean
+  selectedAccount: string;
+  setSelectedAccount?: (value: string) => void;
+  onAccountChange?: (value: string) => void;
+  isLoading?: boolean;
+  placeholder?: string;
+  label?: string;
+  className?: string;
+  showLabel?: boolean;
 }
 
 export function AccountSelect({
@@ -30,18 +31,18 @@ export function AccountSelect({
   className,
   showLabel = false,
 }: AccountSelectProps) {
-  const id = useId()
+  const id = useId();
 
   // Use external data if provided, otherwise fetch internally
-  const { data: internalAccounts, isLoading: internalLoading } = useFinanceAccounts()
-  const accounts = internalAccounts || []
-  const isLoading = externalLoading !== undefined ? externalLoading : internalLoading
+  const { data: internalAccounts, isLoading: internalLoading } = useFinanceAccounts();
+  const accounts = internalAccounts || [];
+  const isLoading = externalLoading !== undefined ? externalLoading : internalLoading;
 
   // Support both prop naming conventions for backward compatibility
-  const handleChange = onAccountChange || setSelectedAccount
+  const handleChange = onAccountChange || setSelectedAccount;
 
   if (!handleChange) {
-    throw new Error('AccountSelect requires either setSelectedAccount or onAccountChange prop')
+    throw new Error('AccountSelect requires either setSelectedAccount or onAccountChange prop');
   }
 
   const selectElement = (
@@ -68,7 +69,7 @@ export function AccountSelect({
         )}
       </SelectContent>
     </Select>
-  )
+  );
 
   if (showLabel) {
     return (
@@ -76,8 +77,8 @@ export function AccountSelect({
         <Label htmlFor={id}>{label}</Label>
         {selectElement}
       </div>
-    )
+    );
   }
 
-  return selectElement
+  return selectElement;
 }

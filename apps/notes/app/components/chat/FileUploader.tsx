@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   AlertCircle,
   CheckCircle,
@@ -9,83 +9,85 @@ import {
   Upload,
   Video,
   X,
-} from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { useFileUpload } from '~/lib/hooks/use-file-upload.js'
-import type { UploadedFile } from '~/lib/types/upload.js'
+} from 'lucide-react';
+import { useCallback, useState } from 'react';
+
+import type { UploadedFile } from '~/lib/types/upload.js';
+
+import { useFileUpload } from '~/lib/hooks/use-file-upload.js';
 
 interface FileUploaderProps {
-  onFilesUploaded?: (files: UploadedFile[]) => void
-  maxFiles?: number
-  className?: string
+  onFilesUploaded?: (files: UploadedFile[]) => void;
+  maxFiles?: number;
+  className?: string;
 }
 
 export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: FileUploaderProps) {
-  const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload()
-  const [isDragOver, setIsDragOver] = useState(false)
+  const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload();
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleFileSelect = useCallback(
     async (files: FileList | File[]) => {
       try {
-        const fileArray = Array.from(files)
+        const fileArray = Array.from(files);
         if (fileArray.length > maxFiles) {
-          console.warn(`Only ${maxFiles} files allowed. Selected: ${fileArray.length}`)
-          return
+          console.warn(`Only ${maxFiles} files allowed. Selected: ${fileArray.length}`);
+          return;
         }
-        const newFiles = await uploadFiles(files)
-        onFilesUploaded?.(newFiles)
+        const newFiles = await uploadFiles(files);
+        onFilesUploaded?.(newFiles);
       } catch (error) {
-        console.error('Upload failed:', error)
+        console.error('Upload failed:', error);
       }
     },
-    [uploadFiles, onFilesUploaded, maxFiles]
-  )
+    [uploadFiles, onFilesUploaded, maxFiles],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
-      e.preventDefault()
-      setIsDragOver(false)
+      e.preventDefault();
+      setIsDragOver(false);
 
-      const files = e.dataTransfer.files
+      const files = e.dataTransfer.files;
       if (files.length > 0) {
-        handleFileSelect(files)
+        handleFileSelect(files);
       }
     },
-    [handleFileSelect]
-  )
+    [handleFileSelect],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(true)
-  }, [])
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-  }, [])
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
 
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'image':
-        return <Image className="size-4" />
+        return <Image className="size-4" />;
       case 'audio':
-        return <Music className="size-4" />
+        return <Music className="size-4" />;
       case 'video':
-        return <Video className="size-4" />
+        return <Video className="size-4" />;
       case 'document':
-        return <FileText className="size-4" />
+        return <FileText className="size-4" />;
       default:
-        return <Paperclip className="size-4" />
+        return <Paperclip className="size-4" />;
     }
-  }
+  };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
-  }
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
+  };
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -111,15 +113,15 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
           size="sm"
           disabled={uploadState.isUploading}
           onClick={() => {
-            const input = document.createElement('input')
-            input.type = 'file'
-            input.multiple = true
-            input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt'
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt';
             input.onchange = (e) => {
-              const files = (e.target as HTMLInputElement).files
-              if (files) handleFileSelect(files)
-            }
-            input.click()
+              const files = (e.target as HTMLInputElement).files;
+              if (files) handleFileSelect(files);
+            };
+            input.click();
           }}
         >
           <Paperclip className="size-4 mr-2" />
@@ -227,5 +229,5 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
         </div>
       )}
     </div>
-  )
+  );
 }

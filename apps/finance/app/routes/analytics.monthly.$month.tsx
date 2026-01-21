@@ -1,22 +1,23 @@
-import { useParams } from 'react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
-import { formatCurrency } from '~/lib/number.utils'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import { useParams } from 'react-router';
+
+import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
+import { formatCurrency } from '~/lib/number.utils';
 
 // Helper function to format month string (e.g., "2024-05" to "May 2024")
 function formatMonthDisplay(monthStr: string | undefined) {
-  if (!monthStr) return ''
-  const [year, month] = monthStr.split('-')
-  const date = new Date(Number(year), Number(month) - 1)
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  if (!monthStr) return '';
+  const [year, month] = monthStr.split('-');
+  const date = new Date(Number(year), Number(month) - 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
 export default function MonthlyAnalyticsPage() {
-  const { month } = useParams<{ month: string }>()
-  const { stats, isLoading, error } = useMonthlyStats(month)
+  const { month } = useParams<{ month: string }>();
+  const { stats, isLoading, error } = useMonthlyStats(month);
 
-  const formattedMonth = formatMonthDisplay(month)
+  const formattedMonth = formatMonthDisplay(month);
 
   return (
     <div className="p-4 md:p-8">
@@ -119,5 +120,5 @@ export default function MonthlyAnalyticsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

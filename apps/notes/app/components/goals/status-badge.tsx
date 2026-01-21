@@ -1,12 +1,12 @@
-import type { GoalStatus } from '@hominem/services/types'
+import type { GoalStatus } from '@hominem/services/types';
 
 interface StatusBadgeProps {
-  status: string | GoalStatus
+  status: string | GoalStatus;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   // Cast the status to GoalStatus since we know it should be one of the valid values
-  const goalStatus = status as GoalStatus
+  const goalStatus = status as GoalStatus;
 
   return (
     <span
@@ -22,5 +22,5 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     >
       {goalStatus.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
     </span>
-  )
+  );
 }

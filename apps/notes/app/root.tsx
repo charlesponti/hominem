@@ -1,8 +1,9 @@
-import { SupabaseAuthProvider } from '@hominem/auth'
-import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui'
-import type { AuthChangeEvent } from '@supabase/supabase-js'
-import type React from 'react'
-import { useCallback } from 'react'
+import type { AuthChangeEvent } from '@supabase/supabase-js';
+import type React from 'react';
+
+import { SupabaseAuthProvider } from '@hominem/auth';
+import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
+import { useCallback } from 'react';
 import {
   data,
   isRouteErrorResponse,
@@ -12,16 +13,19 @@ import {
   Scripts,
   ScrollRestoration,
   useRevalidator,
-} from 'react-router'
-import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags'
-import type { Route } from './+types/root'
-import './globals.css'
-import { authConfig, getServerSession } from './lib/auth.server'
-import './lib/i18n'
-import { TRPCProvider } from './lib/trpc'
+} from 'react-router';
+
+import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags';
+
+import type { Route } from './+types/root';
+
+import './globals.css';
+import { authConfig, getServerSession } from './lib/auth.server';
+import './lib/i18n';
+import { TRPCProvider } from './lib/trpc';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { session, headers } = await getServerSession(request)
+  const { session, headers } = await getServerSession(request);
 
   return data(
     {
@@ -31,25 +35,28 @@ export async function loader({ request }: Route.LoaderArgs) {
         anonKey: authConfig.supabaseAnonKey,
       },
     },
-    { headers }
-  )
+    { headers },
+  );
 }
 
 export const meta: Route.MetaFunction = () => {
   return [
     { title: 'Animus' },
     { name: 'description', content: 'Organize and manage your personal notes and knowledge' },
-  ]
-}
+  ];
+};
 
-export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...COMMON_ICON_LINKS]
+export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...COMMON_ICON_LINKS];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1"
+        />
         <Meta />
         <Links />
       </head>
@@ -61,21 +68,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, supabaseEnv } = loaderData
-  const revalidator = useRevalidator()
+  const { session, supabaseEnv } = loaderData;
+  const revalidator = useRevalidator();
 
   const handleAuthEvent = useCallback(
     (event: AuthChangeEvent) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-        revalidator.revalidate()
+        revalidator.revalidate();
       }
     },
-    [revalidator]
-  )
+    [revalidator],
+  );
 
   return (
     <SupabaseAuthProvider
@@ -89,21 +96,21 @@ export default function App({ loaderData }: Route.ComponentProps) {
         </FeatureFlagsProvider>
       </TRPCProvider>
     </SupabaseAuthProvider>
-  )
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'Oops!'
-  let details = 'An unexpected error occurred.'
-  let stack: string | undefined
+  let message = 'Oops!';
+  let details = 'An unexpected error occurred.';
+  let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'Error'
+    message = error.status === 404 ? '404' : 'Error';
     details =
-      error.status === 404 ? 'The requested page could not be found.' : error.statusText || details
+      error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message
-    stack = error.stack
+    details = error.message;
+    stack = error.stack;
   }
 
   return (
@@ -116,5 +123,5 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
     </main>
-  )
+  );
 }

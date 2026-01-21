@@ -1,15 +1,17 @@
-import type { ContentStrategy } from '@hominem/db/schema'
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Checkbox } from '@hominem/ui/components/ui/checkbox'
-import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@hominem/ui/components/ui/tabs'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
-import { Copy, FileText, Save } from 'lucide-react'
-import { useRef, useState } from 'react'
-import { Link } from 'react-router'
-import { useCreateContentStrategy } from '~/hooks/use-content-strategies'
+import type { ContentStrategy } from '@hominem/db/schema';
+
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Checkbox } from '@hominem/ui/components/ui/checkbox';
+import { Label } from '@hominem/ui/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@hominem/ui/components/ui/tabs';
+import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { Input } from '@hominem/ui/input';
+import { Copy, FileText, Save } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Link } from 'react-router';
+
+import { useCreateContentStrategy } from '~/hooks/use-content-strategies';
 
 function ResultSkeleton() {
   return (
@@ -20,80 +22,80 @@ function ResultSkeleton() {
         <div className="h-4 bg-slate-200 rounded w-1/2" />
       </div>
     </div>
-  )
+  );
 }
 
 // Temporary type for AI API response that may have different structure
 type AIContentStrategy = {
-  topic: string
-  targetAudience: string
-  keyInsights?: string[]
+  topic: string;
+  targetAudience: string;
+  keyInsights?: string[];
   contentPlan?: {
     blog?: {
-      title: string
-      outline: { heading: string; content: string }[]
-      wordCount: number
-      seoKeywords: string[]
-      callToAction: string
-    }
+      title: string;
+      outline: { heading: string; content: string }[];
+      wordCount: number;
+      seoKeywords: string[];
+      callToAction: string;
+    };
     socialMedia?: {
-      platform: string
-      contentIdeas: string[]
-      hashtagSuggestions: string[]
-      bestTimeToPost: string
-    }[]
+      platform: string;
+      contentIdeas: string[];
+      hashtagSuggestions: string[];
+      bestTimeToPost: string;
+    }[];
     visualContent?: {
-      infographicIdeas: string[]
-      imageSearchTerms: string[]
-    }
-  }
-  monetizationIdeas?: string[]
+      infographicIdeas: string[];
+      imageSearchTerms: string[];
+    };
+  };
+  monetizationIdeas?: string[];
   competitiveAnalysis?: {
-    gaps: string
-    opportunities: string | string[] // AI might return either
-  }
-}
+    gaps: string;
+    opportunities: string | string[]; // AI might return either
+  };
+};
 
 // Type for blog outline sections
 type BlogSection = {
-  heading: string
-  content: string
-}
+  heading: string;
+  content: string;
+};
 
 // Type for social media platforms
 type SocialMediaPlatform = {
-  platform: string
-  contentIdeas: string[]
-  hashtagSuggestions: string[]
-  bestTimeToPost: string
-}
+  platform: string;
+  contentIdeas: string[];
+  hashtagSuggestions: string[];
+  bestTimeToPost: string;
+};
 
 export default function ContentStrategyPage() {
-  const { toast } = useToast()
-  const { createStrategy, isLoading: isSaving } = useCreateContentStrategy()
-  const [topic, setTopic] = useState('')
-  const [audience, setAudience] = useState('')
+  const { toast } = useToast();
+  const { createStrategy, isLoading: isSaving } = useCreateContentStrategy();
+  const [topic, setTopic] = useState('');
+  const [audience, setAudience] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([
     'blog',
     'twitter',
     'instagram',
-  ])
-  const [strategy, setStrategy] = useState<AIContentStrategy | null>(null)
-  const [loading, setLoading] = useState(false)
+  ]);
+  const [strategy, setStrategy] = useState<AIContentStrategy | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Store IDs in a ref to maintain them across renders
-  const idMapRef = useRef(new Map<string, string>())
+  const idMapRef = useRef(new Map<string, string>());
 
   // Generate a unique ID for an item
   const getUniqueId = (prefix: string, item: string | number | object) => {
-    const mapKey = `${prefix}-${typeof item === 'object' ? JSON.stringify(item) : item}`
+    const mapKey = `${prefix}-${typeof item === 'object' ? JSON.stringify(item) : item}`;
 
     if (!idMapRef.current.has(mapKey)) {
-      idMapRef.current.set(mapKey, crypto.randomUUID())
+      idMapRef.current.set(mapKey, crypto.randomUUID());
     }
 
-    return idMapRef.current.get(mapKey)
-  }
+    return idMapRef.current.get(mapKey);
+  };
 
   const platforms = [
     { id: 'blog', label: 'Blog' },
@@ -102,18 +104,18 @@ export default function ContentStrategyPage() {
     { id: 'linkedin', label: 'LinkedIn' },
     { id: 'youtube', label: 'YouTube' },
     { id: 'tiktok', label: 'TikTok' },
-  ]
+  ];
 
   const togglePlatform = (platform: string) => {
     setSelectedPlatforms((current) =>
-      current.includes(platform) ? current.filter((p) => p !== platform) : [...current, platform]
-    )
-  }
+      current.includes(platform) ? current.filter((p) => p !== platform) : [...current, platform],
+    );
+  };
 
   const generateStrategy = async () => {
-    if (!topic) return
+    if (!topic) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
       // For now, we'll use a simple mock strategy since the AI endpoint might not be available
       // In a real implementation, you'd call the AI endpoint here
@@ -160,43 +162,43 @@ export default function ContentStrategyPage() {
           gaps: 'Focus on unique perspectives and personal experiences',
           opportunities: ['Build a community', 'Create partnerships', 'Expand to new platforms'],
         },
-      }
+      };
 
-      setStrategy(mockStrategy)
+      setStrategy(mockStrategy);
       toast({
         title: 'Content Strategy Generated',
         description: 'Your AI-powered content strategy is ready!',
-      })
+      });
     } catch (error) {
-      console.error('Failed to generate content strategy:', error)
+      console.error('Failed to generate content strategy:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to generate content strategy. Please try again.',
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const copyToClipboard = async (text: string, description: string) => {
     try {
-      await navigator.clipboard.writeText(text)
+      await navigator.clipboard.writeText(text);
       toast({
         title: 'Copied!',
         description: `${description} copied to clipboard`,
-      })
+      });
     } catch (_error) {
       toast({
         variant: 'destructive',
         title: 'Copy failed',
         description: 'Unable to copy to clipboard',
-      })
+      });
     }
-  }
+  };
 
   const copyFullStrategy = async () => {
-    if (!strategy) return
+    if (!strategy) return;
 
     const fullText = `
 Content Strategy for: ${strategy.topic}
@@ -229,7 +231,7 @@ Best time to post: ${platform.bestTimeToPost}
 Content Ideas:
 ${platform.contentIdeas.map((idea) => `• ${idea}`).join('\n')}
 Hashtags: ${platform.hashtagSuggestions.join(' ')}
-`
+`,
     )
     .join('\n') || 'No social media content available'
 }
@@ -246,13 +248,13 @@ ${strategy.monetizationIdeas?.map((idea) => `• ${idea}`).join('\n') || 'No mon
 COMPETITIVE ANALYSIS:
 Content Gaps: ${strategy.competitiveAnalysis?.gaps || 'No gaps identified'}
 Opportunities: ${strategy.competitiveAnalysis?.opportunities || 'No opportunities identified'}
-    `.trim()
+    `.trim();
 
-    await copyToClipboard(fullText, 'Full content strategy')
-  }
+    await copyToClipboard(fullText, 'Full content strategy');
+  };
 
   const createNotesFromStrategy = async () => {
-    if (!strategy) return
+    if (!strategy) return;
 
     const notesContent = `
 # Content Strategy for ${strategy.topic}
@@ -281,7 +283,7 @@ ${
       (platform) =>
         `**${platform.platform.toUpperCase()}**\n- Best time to post: ${platform.bestTimeToPost}\n- Content Ideas:\n${platform.contentIdeas
           .map((idea) => `  - ${idea}`)
-          .join('\n')}\n- Hashtags: ${platform.hashtagSuggestions.join(' ')}`
+          .join('\n')}\n- Hashtags: ${platform.hashtagSuggestions.join(' ')}`,
     )
     .join('\n\n') || 'No social media content available'
 }
@@ -298,25 +300,25 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
 ## Competitive Analysis
 **Content Gaps:** ${strategy.competitiveAnalysis?.gaps || 'No gaps identified'}
 **Opportunities:** ${strategy.competitiveAnalysis?.opportunities || 'No opportunities identified'}
-    `.trim()
+    `.trim();
 
     try {
-      await navigator.clipboard.writeText(notesContent)
+      await navigator.clipboard.writeText(notesContent);
       toast({
         title: 'Notes Created!',
         description: 'The content strategy has been converted into notes and copied to clipboard.',
-      })
+      });
     } catch (_error) {
       toast({
         variant: 'destructive',
         title: 'Failed to create notes',
         description: 'Unable to convert strategy to notes. Please try again.',
-      })
+      });
     }
-  }
+  };
 
   const saveStrategy = async () => {
-    if (!strategy) return
+    if (!strategy) return;
 
     try {
       // Ensure the strategy matches our schema
@@ -337,28 +339,28 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                   : [],
             }
           : undefined,
-      }
+      };
 
       // Save the strategy using the new content strategies API
       createStrategy({
         title: `Content Strategy: ${strategy.topic}`,
         description: `Content strategy for ${strategy.targetAudience} focusing on ${strategy.topic}`,
         strategy: normalizedStrategy,
-      })
+      });
 
       toast({
         title: 'Strategy Saved!',
         description: 'Your content strategy has been saved successfully.',
-      })
+      });
     } catch (error) {
-      console.error('Failed to save strategy:', error)
+      console.error('Failed to save strategy:', error);
       toast({
         variant: 'destructive',
         title: 'Save Failed',
         description: 'Unable to save the strategy. Please try again.',
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -454,7 +456,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                             strategy.keyInsights
                               ?.map((insight: string) => `• ${insight}`)
                               .join('\n') || 'No insights available',
-                            'Key insights'
+                            'Key insights',
                           )
                         }
                       >
@@ -486,13 +488,13 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                                 strategy.contentPlan?.blog?.outline
                                   ?.map(
                                     (section: BlogSection) =>
-                                      `${section.heading}: ${section.content}`
+                                      `${section.heading}: ${section.content}`,
                                   )
                                   .join('\n') || 'No outline available'
                               }\n\nSEO Keywords: ${
                                 strategy.contentPlan?.blog?.seoKeywords?.join(', ') || 'No keywords'
                               }`,
-                              'Blog content plan'
+                              'Blog content plan',
                             )
                           }
                         >
@@ -570,11 +572,11 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                                     `${platform.platform.toUpperCase()}:\nContent Ideas:\n${platform.contentIdeas
                                       .map((idea: string) => `• ${idea}`)
                                       .join('\n')}\nHashtags: ${platform.hashtagSuggestions.join(
-                                      ' '
-                                    )}`
+                                      ' ',
+                                    )}`,
                                 )
                                 .join('\n\n') || 'No social media content available',
-                              'Social media content'
+                              'Social media content',
                             )
                           }
                         >
@@ -643,7 +645,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                                 strategy.contentPlan?.visualContent?.imageSearchTerms?.join(', ') ||
                                 'No image search terms'
                               }`,
-                              'Visual content ideas'
+                              'Visual content ideas',
                             )
                           }
                         >
@@ -661,7 +663,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                                 {strategy.contentPlan.visualContent.infographicIdeas.map(
                                   (idea: string) => (
                                     <li key={getUniqueId('infographic', idea)}>{idea}</li>
-                                  )
+                                  ),
                                 )}
                               </ul>
                             ) : (
@@ -684,7 +686,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                                     >
                                       {term}
                                     </span>
-                                  )
+                                  ),
                                 )}
                               </div>
                             ) : (
@@ -711,7 +713,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                             strategy.monetizationIdeas
                               ?.map((idea: string) => `• ${idea}`)
                               .join('\n') || 'No monetization ideas available',
-                            'Monetization ideas'
+                            'Monetization ideas',
                           )
                         }
                       >
@@ -739,7 +741,7 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
                         onClick={() =>
                           copyToClipboard(
                             `Content Gaps: ${strategy.competitiveAnalysis?.gaps || 'No gaps identified'}\n\nOpportunities: ${strategy.competitiveAnalysis?.opportunities || 'No opportunities identified'}`,
-                            'Competitive analysis'
+                            'Competitive analysis',
                           )
                         }
                       >
@@ -797,5 +799,5 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Download,
   Loader2,
@@ -9,17 +9,18 @@ import {
   Square,
   Volume2,
   VolumeX,
-} from 'lucide-react'
-import { useEffect } from 'react'
-import { formatTime, useAudioPlayer } from '~/lib/hooks/use-audio-player.js'
+} from 'lucide-react';
+import { useEffect } from 'react';
+
+import { formatTime, useAudioPlayer } from '~/lib/hooks/use-audio-player.js';
 
 interface AudioPlayerProps {
-  src: string
-  title?: string
-  autoPlay?: boolean
-  className?: string
-  showDownload?: boolean
-  onEnded?: () => void
+  src: string;
+  title?: string;
+  autoPlay?: boolean;
+  className?: string;
+  showDownload?: boolean;
+  onEnded?: () => void;
 }
 
 export function AudioPlayer({
@@ -31,65 +32,65 @@ export function AudioPlayer({
   onEnded,
 }: AudioPlayerProps) {
   const { state, audioRef, play, pause, stop, seek, setVolume, toggleMute, loadAudio } =
-    useAudioPlayer()
+    useAudioPlayer();
 
   // Load audio when src changes
   useEffect(() => {
     if (src) {
-      loadAudio(src)
+      loadAudio(src);
     }
-  }, [src, loadAudio])
+  }, [src, loadAudio]);
 
   // Auto play if requested
   useEffect(() => {
     if (autoPlay && !state.isLoading && src) {
-      play()
+      play();
     }
-  }, [autoPlay, state.isLoading, src, play])
+  }, [autoPlay, state.isLoading, src, play]);
 
   // Handle ended event
   useEffect(() => {
     if (audioRef.current) {
       const handleEnded = () => {
-        onEnded?.()
-      }
+        onEnded?.();
+      };
 
-      audioRef.current.addEventListener('ended', handleEnded)
+      audioRef.current.addEventListener('ended', handleEnded);
       return () => {
-        audioRef.current?.removeEventListener('ended', handleEnded)
-      }
+        audioRef.current?.removeEventListener('ended', handleEnded);
+      };
     }
-  }, [onEnded])
+  }, [onEnded]);
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const percent = (e.clientX - rect.left) / rect.width
-    const time = percent * state.duration
-    seek(time)
-  }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const time = percent * state.duration;
+    seek(time);
+  };
 
   const handleSkipBack = () => {
-    seek(Math.max(0, state.currentTime - 10))
-  }
+    seek(Math.max(0, state.currentTime - 10));
+  };
 
   const handleSkipForward = () => {
-    seek(Math.min(state.duration, state.currentTime + 10))
-  }
+    seek(Math.min(state.duration, state.currentTime + 10));
+  };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(Number.parseFloat(e.target.value))
-  }
+    setVolume(Number.parseFloat(e.target.value));
+  };
 
   const handleDownload = () => {
-    const link = document.createElement('a')
-    link.href = src
-    link.download = title || 'audio.mp3'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+    const link = document.createElement('a');
+    link.href = src;
+    link.download = title || 'audio.mp3';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-  const progressPercent = state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0
+  const progressPercent = state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0;
 
   return (
     <div className={`bg-muted rounded-lg p-4 space-y-3 ${className}`}>
@@ -217,5 +218,5 @@ export function AudioPlayer({
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,13 +1,14 @@
-import type { GoalMilestone } from '@hominem/services/types'
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
-import { Plus, XCircle } from 'lucide-react'
+import type { GoalMilestone } from '@hominem/services/types';
+
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/input';
+import { Plus, XCircle } from 'lucide-react';
 
 interface GoalMilestoneListProps {
-  milestones: GoalMilestone[]
-  onAdd: () => void
-  onChange: (index: number, field: keyof GoalMilestone, value: string | boolean) => void
-  onRemove: (index: number) => void
+  milestones: GoalMilestone[];
+  onAdd: () => void;
+  onChange: (index: number, field: keyof GoalMilestone, value: string | boolean) => void;
+  onRemove: (index: number) => void;
 }
 
 export function GoalMilestoneList({
@@ -47,5 +48,5 @@ export function GoalMilestoneList({
         </div>
       ))}
     </div>
-  )
+  );
 }

@@ -1,27 +1,28 @@
-import { getLastMonthFromRange } from '@hominem/utils/dates'
-import { subMonths } from 'date-fns'
-import { useState } from 'react'
-import { AnalyticsChartDisplay } from '~/components/analytics/analytics-chart-display'
-import { AnalyticsFilters } from '~/components/analytics/analytics-filters'
-import { AnalyticsStatisticsSummary } from '~/components/analytics/analytics-statistics-summary'
-import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown'
-import { TopCategories } from '~/components/analytics/top-categories'
-import { TopMerchants } from '~/components/analytics/top-merchants'
-import { BudgetHistoryChart } from '~/components/budget-categories'
-import { BudgetOverview } from '~/components/budget-overview'
+import { getLastMonthFromRange } from '@hominem/utils/dates';
+import { subMonths } from 'date-fns';
+import { useState } from 'react';
+
+import { AnalyticsChartDisplay } from '~/components/analytics/analytics-chart-display';
+import { AnalyticsFilters } from '~/components/analytics/analytics-filters';
+import { AnalyticsStatisticsSummary } from '~/components/analytics/analytics-statistics-summary';
+import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown';
+import { TopCategories } from '~/components/analytics/top-categories';
+import { TopMerchants } from '~/components/analytics/top-merchants';
+import { BudgetHistoryChart } from '~/components/budget-categories';
+import { BudgetOverview } from '~/components/budget-overview';
 
 export default function FinanceAnalyticsPage() {
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(subMonths(new Date(), 6))
-  const [dateTo, setDateTo] = useState<Date | undefined>(new Date())
-  const [selectedAccount, setSelectedAccount] = useState<string>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [includeStats, setIncludeStats] = useState<boolean>(true)
-  const [compareToPrevious, setCompareToPrevious] = useState<boolean>(true)
-  const [groupBy, setGroupBy] = useState<'month' | 'week' | 'day'>('month')
-  const [chartType, setChartType] = useState<'area' | 'bar'>('area')
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(subMonths(new Date(), 6));
+  const [dateTo, setDateTo] = useState<Date | undefined>(new Date());
+  const [selectedAccount, setSelectedAccount] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [includeStats, setIncludeStats] = useState<boolean>(true);
+  const [compareToPrevious, setCompareToPrevious] = useState<boolean>(true);
+  const [groupBy, setGroupBy] = useState<'month' | 'week' | 'day'>('month');
+  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
 
   // Get the last month from the date range for budget overview
-  const lastMonthYear = getLastMonthFromRange(dateFrom, dateTo)
+  const lastMonthYear = getLastMonthFromRange(dateFrom, dateTo);
 
   return (
     <div className="w-full">
@@ -97,5 +98,5 @@ export default function FinanceAnalyticsPage() {
         <BudgetHistoryChart />
       </div>
     </div>
-  )
+  );
 }

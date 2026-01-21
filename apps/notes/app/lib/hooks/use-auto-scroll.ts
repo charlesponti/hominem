@@ -1,17 +1,19 @@
-import { useEffect, useRef } from 'react'
-import type { Virtualizer } from '@tanstack/react-virtual'
-import { scrollToBottom } from '~/lib/utils/scroll'
+import type { Virtualizer } from '@tanstack/react-virtual';
+
+import { useEffect, useRef } from 'react';
+
+import { scrollToBottom } from '~/lib/utils/scroll';
 
 interface UseAutoScrollOptions {
-  containerRef: React.RefObject<HTMLDivElement | null>
-  parentRef?: React.RefObject<HTMLDivElement | null>
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  parentRef?: React.RefObject<HTMLDivElement | null>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  virtualizer?: Virtualizer<HTMLDivElement, any>
-  messageCount: number
-  status: string
-  isNearBottom: boolean
-  shouldUseVirtualScrolling: boolean
-  checkIfNearBottom?: () => boolean
+  virtualizer?: Virtualizer<HTMLDivElement, any>;
+  messageCount: number;
+  status: string;
+  isNearBottom: boolean;
+  shouldUseVirtualScrolling: boolean;
+  checkIfNearBottom?: () => boolean;
 }
 
 /**
@@ -27,33 +29,33 @@ export function useAutoScroll({
   shouldUseVirtualScrolling,
   checkIfNearBottom,
 }: UseAutoScrollOptions) {
-  const previousMessageCountRef = useRef(0)
+  const previousMessageCountRef = useRef(0);
 
   // Auto-scroll to bottom when messages change (only if user is near bottom)
   useEffect(() => {
-    const currentMessageCount = messageCount
-    const previousMessageCount = previousMessageCountRef.current
+    const currentMessageCount = messageCount;
+    const previousMessageCount = previousMessageCountRef.current;
 
     // Only scroll if we have new messages or if we're streaming, AND user is near bottom
     if ((currentMessageCount > previousMessageCount || status === 'streaming') && isNearBottom) {
-      const container = shouldUseVirtualScrolling ? parentRef?.current : containerRef.current
+      const container = shouldUseVirtualScrolling ? parentRef?.current : containerRef.current;
       if (container) {
         const performScroll = () => {
-          const lastIndex = messageCount > 0 ? messageCount - 1 : 0
-          scrollToBottom(container, virtualizer, shouldUseVirtualScrolling, lastIndex)
-        }
+          const lastIndex = messageCount > 0 ? messageCount - 1 : 0;
+          scrollToBottom(container, virtualizer, shouldUseVirtualScrolling, lastIndex);
+        };
 
         // Use requestAnimationFrame for smoother scrolling
         requestAnimationFrame(() => {
-          performScroll()
+          performScroll();
           // Also scroll after a small delay to handle any dynamic content rendering
-          setTimeout(performScroll, 100)
-        })
+          setTimeout(performScroll, 100);
+        });
       }
     }
 
     // Update the ref with current count
-    previousMessageCountRef.current = currentMessageCount
+    previousMessageCountRef.current = currentMessageCount;
   }, [
     messageCount,
     status,
@@ -62,24 +64,24 @@ export function useAutoScroll({
     virtualizer,
     containerRef,
     parentRef,
-  ])
+  ]);
 
   // Auto-scroll during streaming with a more frequent interval (only if near bottom)
   useEffect(() => {
     if (status === 'streaming' && isNearBottom && checkIfNearBottom) {
-      const container = shouldUseVirtualScrolling ? parentRef?.current : containerRef.current
-      if (!container) return undefined
+      const container = shouldUseVirtualScrolling ? parentRef?.current : containerRef.current;
+      if (!container) return undefined;
 
       const intervalId = setInterval(() => {
         if (checkIfNearBottom()) {
-          const lastIndex = messageCount > 0 ? messageCount - 1 : 0
-          scrollToBottom(container, virtualizer, shouldUseVirtualScrolling, lastIndex)
+          const lastIndex = messageCount > 0 ? messageCount - 1 : 0;
+          scrollToBottom(container, virtualizer, shouldUseVirtualScrolling, lastIndex);
         }
-      }, 100) // Scroll every 100ms during streaming
+      }, 100); // Scroll every 100ms during streaming
 
-      return () => clearInterval(intervalId)
+      return () => clearInterval(intervalId);
     }
-    return undefined
+    return undefined;
   }, [
     status,
     isNearBottom,
@@ -89,5 +91,5 @@ export function useAutoScroll({
     messageCount,
     containerRef,
     parentRef,
-  ])
+  ]);
 }

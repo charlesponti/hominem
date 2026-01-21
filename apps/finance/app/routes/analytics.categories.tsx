@@ -1,50 +1,51 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Button } from '@hominem/ui/components/ui/button'
-import { useSort } from '@hominem/ui/hooks'
-import { format, subMonths } from 'date-fns'
-import { ArrowDown, ArrowUp, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
-import { TransactionFilters } from '~/components/finance/transaction-filters'
-import { type FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data'
-import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
-import { formatCurrency } from '~/lib/number.utils'
-import { trpc } from '~/lib/trpc'
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Button } from '@hominem/ui/components/ui/button';
+import { useSort } from '@hominem/ui/hooks';
+import { format, subMonths } from 'date-fns';
+import { ArrowDown, ArrowUp, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
+
+import { TransactionFilters } from '~/components/finance/transaction-filters';
+import { type FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data';
+import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
+import { formatCurrency } from '~/lib/number.utils';
+import { trpc } from '~/lib/trpc';
 
 export default function CategoriesAnalyticsPage() {
-  const navigate = useNavigate()
-  const { selectedAccount, setSelectedAccount } = useSelectedAccount()
+  const navigate = useNavigate();
+  const { selectedAccount, setSelectedAccount } = useSelectedAccount();
 
   // Initialize filters with default date range
   const [filters, setFilters] = useState<FilterArgs>({
     dateFrom: subMonths(new Date(), 6),
     dateTo: new Date(),
-  })
+  });
 
   // Debounced filters for API calls
-  const [debouncedFilters, setDebouncedFilters] = useState<FilterArgs>(filters)
+  const [debouncedFilters, setDebouncedFilters] = useState<FilterArgs>(filters);
 
-  const [searchValue, setSearchValue] = useState('')
+  const [searchValue, setSearchValue] = useState('');
   const { sortOptions, addSortOption, updateSortOption, removeSortOption } = useSort({
     initialSortOptions: [],
-  })
+  });
 
   const {
     accountsMap,
     isLoading: accountsLoading,
     refetch: refetchAccounts,
-  } = useFinanceAccountsWithMap()
+  } = useFinanceAccountsWithMap();
 
   // Debounce filter changes (300ms delay)
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedFilters(filters)
-    }, 300)
+      setDebouncedFilters(filters);
+    }, 300);
 
     return () => {
-      clearTimeout(timer)
-    }
-  }, [filters])
+      clearTimeout(timer);
+    };
+  }, [filters]);
 
   const {
     data: breakdown,
@@ -57,115 +58,115 @@ export default function CategoriesAnalyticsPage() {
     to: debouncedFilters.dateTo?.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
     limit: '100',
-  })
+  });
 
   // Calculate total spending for percentage calculations
   const totalSpending = useMemo(() => {
-    return breakdown?.reduce((sum, item) => sum + Number.parseFloat(item.total), 0) || 0
-  }, [breakdown])
+    return breakdown?.reduce((sum, item) => sum + Number.parseFloat(item.total), 0) || 0;
+  }, [breakdown]);
 
   // Client-side filtering and sorting
   const filteredAndSortedData = useMemo(() => {
     if (!breakdown) {
-      return []
+      return [];
     }
 
-    let result = [...breakdown]
+    let result = [...breakdown];
 
     // Apply search filter
     if (searchValue.trim()) {
       result = result.filter((item) =>
-        item.category.toLowerCase().includes(searchValue.toLowerCase())
-      )
+        item.category.toLowerCase().includes(searchValue.toLowerCase()),
+      );
     }
 
     // Apply sort
     if (sortOptions.length > 0) {
-      const sort = sortOptions[0]
+      const sort = sortOptions[0];
       if (sort) {
         result.sort((a, b) => {
-          let aValue: string | number
-          let bValue: string | number
+          let aValue: string | number;
+          let bValue: string | number;
 
           if (sort.field === 'category') {
-            aValue = a.category.toLowerCase()
-            bValue = b.category.toLowerCase()
+            aValue = a.category.toLowerCase();
+            bValue = b.category.toLowerCase();
           } else if (sort.field === 'total') {
-            aValue = Number.parseFloat(a.total)
-            bValue = Number.parseFloat(b.total)
+            aValue = Number.parseFloat(a.total);
+            bValue = Number.parseFloat(b.total);
           } else if (sort.field === 'count') {
-            aValue = a.count
-            bValue = b.count
+            aValue = a.count;
+            bValue = b.count;
           } else {
-            return 0
+            return 0;
           }
 
           if (aValue < bValue) {
-            return sort.direction === 'asc' ? -1 : 1
+            return sort.direction === 'asc' ? -1 : 1;
           }
           if (aValue > bValue) {
-            return sort.direction === 'asc' ? 1 : -1
+            return sort.direction === 'asc' ? 1 : -1;
           }
-          return 0
-        })
+          return 0;
+        });
       }
     }
 
-    return result
-  }, [breakdown, searchValue, sortOptions])
+    return result;
+  }, [breakdown, searchValue, sortOptions]);
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: FilterArgs) => {
-    setFilters(newFilters)
-  }, [])
+    setFilters(newFilters);
+  }, []);
 
   // Handle search changes
   const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value)
-  }, [])
+    setSearchValue(value);
+  }, []);
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
-    refetchAccounts()
-    refetchBreakdown()
-  }, [refetchAccounts, refetchBreakdown])
+    refetchAccounts();
+    refetchBreakdown();
+  }, [refetchAccounts, refetchBreakdown]);
 
   // Handle sort header click
   const handleSortHeaderClick = useCallback(
     (field: 'category' | 'total' | 'count') => {
-      const existingSort = sortOptions.find((s) => s.field === field)
+      const existingSort = sortOptions.find((s) => s.field === field);
       if (existingSort) {
         // Toggle direction if same field
         updateSortOption(0, {
           ...existingSort,
           direction: existingSort.direction === 'asc' ? 'desc' : 'asc',
-        })
+        });
       } else {
         // Add new sort option
-        addSortOption({ field, direction: 'desc' })
+        addSortOption({ field, direction: 'desc' });
       }
     },
-    [sortOptions, addSortOption, updateSortOption]
-  )
+    [sortOptions, addSortOption, updateSortOption],
+  );
 
   // Get sort direction for header
   const getSortDirection = (field: string) => {
-    const sort = sortOptions.find((s) => s.field === field)
-    return sort?.direction
-  }
+    const sort = sortOptions.find((s) => s.field === field);
+    return sort?.direction;
+  };
 
   // Active filters for display
   const activeFilters = useMemo(() => {
-    const filterChips: Array<{ id: string; label: string; onRemove: () => void }> = []
+    const filterChips: Array<{ id: string; label: string; onRemove: () => void }> = [];
 
     if (debouncedFilters.dateFrom) {
       filterChips.push({
         id: 'dateFrom',
         label: `From: ${format(debouncedFilters.dateFrom, 'MMM d, yyyy')}`,
         onRemove: () => {
-          handleFiltersChange({ ...debouncedFilters, dateFrom: undefined })
+          handleFiltersChange({ ...debouncedFilters, dateFrom: undefined });
         },
-      })
+      });
     }
 
     if (debouncedFilters.dateTo) {
@@ -173,36 +174,36 @@ export default function CategoriesAnalyticsPage() {
         id: 'dateTo',
         label: `To: ${format(debouncedFilters.dateTo, 'MMM d, yyyy')}`,
         onRemove: () => {
-          handleFiltersChange({ ...debouncedFilters, dateTo: undefined })
+          handleFiltersChange({ ...debouncedFilters, dateTo: undefined });
         },
-      })
+      });
     }
 
     if (selectedAccount !== 'all') {
-      const accountName = accountsMap.get(selectedAccount)?.name || 'Account'
+      const accountName = accountsMap.get(selectedAccount)?.name || 'Account';
       filterChips.push({
         id: 'account',
         label: accountName,
         onRemove: () => {
-          setSelectedAccount('all')
+          setSelectedAccount('all');
         },
-      })
+      });
     }
 
-    return filterChips
-  }, [debouncedFilters, selectedAccount, accountsMap, handleFiltersChange, setSelectedAccount])
+    return filterChips;
+  }, [debouncedFilters, selectedAccount, accountsMap, handleFiltersChange, setSelectedAccount]);
 
   // Clear all filters
   const handleClearFilters = useCallback(() => {
     setFilters({
       dateFrom: subMonths(new Date(), 6),
       dateTo: new Date(),
-    })
-    setSelectedAccount('all')
-    setSearchValue('')
-  }, [setSelectedAccount])
+    });
+    setSelectedAccount('all');
+    setSearchValue('');
+  }, [setSelectedAccount]);
 
-  const loading = isLoading || accountsLoading
+  const loading = isLoading || accountsLoading;
 
   return (
     <div className="container">
@@ -240,8 +241,8 @@ export default function CategoriesAnalyticsPage() {
                 className="size-4 p-0 ml-1 shrink-0"
                 aria-label={`Remove ${filter.label}`}
                 onClick={(e) => {
-                  e.stopPropagation()
-                  filter.onRemove()
+                  e.stopPropagation();
+                  filter.onRemove();
                 }}
               >
                 <X className="size-3" />
@@ -372,8 +373,8 @@ export default function CategoriesAnalyticsPage() {
             </thead>
             <tbody>
               {filteredAndSortedData.map((item) => {
-                const itemTotal = Number.parseFloat(item.total)
-                const percentage = totalSpending > 0 ? (itemTotal / totalSpending) * 100 : 0
+                const itemTotal = Number.parseFloat(item.total);
+                const percentage = totalSpending > 0 ? (itemTotal / totalSpending) * 100 : 0;
 
                 return (
                   <tr
@@ -386,7 +387,7 @@ export default function CategoriesAnalyticsPage() {
                     aria-label={`View details for ${item.category}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        navigate(`/analytics/category/${encodeURIComponent(item.category)}`)
+                        navigate(`/analytics/category/${encodeURIComponent(item.category)}`);
                       }
                     }}
                   >
@@ -426,12 +427,12 @@ export default function CategoriesAnalyticsPage() {
                       </div>
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
         </div>
       )}
     </div>
-  )
+  );
 }

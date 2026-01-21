@@ -1,9 +1,10 @@
-import { Button } from '@hominem/ui/button'
-import { X } from 'lucide-react'
-import type { AttachmentsPreviewProps } from '~/lib/types/chat'
+import { Button } from '@hominem/ui/button';
+import { X } from 'lucide-react';
+
+import type { AttachmentsPreviewProps } from '~/lib/types/chat';
 
 export function AttachmentsPreview({ files, onRemoveFile, onRemoveAll }: AttachmentsPreviewProps) {
-  if (files.length === 0) return null
+  if (files.length === 0) return null;
 
   return (
     <div className="mb-4 p-3 bg-background/95 backdrop-blur-sm border rounded-lg">
@@ -30,5 +31,5 @@ export function AttachmentsPreview({ files, onRemoveFile, onRemoveAll }: Attachm
         ))}
       </div>
     </div>
-  )
+  );
 }

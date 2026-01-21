@@ -1,11 +1,12 @@
-import { Loader2 } from 'lucide-react'
-import { cn } from '~/lib/utils'
+import { Loader2 } from 'lucide-react';
+
+import { cn } from '~/lib/utils';
 
 interface LoadingProps {
-  text?: string
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
-  fullScreen?: boolean
+  text?: string;
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  fullScreen?: boolean;
 }
 
 export function Loading({
@@ -18,7 +19,7 @@ export function Loading({
     sm: 'size-4',
     md: 'size-8',
     lg: 'size-12',
-  }
+  };
 
   const content = (
     <div className={cn('flex items-center justify-center', className)}>
@@ -27,17 +28,17 @@ export function Loading({
         {text && <span className="text-sm text-muted-foreground">{text}</span>}
       </div>
     </div>
-  )
+  );
 
   if (fullScreen) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
         {content}
       </div>
-    )
+    );
   }
 
-  return content
+  return content;
 }
 
 export function LoadingScreen() {
@@ -45,5 +46,5 @@ export function LoadingScreen() {
     <div className="flex items-center justify-center max-h-[300px] mx-auto w-full">
       <Loading size="lg" fullScreen={false} />
     </div>
-  )
+  );
 }

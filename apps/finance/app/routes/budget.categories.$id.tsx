@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,20 +8,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@hominem/ui/components/ui/alert-dialog'
-import { Label } from '@hominem/ui/components/ui/label'
+} from '@hominem/ui/components/ui/alert-dialog';
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { Input } from '@hominem/ui/input'
-import { Save, Trash2 } from 'lucide-react'
-import { useEffect, useId, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
-import { trpc } from '~/lib/trpc'
+} from '@hominem/ui/components/ui/select';
+import { Input } from '@hominem/ui/input';
+import { Save, Trash2 } from 'lucide-react';
+import { useEffect, useId, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+
+import { trpc } from '~/lib/trpc';
 
 const categoryColors = [
   'bg-blue-500',
@@ -32,30 +33,30 @@ const categoryColors = [
   'bg-indigo-500',
   'bg-pink-500',
   'bg-teal-500',
-]
+];
 
 export default function EditBudgetCategory() {
-  const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
-  const nameId = useId()
-  const budgetId = useId()
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const nameId = useId();
+  const budgetId = useId();
 
   const { data: category, isLoading } = trpc.finance.budget.categories.get.useQuery(
     { id: id! },
-    { enabled: !!id }
-  )
+    { enabled: !!id },
+  );
 
-  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation()
-  const deleteCategoryMutation = trpc.finance.budget.categories.delete.useMutation()
+  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation();
+  const deleteCategoryMutation = trpc.finance.budget.categories.delete.useMutation();
 
   const [formData, setFormData] = useState({
     name: '',
     type: 'expense' as 'income' | 'expense',
     averageMonthlyExpense: '',
     color: categoryColors[0],
-  })
+  });
 
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Update form data when category loads
   useEffect(() => {
@@ -65,14 +66,14 @@ export default function EditBudgetCategory() {
         type: category.type === 'income' || category.type === 'expense' ? category.type : 'expense',
         averageMonthlyExpense: category.averageMonthlyExpense || '',
         color: category.color || categoryColors[0],
-      })
+      });
     }
-  }, [category])
+  }, [category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!formData.name || !formData.averageMonthlyExpense || !id) return
+    if (!formData.name || !formData.averageMonthlyExpense || !id) return;
 
     try {
       await updateCategoryMutation.mutateAsync({
@@ -81,27 +82,27 @@ export default function EditBudgetCategory() {
         type: formData.type,
         averageMonthlyExpense: formData.averageMonthlyExpense,
         color: formData.color,
-      })
-      navigate('/budget')
+      });
+      navigate('/budget');
     } catch (error) {
-      console.error('Failed to update category:', error)
+      console.error('Failed to update category:', error);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!id) return
+    if (!id) return;
 
     try {
-      await deleteCategoryMutation.mutateAsync({ id })
-      navigate('/budget')
+      await deleteCategoryMutation.mutateAsync({ id });
+      navigate('/budget');
     } catch (error) {
-      console.error('Failed to delete category:', error)
+      console.error('Failed to delete category:', error);
     }
-  }
+  };
 
   const handleCancel = () => {
-    navigate('/budget')
-  }
+    navigate('/budget');
+  };
 
   if (isLoading) {
     return (
@@ -111,7 +112,7 @@ export default function EditBudgetCategory() {
           <p className="mt-2 text-sm text-gray-600">Loading category...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!category) {
@@ -121,7 +122,7 @@ export default function EditBudgetCategory() {
         <p className="text-gray-600 mb-4">The category you're looking for doesn't exist.</p>
         <Button onClick={handleCancel}>Back to Categories</Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -233,5 +234,5 @@ export default function EditBudgetCategory() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

@@ -1,54 +1,57 @@
-import type { Goal } from '@hominem/services/types'
-import { PageTitle } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Checkbox } from '@hominem/ui/components/ui/checkbox'
-import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/components/ui/label'
+import type { Goal } from '@hominem/services/types';
+
+import { PageTitle } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Checkbox } from '@hominem/ui/components/ui/checkbox';
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
-import { Plus } from 'lucide-react'
-import { useState } from 'react'
-import { ArchiveModal } from '~/components/goals/archive-modal'
-import { GoalCard } from '~/components/goals/goal-card'
-import type { GoalFormData } from '~/components/goals/goal-modal'
-import { GoalModal } from '~/components/goals/goal-modal'
-import { trpc } from '~/lib/trpc'
+} from '@hominem/ui/components/ui/select';
+import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { Input } from '@hominem/ui/input';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+
+import type { GoalFormData } from '~/components/goals/goal-modal';
+
+import { ArchiveModal } from '~/components/goals/archive-modal';
+import { GoalCard } from '~/components/goals/goal-card';
+import { GoalModal } from '~/components/goals/goal-modal';
+import { trpc } from '~/lib/trpc';
 
 export default function GoalsPage() {
-  const utils = trpc.useUtils()
-  const [showArchived, setShowArchived] = useState(false)
-  const [sortOrder, setSortOrder] = useState('priority')
-  const [categoryFilter, setCategoryFilter] = useState('')
+  const utils = trpc.useUtils();
+  const [showArchived, setShowArchived] = useState(false);
+  const [sortOrder, setSortOrder] = useState('priority');
+  const [categoryFilter, setCategoryFilter] = useState('');
 
   const { data: goals = [], isLoading: isLoadingGoals } = trpc.goals.list.useQuery({
     showArchived,
     sortBy: sortOrder,
     category: categoryFilter,
-  })
+  });
 
-  const typedGoals = goals as Goal[]
+  const typedGoals = goals as Goal[];
 
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false)
-  const [currentGoal, setCurrentGoal] = useState<Goal | null>(null)
-  const { toast } = useToast()
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
+  const { toast } = useToast();
 
   const createGoal = trpc.goals.create.useMutation({
     onMutate: async (newGoal) => {
-      setIsCreateModalOpen(false)
-      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      setIsCreateModalOpen(false);
+      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter });
       const previousGoals = utils.goals.list.getData({
         showArchived,
         sortBy: sortOrder,
         category: categoryFilter,
-      })
+      });
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
         (old) => [
@@ -66,131 +69,131 @@ export default function GoalsPage() {
             startDate: newGoal.startDate ?? null,
             dueDate: newGoal.dueDate ?? null,
           } as Goal,
-        ]
-      )
-      return { previousGoals }
+        ],
+      );
+      return { previousGoals };
     },
     onSuccess: () => {
-      toast({ description: 'Goal created successfully' })
+      toast({ description: 'Goal created successfully' });
     },
     onError: (err, _newGoal, context) => {
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
-        context?.previousGoals
-      )
+        context?.previousGoals,
+      );
       toast({
         variant: 'destructive',
         description: err.message || 'Failed to create goal',
-      })
+      });
     },
     onSettled: () => {
-      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter });
     },
-  })
+  });
 
   const updateGoal = trpc.goals.update.useMutation({
     onMutate: async (updatedGoal) => {
-      setIsEditModalOpen(false)
-      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      setIsEditModalOpen(false);
+      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter });
       const previousGoals = utils.goals.list.getData({
         showArchived,
         sortBy: sortOrder,
         category: categoryFilter,
-      })
+      });
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
         (old) =>
           (old || []).map((goal) =>
-            goal.id === updatedGoal.id ? ({ ...goal, ...updatedGoal } as Goal) : goal
-          )
-      )
-      return { previousGoals }
+            goal.id === updatedGoal.id ? ({ ...goal, ...updatedGoal } as Goal) : goal,
+          ),
+      );
+      return { previousGoals };
     },
     onSuccess: () => {
-      toast({ description: 'Goal updated successfully' })
+      toast({ description: 'Goal updated successfully' });
     },
     onError: (err, _newGoal, context) => {
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
-        context?.previousGoals
-      )
+        context?.previousGoals,
+      );
       toast({
         variant: 'destructive',
         description: err.message || 'Failed to update goal',
-      })
+      });
     },
     onSettled: () => {
-      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter })
-      setCurrentGoal(null)
+      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter });
+      setCurrentGoal(null);
     },
-  })
+  });
 
   const archiveGoal = trpc.goals.archive.useMutation({
     onMutate: async (archivedGoal) => {
-      setIsArchiveModalOpen(false)
-      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter })
+      setIsArchiveModalOpen(false);
+      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter });
       const previousGoals = utils.goals.list.getData({
         showArchived,
         sortBy: sortOrder,
         category: categoryFilter,
-      })
+      });
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
-        (old) => (old || []).filter((goal) => goal.id !== archivedGoal.id)
-      )
-      return { previousGoals }
+        (old) => (old || []).filter((goal) => goal.id !== archivedGoal.id),
+      );
+      return { previousGoals };
     },
     onSuccess: () => {
-      toast({ description: 'Goal archived successfully' })
+      toast({ description: 'Goal archived successfully' });
     },
     onError: (err, _newGoal, context) => {
       utils.goals.list.setData(
         { showArchived, sortBy: sortOrder, category: categoryFilter },
-        context?.previousGoals
-      )
+        context?.previousGoals,
+      );
       toast({
         variant: 'destructive',
         description: err.message || 'Failed to archive goal',
-      })
+      });
     },
     onSettled: () => {
-      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter })
-      setCurrentGoal(null)
+      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter });
+      setCurrentGoal(null);
     },
-  })
+  });
 
   const handleCreateSubmit = (data: GoalFormData) => {
     createGoal.mutate({
       ...data,
       startDate: data.startDate?.toISOString(),
       dueDate: data.dueDate?.toISOString(),
-    })
-  }
+    });
+  };
 
   const handleEditSubmit = (data: GoalFormData) => {
-    if (!currentGoal?.id) return
+    if (!currentGoal?.id) return;
     updateGoal.mutate({
       id: currentGoal.id,
       ...data,
       startDate: data.startDate?.toISOString(),
       dueDate: data.dueDate?.toISOString(),
-    })
-  }
+    });
+  };
 
   const handleEditClick = (goal: Goal) => {
-    setCurrentGoal(goal)
-    setIsEditModalOpen(true)
-  }
+    setCurrentGoal(goal);
+    setIsEditModalOpen(true);
+  };
 
   const handleArchiveClick = (goal: Goal) => {
-    setCurrentGoal(goal)
-    setIsArchiveModalOpen(true)
-  }
+    setCurrentGoal(goal);
+    setIsArchiveModalOpen(true);
+  };
 
   const handleArchive = () => {
-    if (!currentGoal?.id) return
-    archiveGoal.mutate({ id: currentGoal.id })
-  }
+    if (!currentGoal?.id) return;
+    archiveGoal.mutate({ id: currentGoal.id });
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -269,5 +272,5 @@ export default function GoalsPage() {
         onConfirm={handleArchive}
       />
     </div>
-  )
+  );
 }

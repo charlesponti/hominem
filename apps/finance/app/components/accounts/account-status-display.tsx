@@ -1,12 +1,13 @@
-import type { RouterOutput } from '~/lib/trpc'
-import { ManualInstitutionStatus } from './manual-institution-status'
-import { NotConnectedStatus } from './not-connected-status'
-import { PlaidAccountStatus } from './plaid-account-status'
+import type { RouterOutput } from '~/lib/trpc';
+
+import { ManualInstitutionStatus } from './manual-institution-status';
+import { NotConnectedStatus } from './not-connected-status';
+import { PlaidAccountStatus } from './plaid-account-status';
 
 interface AccountStatusDisplayProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
-  showDialog?: boolean
-  onRefresh?: () => void
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  showDialog?: boolean;
+  onRefresh?: () => void;
 }
 
 export function AccountStatusDisplay({
@@ -15,10 +16,10 @@ export function AccountStatusDisplay({
   onRefresh,
 }: AccountStatusDisplayProps) {
   if (account.plaidItemId) {
-    return <PlaidAccountStatus account={account} onRefresh={onRefresh} />
+    return <PlaidAccountStatus account={account} onRefresh={onRefresh} />;
   }
   if (account.institutionId) {
-    return <ManualInstitutionStatus account={account} showDialog={showDialog} />
+    return <ManualInstitutionStatus account={account} showDialog={showDialog} />;
   }
-  return <NotConnectedStatus account={account} showDialog={showDialog} />
+  return <NotConnectedStatus account={account} showDialog={showDialog} />;
 }

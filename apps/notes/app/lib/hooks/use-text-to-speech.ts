@@ -1,18 +1,18 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react';
 
 export interface TTSState {
-  isSpeaking: boolean
-  isLoading: boolean
-  error: string | null
-  currentAudio: string | null
+  isSpeaking: boolean;
+  isLoading: boolean;
+  error: string | null;
+  currentAudio: string | null;
 }
 
 export interface UseTextToSpeechReturn {
-  state: TTSState
-  speak: (text: string, voice?: string, speed?: number) => Promise<void>
-  stop: () => void
-  pause: () => void
-  resume: () => void
+  state: TTSState;
+  speak: (text: string, voice?: string, speed?: number) => Promise<void>;
+  stop: () => void;
+  pause: () => void;
+  resume: () => void;
 }
 
 export function useTextToSpeech(): UseTextToSpeechReturn {
@@ -21,23 +21,23 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     isLoading: false,
     error: null,
     currentAudio: null,
-  })
+  });
 
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const currentAbortControllerRef = useRef<AbortController | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAbortControllerRef = useRef<AbortController | null>(null);
 
   const stop = useCallback(() => {
     // Abort any pending request
     if (currentAbortControllerRef.current) {
-      currentAbortControllerRef.current.abort()
-      currentAbortControllerRef.current = null
+      currentAbortControllerRef.current.abort();
+      currentAbortControllerRef.current = null;
     }
 
     // Stop current audio
     if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-      audioRef.current = null
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
     }
 
     setState((prev) => ({
@@ -45,28 +45,28 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
       isSpeaking: false,
       isLoading: false,
       currentAudio: null,
-    }))
-  }, [])
+    }));
+  }, []);
 
   const speak = useCallback(
     async (text: string, voice = 'alloy', speed = 1.0): Promise<void> => {
       // Stop any current speech
-      stop()
+      stop();
 
       if (!text.trim()) {
-        return
+        return;
       }
 
       setState((prev) => ({
         ...prev,
         isLoading: true,
         error: null,
-      }))
+      }));
 
       try {
         // Create abort controller for this request
-        const abortController = new AbortController()
-        currentAbortControllerRef.current = abortController
+        const abortController = new AbortController();
+        currentAbortControllerRef.current = abortController;
 
         // Generate speech via API
         const response = await fetch('/api/speech', {
@@ -76,26 +76,26 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
           },
           body: JSON.stringify({ text, voice, speed }),
           signal: abortController.signal,
-        })
+        });
 
         if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Failed to generate speech')
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate speech');
         }
 
-        const result = await response.json()
+        const result = await response.json();
 
         if (abortController.signal.aborted) {
-          return
+          return;
         }
 
         // Create audio element and play
-        const audio = new Audio(result.audio.url)
-        audioRef.current = audio
+        const audio = new Audio(result.audio.url);
+        audioRef.current = audio;
 
         audio.onloadstart = () => {
-          setState((prev) => ({ ...prev, isLoading: true }))
-        }
+          setState((prev) => ({ ...prev, isLoading: true }));
+        };
 
         audio.oncanplaythrough = () => {
           setState((prev) => ({
@@ -103,17 +103,17 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
             isLoading: false,
             isSpeaking: true,
             currentAudio: result.audio.url,
-          }))
-        }
+          }));
+        };
 
         audio.onended = () => {
           setState((prev) => ({
             ...prev,
             isSpeaking: false,
             currentAudio: null,
-          }))
-          audioRef.current = null
-        }
+          }));
+          audioRef.current = null;
+        };
 
         audio.onerror = () => {
           setState((prev) => ({
@@ -122,47 +122,47 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
             isSpeaking: false,
             error: 'Failed to play audio',
             currentAudio: null,
-          }))
-          audioRef.current = null
-        }
+          }));
+          audioRef.current = null;
+        };
 
         // Start playing
-        await audio.play()
+        await audio.play();
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
           // Request was aborted, ignore
-          return
+          return;
         }
 
-        console.error('Text-to-speech error:', error)
+        console.error('Text-to-speech error:', error);
         setState((prev) => ({
           ...prev,
           isLoading: false,
           isSpeaking: false,
           error: error instanceof Error ? error.message : 'Failed to generate speech',
           currentAudio: null,
-        }))
+        }));
       }
     },
     [
       // Stop any current speech
       stop,
-    ]
-  )
+    ],
+  );
 
   const pause = useCallback(() => {
     if (audioRef.current && state.isSpeaking) {
-      audioRef.current.pause()
-      setState((prev) => ({ ...prev, isSpeaking: false }))
+      audioRef.current.pause();
+      setState((prev) => ({ ...prev, isSpeaking: false }));
     }
-  }, [state.isSpeaking])
+  }, [state.isSpeaking]);
 
   const resume = useCallback(() => {
     if (audioRef.current && !state.isSpeaking && state.currentAudio) {
-      audioRef.current.play()
-      setState((prev) => ({ ...prev, isSpeaking: true }))
+      audioRef.current.play();
+      setState((prev) => ({ ...prev, isSpeaking: true }));
     }
-  }, [state.isSpeaking, state.currentAudio])
+  }, [state.isSpeaking, state.currentAudio]);
 
   return {
     state,
@@ -170,5 +170,5 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     stop,
     pause,
     resume,
-  }
+  };
 }

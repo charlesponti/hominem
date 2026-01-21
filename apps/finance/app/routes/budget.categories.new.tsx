@@ -1,18 +1,19 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Label } from '@hominem/ui/components/ui/label'
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { Input } from '@hominem/ui/input'
-import { ArrowLeft, Save } from 'lucide-react'
-import { useId, useState } from 'react'
-import { useNavigate } from 'react-router'
-import { trpc } from '~/lib/trpc'
+} from '@hominem/ui/components/ui/select';
+import { Input } from '@hominem/ui/input';
+import { ArrowLeft, Save } from 'lucide-react';
+import { useId, useState } from 'react';
+import { useNavigate } from 'react-router';
+
+import { trpc } from '~/lib/trpc';
 
 const categoryColors = [
   'bg-blue-500',
@@ -23,25 +24,25 @@ const categoryColors = [
   'bg-indigo-500',
   'bg-pink-500',
   'bg-teal-500',
-]
+];
 
 export default function NewBudgetCategory() {
-  const navigate = useNavigate()
-  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation()
-  const nameId = useId()
-  const budgetId = useId()
+  const navigate = useNavigate();
+  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation();
+  const nameId = useId();
+  const budgetId = useId();
 
   const [formData, setFormData] = useState({
     name: '',
     type: 'expense' as 'income' | 'expense',
     averageMonthlyExpense: '',
     color: categoryColors[0],
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!formData.name || !formData.averageMonthlyExpense) return
+    if (!formData.name || !formData.averageMonthlyExpense) return;
 
     try {
       await createCategoryMutation.mutateAsync({
@@ -49,16 +50,16 @@ export default function NewBudgetCategory() {
         type: formData.type,
         averageMonthlyExpense: formData.averageMonthlyExpense,
         color: formData.color,
-      })
-      navigate('/budget')
+      });
+      navigate('/budget');
     } catch (error) {
-      console.error('Failed to create category:', error)
+      console.error('Failed to create category:', error);
     }
-  }
+  };
 
   const handleCancel = () => {
-    navigate('/budget')
-  }
+    navigate('/budget');
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -154,5 +155,5 @@ export default function NewBudgetCategory() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

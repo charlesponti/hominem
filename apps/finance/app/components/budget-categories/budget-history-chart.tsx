@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import {
   CartesianGrid,
   Legend,
@@ -8,11 +8,12 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
-import { trpc } from '~/lib/trpc'
+} from 'recharts';
+
+import { trpc } from '~/lib/trpc';
 
 interface BudgetHistoryChartProps {
-  historyMonths?: number
+  historyMonths?: number;
 }
 
 export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProps) {
@@ -20,7 +21,7 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
     data: historyData,
     isLoading,
     error,
-  } = trpc.finance.budget.history.useQuery({ months: historyMonths })
+  } = trpc.finance.budget.history.useQuery({ months: historyMonths });
 
   if (isLoading) {
     return (
@@ -35,7 +36,7 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -51,7 +52,7 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -88,5 +89,5 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

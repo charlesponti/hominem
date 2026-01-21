@@ -1,4 +1,4 @@
-import { RefreshCcw, Trash2 } from 'lucide-react'
+import { Button } from '@hominem/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,62 +9,65 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@hominem/ui/components/ui/alert-dialog'
-import { Button } from '@hominem/ui/button'
-import { toast } from '@hominem/ui/components/ui/use-toast'
-import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid'
-import type { RouterOutput } from '~/lib/trpc'
-import { PlaidStatusBadge } from './plaid-status-badge'
+} from '@hominem/ui/components/ui/alert-dialog';
+import { toast } from '@hominem/ui/components/ui/use-toast';
+import { RefreshCcw, Trash2 } from 'lucide-react';
+
+import type { RouterOutput } from '~/lib/trpc';
+
+import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid';
+
+import { PlaidStatusBadge } from './plaid-status-badge';
 
 export function PlaidAccountStatus({
   account,
   onRefresh,
 }: {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
-  onRefresh?: () => void
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  onRefresh?: () => void;
 }) {
-  const syncItemMutation = useSyncPlaidItem()
-  const removeConnectionMutation = useRemovePlaidConnection()
+  const syncItemMutation = useSyncPlaidItem();
+  const removeConnectionMutation = useRemovePlaidConnection();
 
   const handleSync = async () => {
-    if (!account.plaidItemId) return
+    if (!account.plaidItemId) return;
     try {
-      await syncItemMutation.syncItem.mutateAsync(account.plaidItemId)
+      await syncItemMutation.syncItem.mutateAsync(account.plaidItemId);
       toast({
         title: 'Sync Started',
         description: `Started syncing data for ${account.name}`,
-      })
+      });
       setTimeout(() => {
-        onRefresh?.()
-      }, 2000)
+        onRefresh?.();
+      }, 2000);
     } catch {
       toast({
         title: 'Sync Failed',
         description: 'Failed to start sync. Please try again.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   const handleRemoveConnection = async () => {
-    if (!account.plaidItemId) return
+    if (!account.plaidItemId) return;
     try {
-      await removeConnectionMutation.removeConnection.mutateAsync(account.plaidItemId)
+      await removeConnectionMutation.removeConnection.mutateAsync(account.plaidItemId);
       toast({
         title: 'Connection Removed',
         description: `${account.name} has been disconnected from Plaid.`,
-      })
+      });
       setTimeout(() => {
-        onRefresh?.()
-      }, 1000)
+        onRefresh?.();
+      }, 1000);
     } catch {
       toast({
         title: 'Removal Failed',
         description: 'Failed to remove connection. Please try again.',
         variant: 'destructive',
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -133,5 +136,5 @@ export function PlaidAccountStatus({
         </AlertDialog>
       </div>
     </div>
-  )
+  );
 }

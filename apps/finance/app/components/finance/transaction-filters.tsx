@@ -1,48 +1,51 @@
-import { Button } from '@hominem/ui/button'
-import { DatePicker } from '@hominem/ui/components/date-picker'
-import { FilterChip } from '@hominem/ui/filters'
+import type { SortOption } from '@hominem/ui/hooks';
+
+import { Button } from '@hominem/ui/button';
+import { DatePicker } from '@hominem/ui/components/date-picker';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@hominem/ui/components/ui/dropdown-menu'
-import { SearchInput } from '@hominem/ui/components/ui/search-input'
-import type { SortOption } from '@hominem/ui/hooks'
-import { ListFilter, RefreshCcw } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { AccountSelect } from '~/components/account-select'
-import { SortControls } from '~/components/finance/sort-controls'
-import type { FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data'
-import { useSelectedAccount } from '~/lib/hooks/use-selected-account'
+} from '@hominem/ui/components/ui/dropdown-menu';
+import { SearchInput } from '@hominem/ui/components/ui/search-input';
+import { FilterChip } from '@hominem/ui/filters';
+import { ListFilter, RefreshCcw } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+
+import type { FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data';
+
+import { AccountSelect } from '~/components/account-select';
+import { SortControls } from '~/components/finance/sort-controls';
+import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
 
 interface ActiveSortOption extends SortOption {
-  onRemove: () => void
-  onClick: () => void
+  onRemove: () => void;
+  onClick: () => void;
 }
 
 interface TransactionFiltersProps {
-  accountsMap: Map<string, ReturnType<typeof useFinanceAccountsWithMap>['accounts'][number]>
-  accountsLoading: boolean
+  accountsMap: Map<string, ReturnType<typeof useFinanceAccountsWithMap>['accounts'][number]>;
+  accountsLoading: boolean;
 
   // Filters state
-  filters: FilterArgs
-  onFiltersChange: (filters: FilterArgs) => void
+  filters: FilterArgs;
+  onFiltersChange: (filters: FilterArgs) => void;
 
   // Search state
-  searchValue: string
-  onSearchChange: (value: string) => void
+  searchValue: string;
+  onSearchChange: (value: string) => void;
 
   // Sort state
-  sortOptions: SortOption[]
-  addSortOption: (option: SortOption) => void
-  updateSortOption: (index: number, option: SortOption) => void
-  removeSortOption: (index: number) => void
+  sortOptions: SortOption[];
+  addSortOption: (option: SortOption) => void;
+  updateSortOption: (index: number, option: SortOption) => void;
+  removeSortOption: (index: number) => void;
 
   // Actions
-  onRefresh: () => void
-  loading?: boolean
+  onRefresh: () => void;
+  loading?: boolean;
 }
 
 export function TransactionFilters({
@@ -59,20 +62,20 @@ export function TransactionFilters({
   onRefresh,
   loading = false,
 }: TransactionFiltersProps) {
-  const { selectedAccount, setSelectedAccount } = useSelectedAccount()
-  const [isFilterControlsOpen, setIsFilterControlsOpen] = useState(false)
-  const [isSortControlsOpen, setIsSortControlsOpen] = useState(false)
-  const [focusedSortIndex, setFocusedSortIndex] = useState<number | null>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  const { selectedAccount, setSelectedAccount } = useSelectedAccount();
+  const [isFilterControlsOpen, setIsFilterControlsOpen] = useState(false);
+  const [isSortControlsOpen, setIsSortControlsOpen] = useState(false);
+  const [focusedSortIndex, setFocusedSortIndex] = useState<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Optimize account lookup with memoized account names map
   const accountNames = useMemo(() => {
-    const names = new Map<string, string>()
+    const names = new Map<string, string>();
     accountsMap.forEach((account, id) => {
-      names.set(id, account.name)
-    })
-    return names
-  }, [accountsMap])
+      names.set(id, account.name);
+    });
+    return names;
+  }, [accountsMap]);
 
   // Create filters object that includes the selected account
   const allFilters = useMemo(
@@ -80,16 +83,16 @@ export function TransactionFilters({
       ...filters,
       accountId: selectedAccount === 'all' ? undefined : selectedAccount,
     }),
-    [filters, selectedAccount]
-  )
+    [filters, selectedAccount],
+  );
 
   // Handle account selection
   const handleSelectedAccountChange = useCallback(
     (accountId: string) => {
-      setSelectedAccount(accountId)
+      setSelectedAccount(accountId);
     },
-    [setSelectedAccount]
-  )
+    [setSelectedAccount],
+  );
 
   // Handle date changes
   const handleDateFromChange = useCallback(
@@ -97,57 +100,57 @@ export function TransactionFilters({
       onFiltersChange({
         ...filters,
         dateFrom: date,
-      })
+      });
     },
-    [filters, onFiltersChange]
-  )
+    [filters, onFiltersChange],
+  );
 
   const handleDateToChange = useCallback(
     (date: Date | undefined) => {
       onFiltersChange({
         ...filters,
         dateTo: date,
-      })
+      });
     },
-    [filters, onFiltersChange]
-  )
+    [filters, onFiltersChange],
+  );
 
   const handleSortControlsOpenChange = useCallback((open: boolean) => {
-    setIsSortControlsOpen(open)
+    setIsSortControlsOpen(open);
     if (!open) {
-      setFocusedSortIndex(null)
+      setFocusedSortIndex(null);
     }
-  }, [])
+  }, []);
 
   const handleSortChipClick = useCallback((index: number) => {
-    setFocusedSortIndex(index)
-    setIsSortControlsOpen(true)
-  }, [])
+    setFocusedSortIndex(index);
+    setIsSortControlsOpen(true);
+  }, []);
 
   const handleRefresh = useCallback(() => {
-    onRefresh()
-  }, [onRefresh])
+    onRefresh();
+  }, [onRefresh]);
 
   const activeFilters = useMemo(() => {
     return Object.entries(allFilters)
       .filter(([, value]) => value !== undefined && value !== '')
       .map(([key, value]) => {
         // Handle special cases for different filter types
-        let displayValue = String(value)
-        let displayKey = key.charAt(0).toUpperCase() + key.slice(1)
+        let displayValue = String(value);
+        let displayKey = key.charAt(0).toUpperCase() + key.slice(1);
 
         // For accountId, show the account name instead of the ID (optimized lookup)
         if (key === 'accountId' && value && typeof value === 'string') {
-          displayValue = accountNames.get(value) || value
-          displayKey = 'Account'
+          displayValue = accountNames.get(value) || value;
+          displayKey = 'Account';
         }
 
         // For date filters, format the date nicely
         if ((key === 'dateFrom' || key === 'dateTo') && value) {
           try {
-            const date = value instanceof Date ? value : new Date(String(value))
-            displayValue = date.toLocaleDateString()
-            displayKey = key === 'dateFrom' ? 'From Date' : 'To Date'
+            const date = value instanceof Date ? value : new Date(String(value));
+            displayValue = date.toLocaleDateString();
+            displayKey = key === 'dateFrom' ? 'From Date' : 'To Date';
           } catch {
             // Keep original value if date parsing fails
           }
@@ -159,42 +162,42 @@ export function TransactionFilters({
           onRemove: () => {
             if (key === 'accountId') {
               // Clear the selected account when removing account filter
-              setSelectedAccount('all')
+              setSelectedAccount('all');
             } else {
               // For other filters, update filters
               onFiltersChange({
                 ...filters,
                 [key]: undefined,
-              })
+              });
               if (key === 'description') {
                 // Also clear the search input value when removing description filter
-                onSearchChange('')
+                onSearchChange('');
               }
             }
           },
           onClick: () => {
             if (key === 'description') {
               // Focus the search input for description filter
-              searchInputRef.current?.focus()
+              searchInputRef.current?.focus();
             }
             if (key === 'accountId') {
               // Could be enhanced to open filter controls and focus account selector
             }
           },
-        }
-      })
-  }, [allFilters, accountNames, filters, onFiltersChange, onSearchChange, setSelectedAccount])
+        };
+      });
+  }, [allFilters, accountNames, filters, onFiltersChange, onSearchChange, setSelectedAccount]);
 
   // Generate active sort option chips with memoization
   const activeSortOptions: ActiveSortOption[] = useMemo(() => {
     return sortOptions.map((sortOption: SortOption, index: number) => ({
       ...sortOption,
       onRemove: () => {
-        removeSortOption(index)
+        removeSortOption(index);
       },
       onClick: () => handleSortChipClick(index),
-    }))
-  }, [sortOptions, removeSortOption, handleSortChipClick])
+    }));
+  }, [sortOptions, removeSortOption, handleSortChipClick]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -292,5 +295,5 @@ export function TransactionFilters({
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,12 +1,13 @@
-import { motion } from 'framer-motion'
-import { cn } from '~/lib/utils'
+import { motion } from 'framer-motion';
+
+import { cn } from '~/lib/utils';
 
 export function ProgressBar({
   className,
   progress = 0,
 }: {
-  className?: string
-  progress?: number
+  className?: string;
+  progress?: number;
 }) {
   return (
     <div className={cn('w-full h-[2px] bg-transparent overflow-hidden', className)}>
@@ -26,5 +27,5 @@ export function ProgressBar({
         }}
       />
     </div>
-  )
+  );
 }

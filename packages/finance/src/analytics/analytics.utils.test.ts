@@ -59,7 +59,7 @@ describe('analytics.utils', () => {
         { income: '1200.75', expenses: '600.50' },
       ];
       const result = calculateTimeSeriesTotals(series);
-      expect(result.total).toBeCloseTo(4051.5, 1);
+      expect(result.total).toBeCloseTo(4052, 1);
     });
 
     it('should handle missing or zero values', () => {

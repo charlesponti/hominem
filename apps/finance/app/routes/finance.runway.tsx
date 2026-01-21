@@ -1,10 +1,10 @@
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Label } from '@hominem/ui/components/ui/label'
-import { Input } from '@hominem/ui/input'
-import { AlertTriangle, Calendar, DollarSign, TrendingDown } from 'lucide-react'
-import { useId, useMemo, useState } from 'react'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Label } from '@hominem/ui/components/ui/label';
+import { Input } from '@hominem/ui/input';
+import { AlertTriangle, Calendar, DollarSign, TrendingDown } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -14,45 +14,46 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
-import { formatCurrency } from '~/lib/number.utils'
-import { trpc } from '~/lib/trpc'
+} from 'recharts';
+
+import { formatCurrency } from '~/lib/number.utils';
+import { trpc } from '~/lib/trpc';
 
 interface PlannedPurchase {
-  description: string
-  amount: number
-  date: string
+  description: string;
+  amount: number;
+  date: string;
 }
 
 export default function RunwayPage() {
-  const initialBalanceId = useId()
-  const monthlyExpensesId = useId()
-  const descriptionId = useId()
-  const amountId = useId()
-  const dateId = useId()
+  const initialBalanceId = useId();
+  const monthlyExpensesId = useId();
+  const descriptionId = useId();
+  const amountId = useId();
+  const dateId = useId();
 
-  const [initialBalance, setInitialBalance] = useState(0)
-  const [monthlyExpenses, setMonthlyExpenses] = useState(0)
-  const [plannedPurchases, setPlannedPurchases] = useState<PlannedPurchase[]>([])
+  const [initialBalance, setInitialBalance] = useState(0);
+  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+  const [plannedPurchases, setPlannedPurchases] = useState<PlannedPurchase[]>([]);
   const [newPurchase, setNewPurchase] = useState<PlannedPurchase>({
     description: '',
     amount: 0,
     date: '',
-  })
+  });
 
-  const runwayMutation = trpc.finance.runway.useMutation()
+  const runwayMutation = trpc.finance.runway.useMutation();
 
   const chartData = useMemo(() => {
-    const response = runwayMutation.data
+    const response = runwayMutation.data;
     if (!response?.success || !('data' in response) || !response.data?.projectionData) {
-      return []
+      return [];
     }
-    return response.data.projectionData
-  }, [runwayMutation.data])
+    return response.data.projectionData;
+  }, [runwayMutation.data]);
 
   // Calculate runway metrics from TRPC response
   const runwayMetrics = useMemo(() => {
-    const response = runwayMutation.data
+    const response = runwayMutation.data;
     if (!response?.success || !('data' in response)) {
       return {
         monthsUntilZero: 0,
@@ -60,12 +61,12 @@ export default function RunwayPage() {
         minimumBalance: 0,
         isRunwayDangerous: false,
         totalPlannedExpenses: 0,
-      }
+      };
     }
 
-    const data = response.data
-    const zeroDate = new Date(data.runwayEndDate)
-    const minimumBalance = Math.min(...chartData.map((d: { balance: number }) => d.balance))
+    const data = response.data;
+    const zeroDate = new Date(data.runwayEndDate);
+    const minimumBalance = Math.min(...chartData.map((d: { balance: number }) => d.balance));
 
     return {
       monthsUntilZero: data.runwayMonths,
@@ -73,14 +74,14 @@ export default function RunwayPage() {
       minimumBalance,
       isRunwayDangerous: data.isRunwayDangerous,
       totalPlannedExpenses: data.totalPlannedExpenses,
-    }
-  }, [runwayMutation.data, chartData])
+    };
+  }, [runwayMutation.data, chartData]);
 
   const handleAddPurchase = () => {
     if (newPurchase.description && newPurchase.amount > 0 && newPurchase.date) {
-      const updatedPurchases = [...plannedPurchases, newPurchase]
-      setPlannedPurchases(updatedPurchases)
-      setNewPurchase({ description: '', amount: 0, date: '' })
+      const updatedPurchases = [...plannedPurchases, newPurchase];
+      setPlannedPurchases(updatedPurchases);
+      setNewPurchase({ description: '', amount: 0, date: '' });
 
       // Recalculate if we have the required values
       if (initialBalance > 0 && monthlyExpenses > 0) {
@@ -88,14 +89,14 @@ export default function RunwayPage() {
           balance: initialBalance,
           monthlyExpenses,
           plannedPurchases: updatedPurchases,
-        })
+        });
       }
     }
-  }
+  };
 
   const handleRemovePurchase = (index: number) => {
-    const updatedPurchases = plannedPurchases.filter((_, i) => i !== index)
-    setPlannedPurchases(updatedPurchases)
+    const updatedPurchases = plannedPurchases.filter((_, i) => i !== index);
+    setPlannedPurchases(updatedPurchases);
 
     // Recalculate if we have the required values
     if (initialBalance > 0 && monthlyExpenses > 0) {
@@ -103,9 +104,9 @@ export default function RunwayPage() {
         balance: initialBalance,
         monthlyExpenses,
         plannedPurchases: updatedPurchases,
-      })
+      });
     }
-  }
+  };
 
   const handleCalculateRunway = () => {
     if (initialBalance > 0 && monthlyExpenses > 0) {
@@ -113,30 +114,30 @@ export default function RunwayPage() {
         balance: initialBalance,
         monthlyExpenses,
         plannedPurchases,
-      })
+      });
     }
-  }
+  };
 
   // Auto-calculate when values change
   const handleInputChange = (field: 'initialBalance' | 'monthlyExpenses', value: number) => {
     if (field === 'initialBalance') {
-      setInitialBalance(value)
+      setInitialBalance(value);
     } else {
-      setMonthlyExpenses(value)
+      setMonthlyExpenses(value);
     }
 
     // Auto-calculate if both values are set
-    const newBalance = field === 'initialBalance' ? value : initialBalance
-    const newMonthlyExpenses = field === 'monthlyExpenses' ? value : monthlyExpenses
+    const newBalance = field === 'initialBalance' ? value : initialBalance;
+    const newMonthlyExpenses = field === 'monthlyExpenses' ? value : monthlyExpenses;
 
     if (newBalance > 0 && newMonthlyExpenses > 0) {
       runwayMutation.mutate({
         balance: newBalance,
         monthlyExpenses: newMonthlyExpenses,
         plannedPurchases,
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -379,8 +380,8 @@ export default function RunwayPage() {
                     stroke="#10b981"
                     strokeWidth={2}
                     dot={(props) => {
-                      const { cx, cy, payload } = props
-                      const isNegative = payload?.balance < 0
+                      const { cx, cy, payload } = props;
+                      const isNegative = payload?.balance < 0;
                       return (
                         <circle
                           cx={cx}
@@ -390,7 +391,7 @@ export default function RunwayPage() {
                           stroke={isNegative ? '#ef4444' : '#10b981'}
                           strokeWidth={2}
                         />
-                      )
+                      );
                     }}
                     activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
                   />
@@ -401,5 +402,5 @@ export default function RunwayPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

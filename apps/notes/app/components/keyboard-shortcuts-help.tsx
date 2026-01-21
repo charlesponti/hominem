@@ -1,12 +1,12 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Keyboard, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Keyboard, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface KeyboardShortcut {
-  keys: string
-  description: string
-  category: string
+  keys: string;
+  description: string;
+  category: string;
 }
 
 const shortcuts: KeyboardShortcut[] = [
@@ -32,18 +32,18 @@ const shortcuts: KeyboardShortcut[] = [
     category: 'Navigation',
   },
   { keys: '?', description: 'Show/hide this help dialog', category: 'Help' },
-]
+];
 
 interface KeyboardShortcutsHelpProps {
-  className?: string
+  className?: string;
 }
 
 export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = useCallback(() => {
-    setIsOpen((prev) => !prev)
-  }, [])
+    setIsOpen((prev) => !prev);
+  }, []);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -54,42 +54,42 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
         !event.metaKey &&
         !event.altKey
       ) {
-        const target = event.target as HTMLElement
+        const target = event.target as HTMLElement;
         // Don't trigger if user is typing in an input
         if (
           target.tagName !== 'INPUT' &&
           target.tagName !== 'TEXTAREA' &&
           !target.isContentEditable
         ) {
-          event.preventDefault()
-          setIsOpen((prev) => !prev)
+          event.preventDefault();
+          setIsOpen((prev) => !prev);
         }
       }
 
       if (event.key === 'Escape' && isOpen) {
-        event.preventDefault()
-        setIsOpen(false)
+        event.preventDefault();
+        setIsOpen(false);
       }
     },
-    [isOpen]
-  )
+    [isOpen],
+  );
 
   // Add global key listener for ? key
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const groupedShortcuts = shortcuts.reduce(
     (acc, shortcut) => {
       if (!acc[shortcut.category]) {
-        acc[shortcut.category] = []
+        acc[shortcut.category] = [];
       }
-      acc[shortcut.category].push(shortcut)
-      return acc
+      acc[shortcut.category].push(shortcut);
+      return acc;
     },
-    {} as Record<string, KeyboardShortcut[]>
-  )
+    {} as Record<string, KeyboardShortcut[]>,
+  );
 
   return (
     <>
@@ -115,12 +115,12 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
           aria-labelledby="shortcuts-title"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setIsOpen(false)
+              setIsOpen(false);
             }
           }}
           onKeyUp={(e) => {
             if (e.key === 'Escape') {
-              setIsOpen(false)
+              setIsOpen(false);
             }
           }}
         >
@@ -177,5 +177,5 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
         </dialog>
       )}
     </>
-  )
+  );
 }

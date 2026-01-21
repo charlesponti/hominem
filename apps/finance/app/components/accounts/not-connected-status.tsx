@@ -1,15 +1,17 @@
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { AlertCircleIcon, LinkIcon } from 'lucide-react'
-import type { RouterOutput } from '~/lib/trpc'
-import { AccountConnectionDialog } from './account-connection-dialog'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { AlertCircleIcon, LinkIcon } from 'lucide-react';
+
+import type { RouterOutput } from '~/lib/trpc';
+
+import { AccountConnectionDialog } from './account-connection-dialog';
 
 export function NotConnectedStatus({
   account,
   showDialog,
 }: {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
-  showDialog?: boolean
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  showDialog?: boolean;
 }) {
   return (
     <div className="flex items-center space-x-2">
@@ -29,5 +31,5 @@ export function NotConnectedStatus({
         />
       )}
     </div>
-  )
+  );
 }

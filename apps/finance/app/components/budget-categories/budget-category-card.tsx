@@ -1,33 +1,34 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { Edit3, Trash2 } from 'lucide-react'
-import type { RouterOutput } from '~/lib/trpc'
+} from '@hominem/ui/components/ui/card';
+import { Edit3, Trash2 } from 'lucide-react';
+
+import type { RouterOutput } from '~/lib/trpc';
 
 // Derive from tRPC type and add UI-specific properties
 export type DisplayBudgetCategory =
   RouterOutput['finance']['budget']['categories']['list'][number] & {
-    budgetAmount: number
-    spent: number
-    color: string
-    description?: string
-  }
+    budgetAmount: number;
+    spent: number;
+    color: string;
+    description?: string;
+  };
 
 interface BudgetCategoryCardProps {
-  category: DisplayBudgetCategory
-  onEdit: (category: DisplayBudgetCategory) => void
-  onDelete: (category: DisplayBudgetCategory) => void
+  category: DisplayBudgetCategory;
+  onEdit: (category: DisplayBudgetCategory) => void;
+  onDelete: (category: DisplayBudgetCategory) => void;
 }
 
 export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategoryCardProps) {
   const spentPercentage =
-    category.budgetAmount > 0 ? (category.spent / category.budgetAmount) * 100 : 0
-  const remaining = category.budgetAmount - category.spent
+    category.budgetAmount > 0 ? (category.spent / category.budgetAmount) * 100 : 0;
+  const remaining = category.budgetAmount - category.spent;
 
   return (
     <Card className="relative">
@@ -88,5 +89,5 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

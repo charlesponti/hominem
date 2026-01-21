@@ -1,29 +1,31 @@
-import { List } from '@hominem/ui/list'
-import type React from 'react'
-import EventCard from './EventCard'
+import type React from 'react';
+
+import { List } from '@hominem/ui/list';
+
+import EventCard from './EventCard';
 
 interface Person {
-  id: string
-  firstName?: string
-  lastName?: string
+  id: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface Activity {
-  id: string
-  date?: string
-  time?: string
-  title: string
-  description?: string
-  location?: string
-  people?: Person[]
-  tags?: string[]
-  source?: 'manual' | 'google_calendar'
+  id: string;
+  date?: string;
+  time?: string;
+  title: string;
+  description?: string;
+  location?: string;
+  people?: Person[];
+  tags?: string[];
+  source?: 'manual' | 'google_calendar';
 }
 
 interface EventListProps {
-  activities: Activity[]
-  loading: boolean
-  onEditEvent: (activity: Activity) => void
+  activities: Activity[];
+  loading: boolean;
+  onEditEvent: (activity: Activity) => void;
 }
 
 const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent }) => {
@@ -34,7 +36,7 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
         <h3 className="text-lg font-medium mb-2">No events yet</h3>
         <p className="text-sm">Start adding events to track your life's memorable moments!</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -45,7 +47,7 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
         </li>
       ))}
     </List>
-  )
-}
+  );
+};
 
-export default EventList
+export default EventList;

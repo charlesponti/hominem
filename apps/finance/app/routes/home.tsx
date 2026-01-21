@@ -1,7 +1,7 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { ArrowRight } from 'lucide-react'
-import { useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { ArrowRight } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 
 export function meta() {
   return [
@@ -11,18 +11,18 @@ export function meta() {
       content:
         "Take control of your financial future with Florin's simple, powerful tools. Track all your accounts, categorize transactions automatically, and gain visual insights into your spending.",
     },
-  ]
+  ];
 }
 
 export default function Home() {
-  const { user, isLoading, supabase } = useSupabaseAuthContext()
-  const navigate = useNavigate()
+  const { user, isLoading, supabase } = useSupabaseAuthContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isLoading && user) {
-      navigate('/finance', { replace: true })
+      navigate('/finance', { replace: true });
     }
-  }, [isLoading, user, navigate])
+  }, [isLoading, user, navigate]);
 
   const handleSignIn = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
@@ -30,15 +30,15 @@ export default function Home() {
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
       },
-    })
-  }, [supabase.auth])
+    });
+  }, [supabase.auth]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
       </div>
-    )
+    );
   }
 
   if (user) {
@@ -46,7 +46,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
       </div>
-    )
+    );
   }
 
   return (
@@ -100,5 +100,5 @@ export default function Home() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

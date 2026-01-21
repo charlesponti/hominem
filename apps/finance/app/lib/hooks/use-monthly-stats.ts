@@ -1,14 +1,14 @@
-import { trpc } from '../trpc'
+import { trpc } from '../trpc';
 
 export interface MonthlyStats {
-  month: string
-  startDate: string
-  endDate: string
-  totalIncome: number
-  totalExpenses: number
-  netIncome: number
-  transactionCount: number
-  categorySpending: Array<{ name: string | null; amount: number }>
+  month: string;
+  startDate: string;
+  endDate: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netIncome: number;
+  transactionCount: number;
+  categorySpending: Array<{ name: string | null; amount: number }>;
 }
 
 /**
@@ -24,13 +24,13 @@ export function useMonthlyStats(month: string | undefined | null, options = {}) 
       enabled: !!month,
       staleTime: 5 * 60 * 1000, // 5 minutes
       ...options,
-    }
-  )
+    },
+  );
 
   return {
     stats: query.data,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
-  }
+  };
 }

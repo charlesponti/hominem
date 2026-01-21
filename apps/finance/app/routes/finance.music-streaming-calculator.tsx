@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Slider } from '@hominem/ui/components/ui/slider'
-import { DollarSign, Music } from 'lucide-react'
-import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Slider } from '@hominem/ui/components/ui/slider';
+import { DollarSign, Music } from 'lucide-react';
+import { useState } from 'react';
 
 const calculateEarnings = (rate: number, streams: number) => {
-  return rate * streams
-}
+  return rate * streams;
+};
 
 const MusicStreamingCalculator = () => {
-  const [streamCount, setStreamCount] = useState([100000])
+  const [streamCount, setStreamCount] = useState([100000]);
 
   const streamingServices = [
     { name: 'Apple Music', rate: 0.008, color: 'bg-red-500' },
@@ -18,10 +18,10 @@ const MusicStreamingCalculator = () => {
     { name: 'Tidal', rate: 0.01, color: 'bg-blue-600' },
     { name: 'Deezer', rate: 0.0035, color: 'bg-purple-500' },
     { name: 'Pandora', rate: 0.0015, color: 'bg-blue-400' },
-  ]
+  ];
 
-  const highestRate = Math.max(...streamingServices.map((service) => service.rate))
-  const maxEarnings = calculateEarnings(highestRate, 1000000)
+  const highestRate = Math.max(...streamingServices.map((service) => service.rate));
+  const maxEarnings = calculateEarnings(highestRate, 1000000);
 
   return (
     <Card className="w-full max-w-2xl">
@@ -59,25 +59,25 @@ const MusicStreamingCalculator = () => {
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 interface StreamingServiceRateProps {
   service: {
-    name: string
-    rate: number
-    color: string
-  }
-  streamCount: number[]
-  maxEarnings: number
+    name: string;
+    rate: number;
+    color: string;
+  };
+  streamCount: number[];
+  maxEarnings: number;
 }
 function StreamingServiceStreamingRate({
   service,
   streamCount,
   maxEarnings,
 }: StreamingServiceRateProps) {
-  const earnings = calculateEarnings(service.rate, streamCount[0])
-  const percentOfMax = earnings / maxEarnings
+  const earnings = calculateEarnings(service.rate, streamCount[0]);
+  const percentOfMax = earnings / maxEarnings;
 
   return (
     <div className="space-y-1">
@@ -97,7 +97,7 @@ function StreamingServiceStreamingRate({
         />
       </div>
     </div>
-  )
+  );
 }
 
-export default MusicStreamingCalculator
+export default MusicStreamingCalculator;

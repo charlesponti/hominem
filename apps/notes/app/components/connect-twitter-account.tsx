@@ -1,32 +1,33 @@
-import { Button } from '@hominem/ui/button'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
-import { Twitter } from 'lucide-react'
-import { useTwitterOAuth } from '~/hooks/use-twitter'
+import { Button } from '@hominem/ui/button';
+import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { Twitter } from 'lucide-react';
+
+import { useTwitterOAuth } from '~/hooks/use-twitter';
 
 export function ConnectTwitterAccount() {
-  const { toast } = useToast()
-  const { accounts, connect, disconnect, isConnecting } = useTwitterOAuth()
+  const { toast } = useToast();
+  const { accounts, connect, disconnect, isConnecting } = useTwitterOAuth();
 
   const handleConnect = () => {
-    connect()
-  }
+    connect();
+  };
 
   const handleDisconnect = async (accountId: string) => {
     try {
-      await disconnect({ accountId })
+      await disconnect({ accountId });
       toast({
         title: 'Disconnected',
         description: 'Twitter account disconnected.',
-      })
+      });
     } catch (error) {
-      console.error('Failed to disconnect Twitter account:', error)
+      console.error('Failed to disconnect Twitter account:', error);
       toast({
         variant: 'destructive',
         title: 'Disconnect failed',
         description: 'Please try again.',
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="space-y-3">
@@ -64,5 +65,5 @@ export function ConnectTwitterAccount() {
         </div>
       )}
     </div>
-  )
+  );
 }

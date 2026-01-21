@@ -1,20 +1,20 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 
 interface BudgetSummaryProps {
-  totalBudget: number
-  totalSpent: number
+  totalBudget: number;
+  totalSpent: number;
 }
 
 export function BudgetSummary({ totalBudget, totalSpent }: BudgetSummaryProps) {
-  const remaining = totalBudget - totalSpent
-  const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
+  const remaining = totalBudget - totalSpent;
+  const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   // Determine the color based on spending percentage
   const getProgressColor = () => {
-    if (spentPercentage > 100) return '#ef4444' // red-500
-    if (spentPercentage > 80) return '#f59e0b' // amber-500
-    return '#10b981' // emerald-500
-  }
+    if (spentPercentage > 100) return '#ef4444'; // red-500
+    if (spentPercentage > 80) return '#f59e0b'; // amber-500
+    return '#10b981'; // emerald-500
+  };
 
   return (
     <Card>
@@ -48,5 +48,5 @@ export function BudgetSummary({ totalBudget, totalSpent }: BudgetSummaryProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

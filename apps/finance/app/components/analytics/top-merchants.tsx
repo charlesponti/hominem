@@ -1,14 +1,15 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants'
-import { formatCurrency } from '~/lib/number.utils'
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+
+import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants';
+import { formatCurrency } from '~/lib/number.utils';
 
 interface TopMerchantsProps {
-  dateFrom?: Date
-  dateTo?: Date
-  selectedAccount?: string
-  selectedCategory?: string
+  dateFrom?: Date;
+  dateTo?: Date;
+  selectedAccount?: string;
+  selectedCategory?: string;
 }
 
 export function TopMerchants({
@@ -27,9 +28,9 @@ export function TopMerchants({
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
     category: selectedCategory || undefined,
     limit: 5,
-  })
+  });
 
-  const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
+  const skeletonItems = Array.from({ length: 5 }, (_, i) => i);
 
   return (
     <Card>
@@ -74,5 +75,5 @@ export function TopMerchants({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

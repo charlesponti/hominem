@@ -1,7 +1,7 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { subMonths } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { subMonths } from 'date-fns';
+import { useMemo, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -12,28 +12,29 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
-import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
-import { formatCurrency } from '~/lib/number.utils'
+} from 'recharts';
 
-const SPENDING_COLOR = '#ef4444'
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
+import { formatCurrency } from '~/lib/number.utils';
+
+const SPENDING_COLOR = '#ef4444';
 
 interface AccountSpendingChartProps {
-  accountId: string
-  accountName: string
+  accountId: string;
+  accountName: string;
 }
 
 export function AccountSpendingChart({ accountId, accountName }: AccountSpendingChartProps) {
-  const [chartType, setChartType] = useState<'area' | 'bar'>('area')
+  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
 
   // Get last 6 months of data for this specific account - memoize to prevent infinite re-renders
   const { dateFrom, dateTo } = useMemo(() => {
-    const now = new Date()
+    const now = new Date();
     return {
       dateFrom: subMonths(now, 6),
       dateTo: now,
-    }
-  }, [])
+    };
+  }, []);
 
   const {
     data: timeSeriesData,
@@ -48,15 +49,15 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
     compareToPrevious: false,
     groupBy: 'month',
     enabled: !!accountId, // Only fetch if accountId is provided
-  })
+  });
 
   const chartData = useMemo(() => {
-    if (!timeSeriesData?.data) return []
+    if (!timeSeriesData?.data) return [];
     return timeSeriesData.data.map((point) => ({
       name: formatDateLabel(point.date),
       Spending: Math.abs(point.expenses),
-    }))
-  }, [timeSeriesData?.data, formatDateLabel])
+    }));
+  }, [timeSeriesData?.data, formatDateLabel]);
 
   if (isLoading) {
     return (
@@ -70,11 +71,11 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
-    console.error('AccountSpendingChart error:', error)
+    console.error('AccountSpendingChart error:', error);
     return (
       <Card>
         <CardHeader>
@@ -91,7 +92,7 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!chartData || chartData.length === 0) {
@@ -106,7 +107,7 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -176,5 +177,5 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

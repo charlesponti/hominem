@@ -1,29 +1,30 @@
-import { getServerAuth } from '~/lib/auth.server'
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { Button } from '@hominem/ui/button'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { useCallback, useState } from 'react'
-import { data, type LoaderFunctionArgs, redirect } from 'react-router'
+} from '@hominem/ui/components/ui/card';
+import { useCallback, useState } from 'react';
+import { data, type LoaderFunctionArgs, redirect } from 'react-router';
+
+import { getServerAuth } from '~/lib/auth.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user, headers } = await getServerAuth(request)
+  const { user, headers } = await getServerAuth(request);
 
   if (!user) {
-    return redirect('/', { headers })
+    return redirect('/', { headers });
   }
 
-  return data({ user }, { headers })
+  return data({ user }, { headers });
 }
 
 export default function SignInPage() {
-  const { supabase, isLoading } = useSupabaseAuthContext()
-  const [error, setError] = useState('')
+  const { supabase, isLoading } = useSupabaseAuthContext();
+  const [error, setError] = useState('');
 
   const handleGoogleLogin = useCallback(async () => {
     try {
@@ -32,11 +33,11 @@ export default function SignInPage() {
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
         },
-      })
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed')
+      setError(err instanceof Error ? err.message : 'Google sign-in failed');
     }
-  }, [supabase.auth])
+  }, [supabase.auth]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background to-muted/50">
@@ -68,5 +69,5 @@ export default function SignInPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

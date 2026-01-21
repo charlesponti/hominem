@@ -1,27 +1,28 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Building, Plane, Utensils } from 'lucide-react'
-import { formatCurrency } from '~/lib/number.utils'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Building, Plane, Utensils } from 'lucide-react';
 
-const DESTINATION = 'Tokyo, Japan'
+import { formatCurrency } from '~/lib/number.utils';
+
+const DESTINATION = 'Tokyo, Japan';
 const COSTS = {
   transportation: { flight: 500, localTransit: 100 },
   accommodation: { hotel: 800, taxes: 100 },
   food: { restaurants: 300, groceries: 100 },
-}
+};
 
 const getTotalCost = (category: Category) => {
-  return Object.values(category).reduce((acc, curr) => acc + curr, 0)
-}
+  return Object.values(category).reduce((acc, curr) => acc + curr, 0);
+};
 
-type Category = Record<string, number>
+type Category = Record<string, number>;
 const TravelCostCard = () => {
-  const { transportation, accommodation, food } = COSTS
+  const { transportation, accommodation, food } = COSTS;
 
   const getCategoryPercentage = (category: Category) => {
     const totalTrip =
-      getTotalCost(transportation) + getTotalCost(accommodation) + getTotalCost(food)
-    return ((getTotalCost(category) / totalTrip) * 100).toFixed(1)
-  }
+      getTotalCost(transportation) + getTotalCost(accommodation) + getTotalCost(food);
+    return ((getTotalCost(category) / totalTrip) * 100).toFixed(1);
+  };
 
   return (
     <Card className="w-full max-w-md">
@@ -123,7 +124,7 @@ const TravelCostCard = () => {
               <span>Total Trip Cost</span>
               <span>
                 {formatCurrency(
-                  getTotalCost(transportation) + getTotalCost(accommodation) + getTotalCost(food)
+                  getTotalCost(transportation) + getTotalCost(accommodation) + getTotalCost(food),
                 )}
               </span>
             </div>
@@ -131,7 +132,7 @@ const TravelCostCard = () => {
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default TravelCostCard
+export default TravelCostCard;

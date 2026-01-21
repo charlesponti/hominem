@@ -1,24 +1,24 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react';
 
 export interface AudioRecordingState {
-  isRecording: boolean
-  isPaused: boolean
-  duration: number
-  audioBlob: Blob | null
-  audioUrl: string | null
-  stream: MediaStream | null
-  isSupported: boolean
-  error: string | null
+  isRecording: boolean;
+  isPaused: boolean;
+  duration: number;
+  audioBlob: Blob | null;
+  audioUrl: string | null;
+  stream: MediaStream | null;
+  isSupported: boolean;
+  error: string | null;
 }
 
 export interface UseAudioRecorderReturn {
-  state: AudioRecordingState
-  startRecording: () => Promise<void>
-  stopRecording: () => void
-  pauseRecording: () => void
-  resumeRecording: () => void
-  clearRecording: () => void
-  downloadRecording: () => void
+  state: AudioRecordingState;
+  startRecording: () => Promise<void>;
+  stopRecording: () => void;
+  pauseRecording: () => void;
+  resumeRecording: () => void;
+  clearRecording: () => void;
+  downloadRecording: () => void;
 }
 
 export function useAudioRecorder(): UseAudioRecorderReturn {
@@ -31,30 +31,30 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     stream: null,
     isSupported: typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia,
     error: null,
-  })
+  });
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const chunksRef = useRef<Blob[]>([])
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const startTimeRef = useRef<number>(0)
-  const pausedTimeRef = useRef<number>(0)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const pausedTimeRef = useRef<number>(0);
 
   const updateDuration = useCallback(() => {
     if (startTimeRef.current) {
-      const elapsed = Date.now() - startTimeRef.current - pausedTimeRef.current
-      setState((prev) => ({ ...prev, duration: Math.floor(elapsed / 1000) }))
+      const elapsed = Date.now() - startTimeRef.current - pausedTimeRef.current;
+      setState((prev) => ({ ...prev, duration: Math.floor(elapsed / 1000) }));
     }
-  }, [])
+  }, []);
 
   const startRecording = useCallback(async (): Promise<void> => {
     try {
       // Clear any previous error
-      setState((prev) => ({ ...prev, error: null }))
+      setState((prev) => ({ ...prev, error: null }));
 
       // Check if already recording
       if (state.isRecording) {
-        return
+        return;
       }
 
       // Request microphone access
@@ -65,33 +65,33 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
           autoGainControl: true,
           sampleRate: 44100,
         },
-      })
+      });
 
-      streamRef.current = stream
-      chunksRef.current = []
+      streamRef.current = stream;
+      chunksRef.current = [];
 
       // Create MediaRecorder
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',
-      })
+      });
 
-      mediaRecorderRef.current = mediaRecorder
+      mediaRecorderRef.current = mediaRecorder;
 
       // Update state with stream for waveform visualization
-      setState((prev) => ({ ...prev, stream }))
+      setState((prev) => ({ ...prev, stream }));
 
       // Set up event handlers
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunksRef.current.push(event.data)
+          chunksRef.current.push(event.data);
         }
-      }
+      };
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(chunksRef.current, {
           type: 'audio/webm;codecs=opus',
-        })
-        const audioUrl = URL.createObjectURL(audioBlob)
+        });
+        const audioUrl = URL.createObjectURL(audioBlob);
 
         setState((prev) => ({
           ...prev,
@@ -100,63 +100,63 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
           stream: null, // Clear stream when recording stops
           isRecording: false,
           isPaused: false,
-        }))
+        }));
 
         // Clean up
         if (streamRef.current) {
           for (const track of streamRef.current.getTracks()) {
-            track.stop()
+            track.stop();
           }
-          streamRef.current = null
+          streamRef.current = null;
         }
 
         if (intervalRef.current) {
-          clearInterval(intervalRef.current)
-          intervalRef.current = null
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
         }
-      }
+      };
 
       mediaRecorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event)
+        console.error('MediaRecorder error:', event);
         setState((prev) => ({
           ...prev,
           error: 'Recording failed. Please try again.',
           isRecording: false,
           isPaused: false,
-        }))
-      }
+        }));
+      };
 
       // Start recording
-      mediaRecorder.start(100) // Collect data every 100ms
-      startTimeRef.current = Date.now()
-      pausedTimeRef.current = 0
+      mediaRecorder.start(100); // Collect data every 100ms
+      startTimeRef.current = Date.now();
+      pausedTimeRef.current = 0;
 
       setState((prev) => ({
         ...prev,
         isRecording: true,
         isPaused: false,
         duration: 0,
-      }))
+      }));
 
       // Start duration timer
-      intervalRef.current = setInterval(updateDuration, 1000)
+      intervalRef.current = setInterval(updateDuration, 1000);
     } catch (error) {
-      console.error('Failed to start recording:', error)
+      console.error('Failed to start recording:', error);
 
-      let errorMessage = 'Failed to access microphone.'
+      let errorMessage = 'Failed to access microphone.';
       if (error instanceof DOMException) {
         switch (error.name) {
           case 'NotAllowedError':
-            errorMessage = 'Microphone access denied. Please allow microphone permissions.'
-            break
+            errorMessage = 'Microphone access denied. Please allow microphone permissions.';
+            break;
           case 'NotFoundError':
-            errorMessage = 'No microphone found. Please connect a microphone.'
-            break
+            errorMessage = 'No microphone found. Please connect a microphone.';
+            break;
           case 'NotSupportedError':
-            errorMessage = 'Audio recording not supported in this browser.'
-            break
+            errorMessage = 'Audio recording not supported in this browser.';
+            break;
           default:
-            errorMessage = `Recording error: ${error.message}`
+            errorMessage = `Recording error: ${error.message}`;
         }
       }
 
@@ -165,50 +165,50 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         error: errorMessage,
         isRecording: false,
         isPaused: false,
-      }))
+      }));
     }
-  }, [state.isRecording, updateDuration])
+  }, [state.isRecording, updateDuration]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && state.isRecording) {
-      mediaRecorderRef.current.stop()
+      mediaRecorderRef.current.stop();
     }
-  }, [state.isRecording])
+  }, [state.isRecording]);
 
   const pauseRecording = useCallback(() => {
     if (mediaRecorderRef.current && state.isRecording && !state.isPaused) {
-      mediaRecorderRef.current.pause()
-      pausedTimeRef.current += Date.now() - startTimeRef.current
+      mediaRecorderRef.current.pause();
+      pausedTimeRef.current += Date.now() - startTimeRef.current;
 
-      setState((prev) => ({ ...prev, isPaused: true }))
+      setState((prev) => ({ ...prev, isPaused: true }));
 
       if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     }
-  }, [state.isRecording, state.isPaused])
+  }, [state.isRecording, state.isPaused]);
 
   const resumeRecording = useCallback(() => {
     if (mediaRecorderRef.current && state.isRecording && state.isPaused) {
-      mediaRecorderRef.current.resume()
-      startTimeRef.current = Date.now()
+      mediaRecorderRef.current.resume();
+      startTimeRef.current = Date.now();
 
-      setState((prev) => ({ ...prev, isPaused: false }))
+      setState((prev) => ({ ...prev, isPaused: false }));
 
-      intervalRef.current = setInterval(updateDuration, 1000)
+      intervalRef.current = setInterval(updateDuration, 1000);
     }
-  }, [state.isRecording, state.isPaused, updateDuration])
+  }, [state.isRecording, state.isPaused, updateDuration]);
 
   const clearRecording = useCallback(() => {
     // Stop recording if active
     if (state.isRecording) {
-      stopRecording()
+      stopRecording();
     }
 
     // Clean up blob URL
     if (state.audioUrl) {
-      URL.revokeObjectURL(state.audioUrl)
+      URL.revokeObjectURL(state.audioUrl);
     }
 
     // Reset state
@@ -219,24 +219,24 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
       audioUrl: null,
       stream: null,
       error: null,
-    }))
+    }));
 
     // Clear refs
-    chunksRef.current = []
-    startTimeRef.current = 0
-    pausedTimeRef.current = 0
-  }, [state.isRecording, state.audioUrl, stopRecording])
+    chunksRef.current = [];
+    startTimeRef.current = 0;
+    pausedTimeRef.current = 0;
+  }, [state.isRecording, state.audioUrl, stopRecording]);
 
   const downloadRecording = useCallback(() => {
     if (state.audioBlob && state.audioUrl) {
-      const link = document.createElement('a')
-      link.href = state.audioUrl
-      link.download = `recording-${Date.now()}.webm`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const link = document.createElement('a');
+      link.href = state.audioUrl;
+      link.download = `recording-${Date.now()}.webm`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
-  }, [state.audioBlob, state.audioUrl])
+  }, [state.audioBlob, state.audioUrl]);
 
   return {
     state,
@@ -246,12 +246,12 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     resumeRecording,
     clearRecording,
     downloadRecording,
-  }
+  };
 }
 
 // Utility function to format duration
 export function formatDuration(seconds: number) {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }

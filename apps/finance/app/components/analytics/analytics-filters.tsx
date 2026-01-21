@@ -1,56 +1,57 @@
-import { Button } from '@hominem/ui/button'
-import { DatePicker } from '@hominem/ui/components/date-picker'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card } from '@hominem/ui/components/ui/card'
-import { Label } from '@hominem/ui/components/ui/label'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { Switch } from '@hominem/ui/components/ui/switch'
-import * as Dialog from '@radix-ui/react-dialog'
-import { Filter, X } from 'lucide-react'
-import { type Dispatch, type SetStateAction, useId, useState } from 'react'
-import { AccountSelect } from '~/components/account-select'
-import { CategorySelect } from '~/components/category-select'
-import { GroupBySelect } from '~/components/group-by-select'
-import { useFinanceAccounts } from '~/lib/hooks/use-finance-data'
-import { trpc } from '~/lib/trpc'
+import { Button } from '@hominem/ui/button';
+import { DatePicker } from '@hominem/ui/components/date-picker';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card } from '@hominem/ui/components/ui/card';
+import { Label } from '@hominem/ui/components/ui/label';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import { Switch } from '@hominem/ui/components/ui/switch';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Filter, X } from 'lucide-react';
+import { type Dispatch, type SetStateAction, useId, useState } from 'react';
 
-type AccountsData = ReturnType<typeof useFinanceAccounts>['data']
+import { AccountSelect } from '~/components/account-select';
+import { CategorySelect } from '~/components/category-select';
+import { GroupBySelect } from '~/components/group-by-select';
+import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
+import { trpc } from '~/lib/trpc';
+
+type AccountsData = ReturnType<typeof useFinanceAccounts>['data'];
 
 interface AnalyticsFiltersProps {
-  dateFrom: Date | undefined
-  setDateFrom: Dispatch<SetStateAction<Date | undefined>>
-  dateTo: Date | undefined
-  setDateTo: Dispatch<SetStateAction<Date | undefined>>
-  selectedAccount: string
-  setSelectedAccount: Dispatch<SetStateAction<string>>
-  selectedCategory: string
-  setSelectedCategory: Dispatch<SetStateAction<string>>
-  groupBy: 'month' | 'week' | 'day'
-  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>
-  includeStats: boolean
-  setIncludeStats: Dispatch<SetStateAction<boolean>>
-  compareToPrevious: boolean
-  setCompareToPrevious: Dispatch<SetStateAction<boolean>>
+  dateFrom: Date | undefined;
+  setDateFrom: Dispatch<SetStateAction<Date | undefined>>;
+  dateTo: Date | undefined;
+  setDateTo: Dispatch<SetStateAction<Date | undefined>>;
+  selectedAccount: string;
+  setSelectedAccount: Dispatch<SetStateAction<string>>;
+  selectedCategory: string;
+  setSelectedCategory: Dispatch<SetStateAction<string>>;
+  groupBy: 'month' | 'week' | 'day';
+  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>;
+  includeStats: boolean;
+  setIncludeStats: Dispatch<SetStateAction<boolean>>;
+  compareToPrevious: boolean;
+  setCompareToPrevious: Dispatch<SetStateAction<boolean>>;
 }
 
 interface FilterChipsProps {
-  dateFrom: Date | undefined
-  setDateFrom: Dispatch<SetStateAction<Date | undefined>>
-  dateTo: Date | undefined
-  setDateTo: Dispatch<SetStateAction<Date | undefined>>
-  selectedAccount: string
-  setSelectedAccount: Dispatch<SetStateAction<string>>
-  selectedCategory: string
-  setSelectedCategory: Dispatch<SetStateAction<string>>
-  groupBy: 'month' | 'week' | 'day'
-  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>
-  includeStats: boolean
-  setIncludeStats: Dispatch<SetStateAction<boolean>>
-  compareToPrevious: boolean
-  setCompareToPrevious: Dispatch<SetStateAction<boolean>>
-  accounts: AccountsData
-  categories: { id: string; name: string }[]
-  isLoading: boolean
+  dateFrom: Date | undefined;
+  setDateFrom: Dispatch<SetStateAction<Date | undefined>>;
+  dateTo: Date | undefined;
+  setDateTo: Dispatch<SetStateAction<Date | undefined>>;
+  selectedAccount: string;
+  setSelectedAccount: Dispatch<SetStateAction<string>>;
+  selectedCategory: string;
+  setSelectedCategory: Dispatch<SetStateAction<string>>;
+  groupBy: 'month' | 'week' | 'day';
+  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>;
+  includeStats: boolean;
+  setIncludeStats: Dispatch<SetStateAction<boolean>>;
+  compareToPrevious: boolean;
+  setCompareToPrevious: Dispatch<SetStateAction<boolean>>;
+  accounts: AccountsData;
+  categories: { id: string; name: string }[];
+  isLoading: boolean;
 }
 
 function FilterChips({
@@ -73,64 +74,64 @@ function FilterChips({
   isLoading,
 }: FilterChipsProps) {
   if (isLoading) {
-    return <Skeleton className="h-6 w-32" />
+    return <Skeleton className="h-6 w-32" />;
   }
 
-  const chips = []
+  const chips = [];
   if (dateFrom) {
     chips.push({
       key: 'dateFrom',
       label: `From: ${dateFrom.toLocaleDateString()}`,
       onRemove: () => setDateFrom(undefined),
-    })
+    });
   }
   if (dateTo) {
     chips.push({
       key: 'dateTo',
       label: `To: ${dateTo.toLocaleDateString()}`,
       onRemove: () => setDateTo(undefined),
-    })
+    });
   }
   if (selectedAccount && selectedAccount !== 'all') {
-    const accountLabel = accounts?.find((a) => a.id === selectedAccount)?.name || 'Account'
+    const accountLabel = accounts?.find((a) => a.id === selectedAccount)?.name || 'Account';
     chips.push({
       key: 'account',
       label: accountLabel,
       onRemove: () => setSelectedAccount('all'),
-    })
+    });
   }
   if (selectedCategory && selectedCategory !== 'all') {
     const categoryLabel =
-      categories.find((c) => c.id === selectedCategory)?.name || selectedCategory
+      categories.find((c) => c.id === selectedCategory)?.name || selectedCategory;
     chips.push({
       key: 'category',
       label: categoryLabel,
       onRemove: () => setSelectedCategory('all'),
-    })
+    });
   }
   if (groupBy !== 'month') {
     chips.push({
       key: 'groupBy',
       label: `Grouped: ${groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}`,
       onRemove: () => setGroupBy('month'),
-    })
+    });
   }
   if (includeStats) {
     chips.push({
       key: 'includeStats',
       label: 'Stats',
       onRemove: () => setIncludeStats(false),
-    })
+    });
   }
   if (compareToPrevious) {
     chips.push({
       key: 'compareToPrevious',
       label: 'Trends',
       onRemove: () => setCompareToPrevious(false),
-    })
+    });
   }
   if (!chips.length) {
-    return <span className="text-xs text-muted-foreground">No filters</span>
+    return <span className="text-xs text-muted-foreground">No filters</span>;
   }
   return (
     <div className="flex flex-wrap gap-1.5 max-w-full">
@@ -147,8 +148,8 @@ function FilterChips({
             className="size-4 p-0 ml-1 shrink-0"
             aria-label={`Remove ${chip.label}`}
             onClick={(e) => {
-              e.stopPropagation()
-              chip.onRemove()
+              e.stopPropagation();
+              chip.onRemove();
             }}
           >
             <X className="size-3" />
@@ -156,7 +157,7 @@ function FilterChips({
         </Badge>
       ))}
     </div>
-  )
+  );
 }
 
 export function AnalyticsFilters({
@@ -175,27 +176,27 @@ export function AnalyticsFilters({
   compareToPrevious,
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
-  const accountsQuery = useFinanceAccounts()
+  const accountsQuery = useFinanceAccounts();
   const { data: categories = [], isLoading: categoriesLoading } =
-    trpc.finance.categories.list.useQuery()
+    trpc.finance.categories.list.useQuery();
 
-  const isLoading = accountsQuery.isLoading || categoriesLoading
-  const dateFromId = useId()
-  const dateToId = useId()
-  const includeStatsId = useId()
-  const compareToPreviousId = useId()
+  const isLoading = accountsQuery.isLoading || categoriesLoading;
+  const dateFromId = useId();
+  const dateToId = useId();
+  const includeStatsId = useId();
+  const compareToPreviousId = useId();
 
   // Ensure we have valid data even during loading
-  const safeAccounts = accountsQuery.data || []
+  const safeAccounts = accountsQuery.data || [];
   const safeCategories =
     categories
       .map((category) => ({
         id: category.category || '',
         name: category.category || '',
       }))
-      .filter((cat) => cat.id && cat.name) || []
+      .filter((cat) => cat.id && cat.name) || [];
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <Card className="border-none shadow-none">
@@ -324,5 +325,5 @@ export function AnalyticsFilters({
         </div>
       </div>
     </Card>
-  )
+  );
 }

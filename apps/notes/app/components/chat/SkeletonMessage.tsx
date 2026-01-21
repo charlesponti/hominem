@@ -11,5 +11,5 @@ export function SkeletonMessage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

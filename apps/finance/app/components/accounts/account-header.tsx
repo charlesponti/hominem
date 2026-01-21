@@ -1,24 +1,27 @@
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react'
-import { RouteLink } from '~/components/route-link'
-import type { RouterOutput } from '~/lib/trpc'
-import { AccountConnectionDialog } from './account-connection-dialog'
-import { AccountStatusDisplay } from './account-status-display'
+} from '@hominem/ui/components/ui/card';
+import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react';
+
+import type { RouterOutput } from '~/lib/trpc';
+
+import { RouteLink } from '~/components/route-link';
+
+import { AccountConnectionDialog } from './account-connection-dialog';
+import { AccountStatusDisplay } from './account-status-display';
 
 interface AccountHeaderProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
-  isBalanceVisible: boolean
-  onToggleBalance: () => void
-  onRefresh: () => void
-  isLoading: boolean
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  isBalanceVisible: boolean;
+  onToggleBalance: () => void;
+  onRefresh: () => void;
+  isLoading: boolean;
 }
 
 export function AccountHeader({
@@ -31,36 +34,36 @@ export function AccountHeader({
   const getAccountTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return <CreditCard className="size-6" />
+        return <CreditCard className="size-6" />;
       default:
-        return <Building2 className="size-6" />
+        return <Building2 className="size-6" />;
     }
-  }
+  };
 
   const formatBalance = (balance: string) => {
-    const amount = Number.parseFloat(balance)
+    const amount = Number.parseFloat(balance);
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const getAccountTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'depository':
-        return 'bg-green-100 text-green-800 border-green-200'
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'investment':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'loan':
-        return 'bg-orange-100 text-orange-800 border-orange-200'
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
-  const isPlaidAccount = account.isPlaidConnected || false
+  const isPlaidAccount = account.isPlaidConnected || false;
 
   return (
     <>
@@ -133,5 +136,5 @@ export function AccountHeader({
         </CardContent>
       </Card>
     </>
-  )
+  );
 }

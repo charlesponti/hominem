@@ -1,7 +1,8 @@
-import { motion } from 'framer-motion'
-import { Wifi, WifiOff } from 'lucide-react'
-import { cn } from '~/lib/utils'
-import { Badge } from '@hominem/ui/components/ui/badge'
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { motion } from 'framer-motion';
+import { Wifi, WifiOff } from 'lucide-react';
+
+import { cn } from '~/lib/utils';
 
 export function WebSocketConnectionBadge({ isConnected }: { isConnected: boolean }) {
   return (
@@ -14,7 +15,7 @@ export function WebSocketConnectionBadge({ isConnected }: { isConnected: boolean
         variant="outline"
         className={cn(
           'flex items-center gap-2 shadow-sm transition-colors duration-200',
-          isConnected ? 'bg-green-50 hover:bg-green-100' : 'bg-red-50 hover:bg-red-100'
+          isConnected ? 'bg-green-50 hover:bg-green-100' : 'bg-red-50 hover:bg-red-100',
         )}
       >
         {isConnected ? (
@@ -50,5 +51,5 @@ export function WebSocketConnectionBadge({ isConnected }: { isConnected: boolean
         )}
       </Badge>
     </motion.div>
-  )
+  );
 }

@@ -1,16 +1,16 @@
-import { Button } from '@hominem/ui/button'
-import { Eraser, Globe, Loader2, Mic, Paperclip, Volume2 } from 'lucide-react'
+import { Button } from '@hominem/ui/button';
+import { Eraser, Globe, Loader2, Mic, Paperclip, Volume2 } from 'lucide-react';
 
 interface ChatActionsProps {
-  onWebSearch: () => void
-  onFileUpload: () => void
-  onToggleVoiceMode: () => void
-  onAudioRecord: () => void
-  onClearChat: () => void
-  isVoiceMode: boolean
-  isLoading: boolean
-  isSearching: boolean
-  hasInput: boolean
+  onWebSearch: () => void;
+  onFileUpload: () => void;
+  onToggleVoiceMode: () => void;
+  onAudioRecord: () => void;
+  onClearChat: () => void;
+  isVoiceMode: boolean;
+  isLoading: boolean;
+  isSearching: boolean;
+  hasInput: boolean;
 }
 
 export function ChatActions({
@@ -76,5 +76,5 @@ export function ChatActions({
         <Eraser className="size-3 mr-1" />
       </Button>
     </div>
-  )
+  );
 }

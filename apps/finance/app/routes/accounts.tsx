@@ -1,6 +1,6 @@
-import { Button } from '@hominem/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
-import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert';
+import { Badge } from '@hominem/ui/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -8,8 +8,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { toast } from '@hominem/ui/components/ui/use-toast'
+} from '@hominem/ui/components/ui/card';
+import { toast } from '@hominem/ui/components/ui/use-toast';
 import {
   AlertTriangle,
   Building2,
@@ -18,37 +18,38 @@ import {
   Eye,
   EyeOff,
   RefreshCcw,
-} from 'lucide-react'
-import { useState } from 'react'
-import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link'
-import { RouteLink } from '~/components/route-link'
-import { useAllAccounts } from '~/lib/hooks/use-finance-data'
+} from 'lucide-react';
+import { useState } from 'react';
+
+import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link';
+import { RouteLink } from '~/components/route-link';
+import { useAllAccounts } from '~/lib/hooks/use-finance-data';
 
 // Simple account card for overview
 function AccountCard({
   account,
 }: {
-  account: ReturnType<typeof useAllAccounts>['accounts'][number]
+  account: ReturnType<typeof useAllAccounts>['accounts'][number];
 }) {
-  const [isBalanceVisible, setIsBalanceVisible] = useState(true)
-  const isPlaidAccount = account.isPlaidConnected || false
+  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+  const isPlaidAccount = account.isPlaidConnected || false;
 
   const getAccountTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return <CreditCard className="size-4" />
+        return <CreditCard className="size-4" />;
       default:
-        return <Building2 className="size-4" />
+        return <Building2 className="size-4" />;
     }
-  }
+  };
 
   const formatBalance = (balance: string) => {
-    const amount = Number.parseFloat(balance)
+    const amount = Number.parseFloat(balance);
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   return (
     <Card className="overflow-hidden flex flex-col">
@@ -108,41 +109,41 @@ function AccountCard({
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
 
 export default function AccountsPage() {
-  const allAccountsQuery = useAllAccounts()
+  const allAccountsQuery = useAllAccounts();
 
   const handleConnectionSuccess = (institutionName: string) => {
     toast({
       title: 'Bank Connected!',
       description: `Successfully connected to ${institutionName}. Your accounts will appear shortly.`,
-    })
-  }
+    });
+  };
 
   const handleConnectionError = (error: Error) => {
     toast({
       title: 'Connection Failed',
       description: error.message || 'Failed to connect bank account. Please try again.',
       variant: 'destructive',
-    })
-  }
+    });
+  };
 
-  const isLoading = allAccountsQuery.isLoading
-  const hasError = allAccountsQuery.error
-  const hasAccounts = (allAccountsQuery.accounts || []).length > 0
+  const isLoading = allAccountsQuery.isLoading;
+  const hasError = allAccountsQuery.error;
+  const hasAccounts = (allAccountsQuery.accounts || []).length > 0;
 
   // Sort accounts to show Plaid-connected accounts first, then manual accounts
   const sortedAccounts = (allAccountsQuery.accounts || []).sort((a, b) => {
-    if (a.isPlaidConnected && !b.isPlaidConnected) return -1
-    if (!a.isPlaidConnected && b.isPlaidConnected) return 1
-    return a.name.localeCompare(b.name)
-  })
+    if (a.isPlaidConnected && !b.isPlaidConnected) return -1;
+    if (!a.isPlaidConnected && b.isPlaidConnected) return 1;
+    return a.name.localeCompare(b.name);
+  });
 
   const refreshData = async () => {
-    await allAccountsQuery.refetch()
-  }
+    await allAccountsQuery.refetch();
+  };
 
   return (
     <div className="space-y-6">
@@ -231,5 +232,5 @@ export default function AccountsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

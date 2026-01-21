@@ -1,20 +1,20 @@
-import { trpc } from '~/lib/trpc'
+import { trpc } from '~/lib/trpc';
 
 export function useNotesList(
   options: {
-    types?: ('note' | 'task' | 'timer' | 'journal' | 'document')[]
-    query?: string
-    tags?: string[]
-    since?: string
-    sortBy?: 'createdAt' | 'updatedAt' | 'title'
-    sortOrder?: 'asc' | 'desc'
-    limit?: number
-    offset?: number
-  } = {}
+    types?: ('note' | 'task' | 'timer' | 'journal' | 'document')[];
+    query?: string;
+    tags?: string[];
+    since?: string;
+    sortBy?: 'createdAt' | 'updatedAt' | 'title';
+    sortOrder?: 'asc' | 'desc';
+    limit?: number;
+    offset?: number;
+  } = {},
 ) {
   return trpc.notes.list.useQuery(options, {
     staleTime: 1000 * 60 * 1, // 1 minute
-  })
+  });
 }
 
 export function useNote(id: string) {
@@ -23,47 +23,47 @@ export function useNote(id: string) {
     {
       enabled: !!id,
       staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  )
+    },
+  );
 }
 
 export function useCreateNote() {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   return trpc.notes.create.useMutation({
     onSuccess: () => {
-      utils.notes.list.invalidate()
+      utils.notes.list.invalidate();
     },
-  })
+  });
 }
 
 export function useUpdateNote() {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   return trpc.notes.update.useMutation({
     onSuccess: (data) => {
-      utils.notes.list.invalidate()
-      utils.notes.get.setData({ id: data.id }, data)
+      utils.notes.list.invalidate();
+      utils.notes.get.setData({ id: data.id }, data);
     },
-  })
+  });
 }
 
 export function useDeleteNote() {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   return trpc.notes.delete.useMutation({
     onSuccess: () => {
-      utils.notes.list.invalidate()
+      utils.notes.list.invalidate();
     },
-  })
+  });
 }
 
 export function useSyncNotes() {
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   return trpc.notes.sync.useMutation({
     onSuccess: () => {
-      utils.notes.list.invalidate()
+      utils.notes.list.invalidate();
     },
-  })
+  });
 }

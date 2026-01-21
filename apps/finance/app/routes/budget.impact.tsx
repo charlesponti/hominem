@@ -1,16 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Label } from '@hominem/ui/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@hominem/ui/components/ui/radio-group'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Label } from '@hominem/ui/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@hominem/ui/components/ui/radio-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { Input } from '@hominem/ui/input'
-import { AlertTriangle, BarChart3, Calendar, TrendingUp } from 'lucide-react'
-import { useId, useMemo, useState } from 'react'
+} from '@hominem/ui/components/ui/select';
+import { Input } from '@hominem/ui/input';
+import { AlertTriangle, BarChart3, Calendar, TrendingUp } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -19,21 +19,22 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
-import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
-import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
-import { formatCurrency } from '~/lib/number.utils'
+} from 'recharts';
+
+import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
+import { formatCurrency } from '~/lib/number.utils';
 
 const BudgetImpactCalculator = () => {
-  const oneTimeId = useId()
-  const recurringId = useId()
+  const oneTimeId = useId();
+  const recurringId = useId();
 
   // Get current month for data
-  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
   // Get historical spending data (last 6 months)
-  const sixMonthsAgo = new Date()
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
   const {
     chartData: historicalData,
@@ -44,21 +45,21 @@ const BudgetImpactCalculator = () => {
     dateTo: new Date(),
     groupBy: 'month',
     enabled: true,
-  })
+  });
 
   // Get current month stats
   const {
     stats: currentMonthStats,
     isLoading: isLoadingCurrent,
     error: currentError,
-  } = useMonthlyStats(currentMonth)
+  } = useMonthlyStats(currentMonth);
 
   // State for purchase inputs
-  const [purchaseType, setPurchaseType] = useState('one-time')
-  const [amount, setAmount] = useState(500)
-  const [frequency, setFrequency] = useState('monthly')
-  const [customValue, setCustomValue] = useState(1)
-  const [customUnit, setCustomUnit] = useState('days')
+  const [purchaseType, setPurchaseType] = useState('one-time');
+  const [amount, setAmount] = useState(500);
+  const [frequency, setFrequency] = useState('monthly');
+  const [customValue, setCustomValue] = useState(1);
+  const [customUnit, setCustomUnit] = useState('days');
 
   // Calculate real financial metrics from historical data
   const financialMetrics = useMemo(() => {
@@ -70,12 +71,12 @@ const BudgetImpactCalculator = () => {
         averageSavingsRate: 0,
         spendingVolatility: 0,
         hasEnoughData: false,
-      }
+      };
     }
 
     const validMonths = historicalData.filter(
-      (month) => (month.Spending || 0) > 0 || (month.Income || 0) > 0
-    )
+      (month) => (month.Spending || 0) > 0 || (month.Income || 0) > 0,
+    );
 
     if (validMonths.length === 0) {
       return {
@@ -85,25 +86,25 @@ const BudgetImpactCalculator = () => {
         averageSavingsRate: 0,
         spendingVolatility: 0,
         hasEnoughData: false,
-      }
+      };
     }
 
-    const totalIncome = validMonths.reduce((sum, month) => sum + (month.Income || 0), 0)
-    const totalExpenses = validMonths.reduce((sum, month) => sum + (month.Spending || 0), 0)
-    const totalSavings = totalIncome - totalExpenses
+    const totalIncome = validMonths.reduce((sum, month) => sum + (month.Income || 0), 0);
+    const totalExpenses = validMonths.reduce((sum, month) => sum + (month.Spending || 0), 0);
+    const totalSavings = totalIncome - totalExpenses;
 
-    const averageMonthlyIncome = totalIncome / validMonths.length
-    const averageMonthlyExpenses = totalExpenses / validMonths.length
-    const averageMonthlySavings = totalSavings / validMonths.length
-    const averageSavingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0
+    const averageMonthlyIncome = totalIncome / validMonths.length;
+    const averageMonthlyExpenses = totalExpenses / validMonths.length;
+    const averageMonthlySavings = totalSavings / validMonths.length;
+    const averageSavingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
 
     // Calculate spending volatility (standard deviation)
-    const spendingValues = validMonths.map((month) => month.Spending || 0)
-    const meanSpending = averageMonthlyExpenses
+    const spendingValues = validMonths.map((month) => month.Spending || 0);
+    const meanSpending = averageMonthlyExpenses;
     const variance =
       spendingValues.reduce((sum, value) => sum + (value - meanSpending) ** 2, 0) /
-      spendingValues.length
-    const spendingVolatility = Math.sqrt(variance)
+      spendingValues.length;
+    const spendingVolatility = Math.sqrt(variance);
 
     return {
       averageMonthlyIncome,
@@ -113,91 +114,91 @@ const BudgetImpactCalculator = () => {
       spendingVolatility,
       hasEnoughData: validMonths.length >= 2,
       dataMonths: validMonths.length,
-    }
-  }, [historicalData])
+    };
+  }, [historicalData]);
 
   // Calculate monthly cost based on frequency
   const calculateMonthlyRate = () => {
-    if (purchaseType === 'one-time') return amount / 12
+    if (purchaseType === 'one-time') return amount / 12;
 
     switch (frequency) {
       case 'weekly':
-        return (amount * 52) / 12
+        return (amount * 52) / 12;
       case 'monthly':
-        return amount
+        return amount;
       case 'quarterly':
-        return amount / 3
+        return amount / 3;
       case 'annually':
-        return amount / 12
+        return amount / 12;
       case 'custom':
         switch (customUnit) {
           case 'days':
-            return (amount * (365 / customValue)) / 12
+            return (amount * (365 / customValue)) / 12;
           case 'weeks':
-            return (amount * (52 / customValue)) / 12
+            return (amount * (52 / customValue)) / 12;
           case 'months':
-            return amount / customValue
+            return amount / customValue;
           case 'years':
-            return amount / (12 * customValue)
+            return amount / (12 * customValue);
           default:
-            return amount
+            return amount;
         }
       default:
-        return amount
+        return amount;
     }
-  }
+  };
 
   // Calculate impact over next 12 months using real data
   const calculateImpact = () => {
-    const months = Array.from({ length: 12 }, (_, i) => i + 1)
-    const monthlyImpact = calculateMonthlyRate()
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    const monthlyImpact = calculateMonthlyRate();
 
     // Use real average savings rate, but be conservative
-    const conservativeSavingsRate = Math.max(0, financialMetrics.averageSavingsRate - 5) // 5% buffer
+    const conservativeSavingsRate = Math.max(0, financialMetrics.averageSavingsRate - 5); // 5% buffer
     const baselineMonthlySavings =
-      financialMetrics.averageMonthlyIncome * (conservativeSavingsRate / 100)
+      financialMetrics.averageMonthlyIncome * (conservativeSavingsRate / 100);
 
     // Start with current savings if available
-    const startingSavings = currentMonthStats?.netIncome || 0
+    const startingSavings = currentMonthStats?.netIncome || 0;
 
     return months.map((month) => {
-      const baselineSavings = startingSavings + baselineMonthlySavings * month
-      const impactedSavings = baselineSavings - monthlyImpact * month
+      const baselineSavings = startingSavings + baselineMonthlySavings * month;
+      const impactedSavings = baselineSavings - monthlyImpact * month;
 
       return {
         month: `Month ${month}`,
         baseline: Math.round(baselineSavings),
         withPurchase: Math.round(impactedSavings),
-      }
-    })
-  }
+      };
+    });
+  };
 
-  const impactData = calculateImpact()
-  const monthlyImpact = calculateMonthlyRate()
+  const impactData = calculateImpact();
+  const monthlyImpact = calculateMonthlyRate();
   const newSavingsRate =
     financialMetrics.averageMonthlyIncome > 0
       ? ((financialMetrics.averageMonthlySavings - monthlyImpact) /
           financialMetrics.averageMonthlyIncome) *
         100
-      : 0
+      : 0;
 
   const formatFrequencyDisplay = () => {
-    if (frequency !== 'custom') return frequency
-    return `Every ${customValue} ${customUnit}`
-  }
+    if (frequency !== 'custom') return frequency;
+    return `Every ${customValue} ${customUnit}`;
+  };
 
   // Calculate actionable insights
   const insights = useMemo(() => {
-    if (!financialMetrics.hasEnoughData) return []
+    if (!financialMetrics.hasEnoughData) return [];
 
-    const insights = []
+    const insights = [];
 
     // Check if this would significantly impact savings
     if (monthlyImpact > financialMetrics.averageMonthlySavings * 0.5) {
       insights.push({
         type: 'warning',
         message: `This purchase would use ${((monthlyImpact / financialMetrics.averageMonthlySavings) * 100).toFixed(0)}% of your average monthly savings`,
-      })
+      });
     }
 
     // Check if this would put savings rate below 10%
@@ -205,7 +206,7 @@ const BudgetImpactCalculator = () => {
       insights.push({
         type: 'warning',
         message: 'This would reduce your savings rate below the recommended 10%',
-      })
+      });
     }
 
     // Check if this would create negative savings
@@ -213,20 +214,20 @@ const BudgetImpactCalculator = () => {
       insights.push({
         type: 'danger',
         message: 'This purchase would exceed your income and create debt',
-      })
+      });
     }
 
     // Suggest alternatives based on spending patterns
     if (monthlyImpact > 0) {
-      const equivalentReduction = (monthlyImpact / financialMetrics.averageMonthlyExpenses) * 100
+      const equivalentReduction = (monthlyImpact / financialMetrics.averageMonthlyExpenses) * 100;
       insights.push({
         type: 'info',
         message: `To afford this, you'd need to reduce other spending by ${equivalentReduction.toFixed(1)}%`,
-      })
+      });
     }
 
-    return insights
-  }, [financialMetrics, monthlyImpact, newSavingsRate])
+    return insights;
+  }, [financialMetrics, monthlyImpact, newSavingsRate]);
 
   if (isLoadingHistorical || isLoadingCurrent) {
     return (
@@ -236,7 +237,7 @@ const BudgetImpactCalculator = () => {
           <p className="mt-2 text-sm text-gray-600">Loading your financial data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (historicalError || currentError) {
@@ -252,7 +253,7 @@ const BudgetImpactCalculator = () => {
           Please ensure you have imported transactions to use this calculator.
         </p>
       </div>
-    )
+    );
   }
 
   if (!financialMetrics.hasEnoughData) {
@@ -267,7 +268,7 @@ const BudgetImpactCalculator = () => {
           {financialMetrics.dataMonths !== 1 ? 's' : ''} of data.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -489,7 +490,7 @@ const BudgetImpactCalculator = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default BudgetImpactCalculator
+export default BudgetImpactCalculator;

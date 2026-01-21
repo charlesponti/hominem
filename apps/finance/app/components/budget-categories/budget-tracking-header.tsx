@@ -1,21 +1,22 @@
-import { Button } from '@hominem/ui/button'
-import { Plus } from 'lucide-react'
-import { useNavigate } from 'react-router'
-import { DateMonthSelect } from '~/components/date-month-select'
-import { trpc } from '~/lib/trpc'
+import { Button } from '@hominem/ui/button';
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router';
+
+import { DateMonthSelect } from '~/components/date-month-select';
+import { trpc } from '~/lib/trpc';
 
 interface BudgetTrackingHeaderProps {
-  selectedMonthYear: string
-  onMonthChange: (value: string) => void
+  selectedMonthYear: string;
+  onMonthChange: (value: string) => void;
 }
 
 export function BudgetTrackingHeader({
   selectedMonthYear,
   onMonthChange,
 }: BudgetTrackingHeaderProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const { data: transactionCategories } = trpc.finance.budget.transactionCategories.useQuery()
+  const { data: transactionCategories } = trpc.finance.budget.transactionCategories.useQuery();
 
   return (
     <div className="flex flex-col gap-4">
@@ -43,5 +44,5 @@ export function BudgetTrackingHeader({
         </Button>
       </div>
     </div>
-  )
+  );
 }

@@ -1,50 +1,61 @@
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@hominem/ui/dialog'
-import { LinkIcon, UnlinkIcon } from 'lucide-react'
-import { useState } from 'react'
-import { useFinancialInstitutions } from '~/lib/hooks/use-finance-data'
-import { useLinkAccountToInstitution, useUnlinkAccountFromInstitution } from '~/lib/hooks/use-plaid'
-import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution'
-import type { RouterOutput } from '~/lib/trpc'
+} from '@hominem/ui/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@hominem/ui/dialog';
+import { LinkIcon, UnlinkIcon } from 'lucide-react';
+import { useState } from 'react';
+
+import type { RouterOutput } from '~/lib/trpc';
+
+import { useFinancialInstitutions } from '~/lib/hooks/use-finance-data';
+import {
+  useLinkAccountToInstitution,
+  useUnlinkAccountFromInstitution,
+} from '~/lib/hooks/use-plaid';
+import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution';
 
 interface AccountConnectionDialogProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
-  trigger?: React.ReactNode
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  trigger?: React.ReactNode;
 }
 
 export function AccountConnectionDialog({ account, trigger }: AccountConnectionDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>('')
-  const [selectedPlaidAccountId, setSelectedPlaidAccountId] = useState<string>('')
+  const [open, setOpen] = useState(false);
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>('');
+  const [selectedPlaidAccountId, setSelectedPlaidAccountId] = useState<string>('');
 
-  const institutionsQuery = useFinancialInstitutions()
-  const plaidAccountsQuery = usePlaidAccountsByInstitution(selectedInstitutionId)
-  const linkMutation = useLinkAccountToInstitution()
-  const unlinkMutation = useUnlinkAccountFromInstitution()
+  const institutionsQuery = useFinancialInstitutions();
+  const plaidAccountsQuery = usePlaidAccountsByInstitution(selectedInstitutionId);
+  const linkMutation = useLinkAccountToInstitution();
+  const unlinkMutation = useUnlinkAccountFromInstitution();
 
-  const isLinked = !!account.institutionId
+  const isLinked = !!account.institutionId;
   const linkedInstitution = institutionsQuery.data?.find(
-    (inst) => inst.id === account.institutionId
-  )
+    (inst) => inst.id === account.institutionId,
+  );
   const linkedPlaidAccount = plaidAccountsQuery.accounts?.find(
-    (plaidAcc) => plaidAcc.id === account.plaidItemId
-  )
+    (plaidAcc) => plaidAcc.id === account.plaidItemId,
+  );
 
   const handleInstitutionChange = (institutionId: string) => {
-    setSelectedInstitutionId(institutionId)
-    setSelectedPlaidAccountId('') // Reset Plaid account selection when institution changes
-  }
+    setSelectedInstitutionId(institutionId);
+    setSelectedPlaidAccountId(''); // Reset Plaid account selection when institution changes
+  };
 
   const handleLink = async () => {
-    if (!selectedInstitutionId) return
+    if (!selectedInstitutionId) return;
 
     try {
       await linkMutation.linkAccount.mutateAsync({
@@ -54,23 +65,23 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
           selectedPlaidAccountId && selectedPlaidAccountId !== 'none'
             ? selectedPlaidAccountId
             : undefined,
-      })
-      setOpen(false)
-      setSelectedInstitutionId('')
-      setSelectedPlaidAccountId('')
+      });
+      setOpen(false);
+      setSelectedInstitutionId('');
+      setSelectedPlaidAccountId('');
     } catch (error) {
-      console.error('Failed to link account:', error)
+      console.error('Failed to link account:', error);
     }
-  }
+  };
 
   const handleUnlink = async () => {
     try {
-      await unlinkMutation.unlinkAccount.mutateAsync(account.id)
-      setOpen(false)
+      await unlinkMutation.unlinkAccount.mutateAsync(account.id);
+      setOpen(false);
     } catch (error) {
-      console.error('Failed to unlink account:', error)
+      console.error('Failed to unlink account:', error);
     }
-  }
+  };
 
   const defaultTrigger = (
     <Button variant="outline" size="sm">
@@ -86,7 +97,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
         </>
       )}
     </Button>
-  )
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -222,5 +233,5 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

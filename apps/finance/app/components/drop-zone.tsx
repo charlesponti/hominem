@@ -1,17 +1,19 @@
-import type React from 'react'
-import { useCallback } from 'react'
-import { cn } from '~/lib/utils'
+import type React from 'react';
+
+import { useCallback } from 'react';
+
+import { cn } from '~/lib/utils';
 
 interface DropZoneProps {
-  isImporting: boolean
-  dragActive: boolean
-  onDrop: (files: File[]) => void
-  onDragOver: () => void
-  onDragLeave: () => void
-  onChange?: (files: File[]) => void
-  accept?: string
-  multiple?: boolean
-  className?: string
+  isImporting: boolean;
+  dragActive: boolean;
+  onDrop: (files: File[]) => void;
+  onDragOver: () => void;
+  onDragLeave: () => void;
+  onChange?: (files: File[]) => void;
+  accept?: string;
+  multiple?: boolean;
+  className?: string;
 }
 
 export function DropZone({
@@ -28,76 +30,76 @@ export function DropZone({
   // Handler for drop events - memoized to prevent recreations on each render
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-      onDragLeave()
+      e.preventDefault();
+      e.stopPropagation();
+      onDragLeave();
 
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        onDrop(Array.from(e.dataTransfer.files))
+        onDrop(Array.from(e.dataTransfer.files));
       }
     },
-    [onDrop, onDragLeave]
-  )
+    [onDrop, onDragLeave],
+  );
 
   // Shared handler function to trigger file input - memoized
   const triggerFileInput = useCallback(() => {
     if (!isImporting) {
-      document.getElementById('file-input-inside-dropzone')?.click()
+      document.getElementById('file-input-inside-dropzone')?.click();
     }
-  }, [isImporting])
+  }, [isImporting]);
 
   // Handler for drag over - memoized
   const handleDragOver = useCallback(
     (e: React.DragEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-      onDragOver()
+      e.preventDefault();
+      e.stopPropagation();
+      onDragOver();
     },
-    [onDragOver]
-  )
+    [onDragOver],
+  );
 
   // Handler for drag leave - memoized
   const handleDragLeave = useCallback(
     (e: React.DragEvent<HTMLButtonElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-      onDragLeave()
+      e.preventDefault();
+      e.stopPropagation();
+      onDragLeave();
     },
-    [onDragLeave]
-  )
+    [onDragLeave],
+  );
 
   // Handler for click events - memoized
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation()
-      triggerFileInput()
+      e.stopPropagation();
+      triggerFileInput();
     },
-    [triggerFileInput]
-  )
+    [triggerFileInput],
+  );
 
   // Handler for keyboard events - memoized
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLButtonElement>) => {
       // Trigger click when Enter or Space is pressed
       if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault() // Prevent scrolling when Space is pressed
-        e.stopPropagation()
-        triggerFileInput()
+        e.preventDefault(); // Prevent scrolling when Space is pressed
+        e.stopPropagation();
+        triggerFileInput();
       }
     },
-    [triggerFileInput]
-  )
+    [triggerFileInput],
+  );
 
   // Handler for file input change - memoized
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.stopPropagation()
+      e.stopPropagation();
       if (onChange) {
-        onChange(e.target.files ? Array.from(e.target.files) : [])
+        onChange(e.target.files ? Array.from(e.target.files) : []);
       }
     },
-    [onChange]
-  )
+    [onChange],
+  );
 
   return (
     <button
@@ -114,7 +116,7 @@ export function DropZone({
           'opacity-50 pointer-events-none cursor-not-allowed': isImporting,
           'cursor-pointer': !isImporting,
         },
-        className
+        className,
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -145,5 +147,5 @@ export function DropZone({
         <p className="text-sm text-muted-foreground">Supported formats: CSV</p>
       </div>
     </button>
-  )
+  );
 }

@@ -1,5 +1,8 @@
 {
   "css.validate": false,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
   "files.associations": {
@@ -16,7 +19,6 @@
     "**/node_modules/**": true,
     "**/coverage/**": true
   },
-  "geminicodeassist.inlineSuggestions.enableAuto": true,
   "github.copilot.chat.newWorkspace.useContext7": true,
   "npm.scriptRunner": "bun",
   "search.exclude": {
@@ -45,7 +47,6 @@
   },
   "typescript.tsserver.useSyntaxServer": "auto",
   "typescript.updateImportsOnFileMove.enabled": "never",
-  "typescript.surveys.enabled": false,
   "typescript.tsserver.enableTracing": false,
   "typescript.enablePromptUseWorkspaceTsdk": false,
   "tailwindCSS.experimental.classRegex": [
@@ -59,6 +60,5 @@
     "typescriptreact": "javascript"
   },
   "tailwindCSS.rootFontSize": 16,
-  "terminal.integrated.shellIntegration.enabled": true,
-  "vitest.maximumConfigs": 20
+  "terminal.integrated.shellIntegration.enabled": true
 }

@@ -1,19 +1,22 @@
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { CheckCircleIcon } from 'lucide-react'
-import { useAllInstitutions } from '~/lib/hooks/use-institutions'
-import type { RouterOutput } from '~/lib/trpc'
-import { AccountConnectionDialog } from './account-connection-dialog'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { CheckCircleIcon } from 'lucide-react';
+
+import type { RouterOutput } from '~/lib/trpc';
+
+import { useAllInstitutions } from '~/lib/hooks/use-institutions';
+
+import { AccountConnectionDialog } from './account-connection-dialog';
 
 export function ManualInstitutionStatus({
   account,
   showDialog,
 }: {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
-  showDialog?: boolean
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  showDialog?: boolean;
 }) {
-  const institutionsQuery = useAllInstitutions()
-  const institution = institutionsQuery.data?.find((inst) => inst.id === account.institutionId)
+  const institutionsQuery = useAllInstitutions();
+  const institution = institutionsQuery.data?.find((inst) => inst.id === account.institutionId);
   return (
     <div className="flex items-center space-x-2">
       <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">
@@ -32,5 +35,5 @@ export function ManualInstitutionStatus({
         />
       )}
     </div>
-  )
+  );
 }

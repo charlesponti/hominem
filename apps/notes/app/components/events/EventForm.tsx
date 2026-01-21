@@ -1,17 +1,18 @@
-import { Textarea } from '@hominem/ui/components/ui/textarea'
-import type React from 'react'
-import { useState } from 'react'
+import type React from 'react';
+
+import { Textarea } from '@hominem/ui/components/ui/textarea';
+import { useState } from 'react';
 
 interface Person {
-  id: string
-  firstName?: string
-  lastName?: string
+  id: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface EventFormProps {
-  showAddForm: boolean
-  people: Person[]
-  onToggleForm: () => void
+  showAddForm: boolean;
+  people: Person[];
+  onToggleForm: () => void;
 }
 
 const EventForm: React.FC<EventFormProps> = ({
@@ -19,13 +20,13 @@ const EventForm: React.FC<EventFormProps> = ({
   people,
   onToggleForm: _onToggleForm,
 }) => {
-  const [_selectedPeople, setSelectedPeople] = useState<Person[]>([])
+  const [_selectedPeople, setSelectedPeople] = useState<Person[]>([]);
 
   const handlePeopleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedIds = Array.from(e.target.selectedOptions, (option) => option.value)
-    const selectedPeopleList = people.filter((person) => selectedIds.includes(person.id))
-    setSelectedPeople(selectedPeopleList)
-  }
+    const selectedIds = Array.from(e.target.selectedOptions, (option) => option.value);
+    const selectedPeopleList = people.filter((person) => selectedIds.includes(person.id));
+    setSelectedPeople(selectedPeopleList);
+  };
 
   return (
     <>
@@ -166,7 +167,7 @@ const EventForm: React.FC<EventFormProps> = ({
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
-export default EventForm
+export default EventForm;

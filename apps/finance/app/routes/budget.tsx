@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { BudgetCategoryDetails, BudgetProjectionDashboard } from '~/components/budget-categories'
-import { BudgetTrackingHeader } from '~/components/budget-categories/budget-tracking-header'
-import { BudgetOverview } from '~/components/budget-overview'
-import { getCurrentMonthYear } from '~/components/date-month-select'
+import { useState } from 'react';
+
+import { BudgetCategoryDetails, BudgetProjectionDashboard } from '~/components/budget-categories';
+import { BudgetTrackingHeader } from '~/components/budget-categories/budget-tracking-header';
+import { BudgetOverview } from '~/components/budget-overview';
+import { getCurrentMonthYear } from '~/components/date-month-select';
 
 export default function BudgetDashboard() {
-  const [selectedMonthYear, setSelectedMonthYear] = useState<string>(getCurrentMonthYear())
+  const [selectedMonthYear, setSelectedMonthYear] = useState<string>(getCurrentMonthYear());
 
   return (
     <div className="space-y-6">
@@ -24,5 +25,5 @@ export default function BudgetDashboard() {
 
       <BudgetCategoryDetails selectedMonthYear={selectedMonthYear} />
     </div>
-  )
+  );
 }

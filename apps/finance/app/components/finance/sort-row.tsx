@@ -1,21 +1,22 @@
-import { Button } from '@hominem/ui/button'
+import type { SortDirection, SortField, SortOption } from '@hominem/ui/hooks';
+
+import { Button } from '@hominem/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import type { SortDirection, SortField, SortOption } from '@hominem/ui/hooks'
-import { X } from 'lucide-react'
+} from '@hominem/ui/components/ui/select';
+import { X } from 'lucide-react';
 
 interface SortRowProps {
-  sortOption: SortOption
-  index: number
-  sortableFields: SortField[]
-  usedFields: SortField[]
-  updateSortOption: (index: number, option: SortOption) => void
-  removeSortOption: (index: number) => void
+  sortOption: SortOption;
+  index: number;
+  sortableFields: SortField[];
+  usedFields: SortField[];
+  updateSortOption: (index: number, option: SortOption) => void;
+  removeSortOption: (index: number) => void;
 }
 
 export function SortRow({
@@ -27,8 +28,8 @@ export function SortRow({
   removeSortOption,
 }: SortRowProps) {
   const availableFieldsForCurrentSelect = sortableFields.filter(
-    (field) => !usedFields.includes(field) || field === sortOption.field
-  )
+    (field) => !usedFields.includes(field) || field === sortOption.field,
+  );
 
   return (
     <div key={sortOption.field} className="flex items-center gap-2">
@@ -76,5 +77,5 @@ export function SortRow({
         <X className="size-4 text-muted-foreground" />
       </Button>
     </div>
-  )
+  );
 }

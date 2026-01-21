@@ -1,12 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Target } from 'lucide-react'
-import { useMemo } from 'react'
-import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats'
-import { formatCurrency } from '~/lib/number.utils'
-import { trpc } from '~/lib/trpc'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Target } from 'lucide-react';
+import { useMemo } from 'react';
+
+import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
+import { formatCurrency } from '~/lib/number.utils';
+import { trpc } from '~/lib/trpc';
 
 interface BudgetOverviewProps {
-  selectedMonthYear?: string
+  selectedMonthYear?: string;
 }
 
 export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
@@ -14,31 +15,31 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
     data: categories,
     isLoading: isLoadingCategories,
     error: errorCategories,
-  } = trpc.finance.budget.categories.list.useQuery()
+  } = trpc.finance.budget.categories.list.useQuery();
 
   const {
     stats,
     isLoading: isLoadingStats,
     error: errorStats,
-  } = useMonthlyStats(selectedMonthYear || '')
+  } = useMonthlyStats(selectedMonthYear || '');
 
   // Calculate total budgeted amount from categories
   const totalBudgeted = useMemo(() => {
     if (!categories) {
-      return 0
+      return 0;
     }
 
     return categories
       .filter((category) => category.type === 'expense')
-      .reduce((sum, category) => sum + Number.parseFloat(category.averageMonthlyExpense || '0'), 0)
-  }, [categories])
+      .reduce((sum, category) => sum + Number.parseFloat(category.averageMonthlyExpense || '0'), 0);
+  }, [categories]);
 
   // Get actual spending from stats
-  const totalActual = useMemo(() => stats?.totalExpenses || 0, [stats])
+  const totalActual = useMemo(() => stats?.totalExpenses || 0, [stats]);
 
   // Calculate performance metrics
-  const variance = totalBudgeted - totalActual
-  const isOverBudget = totalActual > totalBudgeted
+  const variance = totalBudgeted - totalActual;
+  const isOverBudget = totalActual > totalBudgeted;
 
   if (isLoadingCategories || isLoadingStats) {
     return (
@@ -50,7 +51,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (errorCategories || errorStats) {
@@ -65,7 +66,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!categories || categories.length === 0) {
@@ -78,7 +79,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (totalBudgeted === 0) {
@@ -91,7 +92,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -125,5 +126,5 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,16 +1,16 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Label } from '@hominem/ui/components/ui/label'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { Textarea } from '@hominem/ui/components/ui/textarea'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
+} from '@hominem/ui/components/ui/select';
+import { Textarea } from '@hominem/ui/components/ui/textarea';
+import { useToast } from '@hominem/ui/components/ui/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -18,26 +18,27 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
-import { Loader2, RefreshCw, Twitter } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router'
-import { useContentStrategies } from '~/lib/content/use-content-strategies'
-import { useGenerateTweet } from '~/lib/content/use-generate-tweet'
-import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
-import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth'
+} from '@hominem/ui/dialog';
+import { Loader2, RefreshCw, Twitter } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router';
+
+import { useContentStrategies } from '~/lib/content/use-content-strategies';
+import { useGenerateTweet } from '~/lib/content/use-generate-tweet';
+import { useFeatureFlag } from '~/lib/hooks/use-feature-flags';
+import { useTwitterAccounts, useTwitterPost } from '~/lib/hooks/use-twitter-oauth';
 
 interface TweetModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  noteContent: string
-  noteTitle?: string | null
-  contentId?: string // Optional: link to existing content
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  noteContent: string;
+  noteTitle?: string | null;
+  contentId?: string; // Optional: link to existing content
 }
 
-const TWEET_CHARACTER_LIMIT = 280
+const TWEET_CHARACTER_LIMIT = 280;
 
-type StrategyType = 'default' | 'custom'
+type StrategyType = 'default' | 'custom';
 
 const DEFAULT_STRATEGIES = [
   { value: 'storytelling', label: '📖 Storytelling', description: 'Create a narrative arc' },
@@ -62,7 +63,7 @@ const DEFAULT_STRATEGIES = [
   { value: 'controversy', label: '⚡ Controversy', description: 'Present contrarian perspectives' },
   { value: 'listicle', label: '📝 Listicle', description: 'Break down into numbered points' },
   { value: 'education', label: '🎓 Education', description: 'Focus on teaching concepts' },
-]
+];
 
 export function TweetModal({
   open,
@@ -71,59 +72,59 @@ export function TweetModal({
   noteTitle,
   contentId,
 }: TweetModalProps) {
-  const [strategyType, setStrategyType] = useState<StrategyType>('default')
-  const [strategy, setStrategy] = useState<string>('storytelling')
+  const [strategyType, setStrategyType] = useState<StrategyType>('default');
+  const [strategy, setStrategy] = useState<string>('storytelling');
 
-  const { isAuthenticated } = useSupabaseAuthContext()
-  const { strategies: customStrategies, isLoading: isLoadingStrategies } = useContentStrategies()
-  const twitterIntegrationEnabled = useFeatureFlag('twitterIntegration')
+  const { isAuthenticated } = useSupabaseAuthContext();
+  const { strategies: customStrategies, isLoading: isLoadingStrategies } = useContentStrategies();
+  const twitterIntegrationEnabled = useFeatureFlag('twitterIntegration');
 
   const { generateTweet, regenerateTweet, updateTweet, resetTweet, generatedTweet, isGenerating } =
-    useGenerateTweet()
+    useGenerateTweet();
 
-  const { data: twitterAccounts, isLoading: isLoadingAccounts } = useTwitterAccounts()
-  const postTweet = useTwitterPost()
-  const { toast } = useToast()
+  const { data: twitterAccounts, isLoading: isLoadingAccounts } = useTwitterAccounts();
+  const postTweet = useTwitterPost();
+  const { toast } = useToast();
 
-  const hasTwitterAccount = twitterAccounts && twitterAccounts.length > 0
-  const canPost = twitterIntegrationEnabled && hasTwitterAccount
-  const characterCount = generatedTweet.length
-  const isOverLimit = characterCount > TWEET_CHARACTER_LIMIT
+  const hasTwitterAccount = twitterAccounts && twitterAccounts.length > 0;
+  const canPost = twitterIntegrationEnabled && hasTwitterAccount;
+  const characterCount = generatedTweet.length;
+  const isOverLimit = characterCount > TWEET_CHARACTER_LIMIT;
 
   const handleStrategyTypeChange = (newType: StrategyType) => {
-    setStrategyType(newType)
+    setStrategyType(newType);
     // Reset strategy selection when changing type
     if (newType === 'default') {
-      setStrategy('storytelling')
+      setStrategy('storytelling');
     } else if (customStrategies[0]) {
-      setStrategy(customStrategies[0].id)
+      setStrategy(customStrategies[0].id);
     } else {
-      setStrategy('')
+      setStrategy('');
     }
-  }
+  };
 
   const handleGenerate = () => {
-    const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent
+    const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent;
     generateTweet({
       content,
       strategyType,
       strategy,
-    })
-  }
+    });
+  };
 
   const handleRegenerate = () => {
-    const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent
+    const content = noteTitle ? `${noteTitle}\n\n${noteContent}` : noteContent;
     regenerateTweet({
       content,
       strategyType,
       strategy,
-    })
-  }
+    });
+  };
 
   const handleClose = () => {
-    resetTweet()
-    onOpenChange(false)
-  }
+    resetTweet();
+    onOpenChange(false);
+  };
 
   const handlePost = () => {
     if (canPost) {
@@ -138,31 +139,31 @@ export function TweetModal({
           onSuccess: (_data) => {
             const message = contentId
               ? 'Tweet posted and content updated!'
-              : 'Tweet posted and saved to notes!'
+              : 'Tweet posted and saved to notes!';
             toast({
               title: 'Tweet posted successfully!',
               description: message,
-            })
-            handleClose()
+            });
+            handleClose();
           },
           onError: (error) => {
-            console.error('Failed to post tweet:', error)
+            console.error('Failed to post tweet:', error);
             toast({
               title: 'Failed to post tweet',
               description: 'There was an error posting your tweet. Please try again.',
               variant: 'destructive',
-            })
+            });
           },
-        }
-      )
+        },
+      );
     } else {
       // Fallback to browser intent (always available as backup)
-      const tweetText = encodeURIComponent(generatedTweet)
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`
-      window.open(twitterUrl, '_blank')
-      handleClose()
+      const tweetText = encodeURIComponent(generatedTweet);
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
+      window.open(twitterUrl, '_blank');
+      handleClose();
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -411,5 +412,5 @@ export function TweetModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

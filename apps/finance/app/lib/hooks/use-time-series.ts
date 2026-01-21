@@ -1,23 +1,25 @@
-import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types'
-import { format } from 'date-fns'
-import { trpc } from '../trpc'
+import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types';
+
+import { format } from 'date-fns';
+
+import { trpc } from '../trpc';
 
 export interface TimeSeriesResponse {
-  data: TimeSeriesDataPoint[]
-  stats: TimeSeriesStats | null
-  query: Record<string, unknown>
-  timestamp: string
+  data: TimeSeriesDataPoint[];
+  stats: TimeSeriesStats | null;
+  query: Record<string, unknown>;
+  timestamp: string;
 }
 
 interface TimeSeriesParams {
-  dateFrom?: Date
-  dateTo?: Date
-  account?: string
-  category?: string
-  includeStats?: boolean
-  compareToPrevious?: boolean
-  groupBy?: 'month' | 'week' | 'day'
-  enabled?: boolean
+  dateFrom?: Date;
+  dateTo?: Date;
+  account?: string;
+  category?: string;
+  includeStats?: boolean;
+  compareToPrevious?: boolean;
+  groupBy?: 'month' | 'week' | 'day';
+  enabled?: boolean;
 }
 
 /**
@@ -50,25 +52,25 @@ export function useTimeSeriesData({
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
       refetchOnWindowFocus: false, // Don't refetch when window gains focus
       refetchOnReconnect: false, // Don't refetch when network reconnects
-    }
-  )
+    },
+  );
 
   // Helper to format date labels based on grouping
   const formatDateLabel = (dateStr: string) => {
     if (groupBy === 'month') {
       // Convert YYYY-MM to MMM YYYY
-      const [year, month] = dateStr.split('-')
+      const [year, month] = dateStr.split('-');
       return new Date(
         Number.parseInt(year, 10),
         Number.parseInt(month, 10) - 1,
-        1
+        1,
       ).toLocaleDateString('en-US', {
         month: 'short',
         year: 'numeric',
-      })
+      });
     }
-    return dateStr
-  }
+    return dateStr;
+  };
 
   // Format data for charts
   const chartData = query.data?.data.map((item) => ({
@@ -78,12 +80,12 @@ export function useTimeSeriesData({
     Count: item.count,
     Average: Math.abs(item.average || 0),
     ...(item.trend ? { TrendChange: Number.parseFloat(item.trend.raw) } : {}),
-  }))
+  }));
 
   return {
     ...query,
     chartData,
     formatDateLabel,
     refetch: query.refetch,
-  }
+  };
 }

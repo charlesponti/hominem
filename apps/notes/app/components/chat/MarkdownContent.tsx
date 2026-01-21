@@ -1,35 +1,36 @@
-import { Button } from '@hominem/ui/button'
-import { Check, Copy } from 'lucide-react'
-import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import SyntaxHighlighter from 'react-syntax-highlighter'
-import oneDark from 'react-syntax-highlighter/dist/cjs/styles/prism/one-dark'
-import { cn } from '~/lib/utils'
+import { Button } from '@hominem/ui/button';
+import { Check, Copy } from 'lucide-react';
+import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import oneDark from 'react-syntax-highlighter/dist/cjs/styles/prism/one-dark';
+
+import { cn } from '~/lib/utils';
 
 interface MarkdownContentProps {
-  content: string
-  isStreaming?: boolean
-  className?: string
+  content: string;
+  isStreaming?: boolean;
+  className?: string;
 }
 
 export function MarkdownContent({ content, isStreaming = false, className }: MarkdownContentProps) {
-  const [copiedCodeBlocks, setCopiedCodeBlocks] = useState<Set<string>>(new Set())
+  const [copiedCodeBlocks, setCopiedCodeBlocks] = useState<Set<string>>(new Set());
 
   const handleCopyCode = async (code: string, _language: string, blockId: string) => {
     try {
-      await navigator.clipboard.writeText(code)
-      setCopiedCodeBlocks((prev) => new Set(prev).add(blockId))
+      await navigator.clipboard.writeText(code);
+      setCopiedCodeBlocks((prev) => new Set(prev).add(blockId));
       setTimeout(() => {
         setCopiedCodeBlocks((prev) => {
-          const newSet = new Set(prev)
-          newSet.delete(blockId)
-          return newSet
-        })
-      }, 2000)
+          const newSet = new Set(prev);
+          newSet.delete(blockId);
+          return newSet;
+        });
+      }, 2000);
     } catch (error) {
-      console.error('Failed to copy code:', error)
+      console.error('Failed to copy code:', error);
     }
-  }
+  };
 
   return (
     <div className={cn('prose prose-sm dark:prose-invert max-w-none', className)}>
@@ -37,13 +38,13 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
         components={{
           // Code blocks with syntax highlighting
           code({ node, className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || '')
-            const language = match ? match[1] : ''
-            const codeString = String(children).replace(/\n$/, '')
-            const blockId = `code-${codeString.slice(0, 20)}-${language}`
+            const match = /language-(\w+)/.exec(className || '');
+            const language = match ? match[1] : '';
+            const codeString = String(children).replace(/\n$/, '');
+            const blockId = `code-${codeString.slice(0, 20)}-${language}`;
 
             if (language) {
-              const isCopied = copiedCodeBlocks.has(blockId)
+              const isCopied = copiedCodeBlocks.has(blockId);
               return (
                 <div className="relative group my-4">
                   <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 rounded-t-lg border-b border-border">
@@ -81,7 +82,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
                     {codeString}
                   </SyntaxHighlighter>
                 </div>
-              )
+              );
             }
 
             // Inline code
@@ -89,7 +90,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
               <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
                 {children}
               </code>
-            )
+            );
           },
           // Headings
           h1: ({ children }) => (
@@ -151,5 +152,5 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
         <span className="inline-block w-2 h-4 bg-foreground animate-pulse ml-1 align-middle" />
       )}
     </div>
-  )
+  );
 }

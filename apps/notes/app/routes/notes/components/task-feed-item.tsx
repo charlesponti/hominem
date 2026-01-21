@@ -1,7 +1,8 @@
-import type { Note } from '@hominem/services/types'
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { format } from 'date-fns'
+import type { Note } from '@hominem/services/types';
+
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { format } from 'date-fns';
 import {
   CalendarDays,
   CheckCircle2,
@@ -10,17 +11,19 @@ import {
   PlayCircle,
   Target,
   Trash2,
-} from 'lucide-react'
-import { useTimeTracking } from '~/hooks/use-time-tracking'
-import { cn } from '~/lib/utils'
-import { ElapsedTime } from './elapsed-time'
+} from 'lucide-react';
+
+import { useTimeTracking } from '~/hooks/use-time-tracking';
+import { cn } from '~/lib/utils';
+
+import { ElapsedTime } from './elapsed-time';
 
 type TaskFeedItemProps = {
-  task: Note
-  onDelete: (taskId: string) => void
-  onEdit: (task: Note) => void
-  className?: string
-}
+  task: Note;
+  onDelete: (taskId: string) => void;
+  onEdit: (task: Note) => void;
+  className?: string;
+};
 
 export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFeedItemProps) {
   const {
@@ -32,53 +35,53 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
     isLoading,
   } = useTimeTracking({
     task,
-  })
+  });
 
-  const { title, content: taskContent } = task
-  const { status, priority, dueDate } = task.taskMetadata || {}
-  const currentDuration = task.taskMetadata?.duration || 0
+  const { title, content: taskContent } = task;
+  const { status, priority, dueDate } = task.taskMetadata || {};
+  const currentDuration = task.taskMetadata?.duration || 0;
 
   // fallback for completed (legacy or derived)
   const completed =
     task.taskMetadata && 'completed' in task.taskMetadata
       ? Boolean(task.taskMetadata.completed)
-      : status === 'done'
+      : status === 'done';
 
-  const isRunning = status === 'in-progress'
+  const isRunning = status === 'in-progress';
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'low':
-        return 'bg-blue-500'
+        return 'bg-blue-500';
       case 'medium':
-        return 'bg-yellow-500'
+        return 'bg-yellow-500';
       case 'high':
-        return 'bg-orange-500'
+        return 'bg-orange-500';
       case 'urgent':
-        return 'bg-red-500'
+        return 'bg-red-500';
       default:
-        return 'bg-slate-500'
+        return 'bg-slate-500';
     }
-  }
+  };
 
   const _getStatusColor = (status: string) => {
     switch (status) {
       case 'todo':
-        return 'from-slate-500 to-slate-600'
+        return 'from-slate-500 to-slate-600';
       case 'in-progress':
-        return 'from-yellow-500 to-orange-500'
+        return 'from-yellow-500 to-orange-500';
       case 'done':
-        return 'from-green-500 to-emerald-600'
+        return 'from-green-500 to-emerald-600';
       default:
-        return 'from-slate-500 to-slate-600'
+        return 'from-slate-500 to-slate-600';
     }
-  }
+  };
 
   return (
     <div
       className={cn(
         'border-b border-slate-200 dark:border-slate-700 py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 group',
-        className
+        className,
       )}
     >
       <div className="space-y-3">
@@ -91,9 +94,9 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               className="rounded-full border-slate-300 dark:border-slate-600 shrink-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               onClick={() => {
                 if (status === 'done') {
-                  setTaskToTodoAndResetTime()
+                  setTaskToTodoAndResetTime();
                 } else {
-                  stopTimer()
+                  stopTimer();
                 }
               }}
               disabled={isLoading}
@@ -107,7 +110,7 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
             <h3
               className={cn(
                 'font-semibold text-base text-slate-900 dark:text-slate-100',
-                completed && 'line-through text-slate-500 dark:text-slate-400'
+                completed && 'line-through text-slate-500 dark:text-slate-400',
               )}
             >
               {title}
@@ -139,7 +142,7 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
               status === 'todo' && 'bg-slate-500',
               status === 'in-progress' && 'bg-yellow-500',
               status === 'done' && 'bg-green-500',
-              status === 'archived' && 'bg-slate-400'
+              status === 'archived' && 'bg-slate-400',
             )}
           >
             {status}
@@ -238,5 +241,5 @@ export function TaskFeedItem({ task, onDelete, onEdit, className = '' }: TaskFee
         </div>
       </div>
     </div>
-  )
+  );
 }

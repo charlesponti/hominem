@@ -1,5 +1,5 @@
 interface SourceBadgeProps {
-  source: 'manual' | 'google_calendar'
+  source: 'manual' | 'google_calendar';
 }
 
 export default function SourceBadge({ source }: SourceBadgeProps) {
@@ -48,7 +48,7 @@ export default function SourceBadge({ source }: SourceBadgeProps) {
         </svg>
         Google
       </span>
-    )
+    );
   }
 
   return (
@@ -58,5 +58,5 @@ export default function SourceBadge({ source }: SourceBadgeProps) {
     >
       ✏️ Manual
     </span>
-  )
+  );
 }

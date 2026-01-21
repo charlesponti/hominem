@@ -1,19 +1,20 @@
-import { Button } from '@hominem/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { ArrowLeft, RefreshCcw } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { useParams } from 'react-router'
-import { AccountHeader } from '~/components/accounts/account-header'
-import { AccountSpendingChart } from '~/components/accounts/account-spending-chart'
-import { RouteLink } from '~/components/route-link'
-import { TransactionsList } from '~/components/transactions/transactions-list'
-import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import { Button } from '@hominem/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { ArrowLeft, RefreshCcw } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useParams } from 'react-router';
+
+import { AccountHeader } from '~/components/accounts/account-header';
+import { AccountSpendingChart } from '~/components/accounts/account-spending-chart';
+import { RouteLink } from '~/components/route-link';
+import { TransactionsList } from '~/components/transactions/transactions-list';
+import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 export default function AccountDetailsPage() {
-  const { id } = useParams() as { id: string }
-  const [isBalanceVisible, setIsBalanceVisible] = useState(true)
+  const { id } = useParams() as { id: string };
+  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
   // Get account details
   const {
@@ -21,13 +22,13 @@ export default function AccountDetailsPage() {
     isLoading: accountLoading,
     error: accountError,
     refetch: refetchAccount,
-  } = useAccountById(id)
+  } = useAccountById(id);
 
   // Create a map with a single account for the TransactionsList component
   const accountsMap = useMemo(() => {
-    if (!account) return new Map()
-    return new Map([[account.id, account]])
-  }, [account])
+    if (!account) return new Map();
+    return new Map([[account.id, account]]);
+  }, [account]);
 
   // Get transactions for this specific account
   const {
@@ -39,14 +40,14 @@ export default function AccountDetailsPage() {
   } = useFinanceTransactions({
     filters: { accountId: id },
     limit: 50,
-  })
+  });
 
-  const isLoading = accountLoading || transactionsLoading
-  const hasError = accountError || transactionsError
+  const isLoading = accountLoading || transactionsLoading;
+  const hasError = accountError || transactionsError;
 
   const refreshData = async () => {
-    await Promise.all([refetchAccount(), refetchTransactions()])
-  }
+    await Promise.all([refetchAccount(), refetchTransactions()]);
+  };
 
   if (isLoading) {
     return (
@@ -56,7 +57,7 @@ export default function AccountDetailsPage() {
           <p className="text-muted-foreground">Loading account details...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (hasError) {
@@ -71,7 +72,7 @@ export default function AccountDetailsPage() {
               : 'Failed to load account data'}
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (!account) {
@@ -93,7 +94,7 @@ export default function AccountDetailsPage() {
           </AlertDescription>
         </Alert>
       </div>
-    )
+    );
   }
 
   return (
@@ -137,5 +138,5 @@ export default function AccountDetailsPage() {
         />
       </div>
     </div>
-  )
+  );
 }

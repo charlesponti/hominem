@@ -1,12 +1,12 @@
-import { Button } from '@hominem/ui/button'
-import { Label } from '@hominem/ui/components/ui/label'
+import { Button } from '@hominem/ui/button';
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
+} from '@hominem/ui/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -14,28 +14,29 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
-import { Input } from '@hominem/ui/input'
-import type { DisplayBudgetCategory } from './budget-category-card'
+} from '@hominem/ui/dialog';
+import { Input } from '@hominem/ui/input';
+
+import type { DisplayBudgetCategory } from './budget-category-card';
 
 interface FormData {
-  name: string
-  budgetAmount: string
-  type: 'income' | 'expense'
-  description: string
-  color: string
+  name: string;
+  budgetAmount: string;
+  type: 'income' | 'expense';
+  description: string;
+  color: string;
 }
 
 interface BudgetCategoryFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  editingCategory: DisplayBudgetCategory | null
-  onSubmit: () => void
-  onCancel: () => void
-  formData: FormData
-  onFormDataChange: (data: FormData) => void
-  isLoading: boolean
-  categoryColors: string[]
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editingCategory: DisplayBudgetCategory | null;
+  onSubmit: () => void;
+  onCancel: () => void;
+  formData: FormData;
+  onFormDataChange: (data: FormData) => void;
+  isLoading: boolean;
+  categoryColors: string[];
 }
 
 export function BudgetCategoryFormDialog({
@@ -131,5 +132,5 @@ export function BudgetCategoryFormDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

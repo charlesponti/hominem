@@ -1,7 +1,7 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Target } from 'lucide-react'
-import { useState } from 'react'
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Target } from 'lucide-react';
+import { useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -10,38 +10,39 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
-import { formatCurrency } from '~/lib/number.utils'
-import { trpc } from '~/lib/trpc'
+} from 'recharts';
+
+import { formatCurrency } from '~/lib/number.utils';
+import { trpc } from '~/lib/trpc';
 
 export function BudgetProjectionDashboard() {
-  const [hasCalculated, setHasCalculated] = useState(false)
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const budgetCategories = trpc.finance.budget.categories.list.useQuery()
+  const budgetCategories = trpc.finance.budget.categories.list.useQuery();
   const budgetCalculateMutation = trpc.finance.budget.calculate.useMutation({
     onError: (error) => {
-      console.error('Budget calculation error:', error.message)
+      console.error('Budget calculation error:', error.message);
     },
-  })
+  });
 
   // Calculate total income from categories
   const totalIncome =
     budgetCategories.data
       ?.filter((cat) => cat.type === 'income')
-      .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0
+      .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0;
 
   const handleCalculate = () => {
     if (totalIncome > 0) {
-      budgetCalculateMutation.mutateAsync(undefined)
-      setHasCalculated(true)
+      budgetCalculateMutation.mutateAsync(undefined);
+      setHasCalculated(true);
     }
-  }
+  };
 
   const handleRecalculate = () => {
     if (totalIncome > 0) {
-      budgetCalculateMutation.mutateAsync(undefined)
+      budgetCalculateMutation.mutateAsync(undefined);
     }
-  }
+  };
 
   // Show loading state for budget categories
   if (budgetCategories.isLoading) {
@@ -57,7 +58,7 @@ export function BudgetProjectionDashboard() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Show empty state if no budget categories exist
@@ -80,7 +81,7 @@ export function BudgetProjectionDashboard() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Show initial state if no calculation has been made
@@ -106,7 +107,7 @@ export function BudgetProjectionDashboard() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Show loading state
@@ -123,7 +124,7 @@ export function BudgetProjectionDashboard() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Show error state
@@ -142,19 +143,19 @@ export function BudgetProjectionDashboard() {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Show results
   if (budgetCalculateMutation.data) {
-    const budgetData = budgetCalculateMutation.data
-    const projectedSurplus = budgetData.surplus
+    const budgetData = budgetCalculateMutation.data;
+    const projectedSurplus = budgetData.surplus;
 
     const projectionData = budgetData.projections.slice(0, 6).map((proj) => ({
       month: `Month ${proj.month}`,
       projected: proj.totalSaved,
       baseline: projectedSurplus * proj.month,
-    }))
+    }));
 
     return (
       <div className="space-y-4">
@@ -241,9 +242,9 @@ export function BudgetProjectionDashboard() {
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   // Fallback state (shouldn't reach here)
-  return null
+  return null;
 }

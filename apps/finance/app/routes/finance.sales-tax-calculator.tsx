@@ -1,17 +1,17 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Slider } from '@hominem/ui/components/ui/slider'
-import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Slider } from '@hominem/ui/components/ui/slider';
+import { useState } from 'react';
 
 const SalesTaxCalculator = () => {
-  const [price, setPrice] = useState(100)
-  const TAX_RATE = 0.0875 // 8.75% tax rate - you can adjust this as needed
+  const [price, setPrice] = useState(100);
+  const TAX_RATE = 0.0875; // 8.75% tax rate - you can adjust this as needed
 
-  const salesTax = price * TAX_RATE
-  const total = price + salesTax
+  const salesTax = price * TAX_RATE;
+  const total = price + salesTax;
 
   const handleSliderChange = (value: number[]) => {
-    setPrice(value[0])
-  }
+    setPrice(value[0]);
+  };
 
   return (
     <Card className="w-full max-w-md">
@@ -52,7 +52,7 @@ const SalesTaxCalculator = () => {
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default SalesTaxCalculator
+export default SalesTaxCalculator;

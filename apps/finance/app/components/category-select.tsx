@@ -1,26 +1,26 @@
-import { Label } from '@hominem/ui/components/ui/label'
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { useId } from 'react'
+} from '@hominem/ui/components/ui/select';
+import { useId } from 'react';
 
 interface Category {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface CategorySelectProps {
-  selectedCategory: string
-  onCategoryChange: (value: string) => void
-  categories: Category[]
-  isLoading?: boolean
-  placeholder?: string
-  label?: string
-  className?: string
+  selectedCategory: string;
+  onCategoryChange: (value: string) => void;
+  categories: Category[];
+  isLoading?: boolean;
+  placeholder?: string;
+  label?: string;
+  className?: string;
 }
 
 export function CategorySelect({
@@ -32,8 +32,8 @@ export function CategorySelect({
   label = 'Category',
   className,
 }: CategorySelectProps) {
-  const id = useId()
-  const safeCategories = categories || []
+  const id = useId();
+  const safeCategories = categories || [];
 
   return (
     <div className={`space-y-2 ${className || ''}`}>
@@ -62,5 +62,5 @@ export function CategorySelect({
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }

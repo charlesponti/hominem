@@ -1,5 +1,5 @@
-import { useIsMobile } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
+import { useIsMobile } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 import {
   Card,
   CardContent,
@@ -7,31 +7,32 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { Dialog, DialogContent } from '@hominem/ui/dialog'
-import { Drawer, DrawerContent } from '@hominem/ui/components/ui/drawer'
-import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/components/ui/label'
+} from '@hominem/ui/components/ui/card';
+import { Drawer, DrawerContent } from '@hominem/ui/components/ui/drawer';
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { useEffect, useId, useState } from 'react'
-import { type RouterOutput, trpc } from '~/lib/trpc'
+} from '@hominem/ui/components/ui/select';
+import { Dialog, DialogContent } from '@hominem/ui/dialog';
+import { Input } from '@hominem/ui/input';
+import { useEffect, useId, useState } from 'react';
+
+import { type RouterOutput, trpc } from '~/lib/trpc';
 
 type BudgetCategoryFormData = Pick<
   RouterOutput['finance']['budget']['categories']['list'][number],
   'name' | 'type' | 'averageMonthlyExpense'
->
+>;
 
 interface BudgetCategoryFormProps {
-  category?: RouterOutput['finance']['budget']['categories']['list'][number]
-  onSave: (data: BudgetCategoryFormData) => Promise<void>
-  onCancel: () => void
-  isLoading?: boolean
+  category?: RouterOutput['finance']['budget']['categories']['list'][number];
+  onSave: (data: BudgetCategoryFormData) => Promise<void>;
+  onCancel: () => void;
+  isLoading?: boolean;
 }
 
 export function BudgetCategoryForm({
@@ -40,38 +41,38 @@ export function BudgetCategoryForm({
   onCancel,
   isLoading: isLoadingProp,
 }: BudgetCategoryFormProps) {
-  const [name, setName] = useState('')
-  const [type, setType] = useState<'income' | 'expense'>('expense')
-  const [averageMonthlyExpense, setAverageMonthlyExpense] = useState<string>('')
-  const [formError, setFormError] = useState<string | null>(null)
+  const [name, setName] = useState('');
+  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [averageMonthlyExpense, setAverageMonthlyExpense] = useState<string>('');
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation()
-  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation()
+  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation();
+  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation();
 
-  const nameId = useId()
-  const typeId = useId()
-  const averageMonthlyExpenseId = useId()
+  const nameId = useId();
+  const typeId = useId();
+  const averageMonthlyExpenseId = useId();
 
   useEffect(() => {
     if (category) {
-      setName(category.name)
+      setName(category.name);
       if (category.type === 'income' || category.type === 'expense') {
-        setType(category.type as 'income' | 'expense')
+        setType(category.type as 'income' | 'expense');
       } else {
-        setType('expense')
+        setType('expense');
       }
-      setAverageMonthlyExpense(category.averageMonthlyExpense || '')
+      setAverageMonthlyExpense(category.averageMonthlyExpense || '');
     }
-  }, [category])
+  }, [category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError(null)
+    e.preventDefault();
+    setFormError(null);
     const formData: BudgetCategoryFormData = {
       name,
       type,
       averageMonthlyExpense,
-    }
+    };
     try {
       if (category?.id) {
         await updateCategoryMutation.mutateAsync({
@@ -79,25 +80,25 @@ export function BudgetCategoryForm({
           name,
           type,
           averageMonthlyExpense,
-        })
+        });
       } else {
         await createCategoryMutation.mutateAsync({
           name,
           type,
           averageMonthlyExpense,
-        })
+        });
       }
-      await onSave(formData)
+      await onSave(formData);
     } catch (err) {
-      if (err instanceof Error) setFormError(err.message)
-      else setFormError('An unknown error occurred')
+      if (err instanceof Error) setFormError(err.message);
+      else setFormError('An unknown error occurred');
     }
-  }
+  };
 
   const isLoading =
-    isLoadingProp || createCategoryMutation.isPending || updateCategoryMutation.isPending
+    isLoadingProp || createCategoryMutation.isPending || updateCategoryMutation.isPending;
   const errorMsg =
-    formError || createCategoryMutation.error?.message || updateCategoryMutation.error?.message
+    formError || createCategoryMutation.error?.message || updateCategoryMutation.error?.message;
 
   return (
     <Card className="w-full max-w-md">
@@ -165,14 +166,14 @@ export function BudgetCategoryForm({
         </CardFooter>
       </form>
     </Card>
-  )
+  );
 }
 
 export function BudgetCategoryFormModal(
-  props: BudgetCategoryFormProps & { open: boolean; onOpenChange: (open: boolean) => void }
+  props: BudgetCategoryFormProps & { open: boolean; onOpenChange: (open: boolean) => void },
 ) {
-  const isMobile = useIsMobile()
-  const { open, onOpenChange, ...formProps } = props
+  const isMobile = useIsMobile();
+  const { open, onOpenChange, ...formProps } = props;
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
@@ -180,7 +181,7 @@ export function BudgetCategoryFormModal(
           <BudgetCategoryForm {...formProps} />
         </DrawerContent>
       </Drawer>
-    )
+    );
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,5 +189,5 @@ export function BudgetCategoryFormModal(
         <BudgetCategoryForm {...formProps} />
       </DialogContent>
     </Dialog>
-  )
+  );
 }

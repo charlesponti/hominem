@@ -1,14 +1,14 @@
-import { initTRPC } from '@trpc/server'
+import { initTRPC } from '@trpc/server';
 
 export interface Context {
-  request?: Request
+  request?: Request;
 }
 
 export async function createContext(request?: Request): Promise<Context> {
-  return { request }
+  return { request };
 }
 
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<Context>().create();
 
-export const router = t.router
-export const publicProcedure = t.procedure
+export const router = t.router;
+export const publicProcedure = t.procedure;

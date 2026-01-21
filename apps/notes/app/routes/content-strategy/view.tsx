@@ -1,40 +1,44 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
-import { Link, useParams } from 'react-router'
-import { useContentStrategy, useDeleteContentStrategy } from '~/hooks/use-content-strategies'
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { Link, useParams } from 'react-router';
+
+import { useContentStrategy, useDeleteContentStrategy } from '~/hooks/use-content-strategies';
 
 export default function ContentStrategyViewPage() {
-  const { id } = useParams<{ id: string }>()
-  const { toast } = useToast()
-  const { strategy, isLoading, error } = useContentStrategy(id || '')
-  const { deleteStrategy, isLoading: isDeleting } = useDeleteContentStrategy()
+  const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
+  const { strategy, isLoading, error } = useContentStrategy(id || '');
+  const { deleteStrategy, isLoading: isDeleting } = useDeleteContentStrategy();
 
   const handleDelete = async () => {
     if (
-      !(strategy &&confirm('Are you sure you want to delete this strategy? This action cannot be undone.'))
+      !(
+        strategy &&
+        confirm('Are you sure you want to delete this strategy? This action cannot be undone.')
+      )
     ) {
-      return
+      return;
     }
 
     try {
-      await deleteStrategy({ id: strategy.id })
+      await deleteStrategy({ id: strategy.id });
       toast({
         title: 'Strategy Deleted',
         description: 'The content strategy has been deleted successfully.',
-      })
+      });
       // Redirect to strategies list
-      window.location.href = '/content-strategy/saved'
+      window.location.href = '/content-strategy/saved';
     } catch (error) {
-      console.error('Failed to delete strategy:', error)
+      console.error('Failed to delete strategy:', error);
       toast({
         variant: 'destructive',
         title: 'Delete Failed',
         description: 'Unable to delete the strategy. Please try again.',
-      })
+      });
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -44,7 +48,7 @@ export default function ContentStrategyViewPage() {
           <span className="ml-3">Loading strategy...</span>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !strategy) {
@@ -60,7 +64,7 @@ export default function ContentStrategyViewPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -184,7 +188,7 @@ export default function ContentStrategyViewPage() {
                             <li key={index} className="text-gray-600">
                               <strong>{section.heading}:</strong> {section.content}
                             </li>
-                          )
+                          ),
                         )}
                       </ol>
                     </div>
@@ -251,7 +255,7 @@ export default function ContentStrategyViewPage() {
                               </div>
                             </div>
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
@@ -299,7 +303,7 @@ export default function ContentStrategyViewPage() {
                         <span className="text-orange-500 mt-1">•</span>
                         <span className="text-gray-600">{opportunity}</span>
                       </li>
-                    )
+                    ),
                   )}
                 </ul>
               </div>
@@ -308,5 +312,5 @@ export default function ContentStrategyViewPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

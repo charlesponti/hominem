@@ -1,10 +1,10 @@
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent } from '@hominem/ui/components/ui/card'
-import { AlertTriangle, Target } from 'lucide-react'
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent } from '@hominem/ui/components/ui/card';
+import { AlertTriangle, Target } from 'lucide-react';
 
 interface BudgetTrackingEmptyStateProps {
-  type: 'no-categories' | 'no-spending-data'
-  selectedMonthYear?: string
+  type: 'no-categories' | 'no-spending-data';
+  selectedMonthYear?: string;
 }
 
 export function BudgetTrackingEmptyState({
@@ -23,7 +23,7 @@ export function BudgetTrackingEmptyState({
           <a href="/budget/categories/new">Create</a>
         </Button>
       </div>
-    )
+    );
   }
 
   if (type === 'no-spending-data') {
@@ -45,8 +45,8 @@ export function BudgetTrackingEmptyState({
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  return null
+  return null;
 }

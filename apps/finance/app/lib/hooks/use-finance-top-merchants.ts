@@ -1,12 +1,12 @@
-import { trpc } from '../trpc'
+import { trpc } from '../trpc';
 
 type UseFinanceTopMerchantsParams = {
-  from?: string
-  to?: string
-  account?: string
-  category?: string
-  limit?: number
-}
+  from?: string;
+  to?: string;
+  account?: string;
+  category?: string;
+  limit?: number;
+};
 
 export function useFinanceTopMerchants({
   from,
@@ -25,6 +25,6 @@ export function useFinanceTopMerchants({
     },
     {
       staleTime: 5 * 60 * 1000,
-    }
-  )
+    },
+  );
 }

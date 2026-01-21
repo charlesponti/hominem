@@ -1,20 +1,22 @@
-import { Card, CardContent } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { Link, useNavigate } from 'react-router'
-import { useTimeSeriesData } from '~/lib/hooks/use-time-series'
-import { formatCurrency } from '~/lib/number.utils'
-import type { RouterOutput } from '~/lib/trpc'
-import { cn } from '~/lib/utils'
+import { Card, CardContent } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import { Link, useNavigate } from 'react-router';
+
+import type { RouterOutput } from '~/lib/trpc';
+
+import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
+import { formatCurrency } from '~/lib/number.utils';
+import { cn } from '~/lib/utils';
 
 interface MonthlyBreakdownProps {
-  dateFrom?: Date
-  dateTo?: Date
-  selectedAccount?: string
-  selectedCategory?: string
-  compareToPrevious?: boolean
-  groupBy?: 'month' | 'week' | 'day'
-  category?: string
-  title: string
+  dateFrom?: Date;
+  dateTo?: Date;
+  selectedAccount?: string;
+  selectedCategory?: string;
+  compareToPrevious?: boolean;
+  groupBy?: 'month' | 'week' | 'day';
+  category?: string;
+  title: string;
 }
 
 const DeltaIcon = ({ delta }: { delta: number }) => {
@@ -23,15 +25,15 @@ const DeltaIcon = ({ delta }: { delta: number }) => {
       <span className="text-red-500 mr-1" title="Increase">
         ▲
       </span>
-    )
+    );
   if (delta < 0)
     return (
       <span className="text-green-500 mr-1" title="Decrease">
         ▼
       </span>
-    )
-  return <span className="text-muted-foreground mr-1">–</span>
-}
+    );
+  return <span className="text-muted-foreground mr-1">–</span>;
+};
 
 function TrendsDelta({
   label,
@@ -41,12 +43,12 @@ function TrendsDelta({
   formatDateLabel,
   formatCurrency,
 }: {
-  label: string
-  prevDate: string
-  currDate: string
-  delta: number
-  formatDateLabel: (dateStr: string) => string
-  formatCurrency: (n: number) => string
+  label: string;
+  prevDate: string;
+  currDate: string;
+  delta: number;
+  formatDateLabel: (dateStr: string) => string;
+  formatCurrency: (n: number) => string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -67,7 +69,7 @@ function TrendsDelta({
         </span>
       </div>
     </div>
-  )
+  );
 }
 
 function TrendsContent({
@@ -76,12 +78,12 @@ function TrendsContent({
   formatDateLabel,
   formatCurrency,
 }: {
-  prevMonth: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number]
-  currMonth: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number]
-  formatDateLabel: (dateStr: string) => string
-  formatCurrency: (n: number) => string
+  prevMonth: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number];
+  currMonth: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number];
+  formatDateLabel: (dateStr: string) => string;
+  formatCurrency: (n: number) => string;
 }) {
-  const expensesDelta = (currMonth.expenses ?? 0) - (prevMonth.expenses ?? 0)
+  const expensesDelta = (currMonth.expenses ?? 0) - (prevMonth.expenses ?? 0);
   return (
     <div className="rounded-lg border bg-muted/40 p-4 mb-4">
       <div className="grid grid-cols-1 gap-4">
@@ -95,23 +97,23 @@ function TrendsContent({
         />
       </div>
     </div>
-  )
+  );
 }
 
 interface MonthItemProps {
-  item: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number]
-  compareToPrevious: boolean
-  formatDateLabel: (dateStr: string) => string
-  category: string | undefined
+  item: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number];
+  compareToPrevious: boolean;
+  formatDateLabel: (dateStr: string) => string;
+  category: string | undefined;
 }
 
 function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: MonthItemProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Build the link to monthly analysis filtered by category
   const monthlyAnalyticsUrl = category
     ? `/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
-    : `/analytics/monthly/${item.date}`
+    : `/analytics/monthly/${item.date}`;
 
   return (
     <tr
@@ -119,7 +121,7 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: M
       onClick={() => navigate(monthlyAnalyticsUrl)}
       tabIndex={0}
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl)
+        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl);
       }}
     >
       <td className="py-2">
@@ -147,16 +149,16 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: M
         </td>
       )}
     </tr>
-  )
+  );
 }
 
 function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }: MonthItemProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Build the link to monthly analysis filtered by category
   const monthlyAnalyticsUrl = category
     ? `/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
-    : `/analytics/monthly/${item.date}`
+    : `/analytics/monthly/${item.date}`;
 
   return (
     <button
@@ -164,7 +166,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
       className="w-full text-left rounded-lg border p-4 shadow-sm bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
       onClick={() => navigate(monthlyAnalyticsUrl)}
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl)
+        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl);
       }}
       aria-label={`View details for ${formatDateLabel(item.date)}`}
     >
@@ -207,7 +209,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
         )}
       </div>
     </button>
-  )
+  );
 }
 
 export function MonthlyBreakdown({
@@ -227,7 +229,7 @@ export function MonthlyBreakdown({
     category: selectedCategory,
     compareToPrevious,
     groupBy,
-  })
+  });
 
   if (isLoading) {
     return (
@@ -243,7 +245,7 @@ export function MonthlyBreakdown({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error || !data || data.data.length === 0) {
@@ -255,17 +257,17 @@ export function MonthlyBreakdown({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const sortedData = [...data.data].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  )
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
 
   // Show trends comparison if enabled and we have at least 2 data points
-  const showTrends = compareToPrevious && sortedData.length >= 2
-  const prevMonth = showTrends ? sortedData[1] : null
-  const currMonth = showTrends ? sortedData[0] : null
+  const showTrends = compareToPrevious && sortedData.length >= 2;
+  const prevMonth = showTrends ? sortedData[1] : null;
+  const currMonth = showTrends ? sortedData[0] : null;
 
   return (
     <Card>
@@ -328,5 +330,5 @@ export function MonthlyBreakdown({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

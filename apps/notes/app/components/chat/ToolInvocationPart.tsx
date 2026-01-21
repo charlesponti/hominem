@@ -1,20 +1,20 @@
-import { cn } from '~/lib/utils'
+import { cn } from '~/lib/utils';
 
 interface ToolInvocationPartProps {
   toolInvocation: {
-    type: 'tool-call' | 'tool-result'
-    toolName: string
-    toolCallId?: string
-    args?: Record<string, unknown>
-    result?: unknown
-    isError?: boolean
-  }
-  index: number
+    type: 'tool-call' | 'tool-result';
+    toolName: string;
+    toolCallId?: string;
+    args?: Record<string, unknown>;
+    result?: unknown;
+    isError?: boolean;
+  };
+  index: number;
 }
 
 export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPartProps) {
-  const { toolName, toolCallId, type, args, result, isError } = toolInvocation
-  const id = toolCallId || `tool-${index}`
+  const { toolName, toolCallId, type, args, result, isError } = toolInvocation;
+  const id = toolCallId || `tool-${index}`;
 
   if (type === 'tool-call') {
     return (
@@ -34,7 +34,7 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
           </div>
         )}
       </div>
-    )
+    );
   }
 
   if (type === 'tool-result') {
@@ -45,13 +45,13 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
           'p-3 rounded-lg border mt-2',
           isError
             ? 'bg-destructive/10 border-destructive/20'
-            : 'bg-background/50 dark:bg-background/30 border-border/50'
+            : 'bg-background/50 dark:bg-background/30 border-border/50',
         )}
       >
         <div
           className={cn(
             'font-medium text-sm flex items-center gap-2',
-            isError ? 'text-destructive' : 'text-muted-foreground'
+            isError ? 'text-destructive' : 'text-muted-foreground',
           )}
         >
           <span className="text-base">{isError ? '❌' : '✅'}</span>
@@ -65,8 +65,8 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
           </pre>
         )}
       </div>
-    )
+    );
   }
 
-  return null
+  return null;
 }

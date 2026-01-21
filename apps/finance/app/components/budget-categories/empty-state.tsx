@@ -1,14 +1,14 @@
-import { Button } from '@hominem/ui/button'
-import { Plus } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import { Button } from '@hominem/ui/button';
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 interface EmptyStateProps {
-  transactionCategoriesCount?: number
-  onAddCategory: () => void
+  transactionCategoriesCount?: number;
+  onAddCategory: () => void;
 }
 
 export function EmptyState({ transactionCategoriesCount, onAddCategory }: EmptyStateProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <div className="text-center py-12">
       <div className="mx-auto flex items-center justify-center size-12 rounded-full bg-gray-100">
@@ -33,5 +33,5 @@ export function EmptyState({ transactionCategoriesCount, onAddCategory }: EmptyS
         </Button>
       </div>
     </div>
-  )
+  );
 }

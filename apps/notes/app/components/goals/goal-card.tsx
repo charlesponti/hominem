@@ -1,20 +1,22 @@
-import { Button } from '@hominem/ui/button'
-import { Progress } from '@hominem/ui/components/ui/progress'
-import type { Goal } from '@hominem/utils/types'
-import { CalendarCheck, Edit, Trash2 } from 'lucide-react'
-import { PriorityBadge } from './priority-badge'
-import { StatusBadge } from './status-badge'
+import type { Goal } from '@hominem/utils/types';
+
+import { Button } from '@hominem/ui/button';
+import { Progress } from '@hominem/ui/components/ui/progress';
+import { CalendarCheck, Edit, Trash2 } from 'lucide-react';
+
+import { PriorityBadge } from './priority-badge';
+import { StatusBadge } from './status-badge';
 
 interface GoalCardProps {
-  goal: Goal
-  onEdit: (goal: Goal) => void
-  onDelete: (goal: Goal) => void
+  goal: Goal;
+  onEdit: (goal: Goal) => void;
+  onDelete: (goal: Goal) => void;
 }
 
 export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
-  const completedMilestones = goal.milestones?.filter((m) => m.completed).length || 0
-  const totalMilestones = goal.milestones?.length || 0
-  const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0
+  const completedMilestones = goal.milestones?.filter((m) => m.completed).length || 0;
+  const totalMilestones = goal.milestones?.length || 0;
+  const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
 
   return (
     <div className="group flex flex-col bg-card rounded-lg border p-6 hover:shadow-lg transition-all">
@@ -71,5 +73,5 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         {goal.priority && <PriorityBadge priority={goal.priority} />}
       </div>
     </div>
-  )
+  );
 }

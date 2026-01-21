@@ -1,16 +1,17 @@
-import { subMonths } from 'date-fns'
-import { useState } from 'react'
-import { useParams } from 'react-router'
-import { AccountSelect } from '~/components/account-select'
-import { AnalyticsChartDisplay } from '~/components/analytics/analytics-chart-display'
-import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown'
+import { subMonths } from 'date-fns';
+import { useState } from 'react';
+import { useParams } from 'react-router';
+
+import { AccountSelect } from '~/components/account-select';
+import { AnalyticsChartDisplay } from '~/components/analytics/analytics-chart-display';
+import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown';
 
 export default function CategoryAnalyticsPage() {
-  const { category } = useParams<{ category: string }>()
-  const [selectedAccount, setSelectedAccount] = useState<string>('all')
-  const [dateFrom, _setDateFrom] = useState<Date>(subMonths(new Date(), 6))
-  const [dateTo] = useState<Date>(new Date())
-  const [chartType, setChartType] = useState<'area' | 'bar'>('area')
+  const { category } = useParams<{ category: string }>();
+  const [selectedAccount, setSelectedAccount] = useState<string>('all');
+  const [dateFrom, _setDateFrom] = useState<Date>(subMonths(new Date(), 6));
+  const [dateTo] = useState<Date>(new Date());
+  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
 
   return (
     <div className="container">
@@ -49,5 +50,5 @@ export default function CategoryAnalyticsPage() {
         />
       </div>
     </div>
-  )
+  );
 }

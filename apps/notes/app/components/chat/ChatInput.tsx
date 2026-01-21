@@ -1,71 +1,73 @@
-import { Button } from '@hominem/ui/button'
-import { Textarea } from '@hominem/ui/textarea'
-import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react'
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
-import { useMatches } from 'react-router'
-import { useFileUpload } from '~/lib/hooks/use-file-upload'
-import { useSendMessage } from '~/lib/hooks/use-send-message'
-import { ChatModals } from './ChatModals'
+import { Button } from '@hominem/ui/button';
+import { Textarea } from '@hominem/ui/textarea';
+import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useMatches } from 'react-router';
 
-const MAX_MESSAGE_LENGTH = 10000
+import { useFileUpload } from '~/lib/hooks/use-file-upload';
+import { useSendMessage } from '~/lib/hooks/use-send-message';
+
+import { ChatModals } from './ChatModals';
+
+const MAX_MESSAGE_LENGTH = 10000;
 
 interface ChatInputProps {
-  chatId: string
+  chatId: string;
   onStatusChange?: (
     status: 'idle' | 'submitted' | 'streaming' | 'error',
-    error?: Error | null
-  ) => void
+    error?: Error | null,
+  ) => void;
 }
 
 export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatInput(
   { chatId, onStatusChange },
-  ref
+  ref,
 ) {
-  const [inputValue, setInputValue] = useState('')
-  const [showFileUploader, setShowFileUploader] = useState(false)
-  const [showAudioRecorder, setShowAudioRecorder] = useState(false)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [inputValue, setInputValue] = useState('');
+  const [showFileUploader, setShowFileUploader] = useState(false);
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Expose textarea ref to parent
-  useImperativeHandle(ref, () => textareaRef.current!, [])
+  useImperativeHandle(ref, () => textareaRef.current!, []);
 
   // Get userId from root loader data
-  const matches = useMatches()
+  const matches = useMatches();
   const rootData = matches.find((match) => match.id === 'root')?.data as
     | { supabaseId: string | null }
-    | undefined
-  const userId = rootData?.supabaseId || undefined
+    | undefined;
+  const userId = rootData?.supabaseId || undefined;
 
-  const sendMessage = useSendMessage({ chatId, userId })
-  const { uploadState, clearAll } = useFileUpload()
+  const sendMessage = useSendMessage({ chatId, userId });
+  const { uploadState, clearAll } = useFileUpload();
 
-  const characterCount = inputValue.length
-  const hasInput = inputValue.trim().length > 0
-  const isOverLimit = characterCount > MAX_MESSAGE_LENGTH
-  const canSubmit = hasInput && !isOverLimit
+  const characterCount = inputValue.length;
+  const hasInput = inputValue.trim().length > 0;
+  const isOverLimit = characterCount > MAX_MESSAGE_LENGTH;
+  const canSubmit = hasInput && !isOverLimit;
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value)
-  }, [])
+    setInputValue(e.target.value);
+  }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (!canSubmit && uploadState.uploadedFiles.length === 0) return
+    if (!canSubmit && uploadState.uploadedFiles.length === 0) return;
 
-    const trimmedValue = inputValue.trim()
+    const trimmedValue = inputValue.trim();
     try {
-      onStatusChange?.('streaming')
-      setInputValue('') // Clear input immediately for better UX
-      clearAll()
+      onStatusChange?.('streaming');
+      setInputValue(''); // Clear input immediately for better UX
+      clearAll();
 
       await sendMessage.mutateAsync({
         message: trimmedValue,
         chatId,
-      })
+      });
 
-      onStatusChange?.('idle')
+      onStatusChange?.('idle');
     } catch (error) {
-      console.error('Failed to send message:', error)
-      onStatusChange?.('error', error as Error)
+      console.error('Failed to send message:', error);
+      onStatusChange?.('error', error as Error);
       // Could add error handling UI here
     }
   }, [
@@ -76,55 +78,55 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
     clearAll,
     chatId,
     onStatusChange,
-  ])
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
+        e.preventDefault();
         if (canSubmit || uploadState.uploadedFiles.length > 0) {
-          handleSubmit()
+          handleSubmit();
         }
       }
     },
-    [canSubmit, handleSubmit, uploadState.uploadedFiles.length]
-  )
+    [canSubmit, handleSubmit, uploadState.uploadedFiles.length],
+  );
 
   const handleFileUpload = useCallback(() => {
-    setShowFileUploader(true)
-  }, [])
+    setShowFileUploader(true);
+  }, []);
 
   const handleAudioRecord = useCallback(() => {
-    setShowAudioRecorder(true)
-  }, [])
+    setShowAudioRecorder(true);
+  }, []);
 
   const handleFilesUploaded = useCallback((_files: unknown[]) => {
     // Files are already uploaded by the FileUploader component
     // The useFileUpload hook manages the state internally
-  }, [])
+  }, []);
 
   const handleAudioRecorded = useCallback(
     async (_audioBlob: Blob, transcript?: string) => {
-      setShowAudioRecorder(false)
+      setShowAudioRecorder(false);
 
       if (transcript?.trim()) {
         try {
-          onStatusChange?.('streaming')
+          onStatusChange?.('streaming');
           await sendMessage.mutateAsync({
             message: transcript.trim(),
             chatId,
-          })
-          onStatusChange?.('idle')
+          });
+          onStatusChange?.('idle');
         } catch (error) {
-          console.error('Failed to send transcribed message:', error)
-          onStatusChange?.('error', error as Error)
+          console.error('Failed to send transcribed message:', error);
+          onStatusChange?.('error', error as Error);
         }
       }
     },
-    [sendMessage, chatId, onStatusChange]
-  )
+    [sendMessage, chatId, onStatusChange],
+  );
 
-  const isSubmitting = sendMessage.isPending
+  const isSubmitting = sendMessage.isPending;
 
   return (
     <>
@@ -201,5 +203,5 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
         onAudioRecorded={handleAudioRecorded}
       />
     </>
-  )
-})
+  );
+});

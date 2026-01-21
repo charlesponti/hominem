@@ -1,14 +1,15 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { formatCurrency } from '~/lib/number.utils'
-import { trpc } from '~/lib/trpc'
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+
+import { formatCurrency } from '~/lib/number.utils';
+import { trpc } from '~/lib/trpc';
 
 interface TopCategoriesProps {
-  dateFrom?: Date
-  dateTo?: Date
-  selectedAccount?: string
-  selectedCategory?: string
+  dateFrom?: Date;
+  dateTo?: Date;
+  selectedAccount?: string;
+  selectedCategory?: string;
 }
 
 export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategoriesProps) {
@@ -21,9 +22,9 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
     to: dateTo?.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
     limit: '5',
-  })
+  });
 
-  const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
+  const skeletonItems = Array.from({ length: 5 }, (_, i) => i);
 
   return (
     <Card>
@@ -68,5 +69,5 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

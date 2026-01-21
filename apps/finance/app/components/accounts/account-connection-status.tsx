@@ -1,27 +1,28 @@
-import type { RouterOutput } from '~/lib/trpc'
-import { AccountStatusDisplay } from './account-status-display'
+import type { RouterOutput } from '~/lib/trpc';
+
+import { AccountStatusDisplay } from './account-status-display';
 
 interface AccountConnectionStatusProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number]
-  showDialog?: boolean
+  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  showDialog?: boolean;
 }
 
 export function AccountConnectionStatus({
   account,
   showDialog = true,
 }: AccountConnectionStatusProps) {
-  return <AccountStatusDisplay account={account} showDialog={showDialog} />
+  return <AccountStatusDisplay account={account} showDialog={showDialog} />;
 }
 
 interface AccountConnectionSummaryProps {
-  accounts: RouterOutput['finance']['accounts']['all']['accounts']
+  accounts: RouterOutput['finance']['accounts']['all']['accounts'];
 }
 
 export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryProps) {
-  const connectedCount = accounts.filter((account) => account.institutionId).length
-  const plaidLinkedCount = accounts.filter((account) => account.plaidItemId).length
-  const totalCount = accounts.length
-  const connectionRate = totalCount > 0 ? Math.round((connectedCount / totalCount) * 100) : 0
+  const connectedCount = accounts.filter((account) => account.institutionId).length;
+  const plaidLinkedCount = accounts.filter((account) => account.plaidItemId).length;
+  const totalCount = accounts.length;
+  const connectionRate = totalCount > 0 ? Math.round((connectedCount / totalCount) * 100) : 0;
 
   return (
     <div className="bg-muted/50 rounded-lg p-4">
@@ -47,5 +48,5 @@ export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryP
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -5,5 +5,5 @@ export function jsonResponse(data: unknown, init?: ResponseInit) {
       'Content-Type': 'application/json',
       ...init?.headers,
     },
-  })
+  });
 }

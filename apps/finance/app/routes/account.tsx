@@ -1,6 +1,6 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { useApiClient } from '@hominem/ui'
-import { Button, buttonVariants } from '@hominem/ui/button'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { useApiClient } from '@hominem/ui';
+import { Button, buttonVariants } from '@hominem/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,47 +10,48 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@hominem/ui/components/ui/alert-dialog'
+} from '@hominem/ui/components/ui/alert-dialog';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { toast } from '@hominem/ui/components/ui/use-toast'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { ExportTransactions } from '~/components/finance/export-transactions'
-import { RouteLink } from '~/components/route-link'
+} from '@hominem/ui/components/ui/card';
+import { toast } from '@hominem/ui/components/ui/use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+
+import { ExportTransactions } from '~/components/finance/export-transactions';
+import { RouteLink } from '~/components/route-link';
 
 export default function AccountPage() {
-  const { logout } = useSupabaseAuthContext()
-  const api = useApiClient()
-  const queryClient = useQueryClient()
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+  const { logout } = useSupabaseAuthContext();
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const deleteAllFinanceData = useMutation<void, Error, void>({
     mutationFn: async () => api.delete('/api/finance'),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['finance'] }) // Invalidate all finance related queries
+      await queryClient.invalidateQueries({ queryKey: ['finance'] }); // Invalidate all finance related queries
       toast({
         title: 'Data Deleted',
         description: 'All your finance data has been successfully deleted.',
-      })
-      setShowConfirmDelete(false)
+      });
+      setShowConfirmDelete(false);
     },
     onError: (error: Error) => {
-      console.error('Error deleting finance data:', error)
+      console.error('Error deleting finance data:', error);
       toast({
         title: 'Error',
         description:
           error.message || 'There was a problem deleting your finance data. Please try again.',
         variant: 'destructive',
-      })
-      setShowConfirmDelete(false)
+      });
+      setShowConfirmDelete(false);
     },
-  })
+  });
 
   return (
     <div className="container mx-auto py-8 max-w-3xl">
@@ -144,5 +145,5 @@ export default function AccountPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

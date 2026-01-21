@@ -1,9 +1,9 @@
-import { BudgetCategoryCard, type DisplayBudgetCategory } from './budget-category-card'
+import { BudgetCategoryCard, type DisplayBudgetCategory } from './budget-category-card';
 
 interface BudgetCategoriesGridProps {
-  categories: DisplayBudgetCategory[]
-  onEditCategory: (category: DisplayBudgetCategory) => void
-  onDeleteCategory: (category: DisplayBudgetCategory) => void
+  categories: DisplayBudgetCategory[];
+  onEditCategory: (category: DisplayBudgetCategory) => void;
+  onDeleteCategory: (category: DisplayBudgetCategory) => void;
 }
 
 export function BudgetCategoriesGrid({
@@ -22,5 +22,5 @@ export function BudgetCategoriesGrid({
         />
       ))}
     </div>
-  )
+  );
 }

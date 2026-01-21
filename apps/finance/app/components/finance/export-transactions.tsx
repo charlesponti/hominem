@@ -1,10 +1,11 @@
-import { Button } from '@hominem/ui/button'
-import { toast } from '@hominem/ui/components/ui/use-toast'
-import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data'
+import { Button } from '@hominem/ui/button';
+import { toast } from '@hominem/ui/components/ui/use-toast';
+
+import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 export function ExportTransactions() {
-  const { accountsMap } = useFinanceAccountsWithMap()
-  const { transactions } = useFinanceTransactions()
+  const { accountsMap } = useFinanceAccountsWithMap();
+  const { transactions } = useFinanceTransactions();
 
   const handleExport = () => {
     if (!transactions || transactions.length === 0) {
@@ -12,15 +13,15 @@ export function ExportTransactions() {
         title: 'No Transactions',
         description: 'There are no transactions to export.',
         variant: 'default',
-      })
-      return
+      });
+      return;
     }
 
-    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account']
+    const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account'];
     const csvRows = [
       headers.join(','),
       ...transactions.map((tx) => {
-        const account = accountsMap.get(tx.accountId)
+        const account = accountsMap.get(tx.accountId);
         return [
           tx.date,
           `"${tx.description?.replace(/"/g, '""') || ''}"`,
@@ -28,28 +29,28 @@ export function ExportTransactions() {
           tx.category || 'Other',
           tx.type,
           account?.name || 'Unknown',
-        ].join(',')
+        ].join(',');
       }),
-    ]
+    ];
 
-    const csvContent = csvRows.join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    const date = new Date().toISOString().split('T')[0]
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().split('T')[0];
 
-    a.href = url
-    a.download = `transactions-${date}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    a.href = url;
+    a.download = `transactions-${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 
     toast({
       title: 'Export Successful',
       description: 'Your transactions have been exported as a CSV file.',
-    })
-  }
+    });
+  };
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-md">
@@ -63,5 +64,5 @@ export function ExportTransactions() {
         Export CSV
       </Button>
     </div>
-  )
+  );
 }
