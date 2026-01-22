@@ -8,28 +8,67 @@
       "development": "./src/index.ts",
       "default": "./build/index.js"
     },
-    "./button": "./src/components/ui/button.tsx",
-    "./components/*": "./src/components/*",
-    "./components/ui/badge": "./src/components/ui/badge.tsx",
-    "./components/ui/command": "./src/components/ui/command.tsx",
-    "./components/ui/drawer": "./src/components/ui/drawer.tsx",
-    "./components/ui/label": "./src/components/ui/label.tsx",
-    "./components/ui/popover": "./src/components/ui/popover.tsx",
-    "./components/ui/textarea": "./src/components/ui/textarea.tsx",
-    "./components/layout/app-layout": "./src/components/layout/app-layout.tsx",
-    "./dialog": "./src/components/ui/dialog.tsx",
-    "./dropdown": "./src/components/ui/dropdown-menu.tsx",
-    "./card": "./src/components/ui/card.tsx",
-    "./filters": "./src/components/filters/index.ts",
-    "./hooks": "./src/hooks/index.ts",
-    "./input": "./src/components/ui/input.tsx",
-    "./label": "./src/components/ui/label.tsx",
-    "./list": "./src/components/list.tsx",
-    "./loading": "./src/components/ui/loading.tsx",
-    "./textarea": "./src/components/ui/textarea.tsx",
-    "./lib/*": "./src/lib/*",
-    "./styles/globals.css": "./src/styles/globals.css",
-    "./styles/animations.css": "./src/styles/animations.css"
+    "./button": {
+      "types": "./build/components/ui/button.d.ts",
+      "default": "./build/components/ui/button.js"
+    },
+    "./input": {
+      "types": "./build/components/ui/input.d.ts",
+      "default": "./build/components/ui/input.js"
+    },
+    "./label": {
+      "types": "./build/components/ui/label.d.ts",
+      "default": "./build/components/ui/label.js"
+    },
+    "./textarea": {
+      "types": "./build/components/ui/textarea.d.ts",
+      "default": "./build/components/ui/textarea.js"
+    },
+    "./dialog": {
+      "types": "./build/components/ui/dialog.d.ts",
+      "default": "./build/components/ui/dialog.js"
+    },
+    "./dropdown": {
+      "types": "./build/components/ui/dropdown-menu.d.ts",
+      "default": "./build/components/ui/dropdown-menu.js"
+    },
+    "./card": {
+      "types": "./build/components/ui/card.d.ts",
+      "default": "./build/components/ui/card.js"
+    },
+    "./loading": {
+      "types": "./build/components/ui/loading.d.ts",
+      "default": "./build/components/ui/loading.js"
+    },
+    "./list": {
+      "types": "./build/components/list.d.ts",
+      "default": "./build/components/list.js"
+    },
+    "./filters": {
+      "types": "./build/components/filters/index.d.ts",
+      "default": "./build/components/filters/index.js"
+    },
+    "./hooks": {
+      "types": "./build/hooks/index.d.ts",
+      "default": "./build/hooks/index.js"
+    },
+    "./components/ui/*": {
+      "types": "./build/components/ui/*.d.ts",
+      "default": "./build/components/ui/*.js"
+    },
+    "./components/*": {
+      "types": "./build/components/*.d.ts",
+      "default": "./build/components/*.js"
+    },
+    "./hooks/*": {
+      "types": "./build/hooks/*.d.ts",
+      "default": "./build/hooks/*.js"
+    },
+    "./lib/*": {
+      "types": "./build/lib/*.d.ts",
+      "default": "./build/lib/*.js"
+    },
+    "./styles/*": "./src/styles/*"
   },
   "scripts": {
     "build": "tsc -b",

@@ -6,16 +6,30 @@
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
     "noEmit": true
   },
   "references": [
-    { "path": "../../packages/services" },
-    { "path": "../../packages/utils" }
+    {
+      "path": "../../packages/services"
+    },
+    {
+      "path": "../../packages/utils"
+    }
   ],
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
+  ]
 }

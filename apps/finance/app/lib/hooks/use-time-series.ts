@@ -1,4 +1,4 @@
-import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/utils/types';
+import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/finance-services';
 
 import { format } from 'date-fns';
 

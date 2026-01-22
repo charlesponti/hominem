@@ -1,4 +1,4 @@
-import type { FileStatus } from '@hominem/utils/types';
+import type { FileStatus } from '@hominem/jobs-services';
 
 import { motion } from 'framer-motion';
 import { XIcon } from 'lucide-react';

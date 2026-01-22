@@ -1,27 +1,55 @@
 {
-  "extends": ["../../tsconfig.base.json", "../../tsconfig.paths.json"],
+  "extends": [
+    "../../tsconfig.base.json",
+    "../../tsconfig.paths.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
-    "rootDirs": [".", "./.react-router/types"],
+    "rootDirs": [
+      ".",
+      "./.react-router/types"
+    ],
     "jsx": "react-jsx",
-    "types": ["node", "vite/client", "@testing-library/jest-dom"],
+    "types": [
+      "node",
+      "vite/client",
+      "@testing-library/jest-dom"
+    ],
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": [
+        "./app/*"
+      ]
     },
     "noEmit": true,
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo"
   },
   "references": [
-    { "path": "../../packages/ai" },
-    { "path": "../../packages/auth" },
-    { "path": "../../packages/services" },
-    { "path": "../../packages/trpc" },
-    { "path": "../../packages/ui" },
-    { "path": "../../packages/utils" }
+    {
+      "path": "../../packages/ai"
+    },
+    {
+      "path": "../../packages/auth"
+    },
+    {
+      "path": "../../packages/services"
+    },
+    {
+      "path": "../../packages/trpc"
+    },
+    {
+      "path": "../../packages/ui"
+    },
+    {
+      "path": "../../packages/utils"
+    }
   ],
-  "include": ["app/**/*.ts", "app/**/*.tsx", ".react-router/types/**/*"],
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    ".react-router/types/**/*"
+  ],
   "exclude": [
     "node_modules",
     "build",

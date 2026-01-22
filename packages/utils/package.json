@@ -74,6 +74,11 @@
       "types": "./build/time.d.ts",
       "development": "./src/time.ts",
       "default": "./build/time.js"
+    },
+    "./types/change-management": {
+      "types": "./build/types/change-management.d.ts",
+      "development": "./src/types/change-management.ts",
+      "default": "./build/types/change-management.js"
     }
   },
   "scripts": {

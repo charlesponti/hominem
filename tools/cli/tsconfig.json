@@ -7,18 +7,38 @@
     "baseUrl": ".",
     "rootDir": ".",
     "jsx": "react-jsx",
-    "types": ["node", "bun-types"],
+    "types": [
+      "node",
+      "bun-types"
+    ],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
     "noEmit": true
   },
   "references": [
-    { "path": "../../packages/ai" },
-    { "path": "../../packages/services" },
-    { "path": "../../packages/trpc" },
-    { "path": "../../packages/utils" }
+    {
+      "path": "../../packages/ai"
+    },
+    {
+      "path": "../../packages/services"
+    },
+    {
+      "path": "../../packages/trpc"
+    },
+    {
+      "path": "../../packages/utils"
+    }
   ],
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
+  ]
 }

@@ -33,6 +33,8 @@
       "dependencies": {
         "@hominem/auth": "workspace:*",
         "@hominem/db": "workspace:*",
+        "@hominem/finance-services": "workspace:*",
+        "@hominem/jobs-services": "workspace:*",
         "@hominem/services": "workspace:*",
         "@hominem/trpc": "workspace:*",
         "@hominem/ui": "workspace:*",
