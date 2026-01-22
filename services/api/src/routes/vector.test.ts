@@ -1,9 +1,9 @@
 import { createTestUser } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createTRPCTestClient } from '@/test/trpc-test-utils.js';
+import { createTRPCTestClient } from '@/test/trpc-test-utils';
 
-import { createServer } from '../server.js';
+import { createServer } from '../server';
 
 vi.mock('@hominem/services/vector', () => ({
   VectorService: {

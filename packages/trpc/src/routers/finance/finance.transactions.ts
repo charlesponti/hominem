@@ -84,11 +84,11 @@ export const transactionsRouter = router({
         }
       }
 
-      return await updateTransaction(id, ctx.userId, data as any);
+      return await updateTransaction({ transactionId: id, ...data } as any, ctx.userId);
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ input, ctx }) => {
-    await deleteTransaction(input.id, ctx.userId);
+    await deleteTransaction({ transactionId: input.id }, ctx.userId);
     return { success: true, message: 'Transaction deleted successfully' };
   }),
 });

@@ -9,7 +9,7 @@ import { Hono } from 'hono';
 import crypto from 'node:crypto';
 import { z } from 'zod';
 
-import { ForbiddenError } from '../lib/errors.js';
+import { ForbiddenError } from '../lib/errors';
 export const possessionsRoutes = new Hono();
 
 const createPossessionSchema = z.object({

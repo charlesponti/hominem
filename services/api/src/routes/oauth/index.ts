@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { oauthTwitterCallbackRoutes } from './oauth.twitter.callback.js'
+import { oauthTwitterCallbackRoutes } from './oauth.twitter.callback'
 
 export const oauthRoutes = new Hono()
 

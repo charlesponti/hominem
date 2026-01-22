@@ -7,7 +7,7 @@ import {
   assertSuccessResponse,
   makeAuthenticatedRequest,
   useApiTestLifecycle,
-} from '@/test/api-test-utils.js';
+} from '@/test/api-test-utils';
 
 // Mock BullMQ Queue
 const { mockQueueAdd, mockQueueClose } = vi.hoisted(() => {
@@ -41,7 +41,7 @@ vi.mock('plaid', () => {
   };
 });
 
-vi.mock('@/lib/plaid.js', () => ({
+vi.mock('@/lib/plaid', () => ({
   plaidClient: {
     linkTokenCreate: vi.fn(),
     itemPublicTokenExchange: vi.fn(),
@@ -102,7 +102,7 @@ describe('Plaid Router', () => {
 
   describe('POST /api/finance/plaid/create-link-token', () => {
     test('creates link token successfully', async () => {
-      const { plaidClient } = await import('@/lib/plaid.js');
+      const { plaidClient } = await import('@/lib/plaid');
 
       vi.mocked(plaidClient.linkTokenCreate).mockResolvedValue({
         data: {
@@ -126,7 +126,7 @@ describe('Plaid Router', () => {
     });
 
     test('handles plaid client error', async () => {
-      const { plaidClient } = await import('@/lib/plaid.js');
+      const { plaidClient } = await import('@/lib/plaid');
 
       vi.mocked(plaidClient.linkTokenCreate).mockRejectedValue(new Error('Plaid error'));
 
@@ -144,7 +144,7 @@ describe('Plaid Router', () => {
 
   describe('POST /api/finance/plaid/exchange-token', () => {
     test.skip('exchanges token successfully for new institution', async () => {
-      const { plaidClient } = await import('@/lib/plaid.js');
+      const { plaidClient } = await import('@/lib/plaid');
 
       vi.mocked(plaidClient.itemPublicTokenExchange).mockResolvedValue({
         data: {

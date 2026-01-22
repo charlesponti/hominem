@@ -9,9 +9,20 @@
     "noEmit": false,
     "composite": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "build", "src/test/**", "**/*.test.ts", "**/*.spec.ts", "src/routers/finance/**"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "src/test/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

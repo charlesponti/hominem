@@ -6,33 +6,34 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
-
-import { env } from './lib/env.js';
-import { supabaseMiddleware } from './middleware/supabase.js';
-import { aiRoutes } from './routes/ai/index.js';
-import { componentsRoutes } from './routes/components/index.js';
-import { healthRoutes } from './routes/health.js';
-import { imagesRoutes } from './routes/images.js';
-import { invitesRoutes } from './routes/invites/index.js';
-import { oauthRoutes } from './routes/oauth/index.js';
-import { possessionsRoutes } from './routes/possessions.js';
+import { appRouter } from '@hominem/trpc';
+import { env } from './env';
+import { supabaseMiddleware } from './middleware/supabase';
+import { aiRoutes } from './routes/ai';
+import { componentsRoutes } from './routes/components';
+import { financeRoutes } from './routes/finance';
+import { plaidRoutes } from './routes/finance/plaid';
+import { healthRoutes } from './routes/health';
+import { imagesRoutes } from './routes/images';
+import { invitesRoutes } from './routes/invites';
+import { oauthRoutes } from './routes/oauth';
+import { possessionsRoutes } from './routes/possessions';
 import { statusRoutes } from './routes/status';
-import { appRouter } from './trpc/index.js';
-import { financeRoutes } from './trpc/routers/finance/index.js';
-import { plaidRoutes } from './trpc/routers/finance/plaid/index.js';
+
+import type { HominemUser } from '@hominem/auth/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type AppEnv = {
-  Bindings: {
+  Variables: {
+    userId?: string;
+    user?: HominemUser;
+    supabaseId?: string;
+    supabase?: SupabaseClient;
     queues: {
       plaidSync: Queue;
       importTransactions: Queue;
       placePhotoEnrich: Queue;
     };
-  };
-  Variables: {
-    userId?: string;
-    user?: unknown;
-    supabaseId?: string;
   };
 };
 

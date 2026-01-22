@@ -3,13 +3,13 @@ import { createAccount, getAccountByProviderAccountId, updateAccount } from '@ho
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import z from 'zod'
-import { env } from '../../lib/env.js'
+import { env } from '../../env'
 import {
   getPkceVerifier,
   TWITTER_SCOPES,
   type TwitterTokenResponse,
   type TwitterUserResponse,
-} from '../../lib/oauth.twitter.utils.js'
+} from '../../lib/oauth.twitter.utils'
 
 // Twitter OAuth configuration
 const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID

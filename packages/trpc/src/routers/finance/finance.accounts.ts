@@ -33,7 +33,7 @@ export const accountsRouter = router({
     }
 
     const accountWithTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5);
-    const accountData = accountWithTransactions.find((acc) => acc.id === account.id);
+    const accountData = (accountWithTransactions as any[]).find((acc: any) => acc.id === account.id);
 
     return {
       ...account,
@@ -64,6 +64,7 @@ export const accountsRouter = router({
         type: input.type,
         balance: input.balance?.toString() || '0',
         institutionId: input.institution || null,
+        isoCurrencyCode: 'USD',
         meta: null,
       });
     }),
@@ -118,10 +119,10 @@ export const accountsRouter = router({
     // Get recent transactions for each account using the existing service method
     const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(ctx.userId, 5);
     const transactionsMap = new Map(
-      accountsWithRecentTransactions.map((acc) => [acc.id, acc.transactions || []]),
+      (accountsWithRecentTransactions as any[]).map((acc: any) => [acc.id, acc.transactions || []]),
     );
 
-    const accountsWithTransactions = allAccounts.map((account) => {
+    const accountsWithTransactions = (allAccounts as any[]).map((account: any) => {
       return {
         ...account,
         transactions: transactionsMap.get(account.id) || [],
@@ -132,7 +133,7 @@ export const accountsRouter = router({
     // This ensures we capture all Plaid connections, even those without corresponding finance accounts
     const plaidConnections = await listPlaidConnectionsForUser(ctx.userId);
 
-    const uniqueConnections = plaidConnections.map((connection) => ({
+    const uniqueConnections = (plaidConnections as any[]).map((connection: any) => ({
       id: connection.id,
       itemId: connection.itemId,
       institutionId: connection.institutionId,

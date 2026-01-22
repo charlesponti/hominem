@@ -66,7 +66,7 @@ export async function calculateBudgetBreakdown(
   return { housing, food, transportation, utilities, healthcare, entertainment, savings };
 }
 
-export async function calculateRunway(input: z.infer<typeof calculateRunwayInputSchema>) {
+export async function calculateSimpleRunway(input: z.infer<typeof calculateRunwayInputSchema>) {
   const months = Math.floor(input.currentBalance / input.monthlyExpenses);
   const days = months * 30;
   const estimatedEndDate = new Date();

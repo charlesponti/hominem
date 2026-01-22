@@ -38,7 +38,7 @@ export interface RunwayCalculationResult {
 /**
  * Calculate financial runway based on current balance, monthly expenses, and planned purchases
  */
-export function calculateRunway(input: RunwayCalculationInput): RunwayCalculationResult {
+export function calculateDetailedRunway(input: RunwayCalculationInput): RunwayCalculationResult {
   const { balance, monthlyExpenses, plannedPurchases = [] } = input;
 
   // Group planned purchases by month

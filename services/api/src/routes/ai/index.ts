@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { aiTourRoutes } from './ai.tour.js'
+import { aiTourRoutes } from './ai.tour'
 
 export const aiRoutes = new Hono()
 

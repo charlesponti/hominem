@@ -1,6 +1,6 @@
 import {
+  AccountsService,
   createInstitution,
-  getAccountById,
   getAllInstitutions,
   getInstitution,
   getInstitutionAccounts,
@@ -8,7 +8,6 @@ import {
   getUserAccounts,
   getUserInstitutionConnections,
   getUserPlaidItemForInstitution,
-  updateAccount,
 } from '@hominem/finance-services';
 import { z } from 'zod';
 
@@ -73,7 +72,7 @@ export const institutionsRouter = router({
       const { accountId, institutionId, plaidItemId } = input;
 
       // Ensure account exists and belongs to user
-      const existingAccount = await getAccountById(accountId, ctx.userId);
+      const existingAccount = await AccountsService.getAccountById(accountId, ctx.userId);
       if (!existingAccount) {
         throw new Error('Account not found');
       }
@@ -99,7 +98,7 @@ export const institutionsRouter = router({
       }
 
       // Update account to link with institution
-      const updatedAccount = await updateAccount(accountId, ctx.userId, {
+      const updatedAccount = await AccountsService.updateAccount(accountId, ctx.userId, {
         institutionId,
         plaidItemId: plaidItemId || null,
       });
@@ -118,13 +117,13 @@ export const institutionsRouter = router({
       const { accountId } = input;
 
       // Ensure account exists and belongs to user
-      const existingAccount = await getAccountById(accountId, ctx.userId);
+      const existingAccount = await AccountsService.getAccountById(accountId, ctx.userId);
       if (!existingAccount) {
         throw new Error('Account not found');
       }
 
       // Update account to unlink from institution
-      const updatedAccount = await updateAccount(accountId, ctx.userId, {
+      const updatedAccount = await AccountsService.updateAccount(accountId, ctx.userId, {
         institutionId: null,
         plaidItemId: null,
       });

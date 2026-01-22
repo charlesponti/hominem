@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { Queue } from 'bullmq'
 import type { Context, MiddlewareHandler } from 'hono'
 import { setCookie } from 'hono/cookie'
-import { authConfig } from '../lib/auth.js'
+import { authConfig } from '../lib/auth'
 
 declare module 'hono' {
   interface ContextVariableMap {

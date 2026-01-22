@@ -259,4 +259,23 @@ export const AccountsRepository = {
       accountCount: accounts.length,
     };
   },
+
+  async listPlaidConnections(userId: string) {
+    const result = await db
+      .select({
+        id: plaidItems.id,
+        itemId: plaidItems.itemId,
+        institutionId: plaidItems.institutionId,
+        institutionName: financialInstitutions.name,
+        status: plaidItems.status,
+        lastSyncedAt: plaidItems.lastSyncedAt,
+        error: plaidItems.error,
+        createdAt: plaidItems.createdAt,
+      })
+      .from(plaidItems)
+      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+      .where(eq(plaidItems.userId, userId));
+
+    return result;
+  },
 };

@@ -1,4 +1,4 @@
-import { calculateRunway, calculateRunwayProjection } from '@hominem/finance-services';
+import { calculateDetailedRunway, calculateRunwayProjection } from '@hominem/finance-services';
 import { z } from 'zod';
 
 import { publicProcedure } from '../../procedures';
@@ -23,7 +23,7 @@ export const runwayRouter = publicProcedure
   )
   .mutation(async ({ input }) => {
     try {
-      const runwayResult = calculateRunway(input);
+      const runwayResult = calculateDetailedRunway(input);
       const projectionData = calculateRunwayProjection(input);
 
       return {

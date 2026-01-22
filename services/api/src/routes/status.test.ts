@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { createServer } from '../server.js'
+import { createServer } from '../server'
 
 describe('Status Routes', () => {
   test('GET /api/status - should return system health status', async () => {

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
-import { invitesIncomingRoutes } from '../invites.incoming.js'
-import { invitesOutgoingRoutes } from '../invites.outgoing.js'
+import { invitesIncomingRoutes } from '../invites.incoming'
+import { invitesOutgoingRoutes } from '../invites.outgoing'
 
 export const invitesRoutes = new Hono()
 
