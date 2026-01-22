@@ -1,8 +1,8 @@
 import { db } from '@hominem/db';
 import { type NewVectorDocument, vectorDocuments } from '@hominem/db/schema';
+import { splitMarkdown } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import OpenAI from 'openai';
@@ -173,12 +173,10 @@ export namespace VectorService {
     userId: string,
     metadata?: Record<string, unknown>,
   ): Promise<{ success: boolean; chunksProcessed: number }> {
-    const splitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
+    const splitDocuments = await splitMarkdown(text, {
       chunkSize: 256,
       chunkOverlap: 20,
     });
-
-    const splitDocuments = await splitter.createDocuments([text]);
 
     const batchSize = 50;
     let totalChunks = 0;

@@ -1,8 +1,13 @@
 import { load as cheerio } from 'cheerio';
+import type {
+  Document
+} from '@langchain/core/documents';
 import {
   MarkdownTextSplitter,
   type RecursiveCharacterTextSplitterParams,
 } from 'langchain/text_splitter';
+
+export type { RecursiveCharacterTextSplitterParams };
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
@@ -50,14 +55,26 @@ export interface ProcessedMarkdownFile {
   metadata?: Metadata;
 }
 
+/**
+ * Utility function to split markdown content into chunks using LangChain's MarkdownTextSplitter.
+ */
+export async function splitMarkdown(
+  content: string,
+  options?: Partial<RecursiveCharacterTextSplitterParams>,
+): Promise<Document[]> {
+  const splitter = MarkdownTextSplitter.fromLanguage('markdown', {
+    chunkSize: 512,
+    chunkOverlap: 50,
+    ...options,
+  });
+
+  return await splitter.createDocuments([content]);
+}
+
 export class MarkdownProcessor {
   async getChunks(content: string, options?: Partial<RecursiveCharacterTextSplitterParams>) {
-    const splitter = MarkdownTextSplitter.fromLanguage('markdown', {
-      separators: ['#', '##', '###', '####', '#####', '######'],
-      ...options,
-    });
-    const chunks = await splitter.splitText(content);
-    return chunks;
+    const docs = await splitMarkdown(content, options);
+    return docs.map((doc) => doc.pageContent);
   }
 
   async processFileWithAst(content: string, filename: string): Promise<ProcessedMarkdownFile> {
