@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { TransactionInsert } from '../../finance.types';
 

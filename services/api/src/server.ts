@@ -1,4 +1,8 @@
+import type { HominemUser } from '@hominem/auth/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { redis } from '@hominem/services/redis';
+import { appRouter } from '@hominem/trpc';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { trpcServer } from '@hono/trpc-server';
 import { Queue } from 'bullmq';
@@ -6,7 +10,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
-import { appRouter } from '@hominem/trpc';
+
 import { env } from './env';
 import { supabaseMiddleware } from './middleware/supabase';
 import { aiRoutes } from './routes/ai';
@@ -19,9 +23,6 @@ import { invitesRoutes } from './routes/invites';
 import { oauthRoutes } from './routes/oauth';
 import { possessionsRoutes } from './routes/possessions';
 import { statusRoutes } from './routes/status';
-
-import type { HominemUser } from '@hominem/auth/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type AppEnv = {
   Variables: {

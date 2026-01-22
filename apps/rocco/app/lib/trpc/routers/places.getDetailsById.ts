@@ -1,6 +1,6 @@
 import { getPlaceById, isGooglePhotosUrl } from '@hominem/places-services';
 import { logger } from '@hominem/utils/logger';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { protectedProcedure } from '../context';
 import { enrichPlaceWithDetails } from './places.helpers';

@@ -1,5 +1,5 @@
 import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/lists-services';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { protectedProcedure, publicProcedure, router } from '../context';
 

@@ -1,5 +1,16 @@
 import { afterAll, beforeAll, vi } from 'vitest'
 
+// ESM interop fix for Zod in Vitest/Bun
+vi.mock('zod', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('zod')>()
+  const z = actual.z || actual
+  return {
+    ...actual,
+    z,
+    default: z,
+  }
+})
+
 // Set NODE_ENV to test for environment variable defaults
 process.env.NODE_ENV = 'test'
 

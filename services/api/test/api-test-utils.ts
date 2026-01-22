@@ -106,14 +106,16 @@ export const makeAuthenticatedRequest = async (
     ...options.headers,
   }
 
+  let body: string | undefined
+  if (options.payload) {
+    headers['Content-Type'] = 'application/json'
+    body = JSON.stringify(options.payload)
+  }
+
   const requestInit: RequestInit = {
     method: options.method,
     headers: Object.fromEntries(Object.entries(headers).filter(([_, value]) => value !== null)),
-  }
-
-  if (options.payload) {
-    headers['Content-Type'] = 'application/json'
-    requestInit.body = JSON.stringify(options.payload)
+    body,
   }
 
   const request = new Request(`http://localhost${options.url}`, requestInit)

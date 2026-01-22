@@ -294,7 +294,7 @@ export type BudgetCategory = typeof budgetCategories.$inferSelect;
 export type BudgetGoal = typeof budgetGoals.$inferSelect;
 
 // Zod schemas generated from Drizzle
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
 export const TransactionTypeEnum = z.enum(transactionTypeEnum.enumValues as [string, ...string[]]);

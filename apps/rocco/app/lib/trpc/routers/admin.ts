@@ -1,6 +1,6 @@
 import { refreshAllPlaces } from '@hominem/places-services';
 import { sendAdminNotification } from '@hominem/services/emails';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { adminProcedure, router } from '../context';
 

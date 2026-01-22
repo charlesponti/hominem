@@ -1,7 +1,9 @@
 import { relations, sql } from 'drizzle-orm'
 import { foreignKey, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { z } from 'zod'
-import { type AllContentType, AllContentTypeSchema, type ContentTag } from './shared.schema'
+import * as z from 'zod'
+
+import { AllContentTypeSchema } from './shared.schema'
+import type { ContentTag } from './shared.schema'
 import { users } from './users.schema'
 
 export const ContentStrategySchema = z.object({
@@ -59,7 +61,7 @@ export type ContentStrategy = z.infer<typeof ContentStrategySchema>
  */
 export const ContentTypeSchema = AllContentTypeSchema
 
-export type ContentType = AllContentType
+export type ContentType = z.infer<typeof AllContentTypeSchema>
 
 /**
  * Publishing status for content

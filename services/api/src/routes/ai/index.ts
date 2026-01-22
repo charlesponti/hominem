@@ -1,6 +1,7 @@
-import { Hono } from 'hono'
-import { aiTourRoutes } from './ai.tour'
+import { Hono } from 'hono';
 
-export const aiRoutes = new Hono()
+import { aiTourRoutes } from './ai.tour';
 
-aiRoutes.route('/tour', aiTourRoutes)
+export const aiRoutes = new Hono();
+
+aiRoutes.route('/tour', aiTourRoutes);

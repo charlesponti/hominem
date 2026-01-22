@@ -1,13 +1,14 @@
-import { Hono } from 'hono'
-import { env } from '../../../env'
-import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid'
-export const financePlaidCreateLinkTokenRoutes = new Hono()
+import { Hono } from 'hono';
+
+import { env } from '../../../env';
+import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid';
+export const financePlaidCreateLinkTokenRoutes = new Hono();
 
 // Create a new Plaid link token
 financePlaidCreateLinkTokenRoutes.post('/', async (c) => {
-  const userId = c.get('userId')
+  const userId = c.get('userId');
   if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+    return c.json({ error: 'Not authorized' }, 401);
   }
 
   try {
@@ -18,15 +19,15 @@ financePlaidCreateLinkTokenRoutes.post('/', async (c) => {
       country_codes: PLAID_COUNTRY_CODES,
       language: 'en',
       webhook: `${env.API_URL}/api/finance/plaid/webhook`,
-    })
+    });
 
     return c.json({
       success: true,
       linkToken: createTokenResponse.data.link_token,
       expiration: createTokenResponse.data.expiration,
-    })
+    });
   } catch (error) {
-    console.error(`Failed to create Plaid link token: ${error}`)
-    return c.json({ error: 'Internal Server Error' }, 500)
+    console.error(`Failed to create Plaid link token: ${error}`);
+    return c.json({ error: 'Internal Server Error' }, 500);
   }
-})
+});

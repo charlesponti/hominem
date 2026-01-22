@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const runwayCalculationSchema = z.object({
   balance: z.number().positive(),

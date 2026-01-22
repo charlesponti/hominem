@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 const AirbnbListingSchema = z.object({
   title: z.string().optional(),

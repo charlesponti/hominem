@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const GeocodingSchema = z.object({
   geocoding: z.object({

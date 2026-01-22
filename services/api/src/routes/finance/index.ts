@@ -1,8 +1,9 @@
-import { Hono } from 'hono'
-import { financeCategoriesRoutes } from './finance.categories'
-import { financeImportRoutes } from './finance.import'
+import { Hono } from 'hono';
 
-export const financeRoutes = new Hono()
+import { financeCategoriesRoutes } from './finance.categories';
+import { financeImportRoutes } from './finance.import';
 
-financeRoutes.route('/import', financeImportRoutes)
-financeRoutes.route('/categories', financeCategoriesRoutes)
+export const financeRoutes = new Hono();
+
+financeRoutes.route('/import', financeImportRoutes);
+financeRoutes.route('/categories', financeCategoriesRoutes);

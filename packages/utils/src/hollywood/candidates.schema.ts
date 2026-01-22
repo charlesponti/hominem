@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 const CreditSchema = z.object({
   role: z.string().describe('The role the candidate had in the production'),

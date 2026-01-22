@@ -20,6 +20,12 @@ global.IntersectionObserver = class IntersectionObserver {
   unobserve() {}
 };
 
+// Fix for JSDOM recursion bug with hardwareConcurrency
+Object.defineProperty(navigator, 'hardwareConcurrency', {
+  get: () => 4,
+  configurable: true,
+});
+
 // Ensure jsdom environment is fully initialized before tests run
 beforeAll(() => {
   // Verify jsdom globals are available

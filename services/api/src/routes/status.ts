@@ -1,22 +1,22 @@
-import { db } from '@hominem/db'
-import { health } from '@hominem/db/schema'
-import { Hono } from 'hono'
+import { db } from '@hominem/db';
+import { health } from '@hominem/db/schema';
+import { Hono } from 'hono';
 
-export const statusRoutes = new Hono()
+export const statusRoutes = new Hono();
 
 // System health check endpoint
 statusRoutes.get('/', async (c) => {
   try {
-    await db.select().from(health).limit(1)
+    await db.select().from(health).limit(1);
 
     return c.json({
       status: 'ok',
       serverTime: new Date().toISOString(),
       uptime: process.uptime(),
       database: 'connected',
-    })
+    });
   } catch (error) {
-    console.error('Health check failed:', error)
+    console.error('Health check failed:', error);
     return c.json(
       {
         status: 'error',
@@ -25,7 +25,7 @@ statusRoutes.get('/', async (c) => {
         database: 'disconnected',
         error: error instanceof Error ? error.message : 'Unknown error',
       },
-      500
-    )
+      500,
+    );
   }
-})
+});

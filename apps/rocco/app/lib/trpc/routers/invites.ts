@@ -13,7 +13,7 @@ import {
   sendListInvite,
 } from '@hominem/lists-services';
 import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { protectedProcedure, router } from '../context';
 

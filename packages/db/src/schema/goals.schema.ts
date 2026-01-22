@@ -1,5 +1,5 @@
 import { integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { z } from 'zod'
+import * as z from 'zod'
 import { users } from './users.schema'
 
 export const GoalStatusSchema = z.enum(['todo', 'in_progress', 'completed', 'archived'])

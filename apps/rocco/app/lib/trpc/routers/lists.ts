@@ -9,7 +9,7 @@ import {
   updateList,
 } from '@hominem/lists-services';
 import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { safeAsync } from '../../errors';
 import { logger } from '../../logger';

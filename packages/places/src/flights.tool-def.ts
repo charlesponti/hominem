@@ -1,5 +1,5 @@
 import { toolDefinition } from '@tanstack/ai';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import {
   getFlightPricesInputSchema,

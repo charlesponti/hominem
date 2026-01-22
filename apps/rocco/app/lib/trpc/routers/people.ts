@@ -1,5 +1,5 @@
 import { createPerson, getPeople, type PersonInput } from '@hominem/services';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { protectedProcedure, router } from '../context';
 

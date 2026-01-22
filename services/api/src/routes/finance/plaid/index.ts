@@ -1,14 +1,15 @@
-import { Hono } from 'hono'
-import { financePlaidCreateLinkTokenRoutes } from './finance.plaid.create-link-token'
-import { financePlaidDisconnectRoutes } from './finance.plaid.disconnect'
-import { financePlaidExchangeTokenRoutes } from './finance.plaid.exchange-token'
-import { financePlaidSyncRoutes } from './finance.plaid.sync'
-import { financePlaidWebhookRoutes } from './finance.plaid.webhook'
+import { Hono } from 'hono';
 
-export const plaidRoutes = new Hono()
+import { financePlaidCreateLinkTokenRoutes } from './finance.plaid.create-link-token';
+import { financePlaidDisconnectRoutes } from './finance.plaid.disconnect';
+import { financePlaidExchangeTokenRoutes } from './finance.plaid.exchange-token';
+import { financePlaidSyncRoutes } from './finance.plaid.sync';
+import { financePlaidWebhookRoutes } from './finance.plaid.webhook';
 
-plaidRoutes.route('/create-link-token', financePlaidCreateLinkTokenRoutes)
-plaidRoutes.route('/exchange-token', financePlaidExchangeTokenRoutes)
-plaidRoutes.route('/sync', financePlaidSyncRoutes)
-plaidRoutes.route('/connections', financePlaidDisconnectRoutes)
-plaidRoutes.route('/webhook', financePlaidWebhookRoutes)
+export const plaidRoutes = new Hono();
+
+plaidRoutes.route('/create-link-token', financePlaidCreateLinkTokenRoutes);
+plaidRoutes.route('/exchange-token', financePlaidExchangeTokenRoutes);
+plaidRoutes.route('/sync', financePlaidSyncRoutes);
+plaidRoutes.route('/connections', financePlaidDisconnectRoutes);
+plaidRoutes.route('/webhook', financePlaidWebhookRoutes);

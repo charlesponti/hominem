@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -40,6 +40,8 @@ export type PublishingContentType = z.infer<typeof PublishingContentTypeSchema>;
  * Union type for all content types
  */
 export const AllContentTypeSchema = z.union([BaseContentTypeSchema, PublishingContentTypeSchema]);
+
+export type AllContentType = z.infer<typeof AllContentTypeSchema>;
 
 /**
  * Standardized location coordinates

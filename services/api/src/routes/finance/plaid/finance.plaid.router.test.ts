@@ -1,4 +1,4 @@
-import { financeTestSeed } from '@hominem/finance-services';
+import { cleanupFinanceTestData, seedFinanceTestData } from '@hominem/db/test/utils';
 import crypto from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
@@ -41,7 +41,7 @@ vi.mock('plaid', () => {
   };
 });
 
-vi.mock('@/lib/plaid', () => ({
+vi.mock('@/src/lib/plaid', () => ({
   plaidClient: {
     linkTokenCreate: vi.fn(),
     itemPublicTokenExchange: vi.fn(),
@@ -82,7 +82,7 @@ describe('Plaid Router', () => {
     testInstitutionId = crypto.randomUUID();
 
     // Seed fresh test data for this test (with plaid options)
-    await financeTestSeed.seedFinanceTestData({
+    await seedFinanceTestData({
       userId: testUserId,
       accountId: testAccountId,
       institutionId: testInstitutionId,
@@ -93,7 +93,7 @@ describe('Plaid Router', () => {
 
   // Clean up after each test to prevent data leakage
   afterAll(async () => {
-    await financeTestSeed.cleanupFinanceTestData({
+    await cleanupFinanceTestData({
       userId: testUserId,
       accountId: testAccountId,
       institutionId: testInstitutionId,
@@ -102,7 +102,7 @@ describe('Plaid Router', () => {
 
   describe('POST /api/finance/plaid/create-link-token', () => {
     test('creates link token successfully', async () => {
-      const { plaidClient } = await import('@/lib/plaid');
+      const { plaidClient } = await import('@/src/lib/plaid');
 
       vi.mocked(plaidClient.linkTokenCreate).mockResolvedValue({
         data: {
@@ -126,7 +126,7 @@ describe('Plaid Router', () => {
     });
 
     test('handles plaid client error', async () => {
-      const { plaidClient } = await import('@/lib/plaid');
+      const { plaidClient } = await import('@/src/lib/plaid');
 
       vi.mocked(plaidClient.linkTokenCreate).mockRejectedValue(new Error('Plaid error'));
 
@@ -143,8 +143,8 @@ describe('Plaid Router', () => {
   });
 
   describe('POST /api/finance/plaid/exchange-token', () => {
-    test.skip('exchanges token successfully for new institution', async () => {
-      const { plaidClient } = await import('@/lib/plaid');
+    test('exchanges token successfully for new institution', async () => {
+      const { plaidClient } = await import('@/src/lib/plaid');
 
       vi.mocked(plaidClient.itemPublicTokenExchange).mockResolvedValue({
         data: {

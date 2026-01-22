@@ -31,6 +31,8 @@
     "@hominem/db": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/events-services": "workspace:*",
+    "@hominem/lists-services": "workspace:*",
+    "@hominem/places-services": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",

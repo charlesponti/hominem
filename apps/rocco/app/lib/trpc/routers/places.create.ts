@@ -1,7 +1,7 @@
 import { addPlaceToLists, isGooglePhotosUrl, type PlaceInsert } from '@hominem/places-services';
 import { googlePlaces } from '@hominem/places-services';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { extractPhotoReferences } from '~/lib/places-utils';
 

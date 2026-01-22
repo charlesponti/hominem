@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const DecisionSchema = z.object({
   decision: z.string().describe('Decision made in the text'),

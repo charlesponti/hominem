@@ -1,5 +1,5 @@
 import { getVisitsByPlace } from '@hominem/events-services';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { protectedProcedure } from '../context';
 

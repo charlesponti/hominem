@@ -1,10 +1,11 @@
-import { Hono } from 'hono'
-import { oauthTwitterCallbackRoutes } from './oauth.twitter.callback'
+import { Hono } from 'hono';
 
-export const oauthRoutes = new Hono()
+import { oauthTwitterCallbackRoutes } from './oauth.twitter.callback';
 
-const twitterRoutes = new Hono()
+export const oauthRoutes = new Hono();
 
-twitterRoutes.route('/callback', oauthTwitterCallbackRoutes)
+const twitterRoutes = new Hono();
 
-oauthRoutes.route('/twitter', twitterRoutes)
+twitterRoutes.route('/callback', oauthTwitterCallbackRoutes);
+
+oauthRoutes.route('/twitter', twitterRoutes);

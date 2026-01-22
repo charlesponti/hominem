@@ -1,5 +1,5 @@
 import { googlePlaces } from '@hominem/places-services';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { mapGooglePlaceToPrediction } from '~/lib/places-utils';
 

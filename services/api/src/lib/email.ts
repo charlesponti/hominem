@@ -1,37 +1,38 @@
-import { logger } from '@hominem/utils/logger'
-import { Resend } from 'resend'
-import { env } from './env'
+import { logger } from '@hominem/utils/logger';
+import { Resend } from 'resend';
 
-const isDev = env.NODE_ENV === 'development'
-const isTest = env.NODE_ENV === 'test'
+import { env } from '../env';
 
-if (!((env.RESEND_API_KEY || isDev ) || isTest)) {
-  logger.error('The RESEND_API_KEY env var must be set, otherwise the API cannot send emails.')
-  process.exit(1)
+const isDev = env.NODE_ENV === 'development';
+const isTest = env.NODE_ENV === 'test';
+
+if (!(env.RESEND_API_KEY || isDev || isTest)) {
+  logger.error('The RESEND_API_KEY env var must be set, otherwise the API cannot send emails.');
+  process.exit(1);
 }
 
-const resend = new Resend(env.RESEND_API_KEY || 'test-resend-key')
+const resend = new Resend(env.RESEND_API_KEY || 'test-resend-key');
 
 export interface EmailOptions {
-  to: string
-  subject: string
-  text: string
-  html: string
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
   from?: {
-    email: string
-    name?: string
-  }
+    email: string;
+    name?: string;
+  };
 }
 
 export const emailService = {
   async sendEmail(options: EmailOptions): Promise<void> {
-    const fromEmail = options.from?.email ?? env.RESEND_FROM_EMAIL
-    const fromName = options.from?.name ?? env.RESEND_FROM_NAME
-    const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail
+    const fromEmail = options.from?.email ?? env.RESEND_FROM_EMAIL;
+    const fromName = options.from?.name ?? env.RESEND_FROM_NAME;
+    const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
 
     // Only send an email in prod. Otherwise, log to not waste quota.
     if (isDev || isTest) {
-      logger.info(`Email sent to: ${options.to}: ${options.text}`)
+      logger.info(`Email sent to: ${options.to}: ${options.text}`);
     } else {
       try {
         const result = await resend.emails.send({
@@ -40,19 +41,19 @@ export const emailService = {
           subject: options.subject,
           text: options.text,
           html: options.html,
-        })
+        });
 
         if (result.error) {
-          throw result.error
+          throw result.error;
         }
 
         logger.info('Email sent', {
           receiver: options.to,
           sender: fromEmail,
-        })
+        });
       } catch (err) {
-        logger.error('Error sending email', { err, ...options })
-        throw new Error('Error sending email')
+        logger.error('Error sending email', { err, ...options });
+        throw new Error('Error sending email');
       }
     }
   },
@@ -73,7 +74,7 @@ export const emailService = {
           <p>The login token for the API is: ${token}</p>
         </div>
       `,
-    })
+    });
   },
 
   /**
@@ -93,7 +94,7 @@ export const emailService = {
           <p>We're excited to have you on board.</p>
         </div>
       `,
-    })
+    });
   },
 
   /**
@@ -114,9 +115,9 @@ export const emailService = {
           <p>If you didn't request this reset, please ignore this email.</p>
         </div>
       `,
-    })
+    });
   },
-}
+};
 
 // Export individual functions for backward compatibility
-export const { sendEmail, sendEmailToken, sendWelcomeEmail, sendPasswordResetEmail } = emailService
+export const { sendEmail, sendEmailToken, sendWelcomeEmail, sendPasswordResetEmail } = emailService;

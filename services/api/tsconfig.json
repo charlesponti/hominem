@@ -1,19 +1,80 @@
 {
-  "extends": ["../../tsconfig.base.json", "../../tsconfig.paths.json"],
+  "extends": [
+    "../../tsconfig.base.json",
+    "../../tsconfig.paths.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "src",
-    "types": ["node"],
+    "rootDir": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "types": [
+      "node"
+    ],
     "noEmit": true,
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo"
   },
   "references": [
-    { "path": "../../packages/ai" },
-    { "path": "../../packages/auth" },
-    { "path": "../../packages/services" },
-    { "path": "../../packages/utils" }
+    {
+      "path": "../../packages/ai"
+    },
+    {
+      "path": "../../packages/auth"
+    },
+    {
+      "path": "../../packages/career"
+    },
+    {
+      "path": "../../packages/chat"
+    },
+    {
+      "path": "../../packages/db"
+    },
+    {
+      "path": "../../packages/events"
+    },
+    {
+      "path": "../../packages/finance"
+    },
+    {
+      "path": "../../packages/health"
+    },
+    {
+      "path": "../../packages/jobs"
+    },
+    {
+      "path": "../../packages/lists"
+    },
+    {
+      "path": "../../packages/notes"
+    },
+    {
+      "path": "../../packages/places"
+    },
+    {
+      "path": "../../packages/services"
+    },
+    {
+      "path": "../../packages/trpc"
+    },
+    {
+      "path": "../../packages/utils"
+    }
   ],
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "build", ".turbo", "test", "**/*.test.ts", "**/*.spec.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".turbo"
+  ]
 }

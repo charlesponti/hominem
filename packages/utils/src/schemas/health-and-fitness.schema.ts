@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const strengthMetricsSchema = z.object({
   maximalStrength: z.number(), // One-rep max (kg or lbs)

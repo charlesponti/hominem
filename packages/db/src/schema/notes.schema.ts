@@ -1,6 +1,6 @@
 import { relations, sql } from 'drizzle-orm'
 import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { z } from 'zod'
+import * as z from 'zod'
 import { type BaseContentType, BaseContentTypeSchema, type ContentTag } from './shared.schema'
 import { users } from './users.schema'
 

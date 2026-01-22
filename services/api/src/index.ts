@@ -1,11 +1,12 @@
-import { serve } from '@hono/node-server'
-import { env } from './env'
-import { createServer } from './server'
+import { serve } from '@hono/node-server';
 
-const app = createServer()
-const port = Number.parseInt(env.PORT, 10)
+import { env } from './env';
+import { createServer } from './server';
 
-console.log(`Server is running on port ${port}`)
+const app = createServer();
+const port = Number.parseInt(env.PORT, 10);
+
+console.log(`Server is running on port ${port}`);
 
 serve({
   fetch: app.fetch,
@@ -13,4 +14,4 @@ serve({
   hostname: '0.0.0.0',
   maxRequestBodySize: 200 * 1024 * 1024, // 200MB to allow for large file uploads
   overrideGlobalObjects: false,
-})
+});

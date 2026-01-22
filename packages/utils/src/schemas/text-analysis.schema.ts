@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { DecisionsSchema } from './decision.schema';
 import { TextAnalysisEmotionSchema } from './emotion.schema';

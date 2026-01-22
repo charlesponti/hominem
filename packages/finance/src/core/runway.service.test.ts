@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { calculateRunway, calculateRunwayProjection } from './runway.service';
+import { calculateDetailedRunway, calculateRunwayProjection } from './runway.service';
 
 describe('Runway Service', () => {
-  describe('calculateRunway', () => {
+  describe('calculateDetailedRunway', () => {
     it('should calculate basic runway without planned purchases', () => {
-      const result = calculateRunway({
+      const result = calculateDetailedRunway({
         balance: 10000,
         monthlyExpenses: 2000,
       });
@@ -19,7 +19,7 @@ describe('Runway Service', () => {
     });
 
     it('should calculate runway with planned purchases', () => {
-      const result = calculateRunway({
+      const result = calculateDetailedRunway({
         balance: 10000,
         monthlyExpenses: 2000,
         plannedPurchases: [
@@ -37,7 +37,7 @@ describe('Runway Service', () => {
     });
 
     it('should handle infinite runway when no monthly expenses', () => {
-      const result = calculateRunway({
+      const result = calculateDetailedRunway({
         balance: 10000,
         monthlyExpenses: 0,
       });
@@ -47,7 +47,7 @@ describe('Runway Service', () => {
     });
 
     it('should handle large balance with low expenses', () => {
-      const result = calculateRunway({
+      const result = calculateDetailedRunway({
         balance: 100000,
         monthlyExpenses: 1000,
       });

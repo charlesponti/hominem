@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const JobPostingSchema = z.object({
   benefits: z.array(z.string()).nullable(),

@@ -1,8 +1,6 @@
 import { getSpendingCategories } from '@hominem/finance-services';
 import { Hono } from 'hono';
 
-
-
 // Keep existing Hono route for backward compatibility
 export const financeCategoriesRoutes = new Hono();
 

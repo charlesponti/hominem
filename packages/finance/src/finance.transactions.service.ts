@@ -13,7 +13,7 @@ import {
 import { logger } from '@hominem/utils/logger';
 import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm';
 import { type PgColumn } from 'drizzle-orm/pg-core';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { QueryOptions } from './finance.types';
 
@@ -123,14 +123,14 @@ export function buildWhereConditions(options: QueryOptions) {
 
   if (options.search?.trim()) {
     const term = options.search.trim();
-    const tsVector = sql`to_tsvector('english', 
-      coalesce(${transactions.description}, '') || ' ' || 
-      coalesce(${transactions.merchantName}, '') || ' ' || 
-      coalesce(${transactions.category}, '') || ' ' || 
-      coalesce(${transactions.parentCategory}, '') || ' ' || 
-      coalesce(${transactions.tags}, '') || ' ' || 
-      coalesce(${transactions.note}, '') || ' ' || 
-      coalesce(${transactions.paymentChannel}, '') || ' ' || 
+    const tsVector = sql`to_tsvector('english',
+      coalesce(${transactions.description}, '') || ' ' ||
+      coalesce(${transactions.merchantName}, '') || ' ' ||
+      coalesce(${transactions.category}, '') || ' ' ||
+      coalesce(${transactions.parentCategory}, '') || ' ' ||
+      coalesce(${transactions.tags}, '') || ' ' ||
+      coalesce(${transactions.note}, '') || ' ' ||
+      coalesce(${transactions.paymentChannel}, '') || ' ' ||
       coalesce(${transactions.source}, '')
     )`;
     conditions.push(sql`${tsVector} @@ websearch_to_tsquery('english', ${term})`);

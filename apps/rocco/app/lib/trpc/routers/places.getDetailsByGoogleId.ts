@@ -1,6 +1,6 @@
 import { getPlaceByGoogleMapsId, isGooglePhotosUrl, upsertPlace } from '@hominem/places-services';
 import { googlePlaces } from '@hominem/places-services';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { transformGooglePlaceToPlaceInsert } from '~/lib/places-utils';
 

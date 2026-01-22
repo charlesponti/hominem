@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 const envSchema = z.object({
   VITE_APP_BASE_URL: z.string(),

@@ -84,6 +84,21 @@ vi.mock('@hominem/auth', () => ({
   useSupabaseAuth: () => mockAuthContextValue,
   useSupabaseAuthContext: () => mockAuthContextValue,
   getSupabase: () => mockSupabaseClient,
+  UserAuthService: {
+    findByIdOrEmail: vi.fn(async (opts) => {
+      const id = opts.id || opts.supabaseId;
+      return {
+        id: id,
+        supabaseId: id,
+        email: `test-${id}@example.com`,
+        name: 'Test User',
+        image: null,
+        isAdmin: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }),
+  },
 }));
 
 export function createTestQueryClient() {
