@@ -27,13 +27,11 @@ import {
   calculateLoanDetails,
   calculateLoanDetailsInputSchema,
   calculateLoanDetailsOutputSchema,
-  calculateRunway,
-  calculateRunwayInputSchema,
-  calculateRunwayOutputSchema,
   calculateSavingsGoal,
   calculateSavingsGoalInputSchema,
   calculateSavingsGoalOutputSchema,
 } from './finance.calculators.service';
+import { calculateRunway, runwayCalculationOutputSchema, runwayCalculationSchema } from './core/runway.service';
 import {
   createFinanceAccountInputSchema,
   deleteFinanceAccountInputSchema,
@@ -262,12 +260,12 @@ export const calculateBudgetBreakdownServer =
 export const calculateRunwayDef = toolDefinition({
   name: 'calculate_runway',
   description: 'Calculate financial runway (how long money will last)',
-  inputSchema: calculateRunwayInputSchema,
-  outputSchema: calculateRunwayOutputSchema,
+  inputSchema: runwayCalculationSchema,
+  outputSchema: runwayCalculationOutputSchema,
 });
 
 export const calculateRunwayServer =
-  (_userId: string) => async (input: z.infer<typeof calculateRunwayInputSchema>) =>
+  (_userId: string) => async (input: z.infer<typeof runwayCalculationSchema>) =>
     calculateRunway(input);
 
 export const calculateSavingsGoalDef = toolDefinition({

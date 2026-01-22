@@ -1,43 +1,22 @@
-import { calculateDetailedRunway, calculateRunwayProjection } from '@hominem/finance-services';
-import { z } from 'zod';
+import { calculateRunway, runwayCalculationSchema } from '@hominem/finance-services'
 
-import { publicProcedure } from '../../procedures';
+import { publicProcedure } from '../../procedures'
 
 export const runwayRouter = publicProcedure
-  .input(
-    z.object({
-      balance: z.number().positive(),
-      monthlyExpenses: z.number().positive(),
-      plannedPurchases: z
-        .array(
-          z.object({
-            description: z.string(),
-            amount: z.number().positive(),
-            date: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-              message: 'Invalid date format',
-            }),
-          }),
-        )
-        .optional(),
-    }),
-  )
+  .input(runwayCalculationSchema)
   .mutation(async ({ input }) => {
     try {
-      const runwayResult = calculateDetailedRunway(input);
-      const projectionData = calculateRunwayProjection(input);
+      const result = calculateRunway(input)
 
       return {
         success: true,
-        data: {
-          ...runwayResult,
-          projectionData,
-        },
-      };
+        data: result,
+      }
     } catch (error) {
-      console.error('Runway calculation error:', error);
+      console.error('Runway calculation error:', error)
       return {
         success: false,
         error: 'Failed to calculate runway',
-      };
+      }
     }
-  });
+  })

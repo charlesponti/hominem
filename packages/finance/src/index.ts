@@ -27,20 +27,18 @@ export * from './core/budget-goals.service';
 export * from './core/budget-tracking.service';
 export * from './core/institution.service';
 export {
-  calculateDetailedRunway,
-  calculateRunwayProjection,
+  calculateRunway,
   type RunwayCalculationResult,
+  type RunwayCalculationInput,
+  runwayCalculationSchema,
 } from './core/runway.service';
 export * from './finance.analytics.service';
 export {
   calculateBudgetBreakdown,
-  calculateSimpleRunway,
   calculateSavingsGoal,
   calculateLoanDetails,
   calculateBudgetBreakdownInputSchema,
   calculateBudgetBreakdownOutputSchema,
-  calculateRunwayInputSchema,
-  calculateRunwayOutputSchema,
   calculateSavingsGoalInputSchema,
   calculateSavingsGoalOutputSchema,
   calculateLoanDetailsInputSchema,

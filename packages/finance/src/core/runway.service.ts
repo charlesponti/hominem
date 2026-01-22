@@ -1,8 +1,11 @@
-import * as z from 'zod';
+import * as z from 'zod'
 
+/**
+ * Input schema for runway calculations.
+ */
 export const runwayCalculationSchema = z.object({
-  balance: z.number().positive(),
-  monthlyExpenses: z.number().positive(),
+  balance: z.number().min(0).describe('Current available balance'),
+  monthlyExpenses: z.number().min(0).describe('Average monthly expenses'),
   plannedPurchases: z
     .array(
       z.object({
@@ -14,133 +17,140 @@ export const runwayCalculationSchema = z.object({
       }),
     )
     .optional(),
-});
+  projectionMonths: z.number().min(1).max(120).optional().default(12),
+})
 
-type RunwayCalculationInput = z.infer<typeof runwayCalculationSchema>;
+export type RunwayCalculationInput = z.infer<typeof runwayCalculationSchema>
 
-export interface RunwayCalculationResult {
-  runwayMonths: number;
-  burnRate: number;
-  initialBalance: number;
-  currentBalance: number;
-  runwayEndDate: string;
-  monthlyBreakdown: Array<{
-    month: string;
-    expenses: number;
-    purchases: number;
-    endingBalance: number;
-  }>;
-  isRunwayDangerous: boolean;
-  minimumBalance: number;
-  totalPlannedExpenses: number;
+/**
+ * Individual month breakdown schema.
+ */
+export const monthlyBreakdownSchema = z.object({
+  month: z.string(),
+  expenses: z.number(),
+  purchases: z.number(),
+  endingBalance: z.number(),
+})
+
+export type MonthlyBreakdown = z.infer<typeof monthlyBreakdownSchema>
+
+/**
+ * Projection data point schema for charts.
+ */
+export const runwayProjectionSchema = z.object({
+  month: z.string(),
+  balance: z.number(),
+})
+
+export type RunwayProjection = z.infer<typeof runwayProjectionSchema>
+
+/**
+ * Output schema for the consolidated runway calculation.
+ */
+export const runwayCalculationOutputSchema = z.object({
+  runwayMonths: z.number().describe('Number of months until balance hits zero'),
+  burnRate: z.number().describe('Average monthly expenses used in calculation'),
+  initialBalance: z.number().describe('The starting balance provided'),
+  currentBalance: z.number().describe('Remaining balance after the projection period'),
+  runwayEndDate: z.string().describe('Estimated date when balance will be zero'),
+  monthlyBreakdown: z.array(monthlyBreakdownSchema),
+  projectionData: z.array(runwayProjectionSchema),
+  isRunwayDangerous: z.boolean().describe('True if runway is 6 months or less'),
+  minimumBalance: z.number().describe('The lowest balance reached during the projection'),
+  totalPlannedExpenses: z.number().describe('Sum of all planned one-time purchases'),
+})
+
+export type RunwayCalculationResult = z.infer<typeof runwayCalculationOutputSchema>
+
+/**
+ * Groups planned purchases by their YYYY-MM key for easier lookup during calculation.
+ */
+function groupPurchasesByMonth(purchases: NonNullable<RunwayCalculationInput['plannedPurchases']>) {
+  const grouped: Record<string, number> = {}
+  for (const purchase of purchases) {
+    const date = new Date(purchase.date)
+    const key = `${date.getFullYear()}-${date.getMonth() + 1}`
+    grouped[key] = (grouped[key] || 0) + purchase.amount
+  }
+  return grouped
 }
 
 /**
- * Calculate financial runway based on current balance, monthly expenses, and planned purchases
+ * Consolidated financial runway calculation service.
+ * Handles basic runway, detailed monthly breakdown, and chart projections.
  */
-export function calculateDetailedRunway(input: RunwayCalculationInput): RunwayCalculationResult {
-  const { balance, monthlyExpenses, plannedPurchases = [] } = input;
+export function calculateRunway(input: RunwayCalculationInput): RunwayCalculationResult {
+  const { balance, monthlyExpenses, plannedPurchases = [], projectionMonths = 12 } = input
 
-  // Group planned purchases by month
-  const purchasesByMonth: Record<string, number> = {};
+  const purchasesByMonth = groupPurchasesByMonth(plannedPurchases)
+  const totalPlannedExpenses = plannedPurchases.reduce((sum, p) => sum + p.amount, 0)
 
-  for (const purchase of plannedPurchases) {
-    const purchaseDate = new Date(purchase.date);
-    const monthKey = `${purchaseDate.getFullYear()}-${purchaseDate.getMonth() + 1}`;
-    purchasesByMonth[monthKey] = (purchasesByMonth[monthKey] || 0) + purchase.amount;
-  }
+  const today = new Date()
+  const monthlyBreakdown: MonthlyBreakdown[] = []
+  const projectionData: RunwayProjection[] = []
+  const balances: number[] = [balance]
 
-  // Calculate months of runway with monthly breakdown
-  const today = new Date();
-  const monthlyBreakdown = [];
-  const currentDate = new Date(today);
-  let runwayMonths = 0;
-  let runningBalance = balance;
-  const balances: number[] = [balance];
+  let runningBalance = balance
+  let runwayMonths = 0
+  const maxIterations = 121 // Safety limit (approx 10 years)
 
-  while (runningBalance > 0) {
-    const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
-    const monthExpenses = monthlyExpenses + (purchasesByMonth[monthKey] || 0);
+  // Simulation loop
+  for (let i = 0; i < maxIterations; i++) {
+    const currentDate = new Date(today)
+    currentDate.setMonth(today.getMonth() + i)
 
-    runningBalance -= monthExpenses;
-    balances.push(runningBalance);
+    const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`
+    const monthLabel = currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    const monthPurchases = purchasesByMonth[monthKey] || 0
+    const totalMonthOutflow = monthlyExpenses + monthPurchases
 
-    if (runningBalance > 0) {
-      runwayMonths++;
-      monthlyBreakdown.push({
-        month: currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        expenses: monthExpenses,
-        purchases: purchasesByMonth[monthKey] || 0,
-        endingBalance: runningBalance,
-      });
+    const previousBalance = runningBalance
+    runningBalance -= totalMonthOutflow
+    balances.push(runningBalance)
 
-      // Move to next month
-      currentDate.setMonth(currentDate.getMonth() + 1);
-    }
+    // Track monthly breakdown while balance is positive
+    if (previousBalance > 0) {
+      if (runningBalance > 0) {
+        runwayMonths++
+      }
 
-    // Safety limit to prevent infinite loops
-    if (runwayMonths > 120) {
-      break;
-    }
-  }
-
-  // Calculate additional metrics
-  const totalPlannedExpenses = plannedPurchases.reduce((sum, purchase) => sum + purchase.amount, 0);
-  const runwayEndDate = new Date(today);
-  runwayEndDate.setMonth(today.getMonth() + runwayMonths);
-
-  const minimumBalance = Math.min(...balances);
-  const isRunwayDangerous = runwayMonths <= 6;
-
-  return {
-    runwayMonths,
-    burnRate: monthlyExpenses,
-    initialBalance: balance,
-    currentBalance: runningBalance > 0 ? runningBalance : 0,
-    runwayEndDate: runwayEndDate.toISOString(),
-    monthlyBreakdown,
-    isRunwayDangerous,
-    minimumBalance,
-    totalPlannedExpenses,
-  };
-}
-
-/**
- * Calculate runway with 12-month projection for chart data
- */
-export function calculateRunwayProjection(input: RunwayCalculationInput) {
-  const { balance, monthlyExpenses, plannedPurchases = [] } = input;
-
-  const today = new Date();
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date(today);
-    date.setMonth(today.getMonth() + i);
-    return {
-      month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      date: new Date(date),
-    };
-  });
-
-  let runningBalance = balance;
-  const chartData = months.map(({ month, date }) => {
-    runningBalance -= monthlyExpenses;
-
-    // Apply planned purchases for this month
-    for (const purchase of plannedPurchases) {
-      const purchaseDate = new Date(purchase.date);
-      if (
-        purchaseDate.getMonth() === date.getMonth() &&
-        purchaseDate.getFullYear() === date.getFullYear()
-      ) {
-        runningBalance -= purchase.amount;
+      if (monthlyBreakdown.length < maxIterations) {
+        monthlyBreakdown.push({
+          month: monthLabel,
+          expenses: monthlyExpenses,
+          purchases: monthPurchases,
+          endingBalance: runningBalance,
+        })
       }
     }
 
-    return {
-      month,
-      balance: Math.round(runningBalance),
-    };
-  });
+    // Capture projection data for the requested window
+    if (i < projectionMonths) {
+      projectionData.push({
+        month: monthLabel,
+        balance: Math.round(runningBalance),
+      })
+    }
 
-  return chartData;
+    // Break early if we've passed the runway and the projection window
+    if (runningBalance <= 0 && i >= projectionMonths - 1) {
+      break
+    }
+  }
+
+  const runwayEndDate = new Date(today)
+  runwayEndDate.setMonth(today.getMonth() + runwayMonths)
+
+  return {
+    runwayMonths: monthlyExpenses === 0 && runningBalance > 0 ? Number.POSITIVE_INFINITY : runwayMonths,
+    burnRate: monthlyExpenses,
+    initialBalance: balance,
+    currentBalance: Math.max(0, runningBalance),
+    runwayEndDate: runwayEndDate.toISOString(),
+    monthlyBreakdown,
+    projectionData,
+    isRunwayDangerous: runwayMonths <= 6,
+    minimumBalance: Math.min(...balances),
+    totalPlannedExpenses,
+  }
 }

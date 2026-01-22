@@ -1,79 +1,32 @@
-import { describe, expect, it } from 'vitest';
-
-import { calculateDetailedRunway, calculateRunwayProjection } from './runway.service';
+import { describe, expect, it } from 'vitest'
+import { calculateRunway } from './runway.service'
 
 describe('Runway Service', () => {
-  describe('calculateDetailedRunway', () => {
+  describe('calculateRunway', () => {
     it('should calculate basic runway without planned purchases', () => {
-      const result = calculateDetailedRunway({
+      const result = calculateRunway({
         balance: 10000,
         monthlyExpenses: 2000,
-      });
+      })
 
-      expect(result.runwayMonths).toBe(4); // 10000 / 2000 = 5, but we count months where balance > 0
-      expect(result.burnRate).toBe(2000);
-      expect(result.initialBalance).toBe(10000);
-      expect(result.isRunwayDangerous).toBe(true); // 4 months <= 6
-      expect(result.totalPlannedExpenses).toBe(0);
-      expect(result.monthlyBreakdown).toHaveLength(4);
-    });
+      // 10000 / 2000 = 5 months.
+      // In the loop:
+      // i=0: 10000 - 2000 = 8000 (runwayMonths=1)
+      // i=1: 8000 - 2000 = 6000 (runwayMonths=2)
+      // i=2: 6000 - 2000 = 4000 (runwayMonths=3)
+      // i=3: 4000 - 2000 = 2000 (runwayMonths=4)
+      // i=4: 2000 - 2000 = 0 (runwayMonths=4 - loop tracks months where balance > 0)
+      expect(result.runwayMonths).toBe(4)
+      expect(result.burnRate).toBe(2000)
+      expect(result.initialBalance).toBe(10000)
+      expect(result.isRunwayDangerous).toBe(true) // 4 months <= 6
+      expect(result.totalPlannedExpenses).toBe(0)
+      expect(result.monthlyBreakdown).toHaveLength(5) // Includes the month it hits 0
+    })
 
     it('should calculate runway with planned purchases', () => {
-      const result = calculateDetailedRunway({
-        balance: 10000,
-        monthlyExpenses: 2000,
-        plannedPurchases: [
-          {
-            description: 'New laptop',
-            amount: 3000,
-            date: new Date().toISOString(),
-          },
-        ],
-      });
-
-      expect(result.runwayMonths).toBe(3); // (10000 - 3000) / 2000 = 3.5, rounded down to 3
-      expect(result.totalPlannedExpenses).toBe(3000);
-      expect(result.isRunwayDangerous).toBe(true); // 3 months <= 6
-    });
-
-    it('should handle infinite runway when no monthly expenses', () => {
-      const result = calculateDetailedRunway({
-        balance: 10000,
-        monthlyExpenses: 0,
-      });
-
-      expect(result.runwayMonths).toBe(121); // Safety limit + 1 (initial month)
-      expect(result.isRunwayDangerous).toBe(false);
-    });
-
-    it('should handle large balance with low expenses', () => {
-      const result = calculateDetailedRunway({
-        balance: 100000,
-        monthlyExpenses: 1000,
-      });
-
-      expect(result.runwayMonths).toBe(99); // 100000 / 1000 = 100, but we count months where balance > 0
-      expect(result.isRunwayDangerous).toBe(false); // 99 months > 6
-    });
-  });
-
-  describe('calculateRunwayProjection', () => {
-    it('should generate 12-month projection data', () => {
-      const result = calculateRunwayProjection({
-        balance: 10000,
-        monthlyExpenses: 2000,
-      });
-
-      expect(result).toHaveLength(12);
-      expect(result[0]!.month).toBeDefined();
-      expect(result[0]!.balance).toBe(8000); // 10000 - 2000
-      expect(result[4]!.balance).toBe(0); // Month 5: 10000 - (5 * 2000) = 0
-      expect(result[5]!.balance).toBe(-2000); // Month 6: negative balance
-    });
-
-    it('should include planned purchases in projection', () => {
-      const today = new Date();
-      const result = calculateRunwayProjection({
+      const today = new Date()
+      const result = calculateRunway({
         balance: 10000,
         monthlyExpenses: 2000,
         plannedPurchases: [
@@ -83,9 +36,72 @@ describe('Runway Service', () => {
             date: today.toISOString(),
           },
         ],
-      });
+      })
 
-      expect(result[0]!.balance).toBe(5000); // 10000 - 2000 - 3000
-    });
-  });
-});
+      // Month 1: 10000 - 2000 - 3000 = 5000 (runwayMonths=1)
+      // Month 2: 5000 - 2000 = 3000 (runwayMonths=2)
+      // Month 3: 3000 - 2000 = 1000 (runwayMonths=3)
+      // Month 4: 1000 - 2000 = -1000 (runwayMonths=3)
+      expect(result.runwayMonths).toBe(3)
+      expect(result.totalPlannedExpenses).toBe(3000)
+      expect(result.projectionData[0]!.balance).toBe(5000)
+    })
+
+    it('should handle infinite runway when no monthly expenses', () => {
+      const result = calculateRunway({
+        balance: 10000,
+        monthlyExpenses: 0,
+      })
+
+      expect(result.runwayMonths).toBe(Number.POSITIVE_INFINITY)
+      expect(result.isRunwayDangerous).toBe(false)
+    })
+
+    it('should generate projection data for the specified window', () => {
+      const result = calculateRunway({
+        balance: 10000,
+        monthlyExpenses: 1000,
+        projectionMonths: 6,
+      })
+
+      expect(result.projectionData).toHaveLength(6)
+      expect(result.projectionData[0]!.balance).toBe(9000)
+      expect(result.projectionData[5]!.balance).toBe(4000)
+    })
+
+    it('should handle zero balance correctly', () => {
+      const result = calculateRunway({
+        balance: 0,
+        monthlyExpenses: 1000,
+      })
+
+      expect(result.runwayMonths).toBe(0)
+      expect(result.isRunwayDangerous).toBe(true)
+      expect(result.projectionData[0]!.balance).toBe(-1000)
+    })
+
+    it('should calculate correct minimum balance', () => {
+      const today = new Date()
+      const nextMonth = new Date(today)
+      nextMonth.setMonth(today.getMonth() + 1)
+
+      const result = calculateRunway({
+        balance: 5000,
+        monthlyExpenses: 1000,
+        plannedPurchases: [
+          {
+            description: 'Expensive repair',
+            amount: 6000,
+            date: nextMonth.toISOString(),
+          },
+        ],
+        projectionMonths: 3,
+      })
+
+      // Month 1: 5000 - 1000 = 4000
+      // Month 2: 4000 - 1000 - 6000 = -3000
+      // Month 3: -3000 - 1000 = -4000
+      expect(result.minimumBalance).toBe(-4000)
+    })
+  })
+})
