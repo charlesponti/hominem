@@ -22,6 +22,8 @@ export const chat = pgTable(
   ]
 )
 export type Chat = typeof chat.$inferSelect
+export type ChatSelect = typeof chat.$inferSelect
+export type ChatInsert = typeof chat.$inferInsert
 
 export type ChatMessageReasoning = {
   type: 'reasoning' | 'redacted-reasoning'

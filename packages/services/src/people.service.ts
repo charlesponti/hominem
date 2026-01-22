@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { contacts, eventsUsers } from '@hominem/db/schema';
+import { contacts, eventsUsers, type ContactSelect } from '@hominem/db/schema';
 import { asc, eq, inArray } from 'drizzle-orm';
 
 export interface PersonInput {
@@ -10,7 +10,9 @@ export interface PersonInput {
   phone?: string;
 }
 
-export async function getPeopleForEvent(eventId: string) {
+export async function getPeopleForEvent(
+  eventId: string,
+): Promise<Array<{ id: string; firstName: string; lastName: string | null }>> {
   return db
     .select({
       id: contacts.id,
@@ -22,7 +24,9 @@ export async function getPeopleForEvent(eventId: string) {
     .where(eq(eventsUsers.eventId, eventId));
 }
 
-export async function getPeopleForEvents(eventIds: string[]) {
+export async function getPeopleForEvents(
+  eventIds: string[],
+): Promise<Map<string, Array<{ id: string; firstName: string; lastName: string | null }>>> {
   if (eventIds.length === 0) {
     return new Map();
   }
@@ -76,7 +80,7 @@ export async function replacePeopleForEvent(eventId: string, people?: string[]) 
   await db.insert(eventsUsers).values(relationships);
 }
 
-export async function getPeople({ userId }: { userId: string }) {
+export async function getPeople({ userId }: { userId: string }): Promise<ContactSelect[]> {
   return db
     .select()
     .from(contacts)
@@ -84,13 +88,13 @@ export async function getPeople({ userId }: { userId: string }) {
     .orderBy(asc(contacts.firstName));
 }
 
-export async function getPersonById(id: string) {
+export async function getPersonById(id: string): Promise<ContactSelect | null> {
   const result = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1);
 
   return result.length > 0 ? result[0] : null;
 }
 
-export async function createPerson(person: PersonInput) {
+export async function createPerson(person: PersonInput): Promise<ContactSelect> {
   if (!person.firstName) {
     throw new Error('firstName is required');
   }
@@ -113,7 +117,7 @@ export async function createPerson(person: PersonInput) {
   return result;
 }
 
-export async function updatePerson(id: string, person: PersonInput) {
+export async function updatePerson(id: string, person: PersonInput): Promise<ContactSelect | null> {
   const updateData: Record<string, unknown> = {};
 
   if (person.firstName !== undefined) {
@@ -134,7 +138,7 @@ export async function updatePerson(id: string, person: PersonInput) {
   return result.length > 0 ? result[0] : null;
 }
 
-export async function deletePerson(id: string) {
+export async function deletePerson(id: string): Promise<boolean> {
   await db.delete(eventsUsers).where(eq(eventsUsers.personId, id));
 
   const result = await db.delete(contacts).where(eq(contacts.id, id)).returning();

@@ -107,4 +107,5 @@ export const TweetMetadataSchema = z.object({
 export type TweetMetadata = z.infer<typeof TweetMetadataSchema>
 
 export type Note = typeof notes.$inferSelect
+export type NoteSelect = typeof notes.$inferSelect
 export type NoteInsert = typeof notes.$inferInsert

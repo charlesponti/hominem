@@ -81,6 +81,8 @@ export const jobs = pgTable('jobs', {
   version: integer('version').notNull().default(1), // Version number for tracking changes to the job posting
 })
 export type Job = typeof jobs.$inferSelect
+export type JobSelect = typeof jobs.$inferSelect
+export type JobInsert = typeof jobs.$inferInsert
 export type NewJob = typeof jobs.$inferInsert
 
 export const job_applications = pgTable('job_applications', {
@@ -114,8 +116,9 @@ export const job_applications = pgTable('job_applications', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the application record was last updated
 })
 
-export type JobApplicationInsert = typeof job_applications.$inferInsert
 export type JobApplication = typeof job_applications.$inferSelect
+export type JobApplicationSelect = typeof job_applications.$inferSelect
+export type JobApplicationInsert = typeof job_applications.$inferInsert
 
 export const application_stages = pgTable(
   'application_stages',
@@ -137,6 +140,8 @@ export const application_stages = pgTable(
 )
 
 export type ApplicationStage = typeof application_stages.$inferSelect
+export type ApplicationStageSelect = typeof application_stages.$inferSelect
+export type ApplicationStageInsert = typeof application_stages.$inferInsert
 export type NewApplicationStage = typeof application_stages.$inferInsert
 
 export const work_experiences = pgTable(
@@ -180,4 +185,6 @@ export const work_experiences = pgTable(
 )
 
 export type WorkExperience = typeof work_experiences.$inferSelect
+export type WorkExperienceSelect = typeof work_experiences.$inferSelect
+export type WorkExperienceInsert = typeof work_experiences.$inferInsert
 export type NewWorkExperience = typeof work_experiences.$inferInsert

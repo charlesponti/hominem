@@ -35,3 +35,7 @@ export const documents = pgTable(
     typeIdx: index('doc_type_idx').on(table.type), // Added index on document type
   })
 )
+
+export type Document = typeof documents.$inferSelect
+export type DocumentSelect = typeof documents.$inferSelect
+export type DocumentInsert = typeof documents.$inferInsert

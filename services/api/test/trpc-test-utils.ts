@@ -1,8 +1,8 @@
 import type { UserSelect } from '@hominem/db/schema'
+import type { AppRouter } from '@hominem/trpc'
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
 import type { Hono } from 'hono'
 import type { AppEnv } from '../src/server'
-import type { AppRouter } from '../src/trpc'
 
 /**
  * Creates a tRPC test client that works with the existing test infrastructure

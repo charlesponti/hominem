@@ -35,6 +35,7 @@
     "@hominem/places-services": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
+    "@supabase/supabase-js": "2.88.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@react-router/node": "^7.12.0",
     "@react-router/serve": "^7.12.0",

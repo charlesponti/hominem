@@ -14,4 +14,5 @@ export const tags = pgTable(
 )
 
 export type Tag = typeof tags.$inferSelect
+export type TagSelect = typeof tags.$inferSelect
 export type TagInsert = typeof tags.$inferInsert

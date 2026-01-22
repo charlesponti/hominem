@@ -77,6 +77,7 @@ export const financialInstitutions = pgTable(
   ],
 );
 export type FinancialInstitution = typeof financialInstitutions.$inferSelect;
+export type FinancialInstitutionSelect = typeof financialInstitutions.$inferSelect;
 export type FinancialInstitutionInsert = typeof financialInstitutions.$inferInsert;
 
 // Plaid items table to track connected institutions
@@ -99,6 +100,7 @@ export const plaidItems = pgTable('plaid_items', {
     .notNull(),
 });
 export type PlaidItem = typeof plaidItems.$inferSelect;
+export type PlaidItemSelect = typeof plaidItems.$inferSelect;
 export type PlaidItemInsert = typeof plaidItems.$inferInsert;
 
 // Tables
@@ -135,8 +137,9 @@ export const financeAccounts = pgTable(
     ),
   ],
 );
-export type FinanceAccountInsert = typeof financeAccounts.$inferInsert;
 export type FinanceAccount = typeof financeAccounts.$inferSelect;
+export type FinanceAccountSelect = typeof financeAccounts.$inferSelect;
+export type FinanceAccountInsert = typeof financeAccounts.$inferInsert;
 
 export const transactions = pgTable(
   'transactions',
@@ -182,6 +185,7 @@ export const transactions = pgTable(
   ],
 );
 export type FinanceTransaction = typeof transactions.$inferSelect;
+export type FinanceTransactionSelect = typeof transactions.$inferSelect;
 export type FinanceTransactionInsert = typeof transactions.$inferInsert;
 export const insertTransactionSchema = createInsertSchema(transactions);
 export const updateTransactionSchema = createSelectSchema(transactions);
@@ -291,7 +295,11 @@ export const budgetCategoryRelations = relations(budgetCategories, ({ many }) =>
 }));
 
 export type BudgetCategory = typeof budgetCategories.$inferSelect;
+export type BudgetCategorySelect = typeof budgetCategories.$inferSelect;
+export type BudgetCategoryInsert = typeof budgetCategories.$inferInsert;
 export type BudgetGoal = typeof budgetGoals.$inferSelect;
+export type BudgetGoalSelect = typeof budgetGoals.$inferSelect;
+export type BudgetGoalInsert = typeof budgetGoals.$inferInsert;
 
 // Zod schemas generated from Drizzle
 import * as z from 'zod';

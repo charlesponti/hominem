@@ -358,7 +358,7 @@ export default function RunwayPage() {
             <CardTitle>12-Month Runway Projection</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[400px]">
+            <div className="h-100">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />

@@ -4,8 +4,6 @@ import { Command } from 'commander';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const adapter = createOllamaChat();
-
 type Options = {
   dir: string;
   glob?: string;
@@ -88,6 +86,8 @@ export const rewriteCommand = new Command('rewrite')
       return;
     }
 
+    const adapter = createOllamaChat(opts.model || 'qwen3-vl:30b');
+
     const instruction =
       opts.instruction ||
       'Rewrite the markdown to improve clarity, fix grammar, and preserve original meaning and structure. Keep code blocks and frontmatter unchanged unless the instruction explicitly asks to alter them.';
@@ -106,10 +106,8 @@ export const rewriteCommand = new Command('rewrite')
 
         const stream = chat({
           adapter,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: prompt },
-          ],
+          systemPrompts: [SYSTEM_PROMPT],
+          messages: [{ role: 'user', content: prompt }],
         });
 
         let accumulated = '';

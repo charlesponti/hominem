@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { type PossessionInsert, possessions } from '@hominem/db/schema';
+import { type PossessionInsert, type PossessionSelect, possessions } from '@hominem/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
 type CreatePossessionInput = Omit<PossessionInsert, 'createdAt' | 'updatedAt'> & {
@@ -13,7 +13,7 @@ type UpdatePossessionInput = Partial<
   userId: string;
 };
 
-export async function listPossessions(userId: string) {
+export async function listPossessions(userId: string): Promise<PossessionSelect[]> {
   return db
     .select()
     .from(possessions)
@@ -21,7 +21,7 @@ export async function listPossessions(userId: string) {
     .orderBy(desc(possessions.createdAt));
 }
 
-export async function createPossession(input: CreatePossessionInput) {
+export async function createPossession(input: CreatePossessionInput): Promise<PossessionSelect> {
   const [created] = await db
     .insert(possessions)
     .values({
@@ -33,7 +33,9 @@ export async function createPossession(input: CreatePossessionInput) {
   return created;
 }
 
-export async function updatePossession(input: UpdatePossessionInput) {
+export async function updatePossession(
+  input: UpdatePossessionInput,
+): Promise<PossessionSelect | undefined> {
   const { id, userId, ...updates } = input;
   const [updated] = await db
     .update(possessions)
@@ -47,6 +49,6 @@ export async function updatePossession(input: UpdatePossessionInput) {
   return updated;
 }
 
-export async function deletePossession(id: string, userId: string) {
+export async function deletePossession(id: string, userId: string): Promise<void> {
   await db.delete(possessions).where(and(eq(possessions.id, id), eq(possessions.userId, userId)));
 }

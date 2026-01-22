@@ -13,4 +13,6 @@ export const companies = pgTable('companies', {
 })
 
 export type Company = typeof companies.$inferSelect
+export type CompanySelect = typeof companies.$inferSelect
+export type CompanyInsert = typeof companies.$inferInsert
 export type NewCompany = typeof companies.$inferInsert

@@ -10,3 +10,7 @@ export const health = pgTable('health', {
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
 })
+
+export type Health = typeof health.$inferSelect
+export type HealthSelect = typeof health.$inferSelect
+export type HealthInsert = typeof health.$inferInsert

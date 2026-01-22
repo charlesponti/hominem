@@ -188,7 +188,7 @@ export const command = new Command('typingmind-to-openai')
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error('Validation error in Typing Mind data:');
-        console.error(error.errors);
+        console.error(error.issues);
       } else {
         console.error('Error converting data:', error);
       }

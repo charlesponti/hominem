@@ -12,6 +12,5 @@ serve({
   fetch: app.fetch,
   port,
   hostname: '0.0.0.0',
-  maxRequestBodySize: 200 * 1024 * 1024, // 200MB to allow for large file uploads
   overrideGlobalObjects: false,
 });

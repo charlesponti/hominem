@@ -156,6 +156,7 @@ export const content = pgTable(
 )
 
 export type Content = typeof content.$inferSelect
+export type ContentSelect = typeof content.$inferSelect
 export type ContentInsert = typeof content.$inferInsert
 
 /**
@@ -203,5 +204,5 @@ export const contentStrategiesRelations = relations(contentStrategies, ({ one })
   }),
 }))
 
-export type ContentStrategiesInsert = typeof contentStrategies.$inferInsert
 export type ContentStrategiesSelect = typeof contentStrategies.$inferSelect
+export type ContentStrategiesInsert = typeof contentStrategies.$inferInsert

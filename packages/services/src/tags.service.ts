@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { eventsTags, tags } from '@hominem/db/schema';
+import { eventsTags, tags, type TagSelect } from '@hominem/db/schema';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
@@ -9,7 +9,9 @@ export interface TagInput {
   description?: string;
 }
 
-export async function getTagsForEvent(eventId: string) {
+export async function getTagsForEvent(
+  eventId: string,
+): Promise<Array<{ id: string; name: string; color: string | null; description: string | null }>> {
   return db
     .select({
       id: tags.id,
@@ -22,7 +24,11 @@ export async function getTagsForEvent(eventId: string) {
     .where(eq(eventsTags.eventId, eventId));
 }
 
-export async function getTagsForEvents(eventIds: string[]) {
+export async function getTagsForEvents(
+  eventIds: string[],
+): Promise<
+  Map<string, Array<{ id: string; name: string; color: string | null; description: string | null }>>
+> {
   if (eventIds.length === 0) {
     return new Map();
   }
@@ -98,23 +104,23 @@ export async function syncTagsForEvent(eventId: string, tagIds: string[]) {
   return [];
 }
 
-export async function getTags() {
+export async function getTags(): Promise<TagSelect[]> {
   return db.select().from(tags).orderBy(asc(tags.name));
 }
 
-export async function getTagById(id: string) {
+export async function getTagById(id: string): Promise<TagSelect | null> {
   const result = await db.select().from(tags).where(eq(tags.id, id)).limit(1);
 
   return result.length > 0 ? result[0] : null;
 }
 
-export async function getTagByName(name: string) {
+export async function getTagByName(name: string): Promise<TagSelect | null> {
   const result = await db.select().from(tags).where(eq(tags.name, name)).limit(1);
 
   return result.length > 0 ? result[0] : null;
 }
 
-export async function createTag(tag: TagInput) {
+export async function createTag(tag: TagInput): Promise<TagSelect> {
   const { randomUUID } = await import('node:crypto');
   const result = await db
     .insert(tags)
@@ -129,7 +135,7 @@ export async function createTag(tag: TagInput) {
   return result[0];
 }
 
-export async function updateTag(id: string, tag: TagInput) {
+export async function updateTag(id: string, tag: TagInput): Promise<TagSelect | null> {
   const updateData: Record<string, unknown> = {};
 
   if (tag.name !== undefined) {
@@ -147,7 +153,7 @@ export async function updateTag(id: string, tag: TagInput) {
   return result.length > 0 ? result[0] : null;
 }
 
-export async function deleteTag(id: string) {
+export async function deleteTag(id: string): Promise<boolean> {
   await db.delete(eventsTags).where(eq(eventsTags.tagId, id));
 
   const result = await db.delete(tags).where(eq(tags.id, id)).returning();
@@ -155,7 +161,7 @@ export async function deleteTag(id: string) {
   return result.length > 0;
 }
 
-export async function findOrCreateTagsByNames(tagNames: string[]) {
+export async function findOrCreateTagsByNames(tagNames: string[]): Promise<TagSelect[]> {
   if (tagNames.length === 0) {
     return [];
   }

@@ -43,4 +43,5 @@ export const goals = pgTable('goals', {
   updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
 })
 export type Goal = typeof goals.$inferSelect
+export type GoalSelect = typeof goals.$inferSelect
 export type GoalInsert = typeof goals.$inferInsert

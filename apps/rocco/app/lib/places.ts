@@ -137,5 +137,8 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
     priceLevel: null,
     businessStatus: null,
     openingHours: null,
+    associatedLists: [],
+    thumbnailPhotos: [],
+    fullPhotos: [],
   };
 }

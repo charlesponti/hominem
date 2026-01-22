@@ -85,6 +85,7 @@ export const place = pgTable(
   ]
 )
 export type Place = typeof place.$inferSelect
+export type PlaceSelect = typeof place.$inferSelect
 export type PlaceInsert = typeof place.$inferInsert
 
 export const placeRelations = relations(place, ({ one }) => ({

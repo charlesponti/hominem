@@ -25,4 +25,5 @@ export const contacts = pgTable(
 )
 
 export type Contact = typeof contacts.$inferSelect
-export type NewContact = typeof contacts.$inferInsert
+export type ContactSelect = typeof contacts.$inferSelect
+export type ContactInsert = typeof contacts.$inferInsert

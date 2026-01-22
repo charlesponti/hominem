@@ -25,4 +25,5 @@ export const vectorDocuments = pgTable(
 )
 
 export type VectorDocument = typeof vectorDocuments.$inferSelect
+export type VectorDocumentSelect = typeof vectorDocuments.$inferSelect
 export type NewVectorDocument = typeof vectorDocuments.$inferInsert

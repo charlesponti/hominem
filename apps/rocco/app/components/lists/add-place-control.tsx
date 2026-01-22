@@ -48,7 +48,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         setErrorMessage(null);
       }, 1500);
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       setStatus('error');
       const message =
         error instanceof Error
@@ -144,7 +144,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[90vw] max-w-[400px] p-4"
+        className="w-[90vw] max-w-100 p-4"
         align="start"
         aria-label="Add place to list"
         aria-busy={status === 'submitting'}

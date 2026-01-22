@@ -1,5 +1,10 @@
 import { db } from '@hominem/db';
-import { type CalendarEventInsert, type EventSourceEnum, events } from '@hominem/db/schema';
+import {
+  type CalendarEventInsert,
+  type CalendarEventSelect,
+  type EventSourceEnum,
+  events,
+} from '@hominem/db/schema';
 import { logger } from '@hominem/utils/logger';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type calendar_v3, google, Auth } from 'googleapis';
@@ -129,7 +134,7 @@ export class GoogleCalendarService {
       });
 
       // Get existing synced events from our database for this calendar
-      const existingEvents = await db
+      const existingEvents: CalendarEventSelect[] = await db
         .select()
         .from(events)
         .where(
@@ -253,7 +258,11 @@ export class GoogleCalendarService {
    */
   async pushEventToGoogle(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const eventData = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+      const eventData: CalendarEventSelect[] = await db
+        .select()
+        .from(events)
+        .where(eq(events.id, eventId))
+        .limit(1);
 
       if (eventData.length === 0) {
         return { success: false, error: 'Event not found' };
@@ -380,7 +389,7 @@ export class GoogleCalendarService {
    * Get sync status for user
    */
   async getSyncStatus(): Promise<GoogleCalendarSyncStatus> {
-    const syncedEvents = await db
+    const syncedEvents: CalendarEventSelect[] = await db
       .select()
       .from(events)
       .where(and(eq(events.userId, this.userId), eq(events.source, 'google_calendar')))

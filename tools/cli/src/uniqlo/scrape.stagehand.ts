@@ -46,7 +46,7 @@ async function main() {
   await page.act('scroll to the bottom of the page');
 
   spinner.text = 'Extracting product information';
-  const { products } = await page.extract({
+  const { products } = (await page.extract({
     instruction: 'Extract the product information from the page',
     schema: z.object({
       products: z.array(
@@ -57,8 +57,8 @@ async function main() {
           link: z.string().describe('The link to the product'),
         }),
       ),
-    }),
-  });
+    }) as any,
+  })) as any;
 
   const productss = await page.$$('.fr-ec-product-tile');
   const results: {

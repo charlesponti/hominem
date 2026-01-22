@@ -97,4 +97,5 @@ export const possessionRelations = relations(possessions, ({ one }) => ({
 }))
 
 export type Possession = typeof possessions.$inferSelect
+export type PossessionSelect = typeof possessions.$inferSelect
 export type PossessionInsert = typeof possessions.$inferInsert

@@ -154,7 +154,7 @@ function createUseQuery() {
   };
 }
 
-const mockTrpcClient = {
+const mockTrpcClient: any = {
   useUtils: vi.fn(() => ({
     lists: {
       getAll: createUseQuery(),
@@ -248,8 +248,8 @@ export function renderWithRouter(
 }
 
 class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() { }
+  unobserve() { }
+  disconnect() { }
 }
 (global as typeof globalThis).ResizeObserver = ResizeObserver;

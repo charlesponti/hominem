@@ -1,5 +1,9 @@
 import { db } from '@hominem/db';
-import { type NewVectorDocument, vectorDocuments } from '@hominem/db/schema';
+import {
+  type NewVectorDocument,
+  type VectorDocumentSelect,
+  vectorDocuments,
+} from '@hominem/db/schema';
 import { splitMarkdown } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
 import { and, desc, eq, sql } from 'drizzle-orm';
@@ -20,7 +24,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
   return response.data[0]?.embedding ?? [];
 }
 
-export async function upsertVectorDocuments(documents: NewVectorDocument[]) {
+export async function upsertVectorDocuments(documents: NewVectorDocument[]): Promise<void> {
   if (documents.length === 0) {
     return;
   }
@@ -44,7 +48,16 @@ export async function queryVectorDocuments(params: {
   source: string;
   limit?: number;
   userId?: string;
-}) {
+}): Promise<
+  Array<{
+    id: string;
+    content: string;
+    metadata: string | null;
+    source: string | null;
+    sourceType: string | null;
+    score: number;
+  }>
+> {
   const { embedding, source, limit = 10, userId } = params;
   const conditions = [eq(vectorDocuments.source, source)];
   if (userId) {
@@ -153,7 +166,15 @@ export namespace VectorService {
     source: string;
     limit?: number;
     userId?: string;
-  }) {
+  }): Promise<{
+    results: Array<{
+      id: string;
+      document: string;
+      metadata: any;
+      source: string | null;
+      sourceType: string | null;
+    }>;
+  }> {
     const embedding = await generateEmbedding(q);
     const results = await queryVectorDocuments({ embedding, source, limit, userId });
 
@@ -207,7 +228,16 @@ export namespace VectorService {
     userId: string,
     limit = 10,
     threshold = 0.7,
-  ) {
+  ): Promise<{
+    results: Array<{
+      id: string;
+      document: string;
+      metadata: any;
+      source: string | null;
+      sourceType: string | null;
+      similarity: number;
+    }>;
+  }> {
     const embedding = await generateEmbedding(query);
 
     const results = await db
@@ -236,11 +266,16 @@ export namespace VectorService {
         metadata: row.metadata ? JSON.parse(String(row.metadata)) : {},
         source: row.source,
         sourceType: row.sourceType,
+        similarity: row.similarity,
       })),
     };
   }
 
-  export async function getUserDocuments(userId: string, limit = 50, offset = 0) {
+  export async function getUserDocuments(
+    userId: string,
+    limit = 50,
+    offset = 0,
+  ): Promise<VectorDocumentSelect[]> {
     const results = await db
       .select()
       .from(vectorDocuments)

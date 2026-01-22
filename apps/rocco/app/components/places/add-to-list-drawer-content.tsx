@@ -39,9 +39,9 @@ export const AddToListDrawerContent = ({
     if (!(rawLists && googleMapsId)) {
       return [];
     }
-    return rawLists.map((list) => ({
+    return (rawLists as any[]).map((list: any) => ({
       ...list,
-      isInList: list.places?.some((p) => p.googleMapsId === googleMapsId) ?? false,
+      isInList: list.places?.some((p: any) => p.googleMapsId === googleMapsId) ?? false,
     }));
   }, [rawLists, googleMapsId]);
 
@@ -173,7 +173,7 @@ export const AddToListDrawerContent = ({
                     Create &quot;{searchQuery}&quot;
                   </CommandItem>
                 )}
-                {filteredLists.map((list) => (
+                {filteredLists.map((list: any) => (
                   <CommandItem
                     key={list.id}
                     value={list.name}
@@ -184,7 +184,7 @@ export const AddToListDrawerContent = ({
                   >
                     <span className="flex-1">{list.name}</span>
                     {loadingListId === list.id ||
-                    (createListMutation.isPending && searchQuery.trim() === list.name) ? (
+                      (createListMutation.isPending && searchQuery.trim() === list.name) ? (
                       <Loader2 size={16} className="animate-spin" />
                     ) : (
                       <Check

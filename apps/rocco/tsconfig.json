@@ -35,6 +35,9 @@
       "path": "../../packages/lists"
     },
     {
+      "path": "../../packages/places"
+    },
+    {
       "path": "../../packages/services"
     },
     {

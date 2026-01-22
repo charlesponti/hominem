@@ -6,7 +6,23 @@
     "outDir": "./build",
     "composite": true
   },
-  "references": [{ "path": "../utils" }],
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "**/*.test.tsx"]
+  "references": [
+    {
+      "path": "../utils"
+    },
+    {
+      "path": "../db"
+    }
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

@@ -83,6 +83,7 @@ export const events = pgTable(
   ]
 )
 export type CalendarEvent = typeof events.$inferSelect
+export type CalendarEventSelect = typeof events.$inferSelect
 export type CalendarEventInsert = typeof events.$inferInsert
 
 export const eventsTags = pgTable('events_tags', {

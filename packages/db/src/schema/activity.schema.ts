@@ -43,4 +43,5 @@ export const activities = pgTable('activities', {
   milestones: json('milestones'),
 })
 export type Activity = typeof activities.$inferSelect
-export type NewActivity = typeof activities.$inferInsert
+export type ActivitySelect = typeof activities.$inferSelect
+export type ActivityInsert = typeof activities.$inferInsert

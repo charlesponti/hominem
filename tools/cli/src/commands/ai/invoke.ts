@@ -16,20 +16,25 @@ export const invokeCommand = new Command()
     const spinner = ora('Generating response').start();
 
     try {
-      const response = await trpc.chat.generate.mutate({ message });
+      const response = await trpc.chats.send.mutate({ message });
 
       // Stop spinner
       spinner.succeed(chalk.green('Success'));
 
       // Display the message content, if available
-      if (response.response) {
-        consola.log(`\n${chalk.blue.bold('assistant:')}\n${chalk.white(response.response)}\n`);
+      if (response.messages.assistant.content) {
+        consola.log(
+          `\n${chalk.blue.bold('assistant:')}\n${chalk.white(response.messages.assistant.content)}\n`,
+        );
       }
 
       // Display tool calls if they exist
-      if (response.toolCalls && response.toolCalls.length > 0) {
+      if (
+        response.messages.assistant.toolCalls &&
+        response.messages.assistant.toolCalls.length > 0
+      ) {
         consola.log(chalk.yellow.bold('Tool Calls:'));
-        for (const toolCall of response.toolCalls) {
+        for (const toolCall of response.messages.assistant.toolCalls) {
           consola.log(chalk.cyan(`- Tool: ${toolCall.toolName}`));
           consola.log(chalk.cyan(`  Args: ${JSON.stringify(toolCall.args, null, 2)}`));
         }

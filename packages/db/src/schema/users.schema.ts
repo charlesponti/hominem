@@ -85,3 +85,6 @@ export const account = pgTable(
       .onDelete('cascade'),
   ]
 )
+export type Account = typeof account.$inferSelect
+export type AccountSelect = typeof account.$inferSelect
+export type AccountInsert = typeof account.$inferInsert

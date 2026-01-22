@@ -1,11 +1,10 @@
 import { db } from '@hominem/db';
-import { bookmark } from '@hominem/db/schema';
+import { bookmark, type BookmarkInsert, type BookmarkSelect } from '@hominem/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
-export type BookmarkSelect = typeof bookmark.$inferSelect;
-export type BookmarkInsert = typeof bookmark.$inferInsert;
+export type { BookmarkInsert, BookmarkSelect };
 
-export async function listBookmarksByUser(userId: string) {
+export async function listBookmarksByUser(userId: string): Promise<BookmarkSelect[]> {
   return db
     .select()
     .from(bookmark)
@@ -16,7 +15,7 @@ export async function listBookmarksByUser(userId: string) {
 export async function createBookmarkForUser(
   userId: string,
   data: Omit<BookmarkInsert, 'id' | 'userId'>,
-) {
+): Promise<BookmarkSelect> {
   const [created] = await db
     .insert(bookmark)
     .values({
@@ -33,7 +32,7 @@ export async function updateBookmarkForUser(
   id: string,
   userId: string,
   data: Partial<Omit<BookmarkInsert, 'id' | 'userId'>>,
-) {
+): Promise<BookmarkSelect | null> {
   const [updated] = await db
     .update(bookmark)
     .set(data)
@@ -43,7 +42,7 @@ export async function updateBookmarkForUser(
   return updated ?? null;
 }
 
-export async function deleteBookmarkForUser(id: string, userId: string) {
+export async function deleteBookmarkForUser(id: string, userId: string): Promise<boolean> {
   const result = await db
     .delete(bookmark)
     .where(and(eq(bookmark.id, id), eq(bookmark.userId, userId)))

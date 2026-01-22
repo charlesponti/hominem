@@ -6,7 +6,7 @@ import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,
   GooglePlacesApiResponse,
-} from '~/lib/types';
+} from '~/lib/shared-types';
 
 export const getPlacePhotoUrl = (reference: string | null | undefined) => {
   if (!reference) return null;

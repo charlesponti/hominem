@@ -33,7 +33,7 @@ export default function Lists() {
           </div>
         ) : (
           <List isLoading={isLoading} loadingSize="lg">
-            {lists.map((list) => (
+            {lists.map((list: any) => (
               <ListRow
                 key={list.id}
                 id={list.id}

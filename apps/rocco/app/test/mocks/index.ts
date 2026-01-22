@@ -79,10 +79,13 @@ export const getMockPlace = (): Place => ({
   bestFor: null,
   isPublic: false,
   wifiInfo: null,
-  photos: null,
+  photos: [],
   priceLevel: null,
   businessStatus: null,
   openingHours: null,
+  associatedLists: [],
+  thumbnailPhotos: [],
+  fullPhotos: [],
 });
 
 export const getMockLists = () => [

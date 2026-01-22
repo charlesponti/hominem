@@ -7,13 +7,13 @@ import {
   getPlaceLists,
   removeUserFromList,
   updateList,
-} from '@hominem/lists-services';
-import { TRPCError } from '@trpc/server';
-import * as z from 'zod';
+} from '@hominem/lists-services'
+import { TRPCError } from '@trpc/server'
+import * as z from 'zod'
 
-import { safeAsync } from '../../errors';
-import { logger } from '../../logger';
-import { protectedProcedure, publicProcedure, router } from '../context';
+import { safeAsync } from '../../errors'
+import { logger } from '../../logger'
+import { protectedProcedure, publicProcedure, router } from '../context'
 
 export const listsRouter = router({
   getAll: protectedProcedure
@@ -23,32 +23,32 @@ export const listsRouter = router({
         async () => {
           const { ownedListsWithPlaces, sharedListsWithPlaces } = await getAllUserListsWithPlaces(
             ctx.user.id,
-          );
+          )
 
-          return [...ownedListsWithPlaces, ...sharedListsWithPlaces];
+          return [...ownedListsWithPlaces, ...sharedListsWithPlaces]
         },
         'getAll lists',
         { userId: ctx.user?.id, itemType: input?.itemType },
-      );
+      )
     }),
 
   getById: publicProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
     return safeAsync(
       async () => {
-        const list = await getListById(input.id, ctx.user?.id || null);
+        const list = await getListById(input.id, ctx.user?.id || null)
 
         if (!list) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'List not found',
-          });
+          })
         }
 
-        return list;
+        return list
       },
       'getById list',
       { listId: input.id, userId: ctx.user?.id },
-    );
+    )
   }),
 
   create: protectedProcedure
@@ -61,14 +61,14 @@ export const listsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const newList = await createList(input.name, ctx.user.id);
+        const newList = await createList(input.name, ctx.user.id)
         if (!newList) {
-          throw new Error('Failed to create list');
+          throw new Error('Failed to create list')
         }
-        return newList;
+        return newList
       } catch (error) {
-        logger.error('Error creating list', { error });
-        throw new Error('Failed to create list');
+        logger.error('Error creating list', { error })
+        throw new Error('Failed to create list')
       }
     }),
 
@@ -82,38 +82,38 @@ export const listsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, name } = input;
+      const { id, name } = input
 
       if (!name) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Name is required for update',
-        });
+        })
       }
 
       // Service function checks ownership in WHERE clause
-      const updatedList = await updateList(id, name, ctx.user.id);
+      const updatedList = await updateList(id, name, ctx.user.id)
       if (!updatedList) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: "List not found or you don't have permission to update it",
-        });
+        })
       }
 
-      return updatedList;
+      return updatedList
     }),
 
   delete: protectedProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ ctx, input }) => {
     // Service function checks ownership in WHERE clause
-    const success = await deleteList(input.id, ctx.user.id);
+    const success = await deleteList(input.id, ctx.user.id)
     if (!success) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: "List not found or you don't have permission to delete it",
-      });
+      })
     }
 
-    return { success: true };
+    return { success: true }
   }),
 
   // Delete a specific item from a list
@@ -127,24 +127,24 @@ export const listsRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         // Service function checks access (owner or collaborator) in WHERE clause
-        const success = await deleteListItem(input.listId, input.itemId, ctx.user.id);
+        const success = await deleteListItem(input.listId, input.itemId, ctx.user.id)
         if (!success) {
           throw new TRPCError({
             code: 'FORBIDDEN',
             message: "List item not found or you don't have permission to delete it",
-          });
+          })
         }
 
-        return { success: true };
+        return { success: true }
       } catch (error) {
         if (error instanceof TRPCError) {
-          throw error;
+          throw error
         }
-        logger.error('Error deleting list item', { error });
+        logger.error('Error deleting list item', { error })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to delete list item',
-        });
+        })
       }
     }),
 
@@ -160,14 +160,14 @@ export const listsRouter = router({
       return safeAsync(
         async () => {
           if (!(input.placeId || input.googleMapsId)) {
-            return [];
+            return []
           }
 
           return await getPlaceLists({
             userId: ctx.user.id,
             placeId: input.placeId,
             googleMapsId: input.googleMapsId,
-          });
+          })
         },
         'getContainingPlace lists',
         {
@@ -175,7 +175,7 @@ export const listsRouter = router({
           placeId: input.placeId,
           googleMapsId: input.googleMapsId,
         },
-      );
+      )
     }),
 
   // Remove a collaborator from a list
@@ -191,7 +191,7 @@ export const listsRouter = router({
         listId: input.listId,
         userIdToRemove: input.userId,
         ownerId: ctx.user.id,
-      });
+      })
 
       if ('error' in result) {
         throw new TRPCError({
@@ -204,9 +204,9 @@ export const listsRouter = router({
                   ? 'BAD_REQUEST'
                   : 'INTERNAL_SERVER_ERROR',
           message: result.error,
-        });
+        })
       }
 
-      return { success: true };
+      return { success: true }
     }),
-});
+})

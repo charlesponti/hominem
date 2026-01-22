@@ -9,8 +9,8 @@ import { tripsRouter } from './routers/trips';
 import { userRouter } from './routers/user';
 
 export const appRouter = router({
-  admin: adminRouter,
   lists: listsRouter,
+  admin: adminRouter,
   places: placesRouter,
   items: itemsRouter,
   invites: invitesRouter,

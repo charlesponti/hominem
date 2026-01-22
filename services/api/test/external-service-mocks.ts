@@ -1,9 +1,22 @@
-import { vi } from 'vitest'
+import { vi, type Mock } from 'vitest'
+
+export interface PlaidMocks {
+  plaidClient: {
+    linkTokenCreate: Mock
+    itemPublicTokenExchange: Mock
+    itemRemove: Mock
+    accountsGet: Mock
+    transactionsGet: Mock
+    institutionsGetById: Mock
+  }
+  verifyPlaidWebhookSignature: Mock
+  mockPlaidLib: () => void
+}
 
 /**
  * Plaid service mocks
  */
-export const createPlaidMocks = () => {
+export const createPlaidMocks = (): PlaidMocks => {
   const plaidClient = {
     linkTokenCreate: vi.fn(),
     itemPublicTokenExchange: vi.fn(),
@@ -31,10 +44,35 @@ export const createPlaidMocks = () => {
   }
 }
 
+export interface StripeMocks {
+  stripe: {
+    customers: {
+      create: Mock
+      retrieve: Mock
+      update: Mock
+      del: Mock
+    }
+    subscriptions: {
+      create: Mock
+      retrieve: Mock
+      update: Mock
+      cancel: Mock
+    }
+    paymentMethods: {
+      attach: Mock
+      detach: Mock
+    }
+    webhooks: {
+      constructEvent: Mock
+    }
+  }
+  mockStripeLib: () => void
+}
+
 /**
  * Stripe service mocks
  */
-export const createStripeMocks = () => {
+export const createStripeMocks = (): StripeMocks => {
   const stripe = {
     customers: {
       create: vi.fn(),
@@ -69,10 +107,24 @@ export const createStripeMocks = () => {
   }
 }
 
+export interface OpenAIMocks {
+  openai: {
+    chat: {
+      completions: {
+        create: Mock
+      }
+    }
+    embeddings: {
+      create: Mock
+    }
+  }
+  mockOpenAILib: () => void
+}
+
 /**
  * OpenAI service mocks
  */
-export const createOpenAIMocks = () => {
+export const createOpenAIMocks = (): OpenAIMocks => {
   const openai = {
     chat: {
       completions: {
@@ -96,10 +148,23 @@ export const createOpenAIMocks = () => {
   }
 }
 
+export interface StorageMocks {
+  storage: {
+    storeFile: Mock
+    downloadCsvFileAsBuffer: Mock
+    getFile: Mock
+    deleteFile: Mock
+    getFileUrl: Mock
+    getSignedUrl: Mock
+    listUserFiles: Mock
+  }
+  mockSupabaseStorageLib: () => void
+}
+
 /**
  * Supabase storage service mocks
  */
-export const createStorageMocks = () => {
+export const createStorageMocks = (): StorageMocks => {
   const storage = {
     storeFile: vi.fn().mockResolvedValue({
       id: 'test-id',
@@ -132,10 +197,15 @@ export const createStorageMocks = () => {
   }
 }
 
+export interface EmailMocks {
+  send: Mock
+  mockResendLib: () => void
+}
+
 /**
  * Email service mocks (Resend)
  */
-export const createEmailMocks = () => {
+export const createEmailMocks = (): EmailMocks => {
   const send = vi.fn()
 
   const mockResendLib = () => {
@@ -152,10 +222,26 @@ export const createEmailMocks = () => {
   }
 }
 
+export interface GoogleMocks {
+  places: {
+    places: {
+      get: Mock
+      photos: {
+        getMedia: Mock
+      }
+      searchText: Mock
+    }
+  }
+  auth: {
+    GoogleAuth: Mock
+  }
+  mockGoogleLib: () => void
+}
+
 /**
  * Google APIs mocks
  */
-export const createGoogleMocks = () => {
+export const createGoogleMocks = (): GoogleMocks => {
   const places = {
     places: {
       get: vi.fn(),
@@ -187,10 +273,25 @@ export const createGoogleMocks = () => {
   }
 }
 
+export interface QueueMocks {
+  queue: {
+    add: Mock
+    process: Mock
+    close: Mock
+    getJob: Mock
+    getJobs: Mock
+    clean: Mock
+    pause: Mock
+    resume: Mock
+  }
+  mockBullLib: () => void
+  mockBullMQLib: () => void
+}
+
 /**
  * Queue service mocks (Bull/BullMQ)
  */
-export const createQueueMocks = () => {
+export const createQueueMocks = (): QueueMocks => {
   const queue = {
     add: vi.fn(),
     process: vi.fn(),
@@ -222,10 +323,20 @@ export const createQueueMocks = () => {
   }
 }
 
+export interface AllExternalMocks {
+  plaid: PlaidMocks
+  stripe: StripeMocks
+  openai: OpenAIMocks
+  storage: StorageMocks
+  email: EmailMocks
+  google: GoogleMocks
+  queues: QueueMocks
+}
+
 /**
  * All external service mocks
  */
-export const setupAllExternalMocks = () => {
+export const setupAllExternalMocks = (): AllExternalMocks => {
   const plaid = createPlaidMocks()
   const stripe = createStripeMocks()
   const openai = createOpenAIMocks()

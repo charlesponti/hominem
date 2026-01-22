@@ -37,3 +37,7 @@ export const bookmarkRelations = relations(bookmark, ({ one }) => ({
     references: [users.id],
   }),
 }))
+
+export type Bookmark = typeof bookmark.$inferSelect
+export type BookmarkSelect = typeof bookmark.$inferSelect
+export type BookmarkInsert = typeof bookmark.$inferInsert

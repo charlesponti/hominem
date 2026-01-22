@@ -1,4 +1,4 @@
-import { addItemToTrip, createTrip, getAllTrips, getTripById } from '@hominem/services/travel';
+import { addItemToTrip, createTrip, getAllTrips, getTripById } from '@hominem/places-services';
 import { TRPCError } from '@trpc/server';
 import * as z from 'zod';
 
