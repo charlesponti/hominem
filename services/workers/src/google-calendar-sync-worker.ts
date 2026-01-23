@@ -97,7 +97,7 @@ googleCalendarWorker.on('failed', (job, error) => {
   });
 });
 
-googleCalendarWorker.on('error', (error) => {
+googleCalendarWorker.on('error', (error: Error) => {
   logger.error('Google Calendar worker error:', error);
 });
 
@@ -115,7 +115,8 @@ const gracefulShutdown = async (signal: string) => {
     await googleCalendarWorker.close();
     logger.info('Google Calendar worker shut down successfully');
   } catch (error) {
-    logger.error('Error during Google Calendar worker shutdown:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Error during Google Calendar worker shutdown:', err);
   }
 };
 

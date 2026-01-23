@@ -1,14 +1,26 @@
-import { insertTransactionSchema, updateTransactionSchema } from '@hominem/db/schema';
+import {
+  insertTransactionSchema,
+  updateTransactionSchema,
+  type FinanceTransaction
+} from '@hominem/db/schema';
 import {
   createTransaction,
   deleteTransaction,
   getAccountById,
   queryTransactions,
   updateTransaction,
+  type QueryTransactionsOutput,
 } from '@hominem/finance-services';
 import { z } from 'zod';
 
 import { protectedProcedure, router } from '../../procedures';
+
+/**
+ * Modularized types for router outputs to prevent excessively deep type inference
+ * and provide explicit types for consumers.
+ */
+export type TransactionListOutput = QueryTransactionsOutput;
+export type TransactionDeleteOutput = { success: boolean; message: string };
 
 // Transactions tRPC router
 export const transactionsRouter = router({
@@ -48,14 +60,13 @@ export const transactionsRouter = router({
           .describe('Sort direction(s)'),
       }),
     )
-    .query(async ({ input, ctx }) => {
-      const result = await queryTransactions({ ...input, userId: ctx.userId });
-      return result;
+    .query(async ({ input, ctx }): Promise<TransactionListOutput> => {
+      return await queryTransactions({ ...input, userId: ctx.userId });
     }),
 
   create: protectedProcedure
     .input(insertTransactionSchema.omit({ userId: true }))
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }): Promise<FinanceTransaction> => {
       if (input.accountId) {
         const account = await getAccountById(input.accountId, ctx.userId);
         if (!account) {
@@ -63,6 +74,7 @@ export const transactionsRouter = router({
         }
       }
 
+      // Explicitly map input to avoid anonymous object transformation issues
       return await createTransaction({ ...input, userId: ctx.userId } as any);
     }),
 
@@ -73,7 +85,7 @@ export const transactionsRouter = router({
         data: updateTransactionSchema.partial(),
       }),
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }): Promise<FinanceTransaction> => {
       const { id, data } = input;
 
       // Optional: Validate accountId if provided
@@ -87,8 +99,9 @@ export const transactionsRouter = router({
       return await updateTransaction({ transactionId: id, ...data } as any, ctx.userId);
     }),
 
-  delete: protectedProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ input, ctx }) => {
-    await deleteTransaction({ transactionId: input.id }, ctx.userId);
-    return { success: true, message: 'Transaction deleted successfully' };
-  }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.uuid() }))
+    .mutation(async ({ input, ctx }): Promise<TransactionDeleteOutput> => {
+      return await deleteTransaction({ transactionId: input.id }, ctx.userId);
+    }),
 });

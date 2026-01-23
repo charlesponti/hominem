@@ -4,6 +4,7 @@ import type { Result as PDFParseResult } from 'pdf-parse';
 import { openai } from '@ai-sdk/openai';
 import { logger } from '@hominem/utils/logger';
 import { generateObject, generateText } from 'ai';
+import { z } from 'zod';
 
 import { type SubmissionAttachment, SubmissionAttachmentSchema } from '../lib/writer.schema';
 
@@ -55,7 +56,7 @@ export async function processAttachment(attachment: Attachment): Promise<string 
         {
           role: 'system',
           content: `
-            Based on the following text chunk from an attachment, extract any relevant information that could be added to the writer's profile. 
+            Based on the following text chunk from an attachment, extract any relevant information that could be added to the writer's profile.
             Focus on additional notable works, awards, or background information.
           `,
         },
@@ -108,7 +109,7 @@ export async function processAttachments(
         textLength: content.text.length,
       });
 
-      const response = await generateObject({
+      const response = await generateObject<SubmissionAttachment>({
         model: openai('gpt-4o-mini', { structuredOutputs: true }),
         messages: [
           {
@@ -138,7 +139,8 @@ export async function processAttachments(
       logger.info('Rate limiting pause', { filename });
       await new Promise((resolve) => setTimeout(resolve, 30000));
 
-      results.push(response.object);
+      const attachmentData = response.object as SubmissionAttachment;
+      results.push(attachmentData);
     } catch (error) {
       logger.error('Attachment processing error', {
         filename,

@@ -32,7 +32,7 @@ export function useAccountsByInstitution() {
     isError,
     error,
     refetch,
-  } = trpc.finance.institutions.accounts.useQuery();
+  } = trpc.finance.accounts.accounts.useQuery();
 
   const accountsByInstitution = accounts.reduce(
     (
@@ -75,58 +75,12 @@ export function useAccountsByInstitution() {
 }
 
 // Export tRPC hooks directly for simple queries
-export const useInstitutionConnections = () => trpc.finance.institutions.connections.useQuery();
-export const useInstitutionAccounts = () => trpc.finance.institutions.accounts.useQuery();
+export const useInstitutionConnections = () => trpc.finance.accounts.connections.useQuery();
+export const useInstitutionAccounts = () => trpc.finance.accounts.accounts.useQuery();
 
 export const useInstitutionAccountsByInstitution = (institutionId: string) =>
-  trpc.finance.institutions.institutionAccounts.useQuery(
+  trpc.finance.accounts.institutionAccounts.useQuery(
     { institutionId },
     { enabled: !!institutionId },
   );
-export const useInstitution = (institutionId: string) =>
-  trpc.finance.institutions.get.useQuery({ institutionId }, { enabled: !!institutionId });
 export const useAllInstitutions = () => trpc.finance.institutions.list.useQuery();
-
-// Link an account to an institution
-export function useLinkAccountToInstitution() {
-  const queryClient = useQueryClient();
-  const mutation = trpc.finance.institutions.link.useMutation({
-    onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['finance', 'institutionsNew', 'accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'institutionsNew', 'connections'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
-    },
-  });
-
-  return {
-    linkAccount: mutation.mutate,
-    isLoading: mutation.isPending,
-    isError: mutation.isError,
-    error: mutation.error,
-    data: mutation.data,
-  };
-}
-
-// Unlink an account from an institution
-export function useUnlinkAccountFromInstitution() {
-  const queryClient = useQueryClient();
-  const mutation = trpc.finance.institutions.unlink.useMutation({
-    onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['finance', 'institutionsNew', 'accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'institutionsNew', 'connections'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
-    },
-  });
-
-  return {
-    unlinkAccount: mutation.mutate,
-    isLoading: mutation.isPending,
-    isError: mutation.isError,
-    error: mutation.error,
-    data: mutation.data,
-  };
-}

@@ -50,16 +50,18 @@ export function AudioPlayer({
 
   // Handle ended event
   useEffect(() => {
-    if (audioRef.current) {
-      const handleEnded = () => {
-        onEnded?.();
-      };
-
-      audioRef.current.addEventListener('ended', handleEnded);
-      return () => {
-        audioRef.current?.removeEventListener('ended', handleEnded);
-      };
+    if (!audioRef.current) {
+      return;
     }
+
+    const handleEnded = () => {
+      onEnded?.();
+    };
+
+    audioRef.current.addEventListener('ended', handleEnded);
+    return () => {
+      audioRef.current?.removeEventListener('ended', handleEnded);
+    };
   }, [onEnded]);
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {

@@ -18,14 +18,44 @@ export {
   getAccountWithPlaidInfo,
   listAccountsWithPlaidInfo,
   listPlaidConnectionsForUser,
+  listInstitutionConnections,
+  getAccountsForInstitution,
+  validateAccountNameUnique,
+  validateAccountExists,
+  linkAccountToInstitution,
+  unlinkAccountFromInstitution,
   AccountsService,
 } from './features/accounts/accounts.service';
+export {
+  FinanceAccountSchema,
+  CreateAccountSchema,
+  UpdateAccountSchema,
+  AccountWithPlaidInfoSchema,
+  BalanceSummarySchema,
+  PlaidConnectionSchema,
+  InstitutionConnectionSchema,
+  type FinanceAccount,
+  type CreateAccountInput,
+  type UpdateAccountInput,
+  type AccountWithPlaidInfo,
+  type BalanceSummary,
+  type PlaidConnection,
+  type InstitutionConnection,
+} from './features/accounts/accounts.domain';
+export { AccountsRepository } from './features/accounts/accounts.repository';
 export * from './core/budget.utils';
 export * from './core/budget-analytics.service';
 export * from './core/budget-categories.service';
 export * from './core/budget-goals.service';
 export * from './core/budget-tracking.service';
-export * from './core/institution.service';
+export { InstitutionsRepository } from './core/institutions.repository';
+export {
+  getInstitutionById,
+  getAllInstitutions,
+  createInstitution,
+  getUserPlaidItemForInstitution,
+  InstitutionService,
+} from './core/institution.service';
 export {
   calculateRunway,
   type RunwayCalculationResult,

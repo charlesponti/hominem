@@ -5,7 +5,7 @@ import type {
   JobStats,
 } from '@hominem/jobs-services';
 
-import { processTransactionsFromCSVBuffer } from '@hominem/finance';
+import { processTransactionsFromCSVBuffer } from '@hominem/finance-services';
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
@@ -91,12 +91,12 @@ const processImportTransactionsJob = async (
   jobData.stats.total = 0;
 
   try {
-    const results = await Effect.runPromise(
+    const results = (await Effect.runPromise(
       processTransactionsFromCSVBuffer({
         csvBuffer: fileBuffer,
         userId: job.data.userId,
       }),
-    );
+    )) as Array<{ action?: string }>;
 
     for (const result of results) {
       processedCount++;
@@ -104,7 +104,11 @@ const processImportTransactionsJob = async (
 
       if (result.action) {
         if (isCountableActionKey(result.action)) {
-          jobData.stats[result.action] = (jobData.stats[result.action] ?? 0) + 1;
+          const key = result.action as keyof Pick<
+            JobStats,
+            'created' | 'updated' | 'skipped' | 'merged' | 'invalid'
+          >;
+          jobData.stats[key] = (jobData.stats[key] ?? 0) + 1;
         } else {
           logger.warn(
             `Job ${job.id}: Received unexpected action key '${result.action}' from processor`,

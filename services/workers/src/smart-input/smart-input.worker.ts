@@ -83,7 +83,7 @@ export async function processEmailBody(emailBody: string): Promise<Candidates> {
     bodyLength: emailBody.length,
   });
   try {
-    const response = await generateObject<z.infer<typeof CandidatesSchema>>({
+    const response = await generateObject<Candidates>({
       model: openai('gpt-4o', { structuredOutputs: true }),
       messages: [
         {

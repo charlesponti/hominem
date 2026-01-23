@@ -1,3 +1,5 @@
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+
 import { router } from './procedures';
 import { bookmarksRouter } from './routers/bookmarks';
 import { chatsRouter } from './routers/chats';
@@ -38,3 +40,30 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+/**
+ * Type helpers for full app router
+ * Use only for internal tRPC infrastructure code
+ */
+export type AppRouterInputs = inferRouterInputs<AppRouter>;
+export type AppRouterOutputs = inferRouterOutputs<AppRouter>;
+
+/**
+ * Finance router type helpers
+ * Use in finance apps for better type performance
+ * This prevents TypeScript from inferring types for unrelated routers
+ */
+export type FinanceRouterInputs = inferRouterInputs<typeof financeRouter>;
+export type FinanceRouterOutputs = inferRouterOutputs<typeof financeRouter>;
+
+/**
+ * Notes router type helpers
+ */
+export type NotesRouterInputs = inferRouterInputs<typeof notesRouter>;
+export type NotesRouterOutputs = inferRouterOutputs<typeof notesRouter>;
+
+/**
+ * Chats router type helpers
+ */
+export type ChatsRouterInputs = inferRouterInputs<typeof chatsRouter>;
+export type ChatsRouterOutputs = inferRouterOutputs<typeof chatsRouter>;

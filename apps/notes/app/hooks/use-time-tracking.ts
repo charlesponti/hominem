@@ -1,9 +1,9 @@
-import type { Note } from '@hominem/utils/types';
+import type { NotesListOutput } from '~/lib/trpc/notes-types';
 
 import { useUpdateNote } from './use-notes';
 
 interface UseTimeTrackingOptions {
-  task: Note;
+  task: NotesListOutput[number];
 }
 
 export function useTimeTracking({ task }: UseTimeTrackingOptions) {
@@ -15,13 +15,11 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
 
     await updateNote.mutateAsync({
       id: task.id,
-      data: {
-        taskMetadata: {
-          ...task.taskMetadata,
-          status: 'in-progress',
-          startTime: now,
-          firstStartTime,
-        },
+      taskMetadata: {
+        ...task.taskMetadata,
+        status: 'in-progress',
+        startTime: now,
+        firstStartTime,
       },
     });
   };
@@ -36,13 +34,11 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
 
     await updateNote.mutateAsync({
       id: task.id,
-      data: {
-        taskMetadata: {
-          ...task.taskMetadata,
-          status: 'todo',
-          endTime: new Date().toISOString(),
-          duration: currentDuration,
-        },
+      taskMetadata: {
+        ...task.taskMetadata,
+        status: 'todo',
+        endTime: new Date().toISOString(),
+        duration: currentDuration,
       },
     });
   };
@@ -57,13 +53,11 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
 
     await updateNote.mutateAsync({
       id: task.id,
-      data: {
-        taskMetadata: {
-          ...task.taskMetadata,
-          status: 'done',
-          endTime: new Date().toISOString(),
-          duration: currentDuration,
-        },
+      taskMetadata: {
+        ...task.taskMetadata,
+        status: 'done',
+        endTime: new Date().toISOString(),
+        duration: currentDuration,
       },
     });
   };
@@ -71,14 +65,12 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
   const setTaskToTodoAndResetTime = async () => {
     await updateNote.mutateAsync({
       id: task.id,
-      data: {
-        taskMetadata: {
-          ...task.taskMetadata,
-          status: 'todo',
-          startTime: undefined,
-          endTime: undefined,
-          duration: 0,
-        },
+      taskMetadata: {
+        ...task.taskMetadata,
+        status: 'todo',
+        startTime: undefined,
+        endTime: undefined,
+        duration: 0,
       },
     });
   };
@@ -86,14 +78,12 @@ export function useTimeTracking({ task }: UseTimeTrackingOptions) {
   const resetTimerForInProgressTask = async () => {
     await updateNote.mutateAsync({
       id: task.id,
-      data: {
-        taskMetadata: {
-          ...task.taskMetadata,
-          status: 'todo',
-          startTime: undefined,
-          endTime: undefined,
-          duration: 0,
-        },
+      taskMetadata: {
+        ...task.taskMetadata,
+        status: 'todo',
+        startTime: undefined,
+        endTime: undefined,
+        duration: 0,
       },
     });
   };

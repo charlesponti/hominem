@@ -44,6 +44,7 @@ export function useMutationWithOptimistic<TInput, TOutput>({
         // Return a context object with the snapshotted value
         return { previousData };
       }
+      return undefined;
     },
     onSuccess: (data: TOutput, variables: TInput) => {
       if (successMessage) {

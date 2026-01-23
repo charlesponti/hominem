@@ -6,10 +6,19 @@
     "outDir": "./build",
     "composite": true,
     "paths": {
-      "@hominem/db": ["./src/index.ts"],
-      "@hominem/db/*": ["./src/*"]
+      "@hominem/db": [
+        "./src/index.ts"
+      ],
+      "@hominem/db/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "build", "dist"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
 }

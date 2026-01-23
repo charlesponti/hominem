@@ -44,3 +44,56 @@ export const AccountWithPlaidInfoSchema = FinanceAccountSchema.extend({
 });
 
 export type AccountWithPlaidInfo = z.infer<typeof AccountWithPlaidInfoSchema>;
+
+/**
+ * Type for balance summary
+ */
+export const BalanceSummarySchema = z.object({
+  accounts: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.string(),
+      balance: z.string().nullable(),
+    }),
+  ),
+  totalBalance: z.string(),
+  accountCount: z.number(),
+});
+
+export type BalanceSummary = z.infer<typeof BalanceSummarySchema>;
+
+/**
+ * Type for Plaid connection info
+ */
+export const PlaidConnectionSchema = z.object({
+  id: z.string(),
+  itemId: z.string(),
+  institutionId: z.string().nullable(),
+  institutionName: z.string().nullable(),
+  status: z.string(),
+  lastSyncedAt: z.date().nullable(),
+  error: z.unknown().nullable(),
+  createdAt: z.date(),
+});
+
+export type PlaidConnection = z.infer<typeof PlaidConnectionSchema>;
+
+/**
+ * Type for institution connection info with account count
+ * Represents a user's connection to an institution (Plaid or manual)
+ * Includes account count for better UX
+ */
+export const InstitutionConnectionSchema = z.object({
+  institutionId: z.string(),
+  institutionName: z.string(),
+  institutionLogo: z.string().nullable(),
+  institutionUrl: z.string().nullable(),
+  status: z.enum(['active', 'error', 'pending_expiration', 'revoked']),
+  lastSyncedAt: z.date().nullable(),
+  error: z.unknown().nullable(),
+  accountCount: z.number(),
+  isPlaidConnected: z.boolean(),
+});
+
+export type InstitutionConnection = z.infer<typeof InstitutionConnectionSchema>;

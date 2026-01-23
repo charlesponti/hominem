@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 
-import { Button } from './button';
+import { Button } from '@hominem/ui';
 
 interface EmptyStateProps {
   icon?: LucideIcon;

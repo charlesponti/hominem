@@ -256,16 +256,14 @@ describe('GoogleCalendarService', () => {
       service.calendar.events.list = mockList;
 
       // Mock db.select to return one existing event that is NOT in googleEvents
-      const mockWhere = vi
-        .fn()
-        .mockResolvedValue([
-          {
-            id: 'old-event-id',
-            externalId: 'event-removed',
-            calendarId: 'primary',
-            userId: mockUserId,
-          },
-        ]);
+      const mockWhere = vi.fn().mockResolvedValue([
+        {
+          id: 'old-event-id',
+          externalId: 'event-removed',
+          calendarId: 'primary',
+          userId: mockUserId,
+        },
+      ]);
       const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
       (db.select as any).mockReturnValue({ from: mockFrom });
 

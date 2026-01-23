@@ -23,7 +23,7 @@
     "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",
     "ollama-ai-provider": "^1.2.0",
-    "zod": "4.2.1"
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "typescript": "5.9.3"

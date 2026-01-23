@@ -18,6 +18,12 @@
   },
   "references": [
     {
+      "path": "../../packages/finance"
+    },
+    {
+      "path": "../../packages/jobs"
+    },
+    {
       "path": "../../packages/services"
     },
     {

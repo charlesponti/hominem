@@ -76,7 +76,9 @@ export const queryTransactionsOutputSchema = z.object({
   totalUserCount: z.number(),
 });
 
-export function buildWhereConditions(options: QueryOptions) {
+export type QueryTransactionsOutput = z.infer<typeof queryTransactionsOutputSchema>;
+
+export function buildWhereConditions(options: QueryOptions): SQL | undefined {
   const conditions: (SQL | undefined)[] = [
     options.userId ? eq(transactions.userId, options.userId) : undefined,
     options.type && typeof options.type === 'string'
@@ -140,7 +142,9 @@ export function buildWhereConditions(options: QueryOptions) {
   return filtered.length > 0 ? and(...filtered) : undefined;
 }
 
-export async function queryTransactions(options: QueryOptions) {
+export async function queryTransactions(
+  options: QueryOptions,
+): Promise<QueryTransactionsOutput> {
   const { userId, limit = 100, offset = 0 } = options;
   if (!userId) return { data: [], filteredCount: 0, totalUserCount: 0 };
 
@@ -204,7 +208,7 @@ export async function queryTransactions(options: QueryOptions) {
     .then((res) => res[0]?.count ?? 0);
 
   return {
-    data,
+    data: data as QueryTransactionsOutput['data'],
     filteredCount: data[0]?.filteredCount ?? 0,
     totalUserCount,
   };

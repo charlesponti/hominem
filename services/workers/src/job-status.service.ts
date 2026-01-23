@@ -1,5 +1,4 @@
-import type { ImportTransactionsJob } from '@hominem/jobs-services';
-import type { BaseJob } from '@hominem/utils/types';
+import type { ImportTransactionsJob, BaseJob } from '@hominem/jobs-services';
 
 import { IMPORT_JOB_PREFIX } from '@hominem/jobs-services';
 import { redis } from '@hominem/services/redis';
@@ -71,6 +70,7 @@ export class JobStatusService {
       // Use type assertion with a check for the correct return type
       return updated as T;
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
       if (retries > 0) {
         logger.warn(`Retrying update for job ${jobId}, attempts remaining: ${retries}`);
         await new Promise((resolve) => setTimeout(resolve, JOB_PROCESSING.RETRY_DELAY));
@@ -78,9 +78,9 @@ export class JobStatusService {
       }
       logger.error(
         `Failed to update job status for ${jobId} after ${JOB_PROCESSING.MAX_RETRIES} retries:`,
-        error,
+        err,
       );
-      throw error;
+      throw err;
     }
   }
 

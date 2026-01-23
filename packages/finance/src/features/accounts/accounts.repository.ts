@@ -6,11 +6,16 @@ import {
   type FinanceAccount,
   type FinanceAccountInsert,
   type FinanceTransaction,
-} from '@hominem/db/schema';
+} from '@hominem/db/finance';
 import { and, eq, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
-
-import type { AccountWithPlaidInfo, CreateAccountInput } from './accounts.domain';
+import type {
+  AccountWithPlaidInfo,
+  BalanceSummary,
+  CreateAccountInput,
+  InstitutionConnection,
+  PlaidConnection,
+} from './accounts.domain';
 
 /**
  * Repository for Accounts
@@ -238,7 +243,7 @@ export const AccountsRepository = {
     })) as Array<FinanceAccount & { transactions: FinanceTransaction[] }>;
   },
 
-  async getBalanceSummary(userId: string) {
+  async getBalanceSummary(userId: string): Promise<BalanceSummary> {
     const accounts = await db
       .select({
         id: financeAccounts.id,
@@ -260,7 +265,7 @@ export const AccountsRepository = {
     };
   },
 
-  async listPlaidConnections(userId: string) {
+  async listPlaidConnections(userId: string): Promise<PlaidConnection[]> {
     const result = await db
       .select({
         id: plaidItems.id,
@@ -277,5 +282,92 @@ export const AccountsRepository = {
       .where(eq(plaidItems.userId, userId));
 
     return result;
+  },
+
+  async getAccountsForInstitution(
+    userId: string,
+    institutionId: string,
+  ): Promise<AccountWithPlaidInfo[]> {
+    const result = await db
+      .select({
+        id: financeAccounts.id,
+        userId: financeAccounts.userId,
+        name: financeAccounts.name,
+        type: financeAccounts.type,
+        balance: financeAccounts.balance,
+        interestRate: financeAccounts.interestRate,
+        minimumPayment: financeAccounts.minimumPayment,
+        institutionId: financeAccounts.institutionId,
+        plaidAccountId: financeAccounts.plaidAccountId,
+        plaidItemId: financeAccounts.plaidItemId,
+        mask: financeAccounts.mask,
+        isoCurrencyCode: financeAccounts.isoCurrencyCode,
+        subtype: financeAccounts.subtype,
+        officialName: financeAccounts.officialName,
+        limit: financeAccounts.limit,
+        lastUpdated: financeAccounts.lastUpdated,
+        createdAt: financeAccounts.createdAt,
+        updatedAt: financeAccounts.updatedAt,
+        institutionName: financialInstitutions.name,
+        institutionLogo: financialInstitutions.logo,
+        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`,
+        plaidItemStatus: plaidItems.status,
+        plaidItemError: plaidItems.error,
+        plaidLastSyncedAt: plaidItems.lastSyncedAt,
+        plaidItemInternalId: plaidItems.id,
+        plaidInstitutionId: plaidItems.institutionId,
+        plaidInstitutionName: financialInstitutions.name,
+      })
+      .from(financeAccounts)
+      .leftJoin(plaidItems, eq(financeAccounts.plaidItemId, plaidItems.id))
+      .leftJoin(financialInstitutions, eq(plaidItems.institutionId, financialInstitutions.id))
+      .where(
+        and(eq(financeAccounts.userId, userId), eq(financeAccounts.institutionId, institutionId)),
+      );
+
+    return result as AccountWithPlaidInfo[];
+  },
+
+  async listInstitutionConnections(userId: string): Promise<InstitutionConnection[]> {
+    const result = await db
+      .select({
+        institutionId: financialInstitutions.id,
+        institutionName: financialInstitutions.name,
+        institutionLogo: financialInstitutions.logo,
+        institutionUrl: financialInstitutions.url,
+        status: plaidItems.status,
+        lastSyncedAt: plaidItems.lastSyncedAt,
+        error: plaidItems.error,
+        accountCount: sql<number>`COUNT(DISTINCT ${financeAccounts.id})`,
+        isPlaidConnected: sql<boolean>`${plaidItems.id} IS NOT NULL`,
+      })
+      .from(financialInstitutions)
+      .leftJoin(
+        plaidItems,
+        and(eq(financialInstitutions.id, plaidItems.institutionId), eq(plaidItems.userId, userId)),
+      )
+      .leftJoin(
+        financeAccounts,
+        and(
+          eq(financialInstitutions.id, financeAccounts.institutionId),
+          eq(financeAccounts.userId, userId),
+        ),
+      )
+      .where(sql`${financeAccounts.userId} = ${userId} OR ${plaidItems.userId} = ${userId}`)
+      .groupBy(
+        financialInstitutions.id,
+        financialInstitutions.name,
+        financialInstitutions.logo,
+        financialInstitutions.url,
+        plaidItems.status,
+        plaidItems.lastSyncedAt,
+        plaidItems.error,
+        plaidItems.id,
+      );
+
+    return result.map((conn) => ({
+      ...conn,
+      status: (conn.status || 'active') as 'active' | 'error' | 'pending_expiration' | 'revoked',
+    })) as InstitutionConnection[];
   },
 };

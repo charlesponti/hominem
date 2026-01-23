@@ -150,7 +150,7 @@ export const ChatMessage = memo(function ChatMessage({
       {/* Tool calls section */}
       {hasToolCalls && (
         <div className="flex flex-col gap-2">
-          {message.toolCalls!.map((toolCall, index) => (
+          {message.toolCalls!.map((toolCall: typeof message.toolCalls[number], index: number) => (
             <ToolInvocationPart
               key={toolCall.toolCallId || `tool-${index}`}
               toolInvocation={toolCall}

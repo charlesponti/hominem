@@ -24,5 +24,49 @@
     "src/test/**",
     "**/*.test.ts",
     "**/*.spec.ts"
+  ],
+  "references": [
+    {
+      "path": "../db"
+    },
+    {
+      "path": "../utils"
+    },
+    {
+      "path": "../finance"
+    },
+    {
+      "path": "../auth"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../chat"
+    },
+    {
+      "path": "../notes"
+    },
+    {
+      "path": "../health"
+    },
+    {
+      "path": "../jobs"
+    },
+    {
+      "path": "../lists"
+    },
+    {
+      "path": "../places"
+    },
+    {
+      "path": "../career"
+    },
+    {
+      "path": "../events"
+    }
   ]
 }
