@@ -4,34 +4,15 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "development": "./src/index.ts",
-      "default": "./build/index.js"
-    },
-    "./schema": {
-      "types": "./build/schema/index.d.ts",
-      "development": "./src/schema/index.ts",
-      "default": "./build/schema/index.js"
-    },
-    "./finance": {
-      "types": "./build/schema/finance.schema.d.ts",
-      "development": "./src/schema/finance.schema.ts",
-      "default": "./build/schema/finance.schema.js"
-    },
-    "./test/fixtures": {
-      "types": "./build/test/fixtures.d.ts",
-      "development": "./src/test/fixtures.ts",
-      "default": "./build/test/fixtures.js"
-    },
-    "./test/utils": {
-      "types": "./build/test/utils.d.ts",
-      "development": "./src/test/utils.ts",
-      "default": "./build/test/utils.js"
-    }
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./finance": "./src/schema/finance.schema.ts",
+    "./test/fixtures": "./src/test/fixtures.ts",
+    "./test/utils": "./src/test/utils.ts"
   },
   "scripts": {
     "build": "tsc -b",
+    "clean": "rm -rf build",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

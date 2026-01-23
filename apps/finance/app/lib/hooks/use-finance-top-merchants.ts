@@ -1,4 +1,5 @@
-import { trpc } from '../trpc';
+
+import { useHonoQuery } from '../hono';
 
 type UseFinanceTopMerchantsParams = {
   from?: string;
@@ -15,13 +16,19 @@ export function useFinanceTopMerchants({
   category,
   limit,
 }: UseFinanceTopMerchantsParams) {
-  return trpc.finance.analyze.topMerchants.useQuery(
-    {
-      from,
-      to,
-      account,
-      category,
-      limit,
+  return useHonoQuery(
+    ['finance', 'analyze', 'top-merchants', { from, to, account, category, limit }],
+    async (client) => {
+      const res = await client.api.finance.analyze['top-merchants'].$post({
+        json: {
+          from,
+          to,
+          account,
+          category,
+          limit,
+        },
+      });
+      return res.json();
     },
     {
       staleTime: 5 * 60 * 1000,

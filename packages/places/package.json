@@ -5,14 +5,11 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "development": "./src/index.ts",
-      "default": "./build/index.js"
-    }
+    ".": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc -b",
+    "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "dev": "tsc -b -w",
     "format": "bunx oxfmt ./src",

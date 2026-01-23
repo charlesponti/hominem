@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 
 import type { ReceivedInvite } from '~/lib/types';
 
-import { trpc } from '~/lib/trpc/client';
+import { useAcceptInvite } from '~/lib/hono';
 
 type ReceivedInviteItemProps =
   | {
@@ -29,7 +29,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   const inviteProps = props.variant !== 'preview' ? props : null;
   const previewProps = props.variant === 'preview' ? props : null;
 
-  const { mutate, status } = trpc.invites.accept.useMutation();
+  const { mutate, isPending } = useAcceptInvite();
 
   const normalizedUserEmail = inviteProps?.currentUserEmail?.toLowerCase();
   const isEmailMismatch =
@@ -124,7 +124,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             <ArrowRight size={18} />
           </Link>
         ) : (
-          <AcceptButton status={status} canAccept={canAccept} onAcceptClick={onAcceptClick} />
+          <AcceptButton status={isPending} canAccept={canAccept} onAcceptClick={onAcceptClick} />
         )}
       </div>
       {!accepted && isEmailMismatch && (
@@ -146,17 +146,17 @@ const AcceptButton = ({
   canAccept,
   onAcceptClick,
 }: {
-  status: 'pending' | 'success' | 'error' | 'idle';
+  status: boolean;
   canAccept: boolean;
   onAcceptClick: () => void;
 }) => {
   return (
     <Button
       className="px-4 py-2 rounded-lg shadow-sm transition-colors font-medium"
-      disabled={status === 'pending' || !canAccept}
+      disabled={status || !canAccept}
       onClick={onAcceptClick}
     >
-      {status === 'pending' ? 'Accepting...' : canAccept ? 'Accept invite' : 'Sign in to accept'}
+      {status ? 'Accepting...' : canAccept ? 'Accept invite' : 'Sign in to accept'}
     </Button>
   );
 };

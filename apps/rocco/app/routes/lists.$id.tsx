@@ -1,4 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
+import { listsService } from '@hominem/lists-services';
 import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
@@ -15,8 +16,7 @@ import UserAvatar from '~/components/user-avatar';
 import { MapInteractionProvider } from '~/contexts/map-interaction-context';
 import { useGeolocation } from '~/hooks/useGeolocation';
 import { requireAuth } from '~/lib/guards';
-import { trpc } from '~/lib/trpc/client';
-import { createCaller } from '~/lib/trpc/server';
+import { useListById } from '~/lib/hono';
 
 import type { Route } from './+types/lists.$id';
 
@@ -28,8 +28,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     return redirect('/404');
   }
 
-  const trpcServer = createCaller(request);
-  const list = await trpcServer.lists.getById({ id });
+  const list = await listsService.getById(id);
   if (!list) {
     return redirect('/404');
   }
@@ -46,7 +45,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     data: list,
     isLoading,
     error,
-  } = trpc.lists.getById.useQuery(
+  } = useListById(
     { id: listId },
     {
       initialData: loaderData.list,

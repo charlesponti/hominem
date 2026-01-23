@@ -2,7 +2,7 @@ import {
   deleteAccountForUser,
   getAccountByUserAndProvider,
   listAccountsByProvider,
-} from '@hominem/auth';
+} from '@hominem/auth/server';
 import { ContentService } from '@hominem/notes-services';
 import { logger } from '@hominem/utils/logger';
 import { TRPCError } from '@trpc/server';

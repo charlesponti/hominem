@@ -1,3 +1,4 @@
+import { toast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import {
   AlertDialog,
@@ -10,10 +11,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@hominem/ui/components/ui/alert-dialog';
-import { toast } from '@hominem/ui/components/ui/use-toast';
 import { RefreshCcw, Trash2 } from 'lucide-react';
 
-import type { RouterOutput } from '~/lib/trpc';
+import type { Account } from '~/lib/types/account.types';
 
 import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid';
 
@@ -23,7 +23,7 @@ export function PlaidAccountStatus({
   account,
   onRefresh,
 }: {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  account: Account;
   onRefresh?: () => void;
 }) {
   const syncItemMutation = useSyncPlaidItem();

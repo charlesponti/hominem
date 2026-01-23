@@ -12,8 +12,8 @@ import { type Dispatch, type SetStateAction, useId, useState } from 'react';
 import { AccountSelect } from '~/components/account-select';
 import { CategorySelect } from '~/components/category-select';
 import { GroupBySelect } from '~/components/group-by-select';
+import { useFinanceCategories } from '~/lib/hooks/use-analytics';
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
-import { trpc } from '~/lib/trpc';
 
 type AccountsData = ReturnType<typeof useFinanceAccounts>['data'];
 
@@ -93,7 +93,9 @@ function FilterChips({
     });
   }
   if (selectedAccount && selectedAccount !== 'all') {
-    const accountLabel = accounts?.find((a) => a.id === selectedAccount)?.name || 'Account';
+    const accountLabel = Array.isArray(accounts)
+      ? accounts.find((a) => a.id === selectedAccount)?.name || 'Account'
+      : 'Account';
     chips.push({
       key: 'account',
       label: accountLabel,
@@ -177,8 +179,9 @@ export function AnalyticsFilters({
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
   const accountsQuery = useFinanceAccounts();
-  const { data: categories = [], isLoading: categoriesLoading } =
-    trpc.finance.categories.list.useQuery();
+  const categoriesQuery = useFinanceCategories();
+  const categories = Array.isArray(categoriesQuery.data) ? categoriesQuery.data : [];
+  const categoriesLoading = categoriesQuery.isLoading;
 
   const isLoading = accountsQuery.isLoading || categoriesLoading;
   const dateFromId = useId();
@@ -187,14 +190,13 @@ export function AnalyticsFilters({
   const compareToPreviousId = useId();
 
   // Ensure we have valid data even during loading
-  const safeAccounts = accountsQuery.data || [];
-  const safeCategories =
-    categories
-      .map((category) => ({
-        id: category.category || '',
-        name: category.category || '',
-      }))
-      .filter((cat) => cat.id && cat.name) || [];
+  const safeAccounts = Array.isArray(accountsQuery.data) ? accountsQuery.data : [];
+  const safeCategories = categories
+    .map((category) => ({
+      id: category.category || '',
+      name: category.category || '',
+    }))
+    .filter((cat) => cat.id && cat.name);
 
   const [open, setOpen] = useState(false);
 

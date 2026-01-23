@@ -5,7 +5,7 @@ import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { trpc } from '~/lib/trpc/client';
+import { useMyVisits } from '~/lib/hono';
 import { buildImageUrl } from '~/lib/utils';
 
 export default function VisitsPage() {
@@ -15,10 +15,10 @@ export default function VisitsPage() {
   const [endDate, setEndDate] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  const { data: visits, isLoading } = trpc.places.getMyVisits.useQuery({
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-  });
+  const { data: visits, isLoading } = useMyVisits(
+    { startDate: startDate || undefined, endDate: endDate || undefined },
+    { enabled: isAuthenticated },
+  );
 
   if (!isAuthenticated) {
     return (

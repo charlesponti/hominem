@@ -1,4 +1,4 @@
-import { trpc } from '~/lib/trpc/client';
+import { usePlacesAutocomplete } from '~/lib/hono';
 
 export type { GooglePlacePrediction } from '~/lib/types';
 
@@ -14,14 +14,5 @@ export function useGooglePlacesAutocomplete({
   const trimmed = input.trim();
   const enabled = trimmed.length >= 3;
 
-  return trpc.places.autocomplete.useQuery(
-    location
-      ? { query: trimmed, latitude: location.latitude, longitude: location.longitude }
-      : { query: trimmed },
-    {
-      enabled,
-      staleTime: 1000 * 60,
-      retry: 1,
-    },
-  );
+  return usePlacesAutocomplete(trimmed, location?.latitude, location?.longitude);
 }

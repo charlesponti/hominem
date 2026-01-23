@@ -4,14 +4,14 @@ import { MapPin } from 'lucide-react';
 import { href } from 'react-router';
 
 import { useGeolocation } from '~/hooks/useGeolocation';
-import { trpc } from '~/lib/trpc/client';
+import { useNearbyPlaces } from '~/lib/hono';
 
 import PlaceRow from './place-row';
 
 type Props = {
   latitude?: number;
   longitude?: number;
-  radiusKm?: number;
+  radiusMeters?: number;
   limit?: number;
 };
 
@@ -31,7 +31,7 @@ const formatDistance = (distanceInMeters: number) => {
 export default function PlacesNearby({
   latitude: providedLatitude,
   longitude: providedLongitude,
-  radiusKm = 5,
+  radiusMeters = 5000,
   limit = 4,
 }: Props) {
   // Get user's current location from cached hook (only if not provided via props)
@@ -51,13 +51,9 @@ export default function PlacesNearby({
     data: places = [],
     isLoading,
     error,
-  } = trpc.places.getNearbyFromLists.useQuery({
-    latitude: location.latitude,
-    longitude: location.longitude,
-    radiusKm,
-    limit,
-  });
+  } = useNearbyPlaces(location.latitude, location.longitude, radiusMeters);
   const title = <h2 className="heading-2">Nearby</h2>;
+  const radiusKm = (radiusMeters ?? 5000) / 1000;
 
   if (isLoading) {
     return (

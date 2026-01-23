@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@hominem/ui/components/ui/select';
 import { Textarea } from '@hominem/ui/components/ui/textarea';
-import { useToast } from '@hominem/ui/components/ui/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@hominem/ui/dialog';
+import { useToast } from '@hominem/ui';
 import { Loader2, RefreshCw, Twitter } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';

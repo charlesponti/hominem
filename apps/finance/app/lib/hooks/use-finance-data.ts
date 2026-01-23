@@ -1,24 +1,18 @@
-import type { AppRouter } from '@hominem/trpc';
+import type {
+  AccountListOutput,
+  AccountGetOutput,
+  AccountAllOutput,
+  TransactionListOutput,
+  InstitutionsListOutput,
+} from '@hominem/hono-rpc/types/finance.types';
 import type { SortOption } from '@hominem/ui/hooks';
-import type { TRPCClientErrorLike } from '@trpc/client';
-import type { UseTRPCQueryResult } from '@trpc/react-query/shared';
 
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 
-import type { RouterOutput } from '~/lib/trpc';
-import type {
-  AccountsListOutput,
-  AccountsAllOutput,
-  AccountsAccountsOutput,
-  AccountsConnectionsOutput,
-  InstitutionsListOutput,
-  TransactionsListOutput,
-} from '~/lib/trpc/finance-types';
+import { useHonoQuery } from '~/lib/hono';
 
-import { trpc } from '~/lib/trpc';
-
-// Derive filter args from tRPC input schema where possible
+// Derive filter args from input schema where possible
 export interface FilterArgs {
   accountId?: string;
   dateFrom?: Date;
@@ -26,33 +20,34 @@ export interface FilterArgs {
   description?: string;
 }
 
-type TRPCError = TRPCClientErrorLike<AppRouter>;
+export const useFinanceAccounts = () =>
+  useHonoQuery<AccountListOutput>(['finance', 'accounts', 'list'], async (client) => {
+    const res = await client.api.finance.accounts.list.$post({
+      json: { includeInactive: false },
+    });
+    return res.json();
+  });
 
-export const useFinanceAccounts = (): UseTRPCQueryResult<AccountsListOutput, TRPCError> =>
-  trpc.finance.accounts.list.useQuery({ includeInactive: false });
+export const useFinancialInstitutions = () =>
+  useHonoQuery<InstitutionsListOutput>(['finance', 'institutions', 'list'], async (client) => {
+    const res = await client.api.finance.institutions.list.$post({ json: {} });
+    return res.json();
+  });
 
-export const useFinancialInstitutions = (): UseTRPCQueryResult<InstitutionsListOutput, TRPCError> =>
-  trpc.finance.institutions.list.useQuery();
-
-type Account = RouterOutput['finance']['accounts']['list'][number];
+type Account = AccountListOutput[number];
 type TransformedAccount = Omit<Account, 'createdAt' | 'updatedAt' | 'lastUpdated'> & {
   createdAt: Date;
   updatedAt: Date;
   lastUpdated: Date | null;
 };
 
-export function useFinanceAccountsWithMap(): UseTRPCQueryResult<
-  RouterOutput['finance']['accounts']['list'],
-  TRPCError
-> & {
-  accounts: TransformedAccount[];
-  accountsMap: Map<string, TransformedAccount>;
-} {
+export function useFinanceAccountsWithMap() {
   const accountsQuery = useFinanceAccounts();
 
   // Transform accounts to convert string dates to Date objects
   const transformedAccounts = useMemo<TransformedAccount[]>(() => {
-    return (accountsQuery.data || []).map((account) => ({
+    if (!Array.isArray(accountsQuery.data)) return [];
+    return accountsQuery.data.map((account) => ({
       ...account,
       createdAt: new Date(account.createdAt),
       updatedAt: new Date(account.updatedAt),
@@ -67,21 +62,18 @@ export function useFinanceAccountsWithMap(): UseTRPCQueryResult<
   }, [transformedAccounts]);
 
   return {
-    ...(accountsQuery as any),
+    ...accountsQuery,
     accounts: transformedAccounts,
     accountsMap,
   };
 }
 
 // Hook that adds value by transforming data for unified view
-export function useAllAccounts(): {
-  isLoading: boolean;
-  error: TRPCError | null;
-  refetch: UseTRPCQueryResult<AccountsAllOutput, TRPCError>['refetch'];
-  accounts: AccountsAllOutput['accounts'];
-  connections: AccountsAllOutput['connections'];
-} {
-  const allAccountsQuery = trpc.finance.accounts.all.useQuery();
+export function useAllAccounts() {
+  const allAccountsQuery = useHonoQuery(['finance', 'accounts', 'all'], async (client) => {
+    const res = await client.api.finance.accounts.all.$post({ json: {} });
+    return res.json();
+  });
 
   return {
     isLoading: allAccountsQuery.isLoading,
@@ -92,13 +84,20 @@ export function useAllAccounts(): {
   };
 }
 
-export function useAccountById(id: string): UseTRPCQueryResult<AccountsGetOutput, TRPCError> & {
-  account: AccountsGetOutput | undefined;
-} {
-  const accountQuery = trpc.finance.accounts.get.useQuery({ id }, { enabled: !!id });
+export function useAccountById(id: string) {
+  const accountQuery = useHonoQuery(
+    ['finance', 'accounts', 'get', id],
+    async (client) => {
+      const res = await client.api.finance.accounts.get.$post({
+        json: { id },
+      });
+      return res.json();
+    },
+    { enabled: !!id },
+  );
 
   return {
-    ...(accountQuery as any),
+    ...accountQuery,
     account: accountQuery.data ?? undefined,
   };
 }
@@ -116,14 +115,8 @@ export function useFinanceTransactions({
   sortOptions = [{ field: 'date', direction: 'desc' }],
   page = 0,
   limit = 25,
-}: UseFinanceTransactionsOptions = {}): {
-  transactions: TransactionsListOutput['data'];
-  totalTransactions: number;
-  isLoading: boolean;
-  error: TRPCError | null;
-  refetch: UseTRPCQueryResult<TransactionsListOutput, TRPCError>['refetch'];
-} {
-  // Convert sort options to tRPC format
+}: UseFinanceTransactionsOptions = {}) {
+  // Convert sort options to API format
   const sortBy = useMemo(() => {
     return sortOptions[0]?.field || 'date';
   }, [sortOptions]);
@@ -134,16 +127,33 @@ export function useFinanceTransactions({
 
   const offset = page * limit;
 
-  const query = trpc.finance.transactions.list.useQuery(
-    {
-      from: filters.dateFrom ? format(filters.dateFrom, 'yyyy-MM-dd') : undefined,
-      to: filters.dateTo ? format(filters.dateTo, 'yyyy-MM-dd') : undefined,
-      account: filters.accountId && filters.accountId !== 'all' ? filters.accountId : undefined,
-      description: filters.description,
-      limit,
-      offset,
-      sortBy: sortBy as 'date' | 'amount' | 'description',
-      sortDirection: sortOrder as 'asc' | 'desc',
+  const query = useHonoQuery(
+    [
+      'finance',
+      'transactions',
+      'list',
+      {
+        filters,
+        sortBy,
+        sortOrder,
+        offset,
+        limit,
+      },
+    ],
+    async (client) => {
+      const res = await client.api.finance.transactions.list.$post({
+        json: {
+          from: filters.dateFrom ? format(filters.dateFrom, 'yyyy-MM-dd') : undefined,
+          to: filters.dateTo ? format(filters.dateTo, 'yyyy-MM-dd') : undefined,
+          account: filters.accountId && filters.accountId !== 'all' ? filters.accountId : undefined,
+          description: filters.description,
+          limit,
+          offset,
+          sortBy: [sortBy],
+          sortDirection: [sortOrder as 'asc' | 'desc'],
+        },
+      });
+      return res.json();
     },
     {
       staleTime: 1 * 60 * 1000,
@@ -158,3 +168,11 @@ export function useFinanceTransactions({
     refetch: query.refetch,
   };
 }
+
+// Export types that match the old finance-types structure
+export type AccountsListOutput = AccountListOutput;
+export type AccountsGetOutput = AccountGetOutput;
+export type AccountsAllOutput = AccountAllOutput;
+export type AccountsAccountsOutput = AccountListOutput;
+export type AccountsConnectionsOutput = AccountAllOutput['connections'];
+export type TransactionsListOutput = TransactionListOutput;

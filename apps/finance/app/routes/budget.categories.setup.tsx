@@ -10,20 +10,23 @@ import { ArrowLeft, Check, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import type { RouterOutput } from '~/lib/trpc';
+import { useTransactionCategories, useBulkCreateBudgetCategories } from '~/lib/hooks/use-budget';
 
-import { trpc } from '~/lib/trpc';
-
-export type TransactionCategory = RouterOutput['finance']['budget']['transactionCategories'][0];
+interface TransactionCategory {
+  name: string;
+  transactionCount: number;
+  averageAmount: number;
+  suggestedBudget: number;
+}
 
 export default function BudgetCategoriesSetup() {
   const navigate = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
 
   const { data: transactionCategories, isLoading: isLoadingTransactionCategories } =
-    trpc.finance.budget.transactionCategories.useQuery();
+    useTransactionCategories();
 
-  const bulkCreateMutation = trpc.finance.budget.bulkCreateFromTransactions.useMutation();
+  const bulkCreateMutation = useBulkCreateBudgetCategories();
 
   const isAllSelected = selectedCategories.size === (transactionCategories?.length || 0);
 

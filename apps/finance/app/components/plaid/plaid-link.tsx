@@ -1,4 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
+import { toast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert';
 import {
@@ -8,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card';
-import { toast } from '@hominem/ui/components/ui/use-toast';
 import { AlertCircle, Building2, Link } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { type PlaidLinkOnExit, type PlaidLinkOnSuccess, usePlaidLink } from 'react-plaid-link';

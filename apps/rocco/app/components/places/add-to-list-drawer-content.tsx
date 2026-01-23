@@ -12,8 +12,8 @@ import { Check, Loader2, Plus } from 'lucide-react';
 import { useMemo, useState, useCallback } from 'react';
 import { useRevalidator } from 'react-router';
 
+import { useLists, useCreateList } from '~/lib/hono';
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places';
-import { trpc } from '~/lib/trpc/client';
 import { cn } from '~/lib/utils';
 
 interface AddToListDrawerContentProps {
@@ -33,7 +33,7 @@ export const AddToListDrawerContent = ({
   const [searchQuery, setSearchQuery] = useState('');
   const revalidator = useRevalidator();
 
-  const { isLoading, data: rawLists } = trpc.lists.getAll.useQuery();
+  const { isLoading, data: rawLists } = useLists();
 
   const lists = useMemo(() => {
     if (!(rawLists && googleMapsId)) {
@@ -61,7 +61,7 @@ export const AddToListDrawerContent = ({
     onSettled: () => setLoadingListId(null),
   });
 
-  const createListMutation = trpc.lists.create.useMutation();
+  const createListMutation = useCreateList();
 
   const onListSelectChange = useCallback(
     (listId: string, isInList: boolean) => {
@@ -184,7 +184,7 @@ export const AddToListDrawerContent = ({
                   >
                     <span className="flex-1">{list.name}</span>
                     {loadingListId === list.id ||
-                      (createListMutation.isPending && searchQuery.trim() === list.name) ? (
+                    (createListMutation.isPending && searchQuery.trim() === list.name) ? (
                       <Loader2 size={16} className="animate-spin" />
                     ) : (
                       <Check

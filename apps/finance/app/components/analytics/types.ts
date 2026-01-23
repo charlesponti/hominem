@@ -1,5 +1,16 @@
-import type { RouterOutput } from '~/lib/trpc';
+// Analytics types - Define explicitly since we don't have RouterOutput inference anymore
+// These match the output from the analyze endpoints
 
-// Derive types from tRPC instead of defining them locally
-export type CategoryBreakdownItem = RouterOutput['finance']['analyze']['categoryBreakdown'][0];
-export type TopMerchantItem = RouterOutput['finance']['analyze']['topMerchants'][0];
+export interface CategoryBreakdownItem {
+  category: string;
+  amount: number;
+  percentage: number;
+  transactionCount: number;
+}
+
+export interface TopMerchantItem {
+  merchantName: string;
+  amount: number;
+  transactionCount: number;
+  category: string | null;
+}

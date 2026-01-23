@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 
 import { requireAuth } from '~/lib/guards';
-import { trpc } from '~/lib/trpc/client';
+import { useDeleteAccount } from '~/lib/hono';
 
 import type { Route } from './+types/account';
 
@@ -33,7 +33,7 @@ function MemberSince({ createdAt }: { createdAt: string }) {
 
 function DeleteAccount() {
   const navigate = useNavigate();
-  const { isError, mutate } = trpc.user.deleteAccount.useMutation({
+  const { isError, mutate } = useDeleteAccount({
     onSuccess: () => {
       return navigate('/login');
     },
@@ -42,7 +42,7 @@ function DeleteAccount() {
   const onSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      mutate();
+      mutate({});
     },
     [mutate],
   );

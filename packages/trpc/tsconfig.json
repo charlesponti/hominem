@@ -9,7 +9,8 @@
     "declarationMap": true,
     "noEmit": false,
     "composite": true,
-    "tsBuildInfoFile": "../../.cache/trpc.tsbuildinfo",
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsc/.tsbuildinfo",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -25,6 +26,7 @@
     "src/test/**",
     "**/*.test.ts",
     "**/*.spec.ts",
+    "**/*.type-perf.test.ts",
     "**/__tests__",
     "**/__mocks__",
     "*.tsbuildinfo",

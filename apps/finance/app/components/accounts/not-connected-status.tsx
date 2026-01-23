@@ -2,7 +2,7 @@ import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { AlertCircleIcon, LinkIcon } from 'lucide-react';
 
-import type { RouterOutput } from '~/lib/trpc';
+import type { Account } from '~/lib/types/account.types';
 
 import { AccountConnectionDialog } from './account-connection-dialog';
 
@@ -10,7 +10,7 @@ export function NotConnectedStatus({
   account,
   showDialog,
 }: {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  account: Account;
   showDialog?: boolean;
 }) {
   return (

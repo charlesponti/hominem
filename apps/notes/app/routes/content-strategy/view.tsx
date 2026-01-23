@@ -1,6 +1,6 @@
 import { Button } from '@hominem/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
-import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/card';
+import { useToast } from '@hominem/ui';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 

@@ -5,84 +5,25 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "development": "./src/index.ts",
-      "default": "./build/index.js"
-    },
-    "./supabase": {
-      "types": "./build/supabase/index.d.ts",
-      "development": "./src/supabase/index.ts",
-      "default": "./build/supabase/index.js"
-    },
-    "./consts": {
-      "types": "./build/consts.d.ts",
-      "development": "./src/consts.ts",
-      "default": "./build/consts.js"
-    },
-    "./dates": {
-      "types": "./build/dates.d.ts",
-      "development": "./src/dates.ts",
-      "default": "./build/dates.js"
-    },
-    "./images": {
-      "types": "./build/images.d.ts",
-      "development": "./src/images.ts",
-      "default": "./build/images.js"
-    },
-    "./google": {
-      "types": "./build/google.d.ts",
-      "development": "./src/google.ts",
-      "default": "./build/google.js"
-    },
-    "./http": {
-      "types": "./build/http.d.ts",
-      "development": "./src/http.ts",
-      "default": "./build/http.js"
-    },
-    "./location": {
-      "types": "./build/location/index.d.ts",
-      "development": "./src/location/index.ts",
-      "default": "./build/location/index.js"
-    },
-    "./logger": {
-      "types": "./build/logger.d.ts",
-      "development": "./src/logger.ts",
-      "default": "./build/logger.js"
-    },
-    "./markdown": {
-      "types": "./build/markdown/index.d.ts",
-      "development": "./src/markdown/index.ts",
-      "default": "./build/markdown/index.js"
-    },
-    "./nlp": {
-      "types": "./build/nlp/index.d.ts",
-      "development": "./src/nlp/index.ts",
-      "default": "./build/nlp/index.js"
-    },
-    "./schemas": {
-      "types": "./build/schemas/index.d.ts",
-      "development": "./src/schemas/index.ts",
-      "default": "./build/schemas/index.js"
-    },
-    "./scraping": {
-      "types": "./build/scraping/index.d.ts",
-      "development": "./src/scraping/index.ts",
-      "default": "./build/scraping/index.js"
-    },
-    "./time": {
-      "types": "./build/time.d.ts",
-      "development": "./src/time.ts",
-      "default": "./build/time.js"
-    },
-    "./types/change-management": {
-      "types": "./build/types/change-management.d.ts",
-      "development": "./src/types/change-management.ts",
-      "default": "./build/types/change-management.js"
-    }
+    ".": "./src/index.ts",
+    "./supabase": "./src/supabase/index.ts",
+    "./consts": "./src/consts.ts",
+    "./dates": "./src/dates.ts",
+    "./images": "./src/images.ts",
+    "./google": "./src/google.ts",
+    "./http": "./src/http.ts",
+    "./location": "./src/location/index.ts",
+    "./logger": "./src/logger.ts",
+    "./markdown": "./src/markdown/index.ts",
+    "./nlp": "./src/nlp/index.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./scraping": "./src/scraping/index.ts",
+    "./time": "./src/time.ts",
+    "./types/change-management": "./src/types/change-management.ts"
   },
   "scripts": {
     "build": "tsc -d",
+    "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",

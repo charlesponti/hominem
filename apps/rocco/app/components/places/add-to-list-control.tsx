@@ -5,7 +5,7 @@ import { ListPlus } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import z from 'zod';
 
-import { trpc } from '~/lib/trpc/client';
+import { usePlaceById, usePlaceByGoogleId, useHonoUtils } from '~/lib/hono';
 
 const AddToListDrawerContent = lazy(() => import('./add-to-list-drawer-content'));
 
@@ -16,22 +16,14 @@ interface AddToListControlProps {
 const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const [open, setOpen] = useState(false);
   const { isAuthenticated } = useSupabaseAuthContext();
-  const utils = trpc.useUtils();
+  const utils = useHonoUtils();
   const isUuid = z.uuid().safeParse(placeId).success;
 
   // Fetch place details
-  const { data: placeDetails } = trpc.places.getDetailsById.useQuery(
-    { id: placeId },
-    {
-      enabled: isAuthenticated && isUuid,
-    },
-  );
+  const { data: placeDetails } = usePlaceById(isAuthenticated && isUuid ? placeId : undefined);
 
-  const { data: placeDetailsByGoogleId } = trpc.places.getDetailsByGoogleId.useQuery(
-    { googleMapsId: placeId },
-    {
-      enabled: isAuthenticated && !isUuid,
-    },
+  const { data: placeDetailsByGoogleId } = usePlaceByGoogleId(
+    isAuthenticated && !isUuid ? placeId : undefined,
   );
 
   const place = placeDetails || placeDetailsByGoogleId;
@@ -39,9 +31,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const googleMapsId = isUuid ? place?.googleMapsId : placeId;
 
   const handleMouseEnter = () => {
-    if (isAuthenticated) {
-      utils.lists.getAll.prefetch();
-    }
+    // No-op - prefetching handled by useHonoUtils
   };
 
   if (!(isAuthenticated && place)) {

@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { DateMonthSelect } from '~/components/date-month-select';
-import { trpc } from '~/lib/trpc';
+import { useTransactionCategories } from '~/lib/hooks/use-budget';
 
 interface BudgetTrackingHeaderProps {
   selectedMonthYear: string;
@@ -16,7 +16,7 @@ export function BudgetTrackingHeader({
 }: BudgetTrackingHeaderProps) {
   const navigate = useNavigate();
 
-  const { data: transactionCategories } = trpc.finance.budget.transactionCategories.useQuery();
+  const { data: transactionCategories } = useTransactionCategories();
 
   return (
     <div className="flex flex-col gap-4">

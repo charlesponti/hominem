@@ -1,12 +1,12 @@
 import { List } from '@hominem/ui/list';
 
-import { trpc } from '~/lib/trpc/client';
+import { useLists } from '~/lib/hono';
 
 import ListForm from './list-form';
 import { ListRow } from './list-row';
 
 export default function Lists() {
-  const { data: lists = [], isLoading, error } = trpc.lists.getAll.useQuery();
+  const { data: lists = [], isLoading, error } = useLists();
 
   const title = <h2 className="heading-2">Lists</h2>;
 

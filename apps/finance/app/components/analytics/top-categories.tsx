@@ -2,8 +2,8 @@ import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
 
+import { useCategoryBreakdown } from '~/lib/hooks/use-analytics';
 import { formatCurrency } from '~/lib/number.utils';
-import { trpc } from '~/lib/trpc';
 
 interface TopCategoriesProps {
   dateFrom?: Date;
@@ -17,11 +17,11 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
     data: categoryBreakdown,
     isLoading,
     error,
-  } = trpc.finance.analyze.categoryBreakdown.useQuery({
-    from: dateFrom?.toISOString().split('T')[0],
-    to: dateTo?.toISOString().split('T')[0],
-    account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    limit: '5',
+  } = useCategoryBreakdown({
+    from: dateFrom,
+    to: dateTo,
+    account: selectedAccount,
+    limit: 5,
   });
 
   const skeletonItems = Array.from({ length: 5 }, (_, i) => i);
@@ -50,15 +50,17 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
           </div>
         ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching categories.</div>
-        ) : categoryBreakdown && categoryBreakdown.length > 0 ? (
+        ) : categoryBreakdown &&
+          'breakdown' in categoryBreakdown &&
+          categoryBreakdown.breakdown.length > 0 ? (
           <div className="space-y-3">
-            {categoryBreakdown.map((cat) => (
+            {categoryBreakdown.breakdown.map((cat) => (
               <div key={cat.category} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                 <Badge variant="secondary" className="w-12 justify-center">
-                  {cat.count}x
+                  {cat.transactionCount}x
                 </Badge>
                 <span className="text-sm">{cat.category}</span>
-                <span className="text-sm font-mono text-right">{formatCurrency(cat.total)}</span>
+                <span className="text-sm font-mono text-right">{formatCurrency(cat.amount)}</span>
               </div>
             ))}
           </div>

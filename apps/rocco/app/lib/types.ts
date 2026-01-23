@@ -1,15 +1,20 @@
-import type { inferRouterOutputs } from '@trpc/server';
-
-import type { AppRouter } from './trpc/router';
+import type {
+  SentInvite as SentInviteType,
+  ReceivedInvite as ReceivedInviteType,
+} from '@hominem/invites-services';
+import type { List as ListType } from '@hominem/lists-services';
+import type {
+  Place as PlaceType,
+  PlaceWithLists as PlaceWithListsType,
+  Item as ItemType,
+} from '@hominem/places-services';
 
 export * from './shared-types';
 
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-
-// Extract types from tRPC router outputs
-export type List = RouterOutputs['lists']['getAll'][number];
-export type SentInvite = RouterOutputs['invites']['getByList'][number];
-export type Place = RouterOutputs['places']['getDetailsById'];
-export type PlaceWithLists = RouterOutputs['places']['getDetailsById'];
-export type Item = RouterOutputs['items']['getByListId'][number];
-export type ReceivedInvite = RouterOutputs['invites']['getReceived'][number];
+// Re-export service types
+export type List = ListType;
+export type SentInvite = SentInviteType;
+export type Place = PlaceType;
+export type PlaceWithLists = PlaceWithListsType;
+export type Item = ItemType;
+export type ReceivedInvite = ReceivedInviteType;

@@ -1,7 +1,7 @@
 import { List } from 'lucide-react';
 import { Link } from 'react-router';
 
-import { trpc } from '~/lib/trpc/client';
+import { useHonoUtils, useListById } from '~/lib/hono';
 import { buildImageUrl } from '~/lib/utils';
 
 type ListRowProps = {
@@ -13,19 +13,12 @@ type ListRowProps = {
 };
 
 export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
-  const utils = trpc.useUtils();
+  const utils = useHonoUtils();
   const thumbnailUrl = buildImageUrl(imageUrl, 80, 80);
 
   return (
     <li className="flex items-center gap-3 p-2 group hover:bg-gray-50 transition-colors">
-      <Link
-        to={`/lists/${id}`}
-        viewTransition
-        onMouseEnter={() => {
-          utils.lists.getById.prefetch({ id });
-        }}
-        className="flex-1 min-w-0 focus:outline-none"
-      >
+      <Link to={`/lists/${id}`} viewTransition className="flex-1 min-w-0 focus:outline-none">
         <div className="flex items-center gap-4">
           {imageUrl !== undefined ? (
             <>

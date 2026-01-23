@@ -5,7 +5,7 @@ export default {
   ssr: true,
   build: {
     rollupOptions: {
-      external: ['@hominem/lists-services', '@hominem/places-services'],
+      external: ['@hominem/hono-client', '@hominem/lists-services', '@hominem/places-services'],
     },
   },
 } satisfies Config;

@@ -1,0 +1,40 @@
+{
+  "name": "@hominem/hono-rpc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./types/*": "./src/types/*.ts",
+    "./routes/*": "./src/routes/*.ts",
+    "./middleware/*": "./src/middleware/*.ts"
+  },
+  "scripts": {
+    "typecheck": "bunx tsc --noEmit --incremental",
+    "build": "tsc -b tsconfig.json",
+    "dev": "bunx tsc --noEmit --incremental --watch",
+    "clean": "rm -rf build node_modules/.cache"
+  },
+  "dependencies": {
+    "@hominem/auth": "workspace:*",
+    "@hominem/db": "workspace:*",
+    "@hominem/events-services": "workspace:*",
+    "@hominem/finance-services": "workspace:*",
+    "@hominem/lists-services": "workspace:*",
+    "@hominem/places-services": "workspace:*",
+    "@hominem/services": "workspace:*",
+    "@hominem/utils": "workspace:*",
+    "@hono/zod-validator": "^0.4.1",
+    "@supabase/supabase-js": "2.88.0",
+    "dotenv": "^16.0.0",
+    "drizzle-orm": "0.40.0",
+    "hono": "^4.10.7",
+    "plaid": "^28.0.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.2",
+    "typescript": "5.9.3"
+  }
+}

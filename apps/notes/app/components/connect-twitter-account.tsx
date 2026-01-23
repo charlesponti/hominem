@@ -1,5 +1,5 @@
 import { Button } from '@hominem/ui/button';
-import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { useToast } from '@hominem/ui';
 import { Twitter } from 'lucide-react';
 
 import { useTwitterOAuth } from '~/hooks/use-twitter';

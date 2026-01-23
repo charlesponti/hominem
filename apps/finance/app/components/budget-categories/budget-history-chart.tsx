@@ -10,18 +10,14 @@ import {
   YAxis,
 } from 'recharts';
 
-import { trpc } from '~/lib/trpc';
+import { useBudgetHistory } from '~/lib/hooks/use-budget';
 
 interface BudgetHistoryChartProps {
   historyMonths?: number;
 }
 
 export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProps) {
-  const {
-    data: historyData,
-    isLoading,
-    error,
-  } = trpc.finance.budget.history.useQuery({ months: historyMonths });
+  const { data: historyData, isLoading, error } = useBudgetHistory({ months: historyMonths });
 
   if (isLoading) {
     return (
@@ -61,7 +57,7 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
         <CardTitle>Budget Adherence Over Time ({historyMonths} Months)</CardTitle>
       </CardHeader>
       <CardContent className="h-[300px] md:h-[400px]">
-        {historyData && historyData.length > 0 ? (
+        {historyData && Array.isArray(historyData) && historyData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={historyData}>
               <CartesianGrid strokeDasharray="3 3" />

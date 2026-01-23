@@ -1,4 +1,4 @@
-import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/auth';
+import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/auth/server';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';

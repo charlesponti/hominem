@@ -19,6 +19,7 @@ export type {
   Content,
   ContentInsert,
   ContentStatus,
+  ContentStrategy,
   ContentStrategiesInsert,
   ContentStrategiesSelect,
   ContentType,

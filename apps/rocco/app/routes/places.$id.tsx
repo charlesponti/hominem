@@ -1,3 +1,4 @@
+import { placesService } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
 import z from 'zod';
 
@@ -16,7 +17,6 @@ import PlaceStatus from '~/components/places/PlaceStatus';
 import PlaceWebsite from '~/components/places/PlaceWebsite';
 import { VisitHistory } from '~/components/places/VisitHistory';
 import { requireAuth } from '~/lib/guards';
-import { createCaller } from '~/lib/trpc/server';
 
 import type { Route } from './+types/places.$id';
 
@@ -27,13 +27,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     throw new Error('Place ID is required');
   }
 
-  const trpcServer = createCaller(request);
-
   let data: PlaceWithLists;
   if (z.uuid().safeParse(id).success) {
-    data = await trpcServer.places.getDetailsById({ id });
+    data = await placesService.getDetailsById({ id });
   } else {
-    data = await trpcServer.places.getDetailsByGoogleId({ googleMapsId: id });
+    data = await placesService.getDetailsByGoogleId({ googleMapsId: id });
   }
 
   return { place: data };

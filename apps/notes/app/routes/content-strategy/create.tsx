@@ -1,10 +1,10 @@
-import type { ContentStrategy } from '@hominem/db/schema';
+import type { ContentStrategy } from '@hominem/services/types';
 
 import { Button } from '@hominem/ui/button';
 import { Checkbox } from '@hominem/ui/components/ui/checkbox';
 import { Label } from '@hominem/ui/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@hominem/ui/components/ui/tabs';
-import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { useToast } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { Copy, FileText, Save } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -232,7 +232,7 @@ Opportunities: ${strategy.competitiveAnalysis?.opportunities || 'No opportunitie
 ${strategy.keyInsights?.map((insight) => `- ${insight}`).join('\n') || '- No insights available'}
 
 ## Blog Content
-**Title:** ${strategy.contentPlan?.blog?.title || 'No title available'}  
+**Title:** ${strategy.contentPlan?.blog?.title || 'No title available'}
 **Word Count:** ${strategy.contentPlan?.blog?.wordCount || 'Not specified'}
 
 **Outline:**
@@ -242,7 +242,7 @@ ${
     .join('\n') || 'No outline available'
 }
 
-**SEO Keywords:** ${strategy.contentPlan?.blog?.seoKeywords?.join(', ') || 'No keywords available'}  
+**SEO Keywords:** ${strategy.contentPlan?.blog?.seoKeywords?.join(', ') || 'No keywords available'}
 **Call to Action:** ${strategy.contentPlan?.blog?.callToAction || 'No call to action available'}
 
 ## Social Media Content

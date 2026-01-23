@@ -1,4 +1,4 @@
-import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { useToast } from '@hominem/ui';
 
 import { trpc } from '~/lib/trpc';
 

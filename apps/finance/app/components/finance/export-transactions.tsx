@@ -1,5 +1,5 @@
+import { toast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
-import { toast } from '@hominem/ui/components/ui/use-toast';
 
 import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 

@@ -6,7 +6,7 @@ import { type SyntheticEvent, useCallback, useId, useState } from 'react';
 
 import type { SentInvite } from '~/lib/types';
 
-import { trpc } from '~/lib/trpc/client';
+import { useCreateInvite } from '~/lib/hono';
 
 type SentInviteFormProps = {
   listId: string;
@@ -17,12 +17,7 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
   const [email, setEmail] = useState('');
   const emailId = useId();
 
-  const mutation = trpc.invites.create.useMutation({
-    onSuccess: (invite) => {
-      setEmail('');
-      onCreate(invite as SentInvite);
-    },
-  });
+  const mutation = useCreateInvite();
 
   const onNameChange = useCallback((e: SyntheticEvent<HTMLInputElement>) => {
     setEmail(e.currentTarget.value);
@@ -32,8 +27,10 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
     async (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault();
       await mutation.mutateAsync({ listId, invitedUserEmail: email });
+      setEmail('');
+      onCreate({ listId, invitedUserEmail: email } as SentInvite);
     },
-    [email, mutation, listId],
+    [email, mutation, listId, onCreate],
   );
 
   return (

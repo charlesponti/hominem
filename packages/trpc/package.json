@@ -3,13 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "types": "./build/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "development": "./src/index.ts",
-      "default": "./build/index.js"
-    },
+    ".": "./src/index.ts",
     "./lib/*": "./src/lib/*.ts",
     "./middleware/*": "./src/middleware/*.ts",
     "./routes/*": "./src/routes/*.ts",
@@ -17,9 +12,12 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsc --noEmit --incremental",
+    "typecheck:ci": "tsc --noEmit --force",
+    "typecheck:watch": "bunx tsc --noEmit --incremental --watch",
     "build": "tsc -b tsconfig.json",
-    "dev": "tsc -b tsconfig.json -w"
+    "clean": "rm -rf build node_modules/.cache",
+    "dev": "bunx tsc -b tsconfig.json -w"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",

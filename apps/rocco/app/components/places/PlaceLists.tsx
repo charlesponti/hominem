@@ -7,7 +7,7 @@ import type { PlaceWithLists } from '~/lib/types';
 
 import { ListRow } from '~/components/lists/list-row';
 import AddPlaceToList from '~/components/places/add-to-list-control';
-import { trpc } from '~/lib/trpc/client';
+import { useListsContainingPlace } from '~/lib/hono';
 
 type Props = {
   place: PlaceWithLists;
@@ -19,14 +19,9 @@ const PlaceLists = ({ place }: Props) => {
   const resolvedPlaceId = place.id;
   const googleMapsId = place.googleMapsId;
 
-  const { data: listsContainingPlace = [], isLoading } = trpc.lists.getContainingPlace.useQuery(
-    {
-      placeId: resolvedPlaceId || undefined,
-      googleMapsId: googleMapsId || undefined,
-    },
-    {
-      enabled: isAuthenticated && Boolean(resolvedPlaceId || googleMapsId),
-    },
+  const { data: listsContainingPlace = [], isLoading } = useListsContainingPlace(
+    resolvedPlaceId || undefined,
+    googleMapsId || undefined,
   );
 
   if (!isAuthenticated) {
@@ -52,7 +47,7 @@ const PlaceLists = ({ place }: Props) => {
 
       {(isLoading || listsContainingPlace.length > 0) && (
         <List isLoading={isLoading} loadingSize="md">
-          {listsContainingPlace.map((list) => (
+          {listsContainingPlace.map((list: any) => (
             <ListRow
               key={list.id}
               id={list.id}

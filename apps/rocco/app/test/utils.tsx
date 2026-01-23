@@ -154,62 +154,28 @@ function createUseQuery() {
   };
 }
 
-const mockTrpcClient: any = {
-  useUtils: vi.fn(() => ({
-    lists: {
-      getAll: createUseQuery(),
-      getById: createUseQuery(),
-    },
-    places: {
-      getAll: createUseQuery(),
-      getById: createUseQuery(),
-      getNearbyFromLists: createUseQuery(),
-    },
+// Mock Hono hooks
+vi.mock('~/lib/hono', () => ({
+  useLists: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useListById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  useCreateList: vi.fn(() => createUseMutationQuery()),
+  useUpdateList: vi.fn(() => createUseMutationQuery()),
+  useDeleteList: vi.fn(() => createUseMutationQuery()),
+  usePlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  usePlaceById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlaceByGoogleId: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlacesAutocomplete: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useHonoUtils: vi.fn(() => ({
+    invalidate: vi.fn(),
+    prefetch: vi.fn(),
   })),
-  lists: {
-    getAll: { useQuery: vi.fn() },
-    getById: { useQuery: vi.fn() },
-    create: { useMutation: createUseMutationQuery() },
-    update: { useMutation: createUseMutationQuery() },
-    delete: { useMutation: createUseMutationQuery() },
-  },
-  places: {
-    getAll: { useQuery: vi.fn() },
-    getById: { useQuery: vi.fn() },
-    getNearbyFromLists: { useQuery: vi.fn() },
-    autocomplete: { useQuery: vi.fn() },
-    create: { useMutation: createUseMutationQuery() },
-    update: { useMutation: createUseMutationQuery() },
-    delete: { useMutation: createUseMutationQuery() },
-  },
-  items: {
-    getByListId: { useQuery: vi.fn() },
-    addToList: { useMutation: createUseMutationQuery() },
-    removeFromList: { useMutation: createUseMutationQuery() },
-  },
-  invites: {
-    getAll: { useQuery: vi.fn() },
-    getByList: { useQuery: vi.fn() },
-    create: { useMutation: vi.fn() },
-    accept: { useMutation: vi.fn() },
-    decline: { useMutation: vi.fn() },
-  },
-  user: {
-    deleteAccount: { useMutation: vi.fn() },
-  },
-} as const;
-
-vi.mock('~/lib/trpc/client', () => ({
-  trpc: mockTrpcClient,
 }));
 
-const MockTRPCProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
+const MockHonoProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
 
-vi.mock('~/lib/trpc/provider', () => ({
-  TRPCProvider: MockTRPCProvider,
+vi.mock('~/lib/hono/provider', () => ({
+  HonoProvider: MockHonoProvider,
 }));
-
-export { mockTrpcClient };
 
 export function renderWithProviders(
   ui: ReactElement,
@@ -248,8 +214,8 @@ export function renderWithRouter(
 }
 
 class ResizeObserver {
-  observe() { }
-  unobserve() { }
-  disconnect() { }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 }
 (global as typeof globalThis).ResizeObserver = ResizeObserver;

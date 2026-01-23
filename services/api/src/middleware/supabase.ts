@@ -3,8 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Queue } from 'bullmq';
 import type { Context, MiddlewareHandler } from 'hono';
 
-import { UserAuthService } from '@hominem/auth';
-import { toHominemUser } from '@hominem/auth/server';
+import { toHominemUser, UserAuthService } from '@hominem/auth/server';
 import { type CookieMethodsServer, createServerClient, parseCookieHeader } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { setCookie } from 'hono/cookie';

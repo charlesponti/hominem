@@ -12,7 +12,7 @@ import { Trash2 } from 'lucide-react';
 import { useCallback } from 'react';
 
 import { useModal } from '~/hooks/useModal';
-import { trpc } from '~/lib/trpc/client';
+import { useRemoveCollaborator, useHonoUtils } from '~/lib/hono';
 
 type RemoveCollaboratorButtonProps = {
   listId: string;
@@ -28,8 +28,8 @@ export default function RemoveCollaboratorButton({
   userEmail,
 }: RemoveCollaboratorButtonProps) {
   const { isOpen, open, close } = useModal();
-  const utils = trpc.useUtils();
-  const removeCollaborator = trpc.lists.removeCollaborator.useMutation();
+  const utils = useHonoUtils();
+  const removeCollaborator = useRemoveCollaborator();
 
   const handleRemove = useCallback(async () => {
     // Store previous values for rollback
@@ -37,50 +37,12 @@ export default function RemoveCollaboratorButton({
     const previousInvites = utils.invites.getByList.getData({ listId });
 
     try {
-      // Optimistically update the list cache to remove the collaborator
-      utils.lists.getById.setData({ id: listId }, (old) => {
-        if (!old?.users) {
-          return old;
-        }
-        return {
-          ...old,
-          users: old.users.filter((u) => u.id !== userId),
-        };
-      });
-
-      // Optimistically update the invites list to remove the accepted invite
-      utils.invites.getByList.setData({ listId }, (old) => {
-        if (!old) {
-          return old;
-        }
-        return old.filter((invite) => invite.user_invitedUserId?.id !== userId);
-      });
-
-      // Sync with server
-      await removeCollaborator.mutateAsync({
-        listId,
-        userId,
-      });
-
-      // Invalidate queries to ensure fresh data
-      utils.lists.getById.invalidate({ id: listId });
-      utils.invites.getByList.invalidate({ listId });
-
+      await removeCollaborator.mutateAsync({ listId, userId });
       close();
     } catch (error) {
       console.error('Failed to remove collaborator:', error);
-      // Rollback optimistic updates on error
-      if (previousList) {
-        utils.lists.getById.setData({ id: listId }, previousList);
-      }
-      if (previousInvites) {
-        utils.invites.getByList.setData({ listId }, previousInvites);
-      }
-      // Also invalidate to ensure we get fresh data
-      utils.lists.getById.invalidate({ id: listId });
-      utils.invites.getByList.invalidate({ listId });
     }
-  }, [removeCollaborator, listId, userId, utils, close]);
+  }, [removeCollaborator, listId, userId, close]);
 
   const displayName = userName || userEmail;
 

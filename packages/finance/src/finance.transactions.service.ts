@@ -142,9 +142,7 @@ export function buildWhereConditions(options: QueryOptions): SQL | undefined {
   return filtered.length > 0 ? and(...filtered) : undefined;
 }
 
-export async function queryTransactions(
-  options: QueryOptions,
-): Promise<QueryTransactionsOutput> {
+export async function queryTransactions(options: QueryOptions): Promise<QueryTransactionsOutput> {
   const { userId, limit = 100, offset = 0 } = options;
   if (!userId) return { data: [], filteredCount: 0, totalUserCount: 0 };
 
@@ -288,14 +286,14 @@ export const createTransactionInputSchema = TransactionInsertSchema.pick({
   type: true,
   category: true,
 }).extend({
-  date: z.string().optional().describe('Transaction date (ISO format)'),
+  date: z.date().optional().describe('Transaction date'),
 });
 
 export const createTransactionOutputSchema = TransactionSchema;
 export async function createTransaction(
   input: z.infer<typeof createTransactionInputSchema> & { userId?: string },
   userId?: string,
-): Promise<z.infer<typeof createTransactionOutputSchema>> {
+): Promise<FinanceTransaction> {
   const [result] = await createTransactions(
     [
       {
@@ -309,7 +307,7 @@ export async function createTransaction(
   if (!result) {
     throw new Error('Failed to insert transaction');
   }
-  return result as z.infer<typeof createTransactionOutputSchema>;
+  return result;
 }
 
 /**
@@ -396,7 +394,7 @@ export async function updateTransactionIfNeeded(
 export async function updateTransaction(
   input: z.infer<typeof updateTransactionInputSchema>,
   userId: string,
-): Promise<z.infer<typeof updateTransactionOutputSchema>> {
+): Promise<FinanceTransaction> {
   try {
     const updates: Partial<FinanceTransactionInsert> = {};
     if (input.amount !== undefined) updates.amount = input.amount.toString();
@@ -413,7 +411,7 @@ export async function updateTransaction(
       throw new Error(`Transaction not found or not updated: ${input.transactionId}`);
     }
 
-    return updated as z.infer<typeof updateTransactionOutputSchema>;
+    return updated;
   } catch (error: unknown) {
     logger.error(`Error updating transaction ${input.transactionId}:`, error as Error);
     throw error;

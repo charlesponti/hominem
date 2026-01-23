@@ -1,9 +1,11 @@
-import type { RouterOutput } from '~/lib/trpc';
+import { Banknote } from 'lucide-react';
+
+import type { Account } from '~/lib/types/account.types';
 
 import { AccountStatusDisplay } from './account-status-display';
 
 interface AccountConnectionStatusProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  account: Account;
   showDialog?: boolean;
 }
 
@@ -15,7 +17,7 @@ export function AccountConnectionStatus({
 }
 
 interface AccountConnectionSummaryProps {
-  accounts: RouterOutput['finance']['accounts']['all']['accounts'];
+  accounts: Account[];
 }
 
 export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryProps) {

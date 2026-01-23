@@ -1,6 +1,44 @@
+import { text, uuid, numeric, boolean, timestamp, jsonb, pgEnum, index } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+/**
+ * Column helper functions to reduce type expansion in declarations
+ * These functions use inline column definitions that get properly typed
+ * by Drizzle's type inference, avoiding explicit generic re-declarations
+ */
+
+// Text columns
+export const textColumn = (name: string) => text(name);
+export const requiredTextColumn = (name: string) => text(name).notNull();
+export const optionalTextColumn = (name: string) => text(name);
+export const uniqueTextColumn = (name: string) => text(name).notNull().unique();
+
+// UUID columns
+export const uuidColumn = (name: string) => uuid(name).primaryKey().defaultRandom();
+export const requiredUuidColumn = (name: string) => uuid(name).notNull();
+export const optionalUuidColumn = (name: string) => uuid(name);
+export const foreignKeyUuidColumn = (name: string) => uuid(name);
+
+// Numeric columns
+export const numericColumn = (name: string) => numeric(name);
+export const requiredNumericColumn = (name: string) => numeric(name).notNull();
+export const optionalNumericColumn = (name: string) => numeric(name);
+
+// Boolean columns
+export const booleanColumn = (name: string, defaultValue = false) =>
+  boolean(name).default(defaultValue);
+
+// Timestamp columns
+export const createdAtColumn = () => timestamp('created_at').defaultNow().notNull();
+export const updatedAtColumn = () => timestamp('updated_at').defaultNow().notNull();
+export const optionalTimestampColumn = (name: string) => timestamp(name);
+export const requiredTimestampColumn = (name: string) => timestamp(name).notNull();
+
+// JSON columns
+export const jsonColumn = (name: string) => jsonb(name).$type<Json>();
+export const optionalJsonColumn = (name: string) => jsonb(name).$type<Json>();
 
 /**
  * Shared content tag for categorization across all content types

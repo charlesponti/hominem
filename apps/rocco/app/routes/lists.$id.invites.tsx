@@ -1,21 +1,16 @@
-import type { inferRouterOutputs } from '@trpc/server';
-
+import { invitesService } from '@hominem/invites-services';
+import { listsService } from '@hominem/lists-services';
 import { Alert, PageTitle } from '@hominem/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useRevalidator } from 'react-router';
 
-import type { AppRouter } from '~/lib/trpc/router';
 import type { SentInvite } from '~/lib/types';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
 import SentInviteForm from '~/components/lists/sent-invite-form';
 import SentInvites from '~/components/lists/sent-invites';
-import { createCaller } from '~/lib/trpc/server';
 
 import type { Route } from './+types/lists.$id.invites';
-
-type RouterOutput = inferRouterOutputs<AppRouter>;
-type ListInviteFromLoader = RouterOutput['invites']['getByList'][number];
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const listId = params.id;
@@ -23,10 +18,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     throw new Response('List ID is required', { status: 400 });
   }
 
-  const trpcServer = createCaller(request);
   const [list, invites] = await Promise.all([
-    trpcServer.lists.getById({ id: listId }),
-    trpcServer.invites.getByList({ listId }),
+    listsService.getById(listId),
+    invitesService.getByList({ listId }),
   ]);
 
   return { list, invites };
@@ -35,7 +29,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export default function ListInvites({ loaderData }: Route.ComponentProps) {
   const { list, invites: initialInvites } = loaderData;
   const revalidator = useRevalidator();
-  const [optimisticInvites, setOptimisticInvites] = useState<ListInviteFromLoader[] | null>(null);
+  const [optimisticInvites, setOptimisticInvites] = useState<typeof initialInvites | null>(null);
 
   // Use optimistic state if available, otherwise use loader data
   const invites = useMemo(

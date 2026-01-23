@@ -6,6 +6,7 @@
     "lint": "bunx oxlint ./app",
     "format": "bunx oxfmt ./app",
     "build": "react-router build",
+    "clean": "rm -rf build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "tsc --noEmit",

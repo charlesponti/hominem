@@ -1,14 +1,13 @@
+import { tripsService } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
 import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal';
-import { createCaller } from '~/lib/trpc/server';
 
 import type { Route } from './+types/trips.$tripId';
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const trpcServer = createCaller(request);
-  const trip = await trpcServer.trips.getById({ id: params.tripId });
+  const trip = await tripsService.getById({ id: params.tripId });
   if (!trip) {
     throw new Response('Not Found', { status: 404 });
   }

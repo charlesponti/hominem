@@ -17,7 +17,7 @@ import {
 import { LinkIcon, UnlinkIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import type { RouterOutput } from '~/lib/trpc';
+import type { Account } from '~/lib/types/account.types';
 
 import { useFinancialInstitutions } from '~/lib/hooks/use-finance-data';
 import {
@@ -27,7 +27,7 @@ import {
 import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution';
 
 interface AccountConnectionDialogProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  account: Account;
   trigger?: React.ReactNode;
 }
 

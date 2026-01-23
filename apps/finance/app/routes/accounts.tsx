@@ -1,3 +1,4 @@
+import { toast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert';
 import { Badge } from '@hominem/ui/components/ui/badge';
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card';
-import { toast } from '@hominem/ui/components/ui/use-toast';
 import {
   AlertTriangle,
   Building2,

@@ -1,3 +1,5 @@
+import type { AppRouter } from '@hominem/trpc';
+
 import { cleanupTestData, createTestUser } from '@hominem/db/test/utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -7,12 +9,12 @@ import { createTRPCTestClient } from './trpc-test-utils.js';
 describe('Events tRPC Router', () => {
   let server: ReturnType<typeof createServer>;
   let testUserId: string;
-  let trpc: ReturnType<typeof createTRPCTestClient>;
+  let trpc: ReturnType<typeof createTRPCTestClient<AppRouter>>;
 
   beforeEach(async () => {
     server = createServer();
     testUserId = await createTestUser();
-    trpc = createTRPCTestClient(server, testUserId);
+    trpc = createTRPCTestClient<AppRouter>(server, testUserId);
   });
 
   afterEach(async () => {

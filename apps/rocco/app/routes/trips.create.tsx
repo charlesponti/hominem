@@ -1,3 +1,4 @@
+import { tripsService } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
@@ -5,12 +6,10 @@ import { useId } from 'react';
 import { Form, Link, useNavigation } from 'react-router';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
-import { createCaller } from '~/lib/trpc/server';
 
 import type { Route } from './+types/trips.create';
 
 export async function action({ request }: Route.ActionArgs) {
-  const trpcServer = createCaller(request);
   const formData = await request.formData();
   const name = formData.get('name') as string;
   const startDateStr = formData.get('startDate') as string;
@@ -21,7 +20,7 @@ export async function action({ request }: Route.ActionArgs) {
   const endDate = endDateStr ? new Date(endDateStr) : undefined;
 
   try {
-    const trip = await trpcServer.trips.create({ name, startDate, endDate });
+    const trip = await tripsService.create({ name, startDate, endDate });
     return { success: true, tripId: trip.id };
   } catch {
     return { success: false, error: 'Failed to create trip' };

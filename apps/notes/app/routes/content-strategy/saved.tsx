@@ -1,7 +1,7 @@
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent } from '@hominem/ui/card';
 import { PageContainer } from '@hominem/ui/components/layout/page-container';
-import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { useToast } from '@hominem/ui';
 import { Eye, FileText, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router';
 

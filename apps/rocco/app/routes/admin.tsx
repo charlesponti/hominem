@@ -2,7 +2,7 @@ import { Button } from '@hominem/ui/button';
 import { useState } from 'react';
 import { redirect } from 'react-router';
 
-import { trpc } from '~/lib/trpc/client';
+import { useRefreshGooglePlaces } from '~/lib/hono';
 
 import type { Route } from './+types/admin';
 
@@ -27,7 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function AdminRoute() {
   const [result, setResult] = useState<null | RefreshResult>(null);
   const [loading, setLoading] = useState(false);
-  const refreshMutation = trpc.admin.refreshGooglePlaces.useMutation();
+  const refreshMutation = useRefreshGooglePlaces();
 
   const handleRefresh = async () => {
     setLoading(true);

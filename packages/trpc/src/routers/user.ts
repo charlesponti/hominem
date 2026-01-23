@@ -1,7 +1,7 @@
-import type { SupabaseAuthUser } from '@hominem/auth/server'
-import { UserAuthService } from '@hominem/auth'
-import { z } from 'zod'
-import { protectedProcedure, router } from '../procedures'
+import { type SupabaseAuthUser, UserAuthService } from '@hominem/auth/server';
+import { z } from 'zod';
+
+import { protectedProcedure, router } from '../procedures';
 
 export const userRouter = router({
   updateProfile: protectedProcedure
@@ -9,24 +9,24 @@ export const userRouter = router({
       z.object({
         name: z.string().optional(),
         image: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
         const updatedUser = await UserAuthService.updateProfileBySupabaseId(ctx.supabaseId, {
           name: input.name,
           image: input.image,
-        })
+        });
 
         if (!updatedUser) {
-          throw new Error('User not found')
+          throw new Error('User not found');
         }
 
-        return updatedUser
+        return updatedUser;
       } catch (error) {
         throw new Error(
-          `Failed to update user profile: ${error instanceof Error ? error.message : String(error)}`
-        )
+          `Failed to update user profile: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }),
 
@@ -36,7 +36,7 @@ export const userRouter = router({
         email: z.string().email(),
         name: z.string().optional(),
         image: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
@@ -50,14 +50,14 @@ export const userRouter = router({
           app_metadata: {
             isAdmin: false,
           },
-        }
+        };
 
-        const user = await UserAuthService.findOrCreateUser(supabaseUser as SupabaseAuthUser)
-        return user
+        const user = await UserAuthService.findOrCreateUser(supabaseUser as SupabaseAuthUser);
+        return user;
       } catch (error) {
         throw new Error(
-          `Failed to find or create user: ${error instanceof Error ? error.message : String(error)}`
-        )
+          `Failed to find or create user: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }),
-})
+});

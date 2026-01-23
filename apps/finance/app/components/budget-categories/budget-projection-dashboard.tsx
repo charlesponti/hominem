@@ -12,14 +12,14 @@ import {
   YAxis,
 } from 'recharts';
 
+import { useBudgetCategories, useCalculateBudget } from '~/lib/hooks/use-budget';
 import { formatCurrency } from '~/lib/number.utils';
-import { trpc } from '~/lib/trpc';
 
 export function BudgetProjectionDashboard() {
   const [hasCalculated, setHasCalculated] = useState(false);
 
-  const budgetCategories = trpc.finance.budget.categories.list.useQuery();
-  const budgetCalculateMutation = trpc.finance.budget.calculate.useMutation({
+  const budgetCategories = useBudgetCategories();
+  const budgetCalculateMutation = useCalculateBudget({
     onError: (error) => {
       console.error('Budget calculation error:', error.message);
     },

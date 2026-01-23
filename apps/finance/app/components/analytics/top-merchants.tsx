@@ -56,14 +56,14 @@ export function TopMerchants({
           </div>
         ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching merchants.</div>
-        ) : topMerchants && topMerchants.length > 0 ? (
+        ) : topMerchants && 'merchants' in topMerchants && topMerchants.merchants.length > 0 ? (
           <div className="space-y-3">
-            {topMerchants.map((m) => (
-              <div key={m.merchant} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
+            {topMerchants.merchants.map((m) => (
+              <div key={m.name} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                 <Badge variant="secondary" className="w-12 text-center">
-                  {m.frequency}x
+                  {m.transactionCount}x
                 </Badge>
-                <span className="text-sm">{m.merchant}</span>
+                <span className="text-sm">{m.name}</span>
                 <span className="text-sm font-mono text-right">{formatCurrency(m.totalSpent)}</span>
               </div>
             ))}

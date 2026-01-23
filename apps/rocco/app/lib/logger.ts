@@ -1,5 +1,3 @@
-import { TRPCError } from '@trpc/server';
-
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export interface LogContext {
@@ -17,7 +15,7 @@ export interface LogEntry {
   message: string;
   timestamp: string;
   context?: LogContext;
-  error?: Error | TRPCError;
+  error?: Error;
   stack?: string;
 }
 
@@ -65,15 +63,12 @@ class Logger {
             name: error.name,
             message: error.message,
             stack: error.stack,
-            ...(error instanceof TRPCError && {
-              code: error.code,
-            }),
           }
         : undefined,
     });
   }
 
-  private log(level: LogLevel, message: string, context?: LogContext, error?: Error | TRPCError) {
+  private log(level: LogLevel, message: string, context?: LogContext, error?: Error) {
     const entry: LogEntry = {
       level,
       message,
@@ -128,39 +123,12 @@ class Logger {
     this.log('warn', message, context, error);
   }
 
-  error(message: string, context?: LogContext, error?: Error | TRPCError) {
+  error(message: string, context?: LogContext, error?: Error) {
     this.log('error', message, context, error);
   }
 
-  fatal(message: string, context?: LogContext, error?: Error | TRPCError) {
+  fatal(message: string, context?: LogContext, error?: Error) {
     this.log('fatal', message, context, error);
-  }
-
-  // Convenience method for tRPC errors
-  logTRPCError(error: TRPCError, context?: LogContext) {
-    const level = this.getErrorLevel(error);
-    this.log(level, `tRPC Error: ${error.message}`, context, error);
-  }
-
-  // Determine log level based on tRPC error code
-  private getErrorLevel(error: TRPCError): LogLevel {
-    switch (error.code) {
-      case 'BAD_REQUEST':
-      case 'UNAUTHORIZED':
-      case 'FORBIDDEN':
-      case 'NOT_FOUND':
-        return 'warn';
-      case 'TIMEOUT':
-      case 'TOO_MANY_REQUESTS':
-        return 'error';
-      case 'INTERNAL_SERVER_ERROR':
-      case 'METHOD_NOT_SUPPORTED':
-      case 'PARSE_ERROR':
-      case 'UNSUPPORTED_MEDIA_TYPE':
-        return 'fatal';
-      default:
-        return 'error';
-    }
   }
 
   // Method for logging API requests

@@ -13,7 +13,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { trpc } from '~/lib/trpc';
+import { useCreateBudgetCategory } from '~/lib/hooks/use-budget';
 
 const categoryColors = [
   'bg-blue-500',
@@ -28,7 +28,7 @@ const categoryColors = [
 
 export default function NewBudgetCategory() {
   const navigate = useNavigate();
-  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation();
+  const createCategoryMutation = useCreateBudgetCategory();
   const nameId = useId();
   const budgetId = useId();
 

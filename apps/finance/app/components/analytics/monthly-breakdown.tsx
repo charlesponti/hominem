@@ -1,8 +1,8 @@
+import type { TimeSeriesDataPoint } from '@hominem/finance-services';
+
 import { Card, CardContent } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
 import { Link, useNavigate } from 'react-router';
-
-import type { RouterOutput } from '~/lib/trpc';
 
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
@@ -78,8 +78,8 @@ function TrendsContent({
   formatDateLabel,
   formatCurrency,
 }: {
-  prevMonth: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number];
-  currMonth: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number];
+  prevMonth: TimeSeriesDataPoint;
+  currMonth: TimeSeriesDataPoint;
   formatDateLabel: (dateStr: string) => string;
   formatCurrency: (n: number) => string;
 }) {
@@ -101,7 +101,7 @@ function TrendsContent({
 }
 
 interface MonthItemProps {
-  item: RouterOutput['finance']['analyze']['spendingTimeSeries']['data'][number];
+  item: TimeSeriesDataPoint;
   compareToPrevious: boolean;
   formatDateLabel: (dateStr: string) => string;
   category: string | undefined;

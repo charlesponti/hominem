@@ -13,7 +13,23 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
-import { type Json, type TransactionLocation, TransactionLocationSchema } from './shared.schema';
+import {
+  type Json,
+  type TransactionLocation,
+  TransactionLocationSchema,
+  createdAtColumn,
+  updatedAtColumn,
+  requiredTextColumn,
+  optionalTextColumn,
+  requiredNumericColumn,
+  optionalNumericColumn,
+  requiredUuidColumn,
+  optionalUuidColumn,
+  booleanColumn,
+  requiredTimestampColumn,
+  optionalTimestampColumn,
+  jsonColumn,
+} from './shared.schema';
 import { users } from './users.schema';
 
 // Enums
@@ -24,7 +40,9 @@ export const transactionTypeEnum = pgEnum('transaction_type', [
   'debit',
   'transfer',
   'investment',
-]);
+] as const);
+export const TransactionTypeEnum = z.enum(transactionTypeEnum.enumValues as [string, ...string[]]);
+
 export type TransactionType = (typeof transactionTypeEnum.enumValues)[number];
 export const TransactionTypes = transactionTypeEnum.enumValues.reduce(
   (acc, val) => {
@@ -61,13 +79,13 @@ export const financialInstitutions = pgTable(
   'financial_institutions',
   {
     id: text('id').primaryKey(), // Plaid institution ID or custom ID for non-Plaid institutions
-    name: text('name').notNull(),
-    url: text('url'),
-    logo: text('logo'),
-    primaryColor: text('primary_color'),
-    country: text('country'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    name: requiredTextColumn('name'),
+    url: optionalTextColumn('url'),
+    logo: optionalTextColumn('logo'),
+    primaryColor: optionalTextColumn('primary_color'),
+    country: optionalTextColumn('country'),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     index('financial_institutions_search_idx').using(
@@ -82,22 +100,20 @@ export type FinancialInstitutionInsert = typeof financialInstitutions.$inferInse
 
 // Plaid items table to track connected institutions
 export const plaidItems = pgTable('plaid_items', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: requiredUuidColumn('id').primaryKey().defaultRandom(),
   itemId: text('item_id').notNull().unique(), // Plaid's item_id
-  accessToken: text('access_token').notNull(),
+  accessToken: requiredTextColumn('access_token'),
   institutionId: text('institution_id')
     .references(() => financialInstitutions.id)
     .notNull(),
   status: institutionStatusEnum('status').default('active').notNull(),
-  consentExpiresAt: timestamp('consent_expires_at'),
-  transactionsCursor: text('transactions_cursor'),
-  error: text('error'),
-  lastSyncedAt: timestamp('last_synced_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  userId: uuid('user_id')
-    .references(() => users.id)
-    .notNull(),
+  consentExpiresAt: optionalTimestampColumn('consent_expires_at'),
+  transactionsCursor: optionalTextColumn('transactions_cursor'),
+  error: optionalTextColumn('error'),
+  lastSyncedAt: optionalTimestampColumn('last_synced_at'),
+  createdAt: createdAtColumn(),
+  updatedAt: updatedAtColumn(),
+  userId: requiredUuidColumn('user_id').references(() => users.id),
 });
 export type PlaidItem = typeof plaidItems.$inferSelect;
 export type PlaidItemSelect = typeof plaidItems.$inferSelect;
@@ -107,28 +123,26 @@ export type PlaidItemInsert = typeof plaidItems.$inferInsert;
 export const financeAccounts = pgTable(
   'finance_accounts',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: requiredUuidColumn('id').primaryKey().defaultRandom(),
     type: accountTypeEnum('type').notNull(),
-    balance: numeric('balance').notNull(),
-    interestRate: numeric('interest_rate'),
-    minimumPayment: numeric('minimum_payment'),
-    name: text('name').notNull(),
-    mask: text('mask'),
-    isoCurrencyCode: text('iso_currency_code'),
-    subtype: text('subtype'),
-    officialName: text('official_name'),
-    limit: numeric('limit'),
-    meta: jsonb('meta').$type<Json>(),
-    lastUpdated: timestamp('last_updated'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    balance: requiredNumericColumn('balance'),
+    interestRate: optionalNumericColumn('interest_rate'),
+    minimumPayment: optionalNumericColumn('minimum_payment'),
+    name: requiredTextColumn('name'),
+    mask: optionalTextColumn('mask'),
+    isoCurrencyCode: optionalTextColumn('iso_currency_code'),
+    subtype: optionalTextColumn('subtype'),
+    officialName: optionalTextColumn('official_name'),
+    limit: optionalNumericColumn('limit'),
+    meta: jsonColumn('meta'),
+    lastUpdated: optionalTimestampColumn('last_updated'),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
     // Optional foreign keys to institution and plaid linkage
     institutionId: text('institution_id').references(() => financialInstitutions.id),
-    plaidItemId: uuid('plaid_item_id').references(() => plaidItems.id),
-    plaidAccountId: text('plaid_account_id'),
-    userId: uuid('user_id')
-      .references(() => users.id)
-      .notNull(),
+    plaidItemId: optionalUuidColumn('plaid_item_id').references(() => plaidItems.id),
+    plaidAccountId: optionalTextColumn('plaid_account_id'),
+    userId: requiredUuidColumn('user_id').references(() => users.id),
   },
   (table) => [
     index('finance_accounts_search_idx').using(
@@ -144,35 +158,33 @@ export type FinanceAccountInsert = typeof financeAccounts.$inferInsert;
 export const transactions = pgTable(
   'transactions',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: requiredUuidColumn('id').primaryKey().defaultRandom(),
     type: transactionTypeEnum('type').notNull(),
-    amount: numeric('amount').notNull(),
-    date: timestamp('date').notNull(),
-    description: text('description'),
-    merchantName: text('merchant_name'),
+    amount: requiredNumericColumn('amount'),
+    date: requiredTimestampColumn('date'),
+    description: optionalTextColumn('description'),
+    merchantName: optionalTextColumn('merchant_name'),
     accountId: uuid('account_id')
       .references(() => financeAccounts.id)
       .notNull(),
-    fromAccountId: uuid('from_account_id').references(() => financeAccounts.id),
-    toAccountId: uuid('to_account_id').references(() => financeAccounts.id),
-    status: text('status'),
-    category: text('category'),
-    parentCategory: text('parent_category'),
-    excluded: boolean('excluded').default(false),
-    tags: text('tags'),
-    accountMask: text('account_mask'),
-    note: text('note'),
-    recurring: boolean('recurring').default(false),
-    pending: boolean('pending').default(false),
-    paymentChannel: text('payment_channel'),
+    fromAccountId: optionalUuidColumn('from_account_id').references(() => financeAccounts.id),
+    toAccountId: optionalUuidColumn('to_account_id').references(() => financeAccounts.id),
+    status: optionalTextColumn('status'),
+    category: optionalTextColumn('category'),
+    parentCategory: optionalTextColumn('parent_category'),
+    excluded: booleanColumn('excluded'),
+    tags: optionalTextColumn('tags'),
+    accountMask: optionalTextColumn('account_mask'),
+    note: optionalTextColumn('note'),
+    recurring: booleanColumn('recurring'),
+    pending: booleanColumn('pending'),
+    paymentChannel: optionalTextColumn('payment_channel'),
     location: jsonb('location').$type<TransactionLocation>(),
     plaidTransactionId: text('plaid_transaction_id').unique(),
     source: text('source').default('manual'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-    userId: uuid('user_id')
-      .references(() => users.id)
-      .notNull(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
+    userId: requiredUuidColumn('user_id').references(() => users.id),
   },
   (table) => [
     index('transactions_user_id_idx').on(table.userId),
@@ -187,21 +199,22 @@ export const transactions = pgTable(
 export type FinanceTransaction = typeof transactions.$inferSelect;
 export type FinanceTransactionSelect = typeof transactions.$inferSelect;
 export type FinanceTransactionInsert = typeof transactions.$inferInsert;
-export const insertTransactionSchema = createInsertSchema(transactions);
+export const insertTransactionSchema = createInsertSchema(transactions, {
+  type: TransactionTypeEnum,
+  location: TransactionLocationSchema.optional().nullable(),
+});
 export const updateTransactionSchema = createSelectSchema(transactions);
 
 export const budgetCategories = pgTable(
   'budget_categories',
   {
-    id: uuid('id').primaryKey(),
-    name: text('name').notNull(),
+    id: requiredUuidColumn('id').primaryKey(),
+    name: requiredTextColumn('name'),
     type: budgetCategoryTypeEnum('type').notNull(),
-    budgetId: uuid('budget_id'),
-    averageMonthlyExpense: numeric('average_monthly_expense'),
-    color: text('color'),
-    userId: uuid('user_id')
-      .references(() => users.id)
-      .notNull(),
+    budgetId: optionalUuidColumn('budget_id'),
+    averageMonthlyExpense: optionalNumericColumn('average_monthly_expense'),
+    color: optionalTextColumn('color'),
+    userId: requiredUuidColumn('user_id').references(() => users.id),
   },
   (table) => [
     index('budget_categories_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
@@ -213,16 +226,14 @@ export const budgetCategories = pgTable(
 export const budgetGoals = pgTable(
   'budget_goals',
   {
-    id: uuid('id').primaryKey(),
-    name: text('name').notNull(),
-    targetAmount: numeric('target_amount').notNull(),
-    currentAmount: numeric('current_amount').notNull(),
-    startDate: timestamp('start_date').notNull(),
-    endDate: timestamp('end_date'),
-    categoryId: uuid('category_id').references(() => budgetCategories.id),
-    userId: uuid('user_id')
-      .references(() => users.id)
-      .notNull(),
+    id: requiredUuidColumn('id').primaryKey(),
+    name: requiredTextColumn('name'),
+    targetAmount: requiredNumericColumn('target_amount'),
+    currentAmount: requiredNumericColumn('current_amount'),
+    startDate: requiredTimestampColumn('start_date'),
+    endDate: optionalTimestampColumn('end_date'),
+    categoryId: optionalUuidColumn('category_id').references(() => budgetCategories.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id),
   },
   (table) => [
     index('budget_goals_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
@@ -305,7 +316,6 @@ export type BudgetGoalInsert = typeof budgetGoals.$inferInsert;
 import * as z from 'zod';
 
 export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
-export const TransactionTypeEnum = z.enum(transactionTypeEnum.enumValues as [string, ...string[]]);
 
 export const FinanceAccountSchema = createSelectSchema(financeAccounts, {
   type: AccountTypeEnum,

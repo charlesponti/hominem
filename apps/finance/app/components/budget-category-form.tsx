@@ -21,15 +21,14 @@ import { Dialog, DialogContent } from '@hominem/ui/dialog';
 import { Input } from '@hominem/ui/input';
 import { useEffect, useId, useState } from 'react';
 
-import { type RouterOutput, trpc } from '~/lib/trpc';
+import type { BudgetCategory } from '~/lib/types/budget.types';
 
-type BudgetCategoryFormData = Pick<
-  RouterOutput['finance']['budget']['categories']['list'][number],
-  'name' | 'type' | 'averageMonthlyExpense'
->;
+import { useCreateBudgetCategory, useUpdateBudgetCategory } from '~/lib/hooks/use-budget';
+
+type BudgetCategoryFormData = Pick<BudgetCategory, 'name' | 'type' | 'averageMonthlyExpense'>;
 
 interface BudgetCategoryFormProps {
-  category?: RouterOutput['finance']['budget']['categories']['list'][number];
+  category?: BudgetCategory;
   onSave: (data: BudgetCategoryFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -46,8 +45,8 @@ export function BudgetCategoryForm({
   const [averageMonthlyExpense, setAverageMonthlyExpense] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const createCategoryMutation = trpc.finance.budget.categories.create.useMutation();
-  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation();
+  const createCategoryMutation = useCreateBudgetCategory();
+  const updateCategoryMutation = useUpdateBudgetCategory();
 
   const nameId = useId();
   const typeId = useId();

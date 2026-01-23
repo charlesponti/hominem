@@ -1,4 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
+import { invitesService } from '@hominem/invites-services';
 import { PageTitle } from '@hominem/ui';
 import { List } from '@hominem/ui/list';
 import { Loading } from '@hominem/ui/loading';
@@ -11,8 +12,7 @@ import type { ReceivedInvite } from '~/lib/types';
 import ReceivedInviteItem from '~/components/ReceivedInviteItem';
 import { getAuthState } from '~/lib/auth.server';
 import { env } from '~/lib/env';
-import { buildInvitePreview } from '~/lib/services/invite-preview.service';
-import { createCaller } from '~/lib/trpc/server';
+import { buildInvitePreview } from '~/lib/services/invite-preview.server';
 
 import type { Route } from './+types/invites';
 
@@ -37,9 +37,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   }
 
-  // Authenticated flow: fetch invites via tRPC
-  const trpcServer = createCaller(request);
-  const invites = (await trpcServer.invites.getReceived(
+  // Authenticated flow: fetch invites via service
+  const invites = (await invitesService.getReceived(
     token ? { token } : undefined,
   )) as ReceivedInvite[];
 

@@ -2,7 +2,7 @@ import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { CheckCircleIcon } from 'lucide-react';
 
-import type { RouterOutput } from '~/lib/trpc';
+import type { Account } from '~/lib/types/account.types';
 
 import { useAllInstitutions } from '~/lib/hooks/use-institutions';
 
@@ -12,11 +12,13 @@ export function ManualInstitutionStatus({
   account,
   showDialog,
 }: {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  account: Account;
   showDialog?: boolean;
 }) {
   const institutionsQuery = useAllInstitutions();
-  const institution = institutionsQuery.data?.find((inst) => inst.id === account.institutionId);
+  const institution = Array.isArray(institutionsQuery.data)
+    ? institutionsQuery.data.find((inst) => inst.id === account.institutionId)
+    : undefined;
   return (
     <div className="flex items-center space-x-2">
       <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">

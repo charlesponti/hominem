@@ -17,12 +17,7 @@ import type { Route } from './+types/root';
 
 import ErrorBoundary from './components/ErrorBoundary';
 import './globals.css';
-import { initProductionLogging } from './lib/trpc/logger';
-import { TRPCProvider } from './lib/trpc/provider';
-
-if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
-  initProductionLogging();
-}
+import { HonoProvider } from './lib/hono/provider';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { getServerSession } = await import('./lib/auth.server');
@@ -97,9 +92,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
             config={supabaseConfig}
             onAuthEvent={handleAuthEvent}
           >
-            <TRPCProvider>
+            <HonoProvider>
               <Outlet />
-            </TRPCProvider>
+            </HonoProvider>
           </SupabaseAuthProvider>
         </UpdateGuard>
         <ScrollRestoration />

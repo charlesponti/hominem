@@ -38,6 +38,9 @@
     "start:dev": "bun apps/api/src/index.ts",
     "start:prod": "bun apps/api/src/index.ts",
     "test": "turbo run test",
+    "test:type-perf": "attest precache && bun test \"**/*.type-perf.test.ts\"",
+    "test:type-perf:update": "attest precache && bun test \"**/*.type-perf.test.ts\" --update-snapshots",
+    "analyze:type-perf": "bun run scripts/analyze-type-performance.ts",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
@@ -48,6 +51,7 @@
     "react-router": "7.12.0"
   },
   "devDependencies": {
+    "@ark/attest": "^0.56.0",
     "@tanstack/ai": "^0.2.0",
     "@turbo/gen": "2.6.3",
     "@types/node": "^22.15.2",

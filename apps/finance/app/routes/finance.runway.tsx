@@ -16,8 +16,8 @@ import {
   YAxis,
 } from 'recharts';
 
+import { useCalculateRunway } from '~/lib/hooks/use-runway';
 import { formatCurrency } from '~/lib/number.utils';
-import { trpc } from '~/lib/trpc';
 
 interface PlannedPurchase {
   description: string;
@@ -41,7 +41,7 @@ export default function RunwayPage() {
     date: '',
   });
 
-  const runwayMutation = trpc.finance.runway.useMutation();
+  const runwayMutation = useCalculateRunway();
 
   const chartData = useMemo(() => {
     const response = runwayMutation.data;

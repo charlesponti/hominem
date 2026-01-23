@@ -51,6 +51,9 @@ bun-debug.log*
 # TypeScript build cache
 .cache/
 
+# @ark/attest snapshots (commit these to track type performance over time)
+# .attest/
+
 # turbo
 .turbo
 

@@ -1,5 +1,3 @@
-import { TRPCError } from '@trpc/server';
-
 import { logger } from './logger';
 
 // Custom error classes for different types of errors
@@ -69,48 +67,44 @@ export function handleValidationError(message: string, field?: string): never {
   throw error;
 }
 
-// Convert custom errors to tRPC errors
-export function toTRPCError(error: unknown): TRPCError {
-  if (error instanceof TRPCError) {
-    return error;
-  }
-
+// Convert custom errors to error response
+export function toErrorResponse(error: unknown): { code: string; message: string } {
   if (error instanceof ValidationError) {
-    return new TRPCError({
+    return {
       code: 'BAD_REQUEST',
       message: error.message,
-    });
+    };
   }
 
   if (error instanceof DatabaseError) {
-    logger.error('Database error converted to tRPC error', { error }, error);
-    return new TRPCError({
+    logger.error('Database error', { error }, error);
+    return {
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Database operation failed',
-    });
+    };
   }
 
   if (error instanceof ExternalServiceError) {
-    logger.error('External service error converted to tRPC error', { error }, error);
-    return new TRPCError({
+    logger.error('External service error', { error }, error);
+    return {
       code: 'INTERNAL_SERVER_ERROR',
       message: `${error.service} service unavailable`,
-    });
+    };
   }
 
   if (error instanceof Error) {
-    logger.error('Unknown error converted to tRPC error', { error }, error);
-    return new TRPCError({
+    logger.error('Unknown error', { error }, error);
+    return {
       code: 'INTERNAL_SERVER_ERROR',
       message: 'An unexpected error occurred',
-    });
+    };
   }
 
-  logger.error('Non-Error object converted to tRPC error', { error });
-  return new TRPCError({
+  logger.error('Non-Error object', { error });
+  return {
     code: 'INTERNAL_SERVER_ERROR',
     message: 'An unexpected error occurred',
-  });
+  };
 }
 
 // Safe async wrapper for procedures
@@ -128,7 +122,7 @@ export function safeAsync<T>(
       },
       error as Error,
     );
-    throw toTRPCError(error);
+    throw toErrorResponse(error);
   });
 }
 
@@ -138,13 +132,6 @@ export function formatErrorResponse(error: unknown): {
   code?: string;
   details?: unknown;
 } {
-  if (error instanceof TRPCError) {
-    return {
-      message: error.message,
-      code: error.code,
-    };
-  }
-
   if (error instanceof ValidationError) {
     return {
       message: error.message,

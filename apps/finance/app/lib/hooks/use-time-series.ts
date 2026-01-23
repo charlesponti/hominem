@@ -2,7 +2,7 @@ import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/finance-serv
 
 import { format } from 'date-fns';
 
-import { trpc } from '../trpc';
+import { useHonoQuery } from '../hono';
 
 export interface TimeSeriesResponse {
   data: TimeSeriesDataPoint[];
@@ -23,7 +23,7 @@ interface TimeSeriesParams {
 }
 
 /**
- * Custom hook to fetch and manage time series data using tRPC
+ * Custom hook to fetch and manage time series data using Hono RPC
  */
 export function useTimeSeriesData({
   dateFrom,
@@ -35,15 +35,34 @@ export function useTimeSeriesData({
   groupBy = 'month',
   enabled = true,
 }: TimeSeriesParams) {
-  const query = trpc.finance.analyze.spendingTimeSeries.useQuery(
-    {
-      from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
-      to: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
-      account: account && account !== 'all' ? account : undefined,
-      category,
-      includeStats,
-      compareToPrevious,
-      groupBy,
+  const query = useHonoQuery<TimeSeriesResponse>(
+    [
+      'finance',
+      'analyze',
+      'spending-time-series',
+      {
+        dateFrom: dateFrom?.toISOString(),
+        dateTo: dateTo?.toISOString(),
+        account,
+        category,
+        includeStats,
+        compareToPrevious,
+        groupBy,
+      },
+    ],
+    async (client) => {
+      const res = await client.api.finance.analyze['spending-time-series'].$post({
+        json: {
+          from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
+          to: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
+          account: account && account !== 'all' ? account : undefined,
+          category,
+          includeStats,
+          compareToPrevious,
+          groupBy,
+        },
+      });
+      return res.json();
     },
     {
       enabled,
@@ -86,6 +105,5 @@ export function useTimeSeriesData({
     ...query,
     chartData,
     formatDateLabel,
-    refetch: query.refetch,
   };
 }

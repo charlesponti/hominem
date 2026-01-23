@@ -1,4 +1,4 @@
-import type { ContentStrategiesSelect } from '@hominem/db/schema';
+import type { ContentStrategiesSelect } from '@hominem/services/types';
 
 export function generateFullStrategyText(strategy: ContentStrategiesSelect) {
   const sections = [

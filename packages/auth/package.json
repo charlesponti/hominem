@@ -3,29 +3,14 @@
   "version": "0.0.0",
   "description": "Unified authentication package for Hominem apps",
   "exports": {
-    ".": {
-      "types": "./build/index.d.ts",
-      "development": "./src/index.ts",
-      "default": "./build/index.js"
-    },
-    "./types": {
-      "types": "./build/types.d.ts",
-      "development": "./src/types.ts",
-      "default": "./build/types.js"
-    },
-    "./server": {
-      "types": "./build/server-index.d.ts",
-      "development": "./src/server-index.ts",
-      "default": "./build/server-index.js"
-    },
-    "./tools": {
-      "types": "./build/tools.d.ts",
-      "development": "./src/tools.ts",
-      "default": "./build/tools.js"
-    }
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./server": "./src/server-index.ts",
+    "./tools": "./src/tools.ts"
   },
   "scripts": {
     "build": "tsc -b",
+    "clean": "rm -rf build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

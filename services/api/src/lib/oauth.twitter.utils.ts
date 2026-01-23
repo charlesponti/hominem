@@ -1,4 +1,4 @@
-import { type AccountRecord, updateAccount } from '@hominem/auth';
+import { type AccountRecord, updateAccount } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
 import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';

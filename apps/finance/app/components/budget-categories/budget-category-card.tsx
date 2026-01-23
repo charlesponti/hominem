@@ -8,16 +8,17 @@ import {
 } from '@hominem/ui/components/ui/card';
 import { Edit3, Trash2 } from 'lucide-react';
 
-import type { RouterOutput } from '~/lib/trpc';
+import type { BudgetCategory } from '~/lib/types/budget.types';
 
-// Derive from tRPC type and add UI-specific properties
-export type DisplayBudgetCategory =
-  RouterOutput['finance']['budget']['categories']['list'][number] & {
-    budgetAmount: number;
-    spent: number;
-    color: string;
-    description?: string;
-  };
+import { cn } from '~/lib/utils';
+
+// Derive from BudgetCategory type and add UI-specific properties
+export type DisplayBudgetCategory = BudgetCategory & {
+  budgetAmount: number;
+  spent: number;
+  color: string;
+  description?: string;
+};
 
 interface BudgetCategoryCardProps {
   category: DisplayBudgetCategory;

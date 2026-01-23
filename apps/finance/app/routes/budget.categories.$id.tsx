@@ -22,7 +22,11 @@ import { Save, Trash2 } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
-import { trpc } from '~/lib/trpc';
+import {
+  useBudgetCategory,
+  useUpdateBudgetCategory,
+  useDeleteBudgetCategory,
+} from '~/lib/hooks/use-budget';
 
 const categoryColors = [
   'bg-blue-500',
@@ -41,13 +45,10 @@ export default function EditBudgetCategory() {
   const nameId = useId();
   const budgetId = useId();
 
-  const { data: category, isLoading } = trpc.finance.budget.categories.get.useQuery(
-    { id: id! },
-    { enabled: !!id },
-  );
+  const { data: category, isLoading } = useBudgetCategory(id!);
 
-  const updateCategoryMutation = trpc.finance.budget.categories.update.useMutation();
-  const deleteCategoryMutation = trpc.finance.budget.categories.delete.useMutation();
+  const updateCategoryMutation = useUpdateBudgetCategory();
+  const deleteCategoryMutation = useDeleteBudgetCategory();
 
   const [formData, setFormData] = useState({
     name: '',

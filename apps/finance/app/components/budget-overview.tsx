@@ -2,9 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components
 import { Target } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { useBudgetCategories } from '~/lib/hooks/use-budget';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
-import { trpc } from '~/lib/trpc';
 
 interface BudgetOverviewProps {
   selectedMonthYear?: string;
@@ -15,7 +15,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
     data: categories,
     isLoading: isLoadingCategories,
     error: errorCategories,
-  } = trpc.finance.budget.categories.list.useQuery();
+  } = useBudgetCategories();
 
   const {
     stats,

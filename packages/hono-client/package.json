@@ -1,0 +1,22 @@
+{
+  "name": "@hominem/hono-client",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts",
+    "./ssr": "./src/ssr/index.ts"
+  },
+  "dependencies": {
+    "@hominem/hono-rpc": "workspace:*",
+    "@tanstack/react-query": "5.90.16",
+    "hono": "^4.10.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}

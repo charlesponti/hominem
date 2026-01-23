@@ -7,10 +7,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { TransactionFilters } from '~/components/finance/transaction-filters';
+import { useCategoryBreakdown } from '~/lib/hooks/use-analytics';
 import { type FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
 import { formatCurrency } from '~/lib/number.utils';
-import { trpc } from '~/lib/trpc';
 
 export default function CategoriesAnalyticsPage() {
   const navigate = useNavigate();
@@ -53,21 +53,22 @@ export default function CategoriesAnalyticsPage() {
     isFetching,
     error,
     refetch: refetchBreakdown,
-  } = trpc.finance.analyze.categoryBreakdown.useQuery({
-    from: debouncedFilters.dateFrom?.toISOString().split('T')[0],
-    to: debouncedFilters.dateTo?.toISOString().split('T')[0],
+  } = useCategoryBreakdown({
+    from: debouncedFilters.dateFrom,
+    to: debouncedFilters.dateTo,
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    limit: '100',
+    limit: 100,
   });
 
   // Calculate total spending for percentage calculations
   const totalSpending = useMemo(() => {
-    return breakdown?.reduce((sum, item) => sum + Number.parseFloat(item.total), 0) || 0;
+    if (!Array.isArray(breakdown)) return 0;
+    return breakdown.reduce((sum, item) => sum + Number.parseFloat(item.total), 0);
   }, [breakdown]);
 
   // Client-side filtering and sorting
   const filteredAndSortedData = useMemo(() => {
-    if (!breakdown) {
+    if (!Array.isArray(breakdown)) {
       return [];
     }
 

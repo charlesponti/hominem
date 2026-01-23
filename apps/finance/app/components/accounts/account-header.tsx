@@ -9,7 +9,7 @@ import {
 } from '@hominem/ui/components/ui/card';
 import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react';
 
-import type { RouterOutput } from '~/lib/trpc';
+import type { Account } from '~/lib/types/account.types';
 
 import { RouteLink } from '~/components/route-link';
 
@@ -17,7 +17,7 @@ import { AccountConnectionDialog } from './account-connection-dialog';
 import { AccountStatusDisplay } from './account-status-display';
 
 interface AccountHeaderProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  account: Account;
   isBalanceVisible: boolean;
   onToggleBalance: () => void;
   onRefresh: () => void;

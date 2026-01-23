@@ -5,7 +5,7 @@ import { Textarea } from '@hominem/ui/textarea';
 import { useEffect, useState } from 'react';
 import { useRevalidator } from 'react-router';
 
-import { trpc } from '~/lib/trpc/client';
+import { useLogVisit, useUpdateVisit, useHonoUtils } from '~/lib/hono';
 
 import { PeopleMultiSelect } from './PeopleMultiSelect';
 
@@ -37,7 +37,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
   const [visitReview, setVisitReview] = useState('');
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
   const revalidator = useRevalidator();
-  const utils = trpc.useUtils();
+  const utils = useHonoUtils();
 
   // Initialize form with visit data when editing
   useEffect(() => {
@@ -74,17 +74,17 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
   }, [visit]);
 
   const handleSuccess = () => {
-    utils.places.getPlaceVisits.invalidate({ placeId });
-    utils.places.getVisitStats.invalidate({ placeId });
+    utils.invalidate(['places', 'place-visits', placeId]);
+    utils.invalidate(['places', 'visit-stats', placeId]);
     revalidator.revalidate();
     onSuccess?.();
   };
 
-  const logVisitMutation = trpc.places.logVisit.useMutation({
+  const logVisitMutation = useLogVisit({
     onSuccess: handleSuccess,
   });
 
-  const updateVisitMutation = trpc.places.updateVisit.useMutation({
+  const updateVisitMutation = useUpdateVisit({
     onSuccess: handleSuccess,
   });
 
@@ -96,7 +96,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
 
     if (isEditing && visit) {
       updateVisitMutation.mutate({
-        visitId: visit.id,
+        id: visit.id,
         title: title.trim(),
         description: description.trim() || undefined,
         date,

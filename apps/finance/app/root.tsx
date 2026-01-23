@@ -18,7 +18,7 @@ import {
 import type { Route } from './+types/root';
 
 import { authConfig, getServerSession } from './lib/auth.server';
-import { TRPCProvider } from './lib/trpc';
+import { HonoProvider } from './lib/hono';
 import './globals.css';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -87,9 +87,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
       config={supabaseEnv}
       onAuthEvent={handleAuthEvent}
     >
-      <TRPCProvider>
+      <HonoProvider>
         <Outlet />
-      </TRPCProvider>
+      </HonoProvider>
     </SupabaseAuthProvider>
   );
 }

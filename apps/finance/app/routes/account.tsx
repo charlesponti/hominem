@@ -1,5 +1,6 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { useApiClient } from '@hominem/ui';
+import { toast } from '@hominem/ui';
 import { Button, buttonVariants } from '@hominem/ui/button';
 import {
   AlertDialog,
@@ -18,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card';
-import { toast } from '@hominem/ui/components/ui/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 

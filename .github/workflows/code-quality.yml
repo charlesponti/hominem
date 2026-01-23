@@ -11,21 +11,21 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     env:
-      CHROMA_URL: "http://localhost:8000"
-      COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      CHROMA_URL: 'http://localhost:8000'
+      COOKIE_SECRET: 'T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U='
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      REDIS_URL: "redis://localhost:6379"
-      RESEND_API_KEY: "SG.7Q9Z9ZQzQ9q"
-      SUPABASE_URL: "http://localhost:54321"
-      SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      VITE_APP_BASE_URL: "https://example.com"
+      REDIS_URL: 'redis://localhost:6379'
+      RESEND_API_KEY: 'SG.7Q9Z9ZQzQ9q'
+      SUPABASE_URL: 'http://localhost:54321'
+      SUPABASE_ANON_KEY: 'T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U='
+      SUPABASE_SERVICE_ROLE_KEY: 'T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U='
+      VITE_APP_BASE_URL: 'https://example.com'
       VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      VITE_SUPABASE_URL: "http://localhost:54321"
-      VITE_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      VITE_SUPABASE_URL: 'http://localhost:54321'
+      VITE_SUPABASE_ANON_KEY: 'T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U='
     services:
       postgres:
         env:
@@ -90,6 +90,9 @@ jobs:
       - name: 🧪 Unit tests
         run: bun run test
 
+      - name: 📊 Type Performance Tests
+        run: bun run test:type-perf
+
   analyze:
     name: Analyze
     # Runner size impacts CodeQL analysis time. To learn more, please see:
@@ -107,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript"]
+        language: ['javascript']
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift' ]
         # Use only 'java' to analyze code written in Java, Kotlin or both
         # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
@@ -150,4 +153,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:${{matrix.language}}"
+          category: '/language:${{matrix.language}}'

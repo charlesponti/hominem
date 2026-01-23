@@ -1,7 +1,10 @@
-import type { RouterOutput } from '~/lib/trpc';
+import type {
+  BudgetCategoriesListOutput,
+  TransactionListOutput,
+} from '@hominem/hono-rpc/types/finance.types';
 
-// Define the type based on what tRPC actually returns
-export type BudgetCategory = RouterOutput['finance']['budget']['categories']['list'][0];
+// Define the type based on what the API returns
+export type BudgetCategory = BudgetCategoriesListOutput[0];
 
 // Define the UI-specific type that includes calculated properties
 export interface BudgetCategoryWithSpending extends BudgetCategory {
@@ -17,8 +20,19 @@ export interface BudgetCategoryWithSpending extends BudgetCategory {
 }
 
 // Budget history data type
-export type BudgetHistoryData = RouterOutput['finance']['budget']['history'][0];
-export type TransactionsList = RouterOutput['finance']['transactions']['list'];
+export interface BudgetHistoryData {
+  date: string;
+  budgeted: number;
+  actual: number;
+}
+
+export type TransactionsList = TransactionListOutput;
+
 // Transaction categories analysis type
-export type TransactionCategoryAnalysis =
-  RouterOutput['finance']['budget']['transactionCategories'][0];
+export interface TransactionCategoryAnalysis {
+  category: string;
+  totalAmount: number;
+  transactionCount: number;
+  averageAmount: number;
+  type: 'income' | 'expense';
+}

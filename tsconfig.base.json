@@ -25,7 +25,7 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "disableSourceOfProjectReferenceRedirect": true,
+    "disableSourceOfProjectReferenceRedirect": false,
     "verbatimModuleSyntax": true
   }
 }

@@ -3,9 +3,9 @@ import { useMemo } from 'react';
 
 import type { BudgetCategoryWithSpending } from '~/lib/types/budget.types';
 
+import { useBudgetCategories } from '~/lib/hooks/use-budget';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
-import { trpc } from '~/lib/trpc';
 
 // Utility functions for budget calculations
 const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -40,7 +40,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
     data: categories,
     isLoading: isLoadingCategories,
     error: errorCategories,
-  } = trpc.finance.budget.categories.list.useQuery();
+  } = useBudgetCategories();
 
   const {
     stats,

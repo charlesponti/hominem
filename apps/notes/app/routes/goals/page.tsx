@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select';
-import { useToast } from '@hominem/ui/components/ui/use-toast';
+import { useToast } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';

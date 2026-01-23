@@ -1,11 +1,11 @@
-import type { RouterOutput } from '~/lib/trpc';
+import type { Account } from '~/lib/types/account.types';
 
 import { ManualInstitutionStatus } from './manual-institution-status';
 import { NotConnectedStatus } from './not-connected-status';
 import { PlaidAccountStatus } from './plaid-account-status';
 
 interface AccountStatusDisplayProps {
-  account: RouterOutput['finance']['accounts']['all']['accounts'][number];
+  account: Account;
   showDialog?: boolean;
   onRefresh?: () => void;
 }

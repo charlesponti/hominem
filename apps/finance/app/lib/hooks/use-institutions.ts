@@ -1,19 +1,33 @@
-import { useQueryClient } from '@tanstack/react-query';
+import type {
+  InstitutionCreateOutput,
+  AccountsWithPlaidOutput,
+  AccountConnectionsOutput,
+  AccountInstitutionAccountsOutput,
+  InstitutionsListOutput,
+} from '@hominem/hono-rpc/types/finance.types';
 
-import { trpc } from '~/lib/trpc';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/hono';
 
 /**
  * Hook for creating a new institution with automatic cache invalidation
  */
 export function useCreateInstitution() {
-  const queryClient = useQueryClient();
-  const mutation = trpc.finance.institutions.create.useMutation({
-    onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['finance', 'institutionsNew', 'list'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'institutionsNew', 'connections'] });
+  const utils = useHonoUtils();
+  const mutation = useHonoMutation<InstitutionCreateOutput, any>(
+    async (client, variables) => {
+      const res = await client.api.finance.institutions.create.$post({
+        json: variables,
+      });
+      return res.json();
     },
-  });
+    {
+      onSuccess: () => {
+        // Invalidate related queries
+        utils.invalidate(['finance', 'institutions', 'list']);
+        utils.invalidate(['finance', 'accounts', 'connections']);
+      },
+    },
+  );
 
   return {
     createInstitution: mutation.mutate,
@@ -26,13 +40,12 @@ export function useCreateInstitution() {
 
 // Hook for getting accounts grouped by institution
 export function useAccountsByInstitution() {
-  const {
-    data: accounts = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = trpc.finance.accounts.accounts.useQuery();
+  const query = useHonoQuery(['finance', 'accounts', 'with-plaid'], async (client) => {
+    const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
+    return res.json();
+  });
+
+  const accounts = Array.isArray(query.data) ? query.data : [];
 
   const accountsByInstitution = accounts.reduce(
     (
@@ -42,7 +55,7 @@ export function useAccountsByInstitution() {
           institutionId: string;
           institutionName: string;
           institutionLogo: string | null;
-          accounts: (typeof accounts)[number][];
+          accounts: typeof accounts;
         }
       >,
       account,
@@ -67,20 +80,40 @@ export function useAccountsByInstitution() {
 
   return {
     accountsByInstitution,
-    isLoading,
-    isError,
-    error,
-    refetch,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
-// Export tRPC hooks directly for simple queries
-export const useInstitutionConnections = () => trpc.finance.accounts.connections.useQuery();
-export const useInstitutionAccounts = () => trpc.finance.accounts.accounts.useQuery();
+// Export hooks for simple queries
+export const useInstitutionConnections = () =>
+  useHonoQuery(['finance', 'accounts', 'connections'], async (client) => {
+    const res = await client.api.finance.accounts.connections.$post({ json: {} });
+    return res.json();
+  });
+
+export const useInstitutionAccounts = () =>
+  useHonoQuery(['finance', 'accounts', 'with-plaid'], async (client) => {
+    const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
+    return res.json();
+  });
 
 export const useInstitutionAccountsByInstitution = (institutionId: string) =>
-  trpc.finance.accounts.institutionAccounts.useQuery(
-    { institutionId },
+  useHonoQuery(
+    ['finance', 'accounts', 'institution-accounts', institutionId],
+    async (client) => {
+      const res = await client.api.finance.accounts['institution-accounts'].$post({
+        json: { institutionId },
+      });
+      return res.json();
+    },
     { enabled: !!institutionId },
   );
-export const useAllInstitutions = () => trpc.finance.institutions.list.useQuery();
+
+export const useAllInstitutions = () =>
+  useHonoQuery(['finance', 'institutions', 'list'], async (client) => {
+    const res = await client.api.finance.institutions.list.$post({ json: {} });
+    return res.json();
+  });

@@ -25,10 +25,6 @@ vi.mock('~/components/map.lazy', () => ({
   default: () => <div data-testid="lazy-map-mock">Map Mock</div>,
 }));
 
-vi.mock('~/lib/trpc/server', () => ({
-  createCaller: vi.fn(),
-}));
-
 /**
  * Simplified list tests using renderWithRouter
  *

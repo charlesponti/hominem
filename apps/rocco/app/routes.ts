@@ -1,7 +1,6 @@
 import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
 
 export default [
-  route('api/trpc/*', './routes/api/trpc.ts'),
   route('api/images/*', './routes/api/images.ts'),
 
   // Auth callback route (outside layout to avoid auth checks)
