@@ -4,9 +4,24 @@
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "./build",
-    "composite": true
+    "composite": true,
+    "tsBuildInfoFile": "../../.cache/ai.tsbuildinfo",
+    "sourceMap": false,
+    "declarationMap": true
   },
-  "references": [{ "path": "../utils" }],
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
+  ]
 }

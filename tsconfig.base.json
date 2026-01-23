@@ -1,80 +1,19 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "baseUrl": ".",
-    "paths": {
-      "@hominem/ai": [
-        "packages/ai/src/index.ts"
-      ],
-      "@hominem/auth": [
-        "packages/auth/src/index.ts"
-      ],
-      "@hominem/career-services": [
-        "packages/career/src/index.ts"
-      ],
-      "@hominem/chat-services": [
-        "packages/chat/src/index.ts"
-      ],
-      "@hominem/db": [
-        "packages/db/src/index.ts"
-      ],
-      "@hominem/events-services": [
-        "packages/events/src/index.ts"
-      ],
-      "@hominem/finance-services": [
-        "packages/finance/src/index.ts"
-      ],
-      "@hominem/health-services": [
-        "packages/health/src/index.ts"
-      ],
-      "@hominem/jobs-services": [
-        "packages/jobs/src/index.ts"
-      ],
-      "@hominem/lists-services": [
-        "packages/lists/src/index.ts"
-      ],
-      "@hominem/notes-services": [
-        "packages/notes/src/index.ts"
-      ],
-      "@hominem/places-services": [
-        "packages/places/src/index.ts"
-      ],
-      "@hominem/services": [
-        "packages/services/src/index.ts"
-      ],
-      "@hominem/trpc": [
-        "packages/trpc/src/index.ts"
-      ],
-      "@hominem/ui": [
-        "packages/ui/src/index.ts"
-      ],
-      "@hominem/utils": [
-        "packages/utils/src/index.ts"
-      ],
-      "@finance/*": [
-        "apps/finance/src/*"
-      ],
-      "@notes/*": [
-        "apps/notes/src/*"
-      ],
-      "@rocco/*": [
-        "apps/rocco/src/*"
-      ]
-    },
     "strict": true,
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "incremental": true,
+    "tsBuildInfoFile": "./.cache/.tsbuildinfo",
     "esModuleInterop": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
@@ -87,6 +26,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "disableSourceOfProjectReferenceRedirect": true,
-    "assumeChangesOnlyAffectDirectDependencies": true
+    "verbatimModuleSyntax": true
   }
 }

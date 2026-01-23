@@ -1,44 +1,29 @@
 {
-  "extends": [
-    "../../tsconfig.base.json",
-    "../../tsconfig.paths.json"
-  ],
+  "extends": ["../../tsconfig.base.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
     "jsx": "react-jsx",
-    "types": [
-      "node",
-      "bun-types"
-    ],
+    "types": ["node", "bun-types"],
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
-    "noEmit": true
+    "noEmit": true,
+    "tsBuildInfoFile": "../../.cache/tool-cli.tsbuildinfo"
   },
-  "references": [
-    {
-      "path": "../../packages/ai"
-    },
-    {
-      "path": "../../packages/services"
-    },
-    {
-      "path": "../../packages/trpc"
-    },
-    {
-      "path": "../../packages/utils"
-    }
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts"
+    "build",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

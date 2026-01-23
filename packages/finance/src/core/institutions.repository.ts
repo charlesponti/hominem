@@ -3,7 +3,6 @@ import {
   financialInstitutions,
   type FinancialInstitution,
   type FinancialInstitutionInsert,
-  type FinancialInstitutionInsert,
 } from '@hominem/db/schema';
 import { eq } from 'drizzle-orm';
 

@@ -48,6 +48,9 @@ bun-debug.log*
 .env.test.local
 .env.production.local
 
+# TypeScript build cache
+.cache/
+
 # turbo
 .turbo
 

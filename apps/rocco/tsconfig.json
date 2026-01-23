@@ -1,58 +1,33 @@
 {
-  "extends": [
-    "../../tsconfig.base.json"
-  ],
+  "extends": ["../../tsconfig.base.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
-    "rootDirs": [
-      ".",
-      "./.react-router/types"
-    ],
+    "rootDirs": [".", "./.react-router/types"],
     "jsx": "react-jsx",
-    "types": [
-      "vite/client",
-      "node"
-    ],
+    "types": ["vite/client", "node"],
     "paths": {
-      "~/*": [
-        "./app/*"
-      ]
+      "~/*": ["./app/*"]
     },
     "noEmit": true,
     "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo"
+    "tsBuildInfoFile": "../../.cache/app-rocco.tsbuildinfo"
   },
-  "references": [
-    {
-      "path": "../../packages/auth"
-    },
-    {
-      "path": "../../packages/db"
-    },
-    {
-      "path": "../../packages/lists"
-    },
-    {
-      "path": "../../packages/places"
-    },
-    {
-      "path": "../../packages/services"
-    },
-    {
-      "path": "../../packages/utils"
-    }
-  ],
-  "include": [
-    "app/**/*.ts",
-    "app/**/*.tsx",
-    ".react-router/types/**/*"
-  ],
+  "include": ["app/**/*.ts", "app/**/*.tsx", ".react-router/types/**/*"],
   "exclude": [
     "node_modules",
     "build",
     "dist",
     ".turbo",
-    ".react-router/cache"
+    ".cache",
+    "coverage",
+    ".react-router/cache",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo"
   ]
 }

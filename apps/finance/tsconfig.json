@@ -1,64 +1,32 @@
 {
-  "extends": [
-    "../../tsconfig.base.json"
-  ],
+  "extends": ["../../tsconfig.base.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
-    "rootDirs": [
-      ".",
-      "./.react-router/types"
-    ],
+    "rootDirs": [".", "./.react-router/types"],
     "jsx": "react-jsx",
-    "types": [
-      "vite/client",
-      "node"
-    ],
+    "types": ["vite/client", "node"],
     "paths": {
-      "~/*": [
-        "./app/*"
-      ]
+      "~/*": ["./app/*"]
     },
-    "noEmit": true
+    "noEmit": true,
+    "tsBuildInfoFile": "../../.cache/app-finance.tsbuildinfo"
   },
-  "references": [
-    {
-      "path": "../../packages/auth"
-    },
-    {
-      "path": "../../packages/db"
-    },
-    {
-      "path": "../../packages/finance"
-    },
-    {
-      "path": "../../packages/jobs"
-    },
-    {
-      "path": "../../packages/services"
-    },
-    {
-      "path": "../../packages/trpc"
-    },
-    {
-      "path": "../../packages/ui"
-    },
-    {
-      "path": "../../packages/utils"
-    }
-  ],
-  "include": [
-    "app/**/*",
-    ".react-router/types/**/*",
-    "vite.config.ts",
-    "vitest.config.ts"
-  ],
+  "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
   "exclude": [
     "node_modules",
     "build",
     "dist",
     ".turbo",
+    ".cache",
+    "coverage",
     "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

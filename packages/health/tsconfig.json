@@ -3,8 +3,24 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./build",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "tsBuildInfoFile": "../../.cache/health.tsbuildinfo",
+    "sourceMap": false,
+    "declarationMap": true
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../db" }]
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
+  ]
 }

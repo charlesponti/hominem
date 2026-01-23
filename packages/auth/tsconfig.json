@@ -6,9 +6,26 @@
     "outDir": "./build",
     "jsx": "react-jsx",
     "types": ["vite/client", "node"],
-    "composite": true
+    "composite": true,
+    "tsBuildInfoFile": "../../.cache/auth.tsbuildinfo",
+    "sourceMap": false,
+    "declarationMap": true
   },
-  "references": [{ "path": "../services" }, { "path": "../utils" }],
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
+  ]
 }

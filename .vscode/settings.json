@@ -1,64 +1,25 @@
 {
-  "css.validate": false,
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.formatOnSave": true,
-  "files.associations": {
-    "*.css": "tailwindcss"
-  },
+  "typescript.tsserver.maxTsServerMemory": 8192,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
-    "**/.react-router/**": true,
-    "**/.turbo/**": true,
-    "**/*.tsbuildinfo": true,
-    "**/build/**": true,
-    "**/dist/**": true,
     "**/node_modules/**": true,
-    "**/coverage/**": true
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.cache/**": true,
+    "**/.tsbuildinfo": true,
+    "**/.turbo/**": true,
+    "**/.react-router/cache/**": true
   },
-  "github.copilot.chat.newWorkspace.useContext7": true,
-  "npm.scriptRunner": "bun",
+
   "search.exclude": {
-    "**/.react-router": true,
-    "**/.turbo": true,
-    "**/*.tsbuildinfo": true,
+    "**/node_modules": true,
     "**/build": true,
     "**/dist": true,
-    "**/node_modules": true,
-    "**/coverage": true
-  },
-  "typescript.tsserver.maxTsServerMemory": 16000,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-  "typescript.disableAutomaticTypeAcquisition": true,
-  "typescript.tsserver.watchOptions": {
-    "excludeDirectories": [
-      "**/node_modules",
-      "**/.git",
-      "**/dist",
-      "**/build",
-      "**/.turbo",
-      "**/coverage",
-      "**/.react-router"
-    ],
-    "excludeFiles": ["**/*.tsbuildinfo"]
-  },
-  "typescript.tsserver.useSyntaxServer": "auto",
-  "typescript.updateImportsOnFileMove.enabled": "never",
-  "typescript.tsserver.enableTracing": false,
-  "typescript.enablePromptUseWorkspaceTsdk": false,
-  "tailwindCSS.experimental.classRegex": [
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"]
-  ],
-  "tailwindCSS.experimental.configFile": "./packages/ui/src/styles/globals.css",
-  "tailwindCSS.files.exclude": ["**/.git/**", "**/node_modules/**", "**/.next/**", "**/dist/**"],
-  "tailwindCSS.includeLanguages": {
-    "typescript": "javascript",
-    "typescriptreact": "javascript"
-  },
-  "tailwindCSS.rootFontSize": 16,
-  "terminal.integrated.shellIntegration.enabled": true
+    "**/.cache": true,
+    "**/.turbo": true
+  }
 }

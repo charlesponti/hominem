@@ -1,41 +1,28 @@
 {
-  "extends": [
-    "../../tsconfig.base.json",
-    "../../tsconfig.paths.json"
-  ],
+  "extends": ["../../tsconfig.base.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
-    "noEmit": true
+    "noEmit": true,
+    "tsBuildInfoFile": "../../.cache/service-workers.tsbuildinfo"
   },
-  "references": [
-    {
-      "path": "../../packages/finance"
-    },
-    {
-      "path": "../../packages/jobs"
-    },
-    {
-      "path": "../../packages/services"
-    },
-    {
-      "path": "../../packages/utils"
-    }
-  ],
-  "include": [
-    "src/**/*.ts"
-  ],
+  "include": ["src/**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts"
+    "build",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }
