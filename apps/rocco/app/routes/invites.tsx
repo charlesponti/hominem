@@ -10,7 +10,7 @@ import { data } from 'react-router';
 import type { ReceivedInvite } from '~/lib/types';
 
 import ReceivedInviteItem from '~/components/ReceivedInviteItem';
-import { getAuthState } from '~/lib/auth.server';
+import { getAuthState, getServerSession } from '~/lib/auth.server';
 import { env } from '~/lib/env';
 import { buildInvitePreview } from '~/lib/services/invite-preview.server';
 
@@ -37,10 +37,22 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   }
 
+  // Get user for authenticated flow
+  const { user } = await getServerSession(request);
+  if (!user) {
+    return data(
+      {
+        invites: [],
+        tokenMismatch: false,
+        requiresAuth: true,
+        preview: null,
+      },
+      { headers },
+    );
+  }
+
   // Authenticated flow: fetch invites via service
-  const invites = (await invitesService.getReceived(
-    token ? { token } : undefined,
-  )) as ReceivedInvite[];
+  const invites = await invitesService.getReceived(user.id, token ? { token } : undefined);
 
   // Check if token belongs to another user
   const tokenMismatch = token

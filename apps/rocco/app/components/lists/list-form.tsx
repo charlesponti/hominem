@@ -20,15 +20,25 @@ export default function ListForm() {
   const { supabase, isAuthenticated } = useSupabaseAuthContext();
 
   const { mutate: createList } = useCreateList({
-    onSuccess: () => {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {}
-      setStatus('success');
-      successTimerRef.current = setTimeout(() => {
-        setName('');
-        setStatus('idle');
-      }, 1500);
+    onSuccess: (result) => {
+      if (result.success) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {}
+        setStatus('success');
+        successTimerRef.current = setTimeout(() => {
+          setName('');
+          setStatus('idle');
+        }, 1500);
+      } else {
+        setStatus('open');
+        // TODO: Implement consistent error UI (e.g., toast) as per Phase 3 objectives
+        console.error('Failed to create list:', result.message);
+      }
+    },
+    onError: (error) => {
+      setStatus('open');
+      console.error('Mutation error creating list:', error);
     },
   });
 
@@ -97,6 +107,7 @@ export default function ListForm() {
       createList({
         name: name.trim(),
         description: 'No description',
+        isPublic: false,
       });
     },
     [name, isAuthenticated, supabase, createList],

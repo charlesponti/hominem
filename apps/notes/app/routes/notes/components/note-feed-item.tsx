@@ -1,9 +1,9 @@
-import type { Note } from '@hominem/services/types';
-
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Edit, Trash2, X } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
+
+import type { Note } from '~/lib/trpc/notes-types';
 
 import SocialX from '~/components/icons/SocialX';
 import { useFeatureFlag } from '~/lib/hooks/use-feature-flags';
@@ -159,9 +159,10 @@ export function NoteFeedItem({
       </div>
 
       <TweetModal
-        isOpen={showTweetModal}
-        onClose={() => setShowTweetModal(false)}
-        initialText={note.content}
+        open={showTweetModal}
+        onOpenChange={setShowTweetModal}
+        noteContent={note.content}
+        noteTitle={note.title}
         contentId={note.id}
       />
     </div>

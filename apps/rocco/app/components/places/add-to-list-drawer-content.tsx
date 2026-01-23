@@ -72,7 +72,7 @@ export const AddToListDrawerContent = ({
       setLoadingListId(listId);
       if (isInList) {
         if (resolvedPlaceId) {
-          removeFromListMutation.mutateAsync({ listId, itemId: resolvedPlaceId });
+          removeFromListMutation.mutateAsync({ listId, placeId: resolvedPlaceId });
         } else {
           setLoadingListId(null);
         }
@@ -84,17 +84,7 @@ export const AddToListDrawerContent = ({
       }
 
       addToListMutation.mutate({
-        name: place.name,
-        address: place.address || undefined,
-        latitude: place.latitude || undefined,
-        longitude: place.longitude || undefined,
-        imageUrl: place.imageUrl || undefined,
-        googleMapsId: place.googleMapsId,
-        rating: place.rating || undefined,
-        types: place.types || undefined,
-        websiteUri: place.websiteUri || undefined,
-        phoneNumber: place.phoneNumber || undefined,
-        photos: place.photos || undefined,
+        placeId: place.id,
         listIds: [listId],
       });
     },

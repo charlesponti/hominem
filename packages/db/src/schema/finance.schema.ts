@@ -1,17 +1,7 @@
 import { relations, sql } from 'drizzle-orm';
-import {
-  boolean,
-  index,
-  jsonb,
-  numeric,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import * as z from 'zod';
 
 import {
   type Json,
@@ -313,8 +303,6 @@ export type BudgetGoalSelect = typeof budgetGoals.$inferSelect;
 export type BudgetGoalInsert = typeof budgetGoals.$inferInsert;
 
 // Zod schemas generated from Drizzle
-import * as z from 'zod';
-
 export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
 
 export const FinanceAccountSchema = createSelectSchema(financeAccounts, {

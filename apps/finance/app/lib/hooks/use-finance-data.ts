@@ -5,6 +5,7 @@ import type {
   TransactionListOutput,
   InstitutionsListOutput,
 } from '@hominem/hono-rpc/types/finance.types';
+import type { ApiResult } from '@hominem/services';
 import type { SortOption } from '@hominem/ui/hooks';
 
 import { format } from 'date-fns';
@@ -21,18 +22,21 @@ export interface FilterArgs {
 }
 
 export const useFinanceAccounts = () =>
-  useHonoQuery<AccountListOutput>(['finance', 'accounts', 'list'], async (client) => {
+  useHonoQuery<ApiResult<AccountListOutput>>(['finance', 'accounts', 'list'], async (client) => {
     const res = await client.api.finance.accounts.list.$post({
       json: { includeInactive: false },
     });
-    return res.json();
+    return res.json() as Promise<ApiResult<AccountListOutput>>;
   });
 
 export const useFinancialInstitutions = () =>
-  useHonoQuery<InstitutionsListOutput>(['finance', 'institutions', 'list'], async (client) => {
-    const res = await client.api.finance.institutions.list.$post({ json: {} });
-    return res.json();
-  });
+  useHonoQuery<ApiResult<InstitutionsListOutput>>(
+    ['finance', 'institutions', 'list'],
+    async (client) => {
+      const res = await client.api.finance.institutions.list.$post({ json: {} });
+      return res.json() as Promise<ApiResult<InstitutionsListOutput>>;
+    },
+  );
 
 type Account = AccountListOutput[number];
 type TransformedAccount = Omit<Account, 'createdAt' | 'updatedAt' | 'lastUpdated'> & {
@@ -43,17 +47,19 @@ type TransformedAccount = Omit<Account, 'createdAt' | 'updatedAt' | 'lastUpdated
 
 export function useFinanceAccountsWithMap() {
   const accountsQuery = useFinanceAccounts();
+  const result = accountsQuery.data;
+  const accounts = result?.success ? result.data : [];
 
   // Transform accounts to convert string dates to Date objects
   const transformedAccounts = useMemo<TransformedAccount[]>(() => {
-    if (!Array.isArray(accountsQuery.data)) return [];
-    return accountsQuery.data.map((account) => ({
+    if (!Array.isArray(accounts)) return [];
+    return accounts.map((account) => ({
       ...account,
       createdAt: new Date(account.createdAt),
       updatedAt: new Date(account.updatedAt),
       lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
     }));
-  }, [accountsQuery.data]);
+  }, [accounts]);
 
   const accountsMap = useMemo(() => {
     return new Map<string, TransformedAccount>(
@@ -70,35 +76,46 @@ export function useFinanceAccountsWithMap() {
 
 // Hook that adds value by transforming data for unified view
 export function useAllAccounts() {
-  const allAccountsQuery = useHonoQuery(['finance', 'accounts', 'all'], async (client) => {
-    const res = await client.api.finance.accounts.all.$post({ json: {} });
-    return res.json();
-  });
+  const allAccountsQuery = useHonoQuery<ApiResult<AccountAllOutput>>(
+    ['finance', 'accounts', 'all'],
+    async (client) => {
+      const res = await client.api.finance.accounts.all.$post({ json: {} });
+      return res.json() as Promise<ApiResult<AccountAllOutput>>;
+    },
+  );
+
+  const result = allAccountsQuery.data;
+  const data = result?.success ? result.data : null;
 
   return {
     isLoading: allAccountsQuery.isLoading,
     error: allAccountsQuery.error,
     refetch: allAccountsQuery.refetch,
-    accounts: allAccountsQuery.data?.accounts || [],
-    connections: allAccountsQuery.data?.connections || [],
+    accounts: data?.accounts || [],
+    connections: data?.connections || [],
+    apiError: result?.success === false ? result : null,
   };
 }
 
 export function useAccountById(id: string) {
-  const accountQuery = useHonoQuery(
+  const accountQuery = useHonoQuery<ApiResult<AccountGetOutput>>(
     ['finance', 'accounts', 'get', id],
     async (client) => {
       const res = await client.api.finance.accounts.get.$post({
         json: { id },
       });
-      return res.json();
+      return res.json() as Promise<ApiResult<AccountGetOutput>>;
     },
     { enabled: !!id },
   );
 
+  const result = accountQuery.data;
+  const account = result?.success ? result.data : undefined;
+
   return {
     ...accountQuery,
-    account: accountQuery.data ?? undefined,
+    account,
+    apiError: result?.success === false ? result : null,
   };
 }
 
@@ -127,7 +144,7 @@ export function useFinanceTransactions({
 
   const offset = page * limit;
 
-  const query = useHonoQuery(
+  const query = useHonoQuery<ApiResult<TransactionListOutput>>(
     [
       'finance',
       'transactions',
@@ -153,19 +170,23 @@ export function useFinanceTransactions({
           sortDirection: [sortOrder as 'asc' | 'desc'],
         },
       });
-      return res.json();
+      return res.json() as Promise<ApiResult<TransactionListOutput>>;
     },
     {
       staleTime: 1 * 60 * 1000,
     },
   );
 
+  const result = query.data;
+  const data = result?.success ? result.data : null;
+
   return {
-    transactions: query.data?.data || [],
-    totalTransactions: query.data?.filteredCount || 0,
+    transactions: data?.data || [],
+    totalTransactions: data?.filteredCount || 0,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
+    apiError: result?.success === false ? result : null,
   };
 }
 

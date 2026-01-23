@@ -1,8 +1,7 @@
+import type { HonoClient } from '@hominem/hono-client';
 import type {
-  InvitesGetReceivedInput,
   InvitesGetReceivedOutput,
   InvitesGetSentOutput,
-  InvitesGetByListInput,
   InvitesGetByListOutput,
   InvitesCreateInput,
   InvitesCreateOutput,
@@ -13,23 +12,27 @@ import type {
   InvitesDeleteInput,
   InvitesDeleteOutput,
 } from '@hominem/hono-rpc/types';
+import type { ApiResult } from '@hominem/services';
 
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 /**
  * Get received invites
  */
 export const useReceivedInvites = (token?: string) =>
-  useHonoQuery<InvitesGetReceivedOutput>(['invites', 'received', token], async (client) => {
-    const res = await client.api.invites.received.$post({ json: { token } });
-    return res.json();
-  });
+  useHonoQuery<ApiResult<InvitesGetReceivedOutput>>(
+    ['invites', 'received', token],
+    async (client: HonoClient) => {
+      const res = await client.api.invites.received.$post({ json: { token } });
+      return res.json();
+    },
+  );
 
 /**
  * Get sent invites
  */
 export const useSentInvites = () =>
-  useHonoQuery<InvitesGetSentOutput>(['invites', 'sent'], async (client) => {
+  useHonoQuery<ApiResult<InvitesGetSentOutput>>(['invites', 'sent'], async (client: HonoClient) => {
     const res = await client.api.invites.sent.$post({ json: {} });
     return res.json();
   });
@@ -38,10 +41,10 @@ export const useSentInvites = () =>
  * Get invites for a specific list
  */
 export const useListInvites = (listId: string | undefined) =>
-  useHonoQuery<InvitesGetByListOutput>(
+  useHonoQuery<ApiResult<InvitesGetByListOutput>>(
     ['invites', 'by-list', listId],
-    async (client) => {
-      if (!listId) return [];
+    async (client: HonoClient) => {
+      if (!listId) return { success: true, data: [] };
       const res = await client.api.invites['by-list'].$post({ json: { listId } });
       return res.json();
     },
@@ -55,15 +58,17 @@ export const useListInvites = (listId: string | undefined) =>
  */
 export const useCreateInvite = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<InvitesCreateOutput, InvitesCreateInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<InvitesCreateOutput>, InvitesCreateInput>(
+    async (client: HonoClient, variables: InvitesCreateInput) => {
       const res = await client.api.invites.create.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (_, variables) => {
-        utils.invalidate(['invites', 'sent']);
-        utils.invalidate(['invites', 'by-list', variables.listId]);
+      onSuccess: (result: ApiResult<InvitesCreateOutput>, variables: InvitesCreateInput) => {
+        if (result.success) {
+          utils.invalidate(['invites', 'sent']);
+          utils.invalidate(['invites', 'by-list', variables.listId]);
+        }
       },
     },
   );
@@ -74,15 +79,17 @@ export const useCreateInvite = () => {
  */
 export const useAcceptInvite = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<InvitesAcceptOutput, InvitesAcceptInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<InvitesAcceptOutput>, InvitesAcceptInput>(
+    async (client: HonoClient, variables: InvitesAcceptInput) => {
       const res = await client.api.invites.accept.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: () => {
-        utils.invalidate(['invites', 'received']);
-        utils.invalidate(['lists']);
+      onSuccess: (result: ApiResult<InvitesAcceptOutput>, _variables: InvitesAcceptInput) => {
+        if (result.success) {
+          utils.invalidate(['invites', 'received']);
+          utils.invalidate(['lists']);
+        }
       },
     },
   );
@@ -93,14 +100,16 @@ export const useAcceptInvite = () => {
  */
 export const useDeclineInvite = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<InvitesDeclineOutput, InvitesDeclineInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<InvitesDeclineOutput>, InvitesDeclineInput>(
+    async (client: HonoClient, variables: InvitesDeclineInput) => {
       const res = await client.api.invites.decline.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: () => {
-        utils.invalidate(['invites', 'received']);
+      onSuccess: (result: ApiResult<InvitesDeclineOutput>, _variables: InvitesDeclineInput) => {
+        if (result.success) {
+          utils.invalidate(['invites', 'received']);
+        }
       },
     },
   );
@@ -111,15 +120,17 @@ export const useDeclineInvite = () => {
  */
 export const useDeleteInvite = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<InvitesDeleteOutput, InvitesDeleteInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<InvitesDeleteOutput>, InvitesDeleteInput>(
+    async (client: HonoClient, variables: InvitesDeleteInput) => {
       const res = await client.api.invites.delete.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (_, variables) => {
-        utils.invalidate(['invites', 'sent']);
-        utils.invalidate(['invites', 'by-list', variables.listId]);
+      onSuccess: (result: ApiResult<InvitesDeleteOutput>, variables: InvitesDeleteInput) => {
+        if (result.success) {
+          utils.invalidate(['invites', 'sent']);
+          utils.invalidate(['invites', 'by-list', variables.listId]);
+        }
       },
     },
   );

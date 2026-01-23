@@ -1,14 +1,9 @@
+import type { ChatMessageToolCall } from '@hominem/db/schema';
+
 import { cn } from '~/lib/utils';
 
 interface ToolInvocationPartProps {
-  toolInvocation: {
-    type: 'tool-call' | 'tool-result';
-    toolName: string;
-    toolCallId?: string;
-    args?: Record<string, unknown>;
-    result?: unknown;
-    isError?: boolean;
-  };
+  toolInvocation: ChatMessageToolCall;
   index: number;
 }
 

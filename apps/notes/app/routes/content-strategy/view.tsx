@@ -1,6 +1,6 @@
+import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/card';
-import { useToast } from '@hominem/ui';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 
@@ -184,7 +184,7 @@ export default function ContentStrategyViewPage() {
                       <h5 className="font-medium">Outline</h5>
                       <ol className="list-decimal list-inside space-y-1">
                         {strategy.strategy.contentPlan.blog.outline.map(
-                          (section: any, index: number) => (
+                          (section: { heading: string; content: string }, index: number) => (
                             <li key={index} className="text-gray-600">
                               <strong>{section.heading}:</strong> {section.content}
                             </li>
@@ -222,7 +222,15 @@ export default function ContentStrategyViewPage() {
                     <h4 className="font-medium text-gray-900 mb-3">Social Media Content</h4>
                     <div className="space-y-4">
                       {strategy.strategy.contentPlan.socialMedia.map(
-                        (platform: any, index: number) => (
+                        (
+                          platform: {
+                            platform: string;
+                            contentIdeas: string[];
+                            hashtagSuggestions: string[];
+                            bestTimeToPost: string;
+                          },
+                          index: number,
+                        ) => (
                           <div key={index} className="border rounded-lg p-4">
                             <h5 className="font-medium text-gray-900 mb-2">{platform.platform}</h5>
                             <div className="space-y-2">

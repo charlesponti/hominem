@@ -6,16 +6,18 @@ import ListForm from './list-form';
 import { ListRow } from './list-row';
 
 export default function Lists() {
-  const { data: lists = [], isLoading, error } = useLists();
+  const { data: result, isLoading, error } = useLists();
+  const lists = result?.success ? result.data : [];
+  const apiError = result?.success === false ? result : null;
 
   const title = <h2 className="heading-2">Lists</h2>;
 
-  if (error) {
+  if (error || apiError) {
     return (
       <div className="space-y-2">
         {title}
         <div className="text-center py-8">
-          <p className="text-red-600">Error loading lists: {error.message}</p>
+          <p className="text-red-600">Error loading lists: {error?.message || apiError?.message}</p>
         </div>
       </div>
     );

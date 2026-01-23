@@ -1,11 +1,14 @@
-import type { Note, NoteInsert, Priority, TaskMetadata } from '@hominem/services/types';
+import type { Priority, TaskMetadata } from '@hominem/services/types';
 
 import { Button } from '@hominem/ui/button';
 import { DatePicker } from '@hominem/ui/components/date-picker';
 import { Textarea } from '@hominem/ui/components/ui/textarea';
 import { Input } from '@hominem/ui/input';
+import { compactObject } from '@hominem/utils';
 import { FileText, ListChecks, RefreshCw, Send, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+
+import type { Note, NotesCreateInput as NoteInsert } from '~/lib/trpc/notes-types';
 
 import { PrioritySelect } from '~/components/priority-select';
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes';
@@ -115,9 +118,9 @@ export function InlineCreateForm({
         ...existingTaskMetadata,
         status: itemToEdit?.taskMetadata?.status || 'todo',
         priority: taskPriority,
-        dueDate: taskDueDate ? taskDueDate.toISOString() : null,
-        startTime: itemToEdit?.taskMetadata?.startTime,
-        endTime: itemToEdit?.taskMetadata?.endTime,
+        dueDate: taskDueDate ? taskDueDate.toISOString() : undefined,
+        startTime: itemToEdit?.taskMetadata?.startTime ?? undefined,
+        endTime: itemToEdit?.taskMetadata?.endTime ?? undefined,
         duration: itemToEdit?.taskMetadata?.duration || 0,
       } as TaskMetadata;
       additionalData.tags = itemToEdit?.tags || [];
@@ -127,7 +130,7 @@ export function InlineCreateForm({
 
     if (isEditMode) {
       updateItem.mutate(
-        {
+        compactObject({
           id: itemToEdit.id,
           type: itemToEdit.type,
           title: titleToSave,
@@ -135,7 +138,7 @@ export function InlineCreateForm({
           tags: additionalData.tags,
           taskMetadata: additionalData.taskMetadata,
           analysis: additionalData.analysis,
-        },
+        }) as any,
         {
           onSuccess: () => {
             if (onSuccess) onSuccess();
@@ -148,12 +151,14 @@ export function InlineCreateForm({
       );
     } else {
       createItem.mutate(
-        {
+        compactObject({
           type: itemType,
           title: titleToSave,
           content: contentToSave,
-          ...additionalData,
-        },
+          tags: additionalData.tags,
+          taskMetadata: additionalData.taskMetadata,
+          analysis: additionalData.analysis,
+        }) as any,
         {
           onSuccess: () => {
             if (onSuccess) onSuccess();

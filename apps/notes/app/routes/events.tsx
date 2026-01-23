@@ -1,9 +1,9 @@
+import type { AppRouterInputs } from '@hominem/trpc';
+
 import { ActiveFiltersBar, FilterSelect } from '@hominem/ui/filters';
 import { useSort, useUrlFilters } from '@hominem/ui/hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { data, useNavigate } from 'react-router';
-
-import type { RouterInput } from '~/lib/trpc';
 
 import { getServerSession } from '~/lib/auth.server';
 import i18n from '~/lib/i18n';
@@ -22,6 +22,17 @@ interface EventPerson {
   id: string;
   firstName?: string;
   lastName?: string;
+}
+
+interface RawEvent {
+  id: string;
+  date?: string;
+  time?: string;
+  title: string;
+  description?: string;
+  location?: string;
+  people?: EventPerson[];
+  tags?: { id: string; name: string; color: string | null; description: string | null }[];
 }
 
 interface EventActivity {
@@ -61,7 +72,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const eventData: Partial<RouterInput['events']['create']> = {};
+  const eventData: Partial<AppRouterInputs['events']['create']> = {};
 
   for (const [key, value] of formData.entries()) {
     if (key === 'people') {
@@ -172,15 +183,20 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
   const activities = useMemo(
     () =>
-      ((loaderData.events ?? []) as EventActivity[]).map((activity) => ({
-        ...activity,
-        description: activity.description ?? undefined,
-        people: activity.people?.map((person) => ({
-          ...person,
-          firstName: person.firstName ?? undefined,
-          lastName: person.lastName ?? undefined,
+      ((loaderData.events ?? []) as RawEvent[])
+        .map((activity) => ({
+          ...activity,
+          tags: activity.tags?.map((tag) => tag.name) || [],
+        }))
+        .map((activity) => ({
+          ...activity,
+          description: activity.description ?? undefined,
+          people: activity.people?.map((person) => ({
+            ...person,
+            firstName: person.firstName ?? undefined,
+            lastName: person.lastName ?? undefined,
+          })),
         })),
-      })),
     [loaderData.events],
   );
 

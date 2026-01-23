@@ -9,7 +9,7 @@ import { useSentInvites } from '~/lib/hono';
 
 import type { Route } from './+types/lists.$id.invites.sent';
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader(_args: Route.LoaderArgs) {
   const { userId } = useSupabaseAuthContext();
 
   if (!userId) {

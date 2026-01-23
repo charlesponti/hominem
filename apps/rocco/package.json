@@ -32,6 +32,8 @@
     "@hominem/db": "workspace:*",
     "@hominem/events-services": "workspace:*",
     "@hominem/hono-client": "workspace:*",
+    "@hominem/hono-rpc": "workspace:*",
+    "@hominem/invites-services": "workspace:*",
     "@hominem/lists-services": "workspace:*",
     "@hominem/places-services": "workspace:*",
     "@hominem/services": "workspace:*",

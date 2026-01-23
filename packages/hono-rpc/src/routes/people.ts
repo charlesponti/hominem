@@ -1,9 +1,8 @@
 import { createPerson, getPeople, type PersonInput } from '@hominem/services';
+import { error, isServiceError, success } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-
-import type { PeopleListOutput, PeopleCreateOutput, Person } from '../types/people.types';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
@@ -14,7 +13,7 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 /**
  * Convert Date fields to ISO strings for JSON serialization
  */
-function serializePerson(person: any): Person {
+function serializePerson(person: any) {
   return {
     ...person,
     createdAt: person.createdAt instanceof Date ? person.createdAt.toISOString() : person.createdAt,
@@ -25,7 +24,10 @@ function serializePerson(person: any): Person {
 /**
  * People Routes
  *
- * Handles people/contacts operations
+ * Handles people/contacts operations using the ApiResult pattern:
+ * - Services throw typed errors
+ * - HTTP endpoints catch errors and return ApiResult
+ * - Clients receive discriminated union with `success` field
  */
 
 // ============================================================================
@@ -39,6 +41,9 @@ const peopleCreateSchema = z.object({
   phone: z.string().optional(),
 });
 
+// Export schemas for type derivation
+export { peopleCreateSchema };
+
 // ============================================================================
 // Routes
 // ============================================================================
@@ -51,11 +56,15 @@ export const peopleRoutes = new Hono<AppContext>()
     try {
       const people = await getPeople({ userId });
 
-      const result: PeopleListOutput = people.map(serializePerson);
-      return c.json(result);
-    } catch (error) {
-      console.error('[people.list]', error);
-      return c.json({ error: 'Failed to fetch people' }, 500);
+      const result = people.map(serializePerson);
+      return c.json(success(result), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[people.list] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch people'), 500);
     }
   })
 
@@ -75,10 +84,14 @@ export const peopleRoutes = new Hono<AppContext>()
 
       const newPerson = await createPerson(personInput);
 
-      const result: PeopleCreateOutput = serializePerson(newPerson);
-      return c.json(result);
-    } catch (error) {
-      console.error('[people.create]', error);
-      return c.json({ error: 'Failed to create person' }, 500);
+      const result = serializePerson(newPerson);
+      return c.json(success(result), 201);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[people.create] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to create person'), 500);
     }
   });

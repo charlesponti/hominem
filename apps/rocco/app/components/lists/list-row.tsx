@@ -1,7 +1,6 @@
 import { List } from 'lucide-react';
 import { Link } from 'react-router';
 
-import { useHonoUtils, useListById } from '~/lib/hono';
 import { buildImageUrl } from '~/lib/utils';
 
 type ListRowProps = {
@@ -13,7 +12,6 @@ type ListRowProps = {
 };
 
 export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
-  const utils = useHonoUtils();
   const thumbnailUrl = buildImageUrl(imageUrl, 80, 80);
 
   return (

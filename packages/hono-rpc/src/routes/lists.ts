@@ -8,27 +8,22 @@ import {
   removeUserFromList,
   updateList,
 } from '@hominem/lists-services';
+import { error, isServiceError, success } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-
-import type {
-  ListGetAllOutput,
-  ListGetByIdOutput,
-  ListCreateOutput,
-  ListUpdateOutput,
-  ListDeleteOutput,
-  ListDeleteItemOutput,
-  ListGetContainingPlaceOutput,
-  ListRemoveCollaboratorOutput,
-} from '../types/lists.types';
 
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Lists Routes
  *
- * Handles all list-related operations:
+ * Handles all list-related operations using the new API contract pattern:
+ * - Services throw typed errors
+ * - HTTP endpoints catch errors and return ApiResult
+ * - Clients receive discriminated union with `success` field
+ *
+ * Operations:
  * - POST /list - Get all user's lists
  * - POST /get - Get single list by ID
  * - POST /create - Create new list
@@ -83,6 +78,18 @@ const listRemoveCollaboratorSchema = z.object({
   userId: z.string().uuid(),
 });
 
+// Export schemas for type derivation
+export {
+  listGetAllSchema,
+  listGetByIdSchema,
+  listCreateSchema,
+  listUpdateSchema,
+  listDeleteSchema,
+  listDeleteItemSchema,
+  listGetContainingPlaceSchema,
+  listRemoveCollaboratorSchema,
+};
+
 // ============================================================================
 // Routes
 // ============================================================================
@@ -96,11 +103,15 @@ export const listsRoutes = new Hono<AppContext>()
       const { ownedListsWithPlaces, sharedListsWithPlaces } =
         await getAllUserListsWithPlaces(userId);
 
-      const result: ListGetAllOutput = [...ownedListsWithPlaces, ...sharedListsWithPlaces];
-      return c.json(result);
-    } catch (error) {
-      console.error('[lists.list]', error);
-      return c.json({ error: 'Failed to fetch lists' }, 500);
+      const result = [...ownedListsWithPlaces, ...sharedListsWithPlaces];
+      return c.json(success(result), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[lists.list]', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch lists'), 500);
     }
   })
 
@@ -113,14 +124,17 @@ export const listsRoutes = new Hono<AppContext>()
       const list = await getListById(input.id, userId);
 
       if (!list) {
-        return c.json({ error: 'List not found' }, 404);
+        return c.json(error('NOT_FOUND', 'List not found'), 404);
       }
 
-      const result: ListGetByIdOutput = list;
-      return c.json(result);
-    } catch (error) {
-      console.error('[lists.get]', error);
-      return c.json({ error: 'Failed to fetch list' }, 500);
+      return c.json(success(list), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[lists.get]', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch list'), 500);
     }
   })
 
@@ -133,14 +147,17 @@ export const listsRoutes = new Hono<AppContext>()
       const newList = await createList(input.name, userId);
 
       if (!newList) {
-        return c.json({ error: 'Failed to create list' }, 500);
+        return c.json(error('INTERNAL_ERROR', 'Failed to create list'), 500);
       }
 
-      const result: ListCreateOutput = newList;
-      return c.json(result);
-    } catch (error) {
-      console.error('[lists.create]', error);
-      return c.json({ error: 'Failed to create list' }, 500);
+      return c.json(success(newList), 201);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[lists.create]', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to create list'), 500);
     }
   })
 
@@ -151,20 +168,26 @@ export const listsRoutes = new Hono<AppContext>()
 
     try {
       if (!input.name) {
-        return c.json({ error: 'Name is required for update' }, 400);
+        return c.json(
+          error('VALIDATION_ERROR', 'Name is required for update', { field: 'name' }),
+          400,
+        );
       }
 
       const updatedList = await updateList(input.id, input.name, userId);
 
       if (!updatedList) {
-        return c.json({ error: "List not found or you don't have permission to update it" }, 403);
+        return c.json(error('FORBIDDEN', "You don't have permission to update this list"), 403);
       }
 
-      const result: ListUpdateOutput = updatedList;
-      return c.json(result);
-    } catch (error) {
-      console.error('[lists.update]', error);
-      return c.json({ error: 'Failed to update list' }, 500);
+      return c.json(success(updatedList), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[lists.update]', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to update list'), 500);
     }
   })
 
@@ -174,17 +197,20 @@ export const listsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     try {
-      const success = await deleteList(input.id, userId);
+      const deleteSuccess = await deleteList(input.id, userId);
 
-      if (!success) {
-        return c.json({ error: "List not found or you don't have permission to delete it" }, 403);
+      if (!deleteSuccess) {
+        return c.json(error('FORBIDDEN', "You don't have permission to delete this list"), 403);
       }
 
-      const result: ListDeleteOutput = { success: true };
-      return c.json(result);
-    } catch (error) {
-      console.error('[lists.delete]', error);
-      return c.json({ error: 'Failed to delete list' }, 500);
+      return c.json(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[lists.delete]', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to delete list'), 500);
     }
   })
 
@@ -194,20 +220,23 @@ export const listsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     try {
-      const success = await deleteListItem(input.listId, input.itemId, userId);
+      const deleteSuccess = await deleteListItem(input.listId, input.itemId, userId);
 
-      if (!success) {
+      if (!deleteSuccess) {
         return c.json(
-          { error: "List item not found or you don't have permission to delete it" },
+          error('FORBIDDEN', "You don't have permission to delete this list item"),
           403,
         );
       }
 
-      const result: ListDeleteItemOutput = { success: true };
-      return c.json(result);
-    } catch (error) {
-      console.error('[lists.delete-item]', error);
-      return c.json({ error: 'Failed to delete list item' }, 500);
+      return c.json(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[lists.delete-item]', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to delete list item'), 500);
     }
   })
 
@@ -222,7 +251,7 @@ export const listsRoutes = new Hono<AppContext>()
 
       try {
         if (!(input.placeId || input.googleMapsId)) {
-          return c.json([]);
+          return c.json(success([]), 200);
         }
 
         const lists = await getPlaceLists({
@@ -231,15 +260,19 @@ export const listsRoutes = new Hono<AppContext>()
           googleMapsId: input.googleMapsId,
         });
 
-        const result: ListGetContainingPlaceOutput = lists.map((list) => ({
+        const result = lists.map((list) => ({
           id: list.id,
           name: list.name,
-          isOwner: true, // User fetched their own lists, so they own them
+          isOwner: true,
         }));
-        return c.json(result);
-      } catch (error) {
-        console.error('[lists.containing-place]', error);
-        return c.json({ error: 'Failed to fetch lists' }, 500);
+        return c.json(success(result), 200);
+      } catch (err) {
+        if (isServiceError(err)) {
+          return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        }
+
+        console.error('[lists.containing-place]', err);
+        return c.json(error('INTERNAL_ERROR', 'Failed to fetch lists'), 500);
       }
     },
   )
@@ -261,17 +294,23 @@ export const listsRoutes = new Hono<AppContext>()
         });
 
         if ('error' in result) {
+          const statusCode = (result.status ?? 500) as any;
+          const errorCode =
+            statusCode === 403 ? 'FORBIDDEN' : statusCode === 404 ? 'NOT_FOUND' : 'INTERNAL_ERROR';
           return c.json(
-            { error: result.error },
-            result.status === 403 ? 403 : result.status === 404 ? 404 : 500,
+            error(errorCode, (result.error as string) || 'Operation failed'),
+            statusCode as any,
           );
         }
 
-        const response: ListRemoveCollaboratorOutput = { success: true };
-        return c.json(response);
-      } catch (error) {
-        console.error('[lists.remove-collaborator]', error);
-        return c.json({ error: 'Failed to remove collaborator' }, 500);
+        return c.json(success({ success: true }), 200);
+      } catch (err) {
+        if (isServiceError(err)) {
+          return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        }
+
+        console.error('[lists.remove-collaborator]', err);
+        return c.json(error('INTERNAL_ERROR', 'Failed to remove collaborator'), 500);
       }
     },
   );

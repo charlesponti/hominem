@@ -176,7 +176,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
             {uploadState.uploadedFiles.map((file) => (
               <div key={file.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 {/* File Icon */}
-                <div className="flex-shrink-0">{getFileIcon(file.type)}</div>
+                <div className="shrink-0">{getFileIcon(file.type)}</div>
 
                 {/* File Info */}
                 <div className="flex-1 min-w-0">
@@ -204,7 +204,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
 
                 {/* Thumbnail */}
                 {file.thumbnail && (
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <img
                       src={file.thumbnail}
                       alt="Thumbnail"
@@ -219,7 +219,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                   variant="ghost"
                   size="icon"
                   onClick={() => removeFile(file.id)}
-                  className="flex-shrink-0 size-8"
+                  className="shrink-0 size-8"
                 >
                   <X className="size-4" />
                 </Button>

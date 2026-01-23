@@ -12,3 +12,27 @@ export * from './spotify.service';
 export * from './tags.service';
 export * from './typing-mind.schema';
 export * from './google-places.service';
+
+// API Contract patterns
+export {
+  ServiceError,
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+  ConflictError,
+  UnavailableError,
+  InternalError,
+  isServiceError,
+  asServiceError,
+  type ErrorCode,
+} from './errors';
+
+export {
+  success,
+  error,
+  type ApiResult,
+  type ApiSuccess,
+  type ApiError,
+  type ExtractApiData,
+} from './api-result';

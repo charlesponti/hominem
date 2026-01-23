@@ -1,20 +1,18 @@
 import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/lists-services';
+import { error, isServiceError, success } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-
-import type {
-  ItemsAddToListOutput,
-  ItemsRemoveFromListOutput,
-  ItemsGetByListIdOutput,
-} from '../types/items.types';
 
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Items Routes
  *
- * Handles list item operations
+ * Handles list item operations using the ApiResult pattern:
+ * - Services throw typed errors
+ * - HTTP endpoints catch errors and return ApiResult
+ * - Clients receive discriminated union with `success` field
  */
 
 // ============================================================================
@@ -36,6 +34,9 @@ const itemsGetByListIdSchema = z.object({
   listId: z.string().uuid(),
 });
 
+// Export schemas for type derivation
+export { itemsAddToListSchema, itemsRemoveFromListSchema, itemsGetByListIdSchema };
+
 // ============================================================================
 // Routes
 // ============================================================================
@@ -54,11 +55,14 @@ export const itemsRoutes = new Hono<AppContext>()
         userId: userId,
       });
 
-      const result: ItemsAddToListOutput = newItem;
-      return c.json(result);
-    } catch (error) {
-      console.error('[items.add]', error);
-      return c.json({ error: 'Failed to add item to list' }, 500);
+      return c.json(success(newItem), 201);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[items.add] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to add item to list'), 500);
     }
   })
 
@@ -75,14 +79,17 @@ export const itemsRoutes = new Hono<AppContext>()
       });
 
       if (!removed) {
-        return c.json({ error: 'Item not found in this list' }, 404);
+        return c.json(error('NOT_FOUND', 'Item not found in this list'), 404);
       }
 
-      const result: ItemsRemoveFromListOutput = { success: true };
-      return c.json(result);
-    } catch (error) {
-      console.error('[items.remove]', error);
-      return c.json({ error: 'Failed to remove item from list' }, 500);
+      return c.json(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[items.remove] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to remove item from list'), 500);
     }
   })
 
@@ -93,10 +100,13 @@ export const itemsRoutes = new Hono<AppContext>()
     try {
       const items = await getItemsByListId(input.listId);
 
-      const result: ItemsGetByListIdOutput = items;
-      return c.json(result);
-    } catch (error) {
-      console.error('[items.by-list]', error);
-      return c.json({ error: 'Failed to fetch items' }, 500);
+      return c.json(success(items), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[items.by-list] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch items'), 500);
     }
   });

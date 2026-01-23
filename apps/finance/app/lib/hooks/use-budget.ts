@@ -1,8 +1,21 @@
 import type {
   BudgetCategoriesListOutput,
   BudgetCategoryCreateInput,
+  BudgetCategoryCreateOutput,
   BudgetCategoryUpdateInput,
+  BudgetCategoryUpdateOutput,
   BudgetCategoryGetOutput,
+  BudgetCategoryDeleteOutput,
+  BudgetTrackingInput,
+  BudgetTrackingOutput,
+  BudgetHistoryInput,
+  BudgetHistoryOutput,
+  BudgetCalculateInput,
+  BudgetCalculateOutput,
+  BudgetBulkCreateInput,
+  BudgetBulkCreateOutput,
+  TransactionCategoriesOutput,
+  RunwayCalculateOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 
 import { useHonoQuery, useHonoMutation, useHonoUtils } from '~/lib/hono';
@@ -77,7 +90,7 @@ export const useTransactionCategories = () =>
 export const useCreateBudgetCategory = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<any, BudgetCategoryCreateInput>(
+  return useHonoMutation<BudgetCategoryCreateOutput, BudgetCategoryCreateInput>(
     async (client, variables) => {
       const res = await client.api.finance.budget.categories.create.$post({
         json: variables,
@@ -97,7 +110,7 @@ export const useCreateBudgetCategory = () => {
 export const useUpdateBudgetCategory = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<any, BudgetCategoryUpdateInput>(
+  return useHonoMutation<BudgetCategoryUpdateOutput, BudgetCategoryUpdateInput>(
     async (client, variables) => {
       const res = await client.api.finance.budget.categories.update.$post({
         json: variables,
@@ -117,7 +130,7 @@ export const useUpdateBudgetCategory = () => {
 export const useDeleteBudgetCategory = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<any, { id: string }>(
+  return useHonoMutation<BudgetCategoryDeleteOutput, { id: string }>(
     async (client, variables) => {
       const res = await client.api.finance.budget.categories.delete.$post({
         json: variables,
@@ -137,7 +150,7 @@ export const useDeleteBudgetCategory = () => {
 export const useBulkCreateBudgetCategories = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<any, { categories: BudgetCategoryCreateInput[] }>(
+  return useHonoMutation<BudgetBulkCreateOutput, BudgetBulkCreateInput>(
     async (client, variables) => {
       const res = await client.api.finance.budget['bulk-create'].$post({
         json: variables,
@@ -157,7 +170,7 @@ export const useBulkCreateBudgetCategories = () => {
 export const useCalculateBudget = (options?: { onError?: (error: Error) => void }) => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<any, void>(
+  return useHonoMutation<BudgetCalculateOutput, BudgetCalculateInput>(
     async (client) => {
       const res = await client.api.finance.budget.calculate.$post({ json: {} });
       return res.json();

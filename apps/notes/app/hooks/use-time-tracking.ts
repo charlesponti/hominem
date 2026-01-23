@@ -1,9 +1,9 @@
-import type { NotesListOutput } from '~/lib/trpc/notes-types';
+import type { Note } from '~/lib/trpc/notes-types';
 
 import { useUpdateNote } from './use-notes';
 
 interface UseTimeTrackingOptions {
-  task: NotesListOutput[number];
+  task: Note;
 }
 
 export function useTimeTracking({ task }: UseTimeTrackingOptions) {

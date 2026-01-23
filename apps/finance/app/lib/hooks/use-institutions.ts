@@ -1,4 +1,5 @@
 import type {
+  InstitutionCreateInput,
   InstitutionCreateOutput,
   AccountsWithPlaidOutput,
   AccountConnectionsOutput,
@@ -13,7 +14,7 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/hono';
  */
 export function useCreateInstitution() {
   const utils = useHonoUtils();
-  const mutation = useHonoMutation<InstitutionCreateOutput, any>(
+  const mutation = useHonoMutation<InstitutionCreateOutput, InstitutionCreateInput>(
     async (client, variables) => {
       const res = await client.api.finance.institutions.create.$post({
         json: variables,

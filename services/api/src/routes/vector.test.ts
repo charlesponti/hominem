@@ -45,6 +45,7 @@ describe('Vector System', () => {
             metadata: { source: 'test' },
             source: 'test-source',
             sourceType: 'markdown',
+            similarity: 0.95,
           },
         ],
       };
@@ -72,6 +73,7 @@ describe('Vector System', () => {
             metadata: { userId: testUserId },
             source: 'notes',
             sourceType: 'markdown',
+            similarity: 0.92,
           },
         ],
       };

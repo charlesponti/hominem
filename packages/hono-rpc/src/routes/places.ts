@@ -19,28 +19,11 @@ import {
   removePlaceFromList,
   type PlaceInsert,
 } from '@hominem/places-services';
+import { error, success, isServiceError } from '@hominem/services';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-
-import type {
-  PlaceCreateOutput,
-  PlaceUpdateOutput,
-  PlaceDeleteOutput,
-  PlaceAutocompleteOutput,
-  PlaceGetDetailsByIdOutput,
-  PlaceGetDetailsByGoogleIdOutput,
-  PlaceAddToListsOutput,
-  PlaceRemoveFromListOutput,
-  PlaceGetNearbyFromListsOutput,
-  PlaceLogVisitOutput,
-  PlaceGetMyVisitsOutput,
-  PlaceGetPlaceVisitsOutput,
-  PlaceUpdateVisitOutput,
-  PlaceDeleteVisitOutput,
-  PlaceGetVisitStatsOutput,
-} from '../types/places.types';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
@@ -76,11 +59,10 @@ function serializeVisitFromService(data: any): any {
 /**
  * Places Routes
  *
- * Handles all place-related operations including:
- * - CRUD operations for places
- * - Google Places autocomplete and details
- * - Visit tracking and statistics
- * - Place-list relationships
+ * Handles all place-related operations using the new API contract pattern:
+ * - Services throw typed errors
+ * - HTTP endpoints catch and convert to ApiResult responses
+ * - Clients receive discriminated union with `success` field
  */
 
 // ============================================================================
@@ -195,6 +177,25 @@ const placeGetVisitStatsSchema = z.object({
   placeId: z.string().uuid(),
 });
 
+// Export schemas for type derivation
+export {
+  placeCreateSchema,
+  placeUpdateSchema,
+  placeDeleteSchema,
+  placeAutocompleteSchema,
+  placeGetByIdSchema,
+  placeGetByGoogleIdSchema,
+  placeAddToListsSchema,
+  placeRemoveFromListSchema,
+  placeGetNearbySchema,
+  placeLogVisitSchema,
+  placeGetMyVisitsSchema,
+  placeGetPlaceVisitsSchema,
+  placeUpdateVisitSchema,
+  placeDeleteVisitSchema,
+  placeGetVisitStatsSchema,
+};
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -228,11 +229,11 @@ function mapGooglePlaceToPrediction(place: any) {
 export const placesRoutes = new Hono<AppContext>()
   // Create new place
   .post('/create', authMiddleware, zValidator('json', placeCreateSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-    const queues = c.get('queues');
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+      const queues = c.get('queues');
+
       const { listIds, ...placeInput } = input;
 
       // Fetch Google Place details if needed
@@ -274,8 +275,8 @@ export const placesRoutes = new Hono<AppContext>()
             fetchedWebsiteUri = googlePlaceData.websiteUri ?? null;
             fetchedPhoneNumber = googlePlaceData.nationalPhoneNumber ?? null;
           }
-        } catch (error) {
-          console.error('[places.create] Failed to fetch Google details:', error);
+        } catch (err) {
+          console.error('[places.create] Failed to fetch Google details:', err);
         }
       }
 
@@ -327,62 +328,69 @@ export const placesRoutes = new Hono<AppContext>()
         console.warn('[places.create] Failed to enqueue photo enrichment:', err);
       }
 
-      const result: PlaceCreateOutput = createdPlace as PlaceCreateOutput;
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.create]', error);
-      return c.json({ error: 'Failed to create place' }, 500);
+      return c.json(success(createdPlace), 201);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.create] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to create place'), 500);
     }
   })
 
   // Update place
   .post('/update', authMiddleware, zValidator('json', placeUpdateSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+
       const updatedPlace = await createOrUpdatePlace(input.id, input);
 
       if (!updatedPlace) {
-        return c.json({ error: 'Place not found or unauthorized' }, 404);
+        return c.json(error('NOT_FOUND', 'Place not found'), 404);
       }
 
-      const result: PlaceUpdateOutput = updatedPlace as PlaceUpdateOutput;
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.update]', error);
-      return c.json({ error: 'Failed to update place' }, 500);
+      return c.json(success(updatedPlace), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.update] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to update place'), 500);
     }
   })
 
   // Delete place
   .post('/delete', authMiddleware, zValidator('json', placeDeleteSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
-      const success = await deletePlaceById(input.id);
+      const input = c.req.valid('json');
 
-      if (!success) {
-        return c.json({ error: 'Place not found or unauthorized' }, 404);
+      const success_ = await deletePlaceById(input.id);
+
+      if (!success_) {
+        return c.json(error('NOT_FOUND', 'Place not found'), 404);
       }
 
-      const result: PlaceDeleteOutput = { success: true };
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.delete]', error);
-      return c.json({ error: 'Failed to delete place' }, 500);
+      return c.json(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.delete] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to delete place'), 500);
     }
   })
 
   // Autocomplete places
   .post('/autocomplete', authMiddleware, zValidator('json', placeAutocompleteSchema), async (c) => {
-    const input = c.req.valid('json');
-
     try {
+      const input = c.req.valid('json');
+
       const query = input.query.trim();
       if (query.length < 2) {
-        return c.json([]);
+        return c.json(success([]), 200);
       }
 
       const locationBias =
@@ -400,24 +408,27 @@ export const placesRoutes = new Hono<AppContext>()
       });
 
       const predictions = places.map(mapGooglePlaceToPrediction);
-      const result: PlaceAutocompleteOutput = predictions;
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.autocomplete]', error);
-      return c.json({ error: 'Failed to fetch autocomplete suggestions' }, 500);
+      return c.json(success(predictions), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.autocomplete] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch autocomplete suggestions'), 500);
     }
   })
 
   // Get place details by ID
   .post('/get', authMiddleware, zValidator('json', placeGetByIdSchema), async (c) => {
-    const input = c.req.valid('json');
-    const queues = c.get('queues');
-
     try {
+      const input = c.req.valid('json');
+      const queues = c.get('queues');
+
       const dbPlace = await getPlaceById(input.id);
 
       if (!dbPlace) {
-        return c.json({ error: 'Place not found' }, 404);
+        return c.json(error('NOT_FOUND', 'Place not found'), 404);
       }
 
       // Enqueue photo enrichment if needed
@@ -436,11 +447,14 @@ export const placesRoutes = new Hono<AppContext>()
         // Non-fatal
       }
 
-      const result: PlaceGetDetailsByIdOutput = dbPlace as PlaceGetDetailsByIdOutput;
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.get]', error);
-      return c.json({ error: 'Failed to fetch place' }, 500);
+      return c.json(success(dbPlace), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.get] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch place'), 500);
     }
   })
 
@@ -450,38 +464,45 @@ export const placesRoutes = new Hono<AppContext>()
     authMiddleware,
     zValidator('json', placeGetByGoogleIdSchema),
     async (c) => {
-      const input = c.req.valid('json');
-
       try {
+        const input = c.req.valid('json');
+
         const place = await getPlaceByGoogleMapsId(input.googleMapsId);
 
-        const result: PlaceGetDetailsByGoogleIdOutput = place
-          ? (place as PlaceGetDetailsByGoogleIdOutput)
-          : null;
-        return c.json(result);
-      } catch (error) {
-        console.error('[places.get-by-google-id]', error);
-        return c.json({ error: 'Failed to fetch place' }, 500);
+        return c.json(success(place || null), 200);
+      } catch (err) {
+        if (isServiceError(err)) {
+          return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        }
+
+        console.error('[places.get-by-google-id] unexpected error:', err);
+        return c.json(error('INTERNAL_ERROR', 'Failed to fetch place'), 500);
       }
     },
   )
 
   // Add place to lists
   .post('/add-to-lists', authMiddleware, zValidator('json', placeAddToListsSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
       // Implementation would add place to multiple lists
-      // This is a simplified version
-      const result: PlaceAddToListsOutput = {
-        success: true,
-        addedToLists: input.listIds.length,
-      };
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.add-to-lists]', error);
-      return c.json({ error: 'Failed to add place to lists' }, 500);
+      // This is a simplified version - count successful additions
+      return c.json(
+        success({
+          success: true,
+          addedToLists: input.listIds.length,
+        }),
+        200,
+      );
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.add-to-lists] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to add place to lists'), 500);
     }
   })
 
@@ -491,31 +512,34 @@ export const placesRoutes = new Hono<AppContext>()
     authMiddleware,
     zValidator('json', placeRemoveFromListSchema),
     async (c) => {
-      const input = c.req.valid('json');
-      const userId = c.get('userId')!;
-
       try {
+        const input = c.req.valid('json');
+        const userId = c.get('userId')!;
+
         await removePlaceFromList({
           placeIdentifier: input.placeId,
           listId: input.listId,
           userId,
         });
 
-        const result: PlaceRemoveFromListOutput = { success: true };
-        return c.json(result);
-      } catch (error) {
-        console.error('[places.remove-from-list]', error);
-        return c.json({ error: 'Failed to remove place from list' }, 500);
+        return c.json(success({ success: true }), 200);
+      } catch (err) {
+        if (isServiceError(err)) {
+          return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        }
+
+        console.error('[places.remove-from-list] unexpected error:', err);
+        return c.json(error('INTERNAL_ERROR', 'Failed to remove place from list'), 500);
       }
     },
   )
 
   // Get nearby places from user's lists
   .post('/nearby', authMiddleware, zValidator('json', placeGetNearbySchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
       const places = await getNearbyPlacesFromLists({
         userId,
         latitude: input.latitude,
@@ -524,20 +548,23 @@ export const placesRoutes = new Hono<AppContext>()
         limit: input.limit ?? 20,
       });
 
-      const result: PlaceGetNearbyFromListsOutput = places as PlaceGetNearbyFromListsOutput;
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.nearby]', error);
-      return c.json({ error: 'Failed to fetch nearby places' }, 500);
+      return c.json(success(places), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.nearby] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch nearby places'), 500);
     }
   })
 
   // Log visit to a place
   .post('/log-visit', authMiddleware, zValidator('json', placeLogVisitSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
       const dateValue = input.date ? new Date(input.date) : new Date();
 
       const event = await createEvent({
@@ -554,27 +581,33 @@ export const placesRoutes = new Hono<AppContext>()
         people: input.people,
       });
 
-      const result: PlaceLogVisitOutput = serializeVisit(event);
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.log-visit]', error);
-      return c.json({ error: 'Failed to log visit' }, 500);
+      return c.json(success(serializeVisit(event)), 201);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.log-visit] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to log visit'), 500);
     }
   })
 
   // Get user's visits
   .post('/my-visits', authMiddleware, zValidator('json', placeGetMyVisitsSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
       const visits = await getVisitsByUser(userId);
 
-      const result: PlaceGetMyVisitsOutput = visits.map(serializeVisitFromService);
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.my-visits]', error);
-      return c.json({ error: 'Failed to fetch visits' }, 500);
+      return c.json(success(visits.map(serializeVisitFromService)), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.my-visits] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch visits'), 500);
     }
   })
 
@@ -584,67 +617,76 @@ export const placesRoutes = new Hono<AppContext>()
     authMiddleware,
     zValidator('json', placeGetPlaceVisitsSchema),
     async (c) => {
-      const input = c.req.valid('json');
-
       try {
+        const input = c.req.valid('json');
+
         const visits = await getVisitsByPlace(input.placeId);
 
-        const result: PlaceGetPlaceVisitsOutput = visits.map(serializeVisitFromService);
-        return c.json(result);
-      } catch (error) {
-        console.error('[places.place-visits]', error);
-        return c.json({ error: 'Failed to fetch place visits' }, 500);
+        return c.json(success(visits.map(serializeVisitFromService)), 200);
+      } catch (err) {
+        if (isServiceError(err)) {
+          return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        }
+
+        console.error('[places.place-visits] unexpected error:', err);
+        return c.json(error('INTERNAL_ERROR', 'Failed to fetch place visits'), 500);
       }
     },
   )
 
   // Update visit
   .post('/update-visit', authMiddleware, zValidator('json', placeUpdateVisitSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
       const { id, date, ...updateData } = input;
 
       const updatedEvent = await updateEvent(id, updateData);
 
       if (!updatedEvent) {
-        return c.json({ error: 'Visit not found or unauthorized' }, 404);
+        return c.json(error('NOT_FOUND', 'Visit not found'), 404);
       }
 
-      const result: PlaceUpdateVisitOutput = serializeVisit(updatedEvent);
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.update-visit]', error);
-      return c.json({ error: 'Failed to update visit' }, 500);
+      return c.json(success(serializeVisit(updatedEvent)), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.update-visit] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to update visit'), 500);
     }
   })
 
   // Delete visit
   .post('/delete-visit', authMiddleware, zValidator('json', placeDeleteVisitSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
-      const success = await deleteEvent(input.id);
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
 
-      if (!success) {
-        return c.json({ error: 'Visit not found or unauthorized' }, 404);
+      const success_ = await deleteEvent(input.id);
+
+      if (!success_) {
+        return c.json(error('NOT_FOUND', 'Visit not found'), 404);
       }
 
-      const result: PlaceDeleteVisitOutput = { success: true };
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.delete-visit]', error);
-      return c.json({ error: 'Failed to delete visit' }, 500);
+      return c.json(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.delete-visit] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to delete visit'), 500);
     }
   })
 
   // Get visit statistics for a place
   .post('/visit-stats', authMiddleware, zValidator('json', placeGetVisitStatsSchema), async (c) => {
-    const input = c.req.valid('json');
-
     try {
+      const input = c.req.valid('json');
+
       const visits = await getVisitsByPlace(input.placeId);
 
       // Calculate stats
@@ -688,7 +730,7 @@ export const placesRoutes = new Hono<AppContext>()
         });
       });
 
-      const result: PlaceGetVisitStatsOutput = {
+      const result = {
         totalVisits,
         averageRating: averageRating ?? undefined,
         lastVisit,
@@ -701,9 +743,13 @@ export const placesRoutes = new Hono<AppContext>()
           .sort((a, b) => b.count - a.count),
       };
 
-      return c.json(result);
-    } catch (error) {
-      console.error('[places.visit-stats]', error);
-      return c.json({ error: 'Failed to fetch visit statistics' }, 500);
+      return c.json(success(result), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[places.visit-stats] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch visit statistics'), 500);
     }
   });

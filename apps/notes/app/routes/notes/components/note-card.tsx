@@ -1,14 +1,14 @@
-import type { Content } from '@hominem/services/types';
-
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent } from '@hominem/ui/components/ui/card';
 import { Edit, Trash2, X } from 'lucide-react';
 import { useMemo } from 'react';
 
+import type { Note } from '~/lib/trpc/notes-types';
+
 interface NoteCardProps {
-  note: Content;
-  onEdit: (note: Content) => void;
+  note: Note;
+  onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
   onRemoveTag: (noteId: string, tagValue: string) => void;
   className?: string;

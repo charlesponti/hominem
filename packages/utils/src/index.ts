@@ -1,3 +1,4 @@
+export * from './data/normalization';
 export * from './delay';
 export * from './markdown/index';
 export * from './retry';

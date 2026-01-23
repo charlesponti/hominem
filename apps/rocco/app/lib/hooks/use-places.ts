@@ -1,4 +1,5 @@
-import type { HonoMutationOptions } from '@hominem/hono-client';
+import type { HonoClient } from '@hominem/hono-client';
+import type { HonoMutationOptions } from '@hominem/hono-client/react';
 import type {
   PlaceCreateInput,
   PlaceCreateOutput,
@@ -6,50 +7,46 @@ import type {
   PlaceUpdateOutput,
   PlaceDeleteInput,
   PlaceDeleteOutput,
-  PlaceAutocompleteInput,
   PlaceAutocompleteOutput,
-  PlaceGetDetailsByIdInput,
   PlaceGetDetailsByIdOutput,
-  PlaceGetDetailsByGoogleIdInput,
   PlaceGetDetailsByGoogleIdOutput,
   PlaceAddToListsInput,
   PlaceAddToListsOutput,
   PlaceRemoveFromListInput,
   PlaceRemoveFromListOutput,
-  PlaceGetNearbyFromListsInput,
   PlaceGetNearbyFromListsOutput,
   PlaceLogVisitInput,
   PlaceLogVisitOutput,
-  PlaceGetMyVisitsInput,
   PlaceGetMyVisitsOutput,
-  PlaceGetPlaceVisitsInput,
   PlaceGetPlaceVisitsOutput,
   PlaceUpdateVisitInput,
   PlaceUpdateVisitOutput,
   PlaceDeleteVisitInput,
   PlaceDeleteVisitOutput,
-  PlaceGetVisitStatsInput,
   PlaceGetVisitStatsOutput,
 } from '@hominem/hono-rpc/types';
+import type { ApiResult } from '@hominem/services';
 
-import { useHonoClient, useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 /**
  * Create new place
  */
 export const useCreatePlace = (
-  options?: HonoMutationOptions<PlaceCreateOutput, PlaceCreateInput>,
+  options?: HonoMutationOptions<ApiResult<PlaceCreateOutput>, PlaceCreateInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceCreateOutput, PlaceCreateInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceCreateOutput>, PlaceCreateInput>(
+    async (client: HonoClient, variables: PlaceCreateInput) => {
       const res = await client.api.places.create.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places']);
-        options?.onSuccess?.(data, variables, context, mutationContext);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places']);
+        }
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -60,19 +57,21 @@ export const useCreatePlace = (
  * Update place
  */
 export const useUpdatePlace = (
-  options?: HonoMutationOptions<PlaceUpdateOutput, PlaceUpdateInput>,
+  options?: HonoMutationOptions<ApiResult<PlaceUpdateOutput>, PlaceUpdateInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceUpdateOutput, PlaceUpdateInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceUpdateOutput>, PlaceUpdateInput>(
+    async (client: HonoClient, variables: PlaceUpdateInput) => {
       const res = await client.api.places.update.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places']);
-        utils.invalidate(['places', 'get', data.id]);
-        options?.onSuccess?.(data, variables, context, mutationContext);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places']);
+          utils.invalidate(['places', 'get', result.data.id]);
+        }
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -83,18 +82,20 @@ export const useUpdatePlace = (
  * Delete place
  */
 export const useDeletePlace = (
-  options?: HonoMutationOptions<PlaceDeleteOutput, PlaceDeleteInput>,
+  options?: HonoMutationOptions<ApiResult<PlaceDeleteOutput>, PlaceDeleteInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceDeleteOutput, PlaceDeleteInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceDeleteOutput>, PlaceDeleteInput>(
+    async (client: HonoClient, variables: PlaceDeleteInput) => {
       const res = await client.api.places.delete.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places']);
-        options?.onSuccess?.(data, variables, context, mutationContext);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places']);
+        }
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -109,10 +110,10 @@ export const usePlacesAutocomplete = (
   latitude: number | undefined,
   longitude: number | undefined,
 ) =>
-  useHonoQuery<PlaceAutocompleteOutput>(
+  useHonoQuery<ApiResult<PlaceAutocompleteOutput>>(
     ['places', 'autocomplete', query, latitude, longitude],
-    async (client) => {
-      if (!query || query.length < 2) return [];
+    async (client: HonoClient) => {
+      if (!query || query.length < 2) return { success: true, data: [] };
       const res = await client.api.places.autocomplete.$post({
         json: { query, latitude, longitude },
       });
@@ -127,10 +128,10 @@ export const usePlacesAutocomplete = (
  * Get place details by ID
  */
 export const usePlaceById = (id: string | undefined) =>
-  useHonoQuery<PlaceGetDetailsByIdOutput>(
+  useHonoQuery<ApiResult<PlaceGetDetailsByIdOutput | null>>(
     ['places', 'get', id],
-    async (client) => {
-      if (!id) return null;
+    async (client: HonoClient) => {
+      if (!id) return { success: true, data: null };
       const res = await client.api.places.get.$post({ json: { id } });
       return res.json();
     },
@@ -143,11 +144,13 @@ export const usePlaceById = (id: string | undefined) =>
  * Get place by Google Maps ID
  */
 export const usePlaceByGoogleId = (googleMapsId: string | undefined) =>
-  useHonoQuery<PlaceGetDetailsByGoogleIdOutput>(
+  useHonoQuery<ApiResult<PlaceGetDetailsByGoogleIdOutput | null>>(
     ['places', 'get-by-google-id', googleMapsId],
-    async (client) => {
-      if (!googleMapsId) return null;
-      const res = await client.api.places['get-by-google-id'].$post({ json: { googleMapsId } });
+    async (client: HonoClient) => {
+      if (!googleMapsId) return { success: true, data: null };
+      const res = await client.api.places['get-by-google-id'].$post({
+        json: { googleMapsId },
+      });
       return res.json();
     },
     {
@@ -159,19 +162,21 @@ export const usePlaceByGoogleId = (googleMapsId: string | undefined) =>
  * Add place to lists
  */
 export const useAddPlaceToLists = (
-  options?: HonoMutationOptions<PlaceAddToListsOutput, PlaceAddToListsInput>,
+  options?: HonoMutationOptions<ApiResult<PlaceAddToListsOutput>, PlaceAddToListsInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceAddToListsOutput, PlaceAddToListsInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceAddToListsOutput>, PlaceAddToListsInput>(
+    async (client: HonoClient, variables: PlaceAddToListsInput) => {
       const res = await client.api.places['add-to-lists'].$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places']);
-        utils.invalidate(['lists']);
-        options?.onSuccess?.(data, variables, context, mutationContext);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places']);
+          utils.invalidate(['lists']);
+        }
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -182,19 +187,21 @@ export const useAddPlaceToLists = (
  * Remove place from list
  */
 export const useRemovePlaceFromList = (
-  options?: HonoMutationOptions<PlaceRemoveFromListOutput, PlaceRemoveFromListInput>,
+  options?: HonoMutationOptions<ApiResult<PlaceRemoveFromListOutput>, PlaceRemoveFromListInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceRemoveFromListOutput, PlaceRemoveFromListInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceRemoveFromListOutput>, PlaceRemoveFromListInput>(
+    async (client: HonoClient, variables: PlaceRemoveFromListInput) => {
       const res = await client.api.places['remove-from-list'].$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places']);
-        utils.invalidate(['lists']);
-        options?.onSuccess?.(data, variables, context, mutationContext);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places']);
+          utils.invalidate(['lists']);
+        }
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -207,12 +214,12 @@ export const useRemovePlaceFromList = (
 export const useNearbyPlaces = (
   latitude: number | undefined,
   longitude: number | undefined,
-  radiusMeters?: number,
+  radiusMeters: number | undefined,
 ) =>
-  useHonoQuery<PlaceGetNearbyFromListsOutput>(
+  useHonoQuery<ApiResult<PlaceGetNearbyFromListsOutput>>(
     ['places', 'nearby', latitude, longitude, radiusMeters],
-    async (client) => {
-      if (latitude === undefined || longitude === undefined) return [];
+    async (client: HonoClient) => {
+      if (latitude === undefined || longitude === undefined) return { success: true, data: [] };
       const res = await client.api.places.nearby.$post({
         json: { latitude, longitude, radiusMeters },
       });
@@ -226,23 +233,25 @@ export const useNearbyPlaces = (
 /**
  * Log visit to place
  */
-export const useLogVisit = (
-  options?: HonoMutationOptions<PlaceLogVisitOutput, PlaceLogVisitInput>,
+export const useLogPlaceVisit = (
+  options?: HonoMutationOptions<ApiResult<PlaceLogVisitOutput>, PlaceLogVisitInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceLogVisitOutput, PlaceLogVisitInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceLogVisitOutput>, PlaceLogVisitInput>(
+    async (client: HonoClient, variables: PlaceLogVisitInput) => {
       const res = await client.api.places['log-visit'].$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places', 'my-visits']);
-        if (data.placeId) {
-          utils.invalidate(['places', 'place-visits', data.placeId]);
-          utils.invalidate(['places', 'visit-stats', data.placeId]);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places', 'my-visits']);
+          if (result.data.placeId) {
+            utils.invalidate(['places', 'place-visits', result.data.placeId]);
+            utils.invalidate(['places', 'visit-stats', result.data.placeId]);
+          }
         }
-        options?.onSuccess?.(data, variables, context, mutationContext);
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -253,19 +262,22 @@ export const useLogVisit = (
  * Get user's visits
  */
 export const useMyVisits = (limit?: number, offset?: number) =>
-  useHonoQuery<PlaceGetMyVisitsOutput>(['places', 'my-visits', limit, offset], async (client) => {
-    const res = await client.api.places['my-visits'].$post({ json: { limit, offset } });
-    return res.json();
-  });
+  useHonoQuery<ApiResult<PlaceGetMyVisitsOutput>>(
+    ['places', 'my-visits', limit, offset],
+    async (client: HonoClient) => {
+      const res = await client.api.places['my-visits'].$post({ json: { limit, offset } });
+      return res.json();
+    },
+  );
 
 /**
  * Get visits for a specific place
  */
 export const usePlaceVisits = (placeId: string | undefined) =>
-  useHonoQuery<PlaceGetPlaceVisitsOutput>(
+  useHonoQuery<ApiResult<PlaceGetPlaceVisitsOutput>>(
     ['places', 'place-visits', placeId],
-    async (client) => {
-      if (!placeId) return [];
+    async (client: HonoClient) => {
+      if (!placeId) return { success: true, data: [] };
       const res = await client.api.places['place-visits'].$post({ json: { placeId } });
       return res.json();
     },
@@ -277,23 +289,25 @@ export const usePlaceVisits = (placeId: string | undefined) =>
 /**
  * Update visit
  */
-export const useUpdateVisit = (
-  options?: HonoMutationOptions<PlaceUpdateVisitOutput, PlaceUpdateVisitInput>,
+export const useUpdatePlaceVisit = (
+  options?: HonoMutationOptions<ApiResult<PlaceUpdateVisitOutput>, PlaceUpdateVisitInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceUpdateVisitOutput, PlaceUpdateVisitInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceUpdateVisitOutput>, PlaceUpdateVisitInput>(
+    async (client: HonoClient, variables: PlaceUpdateVisitInput) => {
       const res = await client.api.places['update-visit'].$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places', 'my-visits']);
-        if (data.placeId) {
-          utils.invalidate(['places', 'place-visits', data.placeId]);
-          utils.invalidate(['places', 'visit-stats', data.placeId]);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places', 'my-visits']);
+          if (result.data.placeId) {
+            utils.invalidate(['places', 'place-visits', result.data.placeId]);
+            utils.invalidate(['places', 'visit-stats', result.data.placeId]);
+          }
         }
-        options?.onSuccess?.(data, variables, context, mutationContext);
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -303,21 +317,23 @@ export const useUpdateVisit = (
 /**
  * Delete visit
  */
-export const useDeleteVisit = (
-  options?: HonoMutationOptions<PlaceDeleteVisitOutput, PlaceDeleteVisitInput>,
+export const useDeletePlaceVisit = (
+  options?: HonoMutationOptions<ApiResult<PlaceDeleteVisitOutput>, PlaceDeleteVisitInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<PlaceDeleteVisitOutput, PlaceDeleteVisitInput>(
-    async (client, variables) => {
+  return useHonoMutation<ApiResult<PlaceDeleteVisitOutput>, PlaceDeleteVisitInput>(
+    async (client: HonoClient, variables: PlaceDeleteVisitInput) => {
       const res = await client.api.places['delete-visit'].$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (data, variables, context, mutationContext) => {
-        utils.invalidate(['places', 'my-visits']);
-        utils.invalidate(['places', 'place-visits']);
-        utils.invalidate(['places', 'visit-stats']);
-        options?.onSuccess?.(data, variables, context, mutationContext);
+      onSuccess: (result, variables, context, mutationContext) => {
+        if (result.success) {
+          utils.invalidate(['places', 'my-visits']);
+          utils.invalidate(['places', 'place-visits']);
+          utils.invalidate(['places', 'visit-stats']);
+        }
+        options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
     },
@@ -325,13 +341,13 @@ export const useDeleteVisit = (
 };
 
 /**
- * Get visit statistics for a place
+ * Get visit statistics
  */
-export const useVisitStats = (placeId: string | undefined) =>
-  useHonoQuery<PlaceGetVisitStatsOutput>(
+export const usePlaceVisitStats = (placeId: string | undefined) =>
+  useHonoQuery<ApiResult<PlaceGetVisitStatsOutput | null>>(
     ['places', 'visit-stats', placeId],
-    async (client) => {
-      if (!placeId) return null;
+    async (client: HonoClient) => {
+      if (!placeId) return { success: true, data: null };
       const res = await client.api.places['visit-stats'].$post({ json: { placeId } });
       return res.json();
     },

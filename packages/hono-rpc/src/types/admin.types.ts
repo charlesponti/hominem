@@ -1,16 +1,8 @@
-/**
- * Explicit Type Contracts for Admin API
- *
- * Performance Benefit: These explicit types are resolved INSTANTLY by TypeScript.
- * No complex inference, no router composition, no type instantiation explosion.
- */
+import type { EmptyInput } from './utils';
 
-// ============================================================================
-// Admin RefreshGooglePlaces
-// ============================================================================
+export type AdminRefreshGooglePlacesInput = EmptyInput;
 
-export interface AdminRefreshGooglePlacesOutput {
-  success: boolean;
+export type AdminRefreshGooglePlacesOutput = {
   updatedCount: number;
-  message: string;
-}
+  duration: number;
+};

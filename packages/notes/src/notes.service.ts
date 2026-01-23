@@ -155,7 +155,7 @@ export class NotesService {
       try {
         const sinceDate = new Date(filters.since).toISOString();
         conditions.push(sql`${notes.updatedAt} > ${sinceDate}`);
-      } catch (_e) {
+      } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);
       }
     }

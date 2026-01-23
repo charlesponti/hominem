@@ -14,9 +14,11 @@ const QUERY_KEYS = {
 export function useCreateChat(userId: string) {
   const queryClient = useQueryClient();
   const createChatMutation = trpc.chats.createChat.useMutation({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chats(userId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatStats(userId) });
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chats(userId) });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatStats(userId) });
+      }
     },
   });
 

@@ -1,4 +1,3 @@
-import { tripsService } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
@@ -6,12 +5,9 @@ import { AddPlaceToTripModal } from '~/components/trips/add-place-to-trip-modal'
 
 import type { Route } from './+types/trips.$tripId';
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const trip = await tripsService.getById({ id: params.tripId });
-  if (!trip) {
-    throw new Response('Not Found', { status: 404 });
-  }
-  return { trip };
+export async function loader({ params }: Route.LoaderArgs) {
+  // TODO: Fetch trip data from API via client hook or server action
+  return { trip: null };
 }
 
 export default function TripPage({ loaderData }: Route.ComponentProps) {

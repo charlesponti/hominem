@@ -143,17 +143,6 @@ function createUseMutationQuery<TData = unknown>(): UseMutationFn<TData> {
   return vi.fn<() => MockMutationResult<TData>>(() => defaultResult);
 }
 
-function createUseQuery() {
-  return {
-    data: null,
-    isLoading: false,
-    error: null,
-    invalidate: vi.fn(),
-    refetch: vi.fn(),
-    setData: vi.fn(),
-  };
-}
-
 // Mock Hono hooks
 vi.mock('~/lib/hono', () => ({
   useLists: vi.fn(() => ({ data: [], isLoading: false, error: null })),

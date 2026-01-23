@@ -1,7 +1,7 @@
-import type { Note } from '@hominem/services/types';
-
 import { Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+
+import type { Note } from '~/lib/trpc/notes-types';
 
 import { useDeleteNote, useNotesList, useUpdateNote } from '~/hooks/use-notes';
 
@@ -62,7 +62,7 @@ export default function NotesPage() {
     const newTags = (item.tags || []).filter((tag: { value: string }) => tag.value !== tagValue);
     updateItem.mutate({
       id: noteId,
-      data: { tags: newTags },
+      tags: newTags,
     });
   }
 
@@ -83,7 +83,7 @@ export default function NotesPage() {
   return (
     <div className="flex flex-col h-screen w-full max-w-2xl mx-auto">
       {/* Fixed Header with Title */}
-      <header className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 z-10">
+      <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 z-10">
         <div className="py-4 px-4">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Home</h1>
         </div>
@@ -114,7 +114,7 @@ export default function NotesPage() {
 
             {!isLoading && allContentItems.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-3xl flex items-center justify-center mb-6">
+                <div className="w-24 h-24 bg-linear-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-3xl flex items-center justify-center mb-6">
                   <Sparkles className="w-12 h-12 text-blue-500 dark:text-blue-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">

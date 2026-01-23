@@ -1,85 +1,40 @@
-import { Hono } from 'hono';
-
 import type { AppContext } from './middleware/auth';
 
-import { contextMiddleware } from './middleware/context';
-import { adminRoutes } from './routes/admin';
-import { financeRoutes } from './routes/finance';
-import { invitesRoutes } from './routes/invites';
-import { itemsRoutes } from './routes/items';
-import { listsRoutes } from './routes/lists';
-import { peopleRoutes } from './routes/people';
-import { placesRoutes } from './routes/places';
-import { tripsRoutes } from './routes/trips';
-import { userRoutes } from './routes/user';
+import { app, type AppType } from './app';
 
 /**
- * Main Hono RPC App
- *
- * Performance Benefits:
- * 1. Route composition is simple - no complex type inference
- * 2. Each .route() adds minimal type overhead
- * 3. TypeScript processes this in milliseconds vs seconds with tRPC
- *
- * Compare:
- * - tRPC router composition: 6+ seconds, 10,000+ instantiations
- * - Hono route composition: <500ms, <100 instantiations
- *
- * Result: 90%+ faster type-checking!
+ * Export app for server setup
  */
-
-export const app = new Hono<AppContext>()
-  // Global context middleware - runs on every request
-  .use('*', contextMiddleware)
-
-  // API routes
-  .route('/api/finance', financeRoutes)
-  .route('/api/lists', listsRoutes)
-  .route('/api/places', placesRoutes)
-  .route('/api/invites', invitesRoutes)
-  .route('/api/items', itemsRoutes)
-  .route('/api/trips', tripsRoutes)
-  .route('/api/people', peopleRoutes)
-  .route('/api/user', userRoutes)
-  .route('/api/admin', adminRoutes)
-
-  // Add more routes as you migrate other apps
-  // .route('/api/notes', notesRoutes)
-  // .route('/api/chats', chatsRoutes)
-
-  // Health check
-  .get('/health', (c) =>
-    c.json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    }),
-  );
+export { app };
 
 /**
- * App Type
+ * App Type - use this for type-safe client instantiation
  *
- * This is what clients import for type-safe API calls.
- * Much simpler than tRPC's complex router types.
+ * Example usage in type inference:
+ *   import type { AppType } from '@hominem/hono-rpc'
+ *   import type { InferResponseType } from 'hono/client'
+ *   import { hc } from 'hono/client'
+ *
+ *   type ApiClient = ReturnType<typeof hc<AppType>>
+ *   type MyResponse = InferResponseType<ApiClient['api']['myroute']['$get']>
  */
-export type AppType = typeof app;
+export type { AppType };
 
 /**
- * Export routes for use in server setup
+ * Routes - re-exported for convenience
  */
-export {
-  financeRoutes,
-  listsRoutes,
-  placesRoutes,
-  invitesRoutes,
-  itemsRoutes,
-  tripsRoutes,
-  peopleRoutes,
-  userRoutes,
-  adminRoutes,
-};
+export { financeRoutes } from './routes/finance';
+export { listsRoutes } from './routes/lists';
+export { placesRoutes } from './routes/places';
+export { invitesRoutes } from './routes/invites';
+export { itemsRoutes } from './routes/items';
+export { tripsRoutes } from './routes/trips';
+export { peopleRoutes } from './routes/people';
+export { userRoutes } from './routes/user';
+export { adminRoutes } from './routes/admin';
 
 /**
- * Export types for client usage
+ * Types - re-exported for convenience
  */
-export type { AppContext } from './middleware/auth';
+export type { AppContext };
 export * from './types';

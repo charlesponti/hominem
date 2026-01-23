@@ -42,17 +42,16 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const listId = loaderData.list.id;
 
   const {
-    data: list,
+    data: result,
     isLoading,
     error,
-  } = useListById(
-    { id: listId },
-    {
-      initialData: loaderData.list,
-      enabled: !!listId,
-      staleTime: 1000 * 60,
-    },
-  );
+  } = useListById(listId, {
+    initialData: { success: true, data: loaderData.list },
+    staleTime: 1000 * 60,
+  });
+
+  const list = result?.success && result.data ? result.data : loaderData.list;
+  const apiError = result?.success === false ? result : null;
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation();
 
   const markers: PlaceLocation[] = useMemo(
@@ -70,7 +69,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   );
 
   // Show loading state only on initial load
-  if (isLoading) {
+  if (isLoading && !result) {
     return (
       <div className="flex items-center justify-center h-32">
         <Loading size="lg" />
@@ -85,9 +84,9 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     <MapInteractionProvider>
       <div className="space-y-4">
         <div className="flex-1 space-y-2">
-          {error && (
+          {(error || apiError) && (
             <Alert type="error" dismissible>
-              Error loading list updates: {error.message}
+              Error loading list updates: {error?.message || apiError?.message}
             </Alert>
           )}
           <div

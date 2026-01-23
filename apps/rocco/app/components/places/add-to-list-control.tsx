@@ -5,7 +5,7 @@ import { ListPlus } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import z from 'zod';
 
-import { usePlaceById, usePlaceByGoogleId, useHonoUtils } from '~/lib/hono';
+import { usePlaceById, usePlaceByGoogleId } from '~/lib/hono';
 
 const AddToListDrawerContent = lazy(() => import('./add-to-list-drawer-content'));
 
@@ -16,7 +16,6 @@ interface AddToListControlProps {
 const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const [open, setOpen] = useState(false);
   const { isAuthenticated } = useSupabaseAuthContext();
-  const utils = useHonoUtils();
   const isUuid = z.uuid().safeParse(placeId).success;
 
   // Fetch place details

@@ -26,6 +26,7 @@
     "@hominem/events-services": "workspace:*",
     "@hominem/finance-services": "workspace:*",
     "@hominem/health-services": "workspace:*",
+    "@hominem/hono-rpc": "workspace:*",
     "@hominem/jobs-services": "workspace:*",
     "@hominem/lists-services": "workspace:*",
     "@hominem/notes-services": "workspace:*",

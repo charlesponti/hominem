@@ -1,17 +1,8 @@
+import type { NotesListInput } from '~/lib/trpc/notes-types';
+
 import { trpc } from '~/lib/trpc';
 
-export function useNotesList(
-  options: {
-    types?: ('note' | 'task' | 'timer' | 'journal' | 'document')[];
-    query?: string;
-    tags?: string[];
-    since?: string;
-    sortBy?: 'createdAt' | 'updatedAt' | 'title';
-    sortOrder?: 'asc' | 'desc';
-    limit?: number;
-    offset?: number;
-  } = {},
-) {
+export function useNotesList(options: NotesListInput = {}) {
   return trpc.notes.list.useQuery(options, {
     staleTime: 1000 * 60 * 1, // 1 minute
   });

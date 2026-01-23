@@ -12,7 +12,7 @@ import SentInvites from '~/components/lists/sent-invites';
 
 import type { Route } from './+types/lists.$id.invites';
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const listId = params.id;
   if (!listId) {
     throw new Response('List ID is required', { status: 400 });

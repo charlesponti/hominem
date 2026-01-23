@@ -1,4 +1,3 @@
-import { tripsService } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
@@ -20,8 +19,8 @@ export async function action({ request }: Route.ActionArgs) {
   const endDate = endDateStr ? new Date(endDateStr) : undefined;
 
   try {
-    const trip = await tripsService.create({ name, startDate, endDate });
-    return { success: true, tripId: trip.id };
+    // TODO: Create trip via client hook or server action
+    return { success: false, error: 'Trip creation not yet implemented' };
   } catch {
     return { success: false, error: 'Failed to create trip' };
   }

@@ -1,4 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
+import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Label } from '@hominem/ui/components/ui/label';
@@ -18,7 +19,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@hominem/ui/dialog';
-import { useToast } from '@hominem/ui';
 import { Loader2, RefreshCw, Twitter } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -32,7 +32,7 @@ interface TweetModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   noteContent: string;
-  noteTitle?: string | null;
+  noteTitle?: string | null | undefined;
   contentId?: string; // Optional: link to existing content
 }
 

@@ -37,7 +37,6 @@ interface GoalModalProps {
 
 export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: GoalModalProps) {
   const form = useForm<GoalFormData>({
-    // @ts-expect-error - zodResolver v5 expects Zod v3 types, but we're using Zod v4 which is runtime compatible
     resolver: zodResolver(GoalFormSchema as never),
     defaultValues: {
       title: goal?.title ?? '',

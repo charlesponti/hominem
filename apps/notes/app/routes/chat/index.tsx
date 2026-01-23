@@ -23,9 +23,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     title: 'New Chat',
   });
 
-  if (!newChat.chat) {
+  if (!newChat.success || !newChat.data) {
     return redirect('/', { headers });
   }
 
-  return redirect(`/chat/${newChat.chat.id}`, { headers });
+  return redirect(`/chat/${newChat.data.id}`, { headers });
 }

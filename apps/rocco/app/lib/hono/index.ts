@@ -5,7 +5,12 @@
  */
 
 export { HonoProvider } from './provider';
-export { useHonoClient, useHonoUtils, useHonoQuery, useHonoMutation } from '@hominem/hono-client';
+export {
+  useHonoClient,
+  useHonoUtils,
+  useHonoQuery,
+  useHonoMutation,
+} from '@hominem/hono-client/react';
 
 // Re-export all hooks
 export * from '../hooks/use-lists';
@@ -15,6 +20,13 @@ export * from '../hooks/use-items';
 export * from '../hooks/use-trips';
 export * from '../hooks/use-people';
 export * from '../hooks/use-user';
+export * from '../hooks/use-admin';
+
+// Backward compatibility aliases for visit hooks
+export { useLogPlaceVisit as useLogVisit } from '../hooks/use-places';
+export { useUpdatePlaceVisit as useUpdateVisit } from '../hooks/use-places';
+export { useDeletePlaceVisit as useDeleteVisit } from '../hooks/use-places';
+export { usePlaceVisitStats as useVisitStats } from '../hooks/use-places';
 
 // Re-export types
 export type * from '@hominem/hono-rpc/types';

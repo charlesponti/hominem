@@ -1,10 +1,10 @@
 import type { ContentStrategy } from '@hominem/services/types';
 
+import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Checkbox } from '@hominem/ui/components/ui/checkbox';
 import { Label } from '@hominem/ui/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@hominem/ui/components/ui/tabs';
-import { useToast } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { Copy, FileText, Save } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -157,7 +157,7 @@ export default function ContentStrategyPage() {
         title: 'Copied!',
         description: `${description} copied to clipboard`,
       });
-    } catch (_error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Copy failed',
@@ -277,7 +277,7 @@ ${strategy.monetization?.map((idea) => `- ${idea}`).join('\n') || '- No monetiza
         title: 'Notes Created!',
         description: 'The content strategy has been converted into notes and copied to clipboard.',
       });
-    } catch (_error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Failed to create notes',

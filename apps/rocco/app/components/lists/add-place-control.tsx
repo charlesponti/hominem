@@ -69,17 +69,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         throw new Error('googleMapsId is required');
       }
       addPlaceToList.mutate({
-        name: place.name,
-        address: place.address || undefined,
-        latitude: place.latitude || undefined,
-        longitude: place.longitude || undefined,
-        imageUrl: place.imageUrl || undefined,
-        googleMapsId: place.googleMapsId,
-        rating: place.rating || undefined,
-        types: place.types || undefined,
-        websiteUri: place.websiteUri || undefined,
-        phoneNumber: place.phoneNumber || undefined,
-        photos: place.photos || undefined,
+        placeId: place.id,
         listIds: [listId],
       });
     } catch (error) {

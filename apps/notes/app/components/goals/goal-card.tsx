@@ -1,8 +1,10 @@
-import type { GoalsListOutput } from '~/lib/trpc/notes-types';
+import type { GoalMilestone } from '@hominem/db/schema';
 
 import { Button } from '@hominem/ui';
 import { Progress } from '@hominem/ui/components/ui/progress';
 import { CalendarCheck, Edit, Trash2 } from 'lucide-react';
+
+import type { GoalsListOutput } from '~/lib/trpc/notes-types';
 
 import { PriorityBadge } from './priority-badge';
 import { StatusBadge } from './status-badge';
@@ -16,7 +18,8 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
-  const completedMilestones = goal.milestones?.filter((m: Goal['milestones'][number]) => m.completed).length || 0;
+  const completedMilestones =
+    goal.milestones?.filter((m: GoalMilestone) => m.completed).length || 0;
   const totalMilestones = goal.milestones?.length || 0;
   const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
 
@@ -43,17 +46,19 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         {goal.milestones && goal.milestones.length > 0 && (
           <div className="space-y-2">
             <Progress value={progress} className="mb-4 h-2" />
-            {goal.milestones.map((milestone: Goal['milestones'][number], idx: number) => (
+            {goal.milestones.map((milestone: GoalMilestone, idx: number) => (
               <div key={`${goal.id}-milestone-${idx}`} className="flex items-start gap-2 text-sm">
                 <div
-                  className={`mt-1 size-4 rounded-full border-2 flex items-center justify-center ${milestone.completed ? 'bg-green-500 border-green-500' : 'border-muted'
-                    }`}
+                  className={`mt-1 size-4 rounded-full border-2 flex items-center justify-center ${
+                    milestone.completed ? 'bg-green-500 border-green-500' : 'border-muted'
+                  }`}
                 >
                   {milestone.completed && <CalendarCheck className="size-3 text-white" />}
                 </div>
                 <span
-                  className={`flex-1 ${milestone.completed ? 'text-muted-foreground line-through' : ''
-                    }`}
+                  className={`flex-1 ${
+                    milestone.completed ? 'text-muted-foreground line-through' : ''
+                  }`}
                 >
                   {milestone.description}
                 </span>

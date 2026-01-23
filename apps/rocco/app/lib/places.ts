@@ -19,12 +19,12 @@ export {
   useAddPlaceToLists,
   useRemovePlaceFromList,
   useNearbyPlaces,
-  useLogVisit,
+  useLogPlaceVisit,
   useMyVisits,
   usePlaceVisits,
-  useUpdateVisit,
-  useDeleteVisit,
-  useVisitStats,
+  useUpdatePlaceVisit,
+  useDeletePlaceVisit,
+  usePlaceVisitStats,
 } from '~/lib/hono';
 
 export { useRemoveItemFromList } from '~/lib/hono';
@@ -32,6 +32,10 @@ export { useRemoveItemFromList } from '~/lib/hono';
 // Aliases for backward compatibility
 export { useAddPlaceToLists as useAddPlaceToList } from '~/lib/hono';
 export { useRemovePlaceFromList as useRemoveListItem } from '~/lib/hono';
+export { useLogPlaceVisit as useLogVisit } from '~/lib/hono';
+export { useUpdatePlaceVisit as useUpdateVisit } from '~/lib/hono';
+export { useDeletePlaceVisit as useDeleteVisit } from '~/lib/hono';
+export { usePlaceVisitStats as useVisitStats } from '~/lib/hono';
 
 export async function createPlaceFromPrediction(prediction: GooglePlacePrediction): Promise<Place> {
   /**
@@ -68,8 +72,5 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
     priceLevel: null,
     businessStatus: null,
     openingHours: null,
-    associatedLists: [],
-    thumbnailPhotos: [],
-    fullPhotos: [],
   };
 }

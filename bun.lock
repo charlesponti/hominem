@@ -52,9 +52,6 @@
         "@tanstack/react-form": "^1.0.5",
         "@tanstack/react-query": "5.90.16",
         "@tanstack/react-query-devtools": "^5.91.2",
-        "@trpc/client": "11.8.0",
-        "@trpc/react-query": "^11.0.0",
-        "@trpc/server": "11.8.0",
         "@vitejs/plugin-react": "5.1.2",
         "ai": "^4.3.16",
         "autoprefixer": "^10.4.20",
@@ -203,6 +200,8 @@
         "@hominem/db": "workspace:*",
         "@hominem/events-services": "workspace:*",
         "@hominem/hono-client": "workspace:*",
+        "@hominem/hono-rpc": "workspace:*",
+        "@hominem/invites-services": "workspace:*",
         "@hominem/lists-services": "workspace:*",
         "@hominem/places-services": "workspace:*",
         "@hominem/services": "workspace:*",
@@ -446,6 +445,22 @@
       "devDependencies": {
         "@types/node": "^22.15.2",
         "typescript": "5.9.3",
+      },
+    },
+    "packages/invites": {
+      "name": "@hominem/invites-services",
+      "version": "0.0.0",
+      "dependencies": {
+        "@hominem/db": "workspace:*",
+        "@hominem/lists-services": "workspace:*",
+        "@hominem/services": "workspace:*",
+        "drizzle-orm": "0.45.1",
+        "zod": "4.3.6",
+      },
+      "devDependencies": {
+        "@types/node": "^22.18.13",
+        "typescript": "5.9.3",
+        "vitest": "4.0.16",
       },
     },
     "packages/jobs": {
@@ -742,6 +757,7 @@
         "@hominem/events-services": "workspace:*",
         "@hominem/finance-services": "workspace:*",
         "@hominem/health-services": "workspace:*",
+        "@hominem/hono-rpc": "workspace:*",
         "@hominem/jobs-services": "workspace:*",
         "@hominem/lists-services": "workspace:*",
         "@hominem/notes-services": "workspace:*",
@@ -1233,6 +1249,8 @@
     "@hominem/hono-client": ["@hominem/hono-client@workspace:packages/hono-client"],
 
     "@hominem/hono-rpc": ["@hominem/hono-rpc@workspace:packages/hono-rpc"],
+
+    "@hominem/invites-services": ["@hominem/invites-services@workspace:packages/invites"],
 
     "@hominem/jobs-services": ["@hominem/jobs-services@workspace:packages/jobs"],
 
@@ -4243,8 +4261,6 @@
     "@hominem/db/dotenv": ["dotenv@16.6.1", "", {}, "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="],
 
     "@hominem/db/drizzle-kit": ["drizzle-kit@0.30.6", "", { "dependencies": { "@drizzle-team/brocli": "^0.10.2", "@esbuild-kit/esm-loader": "^2.5.5", "esbuild": "^0.19.7", "esbuild-register": "^3.5.0", "gel": "^2.0.0" }, "bin": { "drizzle-kit": "bin.cjs" } }, "sha512-U4wWit0fyZuGuP7iNmRleQyK2V8wCuv57vf5l3MnG4z4fzNTjY/U13M8owyQ5RavqvqxBifWORaR3wIUzlN64g=="],
-
-    "@hominem/finance/@trpc/server": ["@trpc/server@11.8.0", "", { "peerDependencies": { "typescript": ">=5.7.2" } }, "sha512-DphyQnLuyX2nwJCQGWQ9zYz4hZGvRhSBqDhQ0SH3tDhQ3PU4u68xofA0pJ741Ir4InEAFD+TtJVLAQy+wVOkiQ=="],
 
     "@hominem/finance/date-fns": ["date-fns@3.6.0", "", {}, "sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww=="],
 

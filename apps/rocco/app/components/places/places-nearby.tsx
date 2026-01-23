@@ -12,7 +12,6 @@ type Props = {
   latitude?: number;
   longitude?: number;
   radiusMeters?: number;
-  limit?: number;
 };
 
 // Default location: San Francisco (fallback)
@@ -32,7 +31,6 @@ export default function PlacesNearby({
   latitude: providedLatitude,
   longitude: providedLongitude,
   radiusMeters = 5000,
-  limit = 4,
 }: Props) {
   // Get user's current location from cached hook (only if not provided via props)
   const { currentLocation } = useGeolocation({
@@ -96,7 +94,7 @@ export default function PlacesNearby({
       <div className="flex items-center justify-between">{title}</div>
 
       <List>
-        {places.map((place) => {
+        {places.map((place: (typeof places)[0]) => {
           return (
             <PlaceRow
               key={place.id}

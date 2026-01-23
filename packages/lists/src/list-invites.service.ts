@@ -7,10 +7,52 @@ import {
   userLists,
   users,
 } from '@hominem/db/schema';
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+  InternalError,
+  isServiceError,
+} from '@hominem/services';
 import { sendInviteEmail } from '@hominem/services/emails';
 import { logger } from '@hominem/utils/logger';
 import { and, eq, or } from 'drizzle-orm';
 import crypto from 'node:crypto';
+import { z } from 'zod';
+
+/**
+ * Input validation schema for sendListInvite
+ */
+export const sendListInviteSchema = z.object({
+  listId: z.string().uuid('Invalid list ID'),
+  invitedUserEmail: z.string().email('Invalid email format'),
+  invitingUserId: z.string().uuid('Invalid user ID'),
+  baseUrl: z.string().url('Invalid base URL'),
+});
+
+export type SendListInviteParams = z.infer<typeof sendListInviteSchema>;
+
+/**
+ * Input validation schema for acceptListInvite
+ */
+export const acceptListInviteSchema = z.object({
+  listId: z.string().uuid('Invalid list ID'),
+  acceptingUserId: z.string().uuid('Invalid user ID'),
+  token: z.string().min(1, 'Token required'),
+});
+
+export type AcceptListInviteParams = z.infer<typeof acceptListInviteSchema>;
+
+/**
+ * Input validation schema for deleteListInvite
+ */
+export const deleteListInviteSchema = z.object({
+  listId: z.string().uuid('Invalid list ID'),
+  invitedUserEmail: z.string().email('Invalid email format'),
+  userId: z.string().uuid('Invalid user ID'),
+});
+
+export type DeleteListInviteParams = z.infer<typeof deleteListInviteSchema>;
 
 /**
  * Gets all invites for a specific list
@@ -26,11 +68,17 @@ export async function getListInvites(listId: string) {
       },
     });
   } catch (error) {
-    console.error(`Error fetching invites for list ${listId}:`, error);
+    logger.error('Error fetching invites for list', {
+      listId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 }
 
+/**
+ * Gets invites for a user by ID or email
+ */
 export async function getInvitesForUser(userId: string, normalizedEmail?: string | null) {
   const ownershipClause = normalizedEmail
     ? or(eq(listInvite.invitedUserId, userId), eq(listInvite.invitedUserEmail, normalizedEmail))
@@ -42,23 +90,53 @@ export async function getInvitesForUser(userId: string, normalizedEmail?: string
   });
 }
 
+/**
+ * Gets an invite by token, including associated list
+ * @throws NotFoundError if invite not found
+ */
 export async function getInviteByToken(
   token: string,
-): Promise<(ListInviteSelect & { list: ListSelect | null }) | undefined> {
-  return db.query.listInvite.findFirst({
+): Promise<ListInviteSelect & { list: ListSelect | null }> {
+  const invite = await db.query.listInvite.findFirst({
     where: eq(listInvite.token, token),
     with: { list: true },
   });
+
+  if (!invite) {
+    throw new NotFoundError('Invite', { token });
+  }
+
+  return invite;
 }
 
-export async function getInviteByListAndToken(params: { listId: string; token: string }) {
+/**
+ * Gets an invite by list ID and token
+ * @throws NotFoundError if invite not found
+ */
+export async function getInviteByListAndToken(params: {
+  listId: string;
+  token: string;
+}): Promise<ListInviteSelect> {
   const { listId, token } = params;
-  return db.query.listInvite.findFirst({
+
+  const invite = await db.query.listInvite.findFirst({
     where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
   });
+
+  if (!invite) {
+    throw new NotFoundError('Invite', { listId, token });
+  }
+
+  return invite;
 }
 
-export async function deleteInviteByListAndToken(params: { listId: string; token: string }) {
+/**
+ * Deletes an invite by list ID and token
+ */
+export async function deleteInviteByListAndToken(params: {
+  listId: string;
+  token: string;
+}): Promise<boolean> {
   const { listId, token } = params;
   const deletedInvite = await db
     .delete(listInvite)
@@ -68,6 +146,9 @@ export async function deleteInviteByListAndToken(params: { listId: string; token
   return deletedInvite.length > 0;
 }
 
+/**
+ * Gets all outbound invites sent by a user
+ */
 export async function getOutboundInvites(userId: string) {
   return db.query.listInvite.findMany({
     where: eq(listInvite.userId, userId),
@@ -76,53 +157,57 @@ export async function getOutboundInvites(userId: string) {
 }
 
 /**
- * Creates a new list invite.
- * @param listId - The ID of the list to invite to.
- * @param invitedUserEmail - The email of the user to invite.
- * @param invitingUserId - The ID of the user sending the invite.
- * @param baseUrl - The base URL for constructing the invite link.
- * @returns The created invite object or an error string.
+ * Sends a new list invite to a user email
+ *
+ * @param params - Parameters including listId, invitedUserEmail, invitingUserId, baseUrl
+ * @returns The created ListInvite
+ * @throws ValidationError if email format is invalid
+ * @throws NotFoundError if list does not exist
+ * @throws ConflictError if invite already exists for this email
+ * @throws InternalError if database operation fails
  */
-export async function sendListInvite(
-  listId: string,
-  invitedUserEmail: string,
-  invitingUserId: string,
-  baseUrl: string,
-): Promise<ListInviteSelect | { error: string; status: number }> {
+export async function sendListInvite(params: SendListInviteParams): Promise<ListInviteSelect> {
+  const { listId, invitedUserEmail, invitingUserId, baseUrl } = params;
+
+  const normalizedInvitedEmail = invitedUserEmail.toLowerCase();
+
+  // Check if list exists
+  const listRecord = await db.query.list.findFirst({
+    where: eq(list.id, listId),
+  });
+
+  if (!listRecord) {
+    throw new NotFoundError('List', { listId });
+  }
+
+  // Check if invite already exists
+  const existingInvite = await db.query.listInvite.findFirst({
+    where: and(
+      eq(listInvite.listId, listId),
+      eq(listInvite.invitedUserEmail, normalizedInvitedEmail),
+    ),
+  });
+
+  if (existingInvite && !existingInvite.accepted) {
+    throw new ConflictError('An invite for this email address to this list already exists', {
+      listId,
+      email: normalizedInvitedEmail,
+    });
+  }
+
+  // Generate invite token
+  const token = crypto.randomBytes(32).toString('hex');
+
+  // Check if user exists with this email
+  const invitedUserRecord = await db.query.users.findFirst({
+    where: eq(users.email, normalizedInvitedEmail),
+  });
+
   try {
-    const normalizedInvitedEmail = invitedUserEmail.toLowerCase();
-    const listRecord = await db.query.list.findFirst({
-      where: eq(list.id, listId),
-    });
-
-    if (!listRecord) {
-      return { error: 'List not found', status: 404 };
-    }
-
-    const existingInvite = await db.query.listInvite.findFirst({
-      where: and(
-        eq(listInvite.listId, listId),
-        eq(listInvite.invitedUserEmail, normalizedInvitedEmail),
-      ),
-    });
-
-    if (existingInvite) {
-      return {
-        error: 'An invite for this email address to this list already exists.',
-        status: 409,
-      };
-    }
-
-    const token = crypto.randomBytes(32).toString('hex');
-
-    const invitedUserRecord = await db.query.users.findFirst({
-      where: eq(users.email, normalizedInvitedEmail),
-    });
-
     const createdInvite = await db
       .insert(listInvite)
       .values({
-        listId: listId,
+        listId,
         invitedUserEmail: normalizedInvitedEmail,
         invitedUserId: invitedUserRecord?.id || null,
         accepted: false,
@@ -132,6 +217,7 @@ export async function sendListInvite(
       .returning()
       .then(takeUniqueOrThrow);
 
+    // Send invite email
     const inviteLink = `${baseUrl.replace(/\/$/, '')}/invites?token=${token}&listId=${listId}`;
 
     try {
@@ -146,62 +232,78 @@ export async function sendListInvite(
         invitedUserEmail: normalizedInvitedEmail,
         error: error instanceof Error ? error.message : String(error),
       });
+      // Continue - invite was created even if email failed
     }
 
     return createdInvite;
   } catch (error) {
-    console.error(
-      `Error creating list invite for list ${listId} by user ${invitingUserId}:`,
-      error,
-    );
     if (
       error instanceof Error &&
       error.message.includes('duplicate key value violates unique constraint')
     ) {
-      return { error: 'Invite already exists or conflicts with an existing record.', status: 409 };
+      throw new ConflictError('Invite already exists or conflicts with an existing record', {
+        listId,
+        email: normalizedInvitedEmail,
+      });
     }
-    return { error: 'Failed to create invite.', status: 500 };
+
+    throw new InternalError('Failed to create invite', {
+      originalError: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
 /**
- * Accepts a list invite.
- * @param listId - The ID of the list from the invite.
- * @param acceptingUserId - The ID of the user accepting the invite.
- * @param token - The invite token used for verification.
- * @returns The list object if successful, or an error string.
+ * Accepts a list invite
+ *
+ * @param params - Parameters including listId, acceptingUserId, token
+ * @returns The list that was invited to
+ * @throws NotFoundError if invite or list not found
+ * @throws ValidationError if invite was already accepted or conditions not met
+ * @throws InternalError if database operation fails
  */
-export async function acceptListInvite(listId: string, acceptingUserId: string, token: string) {
+export async function acceptListInvite(params: AcceptListInviteParams): Promise<ListSelect> {
+  const { listId, acceptingUserId, token } = params;
+
+  const invite = await db.query.listInvite.findFirst({
+    where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
+  });
+
+  if (!invite) {
+    throw new NotFoundError('Invite', { listId, token });
+  }
+
+  if (invite.accepted) {
+    throw new ValidationError('Invite already accepted', {
+      listId,
+      token,
+    });
+  }
+
+  const listRecord = await db.query.list.findFirst({
+    where: eq(list.id, invite.listId),
+  });
+
+  if (!listRecord) {
+    throw new NotFoundError('List', { listId: invite.listId });
+  }
+
+  if (listRecord.userId === acceptingUserId) {
+    throw new ValidationError('Cannot accept an invite to a list you own', {
+      listId,
+      acceptingUserId,
+    });
+  }
+
+  const acceptingUser = await db.query.users.findFirst({
+    where: eq(users.id, acceptingUserId),
+  });
+
+  if (!acceptingUser) {
+    throw new NotFoundError('User', { userId: acceptingUserId });
+  }
+
   try {
-    const invite = await db.query.listInvite.findFirst({
-      where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
-    });
-
-    if (!invite) {
-      return { error: 'Invite not found.', status: 404 };
-    }
-
-    if (invite.accepted) {
-      return { error: 'Invite already accepted.', status: 400 };
-    }
-
-    const listRecord = await db.query.list.findFirst({
-      where: eq(list.id, invite.listId),
-    });
-
-    if (!listRecord) {
-      return { error: 'List not found.', status: 404 };
-    }
-
-    if (listRecord.userId === acceptingUserId) {
-      return { error: 'Cannot accept an invite to a list you own.', status: 400 };
-    }
-
-    const acceptingUser = await db.query.users.findFirst({ where: eq(users.id, acceptingUserId) });
-    if (!acceptingUser) {
-      return { error: 'User account required to accept invite.', status: 404 };
-    }
-
     const acceptedList = await db.transaction(async (tx) => {
       await tx
         .update(listInvite)
@@ -221,73 +323,75 @@ export async function acceptListInvite(listId: string, acceptingUserId: string, 
         })
         .onConflictDoNothing();
 
-      const l =
-        listRecord ||
-        (await tx.query.list.findFirst({
-          where: eq(list.id, invite.listId),
-        }));
+      const l = await tx.query.list.findFirst({
+        where: eq(list.id, invite.listId),
+      });
+
       if (!l) {
-        throw new Error('List not found after accepting invite.');
+        throw new InternalError('List not found after accepting invite');
       }
+
       return l;
     });
 
     return acceptedList;
   } catch (error) {
-    console.error(
-      `Error accepting list invite for list ${listId} by user ${acceptingUserId}:`,
-      error,
-    );
-    return { error: 'Failed to accept invite.', status: 500 };
+    if (isServiceError(error)) {
+      throw error;
+    }
+
+    throw new InternalError('Failed to accept invite', {
+      originalError: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
 /**
- * Deletes a pending invite for a list owned by the requesting user.
+ * Deletes a pending invite (for list owner)
+ *
+ * @param params - Parameters including listId, invitedUserEmail, userId (owner)
+ * @returns void (throws on error)
+ * @throws ValidationError if invite was already accepted
+ * @throws NotFoundError if list or invite not found
+ * @throws ForbiddenError if user does not own the list
+ * @throws InternalError if database operation fails
  */
-export async function deleteListInvite({
-  listId,
-  invitedUserEmail,
-  userId,
-}: {
-  listId: string;
-  invitedUserEmail: string;
-  userId: string;
-}) {
+export async function deleteListInvite(params: DeleteListInviteParams): Promise<void> {
+  const { listId, invitedUserEmail, userId } = params;
+
+  const normalizedEmail = invitedUserEmail.toLowerCase();
+
+  // Ensure the requester owns the list
+  const listRecord = await db.query.list.findFirst({
+    where: and(eq(list.id, listId), eq(list.userId, userId)),
+  });
+
+  if (!listRecord) {
+    throw new NotFoundError('List', { listId });
+  }
+
+  const invite = await db.query.listInvite.findFirst({
+    where: and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, normalizedEmail)),
+  });
+
+  if (!invite) {
+    throw new NotFoundError('Invite', { listId, email: normalizedEmail });
+  }
+
+  if (invite.accepted) {
+    throw new ValidationError('Invite has already been accepted and cannot be deleted', {
+      listId,
+      email: normalizedEmail,
+    });
+  }
+
   try {
-    const normalizedEmail = invitedUserEmail.toLowerCase();
-
-    // Ensure the requester owns the list
-    const listRecord = await db.query.list.findFirst({
-      where: and(eq(list.id, listId), eq(list.userId, userId)),
-    });
-
-    if (!listRecord) {
-      return { error: 'List not found or you do not own this list.', status: 403 };
-    }
-
-    const invite = await db.query.listInvite.findFirst({
-      where: and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, normalizedEmail)),
-    });
-
-    if (!invite) {
-      return { error: 'Invite not found.', status: 404 };
-    }
-
-    if (invite.accepted) {
-      return { error: 'Invite has already been accepted and cannot be deleted.', status: 400 };
-    }
-
     await db
       .delete(listInvite)
       .where(and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, normalizedEmail)));
-
-    return { success: true };
   } catch (error) {
-    console.error(
-      `Error deleting list invite for list ${listId} by user ${userId} for ${invitedUserEmail}:`,
-      error,
-    );
-    return { error: 'Failed to delete invite.', status: 500 };
+    throw new InternalError('Failed to delete invite', {
+      originalError: error instanceof Error ? error.message : String(error),
+    });
   }
 }

@@ -21,9 +21,9 @@ export async function getOrCreateChat(trpcClient: TRPCClient): Promise<{ chatId:
     title: 'New Chat',
   });
 
-  if (!newChat.chat) {
+  if (!newChat.success || !newChat.data) {
     throw new ChatCreationError();
   }
 
-  return { chatId: newChat.chat.id };
+  return { chatId: newChat.data.id };
 }

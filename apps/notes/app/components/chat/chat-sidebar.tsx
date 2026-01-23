@@ -54,7 +54,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
   return (
     <div className="flex flex-col h-full bg-muted/10">
       {/* Header with Logo */}
-      <div className="p-4 border-b flex-shrink-0">
+      <div className="p-4 border-b shrink-0">
         <RouterLink
           to="/chat"
           className="flex items-center space-x-2 mb-4"
@@ -103,7 +103,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
       </div>
 
       {/* Bottom Profile Section - Fixed */}
-      <div className="p-4 border-t flex-shrink-0">
+      <div className="p-4 border-t shrink-0">
         {isLoggedIn ? (
           <RouterLink
             to="/account"

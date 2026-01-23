@@ -1,6 +1,7 @@
 import type { HominemUser } from '@hominem/auth/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { app as honoRpcApp } from '@hominem/hono-rpc';
 import { redis } from '@hominem/services/redis';
 import { appRouter } from '@hominem/trpc';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
@@ -110,7 +111,11 @@ export function createServer() {
     }),
   );
 
-  // Register route handlers
+  // Register Hono RPC routes
+  // Note: honoRpcApp already includes /api prefix in its routes (e.g., /api/finance, /api/lists)
+  app.route('/', honoRpcApp);
+
+  // Register other route handlers
   app.route('/api/status', statusRoutes);
   app.route('/api/health', healthRoutes);
   app.route('/api/ai', aiRoutes);

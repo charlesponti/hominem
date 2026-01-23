@@ -89,7 +89,7 @@ export class ContentService {
       try {
         const sinceDate = new Date(filters.since).toISOString();
         conditions.push(sql`${content.updatedAt} > ${sinceDate}`);
-      } catch (_e) {
+      } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);
       }
     }

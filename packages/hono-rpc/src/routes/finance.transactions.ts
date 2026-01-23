@@ -68,6 +68,9 @@ const transactionDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
+// Export schemas for type derivation
+export { transactionListSchema, transactionUpdateSchema, transactionDeleteSchema };
+
 // ============================================================================
 // Routes
 // ============================================================================
@@ -138,10 +141,7 @@ export const transactionsRoutes = new Hono<AppContext>()
         }
       }
 
-      const result = await updateTransaction(
-        { transactionId: id, ...data } as any,
-        userId,
-      );
+      const result = await updateTransaction({ transactionId: id, ...data } as any, userId);
 
       return c.json(result);
     } catch (error) {
@@ -156,10 +156,7 @@ export const transactionsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     try {
-      const result = await deleteTransaction(
-        { transactionId: input.id },
-        userId,
-      );
+      const result = await deleteTransaction({ transactionId: input.id }, userId);
 
       return c.json(result);
     } catch (error) {

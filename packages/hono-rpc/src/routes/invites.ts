@@ -1,37 +1,42 @@
 import { UserAuthService } from '@hominem/auth/server';
 import {
-  acceptListInvite as acceptListInviteService,
+  acceptListInvite,
   deleteInviteByListAndToken,
   deleteListInvite,
   getInviteByListAndToken,
   getInviteByToken,
   getInvitesForUser,
   getListInvites,
-  getListOwnedByUser,
   getOutboundInvites,
   isUserMemberOfList,
   sendListInvite,
+  type SendListInviteParams,
+  type AcceptListInviteParams,
+  type DeleteListInviteParams,
 } from '@hominem/lists-services';
+import { getListOwnedByUser } from '@hominem/lists-services';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+  isServiceError,
+  error,
+  success,
+} from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-
-import type {
-  InvitesGetReceivedOutput,
-  InvitesGetSentOutput,
-  InvitesGetByListOutput,
-  InvitesCreateOutput,
-  InvitesAcceptOutput,
-  InvitesDeclineOutput,
-  InvitesDeleteOutput,
-} from '../types/invites.types';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Invites Routes
  *
- * Handles list invitation operations
+ * Handles list invitation operations using the new API contract pattern:
+ * - Services throw typed errors
+ * - Endpoints catch and convert to ApiResult
+ * - Clients use type narrowing with success discriminator
  */
 
 // ============================================================================
@@ -53,12 +58,12 @@ const invitesCreateSchema = z.object({
 
 const invitesAcceptSchema = z.object({
   listId: z.string().uuid(),
-  token: z.string(),
+  token: z.string().min(1, 'Token is required'),
 });
 
 const invitesDeclineSchema = z.object({
   listId: z.string().uuid(),
-  token: z.string(),
+  token: z.string().min(1, 'Token is required'),
 });
 
 const invitesDeleteSchema = z.object({
@@ -66,18 +71,28 @@ const invitesDeleteSchema = z.object({
   invitedUserEmail: z.string().email(),
 });
 
+// Export schemas for type derivation
+export {
+  invitesGetReceivedSchema,
+  invitesGetByListSchema,
+  invitesCreateSchema,
+  invitesAcceptSchema,
+  invitesDeclineSchema,
+  invitesDeleteSchema,
+};
+
 // ============================================================================
 // Routes
 // ============================================================================
 
 export const invitesRoutes = new Hono<AppContext>()
-  // Get received invites
+  // Get received invites (no service call - query operation)
   .post('/received', authMiddleware, zValidator('json', invitesGetReceivedSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-    const user = c.get('user')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+      const user = c.get('user')!;
+
       const normalizedEmail = user.email?.toLowerCase();
       const tokenFilter = input.token;
 
@@ -93,92 +108,106 @@ export const invitesRoutes = new Hono<AppContext>()
 
       if (tokenFilter) {
         const inviteByToken = await getInviteByToken(tokenFilter);
+        if (inviteByToken) {
+          const inviteList = inviteByToken.list;
+          if (inviteList && inviteList.userId !== userId) {
+            const belongsToAnotherUser =
+              (inviteByToken.invitedUserId && inviteByToken.invitedUserId !== userId) ||
+              (normalizedEmail &&
+                inviteByToken.invitedUserEmail &&
+                inviteByToken.invitedUserEmail.toLowerCase() !== normalizedEmail);
 
-        if (!inviteByToken) {
-          return c.json({ error: 'Invite not found' }, 404);
-        }
-
-        const inviteList = inviteByToken.list;
-        if (inviteList && inviteList.userId !== userId) {
-          const belongsToAnotherUser =
-            (inviteByToken.invitedUserId && inviteByToken.invitedUserId !== userId) ||
-            (normalizedEmail &&
-              inviteByToken.invitedUserEmail &&
-              inviteByToken.invitedUserEmail.toLowerCase() !== normalizedEmail);
-
-          tokenInvite = {
-            ...inviteByToken,
-            list: inviteList,
-            belongsToAnotherUser: Boolean(belongsToAnotherUser),
-          };
+            tokenInvite = {
+              ...inviteByToken,
+              list: inviteList,
+              belongsToAnotherUser: Boolean(belongsToAnotherUser),
+            };
+          }
         }
       }
 
-      const invites: InvitesGetReceivedOutput = tokenInvite
+      const invites = tokenInvite
         ? [
             tokenInvite,
             ...filteredBaseInvites.filter((invite: any) => invite.token !== tokenInvite?.token),
           ]
         : filteredBaseInvites;
 
-      return c.json(invites);
-    } catch (error) {
-      console.error('[invites.received]', error);
-      return c.json({ error: 'Failed to fetch invites' }, 500);
+      return c.json(success(invites), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[invites.received] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch invites'), 500);
     }
   })
 
   // Get sent invites
   .post('/sent', authMiddleware, async (c) => {
-    const userId = c.get('userId')!;
-
     try {
-      const invites: InvitesGetSentOutput = await getOutboundInvites(userId);
-      return c.json(invites);
-    } catch (error) {
-      console.error('[invites.sent]', error);
-      return c.json({ error: 'Failed to fetch sent invites' }, 500);
+      const userId = c.get('userId')!;
+
+      const invites = await getOutboundInvites(userId);
+
+      return c.json(success(invites), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[invites.sent] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch sent invites'), 500);
     }
   })
 
   // Get invites by list
   .post('/by-list', authMiddleware, zValidator('json', invitesGetByListSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
       const listItem = await getListOwnedByUser(input.listId, userId);
       if (!listItem) {
-        return c.json({ error: "List not found or you don't have permission" }, 403);
+        return c.json(
+          error('FORBIDDEN', "You don't have permission to access this list's invites"),
+          403,
+        );
       }
 
-      const invites: InvitesGetByListOutput = await getListInvites(input.listId);
-      return c.json(invites);
-    } catch (error) {
-      console.error('[invites.by-list]', error);
-      return c.json({ error: 'Failed to fetch invites' }, 500);
+      const invites = await getListInvites(input.listId);
+
+      return c.json(success(invites), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[invites.by-list] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to fetch invites'), 500);
     }
   })
 
   // Create invite
   .post('/create', authMiddleware, zValidator('json', invitesCreateSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-    const user = c.get('user')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+      const user = c.get('user')!;
+
       const normalizedEmail = input.invitedUserEmail.toLowerCase();
 
       // Prevent self-invites
       if (normalizedEmail === user.email?.toLowerCase()) {
-        return c.json({ error: 'You cannot invite yourself to a list' }, 400);
+        return c.json(error('VALIDATION_ERROR', 'You cannot invite yourself to a list'), 400);
       }
 
       // Check if user owns the list
       const listItem = await getListOwnedByUser(input.listId, userId);
       if (!listItem) {
         return c.json(
-          { error: "List not found or you don't have permission to invite users to it" },
+          error('FORBIDDEN', "You don't have permission to invite users to this list"),
           403,
         );
       }
@@ -188,92 +217,108 @@ export const invitesRoutes = new Hono<AppContext>()
       if (invitedUser) {
         const isAlreadyMember = await isUserMemberOfList(input.listId, invitedUser.id);
         if (isAlreadyMember) {
-          return c.json({ error: 'This user is already a member of this list' }, 409);
+          return c.json(error('CONFLICT', 'This user is already a member of this list'), 409);
         }
       }
 
       const baseUrl = process.env.VITE_APP_BASE_URL;
       if (!baseUrl) {
-        return c.json({ error: 'Base URL not configured' }, 500);
+        return c.json(error('INTERNAL_ERROR', 'Server configuration error'), 500);
       }
 
-      const serviceResponse = await sendListInvite(input.listId, normalizedEmail, userId, baseUrl);
+      // Call service function with properly typed params
+      const params: SendListInviteParams = {
+        listId: input.listId,
+        invitedUserEmail: normalizedEmail,
+        invitingUserId: userId,
+        baseUrl,
+      };
 
-      if ('error' in serviceResponse) {
-        return c.json(
-          { error: serviceResponse.error },
-          serviceResponse.status === 404 ? 404 : serviceResponse.status === 409 ? 409 : 500,
-        );
+      const result = await sendListInvite(params);
+
+      return c.json(success(result), 201);
+    } catch (err) {
+      if (err instanceof ConflictError) {
+        return c.json(error(err.code, err.message, err.details), 409);
+      }
+      if (err instanceof NotFoundError) {
+        return c.json(error(err.code, err.message, err.details), 404);
+      }
+      if (err instanceof ValidationError) {
+        return c.json(error(err.code, err.message, err.details), 400);
+      }
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
-      const result: InvitesCreateOutput = serviceResponse;
-      return c.json(result);
-    } catch (error) {
-      console.error('[invites.create]', error);
-      return c.json({ error: 'Failed to create invite' }, 500);
+      console.error('[invites.create] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to create invite'), 500);
     }
   })
 
   // Accept invite
   .post('/accept', authMiddleware, zValidator('json', invitesAcceptSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-    const user = c.get('user')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+      const user = c.get('user')!;
+
       if (!user.email) {
-        return c.json({ error: 'User email not available' }, 401);
+        return c.json(error('UNAUTHORIZED', 'User email not available'), 401);
       }
 
-      const serviceResponse = await acceptListInviteService(input.listId, userId, input.token);
+      // Call service function with properly typed params
+      const params: AcceptListInviteParams = {
+        listId: input.listId,
+        acceptingUserId: userId,
+        token: input.token,
+      };
 
-      if ('error' in serviceResponse) {
-        return c.json(
-          { error: serviceResponse.error },
-          serviceResponse.status === 404
-            ? 404
-            : serviceResponse.status === 400
-              ? 400
-              : serviceResponse.status === 403
-                ? 403
-                : 500,
-        );
-      }
+      const result = await acceptListInvite(params);
 
+      // Fetch updated invite for response
       const updatedInvite = await getInviteByListAndToken({
         listId: input.listId,
         token: input.token,
       });
 
-      if (!updatedInvite) {
-        return c.json({ error: 'Invite was accepted but could not be retrieved' }, 500);
+      return c.json(success(updatedInvite), 200);
+    } catch (err) {
+      if (err instanceof NotFoundError) {
+        return c.json(error(err.code, err.message, err.details), 404);
+      }
+      if (err instanceof ValidationError) {
+        return c.json(error(err.code, err.message, err.details), 400);
+      }
+      if (err instanceof ForbiddenError) {
+        return c.json(error(err.code, err.message, err.details), 403);
+      }
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
-      const result: InvitesAcceptOutput = updatedInvite;
-      return c.json(result);
-    } catch (error) {
-      console.error('[invites.accept]', error);
-      return c.json({ error: 'Failed to accept invite' }, 500);
+      console.error('[invites.accept] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to accept invite'), 500);
     }
   })
 
   // Decline invite
   .post('/decline', authMiddleware, zValidator('json', invitesDeclineSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
       const invite = await getInviteByListAndToken({
         listId: input.listId,
         token: input.token,
       });
 
       if (!invite) {
-        return c.json({ error: 'Invite not found' }, 404);
+        return c.json(error('NOT_FOUND', 'Invite not found'), 404);
       }
 
       if (invite.invitedUserId && invite.invitedUserId !== userId) {
-        return c.json({ error: 'This invite belongs to a different user' }, 403);
+        return c.json(error('FORBIDDEN', 'This invite belongs to a different user'), 403);
       }
 
       const deleted = await deleteInviteByListAndToken({
@@ -282,46 +327,51 @@ export const invitesRoutes = new Hono<AppContext>()
       });
 
       if (!deleted) {
-        return c.json({ error: 'Invite not found' }, 404);
+        return c.json(error('NOT_FOUND', 'Invite not found'), 404);
       }
 
-      const result: InvitesDeclineOutput = { success: true };
-      return c.json(result);
-    } catch (error) {
-      console.error('[invites.decline]', error);
-      return c.json({ error: 'Failed to decline invite' }, 500);
+      return c.json(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+      }
+
+      console.error('[invites.decline] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to decline invite'), 500);
     }
   })
 
   // Delete invite
   .post('/delete', authMiddleware, zValidator('json', invitesDeleteSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-
     try {
-      const result = await deleteListInvite({
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+
+      // Call service function with properly typed params
+      const params: DeleteListInviteParams = {
         listId: input.listId,
         invitedUserEmail: input.invitedUserEmail,
-        userId: userId,
-      });
+        userId,
+      };
 
-      if ('error' in result) {
-        return c.json(
-          { error: result.error },
-          result.status === 404
-            ? 404
-            : result.status === 400
-              ? 400
-              : result.status === 403
-                ? 403
-                : 500,
-        );
+      await deleteListInvite(params);
+
+      return c.json(success({ success: true }), 200);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        return c.json(error(err.code, err.message, err.details), 400);
+      }
+      if (err instanceof NotFoundError) {
+        return c.json(error(err.code, err.message, err.details), 404);
+      }
+      if (err instanceof ForbiddenError) {
+        return c.json(error(err.code, err.message, err.details), 403);
+      }
+      if (isServiceError(err)) {
+        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
-      const response: InvitesDeleteOutput = result;
-      return c.json(response);
-    } catch (error) {
-      console.error('[invites.delete]', error);
-      return c.json({ error: 'Failed to delete invite' }, 500);
+      console.error('[invites.delete] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to delete invite'), 500);
     }
   });

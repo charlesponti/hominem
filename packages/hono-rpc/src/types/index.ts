@@ -1,11 +1,30 @@
 /**
  * Centralized Type Exports
  *
- * Import all API types from here for maximum performance.
- * Each type is explicit and requires zero inference.
+ * All types are organized by domain and re-exported here for convenience.
+ *
+ * Input types are derived from Zod schemas (ensuring sync with validation).
+ * Output types are inferred from route handlers (ensuring sync with API).
  */
 
+// ============================================================================
+// Utilities
+// ============================================================================
+
+export type { JsonSerialized, EmptyInput } from './utils';
+
+// ============================================================================
+// Admin
+// ============================================================================
+
+export type { AdminRefreshGooglePlacesInput, AdminRefreshGooglePlacesOutput } from './admin.types';
+
+// ============================================================================
+// Finance
+// ============================================================================
+
 export type {
+  // Transactions
   TransactionListInput,
   TransactionListOutput,
   TransactionCreateInput,
@@ -14,9 +33,96 @@ export type {
   TransactionUpdateOutput,
   TransactionDeleteInput,
   TransactionDeleteOutput,
+  // Accounts
+  AccountListInput,
+  AccountListOutput,
+  AccountGetInput,
+  AccountGetOutput,
+  AccountCreateInput,
+  AccountCreateOutput,
+  AccountUpdateInput,
+  AccountUpdateOutput,
+  AccountDeleteInput,
+  AccountDeleteOutput,
+  AccountAllOutput,
+  AccountsWithPlaidOutput,
+  AccountConnectionsOutput,
+  AccountInstitutionAccountsInput,
+  AccountInstitutionAccountsOutput,
+  // Analyze
+  SpendingTimeSeriesInput,
+  TopMerchantsInput,
+  CategoryBreakdownInput,
+  CalculateTransactionsInput,
+  MonthlyStatsInput,
+  // Categories
+  CategoriesListInput,
+  // Plaid
+  PlaidCreateLinkTokenInput,
+  PlaidExchangeTokenInput,
+  PlaidSyncItemInput,
+  PlaidRemoveConnectionInput,
+  // Budget
+  BudgetCategoriesListInput,
+  BudgetCategoriesListWithSpendingInput,
+  BudgetCategoryGetInput,
+  BudgetCategoryCreateInput,
+  BudgetCategoryUpdateInput,
+  BudgetCategoryDeleteInput,
+  BudgetTrackingInput,
+  BudgetHistoryInput,
+  BudgetCalculateInput,
+  BudgetBulkCreateInput,
+  // Institutions
+  InstitutionsListInput,
+  InstitutionCreateInput,
+  // Runway
+  RunwayCalculateInput,
+  // Export
+  ExportTransactionsInput,
+  ExportSummaryInput,
+  // Data
+  DataDeleteAllInput,
 } from './finance.types';
 
+// ============================================================================
+// Invites
+// ============================================================================
+
+export type {
+  InvitesGetReceivedInput,
+  InvitesGetReceivedOutput,
+  InvitesGetSentInput,
+  InvitesGetSentOutput,
+  InvitesGetByListInput,
+  InvitesGetByListOutput,
+  InvitesCreateInput,
+  InvitesCreateOutput,
+  InvitesAcceptInput,
+  InvitesAcceptOutput,
+  InvitesDeclineInput,
+  InvitesDeclineOutput,
+  InvitesDeleteInput,
+  InvitesDeleteOutput,
+} from './invites.types';
+
+// ============================================================================
+// Items
+// ============================================================================
+
+export type {
+  ItemsAddToListInput,
+  ItemsAddToListOutput,
+  ItemsRemoveFromListInput,
+  ItemsRemoveFromListOutput,
+  ItemsGetByListIdInput,
+  ItemsGetByListIdOutput,
+} from './items.types';
+
+// ============================================================================
 // Lists
+// ============================================================================
+
 export type {
   ListGetAllInput,
   ListGetAllOutput,
@@ -36,7 +142,21 @@ export type {
   ListRemoveCollaboratorOutput,
 } from './lists.types';
 
+// ============================================================================
+// People
+// ============================================================================
+
+export type {
+  PeopleListInput,
+  PeopleListOutput,
+  PeopleCreateInput,
+  PeopleCreateOutput,
+} from './people.types';
+
+// ============================================================================
 // Places
+// ============================================================================
+
 export type {
   PlaceCreateInput,
   PlaceCreateOutput,
@@ -46,19 +166,16 @@ export type {
   PlaceDeleteOutput,
   PlaceAutocompleteInput,
   PlaceAutocompleteOutput,
-  PlacePrediction,
   PlaceGetDetailsByIdInput,
   PlaceGetDetailsByIdOutput,
   PlaceGetDetailsByGoogleIdInput,
   PlaceGetDetailsByGoogleIdOutput,
-  EnrichedPlace,
   PlaceAddToListsInput,
   PlaceAddToListsOutput,
   PlaceRemoveFromListInput,
   PlaceRemoveFromListOutput,
   PlaceGetNearbyFromListsInput,
   PlaceGetNearbyFromListsOutput,
-  NearbyPlace,
   PlaceLogVisitInput,
   PlaceLogVisitOutput,
   PlaceGetMyVisitsInput,
@@ -71,41 +188,14 @@ export type {
   PlaceDeleteVisitOutput,
   PlaceGetVisitStatsInput,
   PlaceGetVisitStatsOutput,
-  PlaceVisitStats,
-  Visit,
 } from './places.types';
 
-// Invites
-export type {
-  InvitesGetReceivedInput,
-  InvitesGetReceivedOutput,
-  InvitesGetSentOutput,
-  InvitesGetByListInput,
-  InvitesGetByListOutput,
-  InvitesCreateInput,
-  InvitesCreateOutput,
-  InvitesAcceptInput,
-  InvitesAcceptOutput,
-  InvitesDeclineInput,
-  InvitesDeclineOutput,
-  InvitesDeleteInput,
-  InvitesDeleteOutput,
-  ListInvite,
-} from './invites.types';
-
-// Items
-export type {
-  ItemsAddToListInput,
-  ItemsAddToListOutput,
-  ItemsRemoveFromListInput,
-  ItemsRemoveFromListOutput,
-  ItemsGetByListIdInput,
-  ItemsGetByListIdOutput,
-  ListItem,
-} from './items.types';
-
+// ============================================================================
 // Trips
+// ============================================================================
+
 export type {
+  TripsGetAllInput,
   TripsGetAllOutput,
   TripsGetByIdInput,
   TripsGetByIdOutput,
@@ -113,20 +203,10 @@ export type {
   TripsCreateOutput,
   TripsAddItemInput,
   TripsAddItemOutput,
-  Trip,
-  TripItem,
 } from './trips.types';
 
-// People
-export type {
-  PeopleListOutput,
-  PeopleCreateInput,
-  PeopleCreateOutput,
-  Person,
-} from './people.types';
-
+// ============================================================================
 // User
-export type { UserDeleteAccountOutput } from './user.types';
+// ============================================================================
 
-// Admin
-export type { AdminRefreshGooglePlacesOutput } from './admin.types';
+export type { UserDeleteAccountInput, UserDeleteAccountOutput } from './user.types';

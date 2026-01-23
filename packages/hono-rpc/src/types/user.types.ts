@@ -1,15 +1,4 @@
-/**
- * Explicit Type Contracts for User API
- *
- * Performance Benefit: These explicit types are resolved INSTANTLY by TypeScript.
- * No complex inference, no router composition, no type instantiation explosion.
- */
+import type { EmptyInput } from './utils';
+export type { UserDeleteAccountOutput } from '../lib/typed-routes';
 
-// ============================================================================
-// User DeleteAccount
-// ============================================================================
-
-export interface UserDeleteAccountOutput {
-  success: boolean;
-  message: string;
-}
+export type UserDeleteAccountInput = EmptyInput;

@@ -12,7 +12,7 @@ import { Trash2 } from 'lucide-react';
 import { useCallback } from 'react';
 
 import { useModal } from '~/hooks/useModal';
-import { useRemoveCollaborator, useHonoUtils } from '~/lib/hono';
+import { useRemoveCollaborator } from '~/lib/hono';
 
 type RemoveCollaboratorButtonProps = {
   listId: string;
@@ -28,14 +28,9 @@ export default function RemoveCollaboratorButton({
   userEmail,
 }: RemoveCollaboratorButtonProps) {
   const { isOpen, open, close } = useModal();
-  const utils = useHonoUtils();
   const removeCollaborator = useRemoveCollaborator();
 
   const handleRemove = useCallback(async () => {
-    // Store previous values for rollback
-    const previousList = utils.lists.getById.getData({ id: listId });
-    const previousInvites = utils.invites.getByList.getData({ listId });
-
     try {
       await removeCollaborator.mutateAsync({ listId, userId });
       close();

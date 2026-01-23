@@ -1,4 +1,3 @@
-import { tripsService } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Link } from 'react-router';
@@ -7,9 +6,9 @@ import ErrorBoundary from '~/components/ErrorBoundary';
 
 import type { Route } from './+types/trips._index';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const trips = await tripsService.getAll();
-  return { trips };
+export async function loader(_args: Route.LoaderArgs) {
+  // TODO: Fetch trips data from API via client hook or server action
+  return { trips: [] };
 }
 
 export default function TripsPage({ loaderData }: Route.ComponentProps) {

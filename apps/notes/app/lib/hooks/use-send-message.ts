@@ -1,8 +1,10 @@
+import type { TRPCClientErrorLike } from '@trpc/client';
+
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
-import type { ExtendedMessage } from '../types/chat-message';
 import type { ChatsSendInput, ChatsSendOutput } from '../trpc/notes-types';
+import type { ExtendedMessage } from '../types/chat-message';
 
 import { trpc } from '../trpc';
 
@@ -116,7 +118,7 @@ export function useSendMessage({
   };
 
   const mutation = trpc.chats.send.useMutation({
-    onMutate: async (variables: Parameters<typeof trpc.chats.send.useMutation>[0]['onMutate']): Promise<any> => {
+    onMutate: async (variables: ChatsSendInput): Promise<any> => {
       const currentChatId = variables.chatId || chatId;
       chatIdRef.current = currentChatId;
 
@@ -161,9 +163,16 @@ export function useSendMessage({
       };
     },
     onError: (
-      _err: Error,
+      _err: TRPCClientErrorLike<any>,
       _variables: ChatsSendInput,
-      context: { previousMessages: ExtendedMessage[]; optimisticUserMessage: ExtendedMessage; currentChatId: string; streamId: string | null } | undefined,
+      context:
+        | {
+            previousMessages: ExtendedMessage[];
+            optimisticUserMessage: ExtendedMessage;
+            currentChatId: string;
+            streamId: string | null;
+          }
+        | undefined,
     ) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousMessages && context?.currentChatId) {
@@ -179,7 +188,14 @@ export function useSendMessage({
     onSuccess: (
       data: ChatsSendOutput,
       variables: ChatsSendInput,
-      context: { previousMessages: ExtendedMessage[]; optimisticUserMessage: ExtendedMessage; currentChatId: string; streamId: string | null } | undefined,
+      context:
+        | {
+            previousMessages: ExtendedMessage[];
+            optimisticUserMessage: ExtendedMessage;
+            currentChatId: string;
+            streamId: string | null;
+          }
+        | undefined,
     ) => {
       const currentChatId = context?.currentChatId || variables.chatId || chatId;
       chatIdRef.current = currentChatId;

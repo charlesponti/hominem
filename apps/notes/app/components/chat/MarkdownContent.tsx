@@ -37,7 +37,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
       <ReactMarkdown
         components={{
           // Code blocks with syntax highlighting
-          code({ node, className, children, ...props }) {
+          code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');

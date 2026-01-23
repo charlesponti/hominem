@@ -1,13 +1,16 @@
+import { error, success } from '@hominem/services';
 import { Hono } from 'hono';
-
-import type { AdminRefreshGooglePlacesOutput } from '../types/admin.types';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Admin Routes
  *
- * Handles admin-only operations
+ * Handles admin-only operations using the ApiResult pattern:
+ * - Services throw typed errors
+ * - HTTP endpoints catch errors and return ApiResult
+ * - Clients receive discriminated union with `success` field
+ *
  * TODO: Add admin-only middleware check
  */
 
@@ -25,14 +28,10 @@ export const adminRoutes = new Hono<AppContext>()
       // TODO: Implement Google Places refresh logic
       console.warn('[admin.refresh-google-places] Not yet implemented');
 
-      const result: AdminRefreshGooglePlacesOutput = {
-        success: false,
-        updatedCount: 0,
-        message: 'Google Places refresh is not yet implemented',
-      };
-      return c.json(result);
-    } catch (error) {
-      console.error('[admin.refresh-google-places]', error);
-      return c.json({ error: 'Failed to refresh Google Places' }, 500);
+      // Stub implementation
+      return c.json(success({ updatedCount: 0, duration: 0 }), 200);
+    } catch (err) {
+      console.error('[admin.refresh-google-places] unexpected error:', err);
+      return c.json(error('INTERNAL_ERROR', 'Failed to refresh Google Places'), 500);
     }
   });

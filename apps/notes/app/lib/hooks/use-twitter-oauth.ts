@@ -1,3 +1,5 @@
+import type { TRPCClientErrorLike } from '@trpc/client';
+
 import { useToast } from '@hominem/ui';
 import { useCallback } from 'react';
 
@@ -29,7 +31,7 @@ export function useTwitterPost() {
     onSuccess: () => {
       toast({ title: 'Tweet posted successfully' });
     },
-    onError: (error: Error) => {
+    onError: (error: TRPCClientErrorLike<any>) => {
       toast({ title: 'Error posting tweet', description: error.message, variant: 'destructive' });
     },
   });

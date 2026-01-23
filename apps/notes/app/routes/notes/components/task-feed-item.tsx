@@ -1,5 +1,3 @@
-import type { Note } from '@hominem/services/types';
-
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { format } from 'date-fns';
@@ -12,6 +10,8 @@ import {
   Target,
   Trash2,
 } from 'lucide-react';
+
+import type { Note } from '~/lib/trpc/notes-types';
 
 import { useTimeTracking } from '~/hooks/use-time-tracking';
 import { cn } from '~/lib/utils';

@@ -78,6 +78,16 @@ const institutionAccountsSchema = z.object({
   institutionId: z.string(),
 });
 
+// Export schemas for type derivation
+export {
+  accountListSchema,
+  accountGetSchema,
+  accountCreateSchema,
+  accountUpdateSchema,
+  accountDeleteSchema,
+  institutionAccountsSchema,
+};
+
 // ============================================================================
 // Routes
 // ============================================================================
@@ -252,10 +262,7 @@ export const accountsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     try {
-      const result = await getAccountsForInstitution(
-        userId,
-        input.institutionId,
-      );
+      const result = await getAccountsForInstitution(userId, input.institutionId);
       return c.json(result);
     } catch (error) {
       console.error('Error getting institution accounts:', error);

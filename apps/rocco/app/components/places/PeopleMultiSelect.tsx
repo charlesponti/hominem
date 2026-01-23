@@ -19,7 +19,7 @@ import {
 import { Check, Loader2, Plus, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { usePeople, useCreatePerson, useHonoUtils } from '~/lib/hono';
+import { usePeople, useCreatePerson } from '~/lib/hono';
 import { cn } from '~/lib/utils';
 
 interface Person {
@@ -42,7 +42,6 @@ export function PeopleMultiSelect({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const utils = useHonoUtils();
 
   const { data: people = [], isLoading } = usePeople();
   const createPersonMutation = useCreatePerson();

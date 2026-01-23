@@ -12,7 +12,6 @@ export function useGooglePlacesAutocomplete({
   location,
 }: UseGooglePlacesAutocompleteOptions) {
   const trimmed = input.trim();
-  const enabled = trimmed.length >= 3;
 
   return usePlacesAutocomplete(trimmed, location?.latitude, location?.longitude);
 }

@@ -6,6 +6,9 @@ import type { ProcessedFile } from './upload';
 // Re-export ProcessedFile for convenience
 export type { ProcessedFile } from './upload';
 
+// Define ChatMessage as ChatMessageSelect for convenience
+export type ChatMessage = ChatMessageSelect;
+
 // ============================================================================
 // Core Chat Types
 // ============================================================================
@@ -36,18 +39,6 @@ export interface ChatMessageFile {
   size?: number;
   url?: string;
   [key: string]: unknown;
-}
-
-/**
- * Tool call information for AI interactions
- */
-export interface ChatMessageToolCall {
-  type: 'tool-call' | 'tool-result';
-  toolName: string;
-  toolCallId?: string;
-  args?: Record<string, unknown>;
-  result?: unknown;
-  isError?: boolean;
 }
 
 /**

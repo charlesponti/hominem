@@ -33,7 +33,7 @@ export function useCopyStrategy(strategy: ContentStrategiesSelect | null) {
             return newSet;
           });
         }, 2000);
-      } catch (_error) {
+      } catch {
         toast({
           variant: 'destructive',
           title: 'Copy failed',
