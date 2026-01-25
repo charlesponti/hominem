@@ -1,4 +1,3 @@
-
 import { useHonoQuery } from '../hono';
 
 type UseFinanceTopMerchantsParams = {

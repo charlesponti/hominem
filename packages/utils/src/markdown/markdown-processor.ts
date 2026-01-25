@@ -1,7 +1,6 @@
+import type { Document } from '@langchain/core/documents';
+
 import { load as cheerio } from 'cheerio';
-import type {
-  Document
-} from '@langchain/core/documents';
 import {
   MarkdownTextSplitter,
   type RecursiveCharacterTextSplitterParams,

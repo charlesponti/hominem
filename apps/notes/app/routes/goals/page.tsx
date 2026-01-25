@@ -1,6 +1,7 @@
 import type { Goal } from '@hominem/services/types';
 
 import { PageTitle } from '@hominem/ui';
+import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Checkbox } from '@hominem/ui/components/ui/checkbox';
 import { Label } from '@hominem/ui/components/ui/label';
@@ -11,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hominem/ui/components/ui/select';
-import { useToast } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';

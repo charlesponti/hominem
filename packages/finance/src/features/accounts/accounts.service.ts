@@ -11,8 +11,8 @@ import type {
   PlaidConnection,
 } from './accounts.domain';
 
-import { AccountsRepository } from './accounts.repository';
 import { InstitutionService } from '../../core/institution.service';
+import { AccountsRepository } from './accounts.repository';
 
 /**
  * Service for Accounts

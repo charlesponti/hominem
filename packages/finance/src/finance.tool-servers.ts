@@ -4,6 +4,11 @@ import { z } from 'zod';
 import { calculateTransactions } from './analytics/transaction-analytics.service';
 import { type BudgetCategoryType, getBudgetCategories } from './core/budget-categories.service';
 import {
+  calculateRunway,
+  runwayCalculationOutputSchema,
+  runwayCalculationSchema,
+} from './core/runway.service';
+import {
   FinanceAccountSchema,
   type CreateAccountInput,
   type UpdateAccountInput,
@@ -31,7 +36,6 @@ import {
   calculateSavingsGoalInputSchema,
   calculateSavingsGoalOutputSchema,
 } from './finance.calculators.service';
-import { calculateRunway, runwayCalculationOutputSchema, runwayCalculationSchema } from './core/runway.service';
 import {
   createFinanceAccountInputSchema,
   deleteFinanceAccountInputSchema,

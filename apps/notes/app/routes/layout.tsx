@@ -1,6 +1,6 @@
+import { useToast } from '@hominem/ui';
 import { AppLayout } from '@hominem/ui/components/layout/app-layout';
 import { Toaster } from '@hominem/ui/components/ui/toaster';
-import { useToast } from '@hominem/ui';
 import { Suspense, useEffect } from 'react';
 import { Outlet, useSearchParams } from 'react-router';
 
