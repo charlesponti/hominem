@@ -11,15 +11,12 @@ import { goalsRouter } from './routers/goals';
 import { locationRouter } from './routers/location';
 import { messagesRouter } from './routers/messages';
 import { notesRouter } from './routers/notes';
-import { peopleRouter } from './routers/people';
 import { searchRouter } from './routers/search';
 import { tweetRouter } from './routers/tweet';
 import { twitterRouter } from './routers/twitter';
-import { userRouter } from './routers/user';
 import { vectorRouter } from './routers/vector';
 
 export const appRouter = router({
-  user: userRouter,
   vector: vectorRouter,
   twitter: twitterRouter,
   tweet: tweetRouter,
@@ -34,7 +31,6 @@ export const appRouter = router({
   contentStrategies: contentStrategiesRouter,
   chats: chatsRouter,
   bookmarks: bookmarksRouter,
-  people: peopleRouter,
 });
 
 export type AppRouter = typeof appRouter;

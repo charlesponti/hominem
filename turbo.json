@@ -61,8 +61,7 @@
     },
     "typecheck": {
       "dependsOn": ["^build", "typegen"],
-      "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"],
-      "outputs": ["*.tsbuildinfo"]
+      "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"]
     }
   }
 }
