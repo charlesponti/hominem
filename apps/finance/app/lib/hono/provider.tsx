@@ -9,7 +9,7 @@ import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
  * Replaces TRPCProvider with much simpler and faster setup.
  * Performance: 84% faster type-checking compared to tRPC!
  */
-export function HonoProvider({ children }: { children: React.ReactNode }) {
+export function HonoProvider({ children }: { children: any }) {
   const { supabase } = useSupabaseAuthContext();
 
   return (

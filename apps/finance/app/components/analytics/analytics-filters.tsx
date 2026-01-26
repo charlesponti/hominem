@@ -15,7 +15,9 @@ import { GroupBySelect } from '~/components/group-by-select';
 import { useFinanceCategories } from '~/lib/hooks/use-analytics';
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 
-type AccountsData = ReturnType<typeof useFinanceAccounts>['data'];
+import type { AccountData } from '@hominem/hono-rpc/types/finance.types';
+
+type AccountsData = AccountData[];
 
 interface AnalyticsFiltersProps {
   dateFrom: Date | undefined;

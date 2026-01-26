@@ -131,7 +131,7 @@ export default function AccountsPage() {
   };
 
   const isLoading = allAccountsQuery.isLoading;
-  const hasError = allAccountsQuery.error || allAccountsQuery.apiError;
+  const hasError = allAccountsQuery.error;
   const hasAccounts = (allAccountsQuery.accounts || []).length > 0;
 
   // Sort accounts to show Plaid-connected accounts first, then manual accounts
@@ -179,7 +179,7 @@ export default function AccountsPage() {
           <AlertTitle>Error Loading Data</AlertTitle>
           <AlertDescription>
             {allAccountsQuery.error?.message ||
-              allAccountsQuery.apiError?.message ||
+              allAccountsQuery.error?.message ||
               'Failed to load banking data'}
           </AlertDescription>
         </Alert>

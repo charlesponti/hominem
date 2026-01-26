@@ -41,6 +41,7 @@
     "test:type-perf": "attest precache && bun test \"**/*.type-perf.test.ts\"",
     "test:type-perf:update": "attest precache && bun test \"**/*.type-perf.test.ts\" --update-snapshots",
     "analyze:type-perf": "bun run scripts/analyze-type-performance.ts",
+    "type-audit": "bun run scripts/find-slow-types.ts",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {

@@ -5,7 +5,8 @@ import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/u
 
 export function ExportTransactions() {
   const { accountsMap } = useFinanceAccountsWithMap();
-  const { transactions } = useFinanceTransactions();
+  const { transactions: rawTransactions } = useFinanceTransactions();
+  const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
 
   const handleExport = () => {
     if (!transactions || transactions.length === 0) {
@@ -20,17 +21,26 @@ export function ExportTransactions() {
     const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account'];
     const csvRows = [
       headers.join(','),
-      ...transactions.map((tx) => {
-        const account = accountsMap.get(tx.accountId);
-        return [
-          tx.date,
-          `"${tx.description?.replace(/"/g, '""') || ''}"`,
-          tx.amount,
-          tx.category || 'Other',
-          tx.type,
-          account?.name || 'Unknown',
-        ].join(',');
-      }),
+      ...transactions.map(
+        (tx: {
+          accountId: string;
+          date: string;
+          description?: string | null;
+          amount: string;
+          category?: string | null;
+          type: string;
+        }) => {
+          const account = accountsMap.get(tx.accountId);
+          return [
+            tx.date,
+            `"${tx.description?.replace(/"/g, '""') || ''}"`,
+            tx.amount,
+            tx.category || 'Other',
+            tx.type,
+            account?.name || 'Unknown',
+          ].join(',');
+        },
+      ),
     ];
 
     const csvContent = csvRows.join('\n');

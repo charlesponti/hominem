@@ -119,7 +119,7 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json(result);
     } catch (error) {
       console.error('Error listing budget categories:', error);
-      return c.json({ error: 'Failed to list budget categories' }, 500);
+      throw new Error('Failed to list budget categories');
     }
   })
 
@@ -139,7 +139,7 @@ export const budgetRoutes = new Hono<AppContext>()
         return c.json(result);
       } catch (error) {
         console.error('Error listing categories with spending:', error);
-        return c.json({ error: 'Failed to list categories with spending' }, 500);
+        throw new Error('Failed to list categories with spending');
       }
     },
   )
@@ -154,7 +154,7 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json(result);
     } catch (error) {
       console.error('Error getting budget category:', error);
-      return c.json({ error: 'Failed to get budget category' }, 500);
+      throw new Error('Failed to get budget category');
     }
   })
 
@@ -166,10 +166,7 @@ export const budgetRoutes = new Hono<AppContext>()
     try {
       const existingCategory = await checkBudgetCategoryNameExists(input.name, userId);
       if (existingCategory) {
-        return c.json(
-          { error: `A budget category named "${input.name}" already exists for this user` },
-          400,
-        );
+        throw new Error(`A budget category named "${input.name}" already exists for this user`);
       }
 
       const result = await createBudgetCategory({
@@ -180,7 +177,7 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json(result);
     } catch (error) {
       console.error('Error creating budget category:', error);
-      return c.json({ error: 'Failed to create budget category' }, 500);
+      throw new Error('Failed to create budget category');
     }
   })
 
@@ -192,14 +189,14 @@ export const budgetRoutes = new Hono<AppContext>()
 
     try {
       if (Object.keys(updateData).length === 0) {
-        return c.json({ error: 'No update data provided' }, 400);
+        throw new Error('No update data provided');
       }
 
       const result = await updateBudgetCategory(id, userId, updateData);
       return c.json(result);
     } catch (error) {
       console.error('Error updating budget category:', error);
-      return c.json({ error: 'Failed to update budget category' }, 500);
+      throw new Error('Failed to update budget category');
     }
   })
 
@@ -217,7 +214,7 @@ export const budgetRoutes = new Hono<AppContext>()
       });
     } catch (error) {
       console.error('Error deleting budget category:', error);
-      return c.json({ error: 'Failed to delete budget category' }, 500);
+      throw new Error('Failed to delete budget category');
     }
   })
 
@@ -234,7 +231,7 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json(result);
     } catch (error) {
       console.error('Error getting budget tracking:', error);
-      return c.json({ error: 'Failed to get budget tracking' }, 500);
+      throw new Error('Failed to get budget tracking');
     }
   })
 
@@ -291,7 +288,7 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json(results.reverse());
     } catch (error) {
       console.error('Error getting budget history:', error);
-      return c.json({ error: 'Failed to get budget history' }, 500);
+      throw new Error('Failed to get budget history');
     }
   })
 
@@ -337,12 +334,8 @@ export const budgetRoutes = new Hono<AppContext>()
       const userCategories = await getAllBudgetCategories(userId);
 
       if (userCategories.length === 0) {
-        return c.json(
-          {
-            error:
-              'No budget categories found. Please create categories first or provide manual data.',
-          },
-          400,
+        throw new Error(
+          'No budget categories found. Please create categories first or provide manual data.',
         );
       }
 
@@ -358,10 +351,7 @@ export const budgetRoutes = new Hono<AppContext>()
         }));
 
       if (income <= 0) {
-        return c.json(
-          { error: 'No income categories found. Please add income categories first.' },
-          400,
-        );
+        throw new Error('No income categories found. Please add income categories first.');
       }
 
       const totalExpenses = expenses.reduce((sum: number, expense) => sum + expense.amount, 0);
@@ -391,7 +381,7 @@ export const budgetRoutes = new Hono<AppContext>()
       });
     } catch (error) {
       console.error('Error calculating budget:', error);
-      return c.json({ error: 'Failed to calculate budget' }, 500);
+      throw new Error('Failed to calculate budget');
     }
   })
 
@@ -404,7 +394,7 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json(result);
     } catch (error) {
       console.error('Error getting transaction categories:', error);
-      return c.json({ error: 'Failed to get transaction categories' }, 500);
+      throw new Error('Failed to get transaction categories');
     }
   })
 
@@ -418,6 +408,6 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json(result);
     } catch (error) {
       console.error('Error bulk creating categories:', error);
-      return c.json({ error: 'Failed to bulk create categories' }, 500);
+      throw new Error('Failed to bulk create categories');
     }
   });

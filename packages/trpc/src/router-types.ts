@@ -1,5 +1,5 @@
 /**
- * Optimized TRPC Router Type Exports
+ * TRPC Router Type Exports
  *
  * This file provides direct access to specific procedure types without
  * requiring full router type inference. Use these types in your application
@@ -10,13 +10,7 @@
  * - Instant IDE autocomplete
  * - Minimal memory footprint
  * - No cascading type changes
- *
- * NOTE: Finance types have been migrated to Hono RPC.
- * Import from '@hominem/hono-rpc/types/finance.types' instead.
  */
-
-// Add more procedure type exports as needed from other routers
-// This pattern should be followed for all frequently-used router procedures
 
 /**
  * Re-export router types for convenience

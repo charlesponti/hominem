@@ -1,12 +1,11 @@
-import type { AccountAllOutput } from '@hominem/hono-rpc/types/finance.types';
+import type { AccountWithPlaidData, TransactionData } from '@hominem/hono-rpc/types/finance.types';
 
 /**
- * Account type from the all accounts endpoint
- * Includes account details, Plaid connection info, and transactions
+ * Account type - represents a financial account with Plaid info
  */
-export type Account = AccountAllOutput['accounts'][number];
+export type Account = AccountWithPlaidData;
 
 /**
- * Extract just the account details without transactions
+ * Account with transactions included
  */
-export type AccountWithoutTransactions = Omit<Account, 'transactions'>;
+export type AccountWithTransactions = AccountWithPlaidData & { transactions: TransactionData[] };

@@ -2,7 +2,7 @@ import { defineConfig } from '@ark/attest';
 
 export default defineConfig({
   // TypeScript configuration
-  tsconfig: './tsconfig.base.json',
+  tsconfig: './tsconfig.attest.json',
 
   // Test file patterns
   testFilePatterns: ['**/*.type-perf.test.ts'],

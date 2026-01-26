@@ -65,6 +65,13 @@ export default function RunwayPage() {
     }
 
     const data = response.data;
+    if (!data) return {
+      monthsUntilZero: 0,
+      zeroDate: new Date(),
+      minimumBalance: 0,
+      isRunwayDangerous: false,
+      totalPlannedExpenses: 0,
+    };
     const zeroDate = new Date(data.runwayEndDate);
     const minimumBalance = Math.min(...chartData.map((d: { balance: number }) => d.balance));
 

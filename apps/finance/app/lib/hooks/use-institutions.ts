@@ -19,7 +19,7 @@ export function useCreateInstitution() {
       const res = await client.api.finance.institutions.create.$post({
         json: variables,
       });
-      return res.json();
+      return res.json() as unknown as InstitutionCreateOutput;
     },
     {
       onSuccess: () => {
@@ -46,7 +46,9 @@ export function useAccountsByInstitution() {
     return res.json();
   });
 
-  const accounts = Array.isArray(query.data) ? query.data : [];
+  const accounts = Array.isArray(query.data)
+    ? (query.data as unknown as AccountsWithPlaidOutput)
+    : [];
 
   const accountsByInstitution = accounts.reduce(
     (

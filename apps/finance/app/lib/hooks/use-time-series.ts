@@ -1,15 +1,8 @@
-import type { TimeSeriesDataPoint, TimeSeriesStats } from '@hominem/finance-services';
+import type { SpendingTimeSeriesOutput } from '@hominem/hono-rpc/types/finance.types';
 
 import { format } from 'date-fns';
 
 import { useHonoQuery } from '../hono';
-
-export interface TimeSeriesResponse {
-  data: TimeSeriesDataPoint[];
-  stats: TimeSeriesStats | null;
-  query: Record<string, unknown>;
-  timestamp: string;
-}
 
 interface TimeSeriesParams {
   dateFrom?: Date;
@@ -35,7 +28,7 @@ export function useTimeSeriesData({
   groupBy = 'month',
   enabled = true,
 }: TimeSeriesParams) {
-  const query = useHonoQuery<TimeSeriesResponse>(
+  const query = useHonoQuery<SpendingTimeSeriesOutput>(
     [
       'finance',
       'analyze',
@@ -62,7 +55,7 @@ export function useTimeSeriesData({
           groupBy,
         },
       });
-      return res.json();
+      return res.json() as Promise<SpendingTimeSeriesOutput>;
     },
     {
       enabled,

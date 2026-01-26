@@ -23,7 +23,7 @@ export function useMonthlyStats(month: string | undefined | null, options = {}) 
       const res = await client.api.finance.analyze['monthly-stats'].$post({
         json: { month: month! },
       });
-      return res.json();
+      return res.json() as unknown as MonthlyStats;
     },
     {
       enabled: !!month,

@@ -46,7 +46,7 @@ export default function AccountDetailsPage() {
   const hasError = accountError || transactionsError;
 
   const refreshData = async () => {
-    await Promise.all([refetchAccount(), refetchTransactions()]);
+    await Promise.all([refetchAccount() as Promise<any>, refetchTransactions() as Promise<any>]);
   };
 
   if (isLoading) {

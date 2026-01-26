@@ -6,25 +6,22 @@ import type {
   AccountDeleteInput,
   AccountDeleteOutput,
 } from '@hominem/hono-rpc/types/finance.types';
-import type { ApiResult } from '@hominem/services';
 
 import { useHonoMutation, useHonoUtils } from '~/lib/hono';
 
 export const useCreateAccount = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<ApiResult<AccountCreateOutput>, AccountCreateInput>(
-    async (client, variables) => {
+  return useHonoMutation(
+    async (client, variables: AccountCreateInput) => {
       const res = await client.api.finance.accounts.create.$post({
         json: variables,
       });
-      return res.json() as Promise<ApiResult<AccountCreateOutput>>;
+      return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['finance', 'accounts']);
-        }
+      onSuccess: () => {
+        utils.invalidate(['finance', 'accounts']);
       },
     },
   );
@@ -33,18 +30,16 @@ export const useCreateAccount = () => {
 export const useUpdateAccount = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<ApiResult<AccountUpdateOutput>, AccountUpdateInput>(
-    async (client, variables) => {
+  return useHonoMutation(
+    async (client, variables: AccountUpdateInput) => {
       const res = await client.api.finance.accounts.update.$post({
         json: variables,
       });
-      return res.json() as Promise<ApiResult<AccountUpdateOutput>>;
+      return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['finance', 'accounts']);
-        }
+      onSuccess: () => {
+        utils.invalidate(['finance', 'accounts']);
       },
     },
   );
@@ -53,18 +48,16 @@ export const useUpdateAccount = () => {
 export const useDeleteAccount = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<ApiResult<AccountDeleteOutput>, AccountDeleteInput>(
-    async (client, variables) => {
+  return useHonoMutation(
+    async (client, variables: AccountDeleteInput) => {
       const res = await client.api.finance.accounts.delete.$post({
         json: variables,
       });
-      return res.json() as Promise<ApiResult<AccountDeleteOutput>>;
+      return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['finance', 'accounts']);
-        }
+      onSuccess: () => {
+        utils.invalidate(['finance', 'accounts']);
       },
     },
   );

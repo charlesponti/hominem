@@ -1,3 +1,5 @@
+import type { CategoryBreakdownOutput } from '@hominem/hono-rpc/types/finance.types';
+
 import { format } from 'date-fns';
 
 import { useHonoQuery } from '../hono';

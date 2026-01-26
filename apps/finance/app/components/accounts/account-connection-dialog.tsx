@@ -41,10 +41,9 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
   const linkMutation = useLinkAccountToInstitution();
   const unlinkMutation = useUnlinkAccountFromInstitution();
 
+  const institutions = Array.isArray(institutionsQuery.data) ? institutionsQuery.data : [];
   const isLinked = !!account.institutionId;
-  const linkedInstitution = institutionsQuery.data?.find(
-    (inst) => inst.id === account.institutionId,
-  );
+  const linkedInstitution = institutions.find((inst) => inst.id === account.institutionId);
   const linkedPlaidAccount = plaidAccountsQuery.accounts?.find(
     (plaidAcc) => plaidAcc.id === account.plaidItemId,
   );
@@ -168,7 +167,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                         Loading institutions...
                       </SelectItem>
                     ) : (
-                      institutionsQuery.data?.map((institution) => (
+                      institutions.map((institution) => (
                         <SelectItem key={institution.id} value={institution.id}>
                           {institution.name}
                         </SelectItem>

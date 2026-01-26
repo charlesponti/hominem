@@ -10,7 +10,9 @@
       "~/*": ["./app/*"]
     },
     "noEmit": true,
-    "tsBuildInfoFile": "../../.cache/app-finance.tsbuildinfo"
+    "tsBuildInfoFile": "../../.cache/app-finance.tsbuildinfo",
+    "skipLibCheck": true,
+    "maxNodeModuleJsDepth": 0
   },
   "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
   "exclude": [

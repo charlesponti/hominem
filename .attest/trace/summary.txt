@@ -1,3 +1,0 @@
-⏳ Gathering type trace data for /Users/charlesponti/Developer/hominem/type-performance.test.ts...
-❌ No trace data found (expected a file at /Users/charlesponti/Developer/hominem/.attest/trace/trace.json). TSC output:
-

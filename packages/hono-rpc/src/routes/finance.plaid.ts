@@ -12,13 +12,6 @@ import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import type {
-  PlaidCreateLinkTokenOutput,
-  PlaidExchangeTokenOutput,
-  PlaidSyncItemOutput,
-  PlaidRemoveConnectionOutput,
-} from '../types/finance.types';
-
 import { env } from '../lib/env';
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../lib/plaid';
 import { authMiddleware, type AppContext } from '../middleware/auth';

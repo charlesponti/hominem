@@ -10,13 +10,6 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import type {
-  TransactionListOutput,
-  TransactionCreateOutput,
-  TransactionUpdateOutput,
-  TransactionDeleteOutput,
-} from '../types/finance.types';
-
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**

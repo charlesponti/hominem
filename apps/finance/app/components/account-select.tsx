@@ -35,7 +35,7 @@ export function AccountSelect({
 
   // Use external data if provided, otherwise fetch internally
   const { data: internalAccounts, isLoading: internalLoading } = useFinanceAccounts();
-  const accounts = internalAccounts || [];
+  const accounts = Array.isArray(internalAccounts) ? internalAccounts : [];
   const isLoading = externalLoading !== undefined ? externalLoading : internalLoading;
 
   // Support both prop naming conventions for backward compatibility

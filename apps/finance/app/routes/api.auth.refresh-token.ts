@@ -1,10 +1,13 @@
 import type { ActionFunctionArgs } from 'react-router';
 
-import { createSupabaseServerClient, getServerAuthConfig } from '@hominem/auth/server';
+import { createSupabaseServerClient } from '@hominem/auth/server';
 
 export async function action({ request }: ActionFunctionArgs) {
   const { refreshToken } = await request.json();
-  const config = getServerAuthConfig();
+  const config = {
+    supabaseUrl: process.env.SUPABASE_URL!,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY!,
+  };
   const { supabase } = createSupabaseServerClient(request, config);
 
   if (!refreshToken || typeof refreshToken !== 'string') {
