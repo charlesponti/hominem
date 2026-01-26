@@ -12,6 +12,8 @@ export {
   useHonoMutation,
 } from '@hominem/hono-client/react';
 
+export { queryKeys } from '../query-keys';
+
 // Re-export all hooks
 export * from '../hooks/use-lists';
 export * from '../hooks/use-places';

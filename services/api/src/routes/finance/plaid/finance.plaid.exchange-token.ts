@@ -1,12 +1,14 @@
 import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/finance-services';
+import { success, error } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { plaidClient } from '../../../lib/plaid';
+import type { AppEnv } from '../../../server';
 
-export const financePlaidExchangeTokenRoutes = new Hono();
+export const financePlaidExchangeTokenRoutes = new Hono<AppEnv>();
 
 const exchangeTokenSchema = z.object({
   publicToken: z.string().min(1, 'Public token is required'),
@@ -17,7 +19,7 @@ const exchangeTokenSchema = z.object({
 financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema), async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401);
+    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
   }
 
   const { publicToken, institutionId, institutionName } = c.req.valid('json');
@@ -63,13 +65,15 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
       },
     );
 
-    return c.json({
-      success: true,
-      message: 'Successfully linked account. Your transactions will begin importing shortly.',
-      institutionName,
-    });
-  } catch (error) {
-    console.error(`Token exchange error: ${error}`);
-    return c.json({ error: 'Failed to exchange token' }, 500);
+    return c.json(
+      success({
+        message: 'Successfully linked account. Your transactions will begin importing shortly.',
+        institutionName,
+      }),
+      200,
+    );
+  } catch (err) {
+    console.error(`Token exchange error: ${err}`);
+    return c.json(error('INTERNAL_ERROR', 'Failed to exchange token'), 500);
   }
 });

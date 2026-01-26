@@ -154,28 +154,13 @@ vi.mock('~/lib/hono', () => ({
   usePlaceById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
   usePlaceByGoogleId: vi.fn(() => ({ data: null, isLoading: false, error: null })),
   usePlacesAutocomplete: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useNearbyPlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useDeleteAccount: vi.fn(() => createUseMutationQuery()),
   useHonoUtils: vi.fn(() => ({
     invalidate: vi.fn(),
     prefetch: vi.fn(),
   })),
 }));
-
-// Dummy export for backward compatibility with old tests
-export const mockTrpcClient: any = {
-  lists: {
-    getAll: { useQuery: vi.fn() },
-    getById: { useQuery: vi.fn() },
-    update: { useMutation: vi.fn() },
-  },
-  places: {
-    getNearbyFromLists: { useQuery: vi.fn() },
-    autocomplete: { useQuery: vi.fn() },
-    getById: { useQuery: vi.fn() },
-  },
-  user: {
-    deleteAccount: { useMutation: vi.fn() },
-  },
-};
 
 const MockHonoProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
 

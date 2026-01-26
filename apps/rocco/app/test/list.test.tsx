@@ -30,7 +30,7 @@ vi.mock('~/components/map.lazy', () => ({
  *
  * Testing approach:
  * - Use renderWithRouter with real router setup
- * - Mock only tRPC queries (not the loader)
+ * - Mock only Hono RPC queries (not the loader)
  * - Focus on component behavior, not routing internals
  */
 describe('ListPage', () => {

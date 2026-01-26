@@ -1,9 +1,11 @@
 import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/finance-services';
+import { success, error } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { verifyPlaidWebhookSignature } from '../../../lib/plaid';
+import type { AppEnv } from '../../../server';
 
 const webhookSchema = z.object({
   webhook_type: z.string(),
@@ -17,7 +19,7 @@ const webhookSchema = z.object({
     .optional(),
 });
 
-export const financePlaidWebhookRoutes = new Hono();
+export const financePlaidWebhookRoutes = new Hono<AppEnv>();
 
 // Handle Plaid webhooks
 financePlaidWebhookRoutes.post('/', async (c) => {
@@ -27,7 +29,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
 
   // Verify webhook signature
   if (!verifyPlaidWebhookSignature(headers, rawBody)) {
-    return c.json({ error: 'Invalid webhook signature' }, 401);
+    return c.json(error('UNAUTHORIZED', 'Invalid webhook signature'), 401);
   }
 
   // Parse and validate the JSON body
@@ -35,15 +37,15 @@ financePlaidWebhookRoutes.post('/', async (c) => {
   try {
     parsedBody = JSON.parse(rawBody) as Record<string, unknown>;
   } catch {
-    return c.json({ error: 'Invalid JSON' }, 400);
+    return c.json(error('VALIDATION_ERROR', 'Invalid JSON'), 400);
   }
 
   const parseResult = webhookSchema.safeParse(parsedBody);
   if (!parseResult.success) {
-    return c.json({ error: 'Invalid webhook payload' }, 400);
+    return c.json(error('VALIDATION_ERROR', 'Invalid webhook payload'), 400);
   }
 
-  const { webhook_type, webhook_code, item_id, error } = parseResult.data;
+  const { webhook_type, webhook_code, item_id, error: webhookError } = parseResult.data;
 
   try {
     // Find the plaid item
@@ -51,7 +53,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
 
     if (!plaidItem) {
       console.warn(`Plaid item ${item_id} not found for webhook`);
-      return c.json({ success: true }); // Return success to prevent retries
+      return c.json(success({ acknowledged: true }), 200); // Return success to prevent retries
     }
 
     // Handle different webhook types
@@ -104,7 +106,9 @@ financePlaidWebhookRoutes.post('/', async (c) => {
         // Update item status to error
         await updatePlaidItemStatusByItemId(item_id, {
           status: 'error',
-          error: error ? `${error.error_code}: ${error.error_message}` : 'Unknown error',
+          error: webhookError
+            ? `${webhookError.error_code}: ${webhookError.error_message}`
+            : 'Unknown error',
           updatedAt: new Date(),
         });
       } else if (webhook_code === 'PENDING_EXPIRATION') {
@@ -116,9 +120,9 @@ financePlaidWebhookRoutes.post('/', async (c) => {
       }
     }
 
-    return c.json({ success: true });
-  } catch (webhookError) {
-    console.error(`Webhook processing error: ${webhookError}`);
-    return c.json({ error: 'Webhook processing failed' }, 500);
+    return c.json(success({ acknowledged: true }), 200);
+  } catch (err) {
+    console.error(`Webhook processing error: ${err}`);
+    return c.json(error('INTERNAL_ERROR', 'Webhook processing failed'), 500);
   }
 });

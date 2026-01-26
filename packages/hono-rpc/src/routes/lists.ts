@@ -225,6 +225,8 @@ export const listsRoutes = new Hono<AppContext>()
           id: list.id,
           name: list.name,
           isOwner: true,
+          itemCount: list.itemCount,
+          imageUrl: list.imageUrl,
         }));
         return c.json<ListGetContainingPlaceOutput>(success(result), 200);
       } catch (err) {

@@ -3,14 +3,34 @@ import {
   deletePossession,
   listPossessions,
   updatePossession,
+  success,
+  error,
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import crypto from 'node:crypto';
 import { z } from 'zod';
 
-import { ForbiddenError } from '../lib/errors';
-export const possessionsRoutes = new Hono();
+import type { AppEnv } from '../server';
+
+export const possessionsRoutes = new Hono<AppEnv>();
+
+// Serialize possession Date objects to ISO strings
+function serializePossession(possession: {
+  dateAcquired: Date;
+  dateSold: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  [key: string]: unknown;
+}) {
+  return {
+    ...possession,
+    dateAcquired: possession.dateAcquired.toISOString(),
+    dateSold: possession.dateSold?.toISOString() ?? null,
+    createdAt: possession.createdAt.toISOString(),
+    updatedAt: possession.updatedAt.toISOString(),
+  };
+}
 
 const createPossessionSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -36,20 +56,18 @@ const possessionIdParamSchema = z.object({
 possessionsRoutes.get('/', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    throw ForbiddenError('Unauthorized');
+    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
   }
 
   try {
     const items = await listPossessions(userId);
-
-    return c.json(items);
-  } catch (error) {
-    console.error('Error fetching possessions:', error);
+    return c.json(success(items.map(serializePossession)), 200);
+  } catch (err) {
+    console.error('Error fetching possessions:', err);
     return c.json(
-      {
-        error: 'Failed to fetch possessions',
-        details: error instanceof Error ? error.message : String(error),
-      },
+      error('INTERNAL_ERROR', 'Failed to fetch possessions', {
+        details: err instanceof Error ? err.message : String(err),
+      }),
       500,
     );
   }
@@ -59,12 +77,12 @@ possessionsRoutes.get('/', async (c) => {
 possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
   }
 
   const userId = c.get('userId');
   if (!userId) {
-    throw ForbiddenError('Unauthorized');
+    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
   }
 
   try {
@@ -77,14 +95,13 @@ possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c
       dateAcquired: new Date(data.dateAcquired),
     });
 
-    return c.json(created, 201);
-  } catch (error) {
-    console.error('Error creating possession:', error);
+    return c.json(success(serializePossession(created)), 201);
+  } catch (err) {
+    console.error('Error creating possession:', err);
     return c.json(
-      {
-        error: 'Failed to create possession',
-        details: error instanceof Error ? error.message : String(error),
-      },
+      error('INTERNAL_ERROR', 'Failed to create possession', {
+        details: err instanceof Error ? err.message : String(err),
+      }),
       500,
     );
   }
@@ -98,7 +115,7 @@ possessionsRoutes.put(
   async (c) => {
     const userId = c.get('userId');
     if (!userId) {
-      throw ForbiddenError('Unauthorized');
+      return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
     }
 
     try {
@@ -112,14 +129,17 @@ possessionsRoutes.put(
         dateAcquired: data.dateAcquired ? new Date(data.dateAcquired) : undefined,
       });
 
-      return c.json(updated);
-    } catch (error) {
-      console.error('Error updating possession:', error);
+      if (!updated) {
+        return c.json(error('NOT_FOUND', 'Possession not found'), 404);
+      }
+
+      return c.json(success(serializePossession(updated)), 200);
+    } catch (err) {
+      console.error('Error updating possession:', err);
       return c.json(
-        {
-          error: 'Failed to update possession',
-          details: error instanceof Error ? error.message : String(error),
-        },
+        error('INTERNAL_ERROR', 'Failed to update possession', {
+          details: err instanceof Error ? err.message : String(err),
+        }),
         500,
       );
     }
@@ -130,12 +150,12 @@ possessionsRoutes.put(
 possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
   }
 
   const userId = c.get('userId');
   if (!userId) {
-    throw ForbiddenError('Unauthorized');
+    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
   }
 
   try {
@@ -143,14 +163,13 @@ possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), a
 
     await deletePossession(id, userId);
 
-    return c.body(null, 204);
-  } catch (error) {
-    console.error('Error deleting possession:', error);
+    return c.json(success({ deleted: true }), 200);
+  } catch (err) {
+    console.error('Error deleting possession:', err);
     return c.json(
-      {
-        error: 'Failed to delete possession',
-        details: error instanceof Error ? error.message : String(error),
-      },
+      error('INTERNAL_ERROR', 'Failed to delete possession', {
+        details: err instanceof Error ? err.message : String(err),
+      }),
       500,
     );
   }

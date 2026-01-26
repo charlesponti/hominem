@@ -29,6 +29,8 @@ import type {
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
+import { queryKeys } from '~/lib/query-keys';
+
 /**
  * Create new place
  */
@@ -44,8 +46,8 @@ export const useCreatePlace = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places']);
-          utils.invalidate(['places', 'get', result.data.id]);
+          utils.invalidate(queryKeys.places.all() as any);
+          utils.invalidate(queryKeys.places.get(result.data.id) as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -69,8 +71,8 @@ export const useUpdatePlace = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places']);
-          utils.invalidate(['places', 'get', result.data.id]);
+          utils.invalidate(queryKeys.places.all() as any);
+          utils.invalidate(queryKeys.places.get(result.data.id) as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -94,7 +96,7 @@ export const useDeletePlace = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places']);
+          utils.invalidate(queryKeys.places.all() as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -112,7 +114,7 @@ export const usePlacesAutocomplete = (
   longitude: number | undefined,
 ) =>
   useHonoQuery<PlaceAutocompleteOutput>(
-    ['places', 'autocomplete', query, latitude, longitude],
+    queryKeys.places.autocomplete(query || '', latitude, longitude) as any,
     async (client: HonoClient) => {
       if (!query || query.length < 2) return { success: true, data: [] } as unknown as PlaceAutocompleteOutput;
       const res = await client.api.places.autocomplete.$post({
@@ -133,7 +135,7 @@ export const usePlacesAutocomplete = (
  */
 export const usePlaceById = (id: string | undefined) =>
   useHonoQuery<PlaceGetDetailsByIdOutput>(
-    ['places', 'get', id],
+    queryKeys.places.get(id || '') as any,
     async (client: HonoClient) => {
       if (!id) return { success: true, data: null } as any; // Type assertion needed for null data if generic doesn't allow it easily, but ApiResult usually has data: T
       const res = await client.api.places.get.$post({ json: { id } });
@@ -149,7 +151,7 @@ export const usePlaceById = (id: string | undefined) =>
  */
 export const usePlaceByGoogleId = (googleMapsId: string | undefined) =>
   useHonoQuery<PlaceGetDetailsByGoogleIdOutput>(
-    ['places', 'get-by-google-id', googleMapsId],
+    queryKeys.places.getByGoogleId(googleMapsId || '') as any,
     async (client: HonoClient) => {
       if (!googleMapsId) return { success: true, data: null } as any;
       const res = await client.api.places['get-by-google-id'].$post({
@@ -180,8 +182,8 @@ export const useAddPlaceToLists = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places']);
-          utils.invalidate(['lists']);
+          utils.invalidate(queryKeys.places.all() as any);
+          utils.invalidate(queryKeys.lists.all() as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -205,8 +207,8 @@ export const useRemovePlaceFromList = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places']);
-          utils.invalidate(['lists']);
+          utils.invalidate(queryKeys.places.all() as any);
+          utils.invalidate(queryKeys.lists.all() as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -224,7 +226,7 @@ export const useNearbyPlaces = (
   radiusMeters: number | undefined,
 ) =>
   useHonoQuery<PlaceGetNearbyFromListsOutput>(
-    ['places', 'nearby', latitude, longitude, radiusMeters],
+    queryKeys.places.nearby(latitude, longitude, radiusMeters) as any,
     async (client: HonoClient) => {
       if (latitude === undefined || longitude === undefined) return { success: true, data: [] };
       const res = await client.api.places.nearby.$post({
@@ -252,10 +254,10 @@ export const useLogPlaceVisit = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places', 'my-visits']);
+          utils.invalidate(queryKeys.places.myVisits() as any);
           if (result.data.placeId) {
-            utils.invalidate(['places', 'place-visits', result.data.placeId]);
-            utils.invalidate(['places', 'visit-stats', result.data.placeId]);
+            utils.invalidate(queryKeys.places.placeVisits(result.data.placeId) as any);
+            utils.invalidate(queryKeys.places.visitStats(result.data.placeId) as any);
           }
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
@@ -273,7 +275,7 @@ export const useMyVisits = (
   options?: HonoQueryOptions<PlaceGetMyVisitsOutput>,
 ) =>
   useHonoQuery<PlaceGetMyVisitsOutput>(
-    ['places', 'my-visits', input],
+    queryKeys.places.myVisits(input) as any,
     async (client: HonoClient) => {
       const res = await client.api.places['my-visits'].$post({ json: input || {} });
       return res.json();
@@ -286,7 +288,7 @@ export const useMyVisits = (
  */
 export const usePlaceVisits = (placeId: string | undefined) =>
   useHonoQuery<PlaceGetPlaceVisitsOutput>(
-    ['places', 'place-visits', placeId],
+    queryKeys.places.placeVisits(placeId || '') as any,
     async (client: HonoClient) => {
       if (!placeId) return { success: true, data: [] };
       const res = await client.api.places['place-visits'].$post({ json: { placeId } });
@@ -312,10 +314,10 @@ export const useUpdatePlaceVisit = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places', 'my-visits']);
+          utils.invalidate(queryKeys.places.myVisits() as any);
           if (result.data.placeId) {
-            utils.invalidate(['places', 'place-visits', result.data.placeId]);
-            utils.invalidate(['places', 'visit-stats', result.data.placeId]);
+            utils.invalidate(queryKeys.places.placeVisits(result.data.placeId) as any);
+            utils.invalidate(queryKeys.places.visitStats(result.data.placeId) as any);
           }
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
@@ -340,9 +342,8 @@ export const useDeletePlaceVisit = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['places', 'my-visits']);
-          utils.invalidate(['places', 'place-visits']);
-          utils.invalidate(['places', 'visit-stats']);
+          utils.invalidate(queryKeys.places.myVisits() as any);
+          utils.invalidate(queryKeys.places.all() as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -356,7 +357,7 @@ export const useDeletePlaceVisit = (
  */
 export const usePlaceVisitStats = (placeId: string | undefined) =>
   useHonoQuery<PlaceGetVisitStatsOutput>(
-    ['places', 'visit-stats', placeId],
+    queryKeys.places.visitStats(placeId || '') as any,
     async (client: HonoClient) => {
       if (!placeId) return { success: true, data: null } as any;
       const res = await client.api.places['visit-stats'].$post({ json: { placeId } });

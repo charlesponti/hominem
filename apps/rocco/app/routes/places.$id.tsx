@@ -1,4 +1,6 @@
+import { getPlaceById, getPlaceByGoogleMapsId } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
+import { redirect } from 'react-router';
 import z from 'zod';
 
 import type { PlaceWithLists } from '~/lib/types';
@@ -23,17 +25,22 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   await requireAuth(request);
   const { id } = params;
   if (!id) {
-    throw new Error('Place ID is required');
+    return redirect('/404');
   }
 
-  let data: PlaceWithLists = null as any;
-  // if (z.uuid().safeParse(id).success) {
-  //   data = await placesService.getDetailsById({ id });
-  // } else {
-  //   data = await placesService.getDetailsByGoogleId({ googleMapsId: id });
-  // }
+  const isUuid = z.string().uuid().safeParse(id).success;
+  const place = isUuid ? await getPlaceById(id) : await getPlaceByGoogleMapsId(id);
 
-  return { place: data };
+  if (!place) {
+    return redirect('/404');
+  }
+
+  return {
+    place: {
+      ...place,
+      lists: [], // Initial empty lists, components will fetch via hooks
+    } as PlaceWithLists,
+  };
 }
 
 export default function Place({ loaderData }: Route.ComponentProps) {

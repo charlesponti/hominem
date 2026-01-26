@@ -5,9 +5,25 @@ import {
   listHealthRecords,
   updateHealthRecord,
 } from '@hominem/health-services';
+import { success, error } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
+
+import type { AppEnv } from '../server';
+
+// Serialize health record Date objects to ISO strings
+function serializeHealthRecord(record: {
+  date: Date;
+  createdAt: Date | null;
+  [key: string]: unknown;
+}) {
+  return {
+    ...record,
+    date: record.date.toISOString(),
+    createdAt: record.createdAt?.toISOString() ?? null,
+  };
+}
 
 const healthQuerySchema = z.object({
   userId: z.string().optional(),
@@ -46,7 +62,7 @@ const updateHealthDataSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const healthRoutes = new Hono();
+export const healthRoutes = new Hono<AppEnv>();
 
 // Get health data with optional filters
 healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
@@ -60,10 +76,10 @@ healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
     });
 
     const sorted = results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return c.json(sorted);
-  } catch (error) {
-    console.error('Error fetching health data:', error);
-    return c.json({ error: 'Failed to fetch health data' }, 500);
+    return c.json(success(sorted.map(serializeHealthRecord)), 200);
+  } catch (err) {
+    console.error('Error fetching health data:', err);
+    return c.json(error('INTERNAL_ERROR', 'Failed to fetch health data'), 500);
   }
 });
 
@@ -74,19 +90,19 @@ healthRoutes.get('/:id', async (c) => {
     const numericId = Number.parseInt(id, 10);
 
     if (Number.isNaN(numericId)) {
-      return c.json({ error: 'Invalid ID format' }, 400);
+      return c.json(error('VALIDATION_ERROR', 'Invalid ID format'), 400);
     }
 
     const result = await getHealthRecord(numericId);
 
     if (!result) {
-      return c.json({ error: 'Health record not found' }, 404);
+      return c.json(error('NOT_FOUND', 'Health record not found'), 404);
     }
 
-    return c.json(result);
-  } catch (error) {
-    console.error('Error fetching health record:', error);
-    return c.json({ error: 'Failed to fetch health record' }, 500);
+    return c.json(success(serializeHealthRecord(result)), 200);
+  } catch (err) {
+    console.error('Error fetching health record:', err);
+    return c.json(error('INTERNAL_ERROR', 'Failed to fetch health record'), 500);
   }
 });
 
@@ -96,10 +112,10 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
     const validated = c.req.valid('json');
 
     const result = await createHealthRecord(validated);
-    return c.json(result);
-  } catch (error) {
-    console.error('Error creating health record:', error);
-    return c.json({ error: 'Failed to create health record' }, 500);
+    return c.json(success(serializeHealthRecord(result)), 201);
+  } catch (err) {
+    console.error('Error creating health record:', err);
+    return c.json(error('INTERNAL_ERROR', 'Failed to create health record'), 500);
   }
 });
 
@@ -110,7 +126,7 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
     const numericId = Number.parseInt(id, 10);
 
     if (Number.isNaN(numericId)) {
-      return c.json({ error: 'Invalid ID format' }, 400);
+      return c.json(error('VALIDATION_ERROR', 'Invalid ID format'), 400);
     }
 
     const validated = c.req.valid('json');
@@ -118,13 +134,13 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
     const result = await updateHealthRecord(numericId, validated);
 
     if (!result) {
-      return c.json({ error: 'Health record not found' }, 404);
+      return c.json(error('NOT_FOUND', 'Health record not found'), 404);
     }
 
-    return c.json(result);
-  } catch (error) {
-    console.error('Error updating health record:', error);
-    return c.json({ error: 'Failed to update health record' }, 500);
+    return c.json(success(serializeHealthRecord(result)), 200);
+  } catch (err) {
+    console.error('Error updating health record:', err);
+    return c.json(error('INTERNAL_ERROR', 'Failed to update health record'), 500);
   }
 });
 
@@ -135,17 +151,17 @@ healthRoutes.delete('/:id', async (c) => {
     const numericId = Number.parseInt(id, 10);
 
     if (Number.isNaN(numericId)) {
-      return c.json({ error: 'Invalid ID format' }, 400);
+      return c.json(error('VALIDATION_ERROR', 'Invalid ID format'), 400);
     }
 
     const result = await deleteHealthRecord(numericId);
     if (!result) {
-      return c.json({ error: 'Health record not found' }, 404);
+      return c.json(error('NOT_FOUND', 'Health record not found'), 404);
     }
 
-    return c.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting health record:', error);
-    return c.json({ error: 'Failed to delete health record' }, 500);
+    return c.json(success({ deleted: true }), 200);
+  } catch (err) {
+    console.error('Error deleting health record:', err);
+    return c.json(error('INTERNAL_ERROR', 'Failed to delete health record'), 500);
   }
 });

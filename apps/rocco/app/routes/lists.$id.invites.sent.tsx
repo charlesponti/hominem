@@ -1,17 +1,17 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
 import { PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { redirect } from 'react-router';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
+import { getAuthState } from '~/lib/auth.server';
 import { useSentInvites } from '~/lib/hono';
 
 import type { Route } from './+types/lists.$id.invites.sent';
 
-export async function loader(_args: Route.LoaderArgs) {
-  const { userId } = useSupabaseAuthContext();
+export async function loader({ request }: Route.LoaderArgs) {
+  const { isAuthenticated } = await getAuthState(request);
 
-  if (!userId) {
+  if (!isAuthenticated) {
     return redirect('/');
   }
 

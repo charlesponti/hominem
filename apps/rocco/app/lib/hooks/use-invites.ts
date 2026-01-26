@@ -14,12 +14,14 @@ import type {
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
+import { queryKeys } from '~/lib/query-keys';
+
 /**
  * Get received invites
  */
 export const useReceivedInvites = (token?: string) =>
   useHonoQuery<InvitesGetReceivedOutput>(
-    ['invites', 'received', token],
+    queryKeys.invites.received(token) as any,
     async (client) => {
       const res = await client.api.invites.received.$post({ json: { token } });
       return res.json() as Promise<InvitesGetReceivedOutput>;
@@ -30,7 +32,7 @@ export const useReceivedInvites = (token?: string) =>
  * Get sent invites
  */
 export const useSentInvites = () =>
-  useHonoQuery<InvitesGetSentOutput>(['invites', 'sent'], async (client) => {
+  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent() as any, async (client) => {
     const res = await client.api.invites.sent.$post({ json: {} });
     return res.json() as Promise<InvitesGetSentOutput>;
   });
@@ -40,7 +42,7 @@ export const useSentInvites = () =>
  */
 export const useListInvites = (listId: string | undefined) =>
   useHonoQuery<InvitesGetByListOutput>(
-    ['invites', 'by-list', listId],
+    queryKeys.invites.byList(listId || '') as any,
     async (client) => {
       if (!listId) return { success: true, data: [] } as unknown as InvitesGetByListOutput;
       const res = await client.api.invites['by-list'].$post({ json: { listId } });
@@ -64,8 +66,8 @@ export const useCreateInvite = () => {
     {
       onSuccess: (result, variables) => {
         if (result.success) {
-          utils.invalidate(['invites', 'sent']);
-          utils.invalidate(['invites', 'by-list', variables.listId]);
+          utils.invalidate(queryKeys.invites.sent() as any);
+          utils.invalidate(queryKeys.invites.byList(variables.listId) as any);
         }
       },
     },
@@ -85,8 +87,8 @@ export const useAcceptInvite = () => {
     {
       onSuccess: (result) => {
         if (result.success) {
-          utils.invalidate(['invites', 'received']);
-          utils.invalidate(['lists']);
+          utils.invalidate(queryKeys.invites.received() as any);
+          utils.invalidate(queryKeys.lists.all() as any);
         }
       },
     },
@@ -106,7 +108,7 @@ export const useDeclineInvite = () => {
     {
       onSuccess: (result) => {
         if (result.success) {
-          utils.invalidate(['invites', 'received']);
+          utils.invalidate(queryKeys.invites.received() as any);
         }
       },
     },
@@ -126,8 +128,8 @@ export const useDeleteInvite = () => {
     {
       onSuccess: (result, variables) => {
         if (result.success) {
-          utils.invalidate(['invites', 'sent']);
-          utils.invalidate(['invites', 'by-list', variables.listId]);
+          utils.invalidate(queryKeys.invites.sent() as any);
+          utils.invalidate(queryKeys.invites.byList(variables.listId) as any);
         }
       },
     },

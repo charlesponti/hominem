@@ -144,6 +144,8 @@ export type ListGetContainingPlaceOutput = ApiResult<Array<{
   id: string;
   name: string;
   isOwner: boolean;
+  itemCount: number;
+  imageUrl: string | null;
 }>>;
 
 // ============================================================================

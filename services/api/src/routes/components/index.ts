@@ -1,3 +1,4 @@
+import { success, error } from '@hominem/services';
 import { Hono } from 'hono';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -17,10 +18,10 @@ componentsRoutes.get('/use-api-client.json', async (c) => {
     c.header('Content-Type', 'application/json');
     c.header('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
 
-    return c.json(registryData);
-  } catch (error) {
-    console.error('Error serving use-api-client registry:', error);
-    return c.json({ error: 'Registry file not found' }, 404);
+    return c.json(success(registryData), 200);
+  } catch (err) {
+    console.error('Error serving use-api-client registry:', err);
+    return c.json(error('NOT_FOUND', 'Registry file not found'), 404);
   }
 });
 
@@ -40,12 +41,15 @@ componentsRoutes.get('/', async (c) => {
     c.header('Content-Type', 'application/json');
     c.header('Cache-Control', 'public, max-age=3600');
 
-    return c.json({
-      components,
-      count: components.length,
-    });
-  } catch (error) {
-    console.error('Error listing components:', error);
-    return c.json({ error: 'Failed to list components' }, 500);
+    return c.json(
+      success({
+        components,
+        count: components.length,
+      }),
+      200,
+    );
+  } catch (err) {
+    console.error('Error listing components:', err);
+    return c.json(error('INTERNAL_ERROR', 'Failed to list components'), 500);
   }
 });

@@ -10,11 +10,13 @@ import type {
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
+import { queryKeys } from '~/lib/query-keys';
+
 /**
  * Get all trips
  */
 export const useTrips = () =>
-  useHonoQuery<TripsGetAllOutput>(['trips', 'list'], async (client: HonoClient) => {
+  useHonoQuery<TripsGetAllOutput>(queryKeys.trips.all() as any, async (client: HonoClient) => {
     const res = await client.api.trips.list.$post({ json: {} });
     return res.json() as Promise<TripsGetAllOutput>;
   });
@@ -24,7 +26,7 @@ export const useTrips = () =>
  */
 export const useTripById = (id: string | undefined) =>
   useHonoQuery<TripsGetByIdOutput>(
-    ['trips', 'get', id],
+    queryKeys.trips.get(id || '') as any,
     async (client: HonoClient) => {
       if (!id) return { success: true, data: null } as unknown as TripsGetByIdOutput;
       const res = await client.api.trips.get.$post({ json: { id } });
@@ -48,7 +50,7 @@ export const useCreateTrip = () => {
     {
       onSuccess: (result) => {
         if (result.success) {
-          utils.invalidate(['trips', 'list']);
+          utils.invalidate(queryKeys.trips.all() as any);
         }
       },
     },
@@ -68,7 +70,7 @@ export const useAddItemToTrip = () => {
     {
       onSuccess: (result, variables) => {
         if (result.success) {
-          utils.invalidate(['trips', 'get', variables.tripId]);
+          utils.invalidate(queryKeys.trips.get(variables.tripId) as any);
         }
       },
     },

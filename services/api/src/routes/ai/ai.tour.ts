@@ -1,10 +1,13 @@
 import { openai } from '@ai-sdk/openai';
+import { success, error } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { generateObject } from 'ai';
 import { Hono } from 'hono';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
+
+import type { AppEnv } from '../../server';
 
 const TourCostBreakdown = z.object({
   transportation: z.object({
@@ -44,13 +47,13 @@ const inputSchema = z.object({
   durationInDays: z.number().min(1).max(90).default(14),
 });
 
-export const aiTourRoutes = new Hono();
+export const aiTourRoutes = new Hono<AppEnv>();
 
 // Generate tour cost breakdown
 aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
   }
 
   try {
@@ -88,12 +91,12 @@ aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
       temperature: 0.7,
     });
 
-    return c.json(tourBreakdown);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return c.json({ error: 'Invalid input', details: error.issues }, 400);
+    return c.json(success(tourBreakdown), 200);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return c.json(error('VALIDATION_ERROR', 'Invalid input', { details: err.issues }), 400);
     }
-    console.error('Error generating tour breakdown:', error);
-    return c.json({ error: 'Failed to generate tour breakdown' }, 500);
+    console.error('Error generating tour breakdown:', err);
+    return c.json(error('INTERNAL_ERROR', 'Failed to generate tour breakdown'), 500);
   }
 });

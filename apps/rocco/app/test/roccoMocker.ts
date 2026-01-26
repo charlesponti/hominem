@@ -1,24 +1,33 @@
 import { vi } from 'vitest';
 
 import type { List, Place } from '~/lib/types';
+import {
+  useLists,
+  useListById,
+  useNearbyPlaces,
+  usePlacesAutocomplete,
+  usePlaceById,
+  useDeleteAccount,
+  useUpdateList,
+} from '~/lib/hono';
 
-import { type MockMutationResult, type MockQueryResult, mockTrpcClient } from '~/test/utils';
+import { type MockMutationResult, type MockQueryResult } from '~/test/utils';
 
 export class RoccoMocker {
   mockListsGetAll(data: List[] | undefined, isLoading = false, error: Error | null = null) {
-    mockTrpcClient.lists.getAll.useQuery.mockReturnValue({
-      data,
+    vi.mocked(useLists).mockReturnValue({
+      data: data ? { success: true, data } : undefined,
       isLoading,
       error,
-    } as MockQueryResult<List[]>);
+    } as any);
   }
 
   mockListsGetById(data: List | undefined, isLoading = false, error: Error | null = null) {
-    mockTrpcClient.lists.getById.useQuery.mockReturnValue({
-      data,
+    vi.mocked(useListById).mockReturnValue({
+      data: data ? { success: true, data } : undefined,
       isLoading,
       error,
-    } as MockQueryResult<List>);
+    } as any);
   }
 
   mockPlacesGetNearbyFromLists(
@@ -26,11 +35,11 @@ export class RoccoMocker {
     isLoading = false,
     error: Error | null = null,
   ) {
-    mockTrpcClient.places.getNearbyFromLists.useQuery.mockReturnValue({
-      data,
+    vi.mocked(useNearbyPlaces).mockReturnValue({
+      data: data ? { success: true, data } : undefined,
       isLoading,
       error,
-    } as MockQueryResult<Place[]>);
+    } as any);
   }
 
   mockPlacesAutocomplete(
@@ -38,19 +47,19 @@ export class RoccoMocker {
     isLoading = false,
     error: Error | null = null,
   ) {
-    mockTrpcClient.places.autocomplete.useQuery.mockReturnValue({
-      data,
+    vi.mocked(usePlacesAutocomplete).mockReturnValue({
+      data: data ? { success: true, data } : undefined,
       isLoading,
       error,
-    } as MockQueryResult<Array<unknown>>);
+    } as any);
   }
 
   mockPlacesGetById(data: Place | undefined, isLoading = false, error: Error | null = null) {
-    mockTrpcClient.places.getById.useQuery.mockReturnValue({
-      data,
+    vi.mocked(usePlaceById).mockReturnValue({
+      data: data ? { success: true, data } : undefined,
       isLoading,
       error,
-    } as MockQueryResult<Place>);
+    } as any);
   }
 
   mockUserDeleteAccountMutation(overrides?: Partial<Record<string, unknown>>) {
@@ -63,11 +72,7 @@ export class RoccoMocker {
       error: null,
       ...overrides,
     };
-    mockTrpcClient.user.deleteAccount.useMutation.mockReturnValue(
-      mockDeleteMutation as unknown as ReturnType<
-        typeof mockTrpcClient.user.deleteAccount.useMutation
-      >,
-    );
+    vi.mocked(useDeleteAccount).mockReturnValue(mockDeleteMutation as any);
   }
 
   mockListsUpdateMutation(overrides?: Partial<MockMutationResult>) {
@@ -83,9 +88,7 @@ export class RoccoMocker {
       reset: vi.fn(),
       ...overrides,
     };
-    (
-      mockTrpcClient.lists.update.useMutation as unknown as ReturnType<typeof vi.fn>
-    ).mockReturnValue(result);
+    vi.mocked(useUpdateList).mockReturnValue(result as any);
   }
 }
 

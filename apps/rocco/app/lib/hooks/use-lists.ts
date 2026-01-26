@@ -19,12 +19,14 @@ import type {
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
+import { queryKeys } from '~/lib/query-keys';
+
 /**
  * Get all user's lists with places
  */
 export const useLists = (options?: HonoQueryOptions<ListGetAllOutput>) =>
   useHonoQuery<ListGetAllOutput>(
-    ['lists'],
+    queryKeys.lists.all() as any,
     async (client: HonoClient) => {
       const res = await client.api.lists.list.$post({ json: {} });
       return res.json();
@@ -40,7 +42,7 @@ export const useListById = (
   options?: HonoQueryOptions<ListGetByIdOutput>,
 ) =>
   useHonoQuery<ListGetByIdOutput>(
-    ['lists', 'get', id],
+    queryKeys.lists.get(id || '') as any,
     async (client: HonoClient) => {
       if (!id) return { success: true, data: null } as any;
       const res = await client.api.lists.get.$post({ json: { id } });
@@ -65,7 +67,7 @@ export const useCreateList = (options?: HonoMutationOptions<ListCreateOutput, Li
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['lists']);
+          utils.invalidate(queryKeys.lists.all() as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -87,8 +89,8 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['lists']);
-          utils.invalidate(['lists', 'get', result.data.id]);
+          utils.invalidate(queryKeys.lists.all() as any);
+          utils.invalidate(queryKeys.lists.get(result.data.id) as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -112,7 +114,7 @@ export const useDeleteList = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['lists']);
+          utils.invalidate(queryKeys.lists.all() as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -136,8 +138,8 @@ export const useDeleteListItem = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['lists']);
-          utils.invalidate(['lists', 'get', variables.listId]);
+          utils.invalidate(queryKeys.lists.all() as any);
+          utils.invalidate(queryKeys.lists.get(variables.listId) as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -154,7 +156,7 @@ export const useListsContainingPlace = (
   googleMapsId: string | undefined,
 ) =>
   useHonoQuery<ListGetContainingPlaceOutput>(
-    ['lists', 'containing-place', placeId, googleMapsId],
+    queryKeys.lists.containing(placeId, googleMapsId) as any,
     async (client: HonoClient) => {
       const res = await client.api.lists['containing-place'].$post({
         json: { placeId, googleMapsId },
@@ -181,8 +183,8 @@ export const useRemoveCollaborator = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(['lists']);
-          utils.invalidate(['lists', 'get', variables.listId]);
+          utils.invalidate(queryKeys.lists.all() as any);
+          utils.invalidate(queryKeys.lists.get(variables.listId) as any);
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },

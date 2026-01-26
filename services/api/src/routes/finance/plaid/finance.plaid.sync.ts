@@ -1,13 +1,17 @@
 import { getPlaidItemByUserAndItemId } from '@hominem/finance-services';
+import { success, error } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
-export const financePlaidSyncRoutes = new Hono();
+
+import type { AppEnv } from '../../../server';
+
+export const financePlaidSyncRoutes = new Hono<AppEnv>();
 
 // Manually trigger sync for a specific item
 financePlaidSyncRoutes.post('/:itemId', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401);
+    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
   }
 
   const itemId = c.req.param('itemId');
@@ -17,11 +21,11 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
     const plaidItem = await getPlaidItemByUserAndItemId(userId, itemId);
 
     if (!plaidItem) {
-      return c.json({ error: 'Plaid item not found' }, 404);
+      return c.json(error('NOT_FOUND', 'Plaid item not found'), 404);
     }
 
     if (plaidItem.status !== 'active') {
-      return c.json({ error: 'Plaid item is not active' }, 400);
+      return c.json(error('VALIDATION_ERROR', 'Plaid item is not active'), 400);
     }
 
     // Queue sync job
@@ -45,12 +49,14 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
       },
     );
 
-    return c.json({
-      success: true,
-      message: 'Sync job queued successfully',
-    });
-  } catch (error) {
-    console.error(`Manual sync error: ${error}`);
-    return c.json({ error: 'Failed to queue sync job' }, 500);
+    return c.json(
+      success({
+        message: 'Sync job queued successfully',
+      }),
+      200,
+    );
+  } catch (err) {
+    console.error(`Manual sync error: ${err}`);
+    return c.json(error('INTERNAL_ERROR', 'Failed to queue sync job'), 500);
   }
 });
