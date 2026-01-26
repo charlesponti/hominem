@@ -25,14 +25,14 @@ vi.mock('@hominem/utils/supabase', () => ({
 
 describe('Vector System', () => {
   let testUserId: string;
-  let trpc: ReturnType<typeof createTRPCTestClient<AppRouter>>;
+  let trpc: ReturnType<typeof createTRPCTestClient>;
   let server: ReturnType<typeof createServer>;
 
   beforeEach(async () => {
     server = createServer();
     testUserId = await createTestUser();
     // Set up tRPC client
-    trpc = createTRPCTestClient<AppRouter>(server, testUserId);
+    trpc = createTRPCTestClient(server, testUserId);
   });
 
   describe('tRPC Vector Router', () => {

@@ -1,8 +1,8 @@
-import type { ListInviteSelect as ListInvite, ListSelect } from '@hominem/db/schema';
+import type { ListInviteSelect as ListInvite, ListSelect, UserSelect } from '@hominem/db/schema';
 
 import { getInvitesForUser, getListInvites } from '@hominem/lists-services';
 
-export type SentInvite = ListInvite;
+export type SentInvite = ListInvite & { list: ListSelect; user_invitedUserId: UserSelect | null };
 export type ReceivedInvite = ListInvite & { list: ListSelect; belongsToAnotherUser?: boolean };
 
 export const invitesService = {

@@ -30,15 +30,6 @@ import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
-/**
- * Invites Routes
- *
- * Handles list invitation operations using the new API contract pattern:
- * - Services throw typed errors
- * - Endpoints catch and convert to ApiResult
- * - Clients use type narrowing with success discriminator
- */
-
 // ============================================================================
 // Validation Schemas
 // ============================================================================
@@ -48,27 +39,27 @@ const invitesGetReceivedSchema = z.object({
 });
 
 const invitesGetByListSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
 });
 
 const invitesCreateSchema = z.object({
-  listId: z.string().uuid(),
-  invitedUserEmail: z.string().email(),
+  listId: z.uuid(),
+  invitedUserEmail: z.email(),
 });
 
 const invitesAcceptSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
   token: z.string().min(1, 'Token is required'),
 });
 
 const invitesDeclineSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
   token: z.string().min(1, 'Token is required'),
 });
 
 const invitesDeleteSchema = z.object({
-  listId: z.string().uuid(),
-  invitedUserEmail: z.string().email(),
+  listId: z.uuid(),
+  invitedUserEmail: z.email(),
 });
 
 // Export schemas for type derivation

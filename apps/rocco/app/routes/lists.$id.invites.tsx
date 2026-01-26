@@ -1,5 +1,5 @@
 import { invitesService } from '@hominem/invites-services';
-import { listsService } from '@hominem/lists-services';
+import { getListById } from '@hominem/lists-services';
 import { Alert, PageTitle } from '@hominem/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useRevalidator } from 'react-router';
@@ -19,7 +19,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 
   const [list, invites] = await Promise.all([
-    listsService.getById(listId),
+    getListById(listId),
     invitesService.getByList({ listId }),
   ]);
 

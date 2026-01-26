@@ -62,7 +62,7 @@ const TeamSchema = z.object({
 
 // Contact schema
 const ContactSchema = z.object({
-  email: z.array(z.string().email()).describe('An array of email addresses.'),
+  email: z.array(z.email()).describe('An array of email addresses.'),
 });
 
 // Main Profile schema

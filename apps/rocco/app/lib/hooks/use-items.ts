@@ -1,9 +1,8 @@
+import type { Item } from '@hominem/db/schema';
 import type { HonoClient } from '@hominem/hono-client';
 import type {
   ItemsAddToListInput,
-  ItemsAddToListOutput,
   ItemsRemoveFromListInput,
-  ItemsRemoveFromListOutput,
   ItemsGetByListIdOutput,
 } from '@hominem/hono-rpc/types';
 import type { ApiResult } from '@hominem/services';
@@ -15,13 +14,13 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-clien
  */
 export const useAddItemToList = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<ItemsAddToListOutput>, ItemsAddToListInput>(
+  return useHonoMutation<ApiResult<Item>, ItemsAddToListInput>(
     async (client: HonoClient, variables: ItemsAddToListInput) => {
       const res = await client.api.items.add.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (result: ApiResult<ItemsAddToListOutput>, variables: ItemsAddToListInput) => {
+      onSuccess: (result: ApiResult<Item>, variables: ItemsAddToListInput) => {
         if (result.success) {
           utils.invalidate(['items', 'by-list', variables.listId]);
         }
@@ -35,16 +34,13 @@ export const useAddItemToList = () => {
  */
 export const useRemoveItemFromList = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<ItemsRemoveFromListOutput>, ItemsRemoveFromListInput>(
+  return useHonoMutation<ApiResult<{ success: boolean }>, ItemsRemoveFromListInput>(
     async (client: HonoClient, variables: ItemsRemoveFromListInput) => {
       const res = await client.api.items.remove.$post({ json: variables });
       return res.json();
     },
     {
-      onSuccess: (
-        result: ApiResult<ItemsRemoveFromListOutput>,
-        variables: ItemsRemoveFromListInput,
-      ) => {
+      onSuccess: (result: ApiResult<{ success: boolean }>, variables: ItemsRemoveFromListInput) => {
         if (result.success) {
           utils.invalidate(['items', 'by-list', variables.listId]);
         }
@@ -57,7 +53,7 @@ export const useRemoveItemFromList = () => {
  * Get items in a list
  */
 export const useListItems = (listId: string | undefined) =>
-  useHonoQuery<ApiResult<ItemsGetByListIdOutput>>(
+  useHonoQuery<ApiResult<Item[]>>(
     ['items', 'by-list', listId],
     async (client: HonoClient) => {
       if (!listId) return { success: true, data: [] };

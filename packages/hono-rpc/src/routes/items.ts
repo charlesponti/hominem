@@ -20,18 +20,18 @@ import { authMiddleware, publicMiddleware, type AppContext } from '../middleware
 // ============================================================================
 
 const itemsAddToListSchema = z.object({
-  listId: z.string().uuid(),
-  itemId: z.string().uuid(),
+  listId: z.uuid(),
+  itemId: z.uuid(),
   itemType: z.enum(['FLIGHT', 'PLACE']).default('PLACE'),
 });
 
 const itemsRemoveFromListSchema = z.object({
-  listId: z.string().uuid(),
-  itemId: z.string().uuid(),
+  listId: z.uuid(),
+  itemId: z.uuid(),
 });
 
 const itemsGetByListIdSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
 });
 
 // Export schemas for type derivation

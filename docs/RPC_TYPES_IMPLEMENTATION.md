@@ -131,7 +131,7 @@ const placeCreateSchema = z.object({
   websiteUri: z.string().optional(),
   phoneNumber: z.string().optional(),
   photos: z.array(z.string()).optional(),
-  listIds: z.array(z.string().uuid()).optional(),
+  listIds: z.array(z.uuid()).optional(),
 });
 
 // Export schema for type derivation

@@ -1,3 +1,4 @@
+import type { ChatMessageToolCall } from '@hominem/db/schema';
 // Shared chat types for both client and server
 import type { ChatMessageSelect } from '@hominem/services/types';
 

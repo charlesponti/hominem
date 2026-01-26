@@ -1,5 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
-import { listsService } from '@hominem/lists-services';
+import { getListById } from '@hominem/lists-services';
 import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
@@ -28,7 +28,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     return redirect('/404');
   }
 
-  const list = await listsService.getById(id);
+  const list = await getListById(id);
   if (!list) {
     return redirect('/404');
   }

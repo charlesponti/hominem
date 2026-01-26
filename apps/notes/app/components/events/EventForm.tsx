@@ -1,25 +1,19 @@
+import type { Person } from '@hominem/hono-rpc/types';
 import type React from 'react';
 
 import { Textarea } from '@hominem/ui/components/ui/textarea';
 import { useState } from 'react';
 
-interface Person {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-}
+import { usePeople } from '~/lib/hooks/use-people';
 
 interface EventFormProps {
   showAddForm: boolean;
-  people: Person[];
   onToggleForm: () => void;
 }
 
-const EventForm: React.FC<EventFormProps> = ({
-  showAddForm,
-  people,
-  onToggleForm: _onToggleForm,
-}) => {
+const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onToggleForm }) => {
+  const { data: peopleResult, isLoading: isLoadingPeople } = usePeople();
+  const people = peopleResult && 'data' in peopleResult ? peopleResult.data : [];
   const [_selectedPeople, setSelectedPeople] = useState<Person[]>([]);
 
   const handlePeopleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -112,13 +106,18 @@ const EventForm: React.FC<EventFormProps> = ({
                   name="people"
                   multiple
                   onChange={handlePeopleChange}
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[100px]"
+                  disabled={isLoadingPeople}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[100px] disabled:opacity-50"
                 >
-                  {people.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {person.firstName || ''} {person.lastName || ''}
-                    </option>
-                  ))}
+                  {isLoadingPeople ? (
+                    <option disabled>Loading people...</option>
+                  ) : (
+                    people.map((person) => (
+                      <option key={person.id} value={person.id}>
+                        {person.firstName || ''} {person.lastName || ''}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <div className="text-xs mt-1 text-muted-foreground">
                   Hold Ctrl/Cmd to select multiple people

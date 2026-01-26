@@ -340,7 +340,16 @@ export type BudgetCategoryData = {
 export type AccountData = {
   id: string;
   userId: string;
-  type: 'checking' | 'savings' | 'credit' | 'investment';
+  type:
+    | 'checking'
+    | 'savings'
+    | 'investment'
+    | 'credit'
+    | 'loan'
+    | 'retirement'
+    | 'depository'
+    | 'brokerage'
+    | 'other';
   balance: string;
   interestRate: string | null;
   minimumPayment: string | null;

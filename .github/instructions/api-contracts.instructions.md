@@ -309,7 +309,7 @@ import type { Place } from '@hominem/db/schema';
 import { NotFoundError, ValidationError } from '@hominem/services';
 
 export const getPlaceSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export type GetPlaceParams = z.infer<typeof getPlaceSchema>;

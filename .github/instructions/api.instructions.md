@@ -37,13 +37,11 @@ import { z } from 'zod';
 
 export const usersRouter = router({
   // Public endpoint
-  getById: publicProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input, ctx }) => {
-      return ctx.db.query.users.findFirst({
-        where: eq(users.id, input.id),
-      });
-    }),
+  getById: publicProcedure.input(z.object({ id: z.uuid() })).query(async ({ input, ctx }) => {
+    return ctx.db.query.users.findFirst({
+      where: eq(users.id, input.id),
+    });
+  }),
 
   // Protected endpoint (requires auth)
   updateProfile: protectedProcedure
@@ -141,7 +139,7 @@ export async function verifyToken(token: string) {
 ```typescript
 // Check ownership
 export const deletePost = protectedProcedure
-  .input(z.object({ postId: z.string().uuid() }))
+  .input(z.object({ postId: z.uuid() }))
   .mutation(async ({ input, ctx }) => {
     const post = await ctx.db.query.posts.findFirst({
       where: eq(posts.id, input.postId),
@@ -202,7 +200,7 @@ try {
 ```typescript
 // Define reusable schemas
 const createUserSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   name: z.string().min(1).max(100),
   password: z.string().min(8),
 });

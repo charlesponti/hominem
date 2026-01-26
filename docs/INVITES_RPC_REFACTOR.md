@@ -18,13 +18,13 @@ import { sendListInviteSchema, deleteListInviteSchema } from '@hominem/lists-ser
 
 // New approach (added)
 const invitesCreateSchema = z.object({
-  listId: z.string().uuid(),
-  invitedUserEmail: z.string().email(),
+  listId: z.uuid(),
+  invitedUserEmail: z.email(),
 });
 
 const invitesDeleteSchema = z.object({
-  listId: z.string().uuid(),
-  invitedUserEmail: z.string().email(),
+  listId: z.uuid(),
+  invitedUserEmail: z.email(),
 });
 ```
 
@@ -108,8 +108,8 @@ Example:
 ```typescript
 // routes/invites.ts
 const invitesCreateSchema = z.object({
-  listId: z.string().uuid(),
-  invitedUserEmail: z.string().email(),
+  listId: z.uuid(),
+  invitedUserEmail: z.email(),
 });
 
 // types/invites.types.ts

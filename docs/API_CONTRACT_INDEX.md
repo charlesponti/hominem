@@ -31,7 +31,7 @@
 
 ```typescript
 // 1. Service: Define schema + function that throws
-export const createSchema = z.object({ email: z.string().email() })
+export const createSchema = z.object({ email: z.email() })
 export async function create(params: z.infer<typeof createSchema>): Promise<User> {
   if (exists) throw new ConflictError('Already exists')
   return newUser

@@ -25,7 +25,7 @@ export const tweetRouter = router({
               'listicle',
               'education',
             ]),
-            z.string().uuid(), // For custom strategy IDs
+            z.uuid(), // For custom strategy IDs
           ])
           .default('storytelling'),
       }),

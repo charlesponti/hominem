@@ -7,7 +7,7 @@
 ```typescript
 // 1. SERVICE: Define schema + function that throws
 export const createUserSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   name: z.string().min(1),
 });
 
@@ -83,8 +83,8 @@ if (existing) {
 import { z } from 'zod';
 
 export const updateUserSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email().optional(),
+  id: z.uuid(),
+  email: z.email().optional(),
   name: z.string().min(1).optional(),
 });
 
@@ -302,9 +302,9 @@ packages/hono-rpc/src/routes/
 ```typescript
 // packages/lists/src/list-invites.service.ts
 export const sendListInviteSchema = z.object({
-  listId: z.string().uuid(),
-  invitedUserEmail: z.string().email(),
-  invitingUserId: z.string().uuid(),
+  listId: z.uuid(),
+  invitedUserEmail: z.email(),
+  invitingUserId: z.uuid(),
   baseUrl: z.string().url(),
 });
 

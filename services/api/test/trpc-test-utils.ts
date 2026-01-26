@@ -1,4 +1,5 @@
 import type { UserSelect } from '@hominem/db/schema';
+import type { AppRouter } from '@hominem/trpc';
 import type { Hono } from 'hono';
 
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
@@ -12,7 +13,7 @@ import type { AppEnv } from '../src/server';
 const createTestClientWithFetch = (
   fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
 ) => {
-  return createTRPCProxyClient<any>({
+  return createTRPCProxyClient<AppRouter>({
     links: [
       httpBatchLink({
         url: 'http://localhost/trpc',
@@ -26,7 +27,10 @@ const createTestClientWithFetch = (
  * Creates a tRPC test client that works with the existing test infrastructure
  * Uses x-user-id header for authentication in test mode
  */
-export const createTRPCTestClient = (server: Hono<AppEnv>, userId: string) => {
+export const createTRPCTestClient = (
+  server: Hono<AppEnv>,
+  userId: string,
+): ReturnType<typeof createTRPCProxyClient<AppRouter>> => {
   return createTestClientWithFetch(async (input, init) => {
     // Create a mock request to the server
     const request = new Request(input, {
@@ -48,7 +52,7 @@ export const createTRPCTestClient = (server: Hono<AppEnv>, userId: string) => {
 export const createTRPCTestClientWithContext = (
   server: Hono<AppEnv>,
   context: { userId: string; user?: UserSelect },
-) => {
+): ReturnType<typeof createTRPCProxyClient<AppRouter>> => {
   return createTestClientWithFetch(async (input, init) => {
     const request = new Request(input, {
       ...init,

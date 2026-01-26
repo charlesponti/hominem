@@ -160,6 +160,23 @@ vi.mock('~/lib/hono', () => ({
   })),
 }));
 
+// Dummy export for backward compatibility with old tests
+export const mockTrpcClient: any = {
+  lists: {
+    getAll: { useQuery: vi.fn() },
+    getById: { useQuery: vi.fn() },
+    update: { useMutation: vi.fn() },
+  },
+  places: {
+    getNearbyFromLists: { useQuery: vi.fn() },
+    autocomplete: { useQuery: vi.fn() },
+    getById: { useQuery: vi.fn() },
+  },
+  user: {
+    deleteAccount: { useMutation: vi.fn() },
+  },
+};
+
 const MockHonoProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
 
 vi.mock('~/lib/hono/provider', () => ({

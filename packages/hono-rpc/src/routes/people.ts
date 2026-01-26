@@ -37,7 +37,7 @@ function serializePerson(person: any) {
 const peopleCreateSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.email().optional(),
   phone: z.string().optional(),
 });
 

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { data, useNavigate } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
+import { usePeople } from '~/lib/hooks/use-people';
 import i18n from '~/lib/i18n';
 import { createServerTRPCClient } from '~/lib/trpc/server';
 
@@ -58,16 +59,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { session, headers } = await getServerSession(request);
   const trpc = createServerTRPCClient(session?.access_token);
 
-  const [events, people] = await Promise.all([
-    trpc.events.list.query({
-      tagNames: type ? [type] : undefined,
-      companion: companion || undefined,
-      sortBy,
-    }),
-    trpc.people.list.query(),
-  ]);
+  const events = await trpc.events.list.query({
+    tagNames: type ? [type] : undefined,
+    companion: companion || undefined,
+    sortBy,
+  });
 
-  return data({ events, people }, { headers });
+  return data({ events }, { headers });
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -121,6 +119,8 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
 
+  const { data: peopleResult } = usePeople();
+  const people = peopleResult && 'data' in peopleResult ? peopleResult.data : [];
   const { sync, syncStatus, isSyncing } = useGoogleCalendarSync();
 
   // Use shared hooks for filter management with URL sync
@@ -198,16 +198,6 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
           })),
         })),
     [loaderData.events],
-  );
-
-  const people = useMemo(
-    () =>
-      ((loaderData.people ?? []) as EventPerson[]).map((person) => ({
-        ...person,
-        firstName: person.firstName ?? undefined,
-        lastName: person.lastName ?? undefined,
-      })),
-    [loaderData.people],
   );
 
   const companions = useMemo(() => {
@@ -326,11 +316,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         {showAddForm && (
           <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="rounded-xl p-6 shadow-sm bg-card border border-border">
-              <EventForm
-                showAddForm={showAddForm}
-                people={people}
-                onToggleForm={handleToggleEventForm}
-              />
+              <EventForm showAddForm={showAddForm} onToggleForm={handleToggleEventForm} />
             </div>
           </div>
         )}

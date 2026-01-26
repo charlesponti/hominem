@@ -43,7 +43,7 @@ const listGetAllSchema = z.object({
 });
 
 const listGetByIdSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const listCreateSchema = z.object({
@@ -53,29 +53,29 @@ const listCreateSchema = z.object({
 });
 
 const listUpdateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   isPublic: z.boolean().optional(),
 });
 
 const listDeleteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const listDeleteItemSchema = z.object({
-  listId: z.string().uuid(),
-  itemId: z.string().uuid(),
+  listId: z.uuid(),
+  itemId: z.uuid(),
 });
 
 const listGetContainingPlaceSchema = z.object({
-  placeId: z.string().uuid().optional(),
+  placeId: z.uuid().optional(),
   googleMapsId: z.string().optional(),
 });
 
 const listRemoveCollaboratorSchema = z.object({
-  listId: z.string().uuid(),
-  userId: z.string().uuid(),
+  listId: z.uuid(),
+  userId: z.uuid(),
 });
 
 // Export schemas for type derivation

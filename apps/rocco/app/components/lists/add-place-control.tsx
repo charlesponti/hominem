@@ -39,24 +39,19 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
   }, []);
 
   const addPlaceToList = useAddPlaceToList({
-    onSuccess: () => {
-      setStatus('success');
-      clearSuccessTimer();
-      successTimerRef.current = setTimeout(() => {
-        setOpen(false);
-        setStatus('idle');
-        setErrorMessage(null);
-      }, 1500);
-    },
-    onError: (error: unknown) => {
-      setStatus('error');
-      const message =
-        error instanceof Error
-          ? error.message
-          : typeof error === 'string'
-            ? error
-            : 'Failed to add place. Please try again.';
-      setErrorMessage(message);
+    onSuccess: (result) => {
+      if (result.success) {
+        setStatus('success');
+        clearSuccessTimer();
+        successTimerRef.current = setTimeout(() => {
+          setOpen(false);
+          setStatus('idle');
+          setErrorMessage(null);
+        }, 1500);
+      } else {
+        setStatus('error');
+        setErrorMessage(result.message);
+      }
     },
   });
 
@@ -102,18 +97,6 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
   };
 
   const getErrorMessage = () => {
-    if (addPlaceToList.error) {
-      const error = addPlaceToList.error;
-      if (error instanceof Error) {
-        return error.message;
-      }
-      if (typeof error === 'string') {
-        return error;
-      }
-      if (error && typeof error === 'object' && 'message' in error) {
-        return String(error.message);
-      }
-    }
     return errorMessage;
   };
 

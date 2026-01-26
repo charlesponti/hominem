@@ -42,9 +42,9 @@ const transactionListSchema = z.object({
 });
 
 const transactionUpdateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   data: z.object({
-    accountId: z.string().uuid().optional(),
+    accountId: z.uuid().optional(),
     amount: z.number().optional(),
     description: z.string().optional(),
     category: z.string().optional(),
@@ -58,7 +58,7 @@ const transactionUpdateSchema = z.object({
 });
 
 const transactionDeleteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 // Export schemas for type derivation

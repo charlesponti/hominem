@@ -24,12 +24,12 @@ export const useTrips = () =>
  * Get trip by ID
  */
 export const useTripById = (id: string | undefined) =>
-  useHonoQuery<ApiResult<TripsGetByIdOutput>>(
+  useHonoQuery<ApiResult<any>>(
     ['trips', 'get', id],
     async (client: HonoClient) => {
       if (!id) return { success: true, data: null };
       const res = await client.api.trips.get.$post({ json: { id } });
-      return res.json() as Promise<ApiResult<TripsGetByIdOutput>>;
+      return res.json() as Promise<ApiResult<any>>;
     },
     {
       enabled: !!id,
@@ -41,10 +41,10 @@ export const useTripById = (id: string | undefined) =>
  */
 export const useCreateTrip = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<TripsCreateOutput>, TripsCreateInput>(
+  return useHonoMutation<ApiResult<any>, TripsCreateInput>(
     async (client: HonoClient, variables: TripsCreateInput) => {
       const res = await client.api.trips.create.$post({ json: variables });
-      return res.json() as Promise<ApiResult<TripsCreateOutput>>;
+      return res.json() as Promise<ApiResult<any>>;
     },
     {
       onSuccess: (result) => {
@@ -61,10 +61,10 @@ export const useCreateTrip = () => {
  */
 export const useAddItemToTrip = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<TripsAddItemOutput>, TripsAddItemInput>(
+  return useHonoMutation<ApiResult<any>, TripsAddItemInput>(
     async (client: HonoClient, variables: TripsAddItemInput) => {
       const res = await client.api.trips['add-item'].$post({ json: variables });
-      return res.json() as Promise<ApiResult<TripsAddItemOutput>>;
+      return res.json() as Promise<ApiResult<any>>;
     },
     {
       onSuccess: (result, variables) => {

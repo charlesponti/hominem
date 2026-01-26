@@ -9,12 +9,12 @@ import { createTRPCTestClient } from './trpc-test-utils.js';
 describe('Events tRPC Router', () => {
   let server: ReturnType<typeof createServer>;
   let testUserId: string;
-  let trpc: ReturnType<typeof createTRPCTestClient<AppRouter>>;
+  let trpc: ReturnType<typeof createTRPCTestClient>;
 
   beforeEach(async () => {
     server = createServer();
     testUserId = await createTestUser();
-    trpc = createTRPCTestClient<AppRouter>(server, testUserId);
+    trpc = createTRPCTestClient(server, testUserId);
   });
 
   afterEach(async () => {

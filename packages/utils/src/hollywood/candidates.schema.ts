@@ -31,14 +31,14 @@ const RepresentativeSchema = z.object({
   name: z.string().describe('The name of the representative'),
   title: z.string().optional().describe('The title or position of the representative'),
   organization: z.string().describe('The organization the representative is associated with'),
-  email: z.string().email().optional().describe("The representative's email address"),
+  email: z.email().optional().describe("The representative's email address"),
   phone_number: z.string().optional().describe("The representative's phone number"),
 });
 
 const CandidateSchema = z.object({
   name: z.string().describe('The full name of the candidate'),
   bio: z.string().describe('A short biography of the candidate'),
-  email: z.string().email().describe("The candidate's email address"),
+  email: z.email().describe("The candidate's email address"),
   phone_number: z.string().describe("The candidate's phone number"),
   tags: z
     .array(z.string())

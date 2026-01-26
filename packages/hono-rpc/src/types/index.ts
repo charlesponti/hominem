@@ -174,6 +174,7 @@ export type {
 // ============================================================================
 
 export type {
+  Person,
   PeopleListInput,
   PeopleListOutput,
   PeopleCreateInput,

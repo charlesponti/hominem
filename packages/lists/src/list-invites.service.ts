@@ -2,6 +2,7 @@ import { db, takeUniqueOrThrow } from '@hominem/db';
 import {
   type ListInviteSelect,
   type ListSelect,
+  type UserSelect,
   list,
   listInvite,
   userLists,
@@ -64,6 +65,7 @@ export async function getListInvites(listId: string) {
     return await db.query.listInvite.findMany({
       where: eq(listInvite.listId, listId),
       with: {
+        list: true,
         user_invitedUserId: true,
       },
     });
@@ -149,10 +151,15 @@ export async function deleteInviteByListAndToken(params: {
 /**
  * Gets all outbound invites sent by a user
  */
-export async function getOutboundInvites(userId: string) {
+export async function getOutboundInvites(
+  userId: string,
+): Promise<(ListInviteSelect & { list: ListSelect; user_invitedUserId: UserSelect | null })[]> {
   return db.query.listInvite.findMany({
     where: eq(listInvite.userId, userId),
-    with: { list: true },
+    with: {
+      list: true,
+      user_invitedUserId: true,
+    },
   });
 }
 

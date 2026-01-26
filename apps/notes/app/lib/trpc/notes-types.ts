@@ -101,18 +101,6 @@ export type GoalsDeleteOutput = AppRouterOutputs['goals']['delete'];
 export type GoalsArchiveInput = AppRouterInputs['goals']['archive'];
 export type GoalsArchiveOutput = AppRouterOutputs['goals']['archive'];
 
-// People endpoint types
-export type PeopleListInput = AppRouterInputs['people']['list'];
-export type PeopleListOutput = AppRouterOutputs['people']['list'];
-export type PeopleGetInput = AppRouterInputs['people']['get'];
-export type PeopleGetOutput = AppRouterOutputs['people']['get'];
-export type PeopleCreateInput = AppRouterInputs['people']['create'];
-export type PeopleCreateOutput = AppRouterOutputs['people']['create'];
-export type PeopleUpdateInput = AppRouterInputs['people']['update'];
-export type PeopleUpdateOutput = AppRouterOutputs['people']['update'];
-export type PeopleDeleteInput = AppRouterInputs['people']['delete'];
-export type PeopleDeleteOutput = AppRouterOutputs['people']['delete'];
-
 // Search endpoint types
 export type SearchInput = AppRouterInputs['search']['search'];
 export type SearchOutput = AppRouterOutputs['search']['search'];

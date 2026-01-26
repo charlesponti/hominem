@@ -83,9 +83,6 @@ export const getMockPlace = (): Place => ({
   priceLevel: null,
   businessStatus: null,
   openingHours: null,
-  associatedLists: [],
-  thumbnailPhotos: [],
-  fullPhotos: [],
 });
 
 export const getMockLists = () => [

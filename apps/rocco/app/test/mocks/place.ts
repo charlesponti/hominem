@@ -43,9 +43,6 @@ export const MOCK_PLACE: Place = {
   itemId: null,
   businessStatus: null,
   openingHours: null,
-  associatedLists: [],
-  thumbnailPhotos: [],
-  fullPhotos: [],
 };
 
 // Create a mock place that conforms to ListPlace type

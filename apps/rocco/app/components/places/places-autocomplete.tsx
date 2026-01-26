@@ -41,10 +41,16 @@ function PlacesAutocomplete({
     timeoutId.current = id;
   }, []);
 
-  const { data, error, isLoading } = useGooglePlacesAutocomplete({
+  const {
+    data: result,
+    error,
+    isLoading,
+  } = useGooglePlacesAutocomplete({
     input: debouncedValue,
     location: currentLocation ?? undefined,
   });
+
+  const data = result?.success ? result.data : [];
 
   const handleSelect = useCallback(
     (place: GooglePlacePrediction) => {
@@ -59,7 +65,7 @@ function PlacesAutocomplete({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!(isOpen && data)) {
+      if (!(isOpen && data && data.length > 0)) {
         return;
       }
 

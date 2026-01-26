@@ -1,3 +1,4 @@
+import type { BookmarkSelect } from '@hominem/db/schema';
 import type { AppRouter } from '@hominem/trpc';
 
 import { cleanupTestData, createTestUser } from '@hominem/db/test/utils';
@@ -9,12 +10,12 @@ import { createTRPCTestClient } from './trpc-test-utils.js';
 describe('Bookmarks tRPC Router', () => {
   let server: ReturnType<typeof createServer>;
   let testUserId: string;
-  let trpc: ReturnType<typeof createTRPCTestClient<AppRouter>>;
+  let trpc: ReturnType<typeof createTRPCTestClient>;
 
   beforeEach(async () => {
     server = createServer();
     testUserId = await createTestUser();
-    trpc = createTRPCTestClient<AppRouter>(server, testUserId);
+    trpc = createTRPCTestClient(server, testUserId);
   });
 
   afterEach(async () => {
@@ -105,7 +106,7 @@ describe('Bookmarks tRPC Router', () => {
 
       // Verify it's deleted by trying to list bookmarks
       const bookmarks = await trpc.bookmarks.list.query();
-      expect(bookmarks.find((b) => b.id === newBookmark.id)).toBeUndefined();
+      expect(bookmarks.find((b: BookmarkSelect) => b.id === newBookmark.id)).toBeUndefined();
     });
   });
 });

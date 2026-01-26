@@ -93,19 +93,15 @@ export const AddToListDrawerContent = ({
   );
 
   const handleCreateList = useCallback(async () => {
-    if (!searchQuery.trim() || !place?.googleMapsId) {
-      return;
-    }
-
     try {
-      const newList = await createListMutation.mutateAsync({
+      const result = await createListMutation.mutateAsync({
         name: searchQuery.trim(),
         description: '',
         isPublic: false,
       });
 
-      if (newList) {
-        onListSelectChange(newList.id, false);
+      if (result.success) {
+        onListSelectChange(result.data.id, false);
       }
     } catch (error) {
       console.error('Failed to create list:', error);

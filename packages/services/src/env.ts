@@ -17,7 +17,7 @@ const envSchema = z.object({
   GOOGLE_REDIRECT_URI: z.string().url().optional(),
   REDIS_URL: z.string().url().optional().default('redis://localhost:6379'),
   RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
+  RESEND_FROM_EMAIL: z.email().optional(),
   RESEND_FROM_NAME: z.string().optional(),
 });
 

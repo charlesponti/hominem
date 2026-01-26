@@ -82,11 +82,11 @@ const placeCreateSchema = z.object({
   websiteUri: z.string().optional(),
   phoneNumber: z.string().optional(),
   photos: z.array(z.string()).optional(),
-  listIds: z.array(z.string().uuid()).optional(),
+  listIds: z.array(z.uuid()).optional(),
 });
 
 const placeUpdateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().optional(),
   description: z.string().optional(),
   address: z.string().optional(),
@@ -101,7 +101,7 @@ const placeUpdateSchema = z.object({
 });
 
 const placeDeleteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const placeAutocompleteSchema = z.object({
@@ -112,7 +112,7 @@ const placeAutocompleteSchema = z.object({
 });
 
 const placeGetByIdSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const placeGetByGoogleIdSchema = z.object({
@@ -120,13 +120,13 @@ const placeGetByGoogleIdSchema = z.object({
 });
 
 const placeAddToListsSchema = z.object({
-  placeId: z.string().uuid(),
-  listIds: z.array(z.string().uuid()),
+  placeId: z.uuid(),
+  listIds: z.array(z.uuid()),
 });
 
 const placeRemoveFromListSchema = z.object({
-  placeId: z.string().uuid(),
-  listId: z.string().uuid(),
+  placeId: z.uuid(),
+  listId: z.uuid(),
 });
 
 const placeGetNearbySchema = z.object({
@@ -137,7 +137,7 @@ const placeGetNearbySchema = z.object({
 });
 
 const placeLogVisitSchema = z.object({
-  placeId: z.string().uuid(),
+  placeId: z.uuid(),
   title: z.string().min(1),
   description: z.string().optional(),
   date: z.union([z.string(), z.date()]).optional(),
@@ -154,11 +154,11 @@ const placeGetMyVisitsSchema = z.object({
 });
 
 const placeGetPlaceVisitsSchema = z.object({
-  placeId: z.string().uuid(),
+  placeId: z.uuid(),
 });
 
 const placeUpdateVisitSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   title: z.string().optional(),
   description: z.string().optional(),
   date: z.union([z.string(), z.date()]).optional(),
@@ -170,11 +170,11 @@ const placeUpdateVisitSchema = z.object({
 });
 
 const placeDeleteVisitSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const placeGetVisitStatsSchema = z.object({
-  placeId: z.string().uuid(),
+  placeId: z.uuid(),
 });
 
 // Export schemas for type derivation
@@ -214,11 +214,15 @@ function extractPhotoReferences(photos: any[]): string[] {
 
 function mapGooglePlaceToPrediction(place: any) {
   return {
-    id: place.id,
-    description: place.formattedAddress || place.displayName?.text || '',
-    name: place.displayName?.text || '',
+    place_id: place.id,
+    text: place.displayName?.text || '',
     address: place.formattedAddress,
-    types: place.types,
+    location: place.location
+      ? {
+          latitude: place.location.latitude,
+          longitude: place.location.longitude,
+        }
+      : null,
   };
 }
 

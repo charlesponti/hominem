@@ -52,7 +52,7 @@ const accountListSchema = z.object({
 });
 
 const accountGetSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const accountCreateSchema = z.object({
@@ -63,7 +63,7 @@ const accountCreateSchema = z.object({
 });
 
 const accountUpdateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().optional(),
   type: z.enum(['checking', 'savings', 'investment', 'credit']).optional(),
   balance: z.number().optional(),
@@ -71,7 +71,7 @@ const accountUpdateSchema = z.object({
 });
 
 const accountDeleteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const institutionAccountsSchema = z.object({
@@ -100,8 +100,14 @@ export const accountsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     try {
-      const result = await listAccounts(userId);
-      return c.json(result);
+      const accounts = await listAccounts(userId);
+      const result = accounts.map((account) => ({
+        ...account,
+        createdAt: account.createdAt.toISOString(),
+        updatedAt: account.updatedAt.toISOString(),
+        lastUpdated: account.lastUpdated?.toISOString() || null,
+      }));
+      return c.json(result as AccountListOutput);
     } catch (error) {
       console.error('Error listing accounts:', error);
       return c.json({ error: 'Failed to list accounts' }, 500);
