@@ -6,74 +6,47 @@ import {
   deleteTransaction,
   getAccountById,
 } from '@hominem/finance-services';
+import { error, success, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import {
+  transactionListSchema,
+  transactionUpdateSchema,
+  transactionDeleteSchema,
+  type TransactionData,
+  type TransactionListOutput,
+  type TransactionCreateOutput,
+  type TransactionUpdateOutput,
+  type TransactionDeleteOutput,
+} from '../types/finance.types';
+
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
- * Finance Transactions Routes
- *
- * Handles all transaction-related operations:
- * - POST /list - Query transactions with filters
- * - POST /create - Create new transaction
- * - POST /update - Update existing transaction
- * - POST /delete - Delete transaction
+ * Serialization Helpers
  */
+function serializeTransaction(t: any): TransactionData {
+  return {
+    ...t,
+    date: typeof t.date === 'string' ? t.date : t.date.toISOString(),
+    authorizedDate: t.authorizedDate ? (typeof t.authorizedDate === 'string' ? t.authorizedDate : t.authorizedDate.toISOString()) : null,
+    createdAt: typeof t.createdAt === 'string' ? t.createdAt : t.createdAt.toISOString(),
+    updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt.toISOString(),
+    amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount?.toString() || '0'),
+  };
+}
 
-// ============================================================================
-// Validation Schemas
-// ============================================================================
-
-const transactionListSchema = z.object({
-  from: z.string().optional(),
-  to: z.string().optional(),
-  category: z.string().optional(),
-  min: z.string().optional(),
-  max: z.string().optional(),
-  account: z.string().optional(),
-  limit: z.number().int().min(1).max(100).default(50),
-  offset: z.number().int().min(0).default(0),
-  description: z.string().optional(),
-  search: z.string().optional(),
-  sortBy: z.array(z.string()).optional(),
-  sortDirection: z.array(z.enum(['asc', 'desc'])).optional(),
-});
-
-const transactionUpdateSchema = z.object({
-  id: z.uuid(),
-  data: z.object({
-    accountId: z.uuid().optional(),
-    amount: z.number().optional(),
-    description: z.string().optional(),
-    category: z.string().optional(),
-    date: z.date().optional(),
-    merchantName: z.string().optional(),
-    note: z.string().optional(),
-    tags: z.string().optional(),
-    excluded: z.boolean().optional(),
-    recurring: z.boolean().optional(),
-  }),
-});
-
-const transactionDeleteSchema = z.object({
-  id: z.uuid(),
-});
-
-// Export schemas for type derivation
-export { transactionListSchema, transactionUpdateSchema, transactionDeleteSchema };
-
-// ============================================================================
-// Routes
-// ============================================================================
-
+/**
+ * Finance Transactions Routes
+ */
 export const transactionsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
   // POST /list - Query transactions
   .post('/list', zValidator('json', transactionListSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof transactionListSchema>;
     const userId = c.get('userId')!;
 
     try {
@@ -82,10 +55,20 @@ export const transactionsRoutes = new Hono<AppContext>()
         userId,
       });
 
-      return c.json(result);
-    } catch (error) {
-      console.error('Error querying transactions:', error);
-      return c.json({ error: 'Failed to query transactions' }, 500);
+      return c.json<TransactionListOutput>(
+        success({
+          data: result.data.map(serializeTransaction),
+          filteredCount: result.filteredCount,
+          totalUserCount: result.totalUserCount,
+        }),
+        200,
+      );
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<TransactionListOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error querying transactions:', err);
+      return c.json<TransactionListOutput>(error('INTERNAL_ERROR', 'Failed to query transactions'), 500);
     }
   })
 
@@ -94,7 +77,7 @@ export const transactionsRoutes = new Hono<AppContext>()
     '/create',
     zValidator('json', insertTransactionSchema.omit({ userId: true })),
     async (c) => {
-      const input = c.req.valid('json');
+      const input = c.req.valid('json') as any;
       const userId = c.get('userId')!;
 
       try {
@@ -102,7 +85,7 @@ export const transactionsRoutes = new Hono<AppContext>()
         if (input.accountId) {
           const account = await getAccountById(input.accountId, userId);
           if (!account) {
-            return c.json({ error: 'Account not found' }, 404);
+            return c.json<TransactionCreateOutput>(error('NOT_FOUND', 'Account not found'), 404);
           }
         }
 
@@ -111,17 +94,20 @@ export const transactionsRoutes = new Hono<AppContext>()
           userId,
         });
 
-        return c.json(result);
-      } catch (error) {
-        console.error('Error creating transaction:', error);
-        return c.json({ error: 'Failed to create transaction' }, 500);
+        return c.json<TransactionCreateOutput>(success(serializeTransaction(result)), 201);
+      } catch (err) {
+        if (isServiceError(err)) {
+          return c.json<TransactionCreateOutput>(error(err.code, err.message), err.statusCode as any);
+        }
+        console.error('Error creating transaction:', err);
+        return c.json<TransactionCreateOutput>(error('INTERNAL_ERROR', 'Failed to create transaction'), 500);
       }
     },
   )
 
   // POST /update - Update existing transaction
   .post('/update', zValidator('json', transactionUpdateSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof transactionUpdateSchema>;
     const userId = c.get('userId')!;
     const { id, data } = input;
 
@@ -130,30 +116,39 @@ export const transactionsRoutes = new Hono<AppContext>()
       if (data.accountId) {
         const account = await getAccountById(data.accountId, userId);
         if (!account) {
-          return c.json({ error: 'Account not found' }, 404);
+          return c.json<TransactionUpdateOutput>(error('NOT_FOUND', 'Account not found'), 404);
         }
       }
 
       const result = await updateTransaction({ transactionId: id, ...data } as any, userId);
 
-      return c.json(result);
-    } catch (error) {
-      console.error('Error updating transaction:', error);
-      return c.json({ error: 'Failed to update transaction' }, 500);
+      if (!result) {
+        return c.json<TransactionUpdateOutput>(error('NOT_FOUND', 'Transaction not found'), 404);
+      }
+
+      return c.json<TransactionUpdateOutput>(success(serializeTransaction(result)), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<TransactionUpdateOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error updating transaction:', err);
+      return c.json<TransactionUpdateOutput>(error('INTERNAL_ERROR', 'Failed to update transaction'), 500);
     }
   })
 
   // POST /delete - Delete transaction
   .post('/delete', zValidator('json', transactionDeleteSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof transactionDeleteSchema>;
     const userId = c.get('userId')!;
 
     try {
       const result = await deleteTransaction({ transactionId: input.id }, userId);
-
-      return c.json(result);
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-      return c.json({ error: 'Failed to delete transaction' }, 500);
+      return c.json<TransactionDeleteOutput>(success(result), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<TransactionDeleteOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error deleting transaction:', err);
+      return c.json<TransactionDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete transaction'), 500);
     }
   });

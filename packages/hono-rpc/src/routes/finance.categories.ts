@@ -1,15 +1,13 @@
 import { getSpendingCategories } from '@hominem/finance-services';
+import { error, success, isServiceError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import { type CategoriesListOutput } from '../types/finance.types';
 
 /**
  * Finance Categories Routes
- *
- * Handles category operations:
- * - POST /list - List spending categories
  */
-
 export const categoriesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
@@ -19,9 +17,12 @@ export const categoriesRoutes = new Hono<AppContext>()
 
     try {
       const result = await getSpendingCategories(userId);
-      return c.json(result);
-    } catch (error) {
-      console.error('Error listing categories:', error);
-      return c.json({ error: 'Failed to list categories' }, 500);
+      return c.json<CategoriesListOutput>(success(result), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<CategoriesListOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error listing categories:', err);
+      return c.json<CategoriesListOutput>(error('INTERNAL_ERROR', 'Failed to list categories'), 500);
     }
   });

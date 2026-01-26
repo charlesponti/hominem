@@ -1,3 +1,4 @@
+import type { Person } from '@hominem/hono-rpc/types';
 import type React from 'react';
 
 import { Button } from '@hominem/ui/components/ui/button';
@@ -5,12 +6,6 @@ import { MapPinIcon, PencilIcon, UsersIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
 import SourceBadge from './SourceBadge';
-
-interface Person {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-}
 
 interface Activity {
   id: string;

@@ -8,13 +8,15 @@ import oneDark from 'react-syntax-highlighter/dist/cjs/styles/prism/one-dark';
 import { cn } from '~/lib/utils';
 
 interface MarkdownContentProps {
-  content: string;
+  content: string | null;
   isStreaming?: boolean;
   className?: string;
 }
 
 export function MarkdownContent({ content, isStreaming = false, className }: MarkdownContentProps) {
   const [copiedCodeBlocks, setCopiedCodeBlocks] = useState<Set<string>>(new Set());
+
+  if (content === null) return null;
 
   const handleCopyCode = async (code: string, _language: string, blockId: string) => {
     try {

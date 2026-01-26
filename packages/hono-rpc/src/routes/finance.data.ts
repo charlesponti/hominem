@@ -1,15 +1,13 @@
 import { deleteAllFinanceData } from '@hominem/finance-services';
+import { error, success, isServiceError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import { type DataDeleteAllOutput } from '../types/finance.types';
 
 /**
  * Finance Data Management Routes
- *
- * Handles data management operations:
- * - POST /delete-all - Delete all finance data for user
  */
-
 export const dataRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
@@ -20,12 +18,18 @@ export const dataRoutes = new Hono<AppContext>()
     try {
       await deleteAllFinanceData(userId);
 
-      return c.json({
-        success: true,
-        message: 'All finance data deleted',
-      });
-    } catch (error) {
-      console.error('Error deleting finance data:', error);
-      return c.json({ error: 'Failed to delete finance data' }, 500);
+      return c.json<DataDeleteAllOutput>(
+        success({
+          success: true,
+          message: 'All finance data deleted',
+        }),
+        200,
+      );
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<DataDeleteAllOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error deleting finance data:', err);
+      return c.json<DataDeleteAllOutput>(error('INTERNAL_ERROR', 'Failed to delete finance data'), 500);
     }
   });

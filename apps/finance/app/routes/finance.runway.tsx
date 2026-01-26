@@ -93,7 +93,7 @@ export default function RunwayPage() {
       // Recalculate if we have the required values
       if (initialBalance > 0 && monthlyExpenses > 0) {
         runwayMutation.mutate({
-          balance: initialBalance,
+          assets: initialBalance,
           monthlyExpenses,
           plannedPurchases: updatedPurchases,
         });
@@ -108,7 +108,7 @@ export default function RunwayPage() {
     // Recalculate if we have the required values
     if (initialBalance > 0 && monthlyExpenses > 0) {
       runwayMutation.mutate({
-        balance: initialBalance,
+        assets: initialBalance,
         monthlyExpenses,
         plannedPurchases: updatedPurchases,
       });
@@ -118,7 +118,7 @@ export default function RunwayPage() {
   const handleCalculateRunway = () => {
     if (initialBalance > 0 && monthlyExpenses > 0) {
       runwayMutation.mutate({
-        balance: initialBalance,
+        assets: initialBalance,
         monthlyExpenses,
         plannedPurchases,
       });
@@ -139,7 +139,7 @@ export default function RunwayPage() {
 
     if (newBalance > 0 && newMonthlyExpenses > 0) {
       runwayMutation.mutate({
-        balance: newBalance,
+        assets: newBalance,
         monthlyExpenses: newMonthlyExpenses,
         plannedPurchases,
       });

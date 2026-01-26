@@ -26,51 +26,23 @@ import {
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
-
-// ============================================================================
-// Validation Schemas
-// ============================================================================
-
-const invitesGetReceivedSchema = z.object({
-  token: z.string().optional(),
-});
-
-const invitesGetByListSchema = z.object({
-  listId: z.uuid(),
-});
-
-const invitesCreateSchema = z.object({
-  listId: z.uuid(),
-  invitedUserEmail: z.email(),
-});
-
-const invitesAcceptSchema = z.object({
-  listId: z.uuid(),
-  token: z.string().min(1, 'Token is required'),
-});
-
-const invitesDeclineSchema = z.object({
-  listId: z.uuid(),
-  token: z.string().min(1, 'Token is required'),
-});
-
-const invitesDeleteSchema = z.object({
-  listId: z.uuid(),
-  invitedUserEmail: z.email(),
-});
-
-// Export schemas for type derivation
-export {
+import {
   invitesGetReceivedSchema,
   invitesGetByListSchema,
   invitesCreateSchema,
   invitesAcceptSchema,
   invitesDeclineSchema,
   invitesDeleteSchema,
-};
+  type InvitesGetReceivedOutput,
+  type InvitesGetSentOutput,
+  type InvitesGetByListOutput,
+  type InvitesCreateOutput,
+  type InvitesAcceptOutput,
+  type InvitesDeclineOutput,
+  type InvitesDeleteOutput,
+} from '../types/invites.types';
 
 // ============================================================================
 // Routes
@@ -124,14 +96,14 @@ export const invitesRoutes = new Hono<AppContext>()
           ]
         : filteredBaseInvites;
 
-      return c.json(success(invites), 200);
+      return c.json<InvitesGetReceivedOutput>(success(invites as any), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<InvitesGetReceivedOutput>(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
       console.error('[invites.received] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to fetch invites'), 500);
+      return c.json<InvitesGetReceivedOutput>(error('INTERNAL_ERROR', 'Failed to fetch invites'), 500);
     }
   })
 
@@ -142,14 +114,14 @@ export const invitesRoutes = new Hono<AppContext>()
 
       const invites = await getOutboundInvites(userId);
 
-      return c.json(success(invites), 200);
+      return c.json<InvitesGetSentOutput>(success(invites as any), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<InvitesGetSentOutput>(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
       console.error('[invites.sent] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to fetch sent invites'), 500);
+      return c.json<InvitesGetSentOutput>(error('INTERNAL_ERROR', 'Failed to fetch sent invites'), 500);
     }
   })
 
@@ -161,7 +133,7 @@ export const invitesRoutes = new Hono<AppContext>()
 
       const listItem = await getListOwnedByUser(input.listId, userId);
       if (!listItem) {
-        return c.json(
+        return c.json<InvitesGetByListOutput>(
           error('FORBIDDEN', "You don't have permission to access this list's invites"),
           403,
         );
@@ -169,14 +141,14 @@ export const invitesRoutes = new Hono<AppContext>()
 
       const invites = await getListInvites(input.listId);
 
-      return c.json(success(invites), 200);
+      return c.json<InvitesGetByListOutput>(success(invites as any), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<InvitesGetByListOutput>(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
       console.error('[invites.by-list] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to fetch invites'), 500);
+      return c.json<InvitesGetByListOutput>(error('INTERNAL_ERROR', 'Failed to fetch invites'), 500);
     }
   })
 
@@ -191,13 +163,13 @@ export const invitesRoutes = new Hono<AppContext>()
 
       // Prevent self-invites
       if (normalizedEmail === user.email?.toLowerCase()) {
-        return c.json(error('VALIDATION_ERROR', 'You cannot invite yourself to a list'), 400);
+        return c.json<InvitesCreateOutput>(error('VALIDATION_ERROR', 'You cannot invite yourself to a list'), 400);
       }
 
       // Check if user owns the list
       const listItem = await getListOwnedByUser(input.listId, userId);
       if (!listItem) {
-        return c.json(
+        return c.json<InvitesCreateOutput>(
           error('FORBIDDEN', "You don't have permission to invite users to this list"),
           403,
         );
@@ -208,13 +180,13 @@ export const invitesRoutes = new Hono<AppContext>()
       if (invitedUser) {
         const isAlreadyMember = await isUserMemberOfList(input.listId, invitedUser.id);
         if (isAlreadyMember) {
-          return c.json(error('CONFLICT', 'This user is already a member of this list'), 409);
+          return c.json<InvitesCreateOutput>(error('CONFLICT', 'This user is already a member of this list'), 409);
         }
       }
 
       const baseUrl = process.env.VITE_APP_BASE_URL;
       if (!baseUrl) {
-        return c.json(error('INTERNAL_ERROR', 'Server configuration error'), 500);
+        return c.json<InvitesCreateOutput>(error('INTERNAL_ERROR', 'Server configuration error'), 500);
       }
 
       // Call service function with properly typed params
@@ -227,23 +199,23 @@ export const invitesRoutes = new Hono<AppContext>()
 
       const result = await sendListInvite(params);
 
-      return c.json(success(result), 201);
+      return c.json<InvitesCreateOutput>(success(result as any), 201);
     } catch (err) {
       if (err instanceof ConflictError) {
-        return c.json(error(err.code, err.message, err.details), 409);
+        return c.json<InvitesCreateOutput>(error(err.code, err.message, err.details), 409);
       }
       if (err instanceof NotFoundError) {
-        return c.json(error(err.code, err.message, err.details), 404);
+        return c.json<InvitesCreateOutput>(error(err.code, err.message, err.details), 404);
       }
       if (err instanceof ValidationError) {
-        return c.json(error(err.code, err.message, err.details), 400);
+        return c.json<InvitesCreateOutput>(error(err.code, err.message, err.details), 400);
       }
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<InvitesCreateOutput>(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
       console.error('[invites.create] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to create invite'), 500);
+      return c.json<InvitesCreateOutput>(error('INTERNAL_ERROR', 'Failed to create invite'), 500);
     }
   })
 
@@ -255,7 +227,7 @@ export const invitesRoutes = new Hono<AppContext>()
       const user = c.get('user')!;
 
       if (!user.email) {
-        return c.json(error('UNAUTHORIZED', 'User email not available'), 401);
+        return c.json<InvitesAcceptOutput>(error('UNAUTHORIZED', 'User email not available'), 401);
       }
 
       // Call service function with properly typed params
@@ -273,23 +245,23 @@ export const invitesRoutes = new Hono<AppContext>()
         token: input.token,
       });
 
-      return c.json(success(updatedInvite), 200);
+      return c.json<InvitesAcceptOutput>(success(updatedInvite as any), 200);
     } catch (err) {
       if (err instanceof NotFoundError) {
-        return c.json(error(err.code, err.message, err.details), 404);
+        return c.json<InvitesAcceptOutput>(error(err.code, err.message, err.details), 404);
       }
       if (err instanceof ValidationError) {
-        return c.json(error(err.code, err.message, err.details), 400);
+        return c.json<InvitesAcceptOutput>(error(err.code, err.message, err.details), 400);
       }
       if (err instanceof ForbiddenError) {
-        return c.json(error(err.code, err.message, err.details), 403);
+        return c.json<InvitesAcceptOutput>(error(err.code, err.message, err.details), 403);
       }
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<InvitesAcceptOutput>(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
       console.error('[invites.accept] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to accept invite'), 500);
+      return c.json<InvitesAcceptOutput>(error('INTERNAL_ERROR', 'Failed to accept invite'), 500);
     }
   })
 
@@ -305,11 +277,11 @@ export const invitesRoutes = new Hono<AppContext>()
       });
 
       if (!invite) {
-        return c.json(error('NOT_FOUND', 'Invite not found'), 404);
+        return c.json<InvitesDeclineOutput>(error('NOT_FOUND', 'Invite not found'), 404);
       }
 
       if (invite.invitedUserId && invite.invitedUserId !== userId) {
-        return c.json(error('FORBIDDEN', 'This invite belongs to a different user'), 403);
+        return c.json<InvitesDeclineOutput>(error('FORBIDDEN', 'This invite belongs to a different user'), 403);
       }
 
       const deleted = await deleteInviteByListAndToken({
@@ -318,17 +290,17 @@ export const invitesRoutes = new Hono<AppContext>()
       });
 
       if (!deleted) {
-        return c.json(error('NOT_FOUND', 'Invite not found'), 404);
+        return c.json<InvitesDeclineOutput>(error('NOT_FOUND', 'Invite not found'), 404);
       }
 
-      return c.json(success({ success: true }), 200);
+      return c.json<InvitesDeclineOutput>(success({ success: true }), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<InvitesDeclineOutput>(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
       console.error('[invites.decline] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to decline invite'), 500);
+      return c.json<InvitesDeclineOutput>(error('INTERNAL_ERROR', 'Failed to decline invite'), 500);
     }
   })
 
@@ -347,22 +319,22 @@ export const invitesRoutes = new Hono<AppContext>()
 
       await deleteListInvite(params);
 
-      return c.json(success({ success: true }), 200);
+      return c.json<InvitesDeleteOutput>(success({ success: true }), 200);
     } catch (err) {
       if (err instanceof ValidationError) {
-        return c.json(error(err.code, err.message, err.details), 400);
+        return c.json<InvitesDeleteOutput>(error(err.code, err.message, err.details), 400);
       }
       if (err instanceof NotFoundError) {
-        return c.json(error(err.code, err.message, err.details), 404);
+        return c.json<InvitesDeleteOutput>(error(err.code, err.message, err.details), 404);
       }
       if (err instanceof ForbiddenError) {
-        return c.json(error(err.code, err.message, err.details), 403);
+        return c.json<InvitesDeleteOutput>(error(err.code, err.message, err.details), 403);
       }
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<InvitesDeleteOutput>(error(err.code, err.message, err.details), err.statusCode as any);
       }
 
       console.error('[invites.delete] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to delete invite'), 500);
+      return c.json<InvitesDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete invite'), 500);
     }
   });

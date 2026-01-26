@@ -6,6 +6,8 @@ export type {
   ChatMessageFile,
   ChatMessageSelect,
   Company,
+  ContactSelect,
+  ContactInsert,
   Goal,
   JobApplication,
   JobApplicationInsert,

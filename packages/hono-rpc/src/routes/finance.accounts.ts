@@ -10,88 +10,60 @@ import {
   listInstitutionConnections,
   getAccountsForInstitution,
 } from '@hominem/finance-services';
+import { error, success, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import type {
-  AccountListOutput,
-  AccountGetOutput,
-  AccountCreateOutput,
-  AccountUpdateOutput,
-  AccountDeleteOutput,
-  AccountAllOutput,
-  AccountsWithPlaidOutput,
-  AccountConnectionsOutput,
-  AccountInstitutionAccountsOutput,
-} from '../types/finance.types';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
-
-/**
- * Finance Accounts Routes
- *
- * Handles all account-related operations:
- * - POST /list - List user's accounts
- * - POST /get - Get single account with transactions
- * - POST /create - Create new account
- * - POST /update - Update existing account
- * - POST /delete - Delete account
- * - POST /all - Get all accounts with connections
- * - POST /with-plaid - Get accounts with Plaid info
- * - POST /connections - Get institution connections
- * - POST /institution-accounts - Get accounts for specific institution
- */
-
-// ============================================================================
-// Validation Schemas
-// ============================================================================
-
-const accountListSchema = z.object({
-  includeInactive: z.boolean().optional().default(false),
-});
-
-const accountGetSchema = z.object({
-  id: z.uuid(),
-});
-
-const accountCreateSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  type: z.enum(['checking', 'savings', 'investment', 'credit']),
-  balance: z.number().optional(),
-  institution: z.string().optional(),
-});
-
-const accountUpdateSchema = z.object({
-  id: z.uuid(),
-  name: z.string().optional(),
-  type: z.enum(['checking', 'savings', 'investment', 'credit']).optional(),
-  balance: z.number().optional(),
-  institution: z.string().optional(),
-});
-
-const accountDeleteSchema = z.object({
-  id: z.uuid(),
-});
-
-const institutionAccountsSchema = z.object({
-  institutionId: z.string(),
-});
-
-// Export schemas for type derivation
-export {
+import {
   accountListSchema,
   accountGetSchema,
   accountCreateSchema,
   accountUpdateSchema,
   accountDeleteSchema,
   institutionAccountsSchema,
-};
+  type AccountData,
+  type AccountListOutput,
+  type AccountGetOutput,
+  type AccountCreateOutput,
+  type AccountUpdateOutput,
+  type AccountDeleteOutput,
+  type AccountAllOutput,
+  type AccountsWithPlaidOutput,
+  type AccountConnectionsOutput,
+  type AccountInstitutionAccountsOutput,
+  type TransactionData,
+} from '../types/finance.types';
 
-// ============================================================================
-// Routes
-// ============================================================================
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
+/**
+ * Serialization Helpers
+ */
+function serializeAccount(account: any): AccountData {
+  return {
+    ...account,
+    createdAt: typeof account.createdAt === 'string' ? account.createdAt : account.createdAt.toISOString(),
+    updatedAt: typeof account.updatedAt === 'string' ? account.updatedAt : account.updatedAt.toISOString(),
+    lastUpdated: account.lastUpdated ? (typeof account.lastUpdated === 'string' ? account.lastUpdated : account.lastUpdated.toISOString()) : null,
+    balance: typeof account.balance === 'number' ? account.balance : parseFloat(account.balance?.toString() || '0'),
+  };
+}
+
+function serializeTransaction(t: any): TransactionData {
+  return {
+    ...t,
+    date: typeof t.date === 'string' ? t.date : t.date.toISOString(),
+    authorizedDate: t.authorizedDate ? (typeof t.authorizedDate === 'string' ? t.authorizedDate : t.authorizedDate.toISOString()) : null,
+    createdAt: typeof t.createdAt === 'string' ? t.createdAt : t.createdAt.toISOString(),
+    updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt.toISOString(),
+    amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount?.toString() || '0'),
+  };
+}
+
+/**
+ * Finance Accounts Routes
+ */
 export const accountsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
@@ -101,49 +73,49 @@ export const accountsRoutes = new Hono<AppContext>()
 
     try {
       const accounts = await listAccounts(userId);
-      const result = accounts.map((account) => ({
-        ...account,
-        createdAt: account.createdAt.toISOString(),
-        updatedAt: account.updatedAt.toISOString(),
-        lastUpdated: account.lastUpdated?.toISOString() || null,
-      }));
-      return c.json(result as AccountListOutput);
-    } catch (error) {
-      console.error('Error listing accounts:', error);
-      return c.json({ error: 'Failed to list accounts' }, 500);
+      return c.json<AccountListOutput>(success(accounts.map(serializeAccount)), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountListOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error listing accounts:', err);
+      return c.json<AccountListOutput>(error('INTERNAL_ERROR', 'Failed to list accounts'), 500);
     }
   })
 
   // POST /get - Get single account
   .post('/get', zValidator('json', accountGetSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof accountGetSchema>;
     const userId = c.get('userId')!;
 
     try {
       const account = await getAccountWithPlaidInfo(input.id, userId);
 
       if (!account) {
-        return c.json({ error: 'Account not found' }, 404);
+        return c.json<AccountGetOutput>(error('NOT_FOUND', 'Account not found'), 404);
       }
 
       const accountWithTransactions = await listAccountsWithRecentTransactions(userId, 5);
       const accountData = accountWithTransactions.find((acc) => acc.id === account.id);
 
       const result = {
-        ...account,
-        transactions: accountData?.transactions || [],
+        ...serializeAccount(account),
+        transactions: (accountData?.transactions || []).map(serializeTransaction),
       };
 
-      return c.json(result);
-    } catch (error) {
-      console.error('Error getting account:', error);
-      return c.json({ error: 'Failed to get account' }, 500);
+      return c.json<AccountGetOutput>(success(result as any), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountGetOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error getting account:', err);
+      return c.json<AccountGetOutput>(error('INTERNAL_ERROR', 'Failed to get account'), 500);
     }
   })
 
   // POST /create - Create account
   .post('/create', zValidator('json', accountCreateSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof accountCreateSchema>;
     const userId = c.get('userId')!;
 
     try {
@@ -157,16 +129,19 @@ export const accountsRoutes = new Hono<AppContext>()
         meta: null,
       });
 
-      return c.json(result);
-    } catch (error) {
-      console.error('Error creating account:', error);
-      return c.json({ error: 'Failed to create account' }, 500);
+      return c.json<AccountCreateOutput>(success(serializeAccount(result)), 201);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountCreateOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error creating account:', err);
+      return c.json<AccountCreateOutput>(error('INTERNAL_ERROR', 'Failed to create account'), 500);
     }
   })
 
   // POST /update - Update account
   .post('/update', zValidator('json', accountUpdateSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof accountUpdateSchema>;
     const userId = c.get('userId')!;
     const { id, ...updates } = input;
 
@@ -177,29 +152,34 @@ export const accountsRoutes = new Hono<AppContext>()
         institutionId: updates.institution,
       });
 
-      return c.json(result);
-    } catch (error) {
-      console.error('Error updating account:', error);
-      return c.json({ error: 'Failed to update account' }, 500);
+      if (!result) {
+        return c.json<AccountUpdateOutput>(error('NOT_FOUND', 'Account not found'), 404);
+      }
+
+      return c.json<AccountUpdateOutput>(success(serializeAccount(result)), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountUpdateOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error updating account:', err);
+      return c.json<AccountUpdateOutput>(error('INTERNAL_ERROR', 'Failed to update account'), 500);
     }
   })
 
   // POST /delete - Delete account
   .post('/delete', zValidator('json', accountDeleteSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof accountDeleteSchema>;
     const userId = c.get('userId')!;
 
     try {
       await deleteAccount(input.id, userId);
-      const result = {
-        success: true,
-        message: 'Account deleted successfully',
-      };
-
-      return c.json(result);
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      return c.json({ error: 'Failed to delete account' }, 500);
+      return c.json<AccountDeleteOutput>(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountDeleteOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error deleting account:', err);
+      return c.json<AccountDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete account'), 500);
     }
   })
 
@@ -217,8 +197,8 @@ export const accountsRoutes = new Hono<AppContext>()
       );
 
       const accountsWithTransactions = allAccounts.map((account) => ({
-        ...account,
-        transactions: transactionsMap.get(account.id) || [],
+        ...serializeAccount(account),
+        transactions: (transactionsMap.get(account.id) || []).map(serializeTransaction),
       }));
 
       // Get Plaid connections
@@ -226,13 +206,19 @@ export const accountsRoutes = new Hono<AppContext>()
 
       const result = {
         accounts: accountsWithTransactions,
-        connections: plaidConnections,
+        connections: plaidConnections.map(conn => ({
+          ...conn,
+          lastSynced: typeof conn.lastSynced === 'string' ? conn.lastSynced : (conn.lastSynced as any).toISOString(),
+        })),
       };
 
-      return c.json(result);
-    } catch (error) {
-      console.error('Error getting all accounts:', error);
-      return c.json({ error: 'Failed to get all accounts' }, 500);
+      return c.json<AccountAllOutput>(success(result as any), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountAllOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error getting all accounts:', err);
+      return c.json<AccountAllOutput>(error('INTERNAL_ERROR', 'Failed to get all accounts'), 500);
     }
   })
 
@@ -242,10 +228,13 @@ export const accountsRoutes = new Hono<AppContext>()
 
     try {
       const result = await listAccountsWithPlaidInfo(userId);
-      return c.json(result);
-    } catch (error) {
-      console.error('Error getting accounts with Plaid:', error);
-      return c.json({ error: 'Failed to get accounts with Plaid' }, 500);
+      return c.json<AccountsWithPlaidOutput>(success(result.map(serializeAccount)), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountsWithPlaidOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error getting accounts with Plaid:', err);
+      return c.json<AccountsWithPlaidOutput>(error('INTERNAL_ERROR', 'Failed to get accounts with Plaid'), 500);
     }
   })
 
@@ -254,24 +243,33 @@ export const accountsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     try {
-      const result = await listInstitutionConnections(userId);
-      return c.json(result);
-    } catch (error) {
-      console.error('Error getting connections:', error);
-      return c.json({ error: 'Failed to get connections' }, 500);
+      const result = await listPlaidConnectionsForUser(userId);
+      return c.json<AccountConnectionsOutput>(success(result.map(conn => ({
+        ...conn,
+        lastSynced: typeof conn.lastSynced === 'string' ? conn.lastSynced : (conn.lastSynced as any).toISOString(),
+      }))), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountConnectionsOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error getting connections:', err);
+      return c.json<AccountConnectionsOutput>(error('INTERNAL_ERROR', 'Failed to get connections'), 500);
     }
   })
 
   // POST /institution-accounts - Get accounts for institution
   .post('/institution-accounts', zValidator('json', institutionAccountsSchema), async (c) => {
-    const input = c.req.valid('json');
+    const input = c.req.valid('json') as z.infer<typeof institutionAccountsSchema>;
     const userId = c.get('userId')!;
 
     try {
       const result = await getAccountsForInstitution(userId, input.institutionId);
-      return c.json(result);
-    } catch (error) {
-      console.error('Error getting institution accounts:', error);
-      return c.json({ error: 'Failed to get institution accounts' }, 500);
+      return c.json<AccountInstitutionAccountsOutput>(success(result.map(serializeAccount)), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<AccountInstitutionAccountsOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Error getting institution accounts:', err);
+      return c.json<AccountInstitutionAccountsOutput>(error('INTERNAL_ERROR', 'Failed to get institution accounts'), 500);
     }
   });

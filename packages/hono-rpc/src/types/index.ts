@@ -11,230 +11,29 @@
 // Utilities
 // ============================================================================
 
-export type { JsonSerialized, EmptyInput } from './utils';
+export * from './utils';
+// export * from './errors';
 
 // ============================================================================
-// Admin
+// Domain Types
 // ============================================================================
 
-export type { AdminRefreshGooglePlacesInput, AdminRefreshGooglePlacesOutput } from './admin.types';
+export * from './admin.types';
+export * from './finance.types';
+export * from './invites.types';
+export * from './items.types';
+export * from './lists.types';
+export * from './people.types';
+export * from './places.types';
+export * from './trips.types';
+export * from './user.types';
+export * from './chat.types';
+export * from './twitter.types';
+export * from './notes.types';
+export * from './events.types';
+export * from './tweet.types';
+export * from './goals.types';
 
-// ============================================================================
-// Finance
-// ============================================================================
-
-export type {
-  // Transactions
-  TransactionListInput,
-  TransactionListOutput,
-  TransactionCreateInput,
-  TransactionCreateOutput,
-  TransactionUpdateInput,
-  TransactionUpdateOutput,
-  TransactionDeleteInput,
-  TransactionDeleteOutput,
-  // Accounts
-  AccountListInput,
-  AccountListOutput,
-  AccountGetInput,
-  AccountGetOutput,
-  AccountCreateInput,
-  AccountCreateOutput,
-  AccountUpdateInput,
-  AccountUpdateOutput,
-  AccountDeleteInput,
-  AccountDeleteOutput,
-  AccountAllOutput,
-  AccountsWithPlaidOutput,
-  AccountConnectionsOutput,
-  AccountInstitutionAccountsInput,
-  AccountInstitutionAccountsOutput,
-  // Analyze
-  SpendingTimeSeriesInput,
-  SpendingTimeSeriesOutput,
-  TopMerchantsInput,
-  TopMerchantsOutput,
-  CategoryBreakdownInput,
-  CategoryBreakdownOutput,
-  CalculateTransactionsInput,
-  CalculateTransactionsOutput,
-  MonthlyStatsInput,
-  MonthlyStatsOutput,
-  // Categories
-  CategoriesListInput,
-  CategoriesListOutput,
-  // Plaid
-  PlaidCreateLinkTokenInput,
-  PlaidCreateLinkTokenOutput,
-  PlaidExchangeTokenInput,
-  PlaidExchangeTokenOutput,
-  PlaidSyncItemInput,
-  PlaidSyncItemOutput,
-  PlaidRemoveConnectionInput,
-  PlaidRemoveConnectionOutput,
-  // Institutions
-  InstitutionsListInput,
-  InstitutionsListOutput,
-  InstitutionCreateInput,
-  InstitutionCreateOutput,
-  // Budget
-  BudgetCategoriesListInput,
-  BudgetCategoriesListOutput,
-  BudgetCategoriesListWithSpendingInput,
-  BudgetCategoriesListWithSpendingOutput,
-  BudgetCategoryGetInput,
-  BudgetCategoryGetOutput,
-  BudgetCategoryCreateInput,
-  BudgetCategoryCreateOutput,
-  BudgetCategoryUpdateInput,
-  BudgetCategoryUpdateOutput,
-  BudgetCategoryDeleteInput,
-  BudgetCategoryDeleteOutput,
-  BudgetTrackingInput,
-  BudgetTrackingOutput,
-  BudgetHistoryInput,
-  BudgetHistoryOutput,
-  BudgetCalculateInput,
-  BudgetCalculateOutput,
-  BudgetBulkCreateInput,
-  BudgetBulkCreateOutput,
-  TransactionCategoryAnalysisOutput,
-  // Runway
-  RunwayCalculateInput,
-  RunwayCalculateOutput,
-  // Export
-  ExportTransactionsInput,
-  ExportTransactionsOutput,
-  ExportSummaryInput,
-  ExportSummaryOutput,
-  // Data
-  DataDeleteAllInput,
-  DataDeleteAllOutput,
-} from './finance.types';
-
-// ============================================================================
-// Invites
-// ============================================================================
-
-export type {
-  InvitesGetReceivedInput,
-  InvitesGetReceivedOutput,
-  InvitesGetSentInput,
-  InvitesGetSentOutput,
-  InvitesGetByListInput,
-  InvitesGetByListOutput,
-  InvitesCreateInput,
-  InvitesCreateOutput,
-  InvitesAcceptInput,
-  InvitesAcceptOutput,
-  InvitesDeclineInput,
-  InvitesDeclineOutput,
-  InvitesDeleteInput,
-  InvitesDeleteOutput,
-} from './invites.types';
-
-// ============================================================================
-// Items
-// ============================================================================
-
-export type {
-  ItemsAddToListInput,
-  ItemsAddToListOutput,
-  ItemsRemoveFromListInput,
-  ItemsRemoveFromListOutput,
-  ItemsGetByListIdInput,
-  ItemsGetByListIdOutput,
-} from './items.types';
-
-// ============================================================================
-// Lists
-// ============================================================================
-
-export type {
-  ListGetAllInput,
-  ListGetAllOutput,
-  ListGetByIdInput,
-  ListGetByIdOutput,
-  ListCreateInput,
-  ListCreateOutput,
-  ListUpdateInput,
-  ListUpdateOutput,
-  ListDeleteInput,
-  ListDeleteOutput,
-  ListDeleteItemInput,
-  ListDeleteItemOutput,
-  ListGetContainingPlaceInput,
-  ListGetContainingPlaceOutput,
-  ListRemoveCollaboratorInput,
-  ListRemoveCollaboratorOutput,
-} from './lists.types';
-
-// ============================================================================
-// People
-// ============================================================================
-
-export type {
-  Person,
-  PeopleListInput,
-  PeopleListOutput,
-  PeopleCreateInput,
-  PeopleCreateOutput,
-} from './people.types';
-
-// ============================================================================
-// Places
-// ============================================================================
-
-export type {
-  PlaceCreateInput,
-  PlaceCreateOutput,
-  PlaceUpdateInput,
-  PlaceUpdateOutput,
-  PlaceDeleteInput,
-  PlaceDeleteOutput,
-  PlaceAutocompleteInput,
-  PlaceAutocompleteOutput,
-  PlaceGetDetailsByIdInput,
-  PlaceGetDetailsByIdOutput,
-  PlaceGetDetailsByGoogleIdInput,
-  PlaceGetDetailsByGoogleIdOutput,
-  PlaceAddToListsInput,
-  PlaceAddToListsOutput,
-  PlaceRemoveFromListInput,
-  PlaceRemoveFromListOutput,
-  PlaceGetNearbyFromListsInput,
-  PlaceGetNearbyFromListsOutput,
-  PlaceLogVisitInput,
-  PlaceLogVisitOutput,
-  PlaceGetMyVisitsInput,
-  PlaceGetMyVisitsOutput,
-  PlaceGetPlaceVisitsInput,
-  PlaceGetPlaceVisitsOutput,
-  PlaceUpdateVisitInput,
-  PlaceUpdateVisitOutput,
-  PlaceDeleteVisitInput,
-  PlaceDeleteVisitOutput,
-  PlaceGetVisitStatsInput,
-  PlaceGetVisitStatsOutput,
-} from './places.types';
-
-// ============================================================================
-// Trips
-// ============================================================================
-
-export type {
-  TripsGetAllInput,
-  TripsGetAllOutput,
-  TripsGetByIdInput,
-  TripsGetByIdOutput,
-  TripsCreateInput,
-  TripsCreateOutput,
-  TripsAddItemInput,
-  TripsAddItemOutput,
-} from './trips.types';
-
-// ============================================================================
-// User
-// ============================================================================
-
-export type { UserDeleteAccountInput, UserDeleteAccountOutput } from './user.types';
+// TODO: Add other domains as they are refactored
+// export * from './bookmarks.types';
+// export * from './chats.types';

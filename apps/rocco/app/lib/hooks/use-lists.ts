@@ -1,27 +1,33 @@
 import type { HonoClient } from '@hominem/hono-client';
 import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/hono-client/react';
 import type {
+  List,
+  ListGetAllOutput,
+  ListGetByIdOutput,
   ListCreateInput,
+  ListCreateOutput,
   ListUpdateInput,
+  ListUpdateOutput,
   ListDeleteInput,
+  ListDeleteOutput,
   ListDeleteItemInput,
+  ListDeleteItemOutput,
   ListGetContainingPlaceOutput,
   ListRemoveCollaboratorInput,
+  ListRemoveCollaboratorOutput,
 } from '@hominem/hono-rpc/types';
-import type { List } from '@hominem/lists-services';
-import type { ApiResult } from '@hominem/services';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 /**
  * Get all user's lists with places
  */
-export const useLists = (options?: HonoQueryOptions<ApiResult<List[]>>) =>
-  useHonoQuery<ApiResult<List[]>>(
+export const useLists = (options?: HonoQueryOptions<ListGetAllOutput>) =>
+  useHonoQuery<ListGetAllOutput>(
     ['lists'],
     async (client: HonoClient) => {
       const res = await client.api.lists.list.$post({ json: {} });
-      return res.json() as Promise<ApiResult<List[]>>;
+      return res.json();
     },
     options,
   );
@@ -31,12 +37,12 @@ export const useLists = (options?: HonoQueryOptions<ApiResult<List[]>>) =>
  */
 export const useListById = (
   id: string | undefined,
-  options?: HonoQueryOptions<ApiResult<List | null>>,
+  options?: HonoQueryOptions<ListGetByIdOutput>,
 ) =>
-  useHonoQuery<ApiResult<List | null>>(
+  useHonoQuery<ListGetByIdOutput>(
     ['lists', 'get', id],
     async (client: HonoClient) => {
-      if (!id) return { success: true, data: null };
+      if (!id) return { success: true, data: null } as any;
       const res = await client.api.lists.get.$post({ json: { id } });
       return res.json();
     },
@@ -49,12 +55,12 @@ export const useListById = (
 /**
  * Create new list
  */
-export const useCreateList = (options?: HonoMutationOptions<ApiResult<List>, ListCreateInput>) => {
+export const useCreateList = (options?: HonoMutationOptions<ListCreateOutput, ListCreateInput>) => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<List>, ListCreateInput>(
+  return useHonoMutation<ListCreateOutput, ListCreateInput>(
     async (client: HonoClient, variables: ListCreateInput) => {
       const res = await client.api.lists.create.$post({ json: variables });
-      return res.json() as Promise<ApiResult<List>>;
+      return res.json();
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
@@ -71,12 +77,12 @@ export const useCreateList = (options?: HonoMutationOptions<ApiResult<List>, Lis
 /**
  * Update list
  */
-export const useUpdateList = (options?: HonoMutationOptions<ApiResult<List>, ListUpdateInput>) => {
+export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, ListUpdateInput>) => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<List>, ListUpdateInput>(
+  return useHonoMutation<ListUpdateOutput, ListUpdateInput>(
     async (client: HonoClient, variables: ListUpdateInput) => {
       const res = await client.api.lists.update.$post({ json: variables });
-      return res.json() as Promise<ApiResult<List>>;
+      return res.json();
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
@@ -95,13 +101,13 @@ export const useUpdateList = (options?: HonoMutationOptions<ApiResult<List>, Lis
  * Delete list
  */
 export const useDeleteList = (
-  options?: HonoMutationOptions<ApiResult<{ success: boolean }>, ListDeleteInput>,
+  options?: HonoMutationOptions<ListDeleteOutput, ListDeleteInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<{ success: boolean }>, ListDeleteInput>(
+  return useHonoMutation<ListDeleteOutput, ListDeleteInput>(
     async (client: HonoClient, variables: ListDeleteInput) => {
       const res = await client.api.lists.delete.$post({ json: variables });
-      return res.json() as Promise<ApiResult<{ success: boolean }>>;
+      return res.json();
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
@@ -119,13 +125,13 @@ export const useDeleteList = (
  * Delete item from list
  */
 export const useDeleteListItem = (
-  options?: HonoMutationOptions<ApiResult<{ success: boolean }>, ListDeleteItemInput>,
+  options?: HonoMutationOptions<ListDeleteItemOutput, ListDeleteItemInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<{ success: boolean }>, ListDeleteItemInput>(
+  return useHonoMutation<ListDeleteItemOutput, ListDeleteItemInput>(
     async (client: HonoClient, variables: ListDeleteItemInput) => {
       const res = await client.api.lists['delete-item'].$post({ json: variables });
-      return res.json() as Promise<ApiResult<{ success: boolean }>>;
+      return res.json();
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
@@ -147,13 +153,13 @@ export const useListsContainingPlace = (
   placeId: string | undefined,
   googleMapsId: string | undefined,
 ) =>
-  useHonoQuery<ApiResult<{ id: string; name: string; isOwner: boolean }[]>>(
+  useHonoQuery<ListGetContainingPlaceOutput>(
     ['lists', 'containing-place', placeId, googleMapsId],
     async (client: HonoClient) => {
       const res = await client.api.lists['containing-place'].$post({
         json: { placeId, googleMapsId },
       });
-      return res.json() as Promise<ApiResult<{ id: string; name: string; isOwner: boolean }[]>>;
+      return res.json();
     },
     {
       enabled: !!placeId || !!googleMapsId,
@@ -164,13 +170,13 @@ export const useListsContainingPlace = (
  * Remove collaborator from list
  */
 export const useRemoveCollaborator = (
-  options?: HonoMutationOptions<ApiResult<{ success: boolean }>, ListRemoveCollaboratorInput>,
+  options?: HonoMutationOptions<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>,
 ) => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<{ success: boolean }>, ListRemoveCollaboratorInput>(
+  return useHonoMutation<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>(
     async (client: HonoClient, variables: ListRemoveCollaboratorInput) => {
       const res = await client.api.lists['remove-collaborator'].$post({ json: variables });
-      return res.json() as Promise<ApiResult<{ success: boolean }>>;
+      return res.json();
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {

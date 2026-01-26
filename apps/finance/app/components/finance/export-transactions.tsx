@@ -22,21 +22,14 @@ export function ExportTransactions() {
     const csvRows = [
       headers.join(','),
       ...transactions.map(
-        (tx: {
-          accountId: string;
-          date: string;
-          description?: string | null;
-          amount: string;
-          category?: string | null;
-          type: string;
-        }) => {
+        (tx) => {
           const account = accountsMap.get(tx.accountId);
           return [
             tx.date,
             `"${tx.description?.replace(/"/g, '""') || ''}"`,
-            tx.amount,
+            String(tx.amount),
             tx.category || 'Other',
-            tx.type,
+            tx.type || 'expense',
             account?.name || 'Unknown',
           ].join(',');
         },

@@ -46,7 +46,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     isLoading,
     error,
   } = useListById(listId, {
-    initialData: { success: true, data: loaderData.list },
+    initialData: { success: true, data: loaderData.list as any }, // Cast to match API type
     staleTime: 1000 * 60,
   });
 
@@ -54,18 +54,20 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const apiError = result?.success === false ? result : null;
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation();
 
+  const places = list.places || []; // Ensure places is an array
+
   const markers: PlaceLocation[] = useMemo(
     () =>
-      list.places
-        .filter((p) => Boolean(p.latitude && p.longitude))
-        .map((p) => ({
+      places
+        .filter((p: any) => Boolean(p.latitude && p.longitude))
+        .map((p: any) => ({
           latitude: p.latitude as number,
           longitude: p.longitude as number,
           id: p.id,
           name: p.name,
           imageUrl: p.imageUrl,
         })),
-    [list.places],
+    [places],
   );
 
   // Show loading state only on initial load
@@ -77,8 +79,11 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const isOwner = list.userId === user?.id;
-  const hasAccess = list.hasAccess ?? isOwner;
+  // Use optional chaining and default to check ownership
+  const ownerId = 'ownerId' in list ? list.ownerId : (list as any).userId;
+  const isOwner = ownerId === user?.id;
+  const hasAccess = 'hasAccess' in list ? list.hasAccess : isOwner;
+  const collaborators = 'collaborators' in list ? list.collaborators : (list as any).users || [];
 
   return (
     <MapInteractionProvider>
@@ -99,15 +104,15 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
                 <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
                   <UserPlus size={18} />
                 </Link>
-                <ListEditButton list={list} />
+                <ListEditButton list={list as any} />
               </div>
             )}
           </div>
           <div className="flex items-center gap-3">
             {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
-            {list.users && list.users.length > 0 && (
+            {collaborators && collaborators.length > 0 && (
               <div className="flex items-center -space-x-2">
-                {list.users.slice(0, 5).map((collaborator) => (
+                {collaborators.slice(0, 5).map((collaborator: any) => (
                   <UserAvatar
                     key={collaborator.id}
                     id={collaborator.id}
@@ -117,9 +122,9 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
                     size="sm"
                   />
                 ))}
-                {list.users.length > 5 && (
+                {collaborators.length > 5 && (
                   <div className="flex size-6 items-center justify-center rounded-full border border-border bg-muted text-xs">
-                    +{list.users.length - 5}
+                    +{collaborators.length - 5}
                   </div>
                 )}
               </div>
@@ -129,7 +134,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="overflow-y-auto space-y-4 pb-8">
-            <PlacesList places={list.places} listId={list.id} canAdd={hasAccess} />
+            <PlacesList places={places} listId={list.id} canAdd={hasAccess} />
           </div>
 
           <div className="min-h-[300px] overflow-hidden">

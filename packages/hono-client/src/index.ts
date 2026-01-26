@@ -1,6 +1,6 @@
 export { HonoClient } from './core/client';
 export type { ClientConfig } from './core/client';
-export type { HonoError, HonoResponse } from './core/types';
+// export type { HonoError, HonoResponse } from './core/types';
 export { transformDates, type TransformDates } from './core/transformer';
 
 // Re-export types from hono-rpc for convenience

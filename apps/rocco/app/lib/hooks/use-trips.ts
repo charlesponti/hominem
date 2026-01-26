@@ -7,7 +7,6 @@ import type {
   TripsAddItemInput,
   TripsAddItemOutput,
 } from '@hominem/hono-rpc/types';
-import type { ApiResult } from '@hominem/services';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
@@ -15,21 +14,21 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-clien
  * Get all trips
  */
 export const useTrips = () =>
-  useHonoQuery<ApiResult<TripsGetAllOutput>>(['trips', 'list'], async (client: HonoClient) => {
+  useHonoQuery<TripsGetAllOutput>(['trips', 'list'], async (client: HonoClient) => {
     const res = await client.api.trips.list.$post({ json: {} });
-    return res.json() as Promise<ApiResult<TripsGetAllOutput>>;
+    return res.json() as Promise<TripsGetAllOutput>;
   });
 
 /**
  * Get trip by ID
  */
 export const useTripById = (id: string | undefined) =>
-  useHonoQuery<ApiResult<any>>(
+  useHonoQuery<TripsGetByIdOutput>(
     ['trips', 'get', id],
     async (client: HonoClient) => {
-      if (!id) return { success: true, data: null };
+      if (!id) return { success: true, data: null } as unknown as TripsGetByIdOutput;
       const res = await client.api.trips.get.$post({ json: { id } });
-      return res.json() as Promise<ApiResult<any>>;
+      return res.json() as Promise<TripsGetByIdOutput>;
     },
     {
       enabled: !!id,
@@ -41,10 +40,10 @@ export const useTripById = (id: string | undefined) =>
  */
 export const useCreateTrip = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<any>, TripsCreateInput>(
+  return useHonoMutation<TripsCreateOutput, TripsCreateInput>(
     async (client: HonoClient, variables: TripsCreateInput) => {
       const res = await client.api.trips.create.$post({ json: variables });
-      return res.json() as Promise<ApiResult<any>>;
+      return res.json() as Promise<TripsCreateOutput>;
     },
     {
       onSuccess: (result) => {
@@ -61,10 +60,10 @@ export const useCreateTrip = () => {
  */
 export const useAddItemToTrip = () => {
   const utils = useHonoUtils();
-  return useHonoMutation<ApiResult<any>, TripsAddItemInput>(
+  return useHonoMutation<TripsAddItemOutput, TripsAddItemInput>(
     async (client: HonoClient, variables: TripsAddItemInput) => {
       const res = await client.api.trips['add-item'].$post({ json: variables });
-      return res.json() as Promise<ApiResult<any>>;
+      return res.json() as Promise<TripsAddItemOutput>;
     },
     {
       onSuccess: (result, variables) => {
@@ -75,3 +74,4 @@ export const useAddItemToTrip = () => {
     },
   );
 };
+

@@ -1,4 +1,4 @@
-import type { ChatMessageToolCall } from '@hominem/db/schema';
+import type { ChatMessageToolCall } from '@hominem/hono-rpc/types';
 
 import { cn } from '~/lib/utils';
 

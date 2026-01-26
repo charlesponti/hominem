@@ -8,7 +8,6 @@ import type {
   PeopleDeleteInput,
   PeopleDeleteOutput,
 } from '@hominem/hono-rpc/types';
-import type { ApiResult } from '@hominem/services';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
@@ -28,7 +27,9 @@ export const useCreatePerson = () => {
   const utils = useHonoUtils();
   return useHonoMutation<PeopleCreateOutput, PeopleCreateInput>(
     async (client: HonoClient, variables: PeopleCreateInput) => {
-      const res = await client.api.people.create.$post({ json: variables });
+      const res = await client.api.people.create.$post({
+        json: variables,
+      });
       return res.json() as Promise<PeopleCreateOutput>;
     },
     {

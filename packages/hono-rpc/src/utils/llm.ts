@@ -1,4 +1,4 @@
-import { createOpenaiChat } from '@tanstack/ai-openai';
+import { ai } from '@tanstack/ai';
 
 import { env } from '../lib/env';
 

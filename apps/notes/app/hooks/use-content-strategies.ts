@@ -1,43 +1,72 @@
-import { trpc } from '~/lib/trpc';
+import type { HonoClient } from '@hominem/hono-client';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+
+// TODO: Import proper types from hono-rpc/types once available
+// For now relying on inference or any
 
 export function useContentStrategies() {
-  const query = trpc.contentStrategies.list.useQuery(undefined, {
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  const query = useHonoQuery(
+    ['content-strategies', 'list'],
+    async (client: HonoClient) => {
+      const res = await client.api['content-strategies'].$get();
+      return res.json();
+    },
+    {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }
+  );
+
+  const data = query.data as any; // Cast to avoid strict type checks for now
+  const strategies = data?.success ? data.data : [];
 
   return {
-    strategies: query.data || [],
+    strategies,
     isLoading: query.isLoading,
     error: query.error,
-    count: query.data?.length || 0,
+    count: strategies.length,
   };
 }
 
 export function useContentStrategy(strategyId: string) {
-  const query = trpc.contentStrategies.getById.useQuery(
-    { id: strategyId },
+  const query = useHonoQuery(
+    ['content-strategies', strategyId],
+    async (client: HonoClient) => {
+      const res = await client.api['content-strategies'][':id'].$get({
+        param: { id: strategyId }
+      });
+      return res.json();
+    },
     {
       enabled: !!strategyId,
       staleTime: 1000 * 60 * 5, // 5 minutes
-    },
+    }
   );
 
+  const data = query.data as any;
+  const strategy = data?.success ? data.data : null;
+
   return {
-    strategy: query.data || null,
+    strategy,
     isLoading: query.isLoading,
     error: query.error,
-    found: !!query.data,
+    found: !!strategy,
   };
 }
 
 export function useCreateContentStrategy() {
-  const utils = trpc.useUtils();
+  const utils = useHonoUtils();
 
-  const createStrategy = trpc.contentStrategies.create.useMutation({
-    onSuccess: () => {
-      utils.contentStrategies.list.invalidate();
+  const createStrategy = useHonoMutation(
+    async (client: HonoClient, variables: any) => {
+      const res = await client.api['content-strategies'].$post({ json: variables });
+      return res.json();
     },
-  });
+    {
+      onSuccess: () => {
+        utils.invalidate(['content-strategies', 'list']);
+      },
+    }
+  );
 
   return {
     createStrategy: createStrategy.mutate,
@@ -48,14 +77,26 @@ export function useCreateContentStrategy() {
 }
 
 export function useUpdateContentStrategy() {
-  const utils = trpc.useUtils();
+  const utils = useHonoUtils();
 
-  const updateStrategy = trpc.contentStrategies.update.useMutation({
-    onSuccess: (updatedStrategy) => {
-      utils.contentStrategies.list.invalidate();
-      utils.contentStrategies.getById.invalidate({ id: updatedStrategy.id });
+  const updateStrategy = useHonoMutation(
+    async (client: HonoClient, variables: any) => {
+      const { id, ...data } = variables;
+      const res = await client.api['content-strategies'][':id'].$patch({
+        param: { id },
+        json: data
+      });
+      return res.json();
     },
-  });
+    {
+      onSuccess: (result: any) => {
+        if (result.success) {
+            utils.invalidate(['content-strategies', 'list']);
+            utils.invalidate(['content-strategies', result.data.id]);
+        }
+      },
+    }
+  );
 
   return {
     updateStrategy: updateStrategy.mutate,
@@ -66,13 +107,21 @@ export function useUpdateContentStrategy() {
 }
 
 export function useDeleteContentStrategy() {
-  const utils = trpc.useUtils();
+  const utils = useHonoUtils();
 
-  const deleteStrategy = trpc.contentStrategies.delete.useMutation({
-    onSuccess: () => {
-      utils.contentStrategies.list.invalidate();
+  const deleteStrategy = useHonoMutation(
+    async (client: HonoClient, variables: { id: string }) => {
+      const res = await client.api['content-strategies'][':id'].$delete({
+        param: { id: variables.id }
+      });
+      return res.json();
     },
-  });
+    {
+      onSuccess: () => {
+        utils.invalidate(['content-strategies', 'list']);
+      },
+    }
+  );
 
   return {
     deleteStrategy: deleteStrategy.mutate,

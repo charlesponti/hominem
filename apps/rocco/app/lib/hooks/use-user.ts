@@ -8,7 +8,7 @@ import { useHonoMutation } from '@hominem/hono-client/react';
  * Delete user account
  */
 export const useDeleteAccount = (options?: any) =>
-  useHonoMutation<ApiResult<UserDeleteAccountOutput>, {}>(async (client: HonoClient) => {
+  useHonoMutation<UserDeleteAccountOutput, {}>(async (client: HonoClient) => {
     const res = await client.api.user['delete-account'].$post({ json: {} });
-    return res.json() as Promise<ApiResult<UserDeleteAccountOutput>>;
+    return res.json() as Promise<UserDeleteAccountOutput>;
   }, options);

@@ -1,24 +1,30 @@
 import { useQueryClient } from '@tanstack/react-query';
-
-import { trpc } from '../trpc';
-
-// Query keys
-const QUERY_KEYS = {
-  chats: (userId: string) => ['chats', userId] as const,
-  chat: (chatId: string) => ['chat', chatId] as const,
-};
+import type { HonoClient } from '@hominem/hono-client';
+import { useHonoMutation } from '@hominem/hono-client/react';
+import type { ChatsUpdateOutput } from '@hominem/hono-rpc/types';
 
 /**
  * Hook for updating chat title
  */
-export function useUpdateChatTitle(userId: string) {
+export function useUpdateChatTitle(_userId: string) {
   const queryClient = useQueryClient();
-  const updateTitleMutation = trpc.chats.updateChatTitle.useMutation({
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chats(userId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat(variables.chatId) });
+  
+  const updateTitleMutation = useHonoMutation<ChatsUpdateOutput, { chatId: string; title: string }>(
+    async (client: HonoClient, variables: { chatId: string; title: string }) => {
+      const { chatId, title } = variables;
+      const res = await client.api.chats[':id'].$patch({ 
+        param: { id: chatId },
+        json: { title } 
+      });
+      return res.json() as Promise<ChatsUpdateOutput>;
     },
-  });
+    {
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({ queryKey: ['chats'] });
+        queryClient.invalidateQueries({ queryKey: ['chats', variables.chatId] });
+      },
+    }
+  );
 
   return {
     updateTitle: updateTitleMutation.mutateAsync,

@@ -60,7 +60,7 @@ export function BudgetCategoryForm({
       } else {
         setType('expense');
       }
-      setAverageMonthlyExpense(category.averageMonthlyExpense || '');
+      setAverageMonthlyExpense(String(category.averageMonthlyExpense || ''));
     }
   }, [category]);
 

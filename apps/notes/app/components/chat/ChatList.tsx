@@ -5,8 +5,11 @@ import { MessageSquare, Search, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router';
 
+import type { HonoClient } from '@hominem/hono-client';
+import { useHonoQuery } from '@hominem/hono-client/react';
+import type { ChatsListOutput } from '@hominem/hono-rpc/types';
+
 import { useDeleteChat } from '~/lib/hooks/use-delete-chat';
-import { trpc } from '~/lib/trpc/client';
 
 interface ChatListProps {
   userId: string;
@@ -20,17 +23,22 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
   const [searchQuery, setSearchQuery] = useState('');
 
   // Get chats for the user
-  const chatsQuery = trpc.chats.getUserChats.useQuery(
-    { limit: 50 },
+  const chatsQuery = useHonoQuery<ChatsListOutput>(
+    ['chats'],
+    async (client: HonoClient) => {
+      const res = await client.api.chats.$get({ query: { limit: '50' } });
+      return res.json() as Promise<ChatsListOutput>;
+    },
     {
       enabled: !!userId && userId !== 'anonymous',
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-    },
+    }
   );
+
   const { deleteChat } = useDeleteChat(userId);
 
-  const chats = chatsQuery.data || [];
+  const chats = chatsQuery.data?.success ? chatsQuery.data.data : [];
   const isChatsLoading = chatsQuery.isLoading;
 
   // Filter chats based on search query if search is enabled

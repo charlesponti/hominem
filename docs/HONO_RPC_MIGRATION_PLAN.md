@@ -102,8 +102,8 @@ packages/
     "dev": "bunx tsc --noEmit --incremental --watch"
   },
   "dependencies": {
-    "hono": "^4.10.7",
-    "@hono/zod-validator": "^0.4.1",
+    "hono": "^4.11.6",
+    "@hono/zod-validator": "^0.7.6",
     "zod": "4.3.6"
   },
   "devDependencies": {

@@ -1,15 +1,6 @@
-import { useHonoQuery } from '../hono';
+import type { MonthlyStatsOutput } from '@hominem/hono-rpc/types/finance.types';
 
-export interface MonthlyStats {
-  month: string;
-  startDate: string;
-  endDate: string;
-  totalIncome: number;
-  totalExpenses: number;
-  netIncome: number;
-  transactionCount: number;
-  categorySpending: Array<{ name: string | null; amount: number }>;
-}
+import { useHonoQuery } from '../hono';
 
 /**
  * Custom hook to fetch monthly finance statistics using Hono RPC
@@ -17,13 +8,13 @@ export interface MonthlyStats {
  * @param options Additional options to pass to useQuery
  */
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
-  const query = useHonoQuery<MonthlyStats>(
+  const query = useHonoQuery<MonthlyStatsOutput>(
     ['finance', 'analyze', 'monthly-stats', month],
     async (client) => {
       const res = await client.api.finance.analyze['monthly-stats'].$post({
         json: { month: month! },
       });
-      return res.json() as unknown as MonthlyStats;
+      return res.json() as unknown as Promise<MonthlyStatsOutput>;
     },
     {
       enabled: !!month,

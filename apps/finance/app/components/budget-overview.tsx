@@ -31,7 +31,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
 
     return categories
       .filter((category) => category.type === 'expense')
-      .reduce((sum, category) => sum + Number.parseFloat(category.averageMonthlyExpense || '0'), 0);
+      .reduce((sum, category) => sum + Number(category.averageMonthlyExpense || 0), 0);
   }, [categories]);
 
   // Get actual spending from stats

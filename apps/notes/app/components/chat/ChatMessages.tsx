@@ -7,16 +7,23 @@ import { Search, X } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
 import { useMatches } from 'react-router';
 
+import type { HonoClient } from '@hominem/hono-client';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import type { 
+  ChatsGetMessagesOutput,
+  MessagesDeleteOutput,
+  MessagesUpdateOutput,
+} from '@hominem/hono-rpc/types';
+
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 
 import { useAutoScroll } from '~/lib/hooks/use-auto-scroll';
 import { useMessageSearch } from '~/lib/hooks/use-message-search';
 import { useScrollDetection } from '~/lib/hooks/use-scroll-detection';
-import { useSendMessage } from '~/lib/hooks/use-send-message.js';
-import { trpc } from '~/lib/trpc/client';
-import { findPreviousUserMessage } from '~/lib/utils/message.js';
+import { useSendMessage } from '~/lib/hooks/use-send-message';
+import { findPreviousUserMessage } from '~/lib/utils/message';
 
-import { ChatMessage } from './ChatMessage.js';
+import { ChatMessage } from './ChatMessage';
 import { SkeletonMessage } from './SkeletonMessage';
 import { ThinkingComponent } from './ThinkingComponent';
 
@@ -37,30 +44,49 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       | undefined;
     const userId = rootData?.supabaseId || undefined;
 
-    const {
-      data: messages = [],
-      isLoading,
-      error: messagesError,
-    } = trpc.chats.getMessages.useQuery(
-      { chatId, limit: 50 },
+    const messagesQuery = useHonoQuery<ChatsGetMessagesOutput>(
+      ['chats', 'getMessages', { chatId, limit: 50 }],
+      async (client: HonoClient) => {
+        const res = await client.api.chats[':id'].messages.$get({
+          param: { id: chatId },
+          query: { limit: '50' }
+        });
+        return res.json() as Promise<ChatsGetMessagesOutput>;
+      },
       {
         enabled: !!chatId,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-      },
+      }
     );
 
-    const utils = trpc.useUtils();
-    const deleteMessageMutation = trpc.messages.deleteMessage.useMutation({
-      onSuccess: () => {
-        utils.chats.getMessages.invalidate({ chatId, limit: 50 });
+    const messages = messagesQuery.data?.success ? messagesQuery.data.data : [];
+    const isLoading = messagesQuery.isLoading;
+    const messagesError = messagesQuery.error;
+
+    const utils = useHonoUtils();
+    
+    const deleteMessageMutation = useHonoMutation<MessagesDeleteOutput, { messageId: string }>(
+      async (client: HonoClient, variables: { messageId: string }) => {
+        const res = await client.api.messages[':messageId'].$delete({
+          param: { messageId: variables.messageId }
+        });
+        return res.json() as Promise<MessagesDeleteOutput>;
       },
-    });
+      {
+        onSuccess: () => {
+          // Invalidate messages list for this chat
+          // Note: we need to match the query key structure
+          utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+        },
+      }
+    );
 
     const sendMessage = useSendMessage({ chatId, userId });
 
     // Cast messages to extended type to handle optimistic updates
-    const extendedMessages = messages as ExtendedMessage[];
+    // Note: our ChatMessage type vs ExtendedMessage type
+    const extendedMessages = messages as unknown as ExtendedMessage[];
     const shouldUseVirtualScrolling = extendedMessages.length >= 50;
 
     // Virtual scrolling setup
@@ -137,11 +163,20 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       [deleteMessageMutation],
     );
 
-    const updateMessageMutation = trpc.messages.updateMessage.useMutation({
-      onSuccess: () => {
-        utils.chats.getMessages.invalidate({ chatId, limit: 50 });
+    const updateMessageMutation = useHonoMutation<MessagesUpdateOutput, { messageId: string, content: string }>(
+      async (client: HonoClient, variables: { messageId: string, content: string }) => {
+        const res = await client.api.messages[':messageId'].$patch({
+          param: { messageId: variables.messageId },
+          json: { content: variables.content }
+        });
+        return res.json() as Promise<MessagesUpdateOutput>;
       },
-    });
+      {
+        onSuccess: () => {
+          utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+        },
+      }
+    );
 
     const handleRegenerate = useCallback(
       async (messageId: string) => {
@@ -154,7 +189,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           await handleDeleteMessage(messageId);
           // Send the user message again to regenerate
           await sendMessage.mutateAsync({
-            message: userMessage.content,
+            message: userMessage.content || '',
             chatId,
           });
         }
@@ -245,7 +280,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {displayError && (
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
               <div className="text-sm font-medium text-destructive mb-1">Chat Error</div>
-              <div className="text-xs text-destructive/80">{displayError.message}</div>
+              <div className="text-xs text-destructive/80">{displayError instanceof Error ? displayError.message : String(displayError)}</div>
             </div>
           )}
 

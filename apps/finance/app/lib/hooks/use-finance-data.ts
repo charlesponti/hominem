@@ -30,9 +30,9 @@ export const useFinanceAccounts = () =>
   });
 
 export const useFinancialInstitutions = () =>
-  useHonoQuery(['finance', 'institutions', 'list'], async (client) => {
+  useHonoQuery<InstitutionsListOutput>(['finance', 'institutions', 'list'], async (client) => {
     const res = await client.api.finance.institutions.list.$post({ json: {} });
-    return res.json();
+    return res.json() as unknown as Promise<InstitutionsListOutput>;
   });
 
 type Account = AccountListOutput[number];
@@ -72,12 +72,12 @@ export function useFinanceAccountsWithMap() {
 
 // Hook that adds value by transforming data for unified view
 export function useAllAccounts() {
-  const allAccountsQuery = useHonoQuery(['finance', 'accounts', 'all'], async (client) => {
+  const allAccountsQuery = useHonoQuery<AccountAllOutput>(['finance', 'accounts', 'all'], async (client) => {
     const res = await client.api.finance.accounts.all.$post({ json: {} });
-    return res.json();
+    return res.json() as unknown as Promise<AccountAllOutput>;
   });
 
-  const data = allAccountsQuery.data as unknown as AccountAllOutput;
+  const data = allAccountsQuery.data;
 
   return {
     isLoading: allAccountsQuery.isLoading,
@@ -89,18 +89,18 @@ export function useAllAccounts() {
 }
 
 export function useAccountById(id: string) {
-  const accountQuery = useHonoQuery(
+  const accountQuery = useHonoQuery<AccountGetOutput>(
     ['finance', 'accounts', 'get', id],
     async (client) => {
       const res = await client.api.finance.accounts.get.$post({
         json: { id },
       });
-      return res.json();
+      return res.json() as Promise<AccountGetOutput>;
     },
     { enabled: !!id },
   );
 
-  const account = accountQuery.data as unknown as AccountGetOutput;
+  const account = accountQuery.data;
 
   return {
     ...accountQuery,
@@ -133,7 +133,7 @@ export function useFinanceTransactions({
 
   const offset = page * limit;
 
-  const query = useHonoQuery(
+  const query = useHonoQuery<TransactionListOutput>(
     [
       'finance',
       'transactions',
@@ -159,14 +159,14 @@ export function useFinanceTransactions({
           sortDirection: [sortOrder as 'asc' | 'desc'],
         },
       });
-      return res.json();
+      return res.json() as Promise<TransactionListOutput>;
     },
     {
       staleTime: 1 * 60 * 1000,
     },
   );
 
-  const data = query.data as unknown as TransactionListOutput;
+  const data = query.data;
 
   return {
     transactions: data?.data || [],

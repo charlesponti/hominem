@@ -5,6 +5,39 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import { zValidator } from '@hono/zod-validator';
+import type {
+  NotesListOutput,
+  NotesGetOutput,
+  NotesCreateOutput,
+  NotesUpdateOutput,
+  NotesDeleteOutput,
+  NotesSyncOutput,
+  Note,
+} from '../types/notes.types';
+
+const notesService = new NotesService();
+
+/**
+ * Serialization Helpers
+ */
+function serializeNote(n: any): Note {
+  return {
+    id: n.id,
+    userId: n.userId,
+    type: n.type,
+    title: n.title,
+    content: n.content,
+    tags: n.tags || [],
+    mentions: n.mentions || [],
+    taskMetadata: n.taskMetadata,
+    analysis: n.analysis,
+    socialMediaMetadata: n.tweetMetadata,
+    synced: n.synced,
+    createdAt: typeof n.createdAt === 'string' ? n.createdAt : n.createdAt.toISOString(),
+    updatedAt: typeof n.updatedAt === 'string' ? n.updatedAt : n.updatedAt.toISOString(),
+  };
+}
 
 const NoteMentionSchema = z.object({
   id: z.string(),
@@ -49,30 +82,40 @@ const SyncNoteItemSchema = z.object({
   updatedAt: z.string().optional(),
 });
 
+const notesListQuerySchema = z.object({
+  types: z.string().optional(),
+  tags: z.string().optional(),
+  query: z.string().optional(),
+  since: z.string().optional(),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'title']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  limit: z.string().optional(),
+  offset: z.string().optional(),
+});
+
 export const notesRoutes = new Hono<AppContext>()
+  .use('*', authMiddleware)
   // List notes
-  .get('/', authMiddleware, async (c) => {
+  .get('/', zValidator('query', notesListQuerySchema), async (c) => {
     try {
       const userId = c.get('userId')!;
-      const query = c.req.query();
+      const queryParams = c.req.valid('query');
 
-      const types = query.types?.split(',') as
+      const types = queryParams.types?.split(',') as
         | ('note' | 'task' | 'tweet' | 'essay' | 'blog_post' | 'social_post')[]
         | undefined;
-      const tags = query.tags?.split(',');
-      const sortBy = (query.sortBy as 'createdAt' | 'updatedAt' | 'title') || 'createdAt';
-      const sortOrder = (query.sortOrder as 'asc' | 'desc') || 'desc';
-      const limit = query.limit ? parseInt(query.limit) : undefined;
-      const offset = query.offset ? parseInt(query.offset) : 0;
-
-      const notesService = new NotesService();
+      const tags = queryParams.tags?.split(',');
+      const sortBy = queryParams.sortBy || 'createdAt';
+      const sortOrder = queryParams.sortOrder || 'desc';
+      const limit = queryParams.limit ? parseInt(queryParams.limit) : undefined;
+      const offset = queryParams.offset ? parseInt(queryParams.offset) : 0;
 
       // Get all notes matching filters
       const { notes: allNotes } = await notesService.query(userId, {
         types,
-        query: query.query,
+        query: queryParams.query,
         tags,
-        since: query.since,
+        since: queryParams.since,
       });
 
       // Apply sorting
@@ -103,10 +146,10 @@ export const notesRoutes = new Hono<AppContext>()
         ? sortedNotes.slice(offset, offset + limit)
         : sortedNotes.slice(offset);
 
-      return c.json(success({ notes: paginatedNotes }));
+      return c.json<NotesListOutput>(success({ notes: paginatedNotes.map(serializeNote) }));
     } catch (err) {
       console.error('[notes.list] error:', err);
-      return c.json(
+      return c.json<NotesListOutput>(
         error('INTERNAL_ERROR', `Failed to fetch notes: ${err instanceof Error ? err.message : String(err)}`),
         500,
       );
@@ -114,20 +157,19 @@ export const notesRoutes = new Hono<AppContext>()
   })
 
   // Get note by ID
-  .get('/:id', authMiddleware, async (c) => {
+  .get('/:id', async (c) => {
     try {
       const userId = c.get('userId')!;
       const id = c.req.param('id');
 
-      const notesService = new NotesService();
       const note = await notesService.getById(id, userId);
-      return c.json(success(note));
+      return c.json<NotesGetOutput>(success(serializeNote(note)));
     } catch (err) {
       if (err instanceof Error && err.message === 'Note not found') {
-        return c.json(error('NOT_FOUND', 'Note not found'), 404);
+        return c.json<NotesGetOutput>(error('NOT_FOUND', 'Note not found'), 404);
       }
       console.error('[notes.get] error:', err);
-      return c.json(
+      return c.json<NotesGetOutput>(
         error('INTERNAL_ERROR', `Failed to fetch note: ${err instanceof Error ? err.message : String(err)}`),
         500,
       );
@@ -135,28 +177,22 @@ export const notesRoutes = new Hono<AppContext>()
   })
 
   // Create note
-  .post('/', authMiddleware, async (c) => {
+  .post('/', zValidator('json', CreateNoteInputSchema), async (c) => {
     try {
       const userId = c.get('userId')!;
-      const body = await c.req.json();
-      const parsed = CreateNoteInputSchema.safeParse(body);
+      const data = c.req.valid('json');
 
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
-
-      const notesService = new NotesService();
       const noteData: NoteInsert = {
-        ...parsed.data,
+        ...data,
         userId,
-        tags: parsed.data.tags || [],
-        mentions: parsed.data.mentions || [],
+        tags: data.tags || [],
+        mentions: data.mentions || [],
       };
       const newNote = await notesService.create(noteData);
-      return c.json(success(newNote), 201);
+      return c.json<NotesCreateOutput>(success(serializeNote(newNote)), 201);
     } catch (err) {
       console.error('[notes.create] error:', err);
-      return c.json(
+      return c.json<NotesCreateOutput>(
         error('INTERNAL_ERROR', `Failed to create note: ${err instanceof Error ? err.message : String(err)}`),
         500,
       );
@@ -164,30 +200,24 @@ export const notesRoutes = new Hono<AppContext>()
   })
 
   // Update note
-  .patch('/:id', authMiddleware, async (c) => {
+  .patch('/:id', zValidator('json', UpdateNoteInputSchema), async (c) => {
     try {
       const userId = c.get('userId')!;
       const id = c.req.param('id');
-      const body = await c.req.json();
-      const parsed = UpdateNoteInputSchema.safeParse(body);
+      const data = c.req.valid('json');
 
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
-
-      const notesService = new NotesService();
       const updatedNote = await notesService.update({
         id,
-        ...parsed.data,
+        ...data,
         userId,
       });
-      return c.json(success(updatedNote));
+      return c.json<NotesUpdateOutput>(success(serializeNote(updatedNote)));
     } catch (err) {
       if (err instanceof Error && err.message === 'Note not found or not authorized to update') {
-        return c.json(error('NOT_FOUND', 'Note not found or not authorized to update'), 404);
+        return c.json<NotesUpdateOutput>(error('NOT_FOUND', 'Note not found or not authorized to update'), 404);
       }
       console.error('[notes.update] error:', err);
-      return c.json(
+      return c.json<NotesUpdateOutput>(
         error('INTERNAL_ERROR', `Failed to update note: ${err instanceof Error ? err.message : String(err)}`),
         500,
       );
@@ -195,20 +225,19 @@ export const notesRoutes = new Hono<AppContext>()
   })
 
   // Delete note
-  .delete('/:id', authMiddleware, async (c) => {
+  .delete('/:id', async (c) => {
     try {
       const userId = c.get('userId')!;
       const id = c.req.param('id');
 
-      const notesService = new NotesService();
       const deletedNote = await notesService.delete(id, userId);
-      return c.json(success(deletedNote));
+      return c.json<NotesDeleteOutput>(success(serializeNote(deletedNote)));
     } catch (err) {
       if (err instanceof Error && err.message === 'Note not found or not authorized to delete') {
-        return c.json(error('NOT_FOUND', 'Note not found or not authorized to delete'), 404);
+        return c.json<NotesDeleteOutput>(error('NOT_FOUND', 'Note not found or not authorized to delete'), 404);
       }
       console.error('[notes.delete] error:', err);
-      return c.json(
+      return c.json<NotesDeleteOutput>(
         error('INTERNAL_ERROR', `Failed to delete note: ${err instanceof Error ? err.message : String(err)}`),
         500,
       );
@@ -216,25 +245,19 @@ export const notesRoutes = new Hono<AppContext>()
   })
 
   // Sync notes
-  .post('/sync', authMiddleware, async (c) => {
+  .post('/sync', zValidator('json', z.object({ items: z.array(SyncNoteItemSchema) })), async (c) => {
     try {
       const userId = c.get('userId')!;
-      const body = await c.req.json();
-      const parsed = z.object({ items: z.array(SyncNoteItemSchema) }).safeParse(body);
+      const { items } = c.req.valid('json');
 
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
-
-      const notesService = new NotesService();
       const result = await notesService.sync(
-        parsed.data.items as Parameters<typeof notesService.sync>[0],
+        items as Parameters<typeof notesService.sync>[0],
         userId,
       );
-      return c.json(success(result));
+      return c.json<NotesSyncOutput>(success(result));
     } catch (err) {
       console.error('[notes.sync] error:', err);
-      return c.json(
+      return c.json<NotesSyncOutput>(
         error('INTERNAL_ERROR', `Failed to sync notes: ${err instanceof Error ? err.message : String(err)}`),
         500,
       );

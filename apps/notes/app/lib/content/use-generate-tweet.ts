@@ -1,37 +1,41 @@
 import { useToast } from '@hominem/ui';
 import { useState } from 'react';
 
-import { trpc } from '~/lib/trpc';
-
-interface GenerateTweetParams {
-  content: string;
-  strategyType: 'default' | 'custom';
-  strategy: string;
-}
+import type { HonoClient } from '@hominem/hono-client';
+import { useHonoMutation } from '@hominem/hono-client/react';
+import type { TweetGenerateInput, TweetGenerateOutput } from '@hominem/hono-rpc/types';
 
 export function useGenerateTweet() {
   const [generatedTweet, setGeneratedTweet] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
-  const generateMutation = trpc.tweet.generate.useMutation({
-    onSuccess: (data) => {
-      setGeneratedTweet(data.text);
+  const generateMutation = useHonoMutation<TweetGenerateOutput, TweetGenerateInput>(
+    async (client: HonoClient, variables: TweetGenerateInput) => {
+      const res = await client.api.tweet.generate.$post({ json: variables });
+      return res.json() as Promise<TweetGenerateOutput>;
     },
-    onError: (error) => {
-      toast({
-        title: 'Error generating tweet',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+    {
+      onSuccess: (result) => {
+        if (result.success) {
+          setGeneratedTweet(result.data.text);
+        }
+      },
+      onError: (error) => {
+        toast({
+          title: 'Error generating tweet',
+          description: error.message,
+          variant: 'destructive',
+        });
+      },
+    }
+  );
 
-  const generateTweet = (params: GenerateTweetParams) => {
+  const generateTweet = (params: TweetGenerateInput) => {
     generateMutation.mutate(params);
   };
 
-  const regenerateTweet = (params: GenerateTweetParams) => {
+  const regenerateTweet = (params: TweetGenerateInput) => {
     generateMutation.mutate(params);
   };
 

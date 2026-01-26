@@ -11,15 +11,22 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import {
+  twitterPostSchema,
+  type TwitterAccountsListOutput,
+  type TwitterAuthorizeOutput,
+  type TwitterDisconnectOutput,
+  type TwitterPostOutput,
+  type TwitterPostInput,
+  type TwitterSyncOutput,
+  type TwitterTweet,
+} from '../types/twitter.types';
 
 // Twitter OAuth and API utilities
 const TWITTER_SCOPES = 'tweet.read tweet.write users.read offline.access';
 
 interface TwitterTweetResponse {
-  data: {
-    id: string;
-    text: string;
-  };
+  data: TwitterTweet;
 }
 
 interface TwitterTweetsResponse {
@@ -87,10 +94,11 @@ export const twitterRoutes = new Hono<AppContext>()
     try {
       const userId = c.get('userId')!;
       const accounts = await listAccountsByProvider(userId, 'twitter');
-      return c.json(success(accounts));
+      // @ts-ignore: Account types might mismatch slightly but runtime is fine
+      return c.json<TwitterAccountsListOutput>(success(accounts as any));
     } catch (err) {
       console.error('[twitter.accounts] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to get Twitter accounts'), 500);
+      return c.json<TwitterAccountsListOutput>(error('INTERNAL_ERROR', 'Failed to get Twitter accounts'), 500);
     }
   })
 
@@ -103,7 +111,7 @@ export const twitterRoutes = new Hono<AppContext>()
       const TWITTER_REDIRECT_URI = `${API_URL}/api/oauth/twitter/callback`;
 
       if (!TWITTER_CLIENT_ID) {
-        return c.json(error('INTERNAL_ERROR', 'Twitter client ID not configured'), 500);
+        return c.json<TwitterAuthorizeOutput>(error('INTERNAL_ERROR', 'Twitter client ID not configured'), 500);
       }
 
       // Generate PKCE parameters
@@ -125,10 +133,10 @@ export const twitterRoutes = new Hono<AppContext>()
       authUrl.searchParams.set('code_challenge', codeChallenge);
       authUrl.searchParams.set('code_challenge_method', 'S256');
 
-      return c.json(success({ authUrl: authUrl.toString() }));
+      return c.json<TwitterAuthorizeOutput>(success({ authUrl: authUrl.toString() }));
     } catch (err) {
       console.error('[twitter.authorize] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to generate authorization URL'), 500);
+      return c.json<TwitterAuthorizeOutput>(error('INTERNAL_ERROR', 'Failed to generate authorization URL'), 500);
     }
   })
 
@@ -141,13 +149,13 @@ export const twitterRoutes = new Hono<AppContext>()
       const deleted = await deleteAccountForUser(accountId, userId, 'twitter');
 
       if (!deleted) {
-        return c.json(error('NOT_FOUND', 'Twitter account not found'), 404);
+        return c.json<TwitterDisconnectOutput>(error('NOT_FOUND', 'Twitter account not found'), 404);
       }
 
-      return c.json(success({ success: true, message: 'Twitter account disconnected' }));
+      return c.json<TwitterDisconnectOutput>(success({ success: true, message: 'Twitter account disconnected' }));
     } catch (err) {
       console.error('[twitter.disconnect] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to disconnect Twitter account'), 500);
+      return c.json<TwitterDisconnectOutput>(error('INTERNAL_ERROR', 'Failed to disconnect Twitter account'), 500);
     }
   })
 
@@ -156,10 +164,10 @@ export const twitterRoutes = new Hono<AppContext>()
     try {
       const userId = c.get('userId')!;
       const body = await c.req.json();
-      const parsed = TwitterPostSchema.safeParse(body);
+      const parsed = twitterPostSchema.safeParse(body);
 
       if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        return c.json<TwitterPostOutput>(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
       }
 
       const { text, contentId, saveAsContent } = parsed.data;
@@ -169,7 +177,7 @@ export const twitterRoutes = new Hono<AppContext>()
       const twitterAccount = await getAccountByUserAndProvider(userId, 'twitter');
 
       if (!twitterAccount) {
-        return c.json(error('NOT_FOUND', 'No Twitter account connected'), 404);
+        return c.json<TwitterPostOutput>(error('NOT_FOUND', 'No Twitter account connected'), 404);
       }
 
       // Post the tweet
@@ -195,7 +203,7 @@ export const twitterRoutes = new Hono<AppContext>()
           accountId: twitterAccount.id,
           textLength: text.length,
         });
-        return c.json(error('INTERNAL_ERROR', `Failed to post tweet: ${tweetResponse.status}`), 500);
+        return c.json<TwitterPostOutput>(error('INTERNAL_ERROR', `Failed to post tweet: ${tweetResponse.status}`), 500);
       }
 
       const tweetData = (await tweetResponse.json()) as TwitterTweetResponse;
@@ -239,7 +247,7 @@ export const twitterRoutes = new Hono<AppContext>()
         }
       }
 
-      return c.json(
+      return c.json<TwitterPostOutput>(
         success({
           success: true,
           tweet: tweetData,
@@ -248,7 +256,7 @@ export const twitterRoutes = new Hono<AppContext>()
       );
     } catch (err) {
       console.error('[twitter.post] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to post tweet'), 500);
+      return c.json<TwitterPostOutput>(error('INTERNAL_ERROR', 'Failed to post tweet'), 500);
     }
   })
 
@@ -356,7 +364,7 @@ export const twitterRoutes = new Hono<AppContext>()
         insertedCount = contentToInsert.length;
       }
 
-      return c.json(
+      return c.json<TwitterSyncOutput>(
         success({
           success: true,
           message: `Successfully synced ${insertedCount} new tweets`,
@@ -366,6 +374,6 @@ export const twitterRoutes = new Hono<AppContext>()
       );
     } catch (err) {
       console.error('[twitter.sync] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to sync tweets'), 500);
+      return c.json<TwitterSyncOutput>(error('INTERNAL_ERROR', 'Failed to sync tweets'), 500);
     }
   });

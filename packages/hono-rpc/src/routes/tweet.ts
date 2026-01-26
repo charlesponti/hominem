@@ -6,28 +6,11 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
-
-const generateTweetSchema = z.object({
-  content: z.string().min(1, 'Content is required'),
-  strategyType: z.enum(['default', 'custom']).default('default'),
-  strategy: z
-    .union([
-      z.enum([
-        'storytelling',
-        'question',
-        'statistic',
-        'quote',
-        'tip',
-        'behind-the-scenes',
-        'thread-starter',
-        'controversy',
-        'listicle',
-        'education',
-      ]),
-      z.uuid(), // For custom strategy IDs
-    ])
-    .default('storytelling'),
-});
+import {
+  tweetGenerateSchema,
+  type TweetGenerateOutput,
+  type TweetGenerateInput,
+} from '../types/tweet.types';
 
 const TWEET_CHARACTER_LIMIT = 280;
 
@@ -60,10 +43,10 @@ export const tweetRoutes = new Hono<AppContext>()
     try {
       const userId = c.get('userId')!;
       const body = await c.req.json();
-      const parsed = generateTweetSchema.safeParse(body);
+      const parsed = tweetGenerateSchema.safeParse(body);
 
       if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        return c.json<TweetGenerateOutput>(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
       }
 
       const { content, strategyType, strategy } = parsed.data;
@@ -77,7 +60,7 @@ export const tweetRoutes = new Hono<AppContext>()
         const customStrategy = await contentStrategiesService.getById(strategy as string, userId);
 
         if (!customStrategy) {
-          return c.json(error('NOT_FOUND', 'Custom content strategy not found'), 404);
+          return c.json<TweetGenerateOutput>(error('NOT_FOUND', 'Custom content strategy not found'), 404);
         }
 
         strategyName = customStrategy.title;
@@ -131,7 +114,7 @@ Return only the tweet text, nothing else.`;
       // Check character count
       const characterCount = tweetText.length;
 
-      return c.json(
+      return c.json<TweetGenerateOutput>(
         success({
           text: tweetText,
           hashtags,
@@ -141,12 +124,12 @@ Return only the tweet text, nothing else.`;
       );
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return c.json(
+        return c.json<TweetGenerateOutput>(
           error('VALIDATION_ERROR', `Invalid input: ${err.issues.map((i) => i.message).join(', ')}`),
           400,
         );
       }
       console.error('[tweet.generate] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to generate tweet'), 500);
+      return c.json<TweetGenerateOutput>(error('INTERNAL_ERROR', 'Failed to generate tweet'), 500);
     }
   });

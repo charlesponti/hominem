@@ -15,9 +15,7 @@ import type { app } from './app';
  *
  * Used for type-safe client instantiation and response type inference.
  * This type captures the complete API shape including all routes and methods.
- *
- * PERFORMANCE NOTE: This type inference is expensive (15+ seconds).
- * Only imported by code that actually needs it (hono-client, typed-routes).
+ * NOTE: This type is expensive to compute; import sparingly.
  */
 export type AppType = typeof app;
 

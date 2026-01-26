@@ -41,13 +41,13 @@ export function useCreateInstitution() {
 
 // Hook for getting accounts grouped by institution
 export function useAccountsByInstitution() {
-  const query = useHonoQuery(['finance', 'accounts', 'with-plaid'], async (client) => {
+  const query = useHonoQuery<AccountsWithPlaidOutput>(['finance', 'accounts', 'with-plaid'], async (client) => {
     const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
-    return res.json();
+    return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
   });
 
   const accounts = Array.isArray(query.data)
-    ? (query.data as unknown as AccountsWithPlaidOutput)
+    ? query.data
     : [];
 
   const accountsByInstitution = accounts.reduce(
@@ -92,31 +92,31 @@ export function useAccountsByInstitution() {
 
 // Export hooks for simple queries
 export const useInstitutionConnections = () =>
-  useHonoQuery(['finance', 'accounts', 'connections'], async (client) => {
+  useHonoQuery<AccountConnectionsOutput>(['finance', 'accounts', 'connections'], async (client) => {
     const res = await client.api.finance.accounts.connections.$post({ json: {} });
-    return res.json();
+    return res.json() as unknown as Promise<AccountConnectionsOutput>;
   });
 
 export const useInstitutionAccounts = () =>
-  useHonoQuery(['finance', 'accounts', 'with-plaid'], async (client) => {
+  useHonoQuery<AccountsWithPlaidOutput>(['finance', 'accounts', 'with-plaid'], async (client) => {
     const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
-    return res.json();
+    return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
   });
 
 export const useInstitutionAccountsByInstitution = (institutionId: string) =>
-  useHonoQuery(
+  useHonoQuery<AccountInstitutionAccountsOutput>(
     ['finance', 'accounts', 'institution-accounts', institutionId],
     async (client) => {
       const res = await client.api.finance.accounts['institution-accounts'].$post({
         json: { institutionId },
       });
-      return res.json();
+      return res.json() as unknown as Promise<AccountInstitutionAccountsOutput>;
     },
     { enabled: !!institutionId },
   );
 
 export const useAllInstitutions = () =>
-  useHonoQuery(['finance', 'institutions', 'list'], async (client) => {
+  useHonoQuery<InstitutionsListOutput>(['finance', 'institutions', 'list'], async (client) => {
     const res = await client.api.finance.institutions.list.$post({ json: {} });
-    return res.json();
+    return res.json() as unknown as Promise<InstitutionsListOutput>;
   });

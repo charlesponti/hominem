@@ -1,32 +1,163 @@
 import { z } from 'zod';
+import type { ApiResult } from '@hominem/services';
 
-import {
-  listGetAllSchema,
-  listGetByIdSchema,
-  listCreateSchema,
-  listUpdateSchema,
-  listDeleteSchema,
-  listDeleteItemSchema,
-  listGetContainingPlaceSchema,
-  listRemoveCollaboratorSchema,
-} from '../routes/lists';
+// ============================================================================
+// Data Types
+// ============================================================================
 
-export type {
-  ListGetAllOutput,
-  ListGetByIdOutput,
-  ListCreateOutput,
-  ListUpdateOutput,
-  ListDeleteOutput,
-  ListDeleteItemOutput,
-  ListGetContainingPlaceOutput,
-  ListRemoveCollaboratorOutput,
-} from '../lib/typed-routes';
+export type List = {
+  id: string;
+  name: string;
+  description: string | null;
+  isPublic: boolean;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+  // Lists often include items or places when fetched
+  places?: any[];
+  items?: any[];
+  owner?: {
+    id: string;
+    name: string | null;
+    email: string;
+    imageUrl?: string | null;
+  };
+  collaborators?: Array<{
+    id: string;
+    name: string | null;
+    email: string;
+    imageUrl?: string | null;
+  }>;
+};
 
-export type ListGetAllInput = z.infer<typeof listGetAllSchema>;
-export type ListGetByIdInput = z.infer<typeof listGetByIdSchema>;
-export type ListCreateInput = z.infer<typeof listCreateSchema>;
-export type ListUpdateInput = z.infer<typeof listUpdateSchema>;
-export type ListDeleteInput = z.infer<typeof listDeleteSchema>;
-export type ListDeleteItemInput = z.infer<typeof listDeleteItemSchema>;
-export type ListGetContainingPlaceInput = z.infer<typeof listGetContainingPlaceSchema>;
-export type ListRemoveCollaboratorInput = z.infer<typeof listRemoveCollaboratorSchema>;
+// ============================================================================
+// GET ALL LISTS
+// ============================================================================
+
+export type ListGetAllInput = {
+  itemType?: string;
+};
+
+export const listGetAllSchema = z.object({
+  itemType: z.string().optional(),
+});
+
+export type ListGetAllOutput = ApiResult<List[]>;
+
+// ============================================================================
+// GET LIST BY ID
+// ============================================================================
+
+export type ListGetByIdInput = {
+  id: string;
+};
+
+export const listGetByIdSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export type ListGetByIdOutput = ApiResult<List>;
+
+// ============================================================================
+// CREATE LIST
+// ============================================================================
+
+export type ListCreateInput = {
+  name: string;
+  description?: string;
+  isPublic?: boolean;
+};
+
+export const listCreateSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  isPublic: z.boolean().default(false),
+});
+
+export type ListCreateOutput = ApiResult<List>;
+
+// ============================================================================
+// UPDATE LIST
+// ============================================================================
+
+export type ListUpdateInput = {
+  id: string;
+  name?: string;
+  description?: string;
+  isPublic?: boolean;
+};
+
+export const listUpdateSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  isPublic: z.boolean().optional(),
+});
+
+export type ListUpdateOutput = ApiResult<List>;
+
+// ============================================================================
+// DELETE LIST
+// ============================================================================
+
+export type ListDeleteInput = {
+  id: string;
+};
+
+export const listDeleteSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export type ListDeleteOutput = ApiResult<{ success: boolean }>;
+
+// ============================================================================
+// DELETE LIST ITEM
+// ============================================================================
+
+export type ListDeleteItemInput = {
+  listId: string;
+  itemId: string;
+};
+
+export const listDeleteItemSchema = z.object({
+  listId: z.string().uuid(),
+  itemId: z.string().uuid(),
+});
+
+export type ListDeleteItemOutput = ApiResult<{ success: boolean }>;
+
+// ============================================================================
+// GET CONTAINING PLACE
+// ============================================================================
+
+export type ListGetContainingPlaceInput = {
+  placeId?: string;
+  googleMapsId?: string;
+};
+
+export const listGetContainingPlaceSchema = z.object({
+  placeId: z.string().uuid().optional(),
+  googleMapsId: z.string().optional(),
+});
+
+export type ListGetContainingPlaceOutput = ApiResult<Array<{
+  id: string;
+  name: string;
+  isOwner: boolean;
+}>>;
+
+// ============================================================================
+// REMOVE COLLABORATOR
+// ============================================================================
+
+export type ListRemoveCollaboratorInput = {
+  listId: string;
+  userId: string;
+};
+
+export const listRemoveCollaboratorSchema = z.object({
+  listId: z.string().uuid(),
+  userId: z.string().uuid(),
+});
+
+export type ListRemoveCollaboratorOutput = ApiResult<{ success: boolean }>;

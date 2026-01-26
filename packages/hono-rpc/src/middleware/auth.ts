@@ -16,8 +16,9 @@ export interface AppContext {
     userId?: string;
     supabaseId?: string;
     supabase?: SupabaseClient;
-    queues: Queues;
+    queues?: Queues;
   };
+  Bindings: Record<string, unknown>;
 }
 
 /**

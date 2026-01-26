@@ -4,7 +4,6 @@
     "": {
       "name": "hominem",
       "dependencies": {
-        "@trpc/server": "^11.4.2",
         "drizzle-orm": "0.45.1",
         "react": "^19.2.3",
         "react-dom": "^19.1.0",
@@ -114,7 +113,6 @@
         "@hominem/hono-client": "workspace:*",
         "@hominem/hono-rpc": "workspace:*",
         "@hominem/services": "workspace:*",
-        "@hominem/trpc": "workspace:*",
         "@hominem/ui": "workspace:*",
         "@hominem/utils": "workspace:*",
         "@hookform/resolvers": "^5.2.2",
@@ -129,9 +127,6 @@
         "@tanstack/react-query": "5.90.16",
         "@tanstack/react-query-devtools": "^5.71.2",
         "@tanstack/react-virtual": "^3.13.9",
-        "@trpc/client": "11.8.0",
-        "@trpc/react-query": "^11.4.2",
-        "@trpc/server": "11.8.0",
         "@types/react-syntax-highlighter": "^15.5.13",
         "@types/uuid": "^10.0.0",
         "@uidotdev/usehooks": "^2.4.1",
@@ -146,6 +141,7 @@
         "date-fns": "^3.6.0",
         "dotenv": "17.2.3",
         "google-auth-library": "^9.15.1",
+        "hono": "^4.11.6",
         "i18next": "^25.7.3",
         "isbot": "^5.1.17",
         "lucide-react": "0.562.0",
@@ -414,7 +410,7 @@
       "dependencies": {
         "@hominem/hono-rpc": "workspace:*",
         "@tanstack/react-query": "5.90.16",
-        "hono": "^4.10.7",
+        "hono": "^4.11.6",
       },
       "devDependencies": {
         "@types/react": "^18.0.0",
@@ -439,12 +435,13 @@
         "@hominem/places-services": "workspace:*",
         "@hominem/services": "workspace:*",
         "@hominem/utils": "workspace:*",
-        "@hono/zod-validator": "^0.4.1",
+        "@hono/zod-validator": "^0.7.6",
         "@supabase/supabase-js": "2.88.0",
+        "@tanstack/ai": "^0.2.0",
         "ai": "^4.3.0",
         "dotenv": "^16.0.0",
         "drizzle-orm": "0.40.0",
-        "hono": "^4.10.7",
+        "hono": "^4.11.6",
         "plaid": "^28.0.0",
         "zod": "4.3.6",
       },
@@ -567,77 +564,6 @@
         "@types/uuid": "^10.0.0",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
-      },
-    },
-    "packages/trpc": {
-      "name": "@hominem/trpc",
-      "version": "0.0.0",
-      "dependencies": {
-        "@ai-sdk/google": "^1.2.12",
-        "@ai-sdk/openai": "^1.3.10",
-        "@browserbasehq/stagehand": "^2.4.0",
-        "@hominem/ai": "workspace:*",
-        "@hominem/auth": "workspace:*",
-        "@hominem/chat-services": "workspace:*",
-        "@hominem/db": "workspace:*",
-        "@hominem/events-services": "workspace:*",
-        "@hominem/finance-services": "workspace:*",
-        "@hominem/health-services": "workspace:*",
-        "@hominem/jobs-services": "workspace:*",
-        "@hominem/lists-services": "workspace:*",
-        "@hominem/notes-services": "workspace:*",
-        "@hominem/services": "workspace:*",
-        "@hominem/utils": "workspace:*",
-        "@hono/node-server": "^1.19.2",
-        "@hono/trpc-server": "^0.4.0",
-        "@hono/zod-validator": "^0.4.1",
-        "@node-rs/jieba": "^2.0.1",
-        "@segment/analytics-node": "^2.2.1",
-        "@sentry/node": "^8.54.0",
-        "@sentry/tracing": "^7.120.3",
-        "@supabase/ssr": "0.8.0",
-        "@supabase/supabase-js": "2.88.0",
-        "@tanstack/ai": "^0.2.0",
-        "@tanstack/ai-openai": "^0.2.0",
-        "@total-typescript/ts-reset": "^0.6.1",
-        "@trpc/client": "11.8.0",
-        "@trpc/server": "11.8.0",
-        "@types/uuid": "^10.0.0",
-        "ai": "^4.3.16",
-        "better-auth": "^1.4.12",
-        "bullmq": "5.66.4",
-        "chromadb": "^2.4.6",
-        "class-variance-authority": "^0.7.1",
-        "clsx": "^2.1.1",
-        "date-fns": "^4.1.0",
-        "dayjs": "^1.11.13",
-        "dotenv": "17.2.3",
-        "drizzle-orm": "0.45.1",
-        "drizzle-zod": "^0.7.0",
-        "googleapis": "^170.0.0",
-        "gpt-tokenizer": "^2.9.0",
-        "hono": "^4.10.7",
-        "ioredis": "5.8.2",
-        "isbot": "^5.1.28",
-        "lru-cache": "^11.1.0",
-        "node-fetch": "^3.3.2",
-        "open-graph-scraper": "^6.9.0",
-        "pino": "^9.7.0",
-        "pino-pretty": "^13.0.0",
-        "plaid": "^16.0.0",
-        "react-markdown": "^10.1.0",
-        "recharts": "^3.0.2",
-        "resend": "^4.0.1",
-        "sonner": "^2.0.6",
-        "uuid": "^11.1.0",
-        "vaul": "^1.1.2",
-        "ws": "^8.18.1",
-        "zod": "4.3.6",
-        "zod-to-json-schema": "^3.24.1",
-      },
-      "devDependencies": {
-        "@types/ws": "^8.5.10",
-        "typescript": "5.9.3",
       },
     },
     "packages/ui": {
@@ -769,11 +695,9 @@
         "@hominem/notes-services": "workspace:*",
         "@hominem/places-services": "workspace:*",
         "@hominem/services": "workspace:*",
-        "@hominem/trpc": "workspace:*",
         "@hominem/utils": "workspace:*",
         "@hono/node-server": "^1.19.2",
-        "@hono/trpc-server": "^0.4.0",
-        "@hono/zod-validator": "^0.4.1",
+        "@hono/zod-validator": "^0.7.6",
         "@node-rs/jieba": "^2.0.1",
         "@segment/analytics-node": "^2.2.1",
         "@sentry/node": "^8.54.0",
@@ -783,8 +707,6 @@
         "@tanstack/ai": "^0.2.0",
         "@tanstack/ai-openai": "^0.2.0",
         "@total-typescript/ts-reset": "^0.6.1",
-        "@trpc/client": "11.8.0",
-        "@trpc/server": "11.8.0",
         "@types/uuid": "^10.0.0",
         "ai": "^4.3.16",
         "better-auth": "^1.4.12",
@@ -799,7 +721,7 @@
         "drizzle-zod": "^0.7.0",
         "googleapis": "^170.0.0",
         "gpt-tokenizer": "^2.9.0",
-        "hono": "^4.10.7",
+        "hono": "^4.11.6",
         "ioredis": "5.8.2",
         "isbot": "^5.1.28",
         "lru-cache": "^11.1.0",
@@ -870,12 +792,10 @@
         "@hominem/ai": "workspace:*",
         "@hominem/db": "workspace:*",
         "@hominem/services": "workspace:*",
-        "@hominem/trpc": "workspace:*",
         "@hominem/utils": "workspace:*",
         "@playwright/test": "^1.51.1",
         "@tanstack/ai": "^0.2.0",
         "@tanstack/ai-ollama": "^0.2.0",
-        "@trpc/client": "11.8.0",
         "ai": "^4.3.16",
         "axios": "1.12.0",
         "chalk": "^5.4.1",
@@ -906,7 +826,9 @@
     },
   },
   "overrides": {
+    "@hono/zod-validator": "^0.7.6",
     "drizzle-orm": "0.45.1",
+    "hono": "^4.11.6",
     "zod": "4.3.6",
   },
   "packages": {
@@ -1272,8 +1194,6 @@
 
     "@hominem/services": ["@hominem/services@workspace:packages/services"],
 
-    "@hominem/trpc": ["@hominem/trpc@workspace:packages/trpc"],
-
     "@hominem/ui": ["@hominem/ui@workspace:packages/ui"],
 
     "@hominem/utils": ["@hominem/utils@workspace:packages/utils"],
@@ -1282,9 +1202,7 @@
 
     "@hono/node-server": ["@hono/node-server@1.19.9", "", { "peerDependencies": { "hono": "^4" } }, "sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw=="],
 
-    "@hono/trpc-server": ["@hono/trpc-server@0.4.2", "", { "peerDependencies": { "@trpc/server": "^10.10.0 || >11.0.0-rc", "hono": ">=4.0.0" } }, "sha512-3TDrc42CZLgcTFkXQba+y7JlRWRiyw1AqhLqztWyNS2IFT+3bHld0lxKdGBttCtGKHYx0505dM67RMazjhdZqw=="],
-
-    "@hono/zod-validator": ["@hono/zod-validator@0.4.3", "", { "peerDependencies": { "hono": ">=3.9.0", "zod": "^3.19.1" } }, "sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ=="],
+    "@hono/zod-validator": ["@hono/zod-validator@0.7.6", "", { "peerDependencies": { "hono": ">=3.9.0", "zod": "^3.25.0 || ^4.0.0" } }, "sha512-Io1B6d011Gj1KknV4rXYz4le5+5EubcWEU/speUjuw9XMMIaP3n78yXLhjd2A3PXaXaUwEAluOiAyLqhBEJgsw=="],
 
     "@hookform/resolvers": ["@hookform/resolvers@5.2.2", "", { "dependencies": { "@standard-schema/utils": "^0.3.0" }, "peerDependencies": { "react-hook-form": "^7.55.0" } }, "sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA=="],
 
@@ -1961,12 +1879,6 @@
     "@tootallnate/quickjs-emscripten": ["@tootallnate/quickjs-emscripten@0.23.0", "", {}, "sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA=="],
 
     "@total-typescript/ts-reset": ["@total-typescript/ts-reset@0.6.1", "", {}, "sha512-cka47fVSo6lfQDIATYqb/vO1nvFfbPw7uWLayIXIhGETj0wcOOlrlkobOMDNQOFr9QOafegUPq13V2+6vtD7yg=="],
-
-    "@trpc/client": ["@trpc/client@11.8.0", "", { "peerDependencies": { "@trpc/server": "11.8.0", "typescript": ">=5.7.2" } }, "sha512-imJQeESX1hAapDaC4JB91yvXg41AZfBuTh/scnEiN/hAubZa5s/ikp0n+w29q2GCf+hREkr3WptUFKFJoDAIug=="],
-
-    "@trpc/react-query": ["@trpc/react-query@11.8.1", "", { "peerDependencies": { "@tanstack/react-query": "^5.80.3", "@trpc/client": "11.8.1", "@trpc/server": "11.8.1", "react": ">=18.2.0", "react-dom": ">=18.2.0", "typescript": ">=5.7.2" } }, "sha512-0Vu55ld/oINb4U6nIPPi7eZMhxUop6K+4QUK90RVsfSD5r+957sM80M4c8bjh/JBZUxMFv9JOhxxlWcrgHxHow=="],
-
-    "@trpc/server": ["@trpc/server@11.8.1", "", { "peerDependencies": { "typescript": ">=5.7.2" } }, "sha512-P4rzZRpEL7zDFgjxK65IdyH0e41FMFfTkQkuq0BA5tKcr7E6v9/v38DEklCpoDN6sPiB1Sigy/PUEzHENhswDA=="],
 
     "@tsconfig/node10": ["@tsconfig/node10@1.0.12", "", {}, "sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ=="],
 
@@ -2894,7 +2806,7 @@
 
     "hoist-non-react-statics": ["hoist-non-react-statics@3.3.2", "", { "dependencies": { "react-is": "^16.7.0" } }, "sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw=="],
 
-    "hono": ["hono@4.11.5", "", {}, "sha512-WemPi9/WfyMwZs+ZUXdiwcCh9Y+m7L+8vki9MzDw3jJ+W9Lc+12HGsd368Qc1vZi1xwW8BWMMsnK5efYKPdt4g=="],
+    "hono": ["hono@4.11.6", "", {}, "sha512-ofIiiHyl34SV6AuhE3YT2mhO5HRWokce+eUYE82TsP6z0/H3JeJcjVWEMSIAiw2QkjDOEpES/lYsg8eEbsLtdw=="],
 
     "html": ["html@1.0.0", "", { "dependencies": { "concat-stream": "^1.4.7" }, "bin": { "html": "./bin/html.js" } }, "sha512-lw/7YsdKiP3kk5PnR1INY17iJuzdAtJewxr14ozKJWbbR97znovZ0mh+WEMZ8rjc3lgTK+ID/htTjuyGKB52Kw=="],
 
@@ -4260,8 +4172,6 @@
 
     "@google/genai/google-auth-library": ["google-auth-library@10.5.0", "", { "dependencies": { "base64-js": "^1.3.0", "ecdsa-sig-formatter": "^1.0.11", "gaxios": "^7.0.0", "gcp-metadata": "^8.0.0", "google-logging-utils": "^1.0.0", "gtoken": "^8.0.0", "jws": "^4.0.0" } }, "sha512-7ABviyMOlX5hIVD60YOfHw4/CxOfBhyduaYB+wbFWCWoni4N7SLcV46hrVRktuBbZjFC9ONyqamZITN7q3n32w=="],
 
-    "@hominem/api/@trpc/server": ["@trpc/server@11.8.0", "", { "peerDependencies": { "typescript": ">=5.7.2" } }, "sha512-DphyQnLuyX2nwJCQGWQ9zYz4hZGvRhSBqDhQ0SH3tDhQ3PU4u68xofA0pJ741Ir4InEAFD+TtJVLAQy+wVOkiQ=="],
-
     "@hominem/cli/@ai-sdk/openai-compatible": ["@ai-sdk/openai-compatible@0.2.16", "", { "dependencies": { "@ai-sdk/provider": "1.1.3", "@ai-sdk/provider-utils": "2.2.8" }, "peerDependencies": { "zod": "^3.0.0" } }, "sha512-LkvfcM8slJedRyJa/MiMiaOzcMjV1zNDwzTHEGz7aAsgsQV0maLfmJRi/nuSwf5jmp0EouC+JXXDUj2l94HgQw=="],
 
     "@hominem/db/dotenv": ["dotenv@16.6.1", "", {}, "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="],
@@ -4280,8 +4190,6 @@
 
     "@hominem/hono-rpc/plaid": ["plaid@28.0.0", "", { "dependencies": { "axios": "^1.6.2" } }, "sha512-jz5adPpiTMgKAPHqaAoD05LaqUrE1CKIXXp41fIYpfVV21p6boQ5aoft6GHJOed43ZA9iwu8jeIJrl6zO8GHTQ=="],
 
-    "@hominem/notes/@trpc/server": ["@trpc/server@11.8.0", "", { "peerDependencies": { "typescript": ">=5.7.2" } }, "sha512-DphyQnLuyX2nwJCQGWQ9zYz4hZGvRhSBqDhQ0SH3tDhQ3PU4u68xofA0pJ741Ir4InEAFD+TtJVLAQy+wVOkiQ=="],
-
     "@hominem/notes/date-fns": ["date-fns@3.6.0", "", {}, "sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww=="],
 
     "@hominem/notes/recharts": ["recharts@2.15.4", "", { "dependencies": { "clsx": "^2.0.0", "eventemitter3": "^4.0.1", "lodash": "^4.17.21", "react-is": "^18.3.1", "react-smooth": "^4.0.4", "recharts-scale": "^0.4.4", "tiny-invariant": "^1.3.1", "victory-vendor": "^36.6.8" }, "peerDependencies": { "react": "^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-UT/q6fwS3c1dHbXv2uFgYJ9BMFHu3fwnd7AYZaEQhXuYQ4hgsxLvsUXzGdKeZrW5xopzDCvuA2N41WJ88I7zIw=="],
@@ -4293,8 +4201,6 @@
     "@hominem/rocco/ora": ["ora@9.1.0", "", { "dependencies": { "chalk": "^5.6.2", "cli-cursor": "^5.0.0", "cli-spinners": "^3.2.0", "is-interactive": "^2.0.0", "is-unicode-supported": "^2.1.0", "log-symbols": "^7.0.1", "stdin-discarder": "^0.2.2", "string-width": "^8.1.0" } }, "sha512-53uuLsXHOAJl5zLrUrzY9/kE+uIFEx7iaH4g2BIJQK4LZjY4LpCCYZVKDWIkL+F01wAaCg93duQ1whnK/AmY1A=="],
 
     "@hominem/rocco/tailwind-merge": ["tailwind-merge@3.2.0", "", {}, "sha512-FQT/OVqCD+7edmmJpsgCsY820RTD5AkBryuG5IUqR5YQZSdj5xlH5nLgH7YPths7WsLPSpSBNneJdM8aS8aeFA=="],
-
-    "@hominem/trpc/@trpc/server": ["@trpc/server@11.8.0", "", { "peerDependencies": { "typescript": ">=5.7.2" } }, "sha512-DphyQnLuyX2nwJCQGWQ9zYz4hZGvRhSBqDhQ0SH3tDhQ3PU4u68xofA0pJ741Ir4InEAFD+TtJVLAQy+wVOkiQ=="],
 
     "@hominem/ui/date-fns": ["date-fns@3.6.0", "", {}, "sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww=="],
 

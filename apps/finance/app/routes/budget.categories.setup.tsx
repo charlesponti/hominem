@@ -35,7 +35,7 @@ export default function BudgetCategoriesSetup() {
 
     try {
       const categoriesToCreate = Array.from(selectedCategories).map((categoryName) => {
-        const transactionCategory = transactionCategories?.find((tc) => tc.name === categoryName);
+        const transactionCategory = transactionCategories?.find((tc) => (tc.name || tc.category) === categoryName);
         return {
           name: categoryName,
           type: 'expense' as const,
@@ -63,7 +63,7 @@ export default function BudgetCategoriesSetup() {
   };
 
   const handleSelectAll = () => {
-    setSelectedCategories(new Set(transactionCategories?.map((tc) => tc.name) || []));
+    setSelectedCategories(new Set(transactionCategories?.map((tc) => tc.name || tc.category) || []));
   };
 
   const handleDeselectAll = () => {
@@ -127,29 +127,29 @@ export default function BudgetCategoriesSetup() {
             <div className="grid gap-3 max-h-96 overflow-y-auto">
               {transactionCategories.map((transactionCategory) => (
                 <button
-                  key={transactionCategory.name}
+                  key={transactionCategory.name || transactionCategory.category}
                   className={`w-full text-left flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedCategories.has(transactionCategory.name)
+                    selectedCategories.has(transactionCategory.name || transactionCategory.category)
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
-                  onClick={() => toggleTransactionCategory(transactionCategory.name)}
+                  onClick={() => toggleTransactionCategory(transactionCategory.name || transactionCategory.category)}
                   type="button"
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`size-4 rounded border-2 flex items-center justify-center ${
-                        selectedCategories.has(transactionCategory.name)
+                        selectedCategories.has(transactionCategory.name || transactionCategory.category)
                           ? 'bg-blue-500 border-blue-500'
                           : 'border-gray-300'
                       }`}
                     >
-                      {selectedCategories.has(transactionCategory.name) && (
+                      {selectedCategories.has(transactionCategory.name || transactionCategory.category) && (
                         <Check className="size-3 text-white" />
                       )}
                     </div>
                     <div>
-                      <div className="font-medium">{transactionCategory.name}</div>
+                      <div className="font-medium">{transactionCategory.name || transactionCategory.category}</div>
                       <div className="text-sm text-gray-500">
                         {transactionCategory.transactionCount} transactions • Avg: $
                         {Math.abs(transactionCategory.averageAmount).toFixed(2)}/month
@@ -158,7 +158,7 @@ export default function BudgetCategoriesSetup() {
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-green-600">
-                      ${transactionCategory.suggestedBudget.toFixed(0)}/month
+                      ${(transactionCategory.suggestedBudget || 0).toFixed(0)}/month
                     </div>
                     <div className="text-xs text-gray-500">Suggested budget</div>
                   </div>

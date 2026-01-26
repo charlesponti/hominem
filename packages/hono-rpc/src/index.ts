@@ -38,6 +38,9 @@ import { peopleRoutes } from './routes/people';
 import { placesRoutes } from './routes/places';
 import { tripsRoutes } from './routes/trips';
 import { userRoutes } from './routes/user';
+import { goalsRoutes } from './routes/goals';
+import { chatsRoutes } from './routes/chats';
+import { messagesRoutes } from './routes/messages';
 
 export {
   adminRoutes,
@@ -49,6 +52,9 @@ export {
   placesRoutes,
   tripsRoutes,
   userRoutes,
+  goalsRoutes,
+  chatsRoutes,
+  messagesRoutes,
 };
 
 /**
@@ -66,6 +72,9 @@ export type PeopleType = typeof peopleRoutes;
 export type PlacesType = typeof placesRoutes;
 export type TripsType = typeof tripsRoutes;
 export type UserType = typeof userRoutes;
+export type GoalsType = typeof goalsRoutes;
+export type ChatsType = typeof chatsRoutes;
+export type MessagesType = typeof messagesRoutes;
 
 /**
  * 🎯 Finance Sub-Router Types

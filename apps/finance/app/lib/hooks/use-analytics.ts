@@ -1,15 +1,11 @@
-import type { CategoryBreakdownOutput } from '@hominem/hono-rpc/types/finance.types';
+import type {
+  CategoryBreakdownOutput,
+  CategoriesListOutput,
+} from '@hominem/hono-rpc/types/finance.types';
 
 import { format } from 'date-fns';
 
 import { useHonoQuery } from '../hono';
-
-interface CategoryBreakdownItem {
-  category: string;
-  total: number;
-  count: number;
-  percentage: number;
-}
 
 interface CategoryBreakdownParams {
   from?: Date;
@@ -29,7 +25,7 @@ export function useCategoryBreakdown({
   category,
   limit = 5,
 }: CategoryBreakdownParams) {
-  return useHonoQuery(
+  return useHonoQuery<CategoryBreakdownOutput>(
     [
       'finance',
       'analyze',
@@ -51,7 +47,7 @@ export function useCategoryBreakdown({
           limit: limit.toString(),
         },
       });
-      return res.json();
+      return res.json() as Promise<CategoryBreakdownOutput>;
     },
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -59,21 +55,17 @@ export function useCategoryBreakdown({
   );
 }
 
-interface FinanceCategory {
-  category: string;
-}
-
 /**
  * Hook for fetching list of finance categories
  */
 export function useFinanceCategories() {
-  return useHonoQuery(
+  return useHonoQuery<CategoriesListOutput>(
     ['finance', 'categories', 'list'],
     async (client) => {
       const res = await client.api.finance.categories.list.$post({
         json: {},
       });
-      return res.json();
+      return res.json() as unknown as Promise<CategoriesListOutput>;
     },
     {
       staleTime: 10 * 60 * 1000, // 10 minutes - categories don't change often

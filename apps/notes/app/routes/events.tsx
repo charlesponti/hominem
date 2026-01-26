@@ -6,8 +6,8 @@ import { data, useNavigate } from 'react-router';
 import { getServerSession } from '~/lib/auth.server';
 import i18n from '~/lib/i18n';
 import { createServerHonoClient } from '~/lib/trpc/server';
-import { createServerCallerWithToken } from '@hominem/hono-client/ssr';
-import type { PeopleListOutput } from '@hominem/hono-rpc/types';
+// import { createServerCallerWithToken } from '@hominem/hono-client/ssr'; // redundant if we use createServerHonoClient
+import type { PeopleListOutput, EventsListOutput, EventsCreateInput } from '@hominem/hono-rpc/types';
 import type { ExtractApiData } from '@hominem/services';
 
 import type { Route } from './+types/events';
@@ -31,19 +31,23 @@ export async function loader({ request }: Route.LoaderArgs) {
     sortParam === 'date-asc' || sortParam === 'summary' ? sortParam : 'date-desc';
 
   const { session, headers } = await getServerSession(request);
-  const trpc = createServerTRPCClient(session?.access_token);
-  const api = createServerCallerWithToken(session?.access_token || null);
-
-  const [events, peopleRes] = await Promise.all([
-    trpc.events.list.query({
-      tagNames: type ? [type] : undefined,
-      companion: companion || undefined,
-      sortBy,
+  const client = createServerHonoClient(session?.access_token);
+  
+  const [eventsRes, peopleRes] = await Promise.all([
+    client.api.events.$get({
+      query: {
+        tagNames: type, // API expects comma separated string or array? Route expects tagNames string split by comma
+        companion: companion || undefined,
+        sortBy,
+      }
     }),
-    api.people.list.$post({ json: {} }),
+    client.api.people.list.$post({ json: {} }),
   ]);
 
-  const peopleResult = await peopleRes.json();
+  const eventsResult = await eventsRes.json() as EventsListOutput;
+  const peopleResult = await peopleRes.json() as PeopleListOutput;
+
+  const events = eventsResult.success ? eventsResult.data : [];
   const people = peopleResult.success ? peopleResult.data : [];
 
   return data({ events, people }, { headers });
@@ -51,42 +55,35 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const eventData: Partial<AppRouterInputs['events']['create']> = {};
-
-  for (const [key, value] of formData.entries()) {
-    if (key === 'people') {
-      if (!eventData.people) {
-        eventData.people = [];
-      }
-      eventData.people.push(value as string);
-      continue;
-    }
-    if (key === 'tags') {
-      const tagsValue = value as string;
-      eventData.tags = tagsValue.split(',').map((tag) => tag.trim());
-      continue;
-    }
-    if (key === 'title' || key === 'description' || key === 'date' || key === 'type') {
-      eventData[key] = value as string;
-    }
-  }
+  // We need to construct the input object manually
+  
+  const tags = formData.get('tags') as string;
+  const people = formData.getAll('people') as string[];
+  
+  const eventData: EventsCreateInput = {
+    title: (formData.get('title') as string) || '',
+    description: (formData.get('description') as string) || undefined,
+    date: (formData.get('date') as string) || undefined,
+    type: (formData.get('type') as string) || undefined,
+    tags: tags ? tags.split(',').map(t => t.trim()) : undefined,
+    people: people.length > 0 ? people : undefined,
+  };
 
   if (eventData.date) {
     eventData.date = new Date(eventData.date).toISOString();
   }
 
   const { session } = await getServerSession(request);
-  const trpc = createServerTRPCClient(session?.access_token);
-  const createInput = {
-    title: eventData.title ?? '',
-    description: eventData.description,
-    date: eventData.date,
-    type: eventData.type,
-    tags: eventData.tags,
-    people: eventData.people,
-  };
-  const event = await trpc.events.create.mutate(createInput);
-  return { success: true, event };
+  const client = createServerHonoClient(session?.access_token);
+  
+  const res = await client.api.events.$post({ json: eventData });
+  const result = await res.json();
+  
+  if (!result.success) {
+      throw new Error(result.message);
+  }
+  
+  return { success: true, event: result.data };
 }
 
 type EventFilters = {

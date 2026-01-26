@@ -1,3 +1,5 @@
+import type { TopMerchantsOutput } from '@hominem/hono-rpc/types/finance.types';
+
 import { useHonoQuery } from '../hono';
 
 type UseFinanceTopMerchantsParams = {
@@ -15,7 +17,7 @@ export function useFinanceTopMerchants({
   category,
   limit,
 }: UseFinanceTopMerchantsParams) {
-  return useHonoQuery(
+  return useHonoQuery<TopMerchantsOutput>(
     ['finance', 'analyze', 'top-merchants', { from, to, account, category, limit }],
     async (client) => {
       const res = await client.api.finance.analyze['top-merchants'].$post({
@@ -27,7 +29,7 @@ export function useFinanceTopMerchants({
           limit,
         },
       });
-      return res.json();
+      return res.json() as Promise<TopMerchantsOutput>;
     },
     {
       staleTime: 5 * 60 * 1000,

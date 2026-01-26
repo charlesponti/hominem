@@ -16,7 +16,7 @@ export default function VisitsPage() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const { data: visitsData, isLoading } = useMyVisits(
-    { startDate: startDate || undefined, endDate: endDate || undefined },
+    {}, // TODO: Add date filtering support to API or client-side filtering
     { enabled: isAuthenticated },
   );
 
@@ -170,9 +170,9 @@ export default function VisitsPage() {
                     </p>
                   )}
 
-                  {visit.visitPeople && (
+                  {visit.people && visit.people.length > 0 && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      <span className="font-medium">With:</span> {visit.visitPeople}
+                      <span className="font-medium">With:</span> {visit.people.join(', ')}
                     </p>
                   )}
                 </div>

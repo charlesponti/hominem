@@ -1,4 +1,4 @@
-import type { ChatMessageToolCall } from '@hominem/db/schema';
+import type { ChatMessageToolCall } from '@hominem/hono-rpc/types';
 
 import { Button } from '@hominem/ui/button';
 import {
@@ -47,7 +47,7 @@ export const ChatMessage = memo(function ChatMessage({
   const [isHovered, setIsHovered] = useState(false);
 
   const handleCopyMessage = async () => {
-    const success = await copyToClipboard(message.content);
+    const success = await copyToClipboard(message.content || '');
     if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -56,7 +56,7 @@ export const ChatMessage = memo(function ChatMessage({
 
   const { isEditing, editContent, setEditContent, startEdit, cancelEdit, saveEdit, canSave } =
     useMessageEdit({
-      initialContent: message.content,
+      initialContent: message.content || '',
       onSave: onEdit ? (newContent) => onEdit(message.id, newContent) : undefined,
     });
 

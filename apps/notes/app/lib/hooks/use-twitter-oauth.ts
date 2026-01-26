@@ -1,10 +1,13 @@
-// Error type placeholder for Hono RPC
-type TRPCClientErrorLike = any;
-
 import { useToast } from '@hominem/ui';
 import { useCallback } from 'react';
 
-import { trpc } from '~/lib/trpc';
+import type { HonoClient } from '@hominem/hono-client';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import type {
+  TwitterAccountsListOutput,
+  TwitterPostInput,
+  TwitterPostOutput,
+} from '@hominem/hono-rpc/types';
 
 export function useTwitterOAuth() {
   // keeping this stub as it was in original, potentially unused or pending implementation
@@ -16,7 +19,13 @@ export function useTwitterOAuth() {
 }
 
 export function useTwitterAccounts() {
-  const { data: accounts, isLoading, refetch } = trpc.twitter.accounts.useQuery();
+  const { data: accounts, isLoading, refetch } = useHonoQuery<TwitterAccountsListOutput>(
+    ['twitter', 'accounts'],
+    async (client: HonoClient) => {
+      const res = await client.api.twitter.accounts.$get();
+      return res.json() as Promise<TwitterAccountsListOutput>;
+    }
+  );
 
   return {
     data: accounts || [],
@@ -28,14 +37,20 @@ export function useTwitterAccounts() {
 export function useTwitterPost() {
   const { toast } = useToast();
 
-  const mutation = trpc.twitter.post.useMutation({
-    onSuccess: () => {
-      toast({ title: 'Tweet posted successfully' });
+  const mutation = useHonoMutation<TwitterPostOutput, TwitterPostInput>(
+    async (client: HonoClient, variables: TwitterPostInput) => {
+      const res = await client.api.twitter.post.$post({ json: variables });
+      return res.json() as Promise<TwitterPostOutput>;
     },
-    onError: (error: TRPCClientErrorLike<any>) => {
-      toast({ title: 'Error posting tweet', description: error.message, variant: 'destructive' });
-    },
-  });
+    {
+      onSuccess: () => {
+        toast({ title: 'Tweet posted successfully' });
+      },
+      onError: (error) => {
+        toast({ title: 'Error posting tweet', description: error.message, variant: 'destructive' });
+      },
+    }
+  );
 
   return mutation;
 }

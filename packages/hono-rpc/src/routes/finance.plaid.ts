@@ -6,6 +6,7 @@ import {
   upsertPlaidItem,
   deletePlaidItem,
 } from '@hominem/finance-services';
+import { error, success, isServiceError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { zValidator } from '@hono/zod-validator';
 import { and, eq } from 'drizzle-orm';
@@ -15,39 +16,16 @@ import { z } from 'zod';
 import { env } from '../lib/env';
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../lib/plaid';
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import {
+  type PlaidCreateLinkTokenOutput,
+  type PlaidExchangeTokenOutput,
+  type PlaidSyncItemOutput,
+  type PlaidRemoveConnectionOutput,
+} from '../types/finance.types';
 
 /**
  * Finance Plaid Routes
- *
- * Handles Plaid integration operations:
- * - POST /create-link-token - Create Plaid link token
- * - POST /exchange-token - Exchange public token for access token
- * - POST /sync-item - Sync Plaid item
- * - POST /remove-connection - Remove Plaid connection
  */
-
-// ============================================================================
-// Validation Schemas
-// ============================================================================
-
-const exchangeTokenSchema = z.object({
-  publicToken: z.string().min(1, 'Public token is required'),
-  institutionId: z.string().min(1, 'Institution ID is required'),
-  institutionName: z.string().min(1, 'Institution name is required'),
-});
-
-const syncItemSchema = z.object({
-  itemId: z.string(),
-});
-
-const removeConnectionSchema = z.object({
-  itemId: z.string(),
-});
-
-// ============================================================================
-// Routes
-// ============================================================================
-
 export const plaidRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
@@ -65,24 +43,36 @@ export const plaidRoutes = new Hono<AppContext>()
         webhook: `${env.API_URL}/api/finance/plaid/webhook`,
       });
 
-      const result = {
-        success: true,
-        linkToken: createTokenResponse.data.link_token,
-        expiration: createTokenResponse.data.expiration,
-      };
-
-      return c.json(result);
-    } catch (error) {
-      console.error('Failed to create Plaid link token:', error);
-      return c.json({ error: 'Failed to create link token' }, 500);
+      return c.json<PlaidCreateLinkTokenOutput>(
+        success({
+          linkToken: createTokenResponse.data.link_token,
+          expiration: createTokenResponse.data.expiration,
+          requestId: createTokenResponse.data.request_id,
+        }),
+        200,
+      );
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<PlaidCreateLinkTokenOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Failed to create Plaid link token:', err);
+      return c.json<PlaidCreateLinkTokenOutput>(error('INTERNAL_ERROR', 'Failed to create link token'), 500);
     }
   })
 
   // POST /exchange-token - Exchange public token
-  .post('/exchange-token', zValidator('json', exchangeTokenSchema), async (c) => {
-    const input = c.req.valid('json');
+  .post('/exchange-token', zValidator('json', z.object({
+    publicToken: z.string().min(1),
+    institutionId: z.string().min(1),
+    institutionName: z.string().min(1),
+  })), async (c) => {
+    const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
     const queues = c.get('queues');
+
+    if (!queues) {
+      return c.json<PlaidExchangeTokenOutput>(error('INTERNAL_ERROR', 'Queues not available'), 500);
+    }
 
     try {
       // Exchange public token for access token
@@ -126,31 +116,39 @@ export const plaidRoutes = new Hono<AppContext>()
         },
       );
 
-      const result = {
-        success: true,
-        message: 'Successfully linked account. Your transactions will begin importing shortly.',
-        institutionName: input.institutionName,
-      };
-
-      return c.json(result);
-    } catch (error) {
-      console.error('Token exchange error:', error);
-      return c.json({ error: 'Failed to exchange token' }, 500);
+      return c.json<PlaidExchangeTokenOutput>(
+        success({
+          accessToken,
+          itemId,
+          requestId: exchangeResponse.data.request_id,
+        }),
+        200,
+      );
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<PlaidExchangeTokenOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Token exchange error:', err);
+      return c.json<PlaidExchangeTokenOutput>(error('INTERNAL_ERROR', 'Failed to exchange token'), 500);
     }
   })
 
   // POST /sync-item - Sync Plaid item
-  .post('/sync-item', zValidator('json', syncItemSchema), async (c) => {
-    const input = c.req.valid('json');
+  .post('/sync-item', zValidator('json', z.object({ itemId: z.string() })), async (c) => {
+    const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
     const queues = c.get('queues');
+
+    if (!queues) {
+      return c.json<PlaidSyncItemOutput>(error('INTERNAL_ERROR', 'Queues not available'), 500);
+    }
 
     try {
       // Get the plaid item
       const plaidItem = await getPlaidItemById(input.itemId, userId);
 
       if (!plaidItem) {
-        return c.json({ error: 'Plaid item not found' }, 404);
+        return c.json<PlaidSyncItemOutput>(error('NOT_FOUND', 'Plaid item not found'), 404);
       }
 
       // Queue sync job
@@ -173,34 +171,40 @@ export const plaidRoutes = new Hono<AppContext>()
         },
       );
 
-      const result = {
-        success: true,
-        message: 'Sync job queued successfully',
-      };
-
-      return c.json(result);
-    } catch (error) {
-      console.error('Sync error:', error);
-      return c.json({ error: 'Failed to sync item' }, 500);
+      return c.json<PlaidSyncItemOutput>(
+        success({
+          success: true,
+          added: 0, // Async, so we don't know yet
+          modified: 0,
+          removed: 0,
+        }),
+        200,
+      );
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<PlaidSyncItemOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Sync error:', err);
+      return c.json<PlaidSyncItemOutput>(error('INTERNAL_ERROR', 'Failed to sync item'), 500);
     }
   })
 
   // POST /remove-connection - Remove connection
-  .post('/remove-connection', zValidator('json', removeConnectionSchema), async (c) => {
-    const input = c.req.valid('json');
+  .post('/remove-connection', zValidator('json', z.object({ itemId: z.string() })), async (c) => {
+    const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
 
     try {
       // Get the plaid item
       const plaidItem = await db.query.plaidItems.findFirst({
         where: and(
-          eq(plaidItems.id as any, input.itemId),
-          eq(plaidItems.userId as any, userId),
-        ) as any,
+          eq(plaidItems.id, input.itemId),
+          eq(plaidItems.userId, userId),
+        ),
       });
 
       if (!plaidItem) {
-        return c.json({ error: 'Plaid item not found' }, 404);
+        return c.json<PlaidRemoveConnectionOutput>(error('NOT_FOUND', 'Plaid item not found'), 404);
       }
 
       // Revoke access token with Plaid
@@ -208,22 +212,19 @@ export const plaidRoutes = new Hono<AppContext>()
         await plaidClient.itemAccessTokenInvalidate({
           access_token: plaidItem.accessToken,
         });
-      } catch (error) {
-        console.warn('Failed to revoke Plaid access token:', error);
-        // Continue with removal even if Plaid revocation fails
+      } catch (revokeError) {
+        console.warn('Failed to revoke Plaid access token:', revokeError);
       }
 
       // Delete the plaid item
       await deletePlaidItem(input.itemId, userId);
 
-      const result = {
-        success: true,
-        message: 'Successfully removed Plaid connection',
-      };
-
-      return c.json(result);
-    } catch (error) {
-      console.error('Remove connection error:', error);
-      return c.json({ error: 'Failed to remove connection' }, 500);
+      return c.json<PlaidRemoveConnectionOutput>(success({ success: true }), 200);
+    } catch (err) {
+      if (isServiceError(err)) {
+        return c.json<PlaidRemoveConnectionOutput>(error(err.code, err.message), err.statusCode as any);
+      }
+      console.error('Remove connection error:', err);
+      return c.json<PlaidRemoveConnectionOutput>(error('INTERNAL_ERROR', 'Failed to remove connection'), 500);
     }
   });

@@ -11,21 +11,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const trpcClient = createServerTRPCClient(session.access_token);
 
-  const [firstChat] = await trpcClient.chats.getUserChats.query({
-    limit: 1,
-  });
+  const res = await trpcClient.api.chats.$get({ query: { limit: '1' } });
+  const result = await res.json();
 
-  if (firstChat) {
-    return redirect(`/chat/${firstChat.id}`, { headers });
+  if (result.success && result.data.length > 0) {
+    return redirect(`/chat/${result.data[0].id}`, { headers });
   }
 
-  const newChat = await trpcClient.chats.createChat.mutate({
-    title: 'New Chat',
+  const createRes = await trpcClient.api.chats.$post({
+    json: { title: 'New Chat' },
   });
+  const createResult = await createRes.json();
 
-  if (!newChat.success || !newChat.data) {
+  if (!createResult.success || !createResult.data) {
     return redirect('/', { headers });
   }
 
-  return redirect(`/chat/${newChat.data.id}`, { headers });
+  return redirect(`/chat/${createResult.data.id}`, { headers });
 }

@@ -1,4 +1,5 @@
 import type { createServerTRPCClient } from '~/lib/trpc/server';
+import type { ChatsListOutput, ChatsCreateOutput } from '@hominem/hono-rpc/types';
 
 import { ChatCreationError } from './errors';
 
@@ -9,21 +10,23 @@ type TRPCClient = ReturnType<typeof createServerTRPCClient>;
  * Returns the chat ID
  */
 export async function getOrCreateChat(trpcClient: TRPCClient): Promise<{ chatId: string }> {
-  const [chat] = await trpcClient.chats.getUserChats.query({
-    limit: 1,
-  });
+  const res = await trpcClient.api.chats.$get();
+  const result = (await res.json()) as ChatsListOutput;
 
-  if (chat) {
-    return { chatId: chat.id };
+  if (result.success && result.data.length > 0) {
+    return { chatId: result.data[0].id };
   }
 
-  const newChat = await trpcClient.chats.createChat.mutate({
-    title: 'New Chat',
+  const createRes = await trpcClient.api.chats.$post({
+    json: {
+      title: 'New Chat',
+    },
   });
+  const createResult = (await createRes.json()) as ChatsCreateOutput;
 
-  if (!newChat.success || !newChat.data) {
+  if (!createResult.success || !createResult.data) {
     throw new ChatCreationError();
   }
 
-  return { chatId: newChat.data.id };
+  return { chatId: createResult.data.id };
 }

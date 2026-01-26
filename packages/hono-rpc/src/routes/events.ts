@@ -13,32 +13,36 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
+import { zValidator } from '@hono/zod-validator';
+import {
+  eventsCreateSchema,
+  eventsUpdateSchema,
+  eventsGoogleSyncSchema,
+  type EventsListOutput,
+  type EventsGetOutput,
+  type EventsCreateOutput,
+  type EventsUpdateOutput,
+  type EventsDeleteOutput,
+  type EventsGoogleCalendarsOutput,
+  type EventsGoogleSyncOutput,
+  type EventsSyncStatusOutput,
+  type EventJson,
+} from '../types/events.types';
 
-const createEventSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  date: z.union([z.string(), z.date()]).optional(),
-  type: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  people: z.array(z.string()).optional(),
-});
-
-const updateEventSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  date: z.union([z.string(), z.date()]).optional(),
-  dateStart: z.union([z.string(), z.date()]).optional(),
-  dateEnd: z.union([z.string(), z.date()]).optional(),
-  type: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  people: z.array(z.string()).optional(),
-});
-
-const syncGoogleCalendarSchema = z.object({
-  calendarId: z.string().optional().default('primary'),
-  timeMin: z.string().optional(),
-  timeMax: z.string().optional(),
-});
+/**
+ * Serialization Helpers
+ */
+function serializeEvent(e: any): EventJson {
+  return {
+    ...e,
+    date: typeof e.date === 'string' ? e.date : e.date.toISOString(),
+    dateStart: e.dateStart ? (typeof e.dateStart === 'string' ? e.dateStart : e.dateStart.toISOString()) : null,
+    dateEnd: e.dateEnd ? (typeof e.dateEnd === 'string' ? e.dateEnd : e.dateEnd.toISOString()) : null,
+    createdAt: typeof e.createdAt === 'string' ? e.createdAt : e.createdAt.toISOString(),
+    updatedAt: typeof e.updatedAt === 'string' ? e.updatedAt : e.updatedAt.toISOString(),
+    lastSyncedAt: e.lastSyncedAt ? (typeof e.lastSyncedAt === 'string' ? e.lastSyncedAt : e.lastSyncedAt.toISOString()) : null,
+  };
+}
 
 export const eventsRoutes = new Hono<AppContext>()
   // List events
@@ -49,11 +53,11 @@ export const eventsRoutes = new Hono<AppContext>()
       const companion = query.companion;
       const sortBy = query.sortBy as 'date-asc' | 'date-desc' | 'summary' | undefined;
 
-      const events = await getEvents({ tagNames, companion, sortBy });
-      return c.json(success(events));
+      const eventsData = await getEvents({ tagNames, companion, sortBy });
+      return c.json<EventsListOutput>(success(eventsData.map(serializeEvent)));
     } catch (err) {
       console.error('[events.list] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to fetch events'), 500);
+      return c.json<EventsListOutput>(error('INTERNAL_ERROR', 'Failed to fetch events'), 500);
     }
   })
 
@@ -63,36 +67,31 @@ export const eventsRoutes = new Hono<AppContext>()
       const id = c.req.param('id');
       const event = await getEventById(id);
       if (!event) {
-        return c.json(error('NOT_FOUND', 'Event not found'), 404);
+        return c.json<EventsGetOutput>(error('NOT_FOUND', 'Event not found'), 404);
       }
-      return c.json(success(event));
+      return c.json<EventsGetOutput>(success(serializeEvent(event)));
     } catch (err) {
       console.error('[events.get] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to fetch event'), 500);
+      return c.json<EventsGetOutput>(error('INTERNAL_ERROR', 'Failed to fetch event'), 500);
     }
   })
 
   // Create event
-  .post('/', authMiddleware, async (c) => {
+  .post('/', authMiddleware, zValidator('json', eventsCreateSchema), async (c) => {
     try {
       const userId = c.get('userId')!;
-      const body = await c.req.json();
-      const parsed = createEventSchema.safeParse(body);
+      const data = c.req.valid('json');
 
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
-
-      const { title, description, date, type, tags, people } = parsed.data;
+      const { title, description, date, type, tags, people } = data;
 
       const trimmedTitle = title.trim();
       if (!trimmedTitle) {
-        return c.json(error('VALIDATION_ERROR', 'Title is required'), 400);
+        return c.json<EventsCreateOutput>(error('VALIDATION_ERROR', 'Title is required'), 400);
       }
 
       const dateValue = date ? new Date(date) : new Date();
       if (Number.isNaN(dateValue.getTime())) {
-        return c.json(error('VALIDATION_ERROR', 'Invalid event date'), 400);
+        return c.json<EventsCreateOutput>(error('VALIDATION_ERROR', 'Invalid event date'), 400);
       }
 
       const event = await createEvent({
@@ -104,27 +103,19 @@ export const eventsRoutes = new Hono<AppContext>()
         people,
         userId,
       });
-      return c.json(success(event), 201);
+      return c.json<EventsCreateOutput>(success(serializeEvent(event)), 201);
     } catch (err) {
       console.error('[events.create] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to create event'), 500);
+      return c.json<EventsCreateOutput>(error('INTERNAL_ERROR', 'Failed to create event'), 500);
     }
   })
 
   // Update event
-  .patch('/:id', authMiddleware, async (c) => {
+  .patch('/:id', authMiddleware, zValidator('json', eventsUpdateSchema), async (c) => {
     try {
       const id = c.req.param('id');
-      const body = await c.req.json();
-      const parsed = updateEventSchema.safeParse(body);
+      const updateData = c.req.valid('json');
 
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
-
-      const updateData = parsed.data;
-
-      // Convert string dates to Date objects and build update object
       const eventData: Parameters<typeof updateEvent>[1] = Object.assign(
         {},
         updateData.title !== undefined && { title: updateData.title },
@@ -138,10 +129,13 @@ export const eventsRoutes = new Hono<AppContext>()
       );
 
       const updated = await updateEvent(id, eventData);
-      return c.json(success(updated));
+      if (!updated) {
+        return c.json<EventsUpdateOutput>(error('NOT_FOUND', 'Event not found'), 404);
+      }
+      return c.json<EventsUpdateOutput>(success(serializeEvent(updated)));
     } catch (err) {
       console.error('[events.update] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to update event'), 500);
+      return c.json<EventsUpdateOutput>(error('INTERNAL_ERROR', 'Failed to update event'), 500);
     }
   })
 
@@ -150,10 +144,10 @@ export const eventsRoutes = new Hono<AppContext>()
     try {
       const id = c.req.param('id');
       const result = await deleteEvent(id);
-      return c.json(success(result));
+      return c.json<EventsDeleteOutput>(success(result));
     } catch (err) {
       console.error('[events.delete] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to delete event'), 500);
+      return c.json<EventsDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete event'), 500);
     }
   })
 
@@ -164,7 +158,7 @@ export const eventsRoutes = new Hono<AppContext>()
       const supabase = c.get('supabase');
 
       if (!supabase) {
-        return c.json(error('INTERNAL_ERROR', 'Supabase client not available'), 500);
+        return c.json<EventsGoogleCalendarsOutput>(error('INTERNAL_ERROR', 'Supabase client not available'), 500);
       }
 
       const {
@@ -172,7 +166,7 @@ export const eventsRoutes = new Hono<AppContext>()
       } = await supabase.auth.getSession();
 
       if (!session?.provider_token) {
-        return c.json(
+        return c.json<EventsGoogleCalendarsOutput>(
           error(
             'UNAUTHORIZED',
             'Google Calendar access token not found in session. Please reconnect your Google account.',
@@ -187,28 +181,21 @@ export const eventsRoutes = new Hono<AppContext>()
       });
 
       const calendars = await googleService.getCalendarList();
-      return c.json(success(calendars));
+      return c.json<EventsGoogleCalendarsOutput>(success(calendars as any));
     } catch (err) {
       console.error('[events.getGoogleCalendars] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to get Google calendars'), 500);
+      return c.json<EventsGoogleCalendarsOutput>(error('INTERNAL_ERROR', 'Failed to get Google calendars'), 500);
     }
   })
 
   // Sync Google Calendar
-  .post('/google/sync', authMiddleware, async (c) => {
+  .post('/google/sync', authMiddleware, zValidator('json', eventsGoogleSyncSchema), async (c) => {
     try {
       const userId = c.get('userId')!;
       const supabase = c.get('supabase');
 
       if (!supabase) {
-        return c.json(error('INTERNAL_ERROR', 'Supabase client not available'), 500);
-      }
-
-      const body = await c.req.json();
-      const parsed = syncGoogleCalendarSchema.safeParse(body);
-
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        return c.json<EventsGoogleSyncOutput>(error('INTERNAL_ERROR', 'Supabase client not available'), 500);
       }
 
       const {
@@ -216,7 +203,7 @@ export const eventsRoutes = new Hono<AppContext>()
       } = await supabase.auth.getSession();
 
       if (!session?.provider_token) {
-        return c.json(
+        return c.json<EventsGoogleSyncOutput>(
           error(
             'UNAUTHORIZED',
             'Google Calendar access token not found in session. Please reconnect your Google account.',
@@ -230,12 +217,15 @@ export const eventsRoutes = new Hono<AppContext>()
         refreshToken: session.provider_refresh_token || undefined,
       });
 
-      const { calendarId, timeMin, timeMax } = parsed.data;
+      const { calendarId, timeMin, timeMax } = c.req.valid('json');
       const result = await googleService.syncGoogleCalendarEvents(calendarId, timeMin, timeMax);
-      return c.json(success(result));
+      return c.json<EventsGoogleSyncOutput>(success({
+        syncedEvents: result.syncedEvents,
+        message: result.message,
+      }));
     } catch (err) {
       console.error('[events.syncGoogleCalendar] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to sync Google Calendar'), 500);
+      return c.json<EventsGoogleSyncOutput>(error('INTERNAL_ERROR', 'Failed to sync Google Calendar'), 500);
     }
   })
 
@@ -245,14 +235,16 @@ export const eventsRoutes = new Hono<AppContext>()
       const userId = c.get('userId')!;
       const status = await getSyncStatus(userId);
 
-      return c.json(
+      return c.json<EventsSyncStatusOutput>(
         success({
-          ...status,
-          connected: true, // Assume connected for now
+          lastSyncedAt: status.lastSyncedAt ? status.lastSyncedAt.toISOString() : null,
+          syncError: status.syncError,
+          eventCount: status.eventCount,
+          connected: true, // Assume connected if token exists in session
         }),
       );
     } catch (err) {
       console.error('[events.getSyncStatus] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to get sync status'), 500);
+      return c.json<EventsSyncStatusOutput>(error('INTERNAL_ERROR', 'Failed to get sync status'), 500);
     }
   });

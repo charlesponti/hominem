@@ -1,4 +1,4 @@
-import type { Goal } from '@hominem/services/types';
+import type { GoalJson } from '@hominem/hono-rpc/types';
 
 import { PageTitle } from '@hominem/ui';
 import { useToast } from '@hominem/ui';
@@ -21,178 +21,110 @@ import type { GoalFormData } from '~/components/goals/goal-modal';
 import { ArchiveModal } from '~/components/goals/archive-modal';
 import { GoalCard } from '~/components/goals/goal-card';
 import { GoalModal } from '~/components/goals/goal-modal';
-import { trpc } from '~/lib/trpc';
+import { useGoals, useCreateGoal, useUpdateGoal, useArchiveGoal } from '~/lib/hooks/use-goals';
 
 export default function GoalsPage() {
-  const utils = trpc.useUtils();
   const [showArchived, setShowArchived] = useState(false);
-  const [sortOrder, setSortOrder] = useState('priority');
+  const [sortOrder, setSortOrder] = useState<'priority' | 'dueDate' | 'createdAt'>('priority');
   const [categoryFilter, setCategoryFilter] = useState('');
 
-  const { data: goals = [], isLoading: isLoadingGoals } = trpc.goals.list.useQuery({
-    showArchived,
+  const queryParams = {
+    showArchived: String(showArchived),
     sortBy: sortOrder,
-    category: categoryFilter,
-  });
+    category: categoryFilter || undefined,
+  };
 
-  const typedGoals = goals as Goal[];
+  const { data: goalsResult, isLoading: isLoadingGoals } = useGoals(queryParams);
+  const goals = goalsResult?.success ? goalsResult.data : [];
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
-  const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
+  const [currentGoal, setCurrentGoal] = useState<GoalJson | null>(null);
   const { toast } = useToast();
 
-  const createGoal = trpc.goals.create.useMutation({
-    onMutate: async (newGoal) => {
-      setIsCreateModalOpen(false);
-      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter });
-      const previousGoals = utils.goals.list.getData({
-        showArchived,
-        sortBy: sortOrder,
-        category: categoryFilter,
-      });
-      utils.goals.list.setData(
-        { showArchived, sortBy: sortOrder, category: categoryFilter },
-        (old) => [
-          ...(old || []),
-          {
-            ...newGoal,
-            id: 'temp-id',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            userId: 'temp-user-id',
-            description: newGoal.description ?? null,
-            goalCategory: newGoal.goalCategory ?? null,
-            priority: newGoal.priority ?? null,
-            milestones: newGoal.milestones ?? null,
-            startDate: newGoal.startDate ?? null,
-            dueDate: newGoal.dueDate ?? null,
-          } as Goal,
-        ],
-      );
-      return { previousGoals };
-    },
-    onSuccess: () => {
-      toast({ description: 'Goal created successfully' });
-    },
-    onError: (err, _newGoal, context) => {
-      utils.goals.list.setData(
-        { showArchived, sortBy: sortOrder, category: categoryFilter },
-        context?.previousGoals,
-      );
-      toast({
-        variant: 'destructive',
-        description: err.message || 'Failed to create goal',
-      });
-    },
-    onSettled: () => {
-      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter });
-    },
-  });
-
-  const updateGoal = trpc.goals.update.useMutation({
-    onMutate: async (updatedGoal) => {
-      setIsEditModalOpen(false);
-      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter });
-      const previousGoals = utils.goals.list.getData({
-        showArchived,
-        sortBy: sortOrder,
-        category: categoryFilter,
-      });
-      utils.goals.list.setData(
-        { showArchived, sortBy: sortOrder, category: categoryFilter },
-        (old) =>
-          (old || []).map((goal) =>
-            goal.id === updatedGoal.id ? ({ ...goal, ...updatedGoal } as Goal) : goal,
-          ),
-      );
-      return { previousGoals };
-    },
-    onSuccess: () => {
-      toast({ description: 'Goal updated successfully' });
-    },
-    onError: (err, _newGoal, context) => {
-      utils.goals.list.setData(
-        { showArchived, sortBy: sortOrder, category: categoryFilter },
-        context?.previousGoals,
-      );
-      toast({
-        variant: 'destructive',
-        description: err.message || 'Failed to update goal',
-      });
-    },
-    onSettled: () => {
-      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter });
-      setCurrentGoal(null);
-    },
-  });
-
-  const archiveGoal = trpc.goals.archive.useMutation({
-    onMutate: async (archivedGoal) => {
-      setIsArchiveModalOpen(false);
-      await utils.goals.list.cancel({ showArchived, sortBy: sortOrder, category: categoryFilter });
-      const previousGoals = utils.goals.list.getData({
-        showArchived,
-        sortBy: sortOrder,
-        category: categoryFilter,
-      });
-      utils.goals.list.setData(
-        { showArchived, sortBy: sortOrder, category: categoryFilter },
-        (old) => (old || []).filter((goal) => goal.id !== archivedGoal.id),
-      );
-      return { previousGoals };
-    },
-    onSuccess: () => {
-      toast({ description: 'Goal archived successfully' });
-    },
-    onError: (err, _newGoal, context) => {
-      utils.goals.list.setData(
-        { showArchived, sortBy: sortOrder, category: categoryFilter },
-        context?.previousGoals,
-      );
-      toast({
-        variant: 'destructive',
-        description: err.message || 'Failed to archive goal',
-      });
-    },
-    onSettled: () => {
-      utils.goals.list.invalidate({ showArchived, sortBy: sortOrder, category: categoryFilter });
-      setCurrentGoal(null);
-    },
-  });
+  const createGoal = useCreateGoal(queryParams);
+  const updateGoal = useUpdateGoal(queryParams);
+  const archiveGoal = useArchiveGoal(queryParams);
 
   const handleCreateSubmit = (data: GoalFormData) => {
-    createGoal.mutate({
-      ...data,
-      startDate: data.startDate?.toISOString(),
-      dueDate: data.dueDate?.toISOString(),
-    });
+    createGoal.mutate(
+      {
+        ...data,
+        startDate: data.startDate?.toISOString(),
+        dueDate: data.dueDate?.toISOString(),
+      },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setIsCreateModalOpen(false);
+            toast({ description: 'Goal created successfully' });
+          } else {
+            toast({
+              variant: 'destructive',
+              description: result.message || 'Failed to create goal',
+            });
+          }
+        },
+      },
+    );
   };
 
   const handleEditSubmit = (data: GoalFormData) => {
     if (!currentGoal?.id) return;
-    updateGoal.mutate({
-      id: currentGoal.id,
-      ...data,
-      startDate: data.startDate?.toISOString(),
-      dueDate: data.dueDate?.toISOString(),
-    });
+    updateGoal.mutate(
+      {
+        id: currentGoal.id,
+        json: {
+          ...data,
+          startDate: data.startDate?.toISOString(),
+          dueDate: data.dueDate?.toISOString(),
+        },
+      },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setIsEditModalOpen(false);
+            toast({ description: 'Goal updated successfully' });
+          } else {
+            toast({
+              variant: 'destructive',
+              description: result.message || 'Failed to update goal',
+            });
+          }
+        },
+      },
+    );
   };
 
-  const handleEditClick = (goal: Goal) => {
+  const handleEditClick = (goal: any) => {
     setCurrentGoal(goal);
     setIsEditModalOpen(true);
   };
 
-  const handleArchiveClick = (goal: Goal) => {
+  const handleArchiveClick = (goal: any) => {
     setCurrentGoal(goal);
     setIsArchiveModalOpen(true);
   };
 
   const handleArchive = () => {
     if (!currentGoal?.id) return;
-    archiveGoal.mutate({ id: currentGoal.id });
+    archiveGoal.mutate(
+      { id: currentGoal.id },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setIsArchiveModalOpen(false);
+            toast({ description: 'Goal archived successfully' });
+          } else {
+            toast({
+              variant: 'destructive',
+              description: result.message || 'Failed to archive goal',
+            });
+          }
+        },
+      },
+    );
   };
 
   return (
@@ -206,7 +138,10 @@ export default function GoalsPage() {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="w-48"
           />
-          <Select value={sortOrder} onValueChange={setSortOrder}>
+          <Select
+            value={sortOrder}
+            onValueChange={(v) => setSortOrder(v as 'priority' | 'dueDate' | 'createdAt')}
+          >
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -233,12 +168,12 @@ export default function GoalsPage() {
 
       {isLoadingGoals ? (
         <p className="text-center text-muted-foreground mt-10">Loading goals...</p>
-      ) : typedGoals.length > 0 ? (
+      ) : goals.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {typedGoals.map((goal) => (
+          {goals.map((goal) => (
             <GoalCard
               key={goal.id}
-              goal={goal}
+              goal={goal as any}
               onEdit={handleEditClick}
               onDelete={handleArchiveClick}
             />

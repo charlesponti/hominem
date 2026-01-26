@@ -20,11 +20,11 @@ const DEFAULT_LOCATION = {
   longitude: -122.4194,
 };
 
-const formatDistance = (distanceInMeters: number) => {
-  if (distanceInMeters < 1000) {
-    return `${Math.round(distanceInMeters)}m`;
+const formatDistance = (distance: { km: number; miles: number }) => {
+  if (distance.km < 1) {
+    return `${Math.round(distance.km * 1000)}m`;
   }
-  return `${(distanceInMeters / 1000).toFixed(1)}km`;
+  return `${distance.km.toFixed(1)}km`;
 };
 
 export default function PlacesNearby({
@@ -102,7 +102,7 @@ export default function PlacesNearby({
               key={place.id}
               name={place.name}
               href={href('/places/:id', { id: place.id })}
-              photoUrl={place.photos?.[0] ?? null}
+              photoUrl={null}
               imageUrl={place.imageUrl}
               meta={
                 <div className="flex gap-1 items-center text-xs text-muted-foreground">
