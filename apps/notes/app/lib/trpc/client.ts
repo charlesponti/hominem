@@ -1,13 +1,14 @@
-import type { NotesRouterInputs, NotesRouterOutputs, AppRouter } from '@hominem/trpc';
-
-import { createTRPCReact } from '@trpc/react-query';
+import type { AppType } from '@hominem/hono-rpc';
+import { hc } from 'hono/client';
 
 /**
- * Use notes-specific types for better type checking performance
- * This prevents TypeScript from inferring types for unrelated routers
- * (finance, chats, etc.) which can significantly slow down IDE responsiveness
+ * Hono RPC client for the notes app
+ * Provides type-safe access to the API endpoints
  */
-export type RouterInput = NotesRouterInputs;
-export type RouterOutput = NotesRouterOutputs;
+const client = hc<AppType>(import.meta.env.VITE_API_URL || 'http://localhost:4040');
 
-export const trpc = createTRPCReact<AppRouter>();
+export const honoClient = client;
+export const trpc = client; // Backwards compatibility alias
+
+// Export types from the client
+export type APIClient = typeof client;

@@ -1,16 +1,16 @@
-import type { AppRouter } from '@hominem/trpc';
+import type { AppType } from '@hominem/hono-rpc';
+import { hc } from 'hono/client';
 
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
-
-export function createServerTRPCClient(accessToken?: string) {
-  return createTRPCProxyClient<AppRouter>({
-    links: [
-      httpBatchLink({
-        url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
-        async headers() {
-          return accessToken ? { authorization: `Bearer ${accessToken}` } : {};
-        },
-      }),
-    ],
+export function createServerHonoClient(accessToken?: string) {
+  return hc<AppType>(import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040', {
+    headers: () =>
+      accessToken
+        ? {
+            authorization: `Bearer ${accessToken}`,
+          }
+        : {},
   });
 }
+
+// Backwards compatibility alias
+export const createServerTRPCClient = createServerHonoClient;

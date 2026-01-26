@@ -3,9 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { app as honoRpcApp } from '@hominem/hono-rpc';
 import { redis } from '@hominem/services/redis';
-import { appRouter } from '@hominem/trpc';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
-import { trpcServer } from '@hono/trpc-server';
 import { Queue } from 'bullmq';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -83,33 +81,7 @@ export function createServer() {
   // Authentication middleware
   app.use('*', supabaseMiddleware());
 
-  // Register tRPC routes
-  app.use(
-    '/trpc/*',
-    trpcServer({
-      router: appRouter,
-      createContext: (opts, c) => {
-        const request = opts.req;
-
-        return {
-          req: {
-            header: (name: string) => {
-              return request.headers.get(name) || '';
-            },
-          },
-          queues: {
-            plaidSync: plaidSyncQueue,
-            importTransactions: importTransactionsQueue,
-            placePhotoEnrich: placePhotoEnrichQueue,
-          },
-          user: c.get('user'),
-          userId: c.get('userId'),
-          supabaseId: c.get('supabaseId') || '',
-          supabase: c.get('supabase'),
-        };
-      },
-    }),
-  );
+  // tRPC routes deprecated - using Hono RPC instead
 
   // Register Hono RPC routes
   // Note: honoRpcApp already includes /api prefix in its routes (e.g., /api/finance, /api/lists)

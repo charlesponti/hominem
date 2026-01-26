@@ -1,51 +1,25 @@
-import type { AppRouterInputs } from '@hominem/trpc';
-
 import { ActiveFiltersBar, FilterSelect } from '@hominem/ui/filters';
 import { useSort, useUrlFilters } from '@hominem/ui/hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { data, useNavigate } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
-import { usePeople } from '~/lib/hooks/use-people';
 import i18n from '~/lib/i18n';
-import { createServerTRPCClient } from '~/lib/trpc/server';
+import { createServerHonoClient } from '~/lib/trpc/server';
+import { createServerCallerWithToken } from '@hominem/hono-client/ssr';
+import type { PeopleListOutput } from '@hominem/hono-rpc/types';
+import type { ExtractApiData } from '@hominem/services';
 
 import type { Route } from './+types/events';
 
 import EventForm from '../components/events/EventForm';
-import EventList from '../components/events/EventList';
+import EventList, { type Activity } from '../components/events/EventList';
 import StatsDisplay from '../components/events/StatsDisplay';
 import SyncButton from '../components/events/SyncButton';
 import SyncStatus from '../components/events/SyncStatus';
 import { useGoogleCalendarSync } from '../hooks/useGoogleCalendarSync';
 
-interface EventPerson {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-}
-
-interface RawEvent {
-  id: string;
-  date?: string;
-  time?: string;
-  title: string;
-  description?: string;
-  location?: string;
-  people?: EventPerson[];
-  tags?: { id: string; name: string; color: string | null; description: string | null }[];
-}
-
-interface EventActivity {
-  id: string;
-  date?: string;
-  time?: string;
-  title: string;
-  description?: string;
-  location?: string;
-  people?: EventPerson[];
-  tags?: string[];
-}
+type Person = ExtractApiData<PeopleListOutput>[number];
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -58,14 +32,21 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const { session, headers } = await getServerSession(request);
   const trpc = createServerTRPCClient(session?.access_token);
+  const api = createServerCallerWithToken(session?.access_token || null);
 
-  const events = await trpc.events.list.query({
-    tagNames: type ? [type] : undefined,
-    companion: companion || undefined,
-    sortBy,
-  });
+  const [events, peopleRes] = await Promise.all([
+    trpc.events.list.query({
+      tagNames: type ? [type] : undefined,
+      companion: companion || undefined,
+      sortBy,
+    }),
+    api.people.list.$post({ json: {} }),
+  ]);
 
-  return data({ events }, { headers });
+  const peopleResult = await peopleRes.json();
+  const people = peopleResult.success ? peopleResult.data : [];
+
+  return data({ events, people }, { headers });
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -119,8 +100,6 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const { data: peopleResult } = usePeople();
-  const people = peopleResult && 'data' in peopleResult ? peopleResult.data : [];
   const { sync, syncStatus, isSyncing } = useGoogleCalendarSync();
 
   // Use shared hooks for filter management with URL sync
@@ -183,21 +162,22 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
   const activities = useMemo(
     () =>
-      ((loaderData.events ?? []) as RawEvent[])
+      ((loaderData.events ?? []) as any[])
         .map((activity) => ({
           ...activity,
-          tags: activity.tags?.map((tag) => tag.name) || [],
+          tags: activity.tags?.map((tag: any) => tag.name || tag) || [],
         }))
         .map((activity) => ({
           ...activity,
           description: activity.description ?? undefined,
-          people: activity.people?.map((person) => ({
-            ...person,
-            firstName: person.firstName ?? undefined,
-            lastName: person.lastName ?? undefined,
-          })),
-        })),
+          people: activity.people as Person[] | undefined,
+        })) as Activity[],
     [loaderData.events],
+  );
+
+  const people = useMemo(
+    () => (loaderData.people ?? []) as Person[],
+    [loaderData.people],
   );
 
   const companions = useMemo(() => {
@@ -260,7 +240,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
     setShowAddForm(!showAddForm);
   };
 
-  const editEvent = (activity: EventActivity) => {
+  const editEvent = (activity: Activity) => {
     navigate(`/events/edit/${activity.id}`);
   };
 
@@ -316,7 +296,11 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         {showAddForm && (
           <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="rounded-xl p-6 shadow-sm bg-card border border-border">
-              <EventForm showAddForm={showAddForm} onToggleForm={handleToggleEventForm} />
+              <EventForm
+                showAddForm={showAddForm}
+                people={people}
+                onToggleForm={handleToggleEventForm}
+              />
             </div>
           </div>
         )}

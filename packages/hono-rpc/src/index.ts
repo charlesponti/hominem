@@ -1,6 +1,6 @@
 import type { AppContext } from './middleware/auth';
 
-import { app, type AppType } from './app';
+import { app } from './app';
 
 /**
  * Export app for server setup
@@ -15,8 +15,10 @@ export { app };
  *   import { hc } from 'hono/client'
  *
  *   type ApiClient = ReturnType<typeof hc<AppType>>
+ *
+ * NOTE: Re-exported from app.type.ts to defer expensive type computation
  */
-export type { AppType };
+export type { AppType } from './app.type';
 
 /**
  * Routes - re-exported for convenience

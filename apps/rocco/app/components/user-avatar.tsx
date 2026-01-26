@@ -35,7 +35,6 @@ function getProxiedImageUrl(imageUrl: string | null | undefined) {
 
   // Only proxy Google user content URLs
   if (isValidGoogleHost(imageUrl)) {
-    // Use relative path - will be proxied through the same way as /api/trpc
     return `/api/images/proxy?url=${encodeURIComponent(imageUrl)}`;
   }
 

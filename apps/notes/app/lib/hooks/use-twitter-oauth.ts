@@ -1,4 +1,5 @@
-import type { TRPCClientErrorLike } from '@trpc/client';
+// Error type placeholder for Hono RPC
+type TRPCClientErrorLike = any;
 
 import { useToast } from '@hominem/ui';
 import { useCallback } from 'react';

@@ -103,4 +103,4 @@ export function error(
  * type GetUserResult = ApiResult<User>
  * type UserData = ExtractApiData<GetUserResult> // User
  */
-export type ExtractApiData<T> = T extends ApiResult<infer U> ? U : never;
+export type ExtractApiData<T> = T extends { success: true; data: infer U } ? U : never;

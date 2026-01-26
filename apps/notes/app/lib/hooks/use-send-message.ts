@@ -1,4 +1,5 @@
-import type { TRPCClientErrorLike } from '@trpc/client';
+// Error type placeholder for Hono RPC
+type TRPCClientErrorLike = any;
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';

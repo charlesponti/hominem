@@ -1,122 +1,106 @@
-import type { AppRouterOutputs, AppRouterInputs } from '@hominem/trpc';
+// Placeholder types for Hono RPC client
+// These will be replaced with proper Hono RPC types once client is updated
 
-/**
- * Pre-computed notes endpoint output types
- * These help TypeScript avoid re-inferring types repeatedly
- * and provide better IDE autocomplete and performance
- */
+export type NotesListInput = { types?: string[]; query?: string; tags?: string[]; limit?: number };
+export type NotesListOutput = { notes: Array<any> };
+export type NotesGetInput = { id: string };
+export type NotesGetOutput = any;
+export type Note = any;
+export type NotesCreateInput = { title?: string; content: string; tags?: Array<{ value: string }> };
+export type NotesCreateOutput = any;
+export type NotesUpdateInput = { id: string; title?: string; content?: string };
+export type NotesUpdateOutput = any;
+export type NotesDeleteInput = { id: string };
+export type NotesDeleteOutput = any;
+export type NotesSyncInput = { items: any[] };
+export type NotesSyncOutput = any;
 
-// Notes endpoint types
-export type NotesListInput = AppRouterInputs['notes']['list'];
-export type NotesListOutput = AppRouterOutputs['notes']['list'];
-export type NotesGetInput = AppRouterInputs['notes']['get'];
-export type NotesGetOutput = AppRouterOutputs['notes']['get'];
-export type Note = NotesListOutput['notes'][number];
-export type NotesCreateInput = AppRouterInputs['notes']['create'];
-export type NotesCreateOutput = AppRouterOutputs['notes']['create'];
-export type NotesUpdateInput = AppRouterInputs['notes']['update'];
-export type NotesUpdateOutput = AppRouterOutputs['notes']['update'];
-export type NotesDeleteInput = AppRouterInputs['notes']['delete'];
-export type NotesDeleteOutput = AppRouterOutputs['notes']['delete'];
-export type NotesSyncInput = AppRouterInputs['notes']['sync'];
-export type NotesSyncOutput = AppRouterOutputs['notes']['sync'];
+export type ChatsCreateInput = { title: string };
+export type ChatsCreateOutput = any;
+export type ChatsGetInput = { chatId: string };
+export type ChatsGetOutput = any;
+export type ChatsListInput = { limit?: number };
+export type ChatsListOutput = any;
+export type ChatsUpdateInput = { chatId: string; title: string };
+export type ChatsUpdateOutput = any;
+export type ChatsDeleteInput = { chatId: string };
+export type ChatsDeleteOutput = any;
+export type ChatsSendInput = { message: string; chatId?: string };
+export type ChatsSendOutput = any;
 
-// Chats endpoint types
-export type ChatsCreateInput = AppRouterInputs['chats']['createChat'];
-export type ChatsCreateOutput = AppRouterOutputs['chats']['createChat'];
-export type ChatsGetInput = AppRouterInputs['chats']['getChatById'];
-export type ChatsGetOutput = AppRouterOutputs['chats']['getChatById'];
-export type ChatsListInput = AppRouterInputs['chats']['getUserChats'];
-export type ChatsListOutput = AppRouterOutputs['chats']['getUserChats'];
-export type ChatsUpdateInput = AppRouterInputs['chats']['updateChatTitle'];
-export type ChatsUpdateOutput = AppRouterOutputs['chats']['updateChatTitle'];
-export type ChatsDeleteInput = AppRouterInputs['chats']['deleteChat'];
-export type ChatsDeleteOutput = AppRouterOutputs['chats']['deleteChat'];
-export type ChatsSendInput = AppRouterInputs['chats']['send'];
-export type ChatsSendOutput = AppRouterOutputs['chats']['send'];
+export type MessagesListInput = { chatId: string; limit?: number };
+export type MessagesListOutput = any;
+export type MessagesGetInput = { messageId: string };
+export type MessagesGetOutput = any;
+export type MessagesUpdateInput = { messageId: string; content: string };
+export type MessagesUpdateOutput = any;
+export type MessagesDeleteInput = { messageId: string };
+export type MessagesDeleteOutput = any;
 
-// Messages endpoint types
-export type MessagesListInput = AppRouterInputs['chats']['getMessages'];
-export type MessagesListOutput = AppRouterOutputs['chats']['getMessages'];
-export type MessagesGetInput = AppRouterInputs['messages']['getMessageById'];
-export type MessagesGetOutput = AppRouterOutputs['messages']['getMessageById'];
-export type MessagesUpdateInput = AppRouterInputs['messages']['updateMessage'];
-export type MessagesUpdateOutput = AppRouterOutputs['messages']['updateMessage'];
-export type MessagesDeleteInput = AppRouterInputs['messages']['deleteMessage'];
-export type MessagesDeleteOutput = AppRouterOutputs['messages']['deleteMessage'];
+export type ContentListInput = { limit?: number };
+export type ContentListOutput = { items: Array<any> };
+export type ContentGetInput = { id: string };
+export type ContentGetOutput = any;
+export type ContentCreateInput = { title: string; description?: string };
+export type ContentCreateOutput = any;
+export type ContentUpdateInput = { id: string };
+export type ContentUpdateOutput = any;
+export type ContentDeleteInput = { id: string };
+export type ContentDeleteOutput = any;
 
-// Content endpoint types
-export type ContentListInput = AppRouterInputs['content']['list'];
-export type ContentListOutput = AppRouterOutputs['content']['list'];
-export type ContentGetInput = AppRouterInputs['content']['getById'];
-export type ContentGetOutput = AppRouterOutputs['content']['getById'];
-export type ContentCreateInput = AppRouterInputs['content']['create'];
-export type ContentCreateOutput = AppRouterOutputs['content']['create'];
-export type ContentUpdateInput = AppRouterInputs['content']['update'];
-export type ContentUpdateOutput = AppRouterOutputs['content']['update'];
-export type ContentDeleteInput = AppRouterInputs['content']['delete'];
-export type ContentDeleteOutput = AppRouterOutputs['content']['delete'];
+export type ContentStrategiesListInput = {};
+export type ContentStrategiesListOutput = any;
+export type ContentStrategiesGetInput = { id: string };
+export type ContentStrategiesGetOutput = any;
+export type ContentStrategiesCreateInput = any;
+export type ContentStrategiesCreateOutput = any;
+export type ContentStrategiesUpdateInput = { id: string };
+export type ContentStrategiesUpdateOutput = any;
+export type ContentStrategiesDeleteInput = { id: string };
+export type ContentStrategiesDeleteOutput = any;
+export type ContentStrategiesGenerateInput = any;
+export type ContentStrategiesGenerateOutput = any;
 
-// Content strategies endpoint types
-export type ContentStrategiesListInput = AppRouterInputs['contentStrategies']['list'];
-export type ContentStrategiesListOutput = AppRouterOutputs['contentStrategies']['list'];
-export type ContentStrategiesGetInput = AppRouterInputs['contentStrategies']['getById'];
-export type ContentStrategiesGetOutput = AppRouterOutputs['contentStrategies']['getById'];
-export type ContentStrategiesCreateInput = AppRouterInputs['contentStrategies']['create'];
-export type ContentStrategiesCreateOutput = AppRouterOutputs['contentStrategies']['create'];
-export type ContentStrategiesUpdateInput = AppRouterInputs['contentStrategies']['update'];
-export type ContentStrategiesUpdateOutput = AppRouterOutputs['contentStrategies']['update'];
-export type ContentStrategiesDeleteInput = AppRouterInputs['contentStrategies']['delete'];
-export type ContentStrategiesDeleteOutput = AppRouterOutputs['contentStrategies']['delete'];
-export type ContentStrategiesGenerateInput = AppRouterInputs['contentStrategies']['generate'];
-export type ContentStrategiesGenerateOutput = AppRouterOutputs['contentStrategies']['generate'];
+export type TweetGenerateInput = any;
+export type TweetGenerateOutput = any;
 
-// Tweet endpoint types
-export type TweetGenerateInput = AppRouterInputs['tweet']['generate'];
-export type TweetGenerateOutput = AppRouterOutputs['tweet']['generate'];
+export type EventsListInput = {};
+export type EventsListOutput = any;
+export type EventsGetInput = { id: string };
+export type EventsGetOutput = any;
+export type EventsCreateInput = { title: string; date?: string };
+export type EventsCreateOutput = any;
+export type EventsUpdateInput = { id: string };
+export type EventsUpdateOutput = any;
+export type EventsDeleteInput = { id: string };
+export type EventsDeleteOutput = any;
 
-// Events endpoint types
-export type EventsListInput = AppRouterInputs['events']['list'];
-export type EventsListOutput = AppRouterOutputs['events']['list'];
-export type EventsGetInput = AppRouterInputs['events']['get'];
-export type EventsGetOutput = AppRouterOutputs['events']['get'];
-export type EventsCreateInput = AppRouterInputs['events']['create'];
-export type EventsCreateOutput = AppRouterOutputs['events']['create'];
-export type EventsUpdateInput = AppRouterInputs['events']['update'];
-export type EventsUpdateOutput = AppRouterOutputs['events']['update'];
-export type EventsDeleteInput = AppRouterInputs['events']['delete'];
-export type EventsDeleteOutput = AppRouterOutputs['events']['delete'];
+export type GoalsListInput = {};
+export type GoalsListOutput = any;
+export type GoalsGetInput = { id: string };
+export type GoalsGetOutput = any;
+export type GoalsCreateInput = { title: string };
+export type GoalsCreateOutput = any;
+export type GoalsUpdateInput = { id: string };
+export type GoalsUpdateOutput = any;
+export type GoalsDeleteInput = { id: string };
+export type GoalsDeleteOutput = any;
+export type GoalsArchiveInput = { id: string };
+export type GoalsArchiveOutput = any;
 
-// Goals endpoint types
-export type GoalsListInput = AppRouterInputs['goals']['list'];
-export type GoalsListOutput = AppRouterOutputs['goals']['list'];
-export type GoalsGetInput = AppRouterInputs['goals']['get'];
-export type GoalsGetOutput = AppRouterOutputs['goals']['get'];
-export type GoalsCreateInput = AppRouterInputs['goals']['create'];
-export type GoalsCreateOutput = AppRouterOutputs['goals']['create'];
-export type GoalsUpdateInput = AppRouterInputs['goals']['update'];
-export type GoalsUpdateOutput = AppRouterOutputs['goals']['update'];
-export type GoalsDeleteInput = AppRouterInputs['goals']['delete'];
-export type GoalsDeleteOutput = AppRouterOutputs['goals']['delete'];
-export type GoalsArchiveInput = AppRouterInputs['goals']['archive'];
-export type GoalsArchiveOutput = AppRouterOutputs['goals']['archive'];
+export type SearchInput = { query: string };
+export type SearchOutput = any;
 
-// Search endpoint types
-export type SearchInput = AppRouterInputs['search']['search'];
-export type SearchOutput = AppRouterOutputs['search']['search'];
+export type LocationSearchInput = { address: string };
+export type LocationSearchOutput = any;
 
-// Location endpoint types
-export type LocationSearchInput = AppRouterInputs['location']['geocode'];
-export type LocationSearchOutput = AppRouterOutputs['location']['geocode'];
-
-// Twitter endpoint types
-export type TwitterAccountsInput = AppRouterInputs['twitter']['accounts'];
-export type TwitterAccountsOutput = AppRouterOutputs['twitter']['accounts'];
-export type TwitterAuthorizeInput = AppRouterInputs['twitter']['authorize'];
-export type TwitterAuthorizeOutput = AppRouterOutputs['twitter']['authorize'];
-export type TwitterDisconnectInput = AppRouterInputs['twitter']['disconnect'];
-export type TwitterDisconnectOutput = AppRouterOutputs['twitter']['disconnect'];
-export type TwitterTweetInput = AppRouterInputs['twitter']['post'];
-export type TwitterTweetOutput = AppRouterOutputs['twitter']['post'];
-export type TwitterSyncInput = AppRouterInputs['twitter']['sync'];
-export type TwitterSyncOutput = AppRouterOutputs['twitter']['sync'];
+export type TwitterAccountsInput = {};
+export type TwitterAccountsOutput = any;
+export type TwitterAuthorizeInput = any;
+export type TwitterAuthorizeOutput = any;
+export type TwitterDisconnectInput = { accountId: string };
+export type TwitterDisconnectOutput = any;
+export type TwitterTweetInput = { content: string };
+export type TwitterTweetOutput = any;
+export type TwitterSyncInput = {};
+export type TwitterSyncOutput = any;
