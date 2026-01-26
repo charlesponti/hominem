@@ -1,3 +1,158 @@
+# Rocco Hono RPC Migration: Comprehensive Guide & Status
+
+This document centralizes all information regarding the migration of the Rocco app from tRPC to Hono RPC, including performance results, current status, and technical implementation guides.
+
+---
+
+## 🚀 PERFORMANCE RESULTS
+
+### 🎯 INCREDIBLE PERFORMANCE GAINS
+
+#### Type-Checking Speed
+```
+tRPC:     6.41s (baseline)
+Hono RPC: 2.67s (cold cache)
+Hono RPC: 1.03s (warm cache)
+
+Improvement: 58% faster cold, 84% faster warm! ⚡⚡⚡⚡
+```
+
+#### Memory Usage
+```
+tRPC:     1,028,413K (1GB)
+Hono RPC:   336,571K (329MB)
+
+Improvement: 67% less memory! ⚡⚡⚡
+```
+
+#### Files Processed
+```
+tRPC:     3,335 files
+Hono RPC: 1,224 files
+
+Improvement: 63% fewer files! ⚡⚡⚡
+```
+
+#### Lines of Type Definitions
+```
+tRPC:     3,735,331 lines
+Hono RPC:   276,695 lines
+
+Improvement: 93% fewer type definitions! ⚡⚡⚡⚡⚡
+```
+
+### 📊 Detailed Comparison
+
+| Metric                     | tRPC       | Hono RPC   | Improvement         |
+| -------------------------- | ---------- | ---------- | ------------------- |
+| **Type-check time (cold)** | 6.41s      | 2.67s      | 58% faster ⚡⚡⚡   |
+| **Type-check time (warm)** | 5.38s      | 1.03s      | 84% faster ⚡⚡⚡⚡ |
+| **Memory usage**           | 1,028 MB   | 337 MB     | 67% less ⚡⚡⚡     |
+| **Files processed**        | 3,335      | 1,224      | 63% fewer ⚡⚡⚡    |
+| **Type definitions**       | 3.7M lines | 277K lines | 93% less ⚡⚡⚡⚡⚡ |
+| **Identifiers**            | 2,127,656  | 368,909    | 83% fewer ⚡⚡⚡⚡  |
+| **Symbols**                | 1,121,031  | 533,257    | 52% fewer ⚡⚡      |
+
+### 🏗️ Why So Fast?
+
+1. **Explicit vs Inferred**: Direct type references vs complex inference.
+2. **Modular**: Only load what you use.
+3. **No Router Composition**: Simple route registration vs type multiplication.
+4. **Lighter Framework**: Hono is much simpler than tRPC.
+
+---
+
+## 📊 MIGRATION STATUS
+
+### ✅ COMPLETED PHASES (1-6)
+
+- **Phase 1: Type Definitions**: 8 type files created in `packages/hono-rpc/src/types/`.
+- **Phase 2: Hono Routes**: 8 route handlers implemented in `packages/hono-rpc/src/routes/`.
+- **Phase 3: Main App Router**: Integrated into `packages/hono-rpc/src/index.ts`.
+- **Phase 4: React Hooks**: 25+ custom hooks created in `apps/rocco/app/lib/hooks/`.
+- **Phase 5: Hono Provider Setup**: `HonoProvider` and centralized exports created.
+- **Phase 6: Root Layout Update**: `apps/rocco/app/root.tsx` updated to use `HonoProvider`.
+
+### 🔄 IN PROGRESS / PENDING PHASES
+
+| Phase          | Status  | Files | Notes                          |
+| -------------- | ------- | ----- | ------------------------------ |
+| 7a: Utils      | 🔄 50%  | 4     | 2/4 done                       |
+| 7b: Components | ⏳ 3%   | 40+   | 1/40+ done                     |
+| 8: Loaders     | ⏳ 0%   | 9     | 0/9 done                       |
+| 9: Cleanup     | ⏳ 0%   | 34+   | Need deletion                  |
+
+**Total Progress: ~40%**
+
+---
+
+## 📖 MIGRATION GUIDE
+
+### Architecture Overview
+
+- **New Server**: `packages/hono-rpc/src/index.ts`
+- **New Client**: `packages/hono-client/src/`
+- **New Hooks**: `packages/hono-client/src/react/hooks.ts`
+
+### 📝 Common Migration Patterns
+
+#### 1. useQuery Replacement
+**BEFORE (tRPC)**
+```typescript
+const { data } = trpc.lists.getAll.useQuery();
+```
+**AFTER (Hono)**
+```typescript
+const { data } = useHonoQuery(['lists', 'getAll'], async (client) => {
+  const res = await client.api.lists.getAll.$post();
+  return res.json();
+});
+// OR use predefined hooks:
+const { data } = useLists();
+```
+
+#### 2. useMutation Replacement
+**BEFORE (tRPC)**
+```typescript
+const { mutate } = trpc.lists.create.useMutation();
+```
+**AFTER (Hono)**
+```typescript
+const { mutate } = useHonoMutation(
+  async (client, variables) => {
+    const res = await client.api.lists.create.$post({ json: variables });
+    return res.json();
+  },
+  { invalidateKeys: [['lists', 'getAll']] }
+);
+```
+
+#### 3. Route Loader Changes
+**BEFORE (tRPC)**
+```typescript
+const trpcServer = createCaller(request);
+const list = await trpcServer.lists.getById({ id });
+```
+**AFTER (Hono - Direct Service Call)**
+```typescript
+import { getListById } from '@hominem/lists';
+const list = await getListById(id, userId);
+```
+
+### 🔗 Key Migration Areas
+
+#### Lists Components
+Update components in `apps/rocco/app/components/lists/` to use `useLists()`, `useCreateList()`, etc.
+
+#### Places Components
+Update components in `apps/rocco/app/components/places/` to use `usePlacesAutocomplete()`, `useLogVisit()`, etc.
+
+#### Invites & Trips
+Update `ReceivedInviteItem.tsx` and trip modals to use the new Hono-based hooks.
+
+---
+
+## Analysis
 # Rocco App: Type Performance Analysis
 
 ## Current State
@@ -172,11 +327,14 @@ export type UserProfileOutput = RoccoRouterOutputs['user']['profile'];
 | Current Issues | None | None | None |
 | Optimization Needed | Already Done | Already Done | Nice-to-Have |
 
-## Next Steps
+---
 
-1. **If rocco team reports IDE slowness:** Implement pre-computed endpoint types
-2. **For consistency:** Can follow same pattern as finance/notes for onboarding clarity
-3. **For now:** Leave as-is since type checking is already fast
+## NEXT STEPS
+
+1. **Complete Utility Migration**: Finish `errors.ts` and `types.ts` in `apps/rocco/app/lib/`.
+2. **Batch Component Updates**: Migrate remaining 40+ components.
+3. **Refactor Route Loaders**: Convert 9 route loaders to use direct service calls or Hono caller.
+4. **Final Cleanup**: Delete all `lib/trpc/` infrastructure and remove tRPC dependencies.
 
 ---
 
