@@ -1,5 +1,4 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
-import { invitesService } from '@hominem/invites-services';
 import { PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { redirect } from 'react-router';
@@ -16,25 +15,22 @@ export async function loader(_args: Route.LoaderArgs) {
     return redirect('/');
   }
 
-  const data = await invitesService.getSent();
-
-  return { invites: data };
+  return { invites: null };
 }
 
 export default function ListSentInvites({ loaderData }: Route.ComponentProps) {
-  const { data, isLoading } = useSentInvites(undefined, {
-    initialData: loaderData.invites,
-  });
+  const { data: invitesData, isLoading } = useSentInvites();
+  const invites = invitesData?.success ? invitesData.data : [];
 
   return (
     <>
       <PageTitle title="Sent Invites" />
       <div>
         {isLoading && <Loading />}
-        {data?.length === 0 && 'Your invites will appear here.'}
-        {data && data.length > 0 && (
+        {invites?.length === 0 && 'Your invites will appear here.'}
+        {invites && invites.length > 0 && (
           <ul className="space-y-2">
-            {data.map((invite) => (
+            {invites.map((invite) => (
               <li key={invite.listId} className="card shadow-md p-4">
                 <p>
                   <span className="font-semibold mr-2">List ID:</span>

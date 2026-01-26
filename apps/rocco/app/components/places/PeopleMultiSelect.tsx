@@ -43,7 +43,8 @@ export function PeopleMultiSelect({
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  const { data: people = [], isLoading } = usePeople();
+  const { data: peopleResult, isLoading } = usePeople();
+  const people = peopleResult?.success ? peopleResult.data : [];
   const createPersonMutation = useCreatePerson();
 
   const selectedPeople = useMemo(() => {

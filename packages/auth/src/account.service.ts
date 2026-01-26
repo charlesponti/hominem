@@ -1,11 +1,11 @@
 import { and, eq } from 'drizzle-orm'
-import { db } from '@hominem/db'
 import { account } from '@hominem/db/schema'
 
 export type AccountRecord = typeof account.$inferSelect
 export type AccountInsert = typeof account.$inferInsert
 
 export async function listAccountsByProvider(userId: string, provider: string) {
+  const { db } = await import('@hominem/db')
   return db
     .select({
       id: account.id,
@@ -21,6 +21,7 @@ export async function getAccountByUserAndProvider(
   userId: string,
   provider: string
 ): Promise<AccountRecord | null> {
+  const { db } = await import('@hominem/db')
   const [result] = await db
     .select()
     .from(account)
@@ -34,6 +35,7 @@ export async function getAccountByProviderAccountId(
   providerAccountId: string,
   provider: string
 ): Promise<AccountRecord | null> {
+  const { db } = await import('@hominem/db')
   const [result] = await db
     .select()
     .from(account)
@@ -44,6 +46,7 @@ export async function getAccountByProviderAccountId(
 }
 
 export async function createAccount(data: AccountInsert): Promise<AccountRecord | null> {
+  const { db } = await import('@hominem/db')
   const [created] = await db.insert(account).values(data).returning()
   return created ?? null
 }
@@ -52,6 +55,7 @@ export async function updateAccount(
   id: string,
   updates: Partial<AccountInsert>
 ): Promise<AccountRecord | null> {
+  const { db } = await import('@hominem/db')
   const [updated] = await db.update(account).set(updates).where(eq(account.id, id)).returning()
   return updated ?? null
 }
@@ -61,6 +65,7 @@ export async function deleteAccountForUser(
   userId: string,
   provider: string
 ): Promise<boolean> {
+  const { db } = await import('@hominem/db')
   const result = await db
     .delete(account)
     .where(and(eq(account.id, id), eq(account.userId, userId), eq(account.provider, provider)))

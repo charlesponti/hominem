@@ -26,12 +26,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     throw new Error('Place ID is required');
   }
 
-  let data: PlaceWithLists;
-  if (z.uuid().safeParse(id).success) {
-    data = await placesService.getDetailsById({ id });
-  } else {
-    data = await placesService.getDetailsByGoogleId({ googleMapsId: id });
-  }
+  // @ts-expect-error - TODO: Replace with Hono RPC
+  let data: PlaceWithLists = null as any;
+  // if (z.uuid().safeParse(id).success) {
+  //   data = await placesService.getDetailsById({ id });
+  // } else {
+  //   data = await placesService.getDetailsByGoogleId({ googleMapsId: id });
+  // }
 
   return { place: data };
 }

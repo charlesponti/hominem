@@ -46,10 +46,12 @@ export default function PlacesNearby({
       ? { latitude: providedLatitude, longitude: providedLongitude }
       : currentLocation || DEFAULT_LOCATION;
   const {
-    data: places = [],
+    data: placesResult,
     isLoading,
     error,
   } = useNearbyPlaces(location.latitude, location.longitude, radiusMeters);
+  
+  const places = placesResult?.success ? placesResult.data : [];
   const title = <h2 className="heading-2">Nearby</h2>;
   const radiusKm = (radiusMeters ?? 5000) / 1000;
 

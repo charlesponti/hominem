@@ -1,4 +1,3 @@
-import { db } from '@hominem/db';
 import {
   type NewVectorDocument,
   type VectorDocumentSelect,
@@ -29,6 +28,7 @@ export async function upsertVectorDocuments(documents: NewVectorDocument[]): Pro
     return;
   }
 
+  const { db } = await import('@hominem/db');
   await db
     .insert(vectorDocuments)
     .values(documents)
@@ -64,6 +64,7 @@ export async function queryVectorDocuments(params: {
     conditions.push(eq(vectorDocuments.userId, userId));
   }
 
+  const { db } = await import('@hominem/db');
   const results = await db
     .select({
       id: vectorDocuments.id,
@@ -216,6 +217,7 @@ export namespace VectorService {
         sourceType: 'markdown',
       }));
 
+      const { db } = await import('@hominem/db');
       await db.insert(vectorDocuments).values(documents);
       totalChunks += batch.length;
     }
@@ -240,6 +242,7 @@ export namespace VectorService {
   }> {
     const embedding = await generateEmbedding(query);
 
+    const { db } = await import('@hominem/db');
     const results = await db
       .select({
         id: vectorDocuments.id,
@@ -276,6 +279,7 @@ export namespace VectorService {
     limit = 50,
     offset = 0,
   ): Promise<VectorDocumentSelect[]> {
+    const { db } = await import('@hominem/db');
     const results = await db
       .select()
       .from(vectorDocuments)
@@ -294,6 +298,7 @@ export namespace VectorService {
       conditions.push(eq(vectorDocuments.source, source));
     }
 
+    const { db } = await import('@hominem/db');
     await db.delete(vectorDocuments).where(and(...conditions));
 
     return { success: true };

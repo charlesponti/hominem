@@ -54,6 +54,7 @@ bun-debug.log*
 # TypeScript
 packages/trpc/src/test/trpc-test-utils.d.ts
 trace.json
+*.trace
 .type-traces
 
 # @ark/attest snapshots (commit these to track type performance over time)

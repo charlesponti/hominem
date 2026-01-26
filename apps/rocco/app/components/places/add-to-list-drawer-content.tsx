@@ -33,7 +33,8 @@ export const AddToListDrawerContent = ({
   const [searchQuery, setSearchQuery] = useState('');
   const revalidator = useRevalidator();
 
-  const { isLoading, data: rawLists } = useLists();
+  const { isLoading, data: rawListsResult } = useLists();
+  const rawLists = rawListsResult?.success ? rawListsResult.data : [];
 
   const lists = useMemo(() => {
     if (!(rawLists && googleMapsId)) {

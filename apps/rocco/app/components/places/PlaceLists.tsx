@@ -19,10 +19,12 @@ const PlaceLists = ({ place }: Props) => {
   const resolvedPlaceId = place.id;
   const googleMapsId = place.googleMapsId;
 
-  const { data: listsContainingPlace = [], isLoading } = useListsContainingPlace(
+  const { data: listsResult, isLoading } = useListsContainingPlace(
     resolvedPlaceId || undefined,
     googleMapsId || undefined,
   );
+  
+  const listsContainingPlace = listsResult?.success ? listsResult.data : [];
 
   if (!isAuthenticated) {
     return null;

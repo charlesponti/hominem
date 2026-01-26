@@ -19,11 +19,14 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const isUuid = z.uuid().safeParse(placeId).success;
 
   // Fetch place details
-  const { data: placeDetails } = usePlaceById(isAuthenticated && isUuid ? placeId : undefined);
+  const { data: placeDetailsResult } = usePlaceById(isAuthenticated && isUuid ? placeId : undefined);
 
-  const { data: placeDetailsByGoogleId } = usePlaceByGoogleId(
+  const { data: placeDetailsByGoogleIdResult } = usePlaceByGoogleId(
     isAuthenticated && !isUuid ? placeId : undefined,
   );
+
+  const placeDetails = placeDetailsResult?.success ? placeDetailsResult.data : null;
+  const placeDetailsByGoogleId = placeDetailsByGoogleIdResult?.success ? placeDetailsByGoogleIdResult.data : null;
 
   const place = placeDetails || placeDetailsByGoogleId;
   const resolvedPlaceId = isUuid ? placeId : place?.id;

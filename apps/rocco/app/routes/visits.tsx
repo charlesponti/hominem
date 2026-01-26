@@ -15,7 +15,7 @@ export default function VisitsPage() {
   const [endDate, setEndDate] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  const { data: visits, isLoading } = useMyVisits(
+  const { data: visitsData, isLoading } = useMyVisits(
     { startDate: startDate || undefined, endDate: endDate || undefined },
     { enabled: isAuthenticated },
   );
@@ -28,6 +28,8 @@ export default function VisitsPage() {
       </div>
     );
   }
+
+  const visits = visitsData?.success ? visitsData.data : [];
 
   const filteredVisits =
     visits
