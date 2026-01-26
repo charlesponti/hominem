@@ -10,10 +10,8 @@ export interface ClientConfig {
 
 export class HonoClient {
   private client: ReturnType<typeof hc<AppType>>;
-  private config: ClientConfig;
 
   constructor(config: ClientConfig) {
-    this.config = config;
     this.client = hc<AppType>(config.baseUrl, {
       fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
         const token = await config.getAuthToken();
