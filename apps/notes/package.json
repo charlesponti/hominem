@@ -20,6 +20,8 @@
     "@hominem/ai": "workspace:*",
     "@hominem/auth": "workspace:*",
     "@hominem/db": "workspace:*",
+    "@hominem/hono-client": "workspace:*",
+    "@hominem/hono-rpc": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/trpc": "workspace:*",
     "@hominem/ui": "workspace:*",
