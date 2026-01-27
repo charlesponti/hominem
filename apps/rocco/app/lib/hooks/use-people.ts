@@ -30,9 +30,7 @@ export const useCreatePerson = () => {
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.people.list() );
-        }
+        utils.invalidate(queryKeys.people.list());
       },
     },
   );

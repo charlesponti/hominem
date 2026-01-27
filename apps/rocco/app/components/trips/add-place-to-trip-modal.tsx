@@ -14,7 +14,7 @@ import { useLists, useAddItemToTrip } from '~/lib/hono';
 export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
   const { isOpen, open, close } = useModal();
   const { data: listsResult } = useLists();
-  const lists = listsResult?.success ? listsResult.data : [];
+  const lists = listsResult ?? [];
   const addItemMutation = useAddItemToTrip();
   const revalidator = useRevalidator();
 

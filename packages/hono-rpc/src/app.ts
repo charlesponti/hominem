@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 
 import type { AppContext } from './middleware/auth';
+import { errorMiddleware } from './middleware/error';
 
 import { adminRoutes } from './routes/admin';
 import { bookmarksRoutes } from './routes/bookmarks';
@@ -36,6 +37,7 @@ import { vectorRoutes } from './routes/vector';
  * expensive type computation during routine type checking.
  */
 export const app = new Hono<AppContext>()
+  .use(errorMiddleware)  // Global error handler - MUST BE FIRST
   .basePath('/api')
   .route('/admin', adminRoutes)
   .route('/bookmarks', bookmarksRoutes)

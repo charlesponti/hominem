@@ -63,71 +63,71 @@ export const importCommand = new Command('import')
           let paragraphBuffer: string[] = [];
           let notesCreated = 0;
 
-          async function flushParagraphBuffer() {
-            if (!paragraphBuffer.length) return;
+           async function flushParagraphBuffer() {
+             if (!paragraphBuffer.length) return;
 
-            const content = paragraphBuffer.join('\n\n');
-            const noteData: NoteData = {
-              type: 'note',
-              title: currentHeading || `${baseName} - Section ${notesCreated + 1}`,
-              content,
-              tags: [
-                { value: 'markdown-import' },
-                { value: 'file-section' },
-                { value: baseName.toLowerCase() },
-              ],
-            };
+             const content = paragraphBuffer.join('\n\n');
+             const noteData: NoteData = {
+               type: 'note',
+               title: currentHeading || `${baseName} - Section ${notesCreated + 1}`,
+               content,
+               tags: [
+                 { value: 'markdown-import' },
+                 { value: 'file-section' },
+                 { value: baseName.toLowerCase() },
+               ],
+             };
 
-            try {
-              const res = await trpc.api.notes.$post({ json: noteData });
-              const result = await res.json();
-              if (result?.success) {
-                consola.success(`Created note: ${result.data.title || 'Untitled'}`);
-                notesCreated++;
-              } else {
-                consola.error(`Failed to create note: ${result?.message ?? 'Unknown error'}`);
-              }
-            } catch (error) {
-              consola.error(`Failed to create note: ${error}`);
-            }
+             try {
+               const res = await trpc.api.notes.$post({ json: noteData });
+               const result = await res.json();
+               if (result?.id) {
+                 consola.success(`Created note: ${result.title || 'Untitled'}`);
+                 notesCreated++;
+               } else {
+                 consola.error(`Failed to create note: Unknown error`);
+               }
+             } catch (error) {
+               consola.error(`Failed to create note: ${error}`);
+             }
 
-            paragraphBuffer = [];
-          }
+             paragraphBuffer = [];
+           }
 
-          async function processBulletPoint(line: string) {
-            const { isTask, isComplete } = detectTask(line);
-            const noteData: NoteData = {
-              type: isTask ? 'task' : 'note',
-              title: currentHeading || baseName,
-              content: line,
-              tags: [
-                { value: 'markdown-import' },
-                { value: 'bullet-point' },
-                { value: baseName.toLowerCase() },
-              ],
-              ...(isTask && {
-                taskMetadata: {
-                  status: isComplete ? 'done' : 'todo',
-                  priority: 'medium',
-                },
-              }),
-            };
+           async function processBulletPoint(line: string) {
+             const { isTask, isComplete } = detectTask(line);
+             const noteData: NoteData = {
+               type: isTask ? 'task' : 'note',
+               title: currentHeading || baseName,
+               content: line,
+               tags: [
+                 { value: 'markdown-import' },
+                 { value: 'bullet-point' },
+                 { value: baseName.toLowerCase() },
+               ],
+               ...(isTask && {
+                 taskMetadata: {
+                   status: isComplete ? 'done' : 'todo',
+                   priority: 'medium',
+                 },
+               }),
+             };
 
-            try {
-              const res = await trpc.api.notes.$post({ json: noteData });
-              const _result = await res.json();
-              if (_result?.success) {
-                consola.success(`Created ${isTask ? 'task' : 'note'}: ${line.substring(0, 50)}...`);
-                notesCreated++;
-              } else {
-                consola.error(
-                  `Failed to create bullet point note: ${_result?.message ?? 'Unknown error'}`,
-                );
-              }
-            } catch (error) {
-              consola.error(`Failed to create bullet point note: ${error}`);
-            }
-          }
+             try {
+               const res = await trpc.api.notes.$post({ json: noteData });
+               const _result = await res.json();
+               if (_result?.id) {
+                 consola.success(`Created ${isTask ? 'task' : 'note'}: ${line.substring(0, 50)}...`);
+                 notesCreated++;
+               } else {
+                 consola.error(
+                   `Failed to create bullet point note: Unknown error`,
+                 );
+               }
+             } catch (error) {
+               consola.error(`Failed to create bullet point note: ${error}`);
+             }
+           }
 
           for await (const line of rl) {
             const trimmed = line.trim();
@@ -140,34 +140,34 @@ export const importCommand = new Command('import')
               currentHeadingLevel = headingMatch[1].length;
 
               // If preserve structure is enabled, create a note for the heading itself
-              if (options.preserveStructure) {
-                const headingNoteData: NoteData = {
-                  type: 'note',
-                  title: currentHeading,
-                  content: `# ${currentHeading}\n\nHeading level ${currentHeadingLevel}`,
-                  tags: [
-                    { value: 'markdown-import' },
-                    { value: 'heading' },
-                    { value: `h${currentHeadingLevel}` },
-                    { value: baseName.toLowerCase() },
-                  ],
-                };
+               if (options.preserveStructure) {
+                 const headingNoteData: NoteData = {
+                   type: 'note',
+                   title: currentHeading,
+                   content: `# ${currentHeading}\n\nHeading level ${currentHeadingLevel}`,
+                   tags: [
+                     { value: 'markdown-import' },
+                     { value: 'heading' },
+                     { value: `h${currentHeadingLevel}` },
+                     { value: baseName.toLowerCase() },
+                   ],
+                 };
 
-                try {
-                  const res = await trpc.api.notes.$post({ json: headingNoteData });
-                  const _result = await res.json();
-                  if (_result?.success) {
-                    consola.success(`Created heading note: ${currentHeading}`);
-                    notesCreated++;
-                  } else {
-                    consola.error(
-                      `Failed to create heading note: ${_result?.message ?? 'Unknown error'}`,
-                    );
-                  }
-                } catch (error) {
-                  consola.error(`Failed to create heading note: ${error}`);
-                }
-              }
+                 try {
+                   const res = await trpc.api.notes.$post({ json: headingNoteData });
+                   const _result = await res.json();
+                   if (_result?.id) {
+                     consola.success(`Created heading note: ${currentHeading}`);
+                     notesCreated++;
+                   } else {
+                     consola.error(
+                       `Failed to create heading note: Unknown error`,
+                     );
+                   }
+                 } catch (error) {
+                   consola.error(`Failed to create heading note: ${error}`);
+                 }
+               }
             }
             // Check for bullet points
             else if (/^[-*]\s+/.test(trimmed)) {
@@ -196,20 +196,20 @@ export const importCommand = new Command('import')
                   ],
                 };
 
-                try {
-                  const res = await trpc.api.notes.$post({ json: noteData });
-                  const _result = await res.json();
-                  if (_result?.success) {
-                    consola.success(`Created paragraph note: ${trimmed.substring(0, 50)}...`);
-                    notesCreated++;
-                  } else {
-                    consola.error(
-                      `Failed to create paragraph note: ${_result?.message ?? 'Unknown error'}`,
-                    );
-                  }
-                } catch (error) {
-                  consola.error(`Failed to create paragraph note: ${error}`);
-                }
+                 try {
+                   const res = await trpc.api.notes.$post({ json: noteData });
+                   const _result = await res.json();
+                   if (_result?.id) {
+                     consola.success(`Created paragraph note: ${trimmed.substring(0, 50)}...`);
+                     notesCreated++;
+                   } else {
+                     consola.error(
+                       `Failed to create paragraph note: Unknown error`,
+                     );
+                   }
+                 } catch (error) {
+                   consola.error(`Failed to create paragraph note: ${error}`);
+                 }
               }
             } else {
               // Empty line - flush buffer if combining paragraphs

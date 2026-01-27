@@ -16,7 +16,7 @@ import {
 export class RoccoMocker {
   mockListsGetAll(data: List[] | undefined, isLoading = false, error: Error | null = null) {
     vi.mocked(useLists).mockReturnValue({
-      data: data ? { success: true, data } : undefined,
+      data,
       isLoading,
       error,
     } as any);
@@ -24,7 +24,7 @@ export class RoccoMocker {
 
   mockListsGetById(data: List | undefined, isLoading = false, error: Error | null = null) {
     vi.mocked(useListById).mockReturnValue({
-      data: data ? { success: true, data } : undefined,
+      data,
       isLoading,
       error,
     } as any);
@@ -36,7 +36,7 @@ export class RoccoMocker {
     error: Error | null = null,
   ) {
     vi.mocked(useNearbyPlaces).mockReturnValue({
-      data: data ? { success: true, data } : undefined,
+      data,
       isLoading,
       error,
     } as any);
@@ -48,7 +48,7 @@ export class RoccoMocker {
     error: Error | null = null,
   ) {
     vi.mocked(usePlacesAutocomplete).mockReturnValue({
-      data: data ? { success: true, data } : undefined,
+      data,
       isLoading,
       error,
     } as any);
@@ -56,7 +56,7 @@ export class RoccoMocker {
 
   mockPlacesGetById(data: Place | undefined, isLoading = false, error: Error | null = null) {
     vi.mocked(usePlaceById).mockReturnValue({
-      data: data ? { success: true, data } : undefined,
+      data,
       isLoading,
       error,
     } as any);

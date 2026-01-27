@@ -42,9 +42,9 @@ export const useSentInvites = () =>
  */
 export const useListInvites = (listId: string | undefined) =>
   useHonoQuery<InvitesGetByListOutput>(
-    queryKeys.invites.byList(listId || '') ,
+    queryKeys.invites.byList(listId || ''),
     async (client) => {
-      if (!listId) return { success: true, data: [] } as unknown as InvitesGetByListOutput;
+      if (!listId) return [] as unknown as InvitesGetByListOutput;
       const res = await client.api.invites['by-list'].$post({ json: { listId } });
       return res.json() as Promise<InvitesGetByListOutput>;
     },
@@ -65,10 +65,8 @@ export const useCreateInvite = () => {
     },
     {
       onSuccess: (result, variables) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.invites.sent() );
-          utils.invalidate(queryKeys.invites.byList(variables.listId) );
-        }
+        utils.invalidate(queryKeys.invites.sent());
+        utils.invalidate(queryKeys.invites.byList(variables.listId));
       },
     },
   );
@@ -86,10 +84,8 @@ export const useAcceptInvite = () => {
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.invites.received() );
-          utils.invalidate(queryKeys.lists.all() );
-        }
+        utils.invalidate(queryKeys.invites.received());
+        utils.invalidate(queryKeys.lists.all());
       },
     },
   );
@@ -107,9 +103,7 @@ export const useDeclineInvite = () => {
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.invites.received() );
-        }
+        utils.invalidate(queryKeys.invites.received());
       },
     },
   );
@@ -127,10 +121,8 @@ export const useDeleteInvite = () => {
     },
     {
       onSuccess: (result, variables) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.invites.sent() );
-          utils.invalidate(queryKeys.invites.byList(variables.listId) );
-        }
+        utils.invalidate(queryKeys.invites.sent());
+        utils.invalidate(queryKeys.invites.byList(variables.listId));
       },
     },
   );

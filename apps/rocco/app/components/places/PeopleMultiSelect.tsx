@@ -44,7 +44,7 @@ export function PeopleMultiSelect({
   const [isCreating, setIsCreating] = useState(false);
 
   const { data: peopleResult, isLoading } = usePeople();
-  const people = peopleResult?.success ? peopleResult.data : [];
+  const people = peopleResult ?? [];
   const createPersonMutation = useCreatePerson();
 
   const selectedPeople = useMemo(() => {

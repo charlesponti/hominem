@@ -10,7 +10,7 @@ import {
   listInstitutionConnections,
   getAccountsForInstitution,
 } from '@hominem/finance-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -73,6 +73,13 @@ function serializeTransaction(t: any): TransactionData {
   };
 }
 
+function throwServiceError(err: any): never {
+  if (isServiceError(err)) {
+    throw err;
+  }
+  throw err;
+}
+
 /**
  * Finance Accounts Routes
  */
@@ -82,17 +89,8 @@ export const accountsRoutes = new Hono<AppContext>()
   // POST /list - List accounts
   .post('/list', zValidator('json', accountListSchema), async (c) => {
     const userId = c.get('userId')!;
-
-    try {
-      const accounts = await listAccounts(userId);
-      return c.json<AccountListOutput>(success(accounts.map(serializeAccount)), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountListOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error listing accounts:', err);
-      return c.json<AccountListOutput>(error('INTERNAL_ERROR', 'Failed to list accounts'), 500);
-    }
+    const accounts = await listAccounts(userId);
+    return c.json<AccountListOutput>(accounts.map(serializeAccount), 200);
   })
 
   // POST /get - Get single account
@@ -100,29 +98,21 @@ export const accountsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as z.infer<typeof accountGetSchema>;
     const userId = c.get('userId')!;
 
-    try {
-      const account = await getAccountWithPlaidInfo(input.id, userId);
+    const account = await getAccountWithPlaidInfo(input.id, userId);
 
-      if (!account) {
-        return c.json<AccountGetOutput>(error('NOT_FOUND', 'Account not found'), 404);
-      }
-
-      const accountWithTransactions = await listAccountsWithRecentTransactions(userId, 5);
-      const accountData = accountWithTransactions.find((acc) => acc.id === account.id);
-
-      const result = {
-        ...serializeAccount(account),
-        transactions: (accountData?.transactions || []).map(serializeTransaction),
-      };
-
-      return c.json<AccountGetOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountGetOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting account:', err);
-      return c.json<AccountGetOutput>(error('INTERNAL_ERROR', 'Failed to get account'), 500);
+    if (!account) {
+      throw new NotFoundError('Account not found');
     }
+
+    const accountWithTransactions = await listAccountsWithRecentTransactions(userId, 5);
+    const accountData = accountWithTransactions.find((acc) => acc.id === account.id);
+
+    const result = {
+      ...serializeAccount(account),
+      transactions: (accountData?.transactions || []).map(serializeTransaction),
+    };
+
+    return c.json<AccountGetOutput>(result as any, 200);
   })
 
   // POST /create - Create account
@@ -130,25 +120,17 @@ export const accountsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as z.infer<typeof accountCreateSchema>;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await createAccount({
-        userId,
-        name: input.name,
-        type: input.type,
-        balance: input.balance?.toString() || '0',
-        institutionId: input.institution || null,
-        isoCurrencyCode: 'USD',
-        meta: null,
-      });
+    const result = await createAccount({
+      userId,
+      name: input.name,
+      type: input.type,
+      balance: input.balance?.toString() || '0',
+      institutionId: input.institution || null,
+      isoCurrencyCode: 'USD',
+      meta: null,
+    });
 
-      return c.json<AccountCreateOutput>(success(serializeAccount(result)), 201);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountCreateOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error creating account:', err);
-      return c.json<AccountCreateOutput>(error('INTERNAL_ERROR', 'Failed to create account'), 500);
-    }
+    return c.json<AccountCreateOutput>(serializeAccount(result), 201);
   })
 
   // POST /update - Update account
@@ -157,25 +139,17 @@ export const accountsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const { id, ...updates } = input;
 
-    try {
-      const result = await updateAccount(id, userId, {
-        ...updates,
-        balance: updates.balance?.toString(),
-        institutionId: updates.institution,
-      });
+    const result = await updateAccount(id, userId, {
+      ...updates,
+      balance: updates.balance?.toString(),
+      institutionId: updates.institution,
+    });
 
-      if (!result) {
-        return c.json<AccountUpdateOutput>(error('NOT_FOUND', 'Account not found'), 404);
-      }
-
-      return c.json<AccountUpdateOutput>(success(serializeAccount(result)), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountUpdateOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error updating account:', err);
-      return c.json<AccountUpdateOutput>(error('INTERNAL_ERROR', 'Failed to update account'), 500);
+    if (!result) {
+      throw new NotFoundError('Account not found');
     }
+
+    return c.json<AccountUpdateOutput>(serializeAccount(result), 200);
   })
 
   // POST /delete - Delete account
@@ -183,117 +157,74 @@ export const accountsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as z.infer<typeof accountDeleteSchema>;
     const userId = c.get('userId')!;
 
-    try {
-      await deleteAccount(input.id, userId);
-      return c.json<AccountDeleteOutput>(success({ success: true }), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountDeleteOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error deleting account:', err);
-      return c.json<AccountDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete account'), 500);
-    }
+    await deleteAccount(input.id, userId);
+    return c.json<AccountDeleteOutput>({ success: true }, 200);
   })
 
   // POST /all - Get all accounts with connections
   .post('/all', async (c) => {
     const userId = c.get('userId')!;
 
-    try {
-      const allAccounts = await listAccountsWithPlaidInfo(userId);
+    const allAccounts = await listAccountsWithPlaidInfo(userId);
 
-      // Get recent transactions for each account
-      const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(userId, 5);
-      const transactionsMap = new Map(
-        accountsWithRecentTransactions.map((acc) => [acc.id, acc.transactions || []]),
-      );
+    // Get recent transactions for each account
+    const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(userId, 5);
+    const transactionsMap = new Map(
+      accountsWithRecentTransactions.map((acc) => [acc.id, acc.transactions || []]),
+    );
 
-      const accountsWithTransactions = allAccounts.map((account) => ({
-        ...serializeAccount(account),
-        transactions: (transactionsMap.get(account.id) || []).map(serializeTransaction),
-      }));
+    const accountsWithTransactions = allAccounts.map((account) => ({
+      ...serializeAccount(account),
+      transactions: (transactionsMap.get(account.id) || []).map(serializeTransaction),
+    }));
 
-      // Get Plaid connections
-      const plaidConnections = await listPlaidConnectionsForUser(userId);
+    // Get Plaid connections
+    const plaidConnections = await listPlaidConnectionsForUser(userId);
 
-      const result = {
-        accounts: accountsWithTransactions,
-        connections: plaidConnections.map((conn) => ({
-          ...conn,
-          lastSynced: conn.lastSyncedAt
-            ? typeof conn.lastSyncedAt === 'string'
-              ? conn.lastSyncedAt
-              : conn.lastSyncedAt.toISOString()
-            : '',
-        })),
-      };
+    const result = {
+      accounts: accountsWithTransactions,
+      connections: plaidConnections.map((conn) => ({
+        ...conn,
+        lastSynced: conn.lastSyncedAt
+          ? typeof conn.lastSyncedAt === 'string'
+            ? conn.lastSyncedAt
+            : conn.lastSyncedAt.toISOString()
+          : '',
+      })),
+    };
 
-      return c.json<AccountAllOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountAllOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting all accounts:', err);
-      return c.json<AccountAllOutput>(error('INTERNAL_ERROR', 'Failed to get all accounts'), 500);
-    }
+    return c.json<AccountAllOutput>(result as any, 200);
   })
 
   // POST /with-plaid - Get accounts with Plaid info
   .post('/with-plaid', async (c) => {
     const userId = c.get('userId')!;
 
-    try {
-      const result = await listAccountsWithPlaidInfo(userId);
-      return c.json<AccountsWithPlaidOutput>(success(result.map(serializeAccount)), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountsWithPlaidOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting accounts with Plaid:', err);
-      return c.json<AccountsWithPlaidOutput>(
-        error('INTERNAL_ERROR', 'Failed to get accounts with Plaid'),
-        500,
-      );
-    }
+    const result = await listAccountsWithPlaidInfo(userId);
+    return c.json<AccountsWithPlaidOutput>(result.map(serializeAccount), 200);
   })
 
   // POST /connections - Get institution connections
   .post('/connections', async (c) => {
     const userId = c.get('userId')!;
 
-    try {
-      const result = await listPlaidConnectionsForUser(userId);
-      return c.json<AccountConnectionsOutput>(
-        success(
-          result.map((conn) => ({
-            id: conn.id,
-            institutionId: conn.institutionId || '',
-            institutionName: conn.institutionName || 'Unknown',
-            institutionLogo: null,
-            status: conn.status as any,
-            lastSynced: conn.lastSyncedAt
-              ? typeof conn.lastSyncedAt === 'string'
-                ? conn.lastSyncedAt
-                : conn.lastSyncedAt.toISOString()
-              : '',
-            accounts: 0,
-          })),
-        ),
-        200,
-      );
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountConnectionsOutput>(
-          error(err.code, err.message),
-          err.statusCode as any,
-        );
-      }
-      console.error('Error getting connections:', err);
-      return c.json<AccountConnectionsOutput>(
-        error('INTERNAL_ERROR', 'Failed to get connections'),
-        500,
-      );
-    }
+    const result = await listPlaidConnectionsForUser(userId);
+    return c.json<AccountConnectionsOutput>(
+      result.map((conn) => ({
+        id: conn.id,
+        institutionId: conn.institutionId || '',
+        institutionName: conn.institutionName || 'Unknown',
+        institutionLogo: null,
+        status: conn.status as any,
+        lastSynced: conn.lastSyncedAt
+          ? typeof conn.lastSyncedAt === 'string'
+            ? conn.lastSyncedAt
+            : conn.lastSyncedAt.toISOString()
+          : '',
+        accounts: 0,
+      })),
+      200,
+    );
   })
 
   // POST /institution-accounts - Get accounts for institution
@@ -301,20 +232,6 @@ export const accountsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as z.infer<typeof institutionAccountsSchema>;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getAccountsForInstitution(userId, input.institutionId);
-      return c.json<AccountInstitutionAccountsOutput>(success(result.map(serializeAccount)), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<AccountInstitutionAccountsOutput>(
-          error(err.code, err.message),
-          err.statusCode as any,
-        );
-      }
-      console.error('Error getting institution accounts:', err);
-      return c.json<AccountInstitutionAccountsOutput>(
-        error('INTERNAL_ERROR', 'Failed to get institution accounts'),
-        500,
-      );
-    }
+    const result = await getAccountsForInstitution(userId, input.institutionId);
+    return c.json<AccountInstitutionAccountsOutput>(result.map(serializeAccount), 200);
   });

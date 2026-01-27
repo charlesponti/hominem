@@ -10,8 +10,6 @@
  * No complex inference from route schemas - all outputs are explicitly defined.
  */
 
-import type { ApiResult } from '@hominem/services';
-
 import { z } from 'zod';
 
 import type { EmptyInput } from './utils';
@@ -228,26 +226,24 @@ export const institutionAccountsSchema = z.object({
   institutionId: z.string(),
 });
 
-export type AccountListOutput = ApiResult<AccountData[]>;
+export type AccountListOutput = AccountData[];
 
-export type AccountGetOutput = ApiResult<
-  AccountWithPlaidData & {
-    transactions: TransactionData[];
-  }
->;
+export type AccountGetOutput = AccountWithPlaidData & {
+  transactions: TransactionData[];
+};
 
-export type AccountCreateOutput = ApiResult<AccountData>;
-export type AccountUpdateOutput = ApiResult<AccountData>;
-export type AccountDeleteOutput = ApiResult<{ success: true }>;
+export type AccountCreateOutput = AccountData;
+export type AccountUpdateOutput = AccountData;
+export type AccountDeleteOutput = { success: true };
 
-export type AccountAllOutput = ApiResult<{
+export type AccountAllOutput = {
   accounts: (AccountWithPlaidData & { transactions: TransactionData[] })[];
   connections: PlaidConnection[];
-}>;
+};
 
-export type AccountsWithPlaidOutput = ApiResult<AccountWithPlaidData[]>;
-export type AccountConnectionsOutput = ApiResult<PlaidConnection[]>;
-export type AccountInstitutionAccountsOutput = ApiResult<AccountWithPlaidData[]>;
+export type AccountsWithPlaidOutput = AccountWithPlaidData[];
+export type AccountConnectionsOutput = PlaidConnection[];
+export type AccountInstitutionAccountsOutput = AccountWithPlaidData[];
 
 // ============================================================================
 // Transactions
@@ -335,22 +331,22 @@ export const transactionDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
-export type TransactionListOutput = ApiResult<{
+export type TransactionListOutput = {
   data: TransactionData[];
   filteredCount: number;
   totalUserCount: number;
-}>;
+};
 
-export type TransactionCreateOutput = ApiResult<TransactionData>;
-export type TransactionUpdateOutput = ApiResult<TransactionData>;
-export type TransactionDeleteOutput = ApiResult<{ success: boolean; message?: string }>;
+export type TransactionCreateOutput = TransactionData;
+export type TransactionUpdateOutput = TransactionData;
+export type TransactionDeleteOutput = { success: boolean; message?: string };
 
 // ============================================================================
 // Institutions
 // ============================================================================
 
 export type InstitutionsListInput = EmptyInput;
-export type InstitutionsListOutput = ApiResult<InstitutionData[]>;
+export type InstitutionsListOutput = InstitutionData[];
 
 export type InstitutionCreateInput = {
   id: string;
@@ -360,14 +356,14 @@ export type InstitutionCreateInput = {
   primaryColor?: string;
   country?: string;
 };
-export type InstitutionCreateOutput = ApiResult<InstitutionData>;
+export type InstitutionCreateOutput = InstitutionData;
 
 // ============================================================================
 // Categories
 // ============================================================================
 
 export type CategoriesListInput = EmptyInput;
-export type CategoriesListOutput = ApiResult<string[]>;
+export type CategoriesListOutput = string[];
 
 // ============================================================================
 // Analytics / Analyze
@@ -384,10 +380,10 @@ export type SpendingTimeSeriesInput = {
   compareToPrevious?: boolean;
 };
 
-export type SpendingTimeSeriesOutput = ApiResult<{
+export type SpendingTimeSeriesOutput = {
   data: TimeSeriesDataPoint[];
   stats?: TimeSeriesStats | null;
-}>;
+};
 
 export type TopMerchantsInput = {
   from?: string;
@@ -397,13 +393,13 @@ export type TopMerchantsInput = {
   limit?: number;
 };
 
-export type TopMerchantsOutput = ApiResult<{
+export type TopMerchantsOutput = {
   merchants: Array<{
     name: string;
     totalSpent: number;
     transactionCount: number;
   }>;
-}>;
+};
 
 export type CategoryBreakdownInput = {
   from?: string;
@@ -412,7 +408,7 @@ export type CategoryBreakdownInput = {
   limit?: number;
 };
 
-export type CategoryBreakdownOutput = ApiResult<{
+export type CategoryBreakdownOutput = {
   breakdown: Array<{
     category: string;
     amount: number;
@@ -421,7 +417,7 @@ export type CategoryBreakdownOutput = ApiResult<{
   }>;
   totalSpending: number;
   averagePerDay: number;
-}>;
+};
 
 export type CalculateTransactionsInput = {
   from?: string;
@@ -434,7 +430,7 @@ export type CalculateTransactionsInput = {
   transactionIds?: string[];
 };
 
-export type CalculateTransactionsOutput = ApiResult<{
+export type CalculateTransactionsOutput = {
   sum?: number;
   average?: number;
   count?: number;
@@ -447,14 +443,14 @@ export type CalculateTransactionsOutput = ApiResult<{
   };
   formattedSum?: string;
   formattedAverage?: string;
-}>;
+};
 
 export type MonthlyStatsInput = {
   year?: number;
   month?: number;
 };
 
-export type MonthlyStatsOutput = ApiResult<{
+export type MonthlyStatsOutput = {
   month: string;
   income: number;
   expenses: number;
@@ -473,75 +469,48 @@ export type MonthlyStatsOutput = ApiResult<{
   categorySpending?: Array<{ name: string | null; amount: number }>;
   startDate?: string;
   endDate?: string;
-}>;
+};
 
 // ============================================================================
 // Budget
 // ============================================================================
 
 export type BudgetCategoriesListInput = EmptyInput;
-export type BudgetCategoriesListOutput = ApiResult<BudgetCategoryData[]>;
+export type BudgetCategoriesListOutput = BudgetCategoryData[];
 
 export type BudgetCategoriesListWithSpendingInput = {
   month?: string;
   monthYear?: string;
 };
 
-export type BudgetCategoriesListWithSpendingOutput = ApiResult<
-  Array<
-    BudgetCategoryData & {
-      actualSpending: number;
-      percentageSpent: number;
-      budgetAmount: number;
-      allocationPercentage: number;
-      variance: number;
-      remaining: number;
-      color: string;
-      status: 'on-track' | 'warning' | 'over-budget';
-      statusColor: string;
-    }
-  >
+export type BudgetCategoriesListWithSpendingOutput = Array<
+  BudgetCategoryData & {
+    actualSpending: number;
+    percentageSpent: number;
+    budgetAmount: number;
+    allocationPercentage: number;
+    variance: number;
+    remaining: number;
+    color: string;
+    status: 'on-track' | 'warning' | 'over-budget';
+    statusColor: string;
+  }
 >;
 
 export type BudgetCategoryGetInput = { id: string };
-export type BudgetCategoryGetOutput = ApiResult<BudgetCategoryData>;
-
-export type BudgetCategoryCreateInput = {
-  name: string;
-  type: 'income' | 'expense';
-  averageMonthlyExpense?: string;
-  budgetId?: string;
-  color?: string;
-  amount?: number;
-  period?: 'monthly' | 'yearly';
-  rollover?: boolean;
-  icon?: string;
-};
-export type BudgetCategoryCreateOutput = ApiResult<BudgetCategoryData>;
-
-export type BudgetCategoryUpdateInput = {
-  id: string;
-  name?: string;
-  type?: 'income' | 'expense';
-  averageMonthlyExpense?: string;
-  budgetId?: string;
-  color?: string;
-  amount?: number;
-  period?: 'monthly' | 'yearly';
-  rollover?: boolean;
-  icon?: string;
-};
-export type BudgetCategoryUpdateOutput = ApiResult<BudgetCategoryData>;
+export type BudgetCategoryGetOutput = BudgetCategoryData;
+export type BudgetCategoryCreateOutput = BudgetCategoryData;
+export type BudgetCategoryUpdateOutput = BudgetCategoryData;
 
 export type BudgetCategoryDeleteInput = { id: string };
-export type BudgetCategoryDeleteOutput = ApiResult<{ success: true; message: string }>;
+export type BudgetCategoryDeleteOutput = { success: true; message: string };
 
 export type BudgetTrackingInput = {
   month?: string;
   monthYear?: string;
 };
 
-export type BudgetTrackingOutput = ApiResult<{
+export type BudgetTrackingOutput = {
   month: string;
   monthYear?: string;
   totalBudget: number;
@@ -574,19 +543,17 @@ export type BudgetTrackingOutput = ApiResult<{
     name: string;
     value: number;
   }>;
-}>;
+};
 
 export type BudgetHistoryInput = {
   months?: number;
 };
 
-export type BudgetHistoryOutput = ApiResult<
-  Array<{
-    date: string;
-    budgeted: number;
-    actual: number;
-  }>
->;
+export type BudgetHistoryOutput = Array<{
+  date: string;
+  budgeted: number;
+  actual: number;
+}>;
 
 export type BudgetCalculateInput = {
   income: number;
@@ -598,7 +565,7 @@ export type BudgetCalculateInput = {
   }>;
 };
 
-export type BudgetCalculateOutput = ApiResult<{
+export type BudgetCalculateOutput = {
   totalBudget: number;
   disposable?: number;
   suggestedAllocations?: Record<string, number>;
@@ -618,7 +585,7 @@ export type BudgetCalculateOutput = ApiResult<{
   }>;
   calculatedAt?: string;
   source?: 'manual' | 'categories';
-}>;
+};
 
 export type BudgetBulkCreateInput = {
   categories: Array<{
@@ -630,24 +597,22 @@ export type BudgetBulkCreateInput = {
   }>;
 };
 
-export type BudgetBulkCreateOutput = ApiResult<{
+export type BudgetBulkCreateOutput = {
   created: number;
   categories: BudgetCategoryData[];
-}>;
+};
 
-export type TransactionCategoryAnalysisOutput = ApiResult<
-  Array<{
-    category: string;
-    name?: string;
-    totalAmount: number;
-    transactionCount: number;
-    averageAmount: number;
-    type?: 'income' | 'expense';
-    suggested?: boolean;
-    suggestedBudget?: number;
-    monthsWithTransactions?: number;
-  }>
->;
+export type TransactionCategoryAnalysisOutput = Array<{
+  category: string;
+  name?: string;
+  totalAmount: number;
+  transactionCount: number;
+  averageAmount: number;
+  type?: 'income' | 'expense';
+  suggested?: boolean;
+  suggestedBudget?: number;
+  monthsWithTransactions?: number;
+}>;
 
 // ============================================================================
 // Plaid
@@ -656,11 +621,16 @@ export type TransactionCategoryAnalysisOutput = ApiResult<
 export type PlaidCreateLinkTokenInput = {
   userId: string;
 };
-export type PlaidCreateLinkTokenOutput = ApiResult<{
+export type PlaidCreateLinkTokenOutput = {
   linkToken: string;
   expiration: string;
   requestId: string;
-}>;
+};
+export type PlaidExchangeTokenOutput = {
+  accessToken: string;
+  itemId: string;
+  requestId: string;
+};
 
 export type PlaidExchangeTokenInput = {
   publicToken: string;
@@ -668,29 +638,24 @@ export type PlaidExchangeTokenInput = {
   institutionName?: string;
   metaData?: any;
 };
-export type PlaidExchangeTokenOutput = ApiResult<{
-  accessToken: string;
-  itemId: string;
-  requestId: string;
-}>;
 
 export type PlaidSyncItemInput = {
   itemId: string;
 };
-export type PlaidSyncItemOutput = ApiResult<{
+export type PlaidSyncItemOutput = {
   success: boolean;
   added: number;
   modified: number;
   removed: number;
-}>;
+};
+export type PlaidRemoveConnectionOutput = {
+  success: boolean;
+};
 
 export type PlaidRemoveConnectionInput = {
   connectionId: string;
   itemId?: string;
 };
-export type PlaidRemoveConnectionOutput = ApiResult<{
-  success: boolean;
-}>;
 
 // ============================================================================
 // Runway
@@ -707,7 +672,7 @@ export type RunwayCalculateInput = {
   projectionMonths?: number;
 };
 
-export type RunwayCalculateOutput = ApiResult<{
+export type RunwayCalculateOutput = {
   runwayMonths: number;
   runwayEndDate: string;
   isRunwayDangerous: boolean;
@@ -718,7 +683,7 @@ export type RunwayCalculateOutput = ApiResult<{
   }>;
   months: number;
   years: number;
-}>;
+};
 
 // ============================================================================
 // Export
@@ -735,14 +700,21 @@ export type ExportTransactionsInput = {
   categories?: string[];
 };
 
-export type ExportTransactionsOutput = ApiResult<{
+export type ExportTransactionsOutput = {
   url: string;
   filename: string;
   expiresAt: string;
   data?: string;
   fileName?: string;
   createdAt?: string;
-}>;
+};
+export type ExportSummaryOutput = {
+  url: string;
+  filename: string;
+  data?: string;
+  fileName?: string;
+  createdAt?: string;
+};
 
 export type ExportSummaryInput = {
   year: number;
@@ -753,14 +725,6 @@ export type ExportSummaryInput = {
   categories?: string[];
 };
 
-export type ExportSummaryOutput = ApiResult<{
-  url: string;
-  filename: string;
-  data?: string;
-  fileName?: string;
-  createdAt?: string;
-}>;
-
 // ============================================================================
 // Data Management
 // ============================================================================
@@ -769,7 +733,7 @@ export type DataDeleteAllInput = {
   confirm: boolean;
 };
 
-export type DataDeleteAllOutput = ApiResult<{
+export type DataDeleteAllOutput = {
   success: boolean;
   deletedCounts?: {
     transactions: number;
@@ -778,4 +742,4 @@ export type DataDeleteAllOutput = ApiResult<{
     connections: number;
   };
   message?: string;
-}>;
+};

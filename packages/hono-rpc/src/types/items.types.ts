@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 
 // ============================================================================
 // Data Types
@@ -33,7 +32,7 @@ export const itemsAddToListSchema = z.object({
   itemType: z.enum(['FLIGHT', 'PLACE']).default('PLACE'),
 });
 
-export type ItemsAddToListOutput = ApiResult<ListItem>;
+export type ItemsAddToListOutput = ListItem;
 
 // ============================================================================
 // REMOVE ITEM FROM LIST
@@ -49,7 +48,7 @@ export const itemsRemoveFromListSchema = z.object({
   itemId: z.string().uuid(),
 });
 
-export type ItemsRemoveFromListOutput = ApiResult<{ success: boolean }>;
+export type ItemsRemoveFromListOutput = { success: boolean };
 
 // ============================================================================
 // GET ITEMS BY LIST ID
@@ -63,4 +62,4 @@ export const itemsGetByListIdSchema = z.object({
   listId: z.string().uuid(),
 });
 
-export type ItemsGetByListIdOutput = ApiResult<ListItem[]>;
+export type ItemsGetByListIdOutput = ListItem[];

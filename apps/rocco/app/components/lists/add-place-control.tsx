@@ -40,18 +40,17 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
 
   const addPlaceToList = useAddPlaceToList({
     onSuccess: (result) => {
-      if (result.success) {
-        setStatus('success');
-        clearSuccessTimer();
-        successTimerRef.current = setTimeout(() => {
-          setOpen(false);
-          setStatus('idle');
-          setErrorMessage(null);
-        }, 1500);
-      } else {
-        setStatus('error');
-        setErrorMessage(result.message);
-      }
+      setStatus('success');
+      clearSuccessTimer();
+      successTimerRef.current = setTimeout(() => {
+        setOpen(false);
+        setStatus('idle');
+        setErrorMessage(null);
+      }, 1500);
+    },
+    onError: (error: any) => {
+      setStatus('error');
+      setErrorMessage(error?.message || 'Failed to add place');
     },
   });
 

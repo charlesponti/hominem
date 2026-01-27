@@ -1,5 +1,9 @@
 import { ChatService, MessageService } from '@hominem/chat-services';
-import { error, success, isServiceError } from '@hominem/services';
+import {
+  NotFoundError,
+  InternalError,
+  ValidationError,
+} from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { streamText, type CoreMessage } from 'ai';
 import { Hono } from 'hono';
@@ -85,250 +89,197 @@ const chatsMessagesQuerySchema = z.object({
  */
 const chatByIdRoutes = new Hono<AppContext>()
   // Get chat by ID
-  .get('/', async (c) => {
-    try {
-      const chatId = c.req.param('id') as string;
-      const userId = c.get('userId')!;
+   .get('/', async (c) => {
+     const chatId = c.req.param('id') as string;
+     const userId = c.get('userId')!;
 
-      const [chatData, messagesData] = await Promise.all([
-        chatService.getChatById(chatId, userId),
-        messageService.getChatMessages(chatId, { limit: 10 }),
-      ]);
+     const [chatData, messagesData] = await Promise.all([
+       chatService.getChatById(chatId, userId),
+       messageService.getChatMessages(chatId, { limit: 10 }),
+     ]);
 
-      if (!chatData) {
-        return c.json<ChatsGetOutput>(error('NOT_FOUND', 'Chat not found'), 404);
-      }
+     if (!chatData) {
+       throw new NotFoundError('Chat not found');
+     }
 
-      return c.json<ChatsGetOutput>(
-        success({
-          ...serializeChat(chatData),
-          messages: messagesData.map(serializeChatMessage),
-        }),
-      );
-    } catch (err) {
-      console.error('[chats.getChatById] unexpected error:', err);
-      return c.json<ChatsGetOutput>(error('INTERNAL_ERROR', 'Failed to get chat'), 500);
-    }
-  })
+     return c.json<ChatsGetOutput>({
+       ...serializeChat(chatData),
+       messages: messagesData.map(serializeChatMessage),
+     });
+   })
 
-  // Delete chat
-  .delete('/', async (c) => {
-    try {
-      const chatId = c.req.param('id') as string;
-      const userId = c.get('userId')!;
+   // Delete chat
+   .delete('/', async (c) => {
+     const chatId = c.req.param('id') as string;
+     const userId = c.get('userId')!;
 
-      const success_result = await chatService.deleteChat(chatId, userId);
-      return c.json(success({ success: success_result }));
-    } catch (err) {
-      console.error('[chats.deleteChat] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to delete chat'), 500);
-    }
-  })
+     const success_result = await chatService.deleteChat(chatId, userId);
+     return c.json({ success: success_result });
+   })
 
-  // Update chat title
-  .patch('/', zValidator('json', chatsUpdateSchema), async (c) => {
-    try {
-      const chatId = c.req.param('id') as string;
-      const userId = c.get('userId')!;
-      const { title } = c.req.valid('json');
+   // Update chat title
+   .patch('/', zValidator('json', chatsUpdateSchema), async (c) => {
+     const chatId = c.req.param('id') as string;
+     const userId = c.get('userId')!;
+     const { title } = c.req.valid('json');
 
-      const chatData = await chatService.updateChatTitle(chatId, title, userId);
-      return c.json<ChatsUpdateOutput>(success({ success: !!chatData }));
-    } catch (err) {
-      console.error('[chats.updateChatTitle] unexpected error:', err);
-      return c.json<ChatsUpdateOutput>(error('INTERNAL_ERROR', 'Failed to update chat title'), 500);
-    }
-  })
+     const chatData = await chatService.updateChatTitle(chatId, title, userId);
+     return c.json<ChatsUpdateOutput>({ success: !!chatData });
+   })
 
-  // Send message with streaming
-  .post('/send', zValidator('json', chatsSendSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const chatId = c.req.param('id') as string;
-      const { message } = c.req.valid('json');
+   // Send message with streaming
+   .post('/send', zValidator('json', chatsSendSchema), async (c) => {
+     const userId = c.get('userId')!;
+     const chatId = c.req.param('id') as string;
+     const { message } = c.req.valid('json');
 
-      const currentChat = await ensureChatAndUser(userId, chatId);
-      const startTime = Date.now();
+     const currentChat = await ensureChatAndUser(userId, chatId);
+     const startTime = Date.now();
 
-      const historyMessages = await messageService.getChatMessages(currentChat.id, {
-        limit: 20,
-        orderBy: 'asc',
-      });
+     const historyMessages = await messageService.getChatMessages(currentChat.id, {
+       limit: 20,
+       orderBy: 'asc',
+     });
 
-      const userMessage = await messageService.addMessage({
-        chatId: currentChat.id,
-        userId,
-        role: 'user',
-        content: message,
-      });
+     const userMessage = await messageService.addMessage({
+       chatId: currentChat.id,
+       userId,
+       role: 'user',
+       content: message,
+     });
 
-      const messagesWithNewUser: CoreMessage[] = [
-        ...historyMessages.map((m) => ({
-          role: m.role as any,
-          content: m.content as string,
-        })),
-        {
-          role: 'user',
-          content: message,
-        },
-      ];
+     const messagesWithNewUser: CoreMessage[] = [
+       ...historyMessages.map((m) => ({
+         role: m.role as any,
+         content: m.content as string,
+       })),
+       {
+         role: 'user',
+         content: message,
+       },
+     ];
 
-      const adapter = getLMStudioAdapter();
-      const { textStream, toolCalls } = await streamText({
-        model: adapter,
-        tools: getAvailableTools(userId) as any,
-        messages: messagesWithNewUser,
-      });
+     const adapter = getLMStudioAdapter();
+     const { textStream, toolCalls } = await streamText({
+       model: adapter,
+       tools: getAvailableTools(userId) as any,
+       messages: messagesWithNewUser,
+     });
 
-      let assistantMessage = await messageService.addMessage({
-        chatId: currentChat.id,
-        userId: '',
-        role: 'assistant',
-        content: '',
-      });
+     let assistantMessage = await messageService.addMessage({
+       chatId: currentChat.id,
+       userId: '',
+       role: 'assistant',
+       content: '',
+     });
 
-      if (!assistantMessage) {
-        throw new Error('Failed to create assistant message');
-      }
+     if (!assistantMessage) {
+       throw new InternalError('Failed to create assistant message');
+     }
 
-      let accumulatedContent = '';
-      const accumulatedToolCalls: any[] = [];
+     let accumulatedContent = '';
+     const accumulatedToolCalls: any[] = [];
 
-      try {
-        // Collect stream results
-        const textPromise = (async () => {
-          for await (const chunk of textStream) {
-            accumulatedContent += chunk;
-          }
-        })();
+     try {
+       // Collect stream results
+       const textPromise = (async () => {
+         for await (const chunk of textStream) {
+           accumulatedContent += chunk;
+         }
+       })();
 
-        const toolsPromise = (async () => {
-          const calls = await toolCalls;
-          for (const call of calls) {
-            accumulatedToolCalls.push(call);
-          }
-        })();
+       const toolsPromise = (async () => {
+         const calls = await toolCalls;
+         for (const call of calls) {
+           accumulatedToolCalls.push(call);
+         }
+       })();
 
-        await Promise.all([textPromise, toolsPromise]);
+       await Promise.all([textPromise, toolsPromise]);
 
-        const updatedAssistantMessage = await messageService.updateMessage({
-          messageId: assistantMessage.id,
-          content: accumulatedContent,
-          toolCalls: accumulatedToolCalls.map((tc) => ({
-            toolName: tc.toolName,
-            type: 'tool-call',
-            toolCallId: tc.toolCallId,
-            args: tc.args as Record<string, string>,
-          })),
-        });
-        if (updatedAssistantMessage) {
-          assistantMessage = updatedAssistantMessage;
-        }
-      } catch (streamError) {
-        console.error('[chats.send] Error consuming stream:', streamError);
-        const updatedOnError = await messageService.updateMessage({
-          messageId: assistantMessage.id,
-          content: accumulatedContent || '[Error: Stream processing failed]',
-        });
-        if (updatedOnError) {
-          assistantMessage = updatedOnError;
-        }
-      }
+       const updatedAssistantMessage = await messageService.updateMessage({
+         messageId: assistantMessage.id,
+         content: accumulatedContent,
+         toolCalls: accumulatedToolCalls.map((tc) => ({
+           toolName: tc.toolName,
+           type: 'tool-call',
+           toolCallId: tc.toolCallId,
+           args: tc.args as Record<string, string>,
+         })),
+       });
+       if (updatedAssistantMessage) {
+         assistantMessage = updatedAssistantMessage;
+       }
+     } catch (streamError) {
+       console.error('[chats.send] Error consuming stream:', streamError);
+       const updatedOnError = await messageService.updateMessage({
+         messageId: assistantMessage.id,
+         content: accumulatedContent || '[Error: Stream processing failed]',
+       });
+       if (updatedOnError) {
+         assistantMessage = updatedOnError;
+       }
+     }
 
-      return c.json<ChatsSendOutput>(
-        success({
-          streamId: assistantMessage.id,
-          chatId: currentChat.id,
-          chatTitle: currentChat.title,
-          messages: {
-            user: serializeChatMessage(userMessage),
-            assistant: serializeChatMessage(assistantMessage),
-          },
-          metadata: {
-            startTime: startTime,
-            timestamp: new Date().toISOString(),
-          },
-        }),
-      );
-    } catch (err) {
-      console.error('[chats.send] unexpected error:', err);
-      return c.json<ChatsSendOutput>(
-        error('INTERNAL_ERROR', 'Failed to send message with streaming'),
-        500,
-      );
-    }
-  })
+     return c.json<ChatsSendOutput>({
+       streamId: assistantMessage.id,
+       chatId: currentChat.id,
+       chatTitle: currentChat.title,
+       messages: {
+         user: serializeChatMessage(userMessage),
+         assistant: serializeChatMessage(assistantMessage),
+       },
+       metadata: {
+         startTime: startTime,
+         timestamp: new Date().toISOString(),
+       },
+     });
+   })
 
-  // Get messages for a chat
-  .get('/messages', zValidator('query', chatsMessagesQuerySchema), async (c) => {
-    try {
-      const chatId = c.req.param('id') as string;
-      const { limit, offset } = c.req.valid('query');
+   // Get messages for a chat
+   .get('/messages', zValidator('query', chatsMessagesQuerySchema), async (c) => {
+     const chatId = c.req.param('id') as string;
+     const { limit, offset } = c.req.valid('query');
 
-      const messagesData = await messageService.getChatMessages(chatId, {
-        limit: limit ? parseInt(limit) : undefined,
-        offset: offset ? parseInt(offset) : undefined,
-      });
-      return c.json<ChatsGetMessagesOutput>(success(messagesData.map(serializeChatMessage)));
-    } catch (err) {
-      console.error('[chats.getMessages] unexpected error:', err);
-      return c.json<ChatsGetMessagesOutput>(
-        error('INTERNAL_ERROR', 'Failed to fetch messages'),
-        500,
-      );
-    }
-  });
+     const messagesData = await messageService.getChatMessages(chatId, {
+       limit: limit ? parseInt(limit) : undefined,
+       offset: offset ? parseInt(offset) : undefined,
+     });
+     return c.json<ChatsGetMessagesOutput>(messagesData.map(serializeChatMessage));
+   });
 
 export const chatsRoutes = new Hono<AppContext>()
-  .use('*', authMiddleware)
-  // Get user's chats
-  .get('/', async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
+   .use('*', authMiddleware)
+   // Get user's chats
+   .get('/', async (c) => {
+     const userId = c.get('userId')!;
+     const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
 
-      const chatsData = await chatService.getUserChats(userId, limit);
-      return c.json<ChatsListOutput>(success(chatsData.map(serializeChat)));
-    } catch (err) {
-      console.error('[chats.getUserChats] unexpected error:', err);
-      return c.json<ChatsListOutput>(error('INTERNAL_ERROR', 'Failed to fetch chats'), 500);
-    }
-  })
+     const chatsData = await chatService.getUserChats(userId, limit);
+     return c.json<ChatsListOutput>(chatsData.map(serializeChat));
+   })
 
-  // Create chat
-  .post('/', zValidator('json', chatsCreateSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const { title } = c.req.valid('json');
+   // Create chat
+   .post('/', zValidator('json', chatsCreateSchema), async (c) => {
+     const userId = c.get('userId')!;
+     const { title } = c.req.valid('json');
 
-      const result = await chatService.createChat({ title, userId });
-      return c.json<ChatsCreateOutput>(success(serializeChat(result)), 201);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<ChatsCreateOutput>(error(err.code, err.message), 400);
-      }
-      console.error('[chats.createChat] unexpected error:', err);
-      return c.json<ChatsCreateOutput>(error('INTERNAL_ERROR', 'Failed to create chat'), 500);
-    }
-  })
+     const result = await chatService.createChat({ title, userId });
+     return c.json<ChatsCreateOutput>(serializeChat(result), 201);
+   })
 
-  // Search chats
-  .get('/search', async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const query = c.req.query('q');
-      const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 20;
+   // Search chats
+   .get('/search', async (c) => {
+     const userId = c.get('userId')!;
+     const query = c.req.query('q');
+     const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 20;
 
-      if (!query) {
-        return c.json(error('VALIDATION_ERROR', 'Query is required'), 400);
-      }
+     if (!query) {
+       throw new ValidationError('Query is required');
+     }
 
-      const chatsData = await chatService.searchChats({ userId, query, limit });
-      return c.json(success({ chats: chatsData.map(serializeChat) }));
-    } catch (err) {
-      console.error('[chats.searchChats] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to search chats'), 500);
-    }
-  })
+     const chatsData = await chatService.searchChats({ userId, query, limit });
+     return c.json({ chats: chatsData.map(serializeChat) });
+   })
 
   .route('/:id', chatByIdRoutes);

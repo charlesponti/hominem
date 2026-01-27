@@ -14,14 +14,46 @@
  * - Discriminator field enables type narrowing
  * - Structured error details for debugging
  * - Clear contract between server and client
+ *
+ * @deprecated This pattern is being migrated to standard REST API practices.
+ * New code should return data directly with HTTP status codes for success/error.
  */
 
 import type { ErrorCode } from './errors';
 
 /**
+ * Standard REST API error response format
+ *
+ * Used for all HTTP error responses (4xx, 5xx).
+ * HTTP status code is the definitive success/failure indicator.
+ *
+ * @example
+ * ```typescript
+ * return c.json<ApiErrorResponse>(
+ *   {
+ *     error: 'not_found',
+ *     code: 'NOT_FOUND',
+ *     message: 'Resource not found',
+ *     details: { resourceId: '123' }
+ *   },
+ *   404
+ * );
+ * ```
+ */
+export interface ApiErrorResponse {
+  error: string;  // Lowercase error code (e.g., 'not_found', 'validation_error')
+  code: ErrorCode;  // Original error code enum for client-side handling
+  message: string;  // Human-readable error message
+  details?: Record<string, unknown>;  // Additional error context
+}
+
+/**
  * Successful API response
  *
  * @template T The type of data being returned
+ *
+ * @deprecated This pattern is being migrated to standard REST API practices.
+ * New code should return data directly without the wrapper.
  */
 export interface ApiSuccess<T> {
   success: true;
@@ -33,6 +65,9 @@ export interface ApiSuccess<T> {
  *
  * Structured error with code, message, and optional details.
  * Never includes HTTP status code (that's in the HTTP response headers).
+ *
+ * @deprecated This pattern is being migrated to standard REST API practices.
+ * Use ApiErrorResponse instead.
  */
 export interface ApiError {
   success: false;
@@ -58,6 +93,9 @@ export interface ApiError {
  *   console.error(`Error ${result.code}: ${result.message}`)
  * }
  * ```
+ *
+ * @deprecated This pattern is being migrated to standard REST API practices.
+ * New code should use proper HTTP status codes instead.
  */
 export type ApiResult<T> = ApiSuccess<T> | ApiError;
 
@@ -66,6 +104,8 @@ export type ApiResult<T> = ApiSuccess<T> | ApiError;
  *
  * @example
  * return ctx.json(success(user), 200)
+ *
+ * @deprecated Use standard REST patterns instead. Return data directly.
  */
 export function success<T>(data: T): ApiSuccess<T> {
   return {
@@ -82,6 +122,8 @@ export function success<T>(data: T): ApiSuccess<T> {
  *   error('NOT_FOUND', 'User not found', { userId }),
  *   404
  * )
+ *
+ * @deprecated Use standard REST patterns instead. Throw errors.
  */
 export function error(
   code: ErrorCode,

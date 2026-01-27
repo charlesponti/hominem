@@ -3,7 +3,6 @@ import type {
   AdminRefreshGooglePlacesInput,
   AdminRefreshGooglePlacesOutput,
 } from '@hominem/hono-rpc/types';
-import type { ApiResult } from '@hominem/services';
 
 import { useHonoMutation } from '@hominem/hono-client/react';
 
@@ -16,12 +15,7 @@ export const useRefreshGooglePlaces = (
   return useHonoMutation<AdminRefreshGooglePlacesOutput, AdminRefreshGooglePlacesInput>(
     async (client, variables: AdminRefreshGooglePlacesInput) => {
       const res = await client.api.admin['refresh-google-places'].$post({ json: variables });
-      const result = (await res.json()) as unknown as ApiResult<AdminRefreshGooglePlacesOutput>;
-      if (result.success) {
-        return result.data;
-      } else {
-        throw new Error(result.message || 'Unknown error');
-      }
+      return (await res.json()) as unknown as AdminRefreshGooglePlacesOutput;
     },
     options,
   );

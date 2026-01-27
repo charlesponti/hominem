@@ -64,10 +64,21 @@ export const getTopMerchantsOutputSchema = z.object({
   ),
 });
 
+export type GetCategoryBreakdownOutput = {
+  breakdown: Array<{
+    category: string;
+    amount: number;
+    percentage: number;
+    transactionCount: number;
+  }>;
+  totalSpending: number;
+  averagePerDay: number;
+};
+
 export async function getCategoryBreakdown(
   userId: string,
   input: z.infer<typeof getCategoryBreakdownInputSchema>,
-) {
+): Promise<GetCategoryBreakdownOutput> {
   const breakdown = await summarizeByCategory({ userId, ...input });
   const totalSpending = breakdown.reduce((sum, cat) => sum + Number.parseFloat(cat.total), 0);
   const averagePerDay = calculateAveragePerDay(totalSpending, input.from, input.to);
@@ -84,19 +95,39 @@ export async function getCategoryBreakdown(
   };
 }
 
+export type GetSpendingTimeSeriesOutput = {
+  series: Array<{
+    month: string;
+    count: number;
+    income: string;
+    expenses: string;
+    average: string;
+  }>;
+  total: number;
+  average: number;
+};
+
 export async function getSpendingTimeSeries(
   userId: string,
   input: z.infer<typeof getSpendingTimeSeriesInputSchema>,
-) {
+): Promise<GetSpendingTimeSeriesOutput> {
   const result = await summarizeByMonth({ userId, ...input });
   const { total, average } = calculateTimeSeriesTotals(result);
   return { series: result, total, average };
 }
 
+export type GetTopMerchantsOutput = {
+  merchants: Array<{
+    name: string;
+    totalSpent: number;
+    transactionCount: number;
+  }>;
+};
+
 export async function getTopMerchants(
   userId: string,
   input: z.infer<typeof getTopMerchantsInputSchema>,
-) {
+): Promise<GetTopMerchantsOutput> {
   const result = await findTopMerchants({ userId, limit: 5, ...input });
   return {
     merchants: result.map((m) => ({

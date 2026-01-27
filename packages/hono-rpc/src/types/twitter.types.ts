@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 
 // ============================================================================
 // Data Types
@@ -22,19 +21,19 @@ export type TwitterTweet = {
 // ACCOUNTS
 // ============================================================================
 
-export type TwitterAccountsListOutput = ApiResult<TwitterAccount[]>;
+export type TwitterAccountsListOutput = TwitterAccount[];
 
 // ============================================================================
 // AUTHORIZE
 // ============================================================================
 
-export type TwitterAuthorizeOutput = ApiResult<{ authUrl: string }>;
+export type TwitterAuthorizeOutput = { authUrl: string };
 
 // ============================================================================
 // DISCONNECT
 // ============================================================================
 
-export type TwitterDisconnectOutput = ApiResult<{ success: boolean; message: string }>;
+export type TwitterDisconnectOutput = { success: boolean; message: string };
 
 // ============================================================================
 // POST TWEET
@@ -52,19 +51,19 @@ export const twitterPostSchema = z.object({
   saveAsContent: z.boolean().default(false),
 });
 
-export type TwitterPostOutput = ApiResult<{
+export type TwitterPostOutput = {
   success: boolean;
   tweet: { data: TwitterTweet };
   content: any | null;
-}>;
+};
 
 // ============================================================================
 // SYNC TWEETS
 // ============================================================================
 
-export type TwitterSyncOutput = ApiResult<{
+export type TwitterSyncOutput = {
   success: boolean;
   message: string;
   synced: number;
   total: number;
-}>;
+};

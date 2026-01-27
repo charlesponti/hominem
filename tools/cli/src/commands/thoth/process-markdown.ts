@@ -81,11 +81,11 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
             try {
               const res = await trpc.api.notes.$post({ json: noteData });
               const result = await res.json();
-              if (result?.success) {
-                consola.success(`Created note: ${result.data.title || 'Untitled'}`);
-                notesCreated++;
-              } else {
-                consola.error(`Failed to create note: ${result?.message ?? 'Unknown error'}`);
+               if (result?.id) {
+                 consola.success(`Created note: ${result.title || 'Untitled'}`);
+                 notesCreated++;
+               } else {
+                 consola.error(`Failed to create note: Unknown error`);
               }
             } catch (error) {
               consola.error(`Failed to create note: ${error}`);
@@ -116,13 +116,13 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
             try {
               const res = await trpc.api.notes.$post({ json: noteData });
               const _result = await res.json();
-              if (_result?.success) {
-                consola.success(`Created ${isTask ? 'task' : 'note'}: ${line.substring(0, 50)}...`);
-                notesCreated++;
-              } else {
-                consola.error(
-                  `Failed to create bullet point note: ${_result?.message ?? 'Unknown error'}`,
-                );
+               if (_result?.id) {
+                 consola.success(`Created ${isTask ? 'task' : 'note'}: ${line.substring(0, 50)}...`);
+                 notesCreated++;
+               } else {
+                 consola.error(
+                   `Failed to create bullet point note: Unknown error`,
+                 );
               }
             } catch (error) {
               consola.error(`Failed to create bullet point note: ${error}`);
@@ -156,13 +156,13 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
                 try {
                   const res = await trpc.api.notes.$post({ json: headingNoteData });
                   const _result = await res.json();
-                  if (_result?.success) {
-                    consola.success(`Created heading note: ${currentHeading}`);
-                    notesCreated++;
-                  } else {
-                    consola.error(
-                      `Failed to create heading note: ${_result?.message ?? 'Unknown error'}`,
-                    );
+                   if (_result?.id) {
+                     consola.success(`Created heading note: ${currentHeading}`);
+                     notesCreated++;
+                   } else {
+                     consola.error(
+                       `Failed to create heading note: Unknown error`,
+                     );
                   }
                 } catch (error) {
                   consola.error(`Failed to create heading note: ${error}`);
@@ -199,13 +199,13 @@ export const groupMarkdownByHeadingCommand = new Command('group-markdown-by-head
                 try {
                   const res = await trpc.api.notes.$post({ json: noteData });
                   const _result = await res.json();
-                  if (_result?.success) {
-                    consola.success(`Created paragraph note: ${trimmed.substring(0, 50)}...`);
-                    notesCreated++;
-                  } else {
-                    consola.error(
-                      `Failed to create paragraph note: ${_result?.message ?? 'Unknown error'}`,
-                    );
+                   if (_result?.id) {
+                     consola.success(`Created paragraph note: ${trimmed.substring(0, 50)}...`);
+                     notesCreated++;
+                   } else {
+                     consola.error(
+                       `Failed to create paragraph note: Unknown error`,
+                     );
                   }
                 } catch (error) {
                   consola.error(`Failed to create paragraph note: ${error}`);

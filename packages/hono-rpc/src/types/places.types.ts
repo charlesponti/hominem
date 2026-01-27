@@ -9,7 +9,6 @@
  */
 
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 
 // ============================================================================
 // CREATE PLACE
@@ -51,7 +50,7 @@ export const placeCreateSchema = z.object({
 });
 
 /** Output: Response after successfully creating a place */
-export type PlaceCreateOutput = ApiResult<{
+export type PlaceCreateOutput = {
   id: string;
   name: string;
   description: string | null;
@@ -65,7 +64,7 @@ export type PlaceCreateOutput = ApiResult<{
   photos: string[] | null;
   createdAt: string;
   updatedAt: string;
-}>;
+};
 
 // ============================================================================
 // UPDATE PLACE
@@ -103,7 +102,7 @@ export const placeUpdateSchema = z.object({
   phoneNumber: z.string().optional(),
 });
 
-export type PlaceUpdateOutput = ApiResult<{
+export type PlaceUpdateOutput = {
   id: string;
   name: string;
   description: string | null;
@@ -116,7 +115,7 @@ export type PlaceUpdateOutput = ApiResult<{
   priceLevel: number | null;
   photos: string[] | null;
   updatedAt: string;
-}>;
+};
 
 // ============================================================================
 // DELETE PLACE
@@ -124,7 +123,7 @@ export type PlaceUpdateOutput = ApiResult<{
 
 export type PlaceDeleteInput = { id: string };
 export const placeDeleteSchema = z.object({ id: z.string() });
-export type PlaceDeleteOutput = ApiResult<{ success: boolean }>;
+export type PlaceDeleteOutput = { success: boolean };
 
 // ============================================================================
 // GET PLACE DETAILS
@@ -136,7 +135,7 @@ export const placeGetByIdSchema = z.object({ id: z.string() });
 export type PlaceGetDetailsByGoogleIdInput = { googleMapsId: string };
 export const placeGetByGoogleIdSchema = z.object({ googleMapsId: z.string() });
 
-export type PlaceGetDetailsByIdOutput = ApiResult<{
+export type PlaceGetDetailsByIdOutput = {
   id: string;
   name: string;
   description: string | null;
@@ -150,9 +149,9 @@ export type PlaceGetDetailsByIdOutput = ApiResult<{
   photos: string[] | null;
   createdAt: string;
   updatedAt: string;
-}>;
+};
 
-export type PlaceGetDetailsByGoogleIdOutput = ApiResult<{
+export type PlaceGetDetailsByGoogleIdOutput = {
   id: string;
   name: string;
   description: string | null;
@@ -166,7 +165,7 @@ export type PlaceGetDetailsByGoogleIdOutput = ApiResult<{
   photos: string[] | null;
   createdAt: string;
   updatedAt: string;
-}>;
+};
 
 // ============================================================================
 // AUTOCOMPLETE
@@ -189,12 +188,12 @@ export const placeAutocompleteSchema = z.object({
   types: z.array(z.string()).optional(),
 });
 
-export type PlaceAutocompleteOutput = ApiResult<Array<{
+export type PlaceAutocompleteOutput = Array<{
   place_id: string;
   text: string;
   address: string;
   location: { latitude: number; longitude: number } | null;
-}>>;
+}>;
 
 // ============================================================================
 // LIST OPERATIONS
@@ -210,10 +209,10 @@ export const placeAddToListsSchema = z.object({
   listIds: z.array(z.string()),
 });
 
-export type PlaceAddToListsOutput = ApiResult<{
+export type PlaceAddToListsOutput = {
   success: boolean;
   addedToLists: number;
-}>;
+};
 
 export type PlaceRemoveFromListInput = {
   placeId: string;
@@ -225,9 +224,9 @@ export const placeRemoveFromListSchema = z.object({
   listId: z.string(),
 });
 
-export type PlaceRemoveFromListOutput = ApiResult<{
+export type PlaceRemoveFromListOutput = {
   success: boolean;
-}>;
+};
 
 // ============================================================================
 // NEARBY PLACES
@@ -250,7 +249,7 @@ export const placeGetNearbySchema = z.object({
   limit: z.number().optional(),
 });
 
-export type PlaceGetNearbyFromListsOutput = ApiResult<Array<{
+export type PlaceGetNearbyFromListsOutput = Array<{
   id: string;
   name: string;
   description: string | null;
@@ -269,7 +268,7 @@ export type PlaceGetNearbyFromListsOutput = ApiResult<Array<{
     id: string;
     name: string;
   }>;
-}>>;
+}>;
 
 // ============================================================================
 // VISIT OPERATIONS
@@ -299,7 +298,7 @@ export const placeLogVisitSchema = z.object({
   people: z.array(z.string()).optional(),
 });
 
-export type PlaceLogVisitOutput = ApiResult<{
+export type PlaceLogVisitOutput = {
   id: string;
   title: string | null;
   description: string | null;
@@ -313,7 +312,7 @@ export type PlaceLogVisitOutput = ApiResult<{
   userId: string;
   createdAt: string;
   updatedAt: string;
-}>;
+};
 
 export type PlaceGetMyVisitsInput = {
   placeId?: string;
@@ -327,7 +326,7 @@ export const placeGetMyVisitsSchema = z.object({
   offset: z.number().optional(),
 });
 
-export type PlaceGetMyVisitsOutput = ApiResult<Array<{
+export type PlaceGetMyVisitsOutput = Array<{
   id: string;
   title: string | null;
   description: string | null;
@@ -348,7 +347,7 @@ export type PlaceGetMyVisitsOutput = ApiResult<Array<{
   people: string[] | null;
   createdAt: string;
   updatedAt: string;
-}>>;
+}>;
 
 export type PlaceGetPlaceVisitsInput = {
   placeId: string;
@@ -362,7 +361,7 @@ export const placeGetPlaceVisitsSchema = z.object({
   offset: z.number().optional(),
 });
 
-export type PlaceGetPlaceVisitsOutput = ApiResult<Array<{
+export type PlaceGetPlaceVisitsOutput = Array<{
   id: string;
   title: string | null;
   description: string | null;
@@ -381,7 +380,7 @@ export type PlaceGetPlaceVisitsOutput = ApiResult<Array<{
   };
   createdAt: string;
   updatedAt: string;
-}>>;
+}>;
 
 export type PlaceUpdateVisitInput = {
   id: string;
@@ -407,7 +406,7 @@ export const placeUpdateVisitSchema = z.object({
   people: z.array(z.string()).optional(),
 });
 
-export type PlaceUpdateVisitOutput = ApiResult<{
+export type PlaceUpdateVisitOutput = {
   id: string;
   title: string | null;
   description: string | null;
@@ -420,11 +419,11 @@ export type PlaceUpdateVisitOutput = ApiResult<{
   people: string[] | null;
   userId: string;
   updatedAt: string;
-}>;
+};
 
 export type PlaceDeleteVisitInput = { id: string };
 export const placeDeleteVisitSchema = z.object({ id: z.string() });
-export type PlaceDeleteVisitOutput = ApiResult<{ success: boolean }>;
+export type PlaceDeleteVisitOutput = { success: boolean };
 
 // ============================================================================
 // VISIT STATS
@@ -446,7 +445,7 @@ export const placeGetVisitStatsSchema = z.object({
   }).optional(),
 });
 
-export type PlaceGetVisitStatsOutput = ApiResult<{
+export type PlaceGetVisitStatsOutput = {
   totalVisits: number;
   averageRating?: number;
   lastVisit?: string;
@@ -459,4 +458,4 @@ export type PlaceGetVisitStatsOutput = ApiResult<{
     person: string;
     count: number;
   }>;
-}>;
+};

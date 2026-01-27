@@ -21,9 +21,7 @@ export const useAddItemToList = () => {
     },
     {
       onSuccess: (result: ItemsAddToListOutput, variables: ItemsAddToListInput) => {
-        if (result.success) {
-          utils.invalidate(['items', 'by-list', variables.listId]);
-        }
+        utils.invalidate(['items', 'by-list', variables.listId]);
       },
     },
   );
@@ -41,9 +39,7 @@ export const useRemoveItemFromList = () => {
     },
     {
       onSuccess: (result: ItemsRemoveFromListOutput, variables: ItemsRemoveFromListInput) => {
-        if (result.success) {
-          utils.invalidate(['items', 'by-list', variables.listId]);
-        }
+        utils.invalidate(['items', 'by-list', variables.listId]);
       },
     },
   );
@@ -56,7 +52,7 @@ export const useListItems = (listId: string | undefined) =>
   useHonoQuery<ItemsGetByListIdOutput>(
     ['items', 'by-list', listId],
     async (client: HonoClient) => {
-      if (!listId) return { success: true, data: [] } as unknown as ItemsGetByListIdOutput;
+      if (!listId) return [] as unknown as ItemsGetByListIdOutput;
       const res = await client.api.items['by-list'].$post({ json: { listId } });
       return res.json();
     },

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 
 // ============================================================================
 // GENERATE TWEET
@@ -33,9 +32,9 @@ export const tweetGenerateSchema = z.object({
     .default('storytelling'),
 });
 
-export type TweetGenerateOutput = ApiResult<{
+export type TweetGenerateOutput = {
   text: string;
   hashtags: string[];
   characterCount: number;
   isOverLimit: boolean;
-}>;
+};

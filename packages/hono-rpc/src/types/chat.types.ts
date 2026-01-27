@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 
 // ============================================================================
 // Data Types
@@ -69,19 +68,19 @@ export type ChatsSendOutputData = {
   };
 };
 
-export type ChatsSendOutput = ApiResult<ChatsSendOutputData>;
+export type ChatsSendOutput = ChatsSendOutputData;
 
 // ============================================================================
 // LIST CHATS
 // ============================================================================
 
-export type ChatsListOutput = ApiResult<Chat[]>;
+export type ChatsListOutput = Chat[];
 
 // ============================================================================
 // GET CHAT
 // ============================================================================
 
-export type ChatsGetOutput = ApiResult<ChatWithMessages>;
+export type ChatsGetOutput = ChatWithMessages;
 
 // ============================================================================
 // CREATE CHAT
@@ -91,7 +90,7 @@ export type ChatsCreateInput = {
   title: string;
 };
 
-export type ChatsCreateOutput = ApiResult<Chat>;
+export type ChatsCreateOutput = Chat;
 
 // ============================================================================
 // UPDATE CHAT
@@ -101,37 +100,37 @@ export type ChatsUpdateInput = {
   title: string;
 };
 
-export type ChatsUpdateOutput = ApiResult<{ success: boolean }>;
+export type ChatsUpdateOutput = { success: boolean };
 
 // ============================================================================
 // DELETE CHAT
 // ============================================================================
 
-export type ChatsDeleteOutput = ApiResult<{ success: boolean }>;
+export type ChatsDeleteOutput = { success: boolean };
 
 // ============================================================================
 // GET MESSAGES
 // ============================================================================
 
-export type ChatsGetMessagesOutput = ApiResult<ChatMessage[]>;
+export type ChatsGetMessagesOutput = ChatMessage[];
 
 // ============================================================================
 // MESSAGES OPERATIONS
 // ============================================================================
 
-export type MessagesGetOutput = ApiResult<{ message: ChatMessage }>;
+export type MessagesGetOutput = { message: ChatMessage };
 
 export type MessagesUpdateInput = {
   content: string;
 };
 
-export type MessagesUpdateOutput = ApiResult<{ message: ChatMessage }>;
+export type MessagesUpdateOutput = { message: ChatMessage };
 
-export type MessagesDeleteOutput = ApiResult<{ success: boolean }>;
+export type MessagesDeleteOutput = { success: boolean };
 
 export type MessagesDeleteAfterInput = {
   chatId: string;
   afterTimestamp: string;
 };
 
-export type MessagesDeleteAfterOutput = ApiResult<{ deletedCount: number }>;
+export type MessagesDeleteAfterOutput = { deletedCount: number };

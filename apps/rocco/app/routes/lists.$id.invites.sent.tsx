@@ -20,7 +20,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function ListSentInvites({ loaderData }: Route.ComponentProps) {
   const { data: invitesData, isLoading } = useSentInvites();
-  const invites = invitesData?.success ? invitesData.data : [];
+  const invites = invitesData ?? [];
 
   return (
     <>
@@ -30,7 +30,7 @@ export default function ListSentInvites({ loaderData }: Route.ComponentProps) {
         {invites?.length === 0 && 'Your invites will appear here.'}
         {invites && invites.length > 0 && (
           <ul className="space-y-2">
-            {invites.map((invite) => (
+            {invites.map((invite: any) => (
               <li key={invite.listId} className="card shadow-md p-4">
                 <p>
                   <span className="font-semibold mr-2">List ID:</span>

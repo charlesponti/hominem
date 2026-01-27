@@ -1,6 +1,5 @@
 import { google } from '@ai-sdk/google';
-import { ContentStrategiesService } from '@hominem/services';
-import { error, success } from '@hominem/services';
+import { ContentStrategiesService, NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -40,31 +39,30 @@ function getDefaultStrategyPrompt(strategy: string) {
 export const tweetRoutes = new Hono<AppContext>()
   // Generate tweet
   .post('/generate', authMiddleware, async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const body = await c.req.json();
-      const parsed = tweetGenerateSchema.safeParse(body);
+    const userId = c.get('userId')!;
+    const body = await c.req.json();
+    const parsed = tweetGenerateSchema.safeParse(body);
 
-      if (!parsed.success) {
-        return c.json<TweetGenerateOutput>(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.issues[0].message);
+    }
+
+    const { content, strategyType, strategy } = parsed.data;
+    const contentStrategiesService = new ContentStrategiesService();
+
+    let strategyPrompt = '';
+    let strategyName = '';
+
+    if (strategyType === 'custom') {
+      // Fetch custom strategy from database
+      const customStrategy = await contentStrategiesService.getById(strategy as string, userId);
+
+      if (!customStrategy) {
+        throw new NotFoundError('Custom content strategy not found');
       }
 
-      const { content, strategyType, strategy } = parsed.data;
-      const contentStrategiesService = new ContentStrategiesService();
-
-      let strategyPrompt = '';
-      let strategyName = '';
-
-      if (strategyType === 'custom') {
-        // Fetch custom strategy from database
-        const customStrategy = await contentStrategiesService.getById(strategy as string, userId);
-
-        if (!customStrategy) {
-          return c.json<TweetGenerateOutput>(error('NOT_FOUND', 'Custom content strategy not found'), 404);
-        }
-
-        strategyName = customStrategy.title;
-        strategyPrompt = `
+      strategyName = customStrategy.title;
+      strategyPrompt = `
 CUSTOM CONTENT STRATEGY: ${customStrategy.title}
 Description: ${customStrategy.description || 'No description provided'}
 
@@ -74,14 +72,14 @@ Strategy Details:
 - Key Insights: ${customStrategy.strategy.keyInsights?.join(', ') || 'None specified'}
 
 Apply this custom strategy when creating the tweet, focusing on the target audience and incorporating the strategic approach outlined above.`;
-      } else {
-        // Use default strategy
-        strategyName = strategy as string;
-        strategyPrompt = getDefaultStrategyPrompt(strategy as string);
-      }
+    } else {
+      // Use default strategy
+      strategyName = strategy as string;
+      strategyPrompt = getDefaultStrategyPrompt(strategy as string);
+    }
 
-      // Create system prompt based on strategy
-      const systemPrompt = `You are a social media expert specializing in creating engaging Twitter content.
+    // Create system prompt based on strategy
+    const systemPrompt = `You are a social media expert specializing in creating engaging Twitter content.
 
 TASK: Convert the provided content into a compelling tweet using the specified content strategy.
 
@@ -97,39 +95,29 @@ ${strategyPrompt}
 
 Return only the tweet text, nothing else.`;
 
-      const result = await generateText({
-        model: google('gemini-1.5-pro-latest'),
-        system: systemPrompt,
-        prompt: `Convert this content into an engaging tweet using the ${strategyName} strategy:\n\n${content}`,
-        maxTokens: 100,
-        temperature: 0.7,
-      });
+    const result = await generateText({
+      model: google('gemini-1.5-pro-latest'),
+      system: systemPrompt,
+      prompt: `Convert this content into an engaging tweet using the ${strategyName} strategy:\n\n${content}`,
+      maxTokens: 100,
+      temperature: 0.7,
+    });
 
-      const tweetText = result.text.trim();
+    const tweetText = result.text.trim();
 
-      // Extract hashtags for metadata
-      const hashtagRegex = /#(\w+)/g;
-      const hashtags = [...tweetText.matchAll(hashtagRegex)].map((match) => match[0]);
+    // Extract hashtags for metadata
+    const hashtagRegex = /#(\w+)/g;
+    const hashtags = [...tweetText.matchAll(hashtagRegex)].map((match) => match[0]);
 
-      // Check character count
-      const characterCount = tweetText.length;
+    // Check character count
+    const characterCount = tweetText.length;
 
-      return c.json<TweetGenerateOutput>(
-        success({
-          text: tweetText,
-          hashtags,
-          characterCount,
-          isOverLimit: characterCount > TWEET_CHARACTER_LIMIT,
-        }),
-      );
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return c.json<TweetGenerateOutput>(
-          error('VALIDATION_ERROR', `Invalid input: ${err.issues.map((i) => i.message).join(', ')}`),
-          400,
-        );
-      }
-      console.error('[tweet.generate] error:', err);
-      return c.json<TweetGenerateOutput>(error('INTERNAL_ERROR', 'Failed to generate tweet'), 500);
-    }
+    return c.json<TweetGenerateOutput>(
+      {
+        text: tweetText,
+        hashtags,
+        characterCount,
+        isOverLimit: characterCount > TWEET_CHARACTER_LIMIT,
+      },
+    );
   });

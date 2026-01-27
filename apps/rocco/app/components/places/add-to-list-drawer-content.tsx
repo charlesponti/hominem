@@ -34,7 +34,7 @@ export const AddToListDrawerContent = ({
   const revalidator = useRevalidator();
 
   const { isLoading, data: rawListsResult } = useLists();
-  const rawLists = rawListsResult?.success ? rawListsResult.data : [];
+  const rawLists = rawListsResult ?? [];
 
   const lists = useMemo(() => {
     if (!(rawLists && googleMapsId)) {
@@ -100,9 +100,7 @@ export const AddToListDrawerContent = ({
         isPublic: false,
       });
 
-      if (result.success) {
-        onListSelectChange(result.data.id, false);
-      }
+      onListSelectChange(result.id, false);
     } catch (error) {
       console.error('Failed to create list:', error);
     }

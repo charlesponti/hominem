@@ -46,12 +46,11 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     isLoading,
     error,
   } = useListById(listId, {
-    initialData: { success: true, data: loaderData.list as any }, // Cast to match API type
+    initialData: loaderData.list as any, // Direct data, no wrapper
     staleTime: 1000 * 60,
   });
 
-  const list = result?.success && result.data ? result.data : loaderData.list;
-  const apiError = result?.success === false ? result : null;
+  const list = result ?? loaderData.list;
   const { currentLocation, isLoading: isLoadingLocation } = useGeolocation();
 
   const places = list.places || []; // Ensure places is an array
@@ -89,9 +88,9 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     <MapInteractionProvider>
       <div className="space-y-4">
         <div className="flex-1 space-y-2">
-          {(error || apiError) && (
+          {error && (
             <Alert type="error" dismissible>
-              Error loading list updates: {error?.message || apiError?.message}
+              Error loading list updates: {error?.message}
             </Alert>
           )}
           <div

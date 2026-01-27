@@ -6,7 +6,7 @@ import {
   deleteTransaction,
   getAccountById,
 } from '@hominem/finance-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -49,27 +49,19 @@ export const transactionsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as z.infer<typeof transactionListSchema>;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await queryTransactions({
-        ...input,
-        userId,
-      });
+    const result = await queryTransactions({
+      ...input,
+      userId,
+    });
 
-      return c.json<TransactionListOutput>(
-        success({
-          data: result.data.map(serializeTransaction),
-          filteredCount: result.filteredCount,
-          totalUserCount: result.totalUserCount,
-        }),
-        200,
-      );
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TransactionListOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error querying transactions:', err);
-      return c.json<TransactionListOutput>(error('INTERNAL_ERROR', 'Failed to query transactions'), 500);
-    }
+    return c.json<TransactionListOutput>(
+      {
+        data: result.data.map(serializeTransaction),
+        filteredCount: result.filteredCount,
+        totalUserCount: result.totalUserCount,
+      },
+      200,
+    );
   })
 
   // POST /create - Create new transaction
@@ -80,28 +72,20 @@ export const transactionsRoutes = new Hono<AppContext>()
       const input = c.req.valid('json') as any;
       const userId = c.get('userId')!;
 
-      try {
-        // Validate account if provided
-        if (input.accountId) {
-          const account = await getAccountById(input.accountId, userId);
-          if (!account) {
-            return c.json<TransactionCreateOutput>(error('NOT_FOUND', 'Account not found'), 404);
-          }
+      // Validate account if provided
+      if (input.accountId) {
+        const account = await getAccountById(input.accountId, userId);
+        if (!account) {
+          throw new NotFoundError('Account not found');
         }
-
-        const result = await createTransaction({
-          ...input,
-          userId,
-        });
-
-        return c.json<TransactionCreateOutput>(success(serializeTransaction(result)), 201);
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<TransactionCreateOutput>(error(err.code, err.message), err.statusCode as any);
-        }
-        console.error('Error creating transaction:', err);
-        return c.json<TransactionCreateOutput>(error('INTERNAL_ERROR', 'Failed to create transaction'), 500);
       }
+
+      const result = await createTransaction({
+        ...input,
+        userId,
+      });
+
+      return c.json<TransactionCreateOutput>(serializeTransaction(result), 201);
     },
   )
 
@@ -111,29 +95,21 @@ export const transactionsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const { id, data } = input;
 
-    try {
-      // Validate account if provided
-      if (data.accountId) {
-        const account = await getAccountById(data.accountId, userId);
-        if (!account) {
-          return c.json<TransactionUpdateOutput>(error('NOT_FOUND', 'Account not found'), 404);
-        }
+    // Validate account if provided
+    if (data.accountId) {
+      const account = await getAccountById(data.accountId, userId);
+      if (!account) {
+        throw new NotFoundError('Account not found');
       }
-
-      const result = await updateTransaction({ transactionId: id, ...data } as any, userId);
-
-      if (!result) {
-        return c.json<TransactionUpdateOutput>(error('NOT_FOUND', 'Transaction not found'), 404);
-      }
-
-      return c.json<TransactionUpdateOutput>(success(serializeTransaction(result)), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TransactionUpdateOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error updating transaction:', err);
-      return c.json<TransactionUpdateOutput>(error('INTERNAL_ERROR', 'Failed to update transaction'), 500);
     }
+
+    const result = await updateTransaction({ transactionId: id, ...data } as any, userId);
+
+    if (!result) {
+      throw new NotFoundError('Transaction not found');
+    }
+
+    return c.json<TransactionUpdateOutput>(serializeTransaction(result), 200);
   })
 
   // POST /delete - Delete transaction
@@ -141,14 +117,6 @@ export const transactionsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as z.infer<typeof transactionDeleteSchema>;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await deleteTransaction({ transactionId: input.id }, userId);
-      return c.json<TransactionDeleteOutput>(success(result), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TransactionDeleteOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error deleting transaction:', err);
-      return c.json<TransactionDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete transaction'), 500);
-    }
+    const result = await deleteTransaction({ transactionId: input.id }, userId);
+    return c.json<TransactionDeleteOutput>(result, 200);
   });

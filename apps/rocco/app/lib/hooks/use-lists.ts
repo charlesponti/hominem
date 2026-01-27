@@ -1,7 +1,6 @@
 import type { HonoClient } from '@hominem/hono-client';
 import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/hono-client/react';
 import type {
-  List,
   ListGetAllOutput,
   ListGetByIdOutput,
   ListCreateInput,
@@ -66,9 +65,7 @@ export const useCreateList = (options?: HonoMutationOptions<ListCreateOutput, Li
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.lists.all());
-        }
+        utils.invalidate(queryKeys.lists.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -88,10 +85,8 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.lists.all());
-          utils.invalidate(queryKeys.lists.get(result.data.id));
-        }
+        utils.invalidate(queryKeys.lists.all());
+        utils.invalidate(queryKeys.lists.get(result.id));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -111,9 +106,7 @@ export const useDeleteList = (options?: HonoMutationOptions<ListDeleteOutput, Li
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.lists.all());
-        }
+        utils.invalidate(queryKeys.lists.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -135,10 +128,8 @@ export const useDeleteListItem = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.lists.all());
-          utils.invalidate(queryKeys.lists.get(variables.listId));
-        }
+        utils.invalidate(queryKeys.lists.all());
+        utils.invalidate(queryKeys.lists.get(variables.listId));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -180,10 +171,8 @@ export const useRemoveCollaborator = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.lists.all());
-          utils.invalidate(queryKeys.lists.get(variables.listId));
-        }
+        utils.invalidate(queryKeys.lists.all());
+        utils.invalidate(queryKeys.lists.get(variables.listId));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,

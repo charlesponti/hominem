@@ -12,7 +12,7 @@ import {
   getTransactionCategoriesAnalysis,
   bulkCreateBudgetCategoriesFromTransactions,
 } from '@hominem/finance-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { NotFoundError, ValidationError, ConflictError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -57,22 +57,8 @@ export const budgetRoutes = new Hono<AppContext>()
   .post('/categories/list', async (c) => {
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getAllBudgetCategories(userId);
-      return c.json<BudgetCategoriesListOutput>(success(result.map(serializeBudgetCategory)), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<BudgetCategoriesListOutput>(
-          error(err.code, err.message),
-          err.statusCode as any,
-        );
-      }
-      console.error('Error listing budget categories:', err);
-      return c.json<BudgetCategoriesListOutput>(
-        error('INTERNAL_ERROR', 'Failed to list budget categories'),
-        500,
-      );
-    }
+    const result = await getAllBudgetCategories(userId);
+    return c.json<BudgetCategoriesListOutput>(result.map(serializeBudgetCategory), 200);
   })
 
   // POST /categories/list-with-spending - List with spending
@@ -83,45 +69,29 @@ export const budgetRoutes = new Hono<AppContext>()
       const input = c.req.valid('json') as { monthYear: string };
       const userId = c.get('userId')!;
 
-      try {
-        const result = await getBudgetCategoriesWithSpending({
-          userId,
-          monthYear: input.monthYear,
-        });
+      const result = await getBudgetCategoriesWithSpending({
+        userId,
+        monthYear: input.monthYear,
+      });
 
-        const totalBudgeted = result.reduce((sum, item) => sum + item.budgetAmount, 0);
+      const totalBudgeted = result.reduce((sum, item) => sum + item.budgetAmount, 0);
 
-        return c.json<BudgetCategoriesListWithSpendingOutput>(
-          success(
-            result.map((item) => ({
-              ...serializeBudgetCategory(item),
-              actualSpending: item.actualSpending,
-              percentageSpent: item.percentageSpent,
-              budgetAmount: item.budgetAmount,
-              allocationPercentage:
-                totalBudgeted > 0 ? (item.budgetAmount / totalBudgeted) * 100 : 0,
-              variance: item.variance,
-              remaining: item.remaining,
-              color: item.color || '#000000',
-              status: item.status as any,
-              statusColor: item.statusColor || '#000000',
-            })),
-          ),
-          200,
-        );
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<BudgetCategoriesListWithSpendingOutput>(
-            error(err.code, err.message),
-            err.statusCode as any,
-          );
-        }
-        console.error('Error listing categories with spending:', err);
-        return c.json<BudgetCategoriesListWithSpendingOutput>(
-          error('INTERNAL_ERROR', 'Failed to list categories with spending'),
-          500,
-        );
-      }
+      return c.json<BudgetCategoriesListWithSpendingOutput>(
+        result.map((item) => ({
+          ...serializeBudgetCategory(item),
+          actualSpending: item.actualSpending,
+          percentageSpent: item.percentageSpent,
+          budgetAmount: item.budgetAmount,
+          allocationPercentage:
+            totalBudgeted > 0 ? (item.budgetAmount / totalBudgeted) * 100 : 0,
+          variance: item.variance,
+          remaining: item.remaining,
+          color: item.color || '#000000',
+          status: item.status as any,
+          statusColor: item.statusColor || '#000000',
+        })),
+        200,
+      );
     },
   )
 
@@ -130,22 +100,11 @@ export const budgetRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as { id: string };
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getBudgetCategoryById(input.id, userId);
-      if (!result) {
-        return c.json<BudgetCategoryGetOutput>(error('NOT_FOUND', 'Category not found'), 404);
-      }
-      return c.json<BudgetCategoryGetOutput>(success(serializeBudgetCategory(result)), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<BudgetCategoryGetOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting budget category:', err);
-      return c.json<BudgetCategoryGetOutput>(
-        error('INTERNAL_ERROR', 'Failed to get budget category'),
-        500,
-      );
+    const result = await getBudgetCategoryById(input.id, userId);
+    if (!result) {
+      throw new NotFoundError('Category not found');
     }
+    return c.json<BudgetCategoryGetOutput>(serializeBudgetCategory(result), 200);
   })
 
   // POST /categories/create - Create category
@@ -165,34 +124,17 @@ export const budgetRoutes = new Hono<AppContext>()
       const input = c.req.valid('json') as any;
       const userId = c.get('userId')!;
 
-      try {
-        const existingCategory = await checkBudgetCategoryNameExists(input.name, userId);
-        if (existingCategory) {
-          return c.json<BudgetCategoryCreateOutput>(
-            error('CONFLICT', `A budget category named "${input.name}" already exists`),
-            409,
-          );
-        }
-
-        const result = await createBudgetCategory({
-          ...input,
-          userId,
-        });
-
-        return c.json<BudgetCategoryCreateOutput>(success(serializeBudgetCategory(result)), 201);
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<BudgetCategoryCreateOutput>(
-            error(err.code, err.message),
-            err.statusCode as any,
-          );
-        }
-        console.error('Error creating budget category:', err);
-        return c.json<BudgetCategoryCreateOutput>(
-          error('INTERNAL_ERROR', 'Failed to create budget category'),
-          500,
-        );
+      const existingCategory = await checkBudgetCategoryNameExists(input.name, userId);
+      if (existingCategory) {
+        throw new ConflictError(`A budget category named "${input.name}" already exists`);
       }
+
+      const result = await createBudgetCategory({
+        ...input,
+        userId,
+      });
+
+      return c.json<BudgetCategoryCreateOutput>(serializeBudgetCategory(result), 201);
     },
   )
 
@@ -215,25 +157,11 @@ export const budgetRoutes = new Hono<AppContext>()
       const userId = c.get('userId')!;
       const { id, ...updateData } = input;
 
-      try {
-        const result = await updateBudgetCategory(id, userId, updateData);
-        if (!result) {
-          return c.json<BudgetCategoryUpdateOutput>(error('NOT_FOUND', 'Category not found'), 404);
-        }
-        return c.json<BudgetCategoryUpdateOutput>(success(serializeBudgetCategory(result)), 200);
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<BudgetCategoryUpdateOutput>(
-            error(err.code, err.message),
-            err.statusCode as any,
-          );
-        }
-        console.error('Error updating budget category:', err);
-        return c.json<BudgetCategoryUpdateOutput>(
-          error('INTERNAL_ERROR', 'Failed to update budget category'),
-          500,
-        );
+      const result = await updateBudgetCategory(id, userId, updateData);
+      if (!result) {
+        throw new NotFoundError('Category not found');
       }
+      return c.json<BudgetCategoryUpdateOutput>(serializeBudgetCategory(result), 200);
     },
   )
 
@@ -245,28 +173,14 @@ export const budgetRoutes = new Hono<AppContext>()
       const input = c.req.valid('json') as { id: string };
       const userId = c.get('userId')!;
 
-      try {
-        await deleteBudgetCategory(input.id, userId);
-        return c.json<BudgetCategoryDeleteOutput>(
-          success({
-            success: true,
-            message: 'Budget category deleted successfully',
-          }),
-          200,
-        );
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<BudgetCategoryDeleteOutput>(
-            error(err.code, err.message),
-            err.statusCode as any,
-          );
-        }
-        console.error('Error deleting budget category:', err);
-        return c.json<BudgetCategoryDeleteOutput>(
-          error('INTERNAL_ERROR', 'Failed to delete budget category'),
-          500,
-        );
-      }
+      await deleteBudgetCategory(input.id, userId);
+      return c.json<BudgetCategoryDeleteOutput>(
+        {
+          success: true,
+          message: 'Budget category deleted successfully',
+        },
+        200,
+      );
     },
   )
 
@@ -275,22 +189,11 @@ export const budgetRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as { monthYear: string };
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getBudgetTrackingData({
-        userId,
-        monthYear: input.monthYear,
-      });
-      return c.json<BudgetTrackingOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<BudgetTrackingOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting budget tracking:', err);
-      return c.json<BudgetTrackingOutput>(
-        error('INTERNAL_ERROR', 'Failed to get budget tracking'),
-        500,
-      );
-    }
+    const result = await getBudgetTrackingData({
+      userId,
+      monthYear: input.monthYear,
+    });
+    return c.json<BudgetTrackingOutput>(result as any, 200);
   })
 
   // POST /history - Get budget history
@@ -302,62 +205,51 @@ export const budgetRoutes = new Hono<AppContext>()
       const userId = c.get('userId')!;
       const months = input.months || 12;
 
-      try {
-        const userExpenseCategories = await getUserExpenseCategories(userId);
+      const userExpenseCategories = await getUserExpenseCategories(userId);
 
-        const totalMonthlyBudget = userExpenseCategories.reduce(
-          (sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'),
-          0,
-        );
+      const totalMonthlyBudget = userExpenseCategories.reduce(
+        (sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'),
+        0,
+      );
 
-        const today = new Date();
-        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        const startDate = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
+      const today = new Date();
+      const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const startDate = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
 
-        const allMonthlySummaries = await summarizeByMonth({
-          userId,
-          from: startDate.toISOString(),
-          to: endDate.toISOString(),
-        });
+      const allMonthlySummaries = await summarizeByMonth({
+        userId,
+        from: startDate.toISOString(),
+        to: endDate.toISOString(),
+      });
 
-        const actualsMap = new Map<string, number>();
-        for (const summary of allMonthlySummaries) {
-          if (summary.month && summary.expenses) {
-            actualsMap.set(summary.month, Number.parseFloat(summary.expenses));
-          }
+      const actualsMap = new Map<string, number>();
+      for (const summary of allMonthlySummaries) {
+        if (summary.month && summary.expenses) {
+          actualsMap.set(summary.month, Number.parseFloat(summary.expenses));
         }
-
-        const history = [];
-        for (let i = 0; i < months; i++) {
-          const targetIterationDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
-          const year = targetIterationDate.getFullYear();
-          const monthNum = targetIterationDate.getMonth();
-          const monthKey = `${year}-${(monthNum + 1).toString().padStart(2, '0')}`;
-
-          const displayMonth = targetIterationDate.toLocaleString('default', {
-            month: 'short',
-            year: 'numeric',
-          });
-          const actualSpending = actualsMap.get(monthKey) || 0;
-
-          history.push({
-            date: displayMonth,
-            budgeted: totalMonthlyBudget,
-            actual: actualSpending,
-          });
-        }
-
-        return c.json<BudgetHistoryOutput>(success(history.reverse()), 200);
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<BudgetHistoryOutput>(error(err.code, err.message), err.statusCode as any);
-        }
-        console.error('Error getting budget history:', err);
-        return c.json<BudgetHistoryOutput>(
-          error('INTERNAL_ERROR', 'Failed to get budget history'),
-          500,
-        );
       }
+
+      const history = [];
+      for (let i = 0; i < months; i++) {
+        const targetIterationDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const year = targetIterationDate.getFullYear();
+        const monthNum = targetIterationDate.getMonth();
+        const monthKey = `${year}-${(monthNum + 1).toString().padStart(2, '0')}`;
+
+        const displayMonth = targetIterationDate.toLocaleString('default', {
+          month: 'short',
+          year: 'numeric',
+        });
+        const actualSpending = actualsMap.get(monthKey) || 0;
+
+        history.push({
+          date: displayMonth,
+          budgeted: totalMonthlyBudget,
+          actual: actualSpending,
+        });
+      }
+
+      return c.json<BudgetHistoryOutput>(history.reverse(), 200);
     },
   )
 
@@ -377,75 +269,19 @@ export const budgetRoutes = new Hono<AppContext>()
       const input = c.req.valid('json') as any;
       const userId = c.get('userId')!;
 
-      try {
-        // If manual data is provided, use it directly
-        if (input) {
-          const expenses = input.expenses || [];
-          const totalExpenses = expenses.reduce(
-            (sum: number, expense: any) => sum + expense.amount,
-            0,
-          );
-          const surplus = input.income - totalExpenses;
-          const savingsRate = input.income > 0 ? (surplus / input.income) * 100 : 0;
+      // If manual data is provided, use it directly
+      if (input) {
+        const expenses = input.expenses || [];
+        const totalExpenses = expenses.reduce(
+          (sum: number, expense: any) => sum + expense.amount,
+          0,
+        );
+        const surplus = input.income - totalExpenses;
+        const savingsRate = input.income > 0 ? (surplus / input.income) * 100 : 0;
 
-          const categories = expenses.map((expense: any) => ({
-            ...expense,
-            percentage: input.income > 0 ? (expense.amount / input.income) * 100 : 0,
-          }));
-
-          const projections = Array.from({ length: 12 }, (_, i) => ({
-            month: i + 1,
-            savings: surplus * (i + 1),
-            totalSaved: surplus * (i + 1),
-          }));
-
-          return c.json<BudgetCalculateOutput>(
-            success({
-              totalBudget: totalExpenses,
-              income: input.income,
-              totalExpenses,
-              surplus,
-              savingsRate,
-              categories,
-              projections,
-              calculatedAt: new Date().toISOString(),
-              source: 'manual',
-            }),
-            200,
-          );
-        }
-
-        // Otherwise, use user's budget categories
-        const userCategories = await getAllBudgetCategories(userId);
-
-        if (userCategories.length === 0) {
-          return c.json<BudgetCalculateOutput>(
-            error('NOT_FOUND', 'No budget categories found'),
-            404,
-          );
-        }
-
-        const income = userCategories
-          .filter((cat) => cat.type === 'income')
-          .reduce(
-            (sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'),
-            0,
-          );
-
-        const expenses = userCategories
-          .filter((cat) => cat.type === 'expense')
-          .map((cat) => ({
-            category: cat.name,
-            amount: Number.parseFloat(cat.averageMonthlyExpense || '0'),
-          }));
-
-        const totalExpenses = expenses.reduce((sum: number, expense) => sum + expense.amount, 0);
-        const surplus = income - totalExpenses;
-        const savingsRate = income > 0 ? (surplus / income) * 100 : 0;
-
-        const categories = expenses.map((expense) => ({
+        const categories = expenses.map((expense: any) => ({
           ...expense,
-          percentage: income > 0 ? (expense.amount / income) * 100 : 0,
+          percentage: input.income > 0 ? (expense.amount / input.income) * 100 : 0,
         }));
 
         const projections = Array.from({ length: 12 }, (_, i) => ({
@@ -455,29 +291,71 @@ export const budgetRoutes = new Hono<AppContext>()
         }));
 
         return c.json<BudgetCalculateOutput>(
-          success({
+          {
             totalBudget: totalExpenses,
-            income,
+            income: input.income,
             totalExpenses,
             surplus,
             savingsRate,
             categories,
             projections,
             calculatedAt: new Date().toISOString(),
-            source: 'categories',
-          }),
+            source: 'manual',
+          },
           200,
         );
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<BudgetCalculateOutput>(error(err.code, err.message), err.statusCode as any);
-        }
-        console.error('Error calculating budget:', err);
-        return c.json<BudgetCalculateOutput>(
-          error('INTERNAL_ERROR', 'Failed to calculate budget'),
-          500,
-        );
       }
+
+      // Otherwise, use user's budget categories
+      const userCategories = await getAllBudgetCategories(userId);
+
+      if (userCategories.length === 0) {
+        throw new NotFoundError('No budget categories found');
+      }
+
+      const income = userCategories
+        .filter((cat) => cat.type === 'income')
+        .reduce(
+          (sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'),
+          0,
+        );
+
+      const expenses = userCategories
+        .filter((cat) => cat.type === 'expense')
+        .map((cat) => ({
+          category: cat.name,
+          amount: Number.parseFloat(cat.averageMonthlyExpense || '0'),
+        }));
+
+      const totalExpenses = expenses.reduce((sum: number, expense) => sum + expense.amount, 0);
+      const surplus = income - totalExpenses;
+      const savingsRate = income > 0 ? (surplus / income) * 100 : 0;
+
+      const categories = expenses.map((expense) => ({
+        ...expense,
+        percentage: income > 0 ? (expense.amount / income) * 100 : 0,
+      }));
+
+      const projections = Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        savings: surplus * (i + 1),
+        totalSaved: surplus * (i + 1),
+      }));
+
+      return c.json<BudgetCalculateOutput>(
+        {
+          totalBudget: totalExpenses,
+          income,
+          totalExpenses,
+          surplus,
+          savingsRate,
+          categories,
+          projections,
+          calculatedAt: new Date().toISOString(),
+          source: 'categories',
+        },
+        200,
+      );
     },
   )
 
@@ -485,22 +363,8 @@ export const budgetRoutes = new Hono<AppContext>()
   .post('/transaction-categories', async (c) => {
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getTransactionCategoriesAnalysis(userId);
-      return c.json<TransactionCategoryAnalysisOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TransactionCategoryAnalysisOutput>(
-          error(err.code, err.message),
-          err.statusCode as any,
-        );
-      }
-      console.error('Error getting transaction categories:', err);
-      return c.json<TransactionCategoryAnalysisOutput>(
-        error('INTERNAL_ERROR', 'Failed to get transaction categories'),
-        500,
-      );
-    }
+    const result = await getTransactionCategoriesAnalysis(userId);
+    return c.json<TransactionCategoryAnalysisOutput>(result as any, 200);
   })
 
   // POST /bulk-create - Bulk create from transactions
@@ -523,27 +387,13 @@ export const budgetRoutes = new Hono<AppContext>()
       const input = c.req.valid('json') as any;
       const userId = c.get('userId')!;
 
-      try {
-        const result = await bulkCreateBudgetCategoriesFromTransactions(userId, input.categories);
-        return c.json<BudgetBulkCreateOutput>(
-          success({
-            created: result.created ?? 0,
-            categories: result.categories.map(serializeBudgetCategory),
-          }),
-          201,
-        );
-      } catch (err) {
-        if (isServiceError(err)) {
-          return c.json<BudgetBulkCreateOutput>(
-            error(err.code, err.message),
-            err.statusCode as any,
-          );
-        }
-        console.error('Error bulk creating categories:', err);
-        return c.json<BudgetBulkCreateOutput>(
-          error('INTERNAL_ERROR', 'Failed to bulk create categories'),
-          500,
-        );
-      }
+      const result = await bulkCreateBudgetCategoriesFromTransactions(userId, input.categories);
+      return c.json<BudgetBulkCreateOutput>(
+        {
+          created: result.created ?? 0,
+          categories: result.categories.map(serializeBudgetCategory),
+        },
+        201,
+      );
     },
   );

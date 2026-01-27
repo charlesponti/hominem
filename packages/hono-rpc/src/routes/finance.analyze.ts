@@ -5,7 +5,7 @@ import {
   calculateTransactions,
   getMonthlyStats,
 } from '@hominem/finance-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -41,20 +41,12 @@ export const analyzeRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await generateTimeSeriesData({
-        ...input,
-        userId,
-      });
+    const result = await generateTimeSeriesData({
+      ...input,
+      userId,
+    });
 
-      return c.json<SpendingTimeSeriesOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<SpendingTimeSeriesOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error generating time series:', err);
-      return c.json<SpendingTimeSeriesOutput>(error('INTERNAL_ERROR', 'Failed to generate time series'), 500);
-    }
+    return c.json<SpendingTimeSeriesOutput>(result as any, 200);
   })
 
   // POST /top-merchants - Top merchants
@@ -68,16 +60,8 @@ export const analyzeRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getTopMerchants(userId, input);
-      return c.json<TopMerchantsOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TopMerchantsOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting top merchants:', err);
-      return c.json<TopMerchantsOutput>(error('INTERNAL_ERROR', 'Failed to get top merchants'), 500);
-    }
+    const result = await getTopMerchants(userId, input);
+    return c.json<TopMerchantsOutput>(result as any, 200);
   })
 
   // POST /category-breakdown - Category breakdown
@@ -90,16 +74,8 @@ export const analyzeRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getCategoryBreakdown(userId, input);
-      return c.json<CategoryBreakdownOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<CategoryBreakdownOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting category breakdown:', err);
-      return c.json<CategoryBreakdownOutput>(error('INTERNAL_ERROR', 'Failed to get category breakdown'), 500);
-    }
+    const result = await getCategoryBreakdown(userId, input);
+    return c.json<CategoryBreakdownOutput>(result as any, 200);
   })
 
   // POST /calculate - Calculate transactions
@@ -115,20 +91,12 @@ export const analyzeRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await calculateTransactions({
-        ...input,
-        userId,
-      });
+    const result = await calculateTransactions({
+      ...input,
+      userId,
+    });
 
-      return c.json<CalculateTransactionsOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<CalculateTransactionsOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error calculating transactions:', err);
-      return c.json<CalculateTransactionsOutput>(error('INTERNAL_ERROR', 'Failed to calculate transactions'), 500);
-    }
+    return c.json<CalculateTransactionsOutput>(result as any, 200);
   })
 
   // POST /monthly-stats - Monthly statistics
@@ -138,18 +106,10 @@ export const analyzeRoutes = new Hono<AppContext>()
     const input = c.req.valid('json') as any;
     const userId = c.get('userId')!;
 
-    try {
-      const result = await getMonthlyStats({
-        month: input.month,
-        userId,
-      });
+    const result = await getMonthlyStats({
+      month: input.month,
+      userId,
+    });
 
-      return c.json<MonthlyStatsOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<MonthlyStatsOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error getting monthly stats:', err);
-      return c.json<MonthlyStatsOutput>(error('INTERNAL_ERROR', 'Failed to get monthly stats'), 500);
-    }
+    return c.json<MonthlyStatsOutput>(result as any, 200);
   });

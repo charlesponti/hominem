@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { Goal } from '@hominem/services/types';
-import type { ApiResult } from '@hominem/services';
 import type { JsonSerialized } from './utils';
 
 // ============================================================================
@@ -54,9 +53,9 @@ export type GoalCreateInput = z.infer<typeof GoalCreateInputSchema>;
 export type GoalUpdateInput = z.infer<typeof GoalUpdateInputSchema>;
 export type GoalListQuery = z.infer<typeof GoalListQuerySchema>;
 
-export type GoalListOutput = ApiResult<GoalJson[]>;
-export type GoalGetOutput = ApiResult<GoalJson>;
-export type GoalCreateOutput = ApiResult<GoalJson>;
-export type GoalUpdateOutput = ApiResult<GoalJson>;
-export type GoalDeleteOutput = ApiResult<GoalJson>;
-export type GoalArchiveOutput = ApiResult<GoalJson>;
+export type GoalListOutput = GoalJson[];
+export type GoalGetOutput = GoalJson;
+export type GoalCreateOutput = GoalJson;
+export type GoalUpdateOutput = GoalJson;
+export type GoalDeleteOutput = GoalJson;
+export type GoalArchiveOutput = GoalJson;

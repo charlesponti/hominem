@@ -26,9 +26,9 @@ export const useTrips = () =>
  */
 export const useTripById = (id: string | undefined) =>
   useHonoQuery<TripsGetByIdOutput>(
-    queryKeys.trips.get(id || '') ,
+    queryKeys.trips.get(id || ''),
     async (client: HonoClient) => {
-      if (!id) return { success: true, data: null } as unknown as TripsGetByIdOutput;
+      if (!id) return null as unknown as TripsGetByIdOutput;
       const res = await client.api.trips.get.$post({ json: { id } });
       return res.json() as Promise<TripsGetByIdOutput>;
     },
@@ -49,9 +49,7 @@ export const useCreateTrip = () => {
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.trips.all() );
-        }
+        utils.invalidate(queryKeys.trips.all());
       },
     },
   );
@@ -69,9 +67,7 @@ export const useAddItemToTrip = () => {
     },
     {
       onSuccess: (result, variables) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.trips.get(variables.tripId) );
-        }
+        utils.invalidate(queryKeys.trips.get(variables.tripId));
       },
     },
   );

@@ -19,7 +19,7 @@ import {
   removePlaceFromList,
   type PlaceInsert,
 } from '@hominem/places-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -226,14 +226,14 @@ export const placesRoutes = new Hono<AppContext>()
         console.warn('[places.create] Failed to enqueue photo enrichment:', err);
       }
 
-      return c.json<PlaceCreateOutput>(success(createdPlace as any), 201);
+      return c.json<PlaceCreateOutput>(createdPlace as any, 201);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceCreateOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.create] unexpected error:', err);
-      return c.json<PlaceCreateOutput>(error('INTERNAL_ERROR', 'Failed to create place'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -245,17 +245,17 @@ export const placesRoutes = new Hono<AppContext>()
       const updatedPlace = await createOrUpdatePlace(input.id, input);
 
       if (!updatedPlace) {
-        return c.json<PlaceUpdateOutput>(error('NOT_FOUND', 'Place not found'), 404);
+        throw new NotFoundError('');
       }
 
-      return c.json<PlaceUpdateOutput>(success(updatedPlace as any), 200);
+      return c.json<PlaceUpdateOutput>(updatedPlace as any, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceUpdateOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.update] unexpected error:', err);
-      return c.json<PlaceUpdateOutput>(error('INTERNAL_ERROR', 'Failed to update place'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -267,17 +267,17 @@ export const placesRoutes = new Hono<AppContext>()
       const success_ = await deletePlaceById(input.id);
 
       if (!success_) {
-        return c.json<PlaceDeleteOutput>(error('NOT_FOUND', 'Place not found'), 404);
+        throw new NotFoundError('');
       }
 
-      return c.json<PlaceDeleteOutput>(success({ success: true }), 200);
+      return c.json<PlaceDeleteOutput>({ success: true }, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceDeleteOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.delete] unexpected error:', err);
-      return c.json<PlaceDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete place'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -288,7 +288,7 @@ export const placesRoutes = new Hono<AppContext>()
 
       const query = input.query.trim();
       if (query.length < 2) {
-        return c.json<PlaceAutocompleteOutput>(success([]), 200);
+        return c.json<PlaceAutocompleteOutput>([], 200);
       }
 
       const locationBias =
@@ -306,14 +306,14 @@ export const placesRoutes = new Hono<AppContext>()
       });
 
       const predictions = places.map(mapGooglePlaceToPrediction);
-      return c.json<PlaceAutocompleteOutput>(success(predictions), 200);
+      return c.json<PlaceAutocompleteOutput>(predictions, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceAutocompleteOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.autocomplete] unexpected error:', err);
-      return c.json<PlaceAutocompleteOutput>(error('INTERNAL_ERROR', 'Failed to fetch autocomplete suggestions'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -326,7 +326,7 @@ export const placesRoutes = new Hono<AppContext>()
       const dbPlace = await getPlaceById(input.id);
 
       if (!dbPlace) {
-        return c.json<PlaceGetDetailsByIdOutput>(error('NOT_FOUND', 'Place not found'), 404);
+        throw new NotFoundError('');
       }
 
       // Enqueue photo enrichment if needed
@@ -347,14 +347,14 @@ export const placesRoutes = new Hono<AppContext>()
         // Non-fatal
       }
 
-      return c.json<PlaceGetDetailsByIdOutput>(success(dbPlace as any), 200);
+      return c.json<PlaceGetDetailsByIdOutput>(dbPlace as any, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceGetDetailsByIdOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.get] unexpected error:', err);
-      return c.json<PlaceGetDetailsByIdOutput>(error('INTERNAL_ERROR', 'Failed to fetch place'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -369,14 +369,14 @@ export const placesRoutes = new Hono<AppContext>()
 
         const place = await getPlaceByGoogleMapsId(input.googleMapsId);
 
-        return c.json<PlaceGetDetailsByGoogleIdOutput>(success(place as any || null), 200);
+        return c.json<PlaceGetDetailsByGoogleIdOutput>(place as any || null, 200);
       } catch (err) {
         if (isServiceError(err)) {
-          return c.json<PlaceGetDetailsByGoogleIdOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+          throw err;
         }
 
         console.error('[places.get-by-google-id] unexpected error:', err);
-        return c.json<PlaceGetDetailsByGoogleIdOutput>(error('INTERNAL_ERROR', 'Failed to fetch place'), 500);
+        throw new InternalError('');
       }
     },
   )
@@ -386,20 +386,17 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeAddToListsSchema>;
 
-      return c.json<PlaceAddToListsOutput>(
-        success({
+       return c.json<PlaceAddToListsOutput>({
           success: true,
           addedToLists: input.listIds.length,
-        }),
-        200,
-      );
+        }, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceAddToListsOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.add-to-lists] unexpected error:', err);
-      return c.json<PlaceAddToListsOutput>(error('INTERNAL_ERROR', 'Failed to add place to lists'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -419,14 +416,14 @@ export const placesRoutes = new Hono<AppContext>()
           userId,
         });
 
-        return c.json<PlaceRemoveFromListOutput>(success({ success: true }), 200);
+        return c.json<PlaceRemoveFromListOutput>({ success: true }, 200);
       } catch (err) {
         if (isServiceError(err)) {
-          return c.json<PlaceRemoveFromListOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+          throw err;
         }
 
         console.error('[places.remove-from-list] unexpected error:', err);
-        return c.json<PlaceRemoveFromListOutput>(error('INTERNAL_ERROR', 'Failed to remove place from list'), 500);
+        throw new InternalError('');
       }
     },
   )
@@ -445,14 +442,14 @@ export const placesRoutes = new Hono<AppContext>()
         limit: input.limit ?? 20,
       });
 
-      return c.json<PlaceGetNearbyFromListsOutput>(success(places as any), 200);
+      return c.json<PlaceGetNearbyFromListsOutput>(places as any, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceGetNearbyFromListsOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.nearby] unexpected error:', err);
-      return c.json<PlaceGetNearbyFromListsOutput>(error('INTERNAL_ERROR', 'Failed to fetch nearby places'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -478,14 +475,14 @@ export const placesRoutes = new Hono<AppContext>()
         people: data.people,
       });
 
-      return c.json<PlaceLogVisitOutput>(success(serializeVisit(event)), 201);
+      return c.json<PlaceLogVisitOutput>(serializeVisit(event), 201);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceLogVisitOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.log-visit] unexpected error:', err);
-      return c.json<PlaceLogVisitOutput>(error('INTERNAL_ERROR', 'Failed to log visit'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -497,14 +494,14 @@ export const placesRoutes = new Hono<AppContext>()
 
       const visits = await getVisitsByUser(userId);
 
-      return c.json<PlaceGetMyVisitsOutput>(success(visits.map(serializeVisitFromService)), 200);
+      return c.json<PlaceGetMyVisitsOutput>(visits.map(serializeVisitFromService), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceGetMyVisitsOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.my-visits] unexpected error:', err);
-      return c.json<PlaceGetMyVisitsOutput>(error('INTERNAL_ERROR', 'Failed to fetch visits'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -519,14 +516,14 @@ export const placesRoutes = new Hono<AppContext>()
 
         const visits = await getVisitsByPlace(input.placeId);
 
-        return c.json<PlaceGetPlaceVisitsOutput>(success(visits.map(serializeVisitFromService)), 200);
+        return c.json<PlaceGetPlaceVisitsOutput>(visits.map(serializeVisitFromService), 200);
       } catch (err) {
         if (isServiceError(err)) {
-          return c.json<PlaceGetPlaceVisitsOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+          throw err;
         }
 
         console.error('[places.place-visits] unexpected error:', err);
-        return c.json<PlaceGetPlaceVisitsOutput>(error('INTERNAL_ERROR', 'Failed to fetch place visits'), 500);
+        throw new InternalError('');
       }
     },
   )
@@ -541,17 +538,17 @@ export const placesRoutes = new Hono<AppContext>()
       const updatedEvent = await updateEvent(id, updateData as any);
 
       if (!updatedEvent) {
-        return c.json<PlaceUpdateVisitOutput>(error('NOT_FOUND', 'Visit not found'), 404);
+        throw new NotFoundError('');
       }
 
-      return c.json<PlaceUpdateVisitOutput>(success(serializeVisit(updatedEvent)), 200);
+      return c.json<PlaceUpdateVisitOutput>(serializeVisit(updatedEvent), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceUpdateVisitOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.update-visit] unexpected error:', err);
-      return c.json<PlaceUpdateVisitOutput>(error('INTERNAL_ERROR', 'Failed to update visit'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -563,17 +560,17 @@ export const placesRoutes = new Hono<AppContext>()
       const success_ = await deleteEvent(input.id);
 
       if (!success_) {
-        return c.json<PlaceDeleteVisitOutput>(error('NOT_FOUND', 'Visit not found'), 404);
+        throw new NotFoundError('');
       }
 
-      return c.json<PlaceDeleteVisitOutput>(success({ success: true }), 200);
+      return c.json<PlaceDeleteVisitOutput>({ success: true }, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceDeleteVisitOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.delete-visit] unexpected error:', err);
-      return c.json<PlaceDeleteVisitOutput>(error('INTERNAL_ERROR', 'Failed to delete visit'), 500);
+      throw new InternalError('');
     }
   })
 
@@ -638,13 +635,13 @@ export const placesRoutes = new Hono<AppContext>()
           .sort((a, b) => b.count - a.count),
       };
 
-      return c.json<PlaceGetVisitStatsOutput>(success(result), 200);
+      return c.json<PlaceGetVisitStatsOutput>(result, 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<PlaceGetVisitStatsOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        throw err;
       }
 
       console.error('[places.visit-stats] unexpected error:', err);
-      return c.json<PlaceGetVisitStatsOutput>(error('INTERNAL_ERROR', 'Failed to fetch visit statistics'), 500);
+      throw new InternalError('');
     }
   });

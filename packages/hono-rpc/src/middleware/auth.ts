@@ -1,6 +1,7 @@
 import type { HominemUser } from '@hominem/auth/server';
 import type { Queues } from '@hominem/services/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { UnauthorizedError } from '@hominem/services';
 
 import { createMiddleware } from 'hono/factory';
 
@@ -25,20 +26,15 @@ export interface AppContext {
  * Authentication Middleware
  *
  * Protects routes that require authentication.
- * Returns 401 if user is not authenticated.
+ * Throws UnauthorizedError if user is not authenticated.
+ * Global error middleware catches and converts to REST response.
  */
 export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const user = c.get('user');
   const userId = c.get('userId');
 
   if (!user || !userId) {
-    return c.json(
-      {
-        error: 'Authentication required',
-        code: 'UNAUTHORIZED',
-      },
-      401,
-    );
+    throw new UnauthorizedError('Authentication required');
   }
 
   return await next();

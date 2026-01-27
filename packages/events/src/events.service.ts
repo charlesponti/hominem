@@ -30,7 +30,12 @@ export interface EventFilters {
   sortBy?: 'date-asc' | 'date-desc' | 'summary';
 }
 
-export async function getEvents(filters: EventFilters = {}) {
+export type EventWithTagsAndPeople = typeof events.$inferSelect & {
+  tags: Array<{ id: string; name: string; color: string | null; description: string | null }>;
+  people: Array<{ id: string; firstName: string; lastName: string | null }>;
+};
+
+export async function getEvents(filters: EventFilters = {}): Promise<EventWithTagsAndPeople[]> {
   const conditions = [];
 
   if (filters.tagNames && filters.tagNames.length > 0) {
@@ -132,7 +137,7 @@ export async function createEvent(
     tags?: string[];
     people?: string[];
   },
-) {
+): Promise<EventWithTagsAndPeople> {
   const [result] = await db
     .insert(events)
     .values({
@@ -183,7 +188,7 @@ export type UpdateEventInput = Partial<
   people?: string[];
 };
 
-export async function updateEvent(id: string, event: UpdateEventInput) {
+export async function updateEvent(id: string, event: UpdateEventInput): Promise<EventWithTagsAndPeople | null> {
   const updateData: Partial<typeof events.$inferInsert> = {};
 
   Object.assign(updateData, { ...event, updatedAt: new Date() });
@@ -226,7 +231,7 @@ export async function deleteEvent(id: string) {
   return result.length > 0;
 }
 
-export async function getEventById(id: string) {
+export async function getEventById(id: string): Promise<EventWithTagsAndPeople | null> {
   const [result] = await db.select().from(events).where(eq(events.id, id)).limit(1);
 
   if (!result) {
@@ -242,7 +247,7 @@ export async function getEventById(id: string) {
   };
 }
 
-export async function getEventByExternalId(externalId: string, calendarId: string) {
+export async function getEventByExternalId(externalId: string, calendarId: string): Promise<EventWithTagsAndPeople | null> {
   const [result] = await db
     .select()
     .from(events)
@@ -293,7 +298,13 @@ export interface VisitFilters {
   endDate?: Date;
 }
 
-export async function getVisitsByUser(userId: string, filters?: VisitFilters) {
+export type VisitWithPlaceAndTags = typeof events.$inferSelect & {
+  place: (typeof place.$inferSelect) | null;
+  tags: Array<{ id: string; name: string; color: string | null; description: string | null }>;
+  people: Array<{ id: string; firstName: string; lastName: string | null }>;
+};
+
+export async function getVisitsByUser(userId: string, filters?: VisitFilters): Promise<VisitWithPlaceAndTags[]> {
   const conditions = [
     eq(events.userId, userId),
     isNull(events.deletedAt),
@@ -336,7 +347,7 @@ export async function getVisitsByUser(userId: string, filters?: VisitFilters) {
   }));
 }
 
-export async function getVisitsByPlace(placeId: string, userId?: string) {
+export async function getVisitsByPlace(placeId: string, userId?: string): Promise<VisitWithPlaceAndTags[]> {
   const conditions = [eq(events.placeId, placeId), isNull(events.deletedAt)];
 
   if (userId) {

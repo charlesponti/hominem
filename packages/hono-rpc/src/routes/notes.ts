@@ -1,6 +1,6 @@
 import { NoteContentTypeSchema, type NoteInsert, TaskMetadataSchema, AllContentTypeSchema, type AllContentType } from '@hominem/db/schema';
 import { NotesService } from '@hominem/notes-services';
-import { error, success } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -98,172 +98,105 @@ export const notesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   // List notes
   .get('/', zValidator('query', notesListQuerySchema), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const queryParams = c.req.valid('query');
+    const userId = c.get('userId')!;
+    const queryParams = c.req.valid('query');
 
-      const types = queryParams.types
-        ?.split(',')
-        .filter((t): t is AllContentType => AllContentTypeSchema.safeParse(t).success);
-      const tags = queryParams.tags?.split(',');
-      const sortBy = queryParams.sortBy || 'createdAt';
-      const sortOrder = queryParams.sortOrder || 'desc';
-      const limit = queryParams.limit ? parseInt(queryParams.limit) : undefined;
-      const offset = queryParams.offset ? parseInt(queryParams.offset) : 0;
+    const types = queryParams.types
+      ?.split(',')
+      .filter((t): t is AllContentType => AllContentTypeSchema.safeParse(t).success);
+    const tags = queryParams.tags?.split(',');
+    const sortBy = queryParams.sortBy || 'createdAt';
+    const sortOrder = queryParams.sortOrder || 'desc';
+    const limit = queryParams.limit ? parseInt(queryParams.limit) : undefined;
+    const offset = queryParams.offset ? parseInt(queryParams.offset) : 0;
 
-      // Get all notes matching filters
-      const { notes: allNotes } = await notesService.query(userId, {
-        types,
-        query: queryParams.query,
-        tags,
-        since: queryParams.since,
+    // Get all notes matching filters
+    const { notes: allNotes } = await notesService.query(userId, {
+      types,
+      query: queryParams.query,
+      tags,
+      since: queryParams.since,
+    });
+
+    // Apply sorting
+    const sortedNotes = [...allNotes];
+    if (sortBy === 'createdAt') {
+      sortedNotes.sort((a, b) => {
+        const aDate = new Date(a.createdAt).getTime();
+        const bDate = new Date(b.createdAt).getTime();
+        return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
       });
-
-      // Apply sorting
-      const sortedNotes = [...allNotes];
-      if (sortBy === 'createdAt') {
-        sortedNotes.sort((a, b) => {
-          const aDate = new Date(a.createdAt).getTime();
-          const bDate = new Date(b.createdAt).getTime();
-          return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
-        });
-      } else if (sortBy === 'updatedAt') {
-        sortedNotes.sort((a, b) => {
-          const aDate = new Date(a.updatedAt).getTime();
-          const bDate = new Date(b.updatedAt).getTime();
-          return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
-        });
-      } else if (sortBy === 'title') {
-        sortedNotes.sort((a, b) => {
-          const aTitle = (a.title || '').toLowerCase();
-          const bTitle = (b.title || '').toLowerCase();
-          const comparison = aTitle.localeCompare(bTitle);
-          return sortOrder === 'asc' ? comparison : -comparison;
-        });
-      }
-
-      // Apply pagination
-      const paginatedNotes = limit
-        ? sortedNotes.slice(offset, offset + limit)
-        : sortedNotes.slice(offset);
-
-      return c.json<NotesListOutput>(success({ notes: paginatedNotes.map(serializeNote) }));
-    } catch (err) {
-      console.error('[notes.list] error:', err);
-      return c.json<NotesListOutput>(
-        error(
-          'INTERNAL_ERROR',
-          `Failed to fetch notes: ${err instanceof Error ? err.message : String(err)}`,
-        ),
-        500,
-      );
+    } else if (sortBy === 'updatedAt') {
+      sortedNotes.sort((a, b) => {
+        const aDate = new Date(a.updatedAt).getTime();
+        const bDate = new Date(b.updatedAt).getTime();
+        return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+      });
+    } else if (sortBy === 'title') {
+      sortedNotes.sort((a, b) => {
+        const aTitle = (a.title || '').toLowerCase();
+        const bTitle = (b.title || '').toLowerCase();
+        const comparison = aTitle.localeCompare(bTitle);
+        return sortOrder === 'asc' ? comparison : -comparison;
+      });
     }
+
+    // Apply pagination
+    const paginatedNotes = limit
+      ? sortedNotes.slice(offset, offset + limit)
+      : sortedNotes.slice(offset);
+
+    return c.json<NotesListOutput>({ notes: paginatedNotes.map(serializeNote) });
   })
 
   // Get note by ID
   .get('/:id', async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const id = c.req.param('id');
+    const userId = c.get('userId')!;
+    const id = c.req.param('id');
 
-      const note = await notesService.getById(id, userId);
-      return c.json<NotesGetOutput>(success(serializeNote(note)));
-    } catch (err) {
-      if (err instanceof Error && err.message === 'Note not found') {
-        return c.json<NotesGetOutput>(error('NOT_FOUND', 'Note not found'), 404);
-      }
-      console.error('[notes.get] error:', err);
-      return c.json<NotesGetOutput>(
-        error(
-          'INTERNAL_ERROR',
-          `Failed to fetch note: ${err instanceof Error ? err.message : String(err)}`,
-        ),
-        500,
-      );
+    const note = await notesService.getById(id, userId);
+    if (!note) {
+      throw new NotFoundError('Note not found');
     }
+    return c.json<NotesGetOutput>(serializeNote(note));
   })
 
   // Create note
   .post('/', zValidator('json', CreateNoteInputSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const data = c.req.valid('json');
+    const userId = c.get('userId')!;
+    const data = c.req.valid('json');
 
-      const noteData: NoteInsert = {
-        ...data,
-        userId,
-        tags: data.tags || [],
-        mentions: data.mentions || [],
-      };
-      const newNote = await notesService.create(noteData);
-      return c.json<NotesCreateOutput>(success(serializeNote(newNote)), 201);
-    } catch (err) {
-      console.error('[notes.create] error:', err);
-      return c.json<NotesCreateOutput>(
-        error(
-          'INTERNAL_ERROR',
-          `Failed to create note: ${err instanceof Error ? err.message : String(err)}`,
-        ),
-        500,
-      );
-    }
+    const noteData: NoteInsert = {
+      ...data,
+      userId,
+      tags: data.tags || [],
+      mentions: data.mentions || [],
+    };
+    const newNote = await notesService.create(noteData);
+    return c.json<NotesCreateOutput>(serializeNote(newNote), 201);
   })
 
   // Update note
   .patch('/:id', zValidator('json', UpdateNoteInputSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const id = c.req.param('id');
-      const data = c.req.valid('json');
+    const userId = c.get('userId')!;
+    const id = c.req.param('id');
+    const data = c.req.valid('json');
 
-      const updatedNote = await notesService.update({
-        id,
-        ...data,
-        userId,
-      });
-      return c.json<NotesUpdateOutput>(success(serializeNote(updatedNote)));
-    } catch (err) {
-      if (err instanceof Error && err.message === 'Note not found or not authorized to update') {
-        return c.json<NotesUpdateOutput>(
-          error('NOT_FOUND', 'Note not found or not authorized to update'),
-          404,
-        );
-      }
-      console.error('[notes.update] error:', err);
-      return c.json<NotesUpdateOutput>(
-        error(
-          'INTERNAL_ERROR',
-          `Failed to update note: ${err instanceof Error ? err.message : String(err)}`,
-        ),
-        500,
-      );
-    }
+    const updatedNote = await notesService.update({
+      id,
+      ...data,
+      userId,
+    });
+    return c.json<NotesUpdateOutput>(serializeNote(updatedNote));
   })
 
   // Delete note
   .delete('/:id', async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const id = c.req.param('id');
+    const userId = c.get('userId')!;
+    const id = c.req.param('id');
 
-      const deletedNote = await notesService.delete(id, userId);
-      return c.json<NotesDeleteOutput>(success(serializeNote(deletedNote)));
-    } catch (err) {
-      if (err instanceof Error && err.message === 'Note not found or not authorized to delete') {
-        return c.json<NotesDeleteOutput>(
-          error('NOT_FOUND', 'Note not found or not authorized to delete'),
-          404,
-        );
-      }
-      console.error('[notes.delete] error:', err);
-      return c.json<NotesDeleteOutput>(
-        error(
-          'INTERNAL_ERROR',
-          `Failed to delete note: ${err instanceof Error ? err.message : String(err)}`,
-        ),
-        500,
-      );
-    }
+    const deletedNote = await notesService.delete(id, userId);
+    return c.json<NotesDeleteOutput>(serializeNote(deletedNote));
   })
 
   // Sync notes
@@ -271,24 +204,13 @@ export const notesRoutes = new Hono<AppContext>()
     '/sync',
     zValidator('json', z.object({ items: z.array(SyncNoteItemSchema) })),
     async (c) => {
-      try {
-        const userId = c.get('userId')!;
-        const { items } = c.req.valid('json');
+      const userId = c.get('userId')!;
+      const { items } = c.req.valid('json');
 
-        const result = await notesService.sync(
-          items as Parameters<typeof notesService.sync>[0],
-          userId,
-        );
-        return c.json<NotesSyncOutput>(success(result));
-      } catch (err) {
-        console.error('[notes.sync] error:', err);
-        return c.json<NotesSyncOutput>(
-          error(
-            'INTERNAL_ERROR',
-            `Failed to sync notes: ${err instanceof Error ? err.message : String(err)}`,
-          ),
-          500,
-        );
-      }
+      const result = await notesService.sync(
+        items as Parameters<typeof notesService.sync>[0],
+        userId,
+      );
+      return c.json<NotesSyncOutput>(result);
     },
   );

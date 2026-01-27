@@ -60,7 +60,9 @@ export type DeleteListInviteParams = z.infer<typeof deleteListInviteSchema>;
  * @param listId - The ID of the list
  * @returns Array of list invites with user data for accepted invites
  */
-export async function getListInvites(listId: string) {
+export async function getListInvites(
+  listId: string,
+): Promise<(ListInviteSelect & { list: ListSelect | null; user_invitedUserId: UserSelect | null })[]> {
   try {
     return await db.query.listInvite.findMany({
       where: eq(listInvite.listId, listId),
@@ -81,7 +83,10 @@ export async function getListInvites(listId: string) {
 /**
  * Gets invites for a user by ID or email
  */
-export async function getInvitesForUser(userId: string, normalizedEmail?: string | null) {
+export async function getInvitesForUser(
+  userId: string,
+  normalizedEmail?: string | null,
+): Promise<(ListInviteSelect & { list: ListSelect | null })[]> {
   const ownershipClause = normalizedEmail
     ? or(eq(listInvite.invitedUserId, userId), eq(listInvite.invitedUserEmail, normalizedEmail))
     : eq(listInvite.invitedUserId, userId);

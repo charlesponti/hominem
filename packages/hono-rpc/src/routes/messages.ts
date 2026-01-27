@@ -1,5 +1,5 @@
 import { MessageService } from '@hominem/chat-services';
-import { error, success } from '@hominem/services';
+import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -48,80 +48,51 @@ export const messagesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   // Get message by ID
   .get('/:messageId', async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const messageId = c.req.param('messageId');
+    const userId = c.get('userId')!;
+    const messageId = c.req.param('messageId');
 
-      const message = await messageService.getMessageById(messageId, userId);
-      if (!message) {
-        return c.json<MessagesGetOutput>(error('NOT_FOUND', 'Message not found'), 404);
-      }
-      return c.json<MessagesGetOutput>(success({ message: serializeChatMessage(message) }));
-    } catch (err) {
-      console.error('[messages.getMessageById] error:', err);
-      return c.json<MessagesGetOutput>(error('INTERNAL_ERROR', 'Failed to load message'), 500);
+    const message = await messageService.getMessageById(messageId, userId);
+    if (!message) {
+      throw new NotFoundError('Message not found');
     }
+    return c.json<MessagesGetOutput>({ message: serializeChatMessage(message) });
   })
 
   // Update message
   .patch('/:messageId', zValidator('json', updateMessageSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const messageId = c.req.param('messageId');
-      const { content } = c.req.valid('json');
+    const userId = c.get('userId')!;
+    const messageId = c.req.param('messageId');
+    const { content } = c.req.valid('json');
 
-      const message = await messageService.getMessageById(messageId, userId);
-      if (!message) {
-        return c.json<MessagesUpdateOutput>(error('NOT_FOUND', 'Message not found or not authorized'), 404);
-      }
-
-      if (message.role !== 'user') {
-        return c.json<MessagesUpdateOutput>(error('FORBIDDEN', 'Only user messages can be edited'), 403);
-      }
-
-      await messageService.deleteMessagesAfter(message.chatId, message.createdAt, userId);
-
-      const updatedMessage = await messageService.updateMessage({ messageId, content });
-      return c.json<MessagesUpdateOutput>(success({ message: serializeChatMessage(updatedMessage) }));
-    } catch (err) {
-      console.error('[messages.updateMessage] error:', err);
-      return c.json<MessagesUpdateOutput>(
-        error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Failed to update message'),
-        500,
-      );
+    const message = await messageService.getMessageById(messageId, userId);
+    if (!message) {
+      throw new NotFoundError('Message not found or not authorized');
     }
+
+    if (message.role !== 'user') {
+      throw new ForbiddenError('Only user messages can be edited');
+    }
+
+    await messageService.deleteMessagesAfter(message.chatId, message.createdAt, userId);
+
+    const updatedMessage = await messageService.updateMessage({ messageId, content });
+    return c.json<MessagesUpdateOutput>({ message: serializeChatMessage(updatedMessage) });
   })
 
   // Delete message
   .delete('/:messageId', async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const messageId = c.req.param('messageId');
+    const userId = c.get('userId')!;
+    const messageId = c.req.param('messageId');
 
-      const deleted = await messageService.deleteMessage(messageId, userId);
-      return c.json<MessagesDeleteOutput>(success({ success: deleted }));
-    } catch (err) {
-      console.error('[messages.deleteMessage] error:', err);
-      return c.json<MessagesDeleteOutput>(error('INTERNAL_ERROR', 'Failed to delete message'), 500);
-    }
+    const deleted = await messageService.deleteMessage(messageId, userId);
+    return c.json<MessagesDeleteOutput>({ success: deleted });
   })
 
   // Delete messages after a timestamp
   .post('/delete-after', zValidator('json', deleteMessagesAfterSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const { chatId, afterTimestamp } = c.req.valid('json');
+    const userId = c.get('userId')!;
+    const { chatId, afterTimestamp } = c.req.valid('json');
 
-      const deletedCount = await messageService.deleteMessagesAfter(chatId, afterTimestamp, userId);
-      return c.json<MessagesDeleteAfterOutput>(success({ deletedCount }));
-    } catch (err) {
-      console.error('[messages.deleteMessagesAfter] error:', err);
-      return c.json<MessagesDeleteAfterOutput>(
-        error(
-          'INTERNAL_ERROR',
-          err instanceof Error ? err.message : 'Failed to delete subsequent messages',
-        ),
-        500,
-      );
-    }
+    const deletedCount = await messageService.deleteMessagesAfter(chatId, afterTimestamp, userId);
+    return c.json<MessagesDeleteAfterOutput>({ deletedCount });
   });

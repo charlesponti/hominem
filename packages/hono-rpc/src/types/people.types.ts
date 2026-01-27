@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ApiResult, ContactSelect } from '@hominem/services';
+import type { ContactSelect } from '@hominem/services';
 import type { EmptyInput, JsonSerialized } from './utils';
 
 // ============================================================================
@@ -13,7 +13,7 @@ export type Person = JsonSerialized<ContactSelect>;
 // ============================================================================
 
 export type PeopleListInput = EmptyInput;
-export type PeopleListOutput = ApiResult<Person[]>;
+export type PeopleListOutput = Person[];
 
 // ============================================================================
 // CREATE PERSON
@@ -33,7 +33,7 @@ export const peopleCreateSchema = z.object({
   phone: z.string().optional(),
 });
 
-export type PeopleCreateOutput = ApiResult<Person>;
+export type PeopleCreateOutput = Person;
 
 // ============================================================================
 // UPDATE PERSON
@@ -56,7 +56,7 @@ export const peopleUpdateSchema = z.object({
   phone: z.string().optional(),
 });
 
-export type PeopleUpdateOutput = ApiResult<Person>;
+export type PeopleUpdateOutput = Person;
 
 // ============================================================================
 // DELETE PERSON
@@ -66,4 +66,4 @@ export type PeopleDeleteInput = {
   id: string;
 };
 
-export type PeopleDeleteOutput = ApiResult<{ success: boolean }>;
+export type PeopleDeleteOutput = { success: boolean };

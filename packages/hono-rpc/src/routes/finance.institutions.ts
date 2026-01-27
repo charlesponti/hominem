@@ -1,5 +1,5 @@
 import { getAllInstitutions, createInstitution } from '@hominem/finance-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -15,16 +15,8 @@ export const institutionsRoutes = new Hono<AppContext>()
 
   // POST /list - List institutions
   .post('/list', async (c) => {
-    try {
-      const result = await getAllInstitutions();
-      return c.json<InstitutionsListOutput>(success(result as any), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<InstitutionsListOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error listing institutions:', err);
-      return c.json<InstitutionsListOutput>(error('INTERNAL_ERROR', 'Failed to list institutions'), 500);
-    }
+    const result = await getAllInstitutions();
+    return c.json<InstitutionsListOutput>(result as any, 200);
   })
 
   // POST /create - Create institution
@@ -38,14 +30,6 @@ export const institutionsRoutes = new Hono<AppContext>()
   })), async (c) => {
     const input = c.req.valid('json') as any;
 
-    try {
-      const result = await createInstitution(input);
-      return c.json<InstitutionCreateOutput>(success(result as any), 201);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<InstitutionCreateOutput>(error(err.code, err.message), err.statusCode as any);
-      }
-      console.error('Error creating institution:', err);
-      return c.json<InstitutionCreateOutput>(error('INTERNAL_ERROR', 'Failed to create institution'), 500);
-    }
+    const result = await createInstitution(input);
+    return c.json<InstitutionCreateOutput>(result as any, 201);
   });

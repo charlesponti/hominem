@@ -1,17 +1,18 @@
 /**
  * API Error Handler Utility
  *
- * Centralized error handling for ApiResult discriminated unions.
- * Use this utility to safely handle errors from API calls with type safety.
+ * Centralized error handling for REST API errors caught by the HTTP layer.
+ * Provides user-friendly messages and recommended actions for different error codes.
+ *
+ * Errors are thrown by the backend error middleware and caught by useHonoQuery/useHonoMutation hooks.
+ * Use this utility to display errors with consistent formatting.
  *
  * Pattern:
  * ```typescript
- * const result = await apiCall();
- * if (result.success) {
- *   // result.data is typed and safe
- * } else {
- *   // result.code and result.message are available
- *   handleApiError(result);
+ * const { data, error } = useHook();
+ * if (error) {
+ *   const config = handleApiError(error);
+ *   toast.error(config.title, { description: error.message });
  * }
  * ```
  */

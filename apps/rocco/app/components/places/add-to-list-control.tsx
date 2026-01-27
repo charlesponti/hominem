@@ -25,8 +25,8 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
     isAuthenticated && !isUuid ? placeId : undefined,
   );
 
-  const placeDetails = placeDetailsResult?.success ? placeDetailsResult.data : null;
-  const placeDetailsByGoogleId = placeDetailsByGoogleIdResult?.success ? placeDetailsByGoogleIdResult.data : null;
+  const placeDetails = placeDetailsResult ?? null;
+  const placeDetailsByGoogleId = placeDetailsByGoogleIdResult ?? null;
 
   const place = placeDetails || placeDetailsByGoogleId;
   const resolvedPlaceId = isUuid ? placeId : place?.id;

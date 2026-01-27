@@ -6,18 +6,17 @@ import ListForm from './list-form';
 import { ListRow } from './list-row';
 
 export default function Lists() {
-  const { data: result, isLoading, error } = useLists();
-  const lists = result?.success ? result.data : [];
-  const apiError = result?.success === false ? result : null;
+  const { data: lists, isLoading, error: apiError } = useLists();
+  const displayLists = lists ?? [];
 
   const title = <h2 className="heading-2">Lists</h2>;
 
-  if (error || apiError) {
+  if (apiError) {
     return (
       <div className="space-y-2">
         {title}
         <div className="text-center py-8">
-          <p className="text-red-600">Error loading lists: {error?.message || apiError?.message}</p>
+          <p className="text-red-600">Error loading lists: {apiError?.message}</p>
         </div>
       </div>
     );
@@ -28,14 +27,14 @@ export default function Lists() {
       {title}
 
       <div className="space-y-1">
-        {lists.length === 0 && !isLoading ? (
+        {displayLists.length === 0 && !isLoading ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
             <h3 className="text-lg font-semibold text-gray-900">No lists yet</h3>
             <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
           </div>
         ) : (
           <List isLoading={isLoading} loadingSize="lg">
-            {lists.map((list: any) => (
+            {displayLists.map((list: any) => (
               <ListRow
                 key={list.id}
                 id={list.id}

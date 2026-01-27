@@ -24,7 +24,7 @@ const PlaceLists = ({ place }: Props) => {
     googleMapsId || undefined,
   );
   
-  const listsContainingPlace = listsResult?.success ? listsResult.data : [];
+  const listsContainingPlace = listsResult ?? [];
 
   if (!isAuthenticated) {
     return null;

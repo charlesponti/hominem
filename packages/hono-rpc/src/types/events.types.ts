@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 
 // ============================================================================
 // Data Types
@@ -30,13 +29,13 @@ export type EventsListInput = {
   sortBy?: 'date-asc' | 'date-desc' | 'summary';
 };
 
-export type EventsListOutput = ApiResult<Event[]>;
+export type EventsListOutput = Event[];
 
 // ============================================================================
 // GET EVENT
 // ============================================================================
 
-export type EventsGetOutput = ApiResult<Event>;
+export type EventsGetOutput = Event;
 
 // ============================================================================
 // CREATE EVENT
@@ -60,7 +59,7 @@ export const eventsCreateSchema = z.object({
   people: z.array(z.string()).optional(),
 });
 
-export type EventsCreateOutput = ApiResult<Event>;
+export type EventsCreateOutput = Event;
 
 // ============================================================================
 // UPDATE EVENT
@@ -88,13 +87,13 @@ export const eventsUpdateSchema = z.object({
   people: z.array(z.string()).optional(),
 });
 
-export type EventsUpdateOutput = ApiResult<Event>;
+export type EventsUpdateOutput = Event;
 
 // ============================================================================
 // DELETE EVENT
 // ============================================================================
 
-export type EventsDeleteOutput = ApiResult<boolean>;
+export type EventsDeleteOutput = boolean;
 
 // ============================================================================
 // GOOGLE CALENDAR
@@ -107,7 +106,7 @@ export type GoogleCalendar = {
   primary?: boolean;
 };
 
-export type EventsGoogleCalendarsOutput = ApiResult<GoogleCalendar[]>;
+export type EventsGoogleCalendarsOutput = GoogleCalendar[];
 
 export type EventsGoogleSyncInput = {
   calendarId?: string;
@@ -121,14 +120,14 @@ export const eventsGoogleSyncSchema = z.object({
   timeMax: z.string().optional(),
 });
 
-export type EventsGoogleSyncOutput = ApiResult<{
+export type EventsGoogleSyncOutput = {
   syncedEvents: number;
   message: string;
-}>;
+};
 
-export type EventsSyncStatusOutput = ApiResult<{
+export type EventsSyncStatusOutput = {
   lastSyncedAt: string | null;
   syncError: string | null;
   eventCount: number;
   connected: boolean;
-}>;
+};

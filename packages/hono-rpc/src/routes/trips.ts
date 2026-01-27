@@ -4,7 +4,7 @@ import {
   getAllTrips,
   getTripById,
 } from '@hominem/places-services';
-import { error, isServiceError, success } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -71,19 +71,10 @@ export const tripsRoutes = new Hono<AppContext>()
   .post('/list', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
 
-    try {
-      const trips = await getAllTrips({ userId });
+    const trips = await getAllTrips({ userId });
 
-      const result = trips.map(serializeTrip);
-      return c.json<TripsGetAllOutput>(success(result), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TripsGetAllOutput>(error(err.code, err.message, err.details), err.statusCode as any);
-      }
-
-      console.error('[trips.list] unexpected error:', err);
-      return c.json<TripsGetAllOutput>(error('INTERNAL_ERROR', 'Failed to fetch trips'), 500);
-    }
+    const result = trips.map(serializeTrip);
+    return c.json<TripsGetAllOutput>(result, 200);
   })
 
   // Get trip by ID
@@ -91,19 +82,10 @@ export const tripsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json');
     const userId = c.get('userId')!;
 
-    try {
-      const trip = await getTripById({ tripId: input.id, userId });
+    const trip = await getTripById({ tripId: input.id, userId });
 
-      const result = serializeTrip(trip);
-      return c.json<TripsGetByIdOutput>(success(result), 200);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TripsGetByIdOutput>(error(err.code, err.message, err.details), err.statusCode as any);
-      }
-
-      console.error('[trips.get] unexpected error:', err);
-      return c.json<TripsGetByIdOutput>(error('INTERNAL_ERROR', 'Failed to fetch trip'), 500);
-    }
+    const result = serializeTrip(trip);
+    return c.json<TripsGetByIdOutput>(result, 200);
   })
 
   // Create trip
@@ -111,46 +93,28 @@ export const tripsRoutes = new Hono<AppContext>()
     const input = c.req.valid('json');
     const userId = c.get('userId')!;
 
-    try {
-      const newTrip = await createTrip({
-        name: input.name,
-        userId,
-        startDate: input.startDate,
-        endDate: input.endDate,
-      });
+    const newTrip = await createTrip({
+      name: input.name,
+      userId,
+      startDate: input.startDate,
+      endDate: input.endDate,
+    });
 
-      const result = serializeTrip(newTrip);
-      return c.json<TripsCreateOutput>(success(result), 201);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TripsCreateOutput>(error(err.code, err.message, err.details), err.statusCode as any);
-      }
-
-      console.error('[trips.create] unexpected error:', err);
-      return c.json<TripsCreateOutput>(error('INTERNAL_ERROR', 'Failed to create trip'), 500);
-    }
+    const result = serializeTrip(newTrip);
+    return c.json<TripsCreateOutput>(result, 201);
   })
 
   // Add item to trip
   .post('/add-item', authMiddleware, zValidator('json', tripsAddItemInputSchema), async (c) => {
     const input = c.req.valid('json');
 
-    try {
-      const newTripItem = await addItemToTrip({
-        tripId: input.tripId,
-        itemId: input.itemId,
-        day: input.day,
-        order: input.order,
-      });
+    const newTripItem = await addItemToTrip({
+      tripId: input.tripId,
+      itemId: input.itemId,
+      day: input.day,
+      order: input.order,
+    });
 
-      const result = serializeTripItem(newTripItem);
-      return c.json<TripsAddItemOutput>(success(result), 201);
-    } catch (err) {
-      if (isServiceError(err)) {
-        return c.json<TripsAddItemOutput>(error(err.code, err.message, err.details), err.statusCode as any);
-      }
-
-      console.error('[trips.add-item] unexpected error:', err);
-      return c.json<TripsAddItemOutput>(error('INTERNAL_ERROR', 'Failed to add item to trip'), 500);
-    }
+    const result = serializeTripItem(newTripItem);
+    return c.json<TripsAddItemOutput>(result, 201);
   });

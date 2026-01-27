@@ -29,18 +29,18 @@ export default function VisitsPage() {
     );
   }
 
-  const visits = visitsData?.success ? visitsData.data : [];
+  const visits = visitsData ?? [];
 
   const filteredVisits =
     visits
-      ?.filter((visit) => {
+      ?.filter((visit: any) => {
         if (!placeFilter) {
           return true;
         }
         const placeName = visit.place?.name || '';
         return placeName.toLowerCase().includes(placeFilter.toLowerCase());
       })
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
@@ -108,9 +108,9 @@ export default function VisitsPage() {
             ? 'No visits recorded yet. Start logging your visits to places!'
             : 'No visits match your filters.'}
         </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredVisits.map((visit) => (
+       ) : (
+         <div className="space-y-4">
+           {filteredVisits.map((visit: any) => (
             <div key={visit.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4">
                 {visit.place?.imageUrl && (

@@ -1,5 +1,3 @@
-import type { ApiResult } from '@hominem/services';
-
 import { z } from 'zod';
 
 // ============================================================================
@@ -43,7 +41,7 @@ export const listGetAllSchema = z.object({
   itemType: z.string().optional(),
 });
 
-export type ListGetAllOutput = ApiResult<List[]>;
+export type ListGetAllOutput = List[];
 
 // ============================================================================
 // GET LIST BY ID
@@ -57,7 +55,7 @@ export const listGetByIdSchema = z.object({
   id: z.string().uuid(),
 });
 
-export type ListGetByIdOutput = ApiResult<List>;
+export type ListGetByIdOutput = List;
 
 // ============================================================================
 // CREATE LIST
@@ -75,7 +73,7 @@ export const listCreateSchema = z.object({
   isPublic: z.boolean().default(false),
 });
 
-export type ListCreateOutput = ApiResult<List>;
+export type ListCreateOutput = List;
 
 // ============================================================================
 // UPDATE LIST
@@ -95,7 +93,7 @@ export const listUpdateSchema = z.object({
   isPublic: z.boolean().optional(),
 });
 
-export type ListUpdateOutput = ApiResult<List>;
+export type ListUpdateOutput = List;
 
 // ============================================================================
 // DELETE LIST
@@ -109,7 +107,7 @@ export const listDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
-export type ListDeleteOutput = ApiResult<{ success: boolean }>;
+export type ListDeleteOutput = { success: boolean };
 
 // ============================================================================
 // DELETE LIST ITEM
@@ -125,7 +123,7 @@ export const listDeleteItemSchema = z.object({
   itemId: z.string().uuid(),
 });
 
-export type ListDeleteItemOutput = ApiResult<{ success: boolean }>;
+export type ListDeleteItemOutput = { success: boolean };
 
 // ============================================================================
 // GET CONTAINING PLACE
@@ -141,15 +139,13 @@ export const listGetContainingPlaceSchema = z.object({
   googleMapsId: z.string().optional(),
 });
 
-export type ListGetContainingPlaceOutput = ApiResult<
-  Array<{
-    id: string;
-    name: string;
-    isOwner: boolean;
-    itemCount: number;
-    imageUrl: string | null;
-  }>
->;
+export type ListGetContainingPlaceOutput = Array<{
+  id: string;
+  name: string;
+  isOwner: boolean;
+  itemCount: number;
+  imageUrl: string | null;
+}>;
 
 // ============================================================================
 // REMOVE COLLABORATOR
@@ -165,4 +161,4 @@ export const listRemoveCollaboratorSchema = z.object({
   userId: z.string().uuid(),
 });
 
-export type ListRemoveCollaboratorOutput = ApiResult<{ success: boolean }>;
+export type ListRemoveCollaboratorOutput = { success: boolean };

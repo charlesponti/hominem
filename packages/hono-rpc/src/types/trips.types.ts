@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 import type { EmptyInput } from './utils';
 
 // ============================================================================
@@ -30,7 +29,7 @@ export type TripItem = {
 // ============================================================================
 
 export type TripsGetAllInput = EmptyInput;
-export type TripsGetAllOutput = ApiResult<Trip[]>;
+export type TripsGetAllOutput = Trip[];
 
 // ============================================================================
 // GET TRIP BY ID
@@ -44,7 +43,7 @@ export const tripsGetByIdSchema = z.object({
   id: z.string().uuid(),
 });
 
-export type TripsGetByIdOutput = ApiResult<Trip>;
+export type TripsGetByIdOutput = Trip;
 
 // ============================================================================
 // CREATE TRIP
@@ -62,7 +61,7 @@ export const tripsCreateInputSchema = z.object({
   endDate: z.coerce.date().optional(),
 });
 
-export type TripsCreateOutput = ApiResult<Trip>;
+export type TripsCreateOutput = Trip;
 
 // ============================================================================
 // ADD ITEM TO TRIP
@@ -82,4 +81,4 @@ export const tripsAddItemInputSchema = z.object({
   order: z.number().int().optional(),
 });
 
-export type TripsAddItemOutput = ApiResult<TripItem>;
+export type TripsAddItemOutput = TripItem;

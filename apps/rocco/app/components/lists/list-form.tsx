@@ -21,20 +21,14 @@ export default function ListForm() {
 
   const { mutate: createList } = useCreateList({
     onSuccess: (result) => {
-      if (result.success) {
-        try {
-          localStorage.removeItem(STORAGE_KEY);
-        } catch {}
-        setStatus('success');
-        successTimerRef.current = setTimeout(() => {
-          setName('');
-          setStatus('idle');
-        }, 1500);
-      } else {
-        setStatus('open');
-        // TODO: Implement consistent error UI (e.g., toast) as per Phase 3 objectives
-        console.error('Failed to create list:', result.message);
-      }
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+      setStatus('success');
+      successTimerRef.current = setTimeout(() => {
+        setName('');
+        setStatus('idle');
+      }, 1500);
     },
     onError: (error) => {
       setStatus('open');

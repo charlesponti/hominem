@@ -45,10 +45,8 @@ export const useCreatePlace = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.all() );
-          utils.invalidate(queryKeys.places.get(result.data.id) );
-        }
+        utils.invalidate(queryKeys.places.all());
+        utils.invalidate(queryKeys.places.get(result.id));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -70,10 +68,8 @@ export const useUpdatePlace = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.all() );
-          utils.invalidate(queryKeys.places.get(result.data.id) );
-        }
+        utils.invalidate(queryKeys.places.all());
+        utils.invalidate(queryKeys.places.get(result.id));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -95,9 +91,7 @@ export const useDeletePlace = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.all() );
-        }
+        utils.invalidate(queryKeys.places.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -114,10 +108,9 @@ export const usePlacesAutocomplete = (
   longitude: number | undefined,
 ) =>
   useHonoQuery<PlaceAutocompleteOutput>(
-    queryKeys.places.autocomplete(query || '', latitude, longitude) ,
+    queryKeys.places.autocomplete(query || '', latitude, longitude),
     async (client: HonoClient) => {
-      if (!query || query.length < 2)
-        return { success: true, data: [] } as unknown as PlaceAutocompleteOutput;
+      if (!query || query.length < 2) return [] as unknown as PlaceAutocompleteOutput;
       const res = await client.api.places.autocomplete.$post({
         json: {
           query,
@@ -134,36 +127,56 @@ export const usePlacesAutocomplete = (
 /**
  * Get place details by ID
  */
-export const usePlaceById = (id: string | undefined) =>
-  useHonoQuery<PlaceGetDetailsByIdOutput>(
-    queryKeys.places.get(id || '') ,
+export const usePlaceById = (id: string | undefined) => {
+  if (!id) {
+    // Return a disabled query when id is undefined
+    return useHonoQuery<PlaceGetDetailsByIdOutput>(
+      queryKeys.places.get(''),
+      async () => {
+        throw new Error('Query should not be called when id is undefined');
+      },
+      {
+        enabled: false,
+      },
+    );
+  }
+
+  return useHonoQuery<PlaceGetDetailsByIdOutput>(
+    queryKeys.places.get(id),
     async (client: HonoClient) => {
-      if (!id) return { success: true, data: null } ; // Type assertion needed for null data if generic doesn't allow it easily, but ApiResult usually has data: T
       const res = await client.api.places.get.$post({ json: { id } });
       return res.json();
     },
-    {
-      enabled: !!id,
-    },
   );
+};
 
 /**
  * Get place by Google Maps ID
  */
-export const usePlaceByGoogleId = (googleMapsId: string | undefined) =>
-  useHonoQuery<PlaceGetDetailsByGoogleIdOutput>(
-    queryKeys.places.getByGoogleId(googleMapsId || '') ,
+export const usePlaceByGoogleId = (googleMapsId: string | undefined) => {
+  if (!googleMapsId) {
+    // Return a disabled query when googleMapsId is undefined
+    return useHonoQuery<PlaceGetDetailsByGoogleIdOutput>(
+      queryKeys.places.getByGoogleId(''),
+      async () => {
+        throw new Error('Query should not be called when googleMapsId is undefined');
+      },
+      {
+        enabled: false,
+      },
+    );
+  }
+
+  return useHonoQuery<PlaceGetDetailsByGoogleIdOutput>(
+    queryKeys.places.getByGoogleId(googleMapsId),
     async (client: HonoClient) => {
-      if (!googleMapsId) return { success: true, data: null } ;
       const res = await client.api.places['get-by-google-id'].$post({
         json: { googleMapsId },
       });
       return res.json();
     },
-    {
-      enabled: !!googleMapsId,
-    },
   );
+};
 
 /**
  * Add place to lists
@@ -179,10 +192,8 @@ export const useAddPlaceToLists = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.all() );
-          utils.invalidate(queryKeys.lists.all() );
-        }
+        utils.invalidate(queryKeys.places.all());
+        utils.invalidate(queryKeys.lists.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -204,10 +215,8 @@ export const useRemovePlaceFromList = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.all() );
-          utils.invalidate(queryKeys.lists.all() );
-        }
+        utils.invalidate(queryKeys.places.all());
+        utils.invalidate(queryKeys.lists.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -224,9 +233,9 @@ export const useNearbyPlaces = (
   radiusMeters: number | undefined,
 ) =>
   useHonoQuery<PlaceGetNearbyFromListsOutput>(
-    queryKeys.places.nearby(latitude, longitude, radiusMeters) ,
+    queryKeys.places.nearby(latitude, longitude, radiusMeters),
     async (client: HonoClient) => {
-      if (latitude === undefined || longitude === undefined) return { success: true, data: [] };
+      if (latitude === undefined || longitude === undefined) return [];
       const res = await client.api.places.nearby.$post({
         json: { location: { lat: latitude, lng: longitude }, radius: radiusMeters }, // Corrected structure
       });
@@ -251,12 +260,10 @@ export const useLogPlaceVisit = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.myVisits() );
-          if (result.data.placeId) {
-            utils.invalidate(queryKeys.places.placeVisits(result.data.placeId) );
-            utils.invalidate(queryKeys.places.visitStats(result.data.placeId) );
-          }
+        utils.invalidate(queryKeys.places.myVisits());
+        if (result.placeId) {
+          utils.invalidate(queryKeys.places.placeVisits(result.placeId));
+          utils.invalidate(queryKeys.places.visitStats(result.placeId));
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -286,9 +293,9 @@ export const useMyVisits = (
  */
 export const usePlaceVisits = (placeId: string | undefined) =>
   useHonoQuery<PlaceGetPlaceVisitsOutput>(
-    queryKeys.places.placeVisits(placeId || '') ,
+    queryKeys.places.placeVisits(placeId || ''),
     async (client: HonoClient) => {
-      if (!placeId) return { success: true, data: [] };
+      if (!placeId) return [];
       const res = await client.api.places['place-visits'].$post({ json: { placeId } });
       return res.json();
     },
@@ -311,12 +318,10 @@ export const useUpdatePlaceVisit = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.myVisits() );
-          if (result.data.placeId) {
-            utils.invalidate(queryKeys.places.placeVisits(result.data.placeId) );
-            utils.invalidate(queryKeys.places.visitStats(result.data.placeId) );
-          }
+        utils.invalidate(queryKeys.places.myVisits());
+        if (result.placeId) {
+          utils.invalidate(queryKeys.places.placeVisits(result.placeId));
+          utils.invalidate(queryKeys.places.visitStats(result.placeId));
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -339,10 +344,8 @@ export const useDeletePlaceVisit = (
     },
     {
       onSuccess: (result, variables, context, mutationContext) => {
-        if (result.success) {
-          utils.invalidate(queryKeys.places.myVisits() );
-          utils.invalidate(queryKeys.places.all() );
-        }
+        utils.invalidate(queryKeys.places.myVisits());
+        utils.invalidate(queryKeys.places.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
       ...options,
@@ -353,15 +356,25 @@ export const useDeletePlaceVisit = (
 /**
  * Get visit statistics
  */
-export const usePlaceVisitStats = (placeId: string | undefined) =>
-  useHonoQuery<PlaceGetVisitStatsOutput>(
-    queryKeys.places.visitStats(placeId || '') ,
+export const usePlaceVisitStats = (placeId: string | undefined) => {
+  if (!placeId) {
+    // Return a disabled query when placeId is undefined
+    return useHonoQuery<PlaceGetVisitStatsOutput>(
+      queryKeys.places.visitStats(''),
+      async () => {
+        throw new Error('Query should not be called when placeId is undefined');
+      },
+      {
+        enabled: false,
+      },
+    );
+  }
+
+  return useHonoQuery<PlaceGetVisitStatsOutput>(
+    queryKeys.places.visitStats(placeId),
     async (client: HonoClient) => {
-      if (!placeId) return { success: true, data: null } ;
       const res = await client.api.places['visit-stats'].$post({ json: { placeId } });
       return res.json();
     },
-    {
-      enabled: !!placeId,
-    },
   );
+};

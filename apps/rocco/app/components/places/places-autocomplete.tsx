@@ -50,7 +50,7 @@ function PlacesAutocomplete({
     location: currentLocation ?? undefined,
   });
 
-  const data = result?.success ? result.data : [];
+  const data = result ?? [];
 
   const handleSelect = useCallback(
     (place: GooglePlacePrediction) => {

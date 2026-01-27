@@ -147,7 +147,7 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
 
 export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
   const { data: visitsResult, isLoading: visitsLoading } = usePlaceVisits(placeId);
-  const visits = visitsResult?.success ? visitsResult.data : [];
+  const visits = visitsResult ?? [];
 
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);

@@ -1,4 +1,4 @@
-import { error, success } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -22,33 +22,28 @@ export const exportRoutes = new Hono<AppContext>()
   })), async (c) => {
     const input = c.req.valid('json') as any;
 
-    try {
-      // TODO: Implement actual export logic from services
-      if (input.format === 'csv') {
-        return c.json<ExportTransactionsOutput>(
-          success({
-            url: '',
-            filename: 'transactions.csv',
-            expiresAt: new Date(Date.now() + 3600000).toISOString(),
-            data: 'Date,Description,Amount,Category\n',
-          }),
-          200,
-        );
-      }
-
+    // TODO: Implement actual export logic from services
+    if (input.format === 'csv') {
       return c.json<ExportTransactionsOutput>(
-        success({
+        {
           url: '',
-          filename: 'transactions.json',
+          filename: 'transactions.csv',
           expiresAt: new Date(Date.now() + 3600000).toISOString(),
-          data: '[]',
-        }),
+          data: 'Date,Description,Amount,Category\n',
+        },
         200,
       );
-    } catch (err) {
-      console.error('Error exporting transactions:', err);
-      return c.json<ExportTransactionsOutput>(error('INTERNAL_ERROR', 'Failed to export transactions'), 500);
     }
+
+    return c.json<ExportTransactionsOutput>(
+      {
+        url: '',
+        filename: 'transactions.json',
+        expiresAt: new Date(Date.now() + 3600000).toISOString(),
+        data: '[]',
+      },
+      200,
+    );
   })
 
   // POST /summary - Export summary
@@ -60,18 +55,13 @@ export const exportRoutes = new Hono<AppContext>()
   })), async (c) => {
     const input = c.req.valid('json') as any;
 
-    try {
-      // TODO: Implement actual summary export logic
-      return c.json<ExportSummaryOutput>(
-        success({
-          url: '',
-          filename: `summary-${input.year}.${input.format}`,
-          data: '',
-        }),
-        200,
-      );
-    } catch (err) {
-      console.error('Error exporting summary:', err);
-      return c.json<ExportSummaryOutput>(error('INTERNAL_ERROR', 'Failed to export summary'), 500);
-    }
+    // TODO: Implement actual summary export logic
+    return c.json<ExportSummaryOutput>(
+      {
+        url: '',
+        filename: `summary-${input.year}.${input.format}`,
+        data: '',
+      },
+      200,
+    );
   });

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { ApiResult } from '@hominem/services';
 import type { EmptyInput } from './utils';
 
 // ============================================================================
@@ -41,14 +40,14 @@ export const invitesGetReceivedSchema = z.object({
   token: z.string().optional(),
 });
 
-export type InvitesGetReceivedOutput = ApiResult<Invite[]>;
+export type InvitesGetReceivedOutput = Invite[];
 
 // ============================================================================
 // GET SENT INVITES
 // ============================================================================
 
 export type InvitesGetSentInput = EmptyInput;
-export type InvitesGetSentOutput = ApiResult<Invite[]>;
+export type InvitesGetSentOutput = Invite[];
 
 // ============================================================================
 // GET INVITES BY LIST
@@ -62,7 +61,7 @@ export const invitesGetByListSchema = z.object({
   listId: z.string().uuid(),
 });
 
-export type InvitesGetByListOutput = ApiResult<Invite[]>;
+export type InvitesGetByListOutput = Invite[];
 
 // ============================================================================
 // CREATE INVITE
@@ -78,7 +77,7 @@ export const invitesCreateSchema = z.object({
   invitedUserEmail: z.string().email(),
 });
 
-export type InvitesCreateOutput = ApiResult<Invite>;
+export type InvitesCreateOutput = Invite;
 
 // ============================================================================
 // ACCEPT INVITE
@@ -94,7 +93,7 @@ export const invitesAcceptSchema = z.object({
   token: z.string().min(1, 'Token is required'),
 });
 
-export type InvitesAcceptOutput = ApiResult<Invite>;
+export type InvitesAcceptOutput = Invite;
 
 // ============================================================================
 // DECLINE INVITE
@@ -110,7 +109,7 @@ export const invitesDeclineSchema = z.object({
   token: z.string().min(1, 'Token is required'),
 });
 
-export type InvitesDeclineOutput = ApiResult<{ success: boolean }>;
+export type InvitesDeclineOutput = { success: boolean };
 
 // ============================================================================
 // DELETE INVITE
@@ -126,4 +125,4 @@ export const invitesDeleteSchema = z.object({
   invitedUserEmail: z.string().email(),
 });
 
-export type InvitesDeleteOutput = ApiResult<{ success: boolean }>;
+export type InvitesDeleteOutput = { success: boolean };

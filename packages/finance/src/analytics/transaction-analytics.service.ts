@@ -52,10 +52,18 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
   }));
 }
 
+export type MonthSummary = {
+  month: string;
+  count: number;
+  income: string;
+  expenses: string;
+  average: string;
+};
+
 /**
  * Summarize transactions by month
  */
-export async function summarizeByMonth(options: QueryOptions) {
+export async function summarizeByMonth(options: QueryOptions): Promise<MonthSummary[]> {
   const whereConditions = buildWhereConditions({ ...options, includeExcluded: true });
 
   const query = db
@@ -132,12 +140,25 @@ export async function findTopMerchants(options: QueryOptions): Promise<TopMercha
 /**
  * Calculate transaction statistics
  */
+export type TransactionStats = {
+  count: number;
+  total: string;
+  average: string;
+  minimum: string;
+  maximum: string;
+};
+
+export type TransactionAggregation = {
+  value: number;
+  calculationType: 'sum' | 'average' | 'count';
+};
+
 export async function calculateTransactions(
   options: QueryOptions & {
     calculationType?: 'sum' | 'average' | 'count' | 'stats';
     descriptionLike?: string;
   },
-) {
+): Promise<TransactionStats | TransactionAggregation> {
   // Create a new options object that includes the descriptionLike in the description field
   // to leverage the standardized condition building
   const enhancedOptions: QueryOptions = {
@@ -204,7 +225,21 @@ export async function calculateTransactions(
   };
 }
 
-export async function getMonthlyStats(params: { month: string; userId: string }) {
+export type MonthlyStatsOutput = {
+  month: string;
+  startDate: string;
+  endDate: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netIncome: number;
+  transactionCount: number;
+  categorySpending: Array<{
+    name: string | null;
+    amount: number;
+  }>;
+};
+
+export async function getMonthlyStats(params: { month: string; userId: string }): Promise<MonthlyStatsOutput> {
   const { month, userId } = params;
   const startDate = new Date(`${month}-01T00:00:00.000Z`);
   const endDate = new Date(startDate);
