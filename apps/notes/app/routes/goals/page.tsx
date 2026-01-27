@@ -1,4 +1,4 @@
-import type { GoalJson } from '@hominem/hono-rpc/types';
+import type { Goal } from '@hominem/hono-rpc/types';
 
 import { PageTitle } from '@hominem/ui';
 import { useToast } from '@hominem/ui';
@@ -40,7 +40,7 @@ export default function GoalsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
-  const [currentGoal, setCurrentGoal] = useState<GoalJson | null>(null);
+  const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const { toast } = useToast();
 
   const createGoal = useCreateGoal(queryParams);
@@ -97,12 +97,12 @@ export default function GoalsPage() {
     );
   };
 
-  const handleEditClick = (goal: GoalJson) => {
+  const handleEditClick = (goal: Goal) => {
     setCurrentGoal(goal);
     setIsEditModalOpen(true);
   };
 
-  const handleArchiveClick = (goal: GoalJson) => {
+  const handleArchiveClick = (goal: Goal) => {
     setCurrentGoal(goal);
     setIsArchiveModalOpen(true);
   };
@@ -170,7 +170,7 @@ export default function GoalsPage() {
         <p className="text-center text-muted-foreground mt-10">Loading goals...</p>
       ) : goals.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {goals.map((goal: GoalJson) => (
+          {goals.map((goal: Goal) => (
             <GoalCard
               key={goal.id}
               goal={goal}

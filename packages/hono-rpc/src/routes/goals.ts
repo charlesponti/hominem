@@ -23,7 +23,7 @@ import {
   type GoalUpdateOutput,
   type GoalArchiveOutput,
   type GoalDeleteOutput,
-  type GoalJson,
+  type Goal,
 } from '../types/goals.types';
 
 export const goalsRoutes = new Hono<AppContext>()
@@ -42,7 +42,7 @@ export const goalsRoutes = new Hono<AppContext>()
       sortBy,
       category,
     });
-    return c.json<GoalListOutput>(goals as GoalJson[]);
+    return c.json<GoalListOutput>(goals as Goal[]);
   })
 
   // Get goal by ID
@@ -54,7 +54,7 @@ export const goalsRoutes = new Hono<AppContext>()
     if (!goal) {
       throw new NotFoundError('Goal not found');
     }
-    return c.json<GoalGetOutput>(goal as GoalJson);
+    return c.json<GoalGetOutput>(goal as Goal);
   })
 
   // Create goal
@@ -63,7 +63,7 @@ export const goalsRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const goal = await createGoal({ ...data, userId });
-    return c.json<GoalCreateOutput>(goal as GoalJson, 201);
+    return c.json<GoalCreateOutput>(goal as Goal, 201);
   })
 
   // Update goal
@@ -76,7 +76,7 @@ export const goalsRoutes = new Hono<AppContext>()
     if (!goal) {
       throw new NotFoundError('Goal not found');
     }
-    return c.json<GoalUpdateOutput>(goal as GoalJson);
+    return c.json<GoalUpdateOutput>(goal as Goal);
   })
 
   // Archive goal
@@ -88,7 +88,7 @@ export const goalsRoutes = new Hono<AppContext>()
     if (!goal) {
       throw new NotFoundError('Goal not found');
     }
-    return c.json<GoalArchiveOutput>(goal as GoalJson);
+    return c.json<GoalArchiveOutput>(goal as Goal);
   })
 
   // Delete goal
@@ -100,5 +100,5 @@ export const goalsRoutes = new Hono<AppContext>()
     if (!goal) {
       throw new NotFoundError('Goal not found');
     }
-    return c.json<GoalDeleteOutput>(goal as GoalJson);
+    return c.json<GoalDeleteOutput>(goal as Goal);
   });

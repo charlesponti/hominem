@@ -1,12 +1,27 @@
 import { z } from 'zod';
-import type { ContactSelect } from '@hominem/services';
 import type { EmptyInput, JsonSerialized } from './utils';
 
 // ============================================================================
 // Data Types
 // ============================================================================
 
-export type Person = JsonSerialized<ContactSelect>;
+/**
+ * Person represents a contact from the database
+ * Uses JsonSerialized to handle Date serialization automatically
+ */
+export type Person = JsonSerialized<{
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+  linkedinUrl: string | null;
+  title: string | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}>;
 
 // ============================================================================
 // LIST PEOPLE

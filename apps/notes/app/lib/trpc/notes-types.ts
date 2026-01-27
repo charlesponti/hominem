@@ -19,5 +19,5 @@ export type {
   GoalUpdateOutput,
   GoalDeleteOutput,
   GoalArchiveOutput,
-  GoalJson as Goal,
+  Goal,
 } from '@hominem/hono-rpc/types';
