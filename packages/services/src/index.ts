@@ -12,6 +12,7 @@ export * from './spotify.service';
 export * from './tags.service';
 export * from './typing-mind.schema';
 export * from './google-places.service';
+export * from './types';
 
 // API Contract patterns
 export {

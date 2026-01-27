@@ -1,11 +1,10 @@
 import { NoteContentTypeSchema, type NoteInsert, TaskMetadataSchema } from '@hominem/db/schema';
 import { NotesService } from '@hominem/notes-services';
 import { error, success } from '@hominem/services';
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
-import { zValidator } from '@hono/zod-validator';
 import type {
   NotesListOutput,
   NotesGetOutput,
@@ -15,6 +14,8 @@ import type {
   NotesSyncOutput,
   Note,
 } from '../types/notes.types';
+
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
 const notesService = new NotesService();
 
@@ -32,7 +33,7 @@ function serializeNote(n: any): Note {
     mentions: n.mentions || [],
     taskMetadata: n.taskMetadata,
     analysis: n.analysis,
-    socialMediaMetadata: n.tweetMetadata,
+    tweetMetadata: n.tweetMetadata,
     synced: n.synced,
     createdAt: typeof n.createdAt === 'string' ? n.createdAt : n.createdAt.toISOString(),
     updatedAt: typeof n.updatedAt === 'string' ? n.updatedAt : n.updatedAt.toISOString(),
@@ -150,7 +151,10 @@ export const notesRoutes = new Hono<AppContext>()
     } catch (err) {
       console.error('[notes.list] error:', err);
       return c.json<NotesListOutput>(
-        error('INTERNAL_ERROR', `Failed to fetch notes: ${err instanceof Error ? err.message : String(err)}`),
+        error(
+          'INTERNAL_ERROR',
+          `Failed to fetch notes: ${err instanceof Error ? err.message : String(err)}`,
+        ),
         500,
       );
     }
@@ -170,7 +174,10 @@ export const notesRoutes = new Hono<AppContext>()
       }
       console.error('[notes.get] error:', err);
       return c.json<NotesGetOutput>(
-        error('INTERNAL_ERROR', `Failed to fetch note: ${err instanceof Error ? err.message : String(err)}`),
+        error(
+          'INTERNAL_ERROR',
+          `Failed to fetch note: ${err instanceof Error ? err.message : String(err)}`,
+        ),
         500,
       );
     }
@@ -193,7 +200,10 @@ export const notesRoutes = new Hono<AppContext>()
     } catch (err) {
       console.error('[notes.create] error:', err);
       return c.json<NotesCreateOutput>(
-        error('INTERNAL_ERROR', `Failed to create note: ${err instanceof Error ? err.message : String(err)}`),
+        error(
+          'INTERNAL_ERROR',
+          `Failed to create note: ${err instanceof Error ? err.message : String(err)}`,
+        ),
         500,
       );
     }
@@ -214,11 +224,17 @@ export const notesRoutes = new Hono<AppContext>()
       return c.json<NotesUpdateOutput>(success(serializeNote(updatedNote)));
     } catch (err) {
       if (err instanceof Error && err.message === 'Note not found or not authorized to update') {
-        return c.json<NotesUpdateOutput>(error('NOT_FOUND', 'Note not found or not authorized to update'), 404);
+        return c.json<NotesUpdateOutput>(
+          error('NOT_FOUND', 'Note not found or not authorized to update'),
+          404,
+        );
       }
       console.error('[notes.update] error:', err);
       return c.json<NotesUpdateOutput>(
-        error('INTERNAL_ERROR', `Failed to update note: ${err instanceof Error ? err.message : String(err)}`),
+        error(
+          'INTERNAL_ERROR',
+          `Failed to update note: ${err instanceof Error ? err.message : String(err)}`,
+        ),
         500,
       );
     }
@@ -234,32 +250,45 @@ export const notesRoutes = new Hono<AppContext>()
       return c.json<NotesDeleteOutput>(success(serializeNote(deletedNote)));
     } catch (err) {
       if (err instanceof Error && err.message === 'Note not found or not authorized to delete') {
-        return c.json<NotesDeleteOutput>(error('NOT_FOUND', 'Note not found or not authorized to delete'), 404);
+        return c.json<NotesDeleteOutput>(
+          error('NOT_FOUND', 'Note not found or not authorized to delete'),
+          404,
+        );
       }
       console.error('[notes.delete] error:', err);
       return c.json<NotesDeleteOutput>(
-        error('INTERNAL_ERROR', `Failed to delete note: ${err instanceof Error ? err.message : String(err)}`),
+        error(
+          'INTERNAL_ERROR',
+          `Failed to delete note: ${err instanceof Error ? err.message : String(err)}`,
+        ),
         500,
       );
     }
   })
 
   // Sync notes
-  .post('/sync', zValidator('json', z.object({ items: z.array(SyncNoteItemSchema) })), async (c) => {
-    try {
-      const userId = c.get('userId')!;
-      const { items } = c.req.valid('json');
+  .post(
+    '/sync',
+    zValidator('json', z.object({ items: z.array(SyncNoteItemSchema) })),
+    async (c) => {
+      try {
+        const userId = c.get('userId')!;
+        const { items } = c.req.valid('json');
 
-      const result = await notesService.sync(
-        items as Parameters<typeof notesService.sync>[0],
-        userId,
-      );
-      return c.json<NotesSyncOutput>(success(result));
-    } catch (err) {
-      console.error('[notes.sync] error:', err);
-      return c.json<NotesSyncOutput>(
-        error('INTERNAL_ERROR', `Failed to sync notes: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
-    }
-  });
+        const result = await notesService.sync(
+          items as Parameters<typeof notesService.sync>[0],
+          userId,
+        );
+        return c.json<NotesSyncOutput>(success(result));
+      } catch (err) {
+        console.error('[notes.sync] error:', err);
+        return c.json<NotesSyncOutput>(
+          error(
+            'INTERNAL_ERROR',
+            `Failed to sync notes: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+          500,
+        );
+      }
+    },
+  );

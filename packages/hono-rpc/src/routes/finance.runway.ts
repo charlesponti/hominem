@@ -21,19 +21,23 @@ export const runwayRoutes = new Hono<AppContext>()
     try {
       const result = calculateRunway(input);
 
-      return c.json<RunwayCalculateOutput>(
+      return c.json(
         success({
-          months: result.months,
-          years: result.years,
-          projection: result.projection,
+          runwayMonths: result.runwayMonths,
+          runwayEndDate: result.runwayEndDate,
+          isRunwayDangerous: result.isRunwayDangerous,
+          totalPlannedExpenses: result.totalPlannedExpenses,
+          projectionData: result.projectionData,
+          months: result.runwayMonths,
+          years: result.runwayMonths / 12,
         }),
         200,
       );
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<RunwayCalculateOutput>(error(err.code, err.message), err.statusCode as any);
+        return c.json(error(err.code, err.message), err.statusCode as any);
       }
       console.error('Runway calculation error:', err);
-      return c.json<RunwayCalculateOutput>(error('INTERNAL_ERROR', 'Failed to calculate runway'), 500);
+      return c.json(error('INTERNAL_ERROR', 'Failed to calculate runway'), 500);
     }
   });

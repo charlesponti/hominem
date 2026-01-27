@@ -17,12 +17,15 @@
     "clean": "rm -rf build node_modules/.cache"
   },
   "dependencies": {
-    "@ai-sdk/google": "^1.2.0",
+    "@ai-sdk/google": "^1.1.0",
+    "@ai-sdk/openai": "^1.1.0",
+    "@ai-sdk/openai-compatible": "^0.1.0",
     "@hominem/auth": "workspace:*",
     "@hominem/chat-services": "workspace:*",
     "@hominem/db": "workspace:*",
     "@hominem/events-services": "workspace:*",
     "@hominem/finance-services": "workspace:*",
+    "@hominem/health-services": "workspace:*",
     "@hominem/lists-services": "workspace:*",
     "@hominem/notes-services": "workspace:*",
     "@hominem/places-services": "workspace:*",
@@ -33,8 +36,8 @@
     "@tanstack/ai": "^0.2.0",
     "ai": "^4.3.0",
     "dotenv": "^16.0.0",
-    "drizzle-orm": "0.40.0",
-    "hono": "^4.11.6",
+    "drizzle-orm": "0.45.1",
+    "hono": "4.11.6",
     "plaid": "^28.0.0",
     "zod": "4.3.6"
   },

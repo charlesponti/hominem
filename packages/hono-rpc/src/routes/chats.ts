@@ -1,13 +1,11 @@
 import { ChatService, MessageService } from '@hominem/chat-services';
 import { error, success, isServiceError } from '@hominem/services';
-import { chat } from '@tanstack/ai';
 import { zValidator } from '@hono/zod-validator';
+import { streamText, type CoreMessage } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import { getLMStudioAdapter } from '../utils/llm';
-import { getAvailableTools } from '../utils/tools';
 import {
   type Chat,
   type ChatMessage,
@@ -19,6 +17,8 @@ import {
   type ChatsGetMessagesOutput,
   chatsSendSchema,
 } from '../types/chat.types';
+import { getLMStudioAdapter } from '../utils/llm';
+import { getAvailableTools } from '../utils/tools';
 
 const chatService = new ChatService();
 const messageService = new MessageService();
@@ -87,7 +87,7 @@ const chatByIdRoutes = new Hono<AppContext>()
   // Get chat by ID
   .get('/', async (c) => {
     try {
-      const chatId = c.req.param('id');
+      const chatId = c.req.param('id') as string;
       const userId = c.get('userId')!;
 
       const [chatData, messagesData] = await Promise.all([
@@ -114,7 +114,7 @@ const chatByIdRoutes = new Hono<AppContext>()
   // Delete chat
   .delete('/', async (c) => {
     try {
-      const chatId = c.req.param('id');
+      const chatId = c.req.param('id') as string;
       const userId = c.get('userId')!;
 
       const success_result = await chatService.deleteChat(chatId, userId);
@@ -128,7 +128,7 @@ const chatByIdRoutes = new Hono<AppContext>()
   // Update chat title
   .patch('/', zValidator('json', chatsUpdateSchema), async (c) => {
     try {
-      const chatId = c.req.param('id');
+      const chatId = c.req.param('id') as string;
       const userId = c.get('userId')!;
       const { title } = c.req.valid('json');
 
@@ -144,7 +144,7 @@ const chatByIdRoutes = new Hono<AppContext>()
   .post('/send', zValidator('json', chatsSendSchema), async (c) => {
     try {
       const userId = c.get('userId')!;
-      const chatId = c.req.param('id');
+      const chatId = c.req.param('id') as string;
       const { message } = c.req.valid('json');
 
       const currentChat = await ensureChatAndUser(userId, chatId);
@@ -162,29 +162,21 @@ const chatByIdRoutes = new Hono<AppContext>()
         content: message,
       });
 
-      const messagesWithNewUser = [
+      const messagesWithNewUser: CoreMessage[] = [
         ...historyMessages.map((m) => ({
-          role: m.role,
-          content: m.content,
-          toolCalls: m.toolCalls?.map((m) => ({
-            id: m.toolCallId,
-            function: {
-              name: m.toolName,
-              arguments: JSON.stringify(m.args),
-            },
-            type: 'function' as const,
-          })),
+          role: m.role as any,
+          content: m.content as string,
         })),
         {
-          role: 'user' as const,
+          role: 'user',
           content: message,
         },
       ];
 
       const adapter = getLMStudioAdapter();
-      const stream = chat({
-        adapter,
-        tools: getAvailableTools(userId),
+      const { textStream, toolCalls } = await streamText({
+        model: adapter,
+        tools: getAvailableTools(userId) as any,
         messages: messagesWithNewUser,
       });
 
@@ -200,24 +192,33 @@ const chatByIdRoutes = new Hono<AppContext>()
       }
 
       let accumulatedContent = '';
-      const toolCalls: any[] = [];
+      const accumulatedToolCalls: any[] = [];
 
       try {
-        for await (const event of stream) {
-          if (event.type === 'content') {
-            accumulatedContent += event.content;
-          } else if (event.type === 'tool_call') {
-            toolCalls.push(event.toolCall);
+        // Collect stream results
+        const textPromise = (async () => {
+          for await (const chunk of textStream) {
+            accumulatedContent += chunk;
           }
-        }
+        })();
+
+        const toolsPromise = (async () => {
+          const calls = await toolCalls;
+          for (const call of calls) {
+            accumulatedToolCalls.push(call);
+          }
+        })();
+
+        await Promise.all([textPromise, toolsPromise]);
+
         const updatedAssistantMessage = await messageService.updateMessage({
           messageId: assistantMessage.id,
           content: accumulatedContent,
-          toolCalls: toolCalls.map((tc) => ({
-            toolName: tc.function.name,
+          toolCalls: accumulatedToolCalls.map((tc) => ({
+            toolName: tc.toolName,
             type: 'tool-call',
-            toolCallId: tc.id,
-            args: JSON.parse(tc.function.arguments) as Record<string, string>,
+            toolCallId: tc.toolCallId,
+            args: tc.args as Record<string, string>,
           })),
         });
         if (updatedAssistantMessage) {
@@ -251,14 +252,17 @@ const chatByIdRoutes = new Hono<AppContext>()
       );
     } catch (err) {
       console.error('[chats.send] unexpected error:', err);
-      return c.json<ChatsSendOutput>(error('INTERNAL_ERROR', 'Failed to send message with streaming'), 500);
+      return c.json<ChatsSendOutput>(
+        error('INTERNAL_ERROR', 'Failed to send message with streaming'),
+        500,
+      );
     }
   })
 
   // Get messages for a chat
   .get('/messages', zValidator('query', chatsMessagesQuerySchema), async (c) => {
     try {
-      const chatId = c.req.param('id');
+      const chatId = c.req.param('id') as string;
       const { limit, offset } = c.req.valid('query');
 
       const messagesData = await messageService.getChatMessages(chatId, {
@@ -268,7 +272,10 @@ const chatByIdRoutes = new Hono<AppContext>()
       return c.json<ChatsGetMessagesOutput>(success(messagesData.map(serializeChatMessage)));
     } catch (err) {
       console.error('[chats.getMessages] unexpected error:', err);
-      return c.json<ChatsGetMessagesOutput>(error('INTERNAL_ERROR', 'Failed to fetch messages'), 500);
+      return c.json<ChatsGetMessagesOutput>(
+        error('INTERNAL_ERROR', 'Failed to fetch messages'),
+        500,
+      );
     }
   });
 

@@ -60,7 +60,7 @@
     "drizzle-zod": "^0.7.0",
     "googleapis": "^170.0.0",
     "gpt-tokenizer": "^2.9.0",
-    "hono": "^4.11.6",
+    "hono": "4.11.6",
     "ioredis": "5.8.2",
     "isbot": "^5.1.28",
     "lru-cache": "^11.1.0",

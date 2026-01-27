@@ -15,6 +15,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   accountListSchema,
   accountGetSchema,
@@ -35,18 +36,25 @@ import {
   type TransactionData,
 } from '../types/finance.types';
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
-
 /**
  * Serialization Helpers
  */
 function serializeAccount(account: any): AccountData {
   return {
     ...account,
-    createdAt: typeof account.createdAt === 'string' ? account.createdAt : account.createdAt.toISOString(),
-    updatedAt: typeof account.updatedAt === 'string' ? account.updatedAt : account.updatedAt.toISOString(),
-    lastUpdated: account.lastUpdated ? (typeof account.lastUpdated === 'string' ? account.lastUpdated : account.lastUpdated.toISOString()) : null,
-    balance: typeof account.balance === 'number' ? account.balance : parseFloat(account.balance?.toString() || '0'),
+    createdAt:
+      typeof account.createdAt === 'string' ? account.createdAt : account.createdAt.toISOString(),
+    updatedAt:
+      typeof account.updatedAt === 'string' ? account.updatedAt : account.updatedAt.toISOString(),
+    lastUpdated: account.lastUpdated
+      ? typeof account.lastUpdated === 'string'
+        ? account.lastUpdated
+        : account.lastUpdated.toISOString()
+      : null,
+    balance:
+      typeof account.balance === 'number'
+        ? account.balance
+        : parseFloat(account.balance?.toString() || '0'),
   };
 }
 
@@ -54,7 +62,11 @@ function serializeTransaction(t: any): TransactionData {
   return {
     ...t,
     date: typeof t.date === 'string' ? t.date : t.date.toISOString(),
-    authorizedDate: t.authorizedDate ? (typeof t.authorizedDate === 'string' ? t.authorizedDate : t.authorizedDate.toISOString()) : null,
+    authorizedDate: t.authorizedDate
+      ? typeof t.authorizedDate === 'string'
+        ? t.authorizedDate
+        : t.authorizedDate.toISOString()
+      : null,
     createdAt: typeof t.createdAt === 'string' ? t.createdAt : t.createdAt.toISOString(),
     updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt.toISOString(),
     amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount?.toString() || '0'),
@@ -206,9 +218,13 @@ export const accountsRoutes = new Hono<AppContext>()
 
       const result = {
         accounts: accountsWithTransactions,
-        connections: plaidConnections.map(conn => ({
+        connections: plaidConnections.map((conn) => ({
           ...conn,
-          lastSynced: typeof conn.lastSynced === 'string' ? conn.lastSynced : (conn.lastSynced as any).toISOString(),
+          lastSynced: conn.lastSyncedAt
+            ? typeof conn.lastSyncedAt === 'string'
+              ? conn.lastSyncedAt
+              : conn.lastSyncedAt.toISOString()
+            : '',
         })),
       };
 
@@ -234,7 +250,10 @@ export const accountsRoutes = new Hono<AppContext>()
         return c.json<AccountsWithPlaidOutput>(error(err.code, err.message), err.statusCode as any);
       }
       console.error('Error getting accounts with Plaid:', err);
-      return c.json<AccountsWithPlaidOutput>(error('INTERNAL_ERROR', 'Failed to get accounts with Plaid'), 500);
+      return c.json<AccountsWithPlaidOutput>(
+        error('INTERNAL_ERROR', 'Failed to get accounts with Plaid'),
+        500,
+      );
     }
   })
 
@@ -244,16 +263,36 @@ export const accountsRoutes = new Hono<AppContext>()
 
     try {
       const result = await listPlaidConnectionsForUser(userId);
-      return c.json<AccountConnectionsOutput>(success(result.map(conn => ({
-        ...conn,
-        lastSynced: typeof conn.lastSynced === 'string' ? conn.lastSynced : (conn.lastSynced as any).toISOString(),
-      }))), 200);
+      return c.json<AccountConnectionsOutput>(
+        success(
+          result.map((conn) => ({
+            id: conn.id,
+            institutionId: conn.institutionId || '',
+            institutionName: conn.institutionName || 'Unknown',
+            institutionLogo: null,
+            status: conn.status as any,
+            lastSynced: conn.lastSyncedAt
+              ? typeof conn.lastSyncedAt === 'string'
+                ? conn.lastSyncedAt
+                : conn.lastSyncedAt.toISOString()
+              : '',
+            accounts: 0,
+          })),
+        ),
+        200,
+      );
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<AccountConnectionsOutput>(error(err.code, err.message), err.statusCode as any);
+        return c.json<AccountConnectionsOutput>(
+          error(err.code, err.message),
+          err.statusCode as any,
+        );
       }
       console.error('Error getting connections:', err);
-      return c.json<AccountConnectionsOutput>(error('INTERNAL_ERROR', 'Failed to get connections'), 500);
+      return c.json<AccountConnectionsOutput>(
+        error('INTERNAL_ERROR', 'Failed to get connections'),
+        500,
+      );
     }
   })
 
@@ -267,9 +306,15 @@ export const accountsRoutes = new Hono<AppContext>()
       return c.json<AccountInstitutionAccountsOutput>(success(result.map(serializeAccount)), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<AccountInstitutionAccountsOutput>(error(err.code, err.message), err.statusCode as any);
+        return c.json<AccountInstitutionAccountsOutput>(
+          error(err.code, err.message),
+          err.statusCode as any,
+        );
       }
       console.error('Error getting institution accounts:', err);
-      return c.json<AccountInstitutionAccountsOutput>(error('INTERNAL_ERROR', 'Failed to get institution accounts'), 500);
+      return c.json<AccountInstitutionAccountsOutput>(
+        error('INTERNAL_ERROR', 'Failed to get institution accounts'),
+        500,
+      );
     }
   });

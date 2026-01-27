@@ -10,8 +10,10 @@
  * No complex inference from route schemas - all outputs are explicitly defined.
  */
 
-import { z } from 'zod';
 import type { ApiResult } from '@hominem/services';
+
+import { z } from 'zod';
+
 import type { EmptyInput } from './utils';
 
 // ============================================================================
@@ -220,9 +222,11 @@ export const institutionAccountsSchema = z.object({
 
 export type AccountListOutput = ApiResult<AccountData[]>;
 
-export type AccountGetOutput = ApiResult<AccountWithPlaidData & {
-  transactions: TransactionData[];
-}>;
+export type AccountGetOutput = ApiResult<
+  AccountWithPlaidData & {
+    transactions: TransactionData[];
+  }
+>;
 
 export type AccountCreateOutput = ApiResult<AccountData>;
 export type AccountUpdateOutput = ApiResult<AccountData>;
@@ -475,19 +479,21 @@ export type BudgetCategoriesListWithSpendingInput = {
   monthYear?: string;
 };
 
-export type BudgetCategoriesListWithSpendingOutput = ApiResult<Array<
-  BudgetCategoryData & {
-    actualSpending: number;
-    percentageSpent: number;
-    budgetAmount: number;
-    allocationPercentage: number;
-    variance: number;
-    remaining: number;
-    color: string;
-    status: 'on-track' | 'warning' | 'over-budget';
-    statusColor: string;
-  }
->>;
+export type BudgetCategoriesListWithSpendingOutput = ApiResult<
+  Array<
+    BudgetCategoryData & {
+      actualSpending: number;
+      percentageSpent: number;
+      budgetAmount: number;
+      allocationPercentage: number;
+      variance: number;
+      remaining: number;
+      color: string;
+      status: 'on-track' | 'warning' | 'over-budget';
+      statusColor: string;
+    }
+  >
+>;
 
 export type BudgetCategoryGetInput = { id: string };
 export type BudgetCategoryGetOutput = ApiResult<BudgetCategoryData>;
@@ -566,11 +572,13 @@ export type BudgetHistoryInput = {
   months?: number;
 };
 
-export type BudgetHistoryOutput = ApiResult<Array<{
-  date: string;
-  budgeted: number;
-  actual: number;
-}>>;
+export type BudgetHistoryOutput = ApiResult<
+  Array<{
+    date: string;
+    budgeted: number;
+    actual: number;
+  }>
+>;
 
 export type BudgetCalculateInput = {
   income: number;
@@ -619,17 +627,19 @@ export type BudgetBulkCreateOutput = ApiResult<{
   categories: BudgetCategoryData[];
 }>;
 
-export type TransactionCategoryAnalysisOutput = ApiResult<Array<{
-  category: string;
-  name?: string;
-  totalAmount: number;
-  transactionCount: number;
-  averageAmount: number;
-  type?: 'income' | 'expense';
-  suggested?: boolean;
-  suggestedBudget?: number;
-  monthsWithTransactions?: number;
-}>>;
+export type TransactionCategoryAnalysisOutput = ApiResult<
+  Array<{
+    category: string;
+    name?: string;
+    totalAmount: number;
+    transactionCount: number;
+    averageAmount: number;
+    type?: 'income' | 'expense';
+    suggested?: boolean;
+    suggestedBudget?: number;
+    monthsWithTransactions?: number;
+  }>
+>;
 
 // ============================================================================
 // Plaid
@@ -695,22 +705,16 @@ export type RunwayCalculateInput = {
 };
 
 export type RunwayCalculateOutput = ApiResult<{
-  months: number;
-  years: number;
-  projection: Array<{
-    month: number;
+  runwayMonths: number;
+  runwayEndDate: string;
+  isRunwayDangerous: boolean;
+  totalPlannedExpenses: number;
+  projectionData: Array<{
+    month: string;
     balance: number;
   }>;
-  data?: {
-    runwayMonths: number;
-    runwayEndDate: string;
-    isRunwayDangerous: boolean;
-    totalPlannedExpenses: number;
-    projectionData: Array<{
-      month: string;
-      balance: number;
-    }>;
-  };
+  months: number;
+  years: number;
 }>;
 
 // ============================================================================

@@ -1,4 +1,5 @@
 import type { EventTypeEnum } from '@hominem/db/schema';
+
 import {
   createEvent,
   deleteEvent,
@@ -9,11 +10,11 @@ import {
   updateEvent,
 } from '@hominem/events-services';
 import { error, success } from '@hominem/services';
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
-import { zValidator } from '@hono/zod-validator';
 import {
   eventsCreateSchema,
   eventsUpdateSchema,
@@ -26,7 +27,7 @@ import {
   type EventsGoogleCalendarsOutput,
   type EventsGoogleSyncOutput,
   type EventsSyncStatusOutput,
-  type EventJson,
+  type Event as EventJson,
 } from '../types/events.types';
 
 /**
@@ -36,11 +37,23 @@ function serializeEvent(e: any): EventJson {
   return {
     ...e,
     date: typeof e.date === 'string' ? e.date : e.date.toISOString(),
-    dateStart: e.dateStart ? (typeof e.dateStart === 'string' ? e.dateStart : e.dateStart.toISOString()) : null,
-    dateEnd: e.dateEnd ? (typeof e.dateEnd === 'string' ? e.dateEnd : e.dateEnd.toISOString()) : null,
+    dateStart: e.dateStart
+      ? typeof e.dateStart === 'string'
+        ? e.dateStart
+        : e.dateStart.toISOString()
+      : null,
+    dateEnd: e.dateEnd
+      ? typeof e.dateEnd === 'string'
+        ? e.dateEnd
+        : e.dateEnd.toISOString()
+      : null,
     createdAt: typeof e.createdAt === 'string' ? e.createdAt : e.createdAt.toISOString(),
     updatedAt: typeof e.updatedAt === 'string' ? e.updatedAt : e.updatedAt.toISOString(),
-    lastSyncedAt: e.lastSyncedAt ? (typeof e.lastSyncedAt === 'string' ? e.lastSyncedAt : e.lastSyncedAt.toISOString()) : null,
+    lastSyncedAt: e.lastSyncedAt
+      ? typeof e.lastSyncedAt === 'string'
+        ? e.lastSyncedAt
+        : e.lastSyncedAt.toISOString()
+      : null,
   };
 }
 
@@ -158,7 +171,10 @@ export const eventsRoutes = new Hono<AppContext>()
       const supabase = c.get('supabase');
 
       if (!supabase) {
-        return c.json<EventsGoogleCalendarsOutput>(error('INTERNAL_ERROR', 'Supabase client not available'), 500);
+        return c.json<EventsGoogleCalendarsOutput>(
+          error('INTERNAL_ERROR', 'Supabase client not available'),
+          500,
+        );
       }
 
       const {
@@ -184,7 +200,10 @@ export const eventsRoutes = new Hono<AppContext>()
       return c.json<EventsGoogleCalendarsOutput>(success(calendars as any));
     } catch (err) {
       console.error('[events.getGoogleCalendars] error:', err);
-      return c.json<EventsGoogleCalendarsOutput>(error('INTERNAL_ERROR', 'Failed to get Google calendars'), 500);
+      return c.json<EventsGoogleCalendarsOutput>(
+        error('INTERNAL_ERROR', 'Failed to get Google calendars'),
+        500,
+      );
     }
   })
 
@@ -195,7 +214,10 @@ export const eventsRoutes = new Hono<AppContext>()
       const supabase = c.get('supabase');
 
       if (!supabase) {
-        return c.json<EventsGoogleSyncOutput>(error('INTERNAL_ERROR', 'Supabase client not available'), 500);
+        return c.json<EventsGoogleSyncOutput>(
+          error('INTERNAL_ERROR', 'Supabase client not available'),
+          500,
+        );
       }
 
       const {
@@ -219,13 +241,18 @@ export const eventsRoutes = new Hono<AppContext>()
 
       const { calendarId, timeMin, timeMax } = c.req.valid('json');
       const result = await googleService.syncGoogleCalendarEvents(calendarId, timeMin, timeMax);
-      return c.json<EventsGoogleSyncOutput>(success({
-        syncedEvents: result.syncedEvents,
-        message: result.message,
-      }));
+      return c.json<EventsGoogleSyncOutput>(
+        success({
+          syncedEvents: result.created + result.updated + result.deleted,
+          message: `Successfully synced ${result.created} created, ${result.updated} updated, and ${result.deleted} deleted events.`,
+        }),
+      );
     } catch (err) {
       console.error('[events.syncGoogleCalendar] error:', err);
-      return c.json<EventsGoogleSyncOutput>(error('INTERNAL_ERROR', 'Failed to sync Google Calendar'), 500);
+      return c.json<EventsGoogleSyncOutput>(
+        error('INTERNAL_ERROR', 'Failed to sync Google Calendar'),
+        500,
+      );
     }
   })
 
@@ -245,6 +272,9 @@ export const eventsRoutes = new Hono<AppContext>()
       );
     } catch (err) {
       console.error('[events.getSyncStatus] error:', err);
-      return c.json<EventsSyncStatusOutput>(error('INTERNAL_ERROR', 'Failed to get sync status'), 500);
+      return c.json<EventsSyncStatusOutput>(
+        error('INTERNAL_ERROR', 'Failed to get sync status'),
+        500,
+      );
     }
   });

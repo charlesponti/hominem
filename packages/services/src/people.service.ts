@@ -2,6 +2,8 @@ import { db } from '@hominem/db';
 import { contacts, eventsUsers, type ContactSelect } from '@hominem/db/schema';
 import { asc, eq, inArray } from 'drizzle-orm';
 
+export type { ContactSelect };
+
 export interface PersonInput {
   userId: string;
   firstName?: string;
