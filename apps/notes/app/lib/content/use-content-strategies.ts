@@ -1,26 +1,23 @@
-import type { ApiResult, ContentStrategiesSelect } from '@hominem/services';
+import type { ContentStrategiesListOutput } from '@hominem/hono-rpc/types';
 import { useHonoQuery } from '@hominem/hono-client/react';
-
-type ContentStrategiesResult = ApiResult<ContentStrategiesSelect[]>;
 
 export function useContentStrategies() {
   const {
-    data: strategiesResult,
+    data: strategies,
     isLoading,
     error,
-  } = useHonoQuery<ContentStrategiesResult>(
+  } = useHonoQuery<ContentStrategiesListOutput>(
     ['content-strategies', 'list'],
     async (client) => {
-      // Route is GET /api/content-strategies
       const res = await client.api['content-strategies'].$get();
-      return res.json();
+      return res.json() as Promise<ContentStrategiesListOutput>;
     },
   );
 
-  const strategies = strategiesResult?.success ? strategiesResult.data : [];
+  const strategiesList = Array.isArray(strategies) ? strategies : [];
 
   return {
-    strategies,
+    strategies: strategiesList,
     isLoading,
     error,
   };

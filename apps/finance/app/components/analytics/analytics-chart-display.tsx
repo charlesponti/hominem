@@ -67,10 +67,10 @@ export function AnalyticsChartDisplay({
   });
 
   const incomeExpensesChartData = useMemo(() => {
-    if (!timeSeriesData?.success || !timeSeriesData.data.data) {
+    if (!Array.isArray(timeSeriesData?.data)) {
       return [];
     }
-    return timeSeriesData.data.data.map((point) => ({
+    return timeSeriesData.data.map((point: any) => ({
       name: formatMonthYear(point.date),
       Income: point.income,
       Expenses: Math.abs(point.expenses),

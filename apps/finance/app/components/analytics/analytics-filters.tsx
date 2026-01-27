@@ -195,8 +195,8 @@ export function AnalyticsFilters({
   const safeAccounts = Array.isArray(accountsQuery.data) ? accountsQuery.data : [];
   const safeCategories = categories
     .map((category) => ({
-      id: category.category || '',
-      name: category.category || '',
+      id: category || '',
+      name: category || '',
     }))
     .filter((cat) => cat.id && cat.name);
 

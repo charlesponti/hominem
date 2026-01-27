@@ -46,7 +46,7 @@ export function useAccountsByInstitution() {
     return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
   });
 
-  const accounts = query.data?.success ? query.data.data : [];
+  const accounts = Array.isArray(query.data) ? query.data : [];
 
   const accountsByInstitution = accounts.reduce<Record<
     string,

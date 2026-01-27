@@ -498,6 +498,23 @@ export type BudgetCategoriesListWithSpendingOutput = Array<
 >;
 
 export type BudgetCategoryGetInput = { id: string };
+export type BudgetCategoryCreateInput = {
+  name: string;
+  type: 'income' | 'expense';
+  averageMonthlyExpense?: string;
+  budgetId?: string;
+  color?: string;
+};
+
+export type BudgetCategoryUpdateInput = {
+  id: string;
+  name?: string;
+  type?: 'income' | 'expense';
+  averageMonthlyExpense?: string;
+  budgetId?: string;
+  color?: string;
+};
+
 export type BudgetCategoryGetOutput = BudgetCategoryData;
 export type BudgetCategoryCreateOutput = BudgetCategoryData;
 export type BudgetCategoryUpdateOutput = BudgetCategoryData;

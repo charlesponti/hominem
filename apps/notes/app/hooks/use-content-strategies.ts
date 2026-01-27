@@ -1,25 +1,31 @@
 import type { HonoClient } from '@hominem/hono-client';
 import type {
-  ApiResult,
-  ContentStrategiesSelect,
-  ContentStrategiesInsert,
-} from '@hominem/services';
+  ContentStrategiesListOutput,
+  ContentStrategiesGetOutput,
+  ContentStrategiesCreateOutput,
+  ContentStrategiesUpdateOutput,
+  ContentStrategiesDeleteOutput,
+  contentStrategiesCreateSchema,
+  contentStrategiesUpdateSchema,
+} from '@hominem/hono-rpc/types';
+import type { ContentStrategiesInsert } from '@hominem/services';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { z } from 'zod';
 
 export function useContentStrategies() {
-  const query = useHonoQuery<ApiResult<ContentStrategiesSelect[]>>(
+  const query = useHonoQuery<ContentStrategiesListOutput>(
     ['content-strategies', 'list'],
     async (client) => {
       const res = await client.api['content-strategies'].$get();
-      return res.json();
+      return res.json() as Promise<ContentStrategiesListOutput>;
     },
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
     },
   );
 
-  const strategies = query.data?.success ? query.data.data : [];
+  const strategies = Array.isArray(query.data) ? query.data : [];
 
   return {
     strategies,
@@ -30,13 +36,13 @@ export function useContentStrategies() {
 }
 
 export function useContentStrategy(strategyId: string) {
-  const query = useHonoQuery<ApiResult<ContentStrategiesSelect>>(
+  const query = useHonoQuery<ContentStrategiesGetOutput>(
     ['content-strategies', strategyId],
     async (client) => {
       const res = await client.api['content-strategies'][':id'].$get({
         param: { id: strategyId },
       });
-      return res.json();
+      return res.json() as Promise<ContentStrategiesGetOutput>;
     },
     {
       enabled: !!strategyId,
@@ -44,7 +50,7 @@ export function useContentStrategy(strategyId: string) {
     },
   );
 
-  const strategy = query.data?.success ? query.data.data : null;
+  const strategy = query.data ?? null;
 
   return {
     strategy,
@@ -57,10 +63,9 @@ export function useContentStrategy(strategyId: string) {
 export function useCreateContentStrategy() {
   const utils = useHonoUtils();
 
-  const createStrategy = useHonoMutation<
-    ApiResult<ContentStrategiesSelect>,
-    Omit<ContentStrategiesInsert, 'userId' | 'id' | 'createdAt' | 'updatedAt'>
-  >(
+  type CreateInput = z.infer<typeof contentStrategiesCreateSchema>;
+
+  const createStrategy = useHonoMutation<ContentStrategiesCreateOutput, CreateInput>(
     async (client, variables) => {
       const res = await client.api['content-strategies'].$post({
         json: {
@@ -68,7 +73,7 @@ export function useCreateContentStrategy() {
           description: variables.description ?? undefined,
         },
       });
-      return res.json();
+      return res.json() as Promise<ContentStrategiesCreateOutput>;
     },
     {
       onSuccess: () => {
@@ -88,10 +93,9 @@ export function useCreateContentStrategy() {
 export function useUpdateContentStrategy() {
   const utils = useHonoUtils();
 
-  const updateStrategy = useHonoMutation<
-    ApiResult<ContentStrategiesSelect>,
-    ContentStrategiesInsert & { id: string }
-  >(
+  type UpdateInput = z.infer<typeof contentStrategiesUpdateSchema> & { id: string };
+
+  const updateStrategy = useHonoMutation<ContentStrategiesUpdateOutput, UpdateInput>(
     async (client, variables) => {
       const { id, ...data } = variables;
       const res = await client.api['content-strategies'][':id'].$patch({
@@ -101,14 +105,12 @@ export function useUpdateContentStrategy() {
           description: data.description ?? undefined,
         },
       });
-      return res.json();
+      return res.json() as Promise<ContentStrategiesUpdateOutput>;
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['content-strategies', 'list']);
-          utils.invalidate(['content-strategies', result.data.id]);
-        }
+        utils.invalidate(['content-strategies', 'list']);
+        utils.invalidate(['content-strategies', result.id]);
       },
     },
   );
@@ -124,12 +126,12 @@ export function useUpdateContentStrategy() {
 export function useDeleteContentStrategy() {
   const utils = useHonoUtils();
 
-  const deleteStrategy = useHonoMutation(
+  const deleteStrategy = useHonoMutation<ContentStrategiesDeleteOutput, { id: string }>(
     async (client: HonoClient, variables: { id: string }) => {
       const res = await client.api['content-strategies'][':id'].$delete({
         param: { id: variables.id },
       });
-      return res.json();
+      return res.json() as Promise<ContentStrategiesDeleteOutput>;
     },
     {
       onSuccess: () => {

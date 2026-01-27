@@ -33,7 +33,7 @@ export function AnalyticsStatisticsSummary({
     groupBy: 'month',
   });
 
-  const stats = timeSeriesData?.success ? timeSeriesData.data.stats : undefined;
+  const stats = timeSeriesData?.stats;
 
   if (!includeStats) {
     return (

@@ -248,21 +248,19 @@ export function MonthlyBreakdown({
     );
   }
 
-  if (error || !data || !data.success || data.data.data.length === 0) {
+  if (error || !Array.isArray(data?.data) || data.data.length === 0) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center text-muted-foreground">
-            {error || (data && !data.success)
-              ? 'Error loading data'
-              : 'No data available for the selected period'}
+            {error ? 'Error loading data' : 'No data available for the selected period'}
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const sortedData = [...data.data.data].sort(
+  const sortedData = [...data.data].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 

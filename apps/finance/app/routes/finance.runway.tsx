@@ -45,16 +45,16 @@ export default function RunwayPage() {
 
   const chartData = useMemo(() => {
     const response = runwayMutation.data;
-    if (!response?.success || !('data' in response) || !response.data?.projectionData) {
+    if (!response?.projectionData) {
       return [];
     }
-    return response.data.projectionData;
+    return response.projectionData;
   }, [runwayMutation.data]);
 
   // Calculate runway metrics from TRPC response
   const runwayMetrics = useMemo(() => {
     const response = runwayMutation.data;
-    if (!response?.success || !('data' in response)) {
+    if (!response) {
       return {
         monthsUntilZero: 0,
         zeroDate: new Date(),
@@ -64,7 +64,7 @@ export default function RunwayPage() {
       };
     }
 
-    const data = response.data;
+    const data = response;
     if (!data)
       return {
         monthsUntilZero: 0,
@@ -158,23 +158,6 @@ export default function RunwayPage() {
           </Badge>
         )}
       </div>
-
-      {/* Error Message */}
-      {runwayMutation.data && !runwayMutation.data.success && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <AlertTriangle className="size-5 text-red-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Calculation Error</h3>
-              <div className="mt-2 text-sm text-red-700">
-                {!runwayMutation.data.success
-                  ? runwayMutation.data.message
-                  : 'Failed to calculate runway. Please try again.'}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Summary Cards */}
       {chartData.length > 0 && (

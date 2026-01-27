@@ -224,9 +224,7 @@ export const placeRemoveFromListSchema = z.object({
   listId: z.string(),
 });
 
-export type PlaceRemoveFromListOutput = {
-  success: boolean;
-};
+export type PlaceRemoveFromListOutput = null;
 
 // ============================================================================
 // NEARBY PLACES

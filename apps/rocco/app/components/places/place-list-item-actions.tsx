@@ -37,13 +37,9 @@ const PlaceListItemActions = ({
 }: PlaceListItemActionsProps) => {
   const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal();
   const removeListItemMutation = useRemoveListItem({
-    onSuccess: (result) => {
-      if (result.success) {
-        closeDeleteModal();
-        onRemove?.();
-      } else {
-        onError?.();
-      }
+    onSuccess: () => {
+      closeDeleteModal();
+      onRemove?.();
     },
     onError: () => {
       onError?.();

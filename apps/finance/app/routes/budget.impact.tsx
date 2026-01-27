@@ -75,7 +75,7 @@ const BudgetImpactCalculator = () => {
     }
 
     const validMonths = historicalData.filter(
-      (month) => (month.Spending || 0) > 0 || (month.Income || 0) > 0,
+      (month: any) => (month.Spending || 0) > 0 || (month.Income || 0) > 0,
     );
 
     if (validMonths.length === 0) {
@@ -89,8 +89,8 @@ const BudgetImpactCalculator = () => {
       };
     }
 
-    const totalIncome = validMonths.reduce((sum, month) => sum + (month.Income || 0), 0);
-    const totalExpenses = validMonths.reduce((sum, month) => sum + (month.Spending || 0), 0);
+    const totalIncome = validMonths.reduce((sum: number, month: any) => sum + (month.Income || 0), 0);
+    const totalExpenses = validMonths.reduce((sum: number, month: any) => sum + (month.Spending || 0), 0);
     const totalSavings = totalIncome - totalExpenses;
 
     const averageMonthlyIncome = totalIncome / validMonths.length;
@@ -99,10 +99,10 @@ const BudgetImpactCalculator = () => {
     const averageSavingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
 
     // Calculate spending volatility (standard deviation)
-    const spendingValues = validMonths.map((month) => month.Spending || 0);
+    const spendingValues = validMonths.map((month: any) => month.Spending || 0);
     const meanSpending = averageMonthlyExpenses;
     const variance =
-      spendingValues.reduce((sum, value) => sum + (value - meanSpending) ** 2, 0) /
+      spendingValues.reduce((sum: number, value: any) => sum + (value - meanSpending) ** 2, 0) /
       spendingValues.length;
     const spendingVolatility = Math.sqrt(variance);
 

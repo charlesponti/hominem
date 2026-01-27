@@ -45,7 +45,7 @@ type TransformedAccount = Omit<Account, 'createdAt' | 'updatedAt' | 'lastUpdated
 
 export function useFinanceAccountsWithMap() {
   const accountsQuery = useFinanceAccounts();
-  const accountsData = accountsQuery.data?.success ? accountsQuery.data.data : [];
+  const accountsData = accountsQuery.data ?? [];
 
   // Transform accounts to convert string dates to Date objects
   const transformedAccounts = useMemo<TransformedAccount[]>(() => {
@@ -87,8 +87,8 @@ export function useAllAccounts() {
     isLoading: allAccountsQuery.isLoading,
     error: allAccountsQuery.error,
     refetch: allAccountsQuery.refetch,
-    accounts: result?.success ? result.data.accounts : [],
-    connections: result?.success ? result.data.connections : [],
+    accounts: result?.accounts ?? [],
+    connections: result?.connections ?? [],
   };
 }
 
@@ -104,7 +104,7 @@ export function useAccountById(id: string) {
     { enabled: !!id },
   );
 
-  const account = accountQuery.data?.success ? accountQuery.data.data : undefined;
+  const account = accountQuery.data;
 
   return {
     ...accountQuery,
@@ -173,8 +173,8 @@ export function useFinanceTransactions({
   const result = query.data;
 
   return {
-    transactions: result?.success ? result.data.data : [],
-    totalTransactions: result?.success ? result.data.filteredCount : 0,
+    transactions: Array.isArray(result?.data) ? result.data : [],
+    totalTransactions: result?.filteredCount ?? 0,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
@@ -186,8 +186,5 @@ export type AccountsListOutput = AccountListOutput;
 export type AccountsGetOutput = AccountGetOutput;
 export type AccountsAllOutput = AccountAllOutput;
 export type AccountsAccountsOutput = AccountListOutput;
-export type AccountsConnectionsOutput = Extract<
-  AccountAllOutput,
-  { success: true }
->['data']['connections'];
+export type AccountsConnectionsOutput = AccountAllOutput['connections'];
 export type TransactionsListOutput = TransactionListOutput;

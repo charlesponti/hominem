@@ -1,12 +1,11 @@
 import type { PeopleListOutput } from '@hominem/hono-rpc/types';
-import type { ExtractApiData } from '@hominem/services';
 import type React from 'react';
 
 import { List } from '@hominem/ui/list';
 
 import EventCard from './EventCard';
 
-type Person = ExtractApiData<PeopleListOutput>[number];
+type Person = PeopleListOutput[number];
 
 export interface Activity {
   id: string;

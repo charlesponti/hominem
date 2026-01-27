@@ -31,10 +31,7 @@ export const useTransactionCategories = () => {
     },
   );
 
-  return {
-    ...query,
-    data: query.data?.success ? query.data.data : undefined,
-  };
+  return query;
 };
 
 // Query hooks
@@ -47,10 +44,7 @@ export const useBudgetCategories = () => {
     },
   );
 
-  return {
-    ...query,
-    data: query.data?.success ? query.data.data : undefined,
-  };
+  return query;
 };
 
 export const useBudgetCategoriesWithSpending = (monthYear: string) => {
@@ -65,10 +59,7 @@ export const useBudgetCategoriesWithSpending = (monthYear: string) => {
     { enabled: !!monthYear },
   );
 
-  return {
-    ...query,
-    data: query.data?.success ? query.data.data : undefined,
-  };
+  return query;
 };
 
 export const useBudgetCategory = (id: string) => {
@@ -83,10 +74,7 @@ export const useBudgetCategory = (id: string) => {
     { enabled: !!id },
   );
 
-  return {
-    ...query,
-    data: query.data?.success ? query.data.data : undefined,
-  };
+  return query;
 };
 
 export const useBudgetTracking = (monthYear: string) => {
@@ -101,10 +89,7 @@ export const useBudgetTracking = (monthYear: string) => {
     { enabled: !!monthYear },
   );
 
-  return {
-    ...query,
-    data: query.data?.success ? query.data.data : undefined,
-  };
+  return query;
 };
 
 export const useBudgetHistory = (params: { months: number }) => {
@@ -118,10 +103,7 @@ export const useBudgetHistory = (params: { months: number }) => {
     },
   );
 
-  return {
-    ...query,
-    data: query.data?.success ? query.data.data : undefined,
-  };
+  return query;
 };
 
 // Mutation hooks

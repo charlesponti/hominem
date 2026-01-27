@@ -56,15 +56,15 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
 
     // Calculate total expenses for allocation percentage (only expense categories)
     const totalExpenses = categories
-      .filter((category) => category.type === 'expense')
-      .reduce((sum, category) => {
+      .filter((category: any) => category.type === 'expense')
+      .reduce((sum: number, category: any) => {
         return sum + Number(category.averageMonthlyExpense || 0);
       }, 0);
 
-    return categories.map((category, index) => {
+    return categories.map((category: any, index: number) => {
       const actualSpending =
         stats.categorySpending?.find(
-          (cat) => cat.name?.toLowerCase() === category.name.toLowerCase(),
+          (cat: any) => cat.name?.toLowerCase() === category.name.toLowerCase(),
         )?.amount || 0;
 
       const budgetAmount = Number(category.averageMonthlyExpense || 0);

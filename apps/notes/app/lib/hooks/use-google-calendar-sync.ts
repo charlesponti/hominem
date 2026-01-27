@@ -1,5 +1,4 @@
-import type { EventsGoogleCalendarsOutput } from '@hominem/hono-rpc/types';
-import type { ApiResult } from '@hominem/services';
+import type { EventsGoogleCalendarsOutput, EventsGoogleSyncOutput, EventsGoogleSyncInput } from '@hominem/hono-rpc/types';
 
 import { useHonoMutation, useHonoClient, useHonoUtils } from '@hominem/hono-client/react';
 import { useCallback, useState } from 'react';
@@ -10,49 +9,33 @@ export interface CalendarSyncOptions {
   timeMax?: string;
 }
 
-export interface CalendarSyncResult {
-  success: boolean;
-  syncedEvents: number;
-  totalEvents: number;
-  events: unknown[];
-  error?: string;
-}
-
 export function useGoogleCalendarSync() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<CalendarSyncResult | null>(null);
+  const [syncResult, setSyncResult] = useState<EventsGoogleSyncOutput | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
-  const syncMutation = useHonoMutation(async (client, variables: CalendarSyncOptions) => {
-    const res = await client.api.events.google.sync.$post({ json: variables });
-    return res.json();
-  });
+  const syncMutation = useHonoMutation<EventsGoogleSyncOutput, EventsGoogleSyncInput>(
+    async (client, variables) => {
+      const res = await client.api.events.google.sync.$post({ json: variables });
+      return res.json();
+    },
+  );
 
   const syncCalendar = async (options: CalendarSyncOptions) => {
     setIsLoading(true);
-    setResult(null);
+    setSyncResult(null);
+    setSyncError(null);
 
     try {
-       const syncResult = await syncMutation.mutateAsync({
-         calendarId: options.calendarId,
-         timeMin: options.timeMin,
-         timeMax: options.timeMax,
-       });
-
-       setResult({
-         success: true,
-         syncedEvents: syncResult.syncedEvents ?? syncResult.eventCount ?? 0,
-         totalEvents: syncResult.eventCount ?? 0,
-         events: [],
-         error: undefined,
-       });
-     } catch (error) {
-      setResult({
-        success: false,
-        syncedEvents: 0,
-        totalEvents: 0,
-        events: [],
-        error: error instanceof Error ? error.message : 'Unknown error',
+      const result = await syncMutation.mutateAsync({
+        calendarId: options.calendarId,
+        timeMin: options.timeMin,
+        timeMax: options.timeMax,
       });
+
+      setSyncResult(result);
+    } catch (error) {
+      setSyncError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +61,7 @@ export function useGoogleCalendarSync() {
     syncCalendar,
     getCalendars,
     isLoading: isLoading || syncMutation.isPending,
-    result,
+    syncResult,
+    syncError,
   };
 }

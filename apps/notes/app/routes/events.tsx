@@ -4,7 +4,6 @@ import type {
   EventsListOutput,
   EventsCreateInput,
 } from '@hominem/hono-rpc/types';
-import type { ExtractApiData } from '@hominem/services';
 
 import { ActiveFiltersBar, FilterSelect } from '@hominem/ui/filters';
 import { useSort, useUrlFilters } from '@hominem/ui/hooks';
@@ -24,8 +23,8 @@ import SyncButton from '../components/events/SyncButton';
 import SyncStatus from '../components/events/SyncStatus';
 import { useGoogleCalendarSync } from '../hooks/useGoogleCalendarSync';
 
-type Person = ExtractApiData<PeopleListOutput>[number];
-type EventData = ExtractApiData<EventsListOutput>[number];
+type Person = PeopleListOutput[number];
+type EventData = EventsListOutput[number];
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -170,16 +169,16 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
    const eventsData = loaderData.events;
 
-   const activities: Activity[] = useMemo(() => {
-     return (eventsData as EventData[]).map((activity) => {
-       return {
-         ...activity,
-         tags: activity.tags || [],
-         description: activity.description ?? undefined,
-         people: (activity.people as any) || [],
-       };
-     });
-   }, [eventsData]);
+    const activities: Activity[] = useMemo(() => {
+      return (eventsData as EventData[]).map((event) => ({
+        id: event.id,
+        date: event.date,
+        title: event.title,
+        description: event.description ?? undefined,
+        people: (event.people as any) || [],
+        tags: event.tags || [],
+      }));
+    }, [eventsData]);
 
   const people: Person[] = useMemo(() => loaderData.people ?? [], [loaderData.people]);
 

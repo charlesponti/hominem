@@ -10,6 +10,6 @@ export const useCalculateRunway = () => {
     const res = await client.api.finance.runway.calculate.$post({
       json: variables,
     });
-    return res.json() as Promise<RunwayCalculateOutput>;
+    return res.json() as unknown as Promise<RunwayCalculateOutput>;
   });
 };

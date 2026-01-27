@@ -406,18 +406,18 @@ export const placesRoutes = new Hono<AppContext>()
     authMiddleware,
     zValidator('json', placeRemoveFromListSchema),
     async (c) => {
-      try {
-        const input = c.req.valid('json') as z.infer<typeof placeRemoveFromListSchema>;
-        const userId = c.get('userId')!;
+       try {
+         const input = c.req.valid('json') as z.infer<typeof placeRemoveFromListSchema>;
+         const userId = c.get('userId')!;
 
-        await removePlaceFromList({
-          placeIdentifier: input.placeId,
-          listId: input.listId,
-          userId,
-        });
+         await removePlaceFromList({
+           placeIdentifier: input.placeId,
+           listId: input.listId,
+           userId,
+         });
 
-        return c.json<PlaceRemoveFromListOutput>({ success: true }, 200);
-      } catch (err) {
+         return c.json<PlaceRemoveFromListOutput>(undefined as any, 200);
+       } catch (err) {
         if (isServiceError(err)) {
           throw err;
         }

@@ -52,8 +52,8 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
   });
 
   const chartData = useMemo(() => {
-    if (!timeSeriesData?.success || !timeSeriesData.data.data) return [];
-    return timeSeriesData.data.data.map((point) => ({
+    if (!Array.isArray(timeSeriesData?.data)) return [];
+    return timeSeriesData.data.map((point: any) => ({
       name: formatDateLabel(point.date),
       Spending: Math.abs(point.expenses),
     }));

@@ -134,7 +134,7 @@ export default function AccountsPage() {
   const hasAccounts = (allAccountsQuery.accounts || []).length > 0;
 
   // Sort accounts to show Plaid-connected accounts first, then manual accounts
-  const sortedAccounts = (allAccountsQuery.accounts || []).sort((a, b) => {
+  const sortedAccounts = (allAccountsQuery.accounts || []).sort((a: any, b: any) => {
     if (a.isPlaidConnected && !b.isPlaidConnected) return -1;
     if (!a.isPlaidConnected && b.isPlaidConnected) return 1;
     return a.name.localeCompare(b.name);
@@ -224,7 +224,7 @@ export default function AccountsPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {sortedAccounts.map((account) => (
+            {sortedAccounts.map((account: any) => (
               <AccountCard key={account.id} account={account} />
             ))}
           </div>

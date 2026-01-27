@@ -30,9 +30,9 @@ export function BudgetProjectionDashboard() {
   // Calculate total income from categories
   const totalIncome =
     categories
-      .filter((cat) => cat.type === 'income')
+      .filter((cat: any) => cat.type === 'income')
       .reduce(
-        (sum: number, cat) => sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')),
+        (sum: number, cat: any) => sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')),
         0,
       ) || 0;
 
@@ -152,12 +152,12 @@ export function BudgetProjectionDashboard() {
   }
 
   // Show results
-  if (budgetCalculateMutation.data?.success) {
-    const budgetData = budgetCalculateMutation.data.data;
+  if (budgetCalculateMutation.data) {
+    const budgetData = budgetCalculateMutation.data;
     const projectedSurplus = budgetData.surplus ?? 0;
 
     const projections = budgetData.projections ?? [];
-    const projectionData = projections.slice(0, 6).map((proj) => ({
+    const projectionData = projections.slice(0, 6).map((proj: any) => ({
       month: `Month ${proj.month}`,
       projected: proj.totalSaved,
       baseline: projectedSurplus * proj.month,

@@ -100,7 +100,7 @@ export default function MonthlyAnalyticsPage() {
             <CardContent>
               {stats.categorySpending && stats.categorySpending.length > 0 ? (
                 <ul className="space-y-2">
-                  {stats.categorySpending.map((category) => (
+                  {stats.categorySpending.map((category: any) => (
                     <li
                       key={category.name}
                       className="flex justify-between items-center border-b pb-1"

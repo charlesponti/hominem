@@ -36,7 +36,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
   const endDateId = useId();
   const hasLoadedCalendars = useRef(false);
 
-  const { syncCalendar, getCalendars, isLoading, result } = useGoogleCalendarSync();
+  const { syncCalendar, getCalendars, isLoading, syncResult, syncError } = useGoogleCalendarSync();
 
   const loadCalendars = useCallback(async () => {
     if (hasLoadedCalendars.current) {
@@ -200,35 +200,35 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
               )}
             </Button>
 
-            {result && (
+            {syncResult || syncError ? (
               <div
                 className={`p-4 rounded-lg ${
-                  result.success
+                  syncResult && !syncError
                     ? 'bg-green-50 border border-green-200'
                     : 'bg-red-50 border border-red-200'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  {result.success ? (
+                  {syncResult && !syncError ? (
                     <CheckCircle className="size-5 text-green-600" />
                   ) : (
                     <AlertCircle className="size-5 text-red-600" />
                   )}
                   <span
-                    className={`font-medium ${result.success ? 'text-green-800' : 'text-red-800'}`}
+                    className={`font-medium ${syncResult && !syncError ? 'text-green-800' : 'text-red-800'}`}
                   >
-                    {result.success ? 'Sync Successful!' : 'Sync Failed'}
+                    {syncResult && !syncError ? 'Sync Successful!' : 'Sync Failed'}
                   </span>
                 </div>
-                {result.success ? (
+                {syncResult && !syncError ? (
                   <p className="text-green-700 mt-1">
-                    Synced {result.syncedEvents} of {result.totalEvents} events
+                    {syncResult.message}
                   </p>
                 ) : (
-                  <p className="text-red-700 mt-1">{result.error}</p>
+                  <p className="text-red-700 mt-1">{syncError}</p>
                 )}
               </div>
-            )}
+            ) : null}
           </>
         )}
       </CardContent>

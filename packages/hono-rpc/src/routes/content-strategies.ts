@@ -1,31 +1,24 @@
 import { google } from '@ai-sdk/google';
 import { ContentStrategySchema } from '@hominem/db/schema';
 import { ContentStrategiesService, content_generator } from '@hominem/services';
-import { error, success } from '@hominem/services';
+import { error } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
-
-const createStrategySchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  strategy: ContentStrategySchema,
-});
-
-const updateStrategySchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
-  strategy: ContentStrategySchema.optional(),
-});
-
-const generateStrategySchema = z.object({
-  topic: z.string().min(1, 'Topic is required'),
-  audience: z.string().min(1, 'Audience is required'),
-  platforms: z.array(z.string()).min(1, 'At least one platform is required'),
-});
+import {
+  contentStrategiesCreateSchema,
+  contentStrategiesUpdateSchema,
+  contentStrategiesGenerateSchema,
+  type ContentStrategiesListOutput,
+  type ContentStrategiesGetOutput,
+  type ContentStrategiesCreateOutput,
+  type ContentStrategiesUpdateOutput,
+  type ContentStrategiesDeleteOutput,
+  type ContentStrategiesGenerateOutput,
+} from '../types/content-strategies.types';
 
 export const contentStrategiesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
@@ -36,7 +29,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
       const contentStrategiesService = new ContentStrategiesService();
 
       const strategies = await contentStrategiesService.getByUserId(userId);
-      return c.json(success(strategies));
+      return c.json<ContentStrategiesListOutput>(strategies);
     } catch (err) {
       console.error('[contentStrategies.list] error:', err);
       return c.json(
@@ -59,7 +52,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
         return c.json(error('NOT_FOUND', 'Content strategy not found'), 404);
       }
 
-      return c.json(success(strategy));
+      return c.json<ContentStrategiesGetOutput>(strategy);
     } catch (err) {
       console.error('[contentStrategies.getById] error:', err);
       return c.json(
@@ -70,18 +63,20 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Create content strategy
-  .post('/', zValidator('json', createStrategySchema), async (c) => {
+  .post('/', zValidator('json', contentStrategiesCreateSchema), async (c) => {
     try {
       const userId = c.get('userId')!;
       const data = c.req.valid('json');
 
       const contentStrategiesService = new ContentStrategiesService();
       const result = await contentStrategiesService.create({
-        ...data,
+        title: data.title,
+        description: data.description,
+        strategy: (data.strategy || {}) as any,
         userId,
       });
 
-      return c.json(success(result), 201);
+      return c.json<ContentStrategiesCreateOutput>(result, 201);
     } catch (err) {
       console.error('[contentStrategies.create] error:', err);
       return c.json(
@@ -92,20 +87,24 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Update content strategy
-  .patch('/:id', zValidator('json', updateStrategySchema), async (c) => {
+  .patch('/:id', zValidator('json', contentStrategiesUpdateSchema), async (c) => {
     try {
       const userId = c.get('userId')!;
       const id = c.req.param('id');
       const data = c.req.valid('json');
 
       const contentStrategiesService = new ContentStrategiesService();
-      const result = await contentStrategiesService.update(id, userId, data);
+      const result = await contentStrategiesService.update(id, userId, {
+        title: data.title,
+        description: data.description,
+        strategy: (data.strategy || {}) as any,
+      });
 
       if (!result) {
         return c.json(error('NOT_FOUND', 'Content strategy not found'), 404);
       }
 
-      return c.json(success(result));
+      return c.json<ContentStrategiesUpdateOutput>(result);
     } catch (err) {
       console.error('[contentStrategies.update] error:', err);
       return c.json(
@@ -128,7 +127,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
         return c.json(error('NOT_FOUND', 'Content strategy not found'), 404);
       }
 
-      return c.json(success({ success: true }));
+      return c.json<ContentStrategiesDeleteOutput>(undefined as any, 200);
     } catch (err) {
       console.error('[contentStrategies.delete] error:', err);
       return c.json(
@@ -139,7 +138,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Generate content strategy using AI
-  .post('/generate', zValidator('json', generateStrategySchema), async (c) => {
+  .post('/generate', zValidator('json', contentStrategiesGenerateSchema), async (c) => {
     try {
       const { topic, audience, platforms } = c.req.valid('json');
 
@@ -155,14 +154,14 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
             role: 'user',
             content: `Create a comprehensive content strategy for the topic "${topic}" targeting the audience "${audience}". Include the following elements:
         
- 1. Key insights about the topic and audience.
- 2. A detailed content plan including:
-     - Blog post ideas with titles, outlines, word counts, SEO keywords, and CTAs.
-     - Social media content ideas for platforms like ${platforms.join(', ')}.
-     - Visual content ideas such as infographics and image search terms.
- 3. Monetization ideas and competitive analysis.
-        
- Ensure all content ideas are tailored to both the topic and audience.`,
+  1. Key insights about the topic and audience.
+  2. A detailed content plan including:
+      - Blog post ideas with titles, outlines, word counts, SEO keywords, and CTAs.
+      - Social media content ideas for platforms like ${platforms.join(', ')}.
+      - Visual content ideas such as infographics and image search terms.
+  3. Monetization ideas and competitive analysis.
+         
+  Ensure all content ideas are tailored to both the topic and audience.`,
           },
         ],
         maxSteps: 5,
@@ -172,7 +171,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
 
       if (toolCall && Array.isArray(toolCall.content) && toolCall.content.length > 0) {
         const toolResult = toolCall.content[0] as { result: unknown };
-        return c.json(success(toolResult.result ?? {}));
+        return c.json<ContentStrategiesGenerateOutput>(toolResult.result as any ?? {});
       }
 
       console.error(
