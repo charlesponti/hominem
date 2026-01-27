@@ -1,6 +1,6 @@
-import type React from 'react';
 import type { PeopleListOutput } from '@hominem/hono-rpc/types';
 import type { ExtractApiData } from '@hominem/services';
+import type React from 'react';
 
 import { List } from '@hominem/ui/list';
 
