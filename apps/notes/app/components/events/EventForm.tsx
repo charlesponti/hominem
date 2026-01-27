@@ -13,7 +13,7 @@ interface EventFormProps {
 
 const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onToggleForm }) => {
   const { data: peopleResult, isLoading: isLoadingPeople } = usePeople();
-  const people = peopleResult && 'data' in peopleResult ? peopleResult.data : [];
+  const people = Array.isArray(peopleResult) ? peopleResult : [];
   const [_selectedPeople, setSelectedPeople] = useState<Person[]>([]);
 
   const handlePeopleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

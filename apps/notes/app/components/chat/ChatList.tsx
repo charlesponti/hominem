@@ -38,7 +38,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
 
   const { deleteChat } = useDeleteChat(userId);
 
-  const chats = chatsQuery.data?.success ? chatsQuery.data.data : [];
+  const chats = Array.isArray(chatsQuery.data) ? chatsQuery.data : [];
   const isChatsLoading = chatsQuery.isLoading;
 
   // Filter chats based on search query if search is enabled

@@ -27,7 +27,7 @@ export default function NotesPage() {
     limit: 100,
   });
 
-  const allContentItems = (notesData?.success ? notesData.data.notes : []) as Note[];
+  const allContentItems = (Array.isArray(notesData) ? notesData : []) as Note[];
   const updateItem = useUpdateNote();
   const deleteItem = useDeleteNote();
 

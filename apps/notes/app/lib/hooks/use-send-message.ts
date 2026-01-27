@@ -27,14 +27,13 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
   const markStreamingComplete = (currentChatId: string, messageId: string) => {
     const key = ['chats', 'getMessages', { chatId: currentChatId, limit: 50 }];
     const oldData = utils.getData<ChatsGetMessagesOutput>(key);
-    if (!oldData || !oldData.success) return;
+    if (!oldData) return;
 
-    utils.setData<ChatsGetMessagesOutput>(key, {
-      ...oldData,
-      data: oldData.data.map((msg) =>
+    utils.setData<ChatsGetMessagesOutput>(key,
+      oldData.map((msg) =>
         msg.id === messageId ? { ...msg, isStreaming: false } : msg,
       ),
-    });
+    );
   };
 
   const pollForUpdates = (currentChatId: string, _messageId: string) => {
@@ -80,10 +79,8 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
         };
       },
       onSuccess: (result, variables, onMutateResult: unknown) => {
-        if (!result.success) return;
-
         const context = onMutateResult as SendMessageContext | undefined;
-        const data = result.data;
+        const data = result;
         const currentChatId = context?.currentChatId || variables.chatId || chatId;
         chatIdRef.current = currentChatId;
         const streamId = data.streamId;

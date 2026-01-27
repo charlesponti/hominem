@@ -34,8 +34,8 @@ export default function GoalsPage() {
     category: categoryFilter || undefined,
   };
 
-  const { data: goalsResult, isLoading: isLoadingGoals } = useGoals(queryParams);
-  const goals = goalsResult?.success ? goalsResult.data : [];
+   const { data: goalsResult, isLoading: isLoadingGoals } = useGoals(queryParams);
+   const goals = Array.isArray(goalsResult) ? goalsResult : [];
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -47,55 +47,53 @@ export default function GoalsPage() {
   const updateGoal = useUpdateGoal(queryParams);
   const archiveGoal = useArchiveGoal(queryParams);
 
-  const handleCreateSubmit = (data: GoalFormData) => {
-    createGoal.mutate(
-      {
-        ...data,
-        startDate: data.startDate?.toISOString(),
-        dueDate: data.dueDate?.toISOString(),
-      },
-      {
-        onSuccess: (result) => {
-          if (result.success) {
-            setIsCreateModalOpen(false);
-            toast({ description: 'Goal created successfully' });
-          } else {
-            toast({
-              variant: 'destructive',
-              description: result.message || 'Failed to create goal',
-            });
-          }
-        },
-      },
-    );
-  };
+   const handleCreateSubmit = (data: GoalFormData) => {
+     createGoal.mutate(
+       {
+         ...data,
+         startDate: data.startDate?.toISOString(),
+         dueDate: data.dueDate?.toISOString(),
+       },
+       {
+         onSuccess: () => {
+           setIsCreateModalOpen(false);
+           toast({ description: 'Goal created successfully' });
+         },
+         onError: (error) => {
+           toast({
+             variant: 'destructive',
+             description: error.message || 'Failed to create goal',
+           });
+         },
+       },
+     );
+   };
 
-  const handleEditSubmit = (data: GoalFormData) => {
-    if (!currentGoal?.id) return;
-    updateGoal.mutate(
-      {
-        id: currentGoal.id,
-        json: {
-          ...data,
-          startDate: data.startDate?.toISOString(),
-          dueDate: data.dueDate?.toISOString(),
-        },
-      },
-      {
-        onSuccess: (result) => {
-          if (result.success) {
-            setIsEditModalOpen(false);
-            toast({ description: 'Goal updated successfully' });
-          } else {
-            toast({
-              variant: 'destructive',
-              description: result.message || 'Failed to update goal',
-            });
-          }
-        },
-      },
-    );
-  };
+   const handleEditSubmit = (data: GoalFormData) => {
+     if (!currentGoal?.id) return;
+     updateGoal.mutate(
+       {
+         id: currentGoal.id,
+         json: {
+           ...data,
+           startDate: data.startDate?.toISOString(),
+           dueDate: data.dueDate?.toISOString(),
+         },
+       },
+       {
+         onSuccess: () => {
+           setIsEditModalOpen(false);
+           toast({ description: 'Goal updated successfully' });
+         },
+         onError: (error) => {
+           toast({
+             variant: 'destructive',
+             description: error.message || 'Failed to update goal',
+           });
+         },
+       },
+     );
+   };
 
   const handleEditClick = (goal: Goal) => {
     setCurrentGoal(goal);
@@ -107,25 +105,24 @@ export default function GoalsPage() {
     setIsArchiveModalOpen(true);
   };
 
-  const handleArchive = () => {
-    if (!currentGoal?.id) return;
-    archiveGoal.mutate(
-      { id: currentGoal.id },
-      {
-        onSuccess: (result) => {
-          if (result.success) {
-            setIsArchiveModalOpen(false);
-            toast({ description: 'Goal archived successfully' });
-          } else {
-            toast({
-              variant: 'destructive',
-              description: result.message || 'Failed to archive goal',
-            });
-          }
-        },
-      },
-    );
-  };
+   const handleArchive = () => {
+     if (!currentGoal?.id) return;
+     archiveGoal.mutate(
+       { id: currentGoal.id },
+       {
+         onSuccess: () => {
+           setIsArchiveModalOpen(false);
+           toast({ description: 'Goal archived successfully' });
+         },
+         onError: (error) => {
+           toast({
+             variant: 'destructive',
+             description: error.message || 'Failed to archive goal',
+           });
+         },
+       },
+     );
+   };
 
   return (
     <div className="container mx-auto py-8 px-4">

@@ -22,10 +22,8 @@ export function useCreateChat(userId: string) {
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          // Invalidate chats list. Assuming standard Hono Query key structure or manual keys used elsewhere.
-          queryClient.invalidateQueries({ queryKey: ['chats'] });
-        }
+        // Invalidate chats list. Assuming standard Hono Query key structure or manual keys used elsewhere.
+        queryClient.invalidateQueries({ queryKey: ['chats'] });
       },
     }
   );

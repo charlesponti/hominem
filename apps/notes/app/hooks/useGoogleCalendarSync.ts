@@ -43,7 +43,7 @@ export function useGoogleCalendarSync() {
     });
   };
 
-  const syncStatus = statusQuery.data?.success ? statusQuery.data.data : undefined;
+  const syncStatus = statusQuery.data;
 
   return {
     sync,

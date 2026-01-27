@@ -31,7 +31,7 @@ export function useTwitterAccounts() {
     },
   );
 
-  const accountsArray = accounts?.success ? accounts.data : [];
+  const accountsArray = Array.isArray(accounts) ? accounts : [];
 
   return {
     data: accountsArray,

@@ -32,30 +32,20 @@ export function useGoogleCalendarSync() {
     setResult(null);
 
     try {
-      const syncResult = await syncMutation.mutateAsync({
-        calendarId: options.calendarId,
-        timeMin: options.timeMin,
-        timeMax: options.timeMax,
-      });
+       const syncResult = await syncMutation.mutateAsync({
+         calendarId: options.calendarId,
+         timeMin: options.timeMin,
+         timeMax: options.timeMax,
+       });
 
-      if (syncResult?.success) {
-        setResult({
-          success: true,
-          syncedEvents: syncResult.data?.syncedEvents ?? 0,
-          totalEvents: syncResult.data?.syncedEvents ?? 0,
-          events: [],
-          error: undefined,
-        });
-      } else {
-        setResult({
-          success: false,
-          syncedEvents: 0,
-          totalEvents: 0,
-          events: [],
-          error: syncResult?.message ?? 'Sync failed',
-        });
-      }
-    } catch (error) {
+       setResult({
+         success: true,
+         syncedEvents: syncResult.syncedEvents ?? syncResult.eventCount ?? 0,
+         totalEvents: syncResult.eventCount ?? 0,
+         events: [],
+         error: undefined,
+       });
+     } catch (error) {
       setResult({
         success: false,
         syncedEvents: 0,
@@ -79,13 +69,9 @@ export function useGoogleCalendarSync() {
     const res = await client.api.events.google.calendars.$get();
     const json = await res.json();
 
-    if (json?.success) {
-      // seed cache
-      utils.setData(['events', 'google', 'calendars'], json);
-      return json;
-    }
-
-    throw new Error(json?.message ?? 'Failed to fetch Google calendars');
+    // seed cache
+    utils.setData(['events', 'google', 'calendars'], json);
+    return json;
   }, [client, utils]);
 
   return {

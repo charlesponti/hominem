@@ -84,10 +84,8 @@ export function useUpdateNote() {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['notes', 'list']);
-        }
+      onSuccess: () => {
+        utils.invalidate(['notes', 'list']);
       },
     },
   );

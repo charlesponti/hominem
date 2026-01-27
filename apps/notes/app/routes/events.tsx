@@ -53,8 +53,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   const eventsResult: EventsListOutput = await eventsRes.json();
   const peopleResult: PeopleListOutput = await peopleRes.json();
 
-  const events = eventsResult.success ? eventsResult.data : [];
-  const people = peopleResult.success ? peopleResult.data : [];
+  const events = Array.isArray(eventsResult) ? eventsResult : [];
+  const people = Array.isArray(peopleResult) ? peopleResult : [];
 
   return data({ events, people }, { headers });
 }
@@ -87,14 +87,14 @@ export async function action({ request }: Route.ActionArgs) {
   const { session } = await getServerSession(request);
   const client = createServerHonoClient(session?.access_token);
 
-  const res = await client.api.events.$post({ json: eventData });
-  const result = await res.json();
+   const res = await client.api.events.$post({ json: eventData });
+   const result = await res.json();
 
-  if (!result.success) {
-    throw new Error(result.message);
-  }
+   if (!result.id) {
+     throw new Error('Failed to create event');
+   }
 
-  return { success: true, event: result.data };
+   return { success: true, event: result };
 }
 
 type EventFilters = {
@@ -168,18 +168,18 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
     }
   }, [sortOptions]); // Only depend on sortOptions to avoid loops
 
-  const eventsData = loaderData.events;
+   const eventsData = loaderData.events;
 
-  const activities: Activity[] = useMemo(() => {
-    return (eventsData as EventData[]).map((activity) => {
-      return {
-        ...activity,
-        tags: activity.tags || [],
-        description: activity.description ?? undefined,
-        people: undefined, // Or map people correctly if needed, but the current schema says string[]
-      };
-    });
-  }, [eventsData]);
+   const activities: Activity[] = useMemo(() => {
+     return (eventsData as EventData[]).map((activity) => {
+       return {
+         ...activity,
+         tags: activity.tags || [],
+         description: activity.description ?? undefined,
+         people: (activity.people as any) || [],
+       };
+     });
+   }, [eventsData]);
 
   const people: Person[] = useMemo(() => loaderData.people ?? [], [loaderData.people]);
 

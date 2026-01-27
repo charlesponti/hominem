@@ -33,10 +33,8 @@ export const useCreatePerson = () => {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['people', 'list']);
-        }
+      onSuccess: () => {
+        utils.invalidate(['people', 'list']);
       },
     },
   );
@@ -57,10 +55,8 @@ export const useUpdatePerson = () => {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['people', 'list']);
-        }
+      onSuccess: () => {
+        utils.invalidate(['people', 'list']);
       },
     },
   );
@@ -80,10 +76,8 @@ export const useDeletePerson = () => {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['people', 'list']);
-        }
+      onSuccess: () => {
+        utils.invalidate(['people', 'list']);
       },
     },
   );

@@ -14,8 +14,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const res = await trpcClient.api.chats.$get({ query: { limit: '1' } });
   const result = await res.json();
 
-  if (result.success && result.data.length > 0) {
-    return redirect(`/chat/${result.data[0].id}`, { headers });
+  if (Array.isArray(result) && result.length > 0) {
+    return redirect(`/chat/${result[0].id}`, { headers });
   }
 
   const createRes = await trpcClient.api.chats.$post({
@@ -23,9 +23,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   });
   const createResult = await createRes.json();
 
-  if (!createResult.success || !createResult.data) {
+  if (!createResult || !createResult.id) {
     return redirect('/', { headers });
   }
 
-  return redirect(`/chat/${createResult.data.id}`, { headers });
+  return redirect(`/chat/${createResult.id}`, { headers });
 }

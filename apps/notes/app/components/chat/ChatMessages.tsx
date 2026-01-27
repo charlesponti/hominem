@@ -60,7 +60,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       }
     );
 
-    const messages = messagesQuery.data?.success ? messagesQuery.data.data : [];
+    const messages = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
     const isLoading = messagesQuery.isLoading;
     const messagesError = messagesQuery.error;
 

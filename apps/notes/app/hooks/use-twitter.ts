@@ -25,7 +25,7 @@ export function useTwitterAccounts() {
   );
 
   const data = query.data;
-  const accounts = data?.success ? data.data : [];
+  const accounts = Array.isArray(data) ? data : [];
 
   return {
     accounts,
@@ -46,10 +46,8 @@ export function useTwitterConnect() {
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          // Redirect to Twitter authorization
-          window.location.href = result.data.authUrl;
-        }
+        // Redirect to Twitter authorization
+        window.location.href = result.authUrl;
       },
     }
   );
@@ -113,7 +111,7 @@ export function useTwitterPost() {
     postTweet: postMutation.mutate,
     isLoading: postMutation.isPending,
     error: postMutation.error,
-    data: postMutation.data?.success ? postMutation.data.data : undefined,
+    data: postMutation.data,
   };
 }
 
@@ -140,7 +138,7 @@ export function useTwitterSync() {
     sync: syncMutation.mutate,
     isLoading: syncMutation.isPending,
     error: syncMutation.error,
-    data: syncMutation.data?.success ? syncMutation.data.data : undefined,
+    data: syncMutation.data,
   };
 }
 

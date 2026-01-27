@@ -7,13 +7,13 @@ import { z } from 'zod';
 /**
  * Base content types
  */
-export const BaseContentTypeSchema = z.enum(['note', 'bookmark', 'tweet', 'linkedin']);
+export const BaseContentTypeSchema = z.enum(['note', 'task', 'timer', 'journal', 'document']);
 export type BaseContentType = z.infer<typeof BaseContentTypeSchema>;
 
 /**
  * Publishing content types
  */
-export const PublishingContentTypeSchema = z.enum(['tweet', 'linkedin', 'newsletter']);
+export const PublishingContentTypeSchema = z.enum(['tweet', 'essay', 'blog_post', 'social_post']);
 export type PublishingContentType = z.infer<typeof PublishingContentTypeSchema>;
 
 /**

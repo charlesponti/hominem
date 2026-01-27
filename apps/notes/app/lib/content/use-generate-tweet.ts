@@ -17,9 +17,7 @@ export function useGenerateTweet() {
     },
     {
       onSuccess: (result) => {
-        if (result.success) {
-          setGeneratedTweet(result.data.text);
-        }
+        setGeneratedTweet(result.text);
       },
       onError: (error) => {
         toast({

@@ -13,8 +13,8 @@ export async function getOrCreateChat(trpcClient: TRPCClient): Promise<{ chatId:
   const res = await trpcClient.api.chats.$get();
   const result = (await res.json()) as ChatsListOutput;
 
-  if (result.success && result.data.length > 0) {
-    return { chatId: result.data[0].id };
+  if (Array.isArray(result) && result.length > 0) {
+    return { chatId: result[0].id };
   }
 
   const createRes = await trpcClient.api.chats.$post({
@@ -24,9 +24,9 @@ export async function getOrCreateChat(trpcClient: TRPCClient): Promise<{ chatId:
   });
   const createResult = (await createRes.json()) as ChatsCreateOutput;
 
-  if (!createResult.success || !createResult.data) {
+  if (!createResult || !createResult.id) {
     throw new ChatCreationError();
   }
 
-  return { chatId: createResult.data.id };
+  return { chatId: createResult.id };
 }

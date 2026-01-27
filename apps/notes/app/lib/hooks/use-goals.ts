@@ -31,10 +31,8 @@ export const useCreateGoal = (query: GoalListQuery) => {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['goals', 'list', query]);
-        }
+      onSuccess: () => {
+        utils.invalidate(['goals', 'list', query]);
       },
     },
   );
@@ -55,10 +53,8 @@ export const useUpdateGoal = (query: GoalListQuery) => {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['goals', 'list', query]);
-        }
+      onSuccess: () => {
+        utils.invalidate(['goals', 'list', query]);
       },
     },
   );
@@ -78,10 +74,8 @@ export const useArchiveGoal = (query: GoalListQuery) => {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['goals', 'list', query]);
-        }
+      onSuccess: () => {
+        utils.invalidate(['goals', 'list', query]);
       },
     },
   );
@@ -101,10 +95,8 @@ export const useDeleteGoal = (query: GoalListQuery) => {
       return res.json();
     },
     {
-      onSuccess: (result) => {
-        if (result.success) {
-          utils.invalidate(['goals', 'list', query]);
-        }
+      onSuccess: () => {
+        utils.invalidate(['goals', 'list', query]);
       },
     },
   );
