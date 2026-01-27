@@ -452,7 +452,7 @@ const createLazyRouter = <T>(loader: () => Promise<{ default: T }>) => {
           const module = await loader();
           cached = module.default;
         }
-        return (cached as any)[prop](...args);
+        return (cached as T)[prop as keyof T](...args);
       };
     },
   });

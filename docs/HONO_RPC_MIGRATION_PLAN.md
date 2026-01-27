@@ -334,7 +334,7 @@ export const financeRoutes = new Hono<AppContext>()
     }
 
     const result: TransactionUpdateOutput = await updateTransaction(
-      { transactionId: id, ...data } as any,
+      { transactionId: id, ...data },
       userId,
     );
 
