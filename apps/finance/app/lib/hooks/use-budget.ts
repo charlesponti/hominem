@@ -20,23 +20,41 @@ import type {
   BudgetCategoriesListWithSpendingOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 
-export const useTransactionCategories = () =>
-  useHonoQuery<TransactionCategoryAnalysisOutput>(['finance', 'budget', 'transaction-categories'], async (client) => {
-    const res = await client.api.finance.budget['transaction-categories'].$post({ json: {} });
-    return res.json() as Promise<TransactionCategoryAnalysisOutput>;
-  });
-
 import { useHonoQuery, useHonoMutation, useHonoUtils } from '~/lib/hono';
 
-// Query hooks
-export const useBudgetCategories = () =>
-  useHonoQuery<BudgetCategoriesListOutput>(['finance', 'budget', 'categories', 'list'], async (client) => {
-    const res = await client.api.finance.budget.categories.list.$post({ json: {} });
-    return res.json() as unknown as Promise<BudgetCategoriesListOutput>;
-  });
+export const useTransactionCategories = () => {
+  const query = useHonoQuery<TransactionCategoryAnalysisOutput>(
+    ['finance', 'budget', 'transaction-categories'],
+    async (client) => {
+      const res = await client.api.finance.budget['transaction-categories'].$post({ json: {} });
+      return res.json() as Promise<TransactionCategoryAnalysisOutput>;
+    },
+  );
 
-export const useBudgetCategoriesWithSpending = (monthYear: string) =>
-  useHonoQuery<BudgetCategoriesListWithSpendingOutput>(
+  return {
+    ...query,
+    data: query.data?.success ? query.data.data : undefined,
+  };
+};
+
+// Query hooks
+export const useBudgetCategories = () => {
+  const query = useHonoQuery<BudgetCategoriesListOutput>(
+    ['finance', 'budget', 'categories', 'list'],
+    async (client) => {
+      const res = await client.api.finance.budget.categories.list.$post({ json: {} });
+      return res.json() as unknown as Promise<BudgetCategoriesListOutput>;
+    },
+  );
+
+  return {
+    ...query,
+    data: query.data?.success ? query.data.data : undefined,
+  };
+};
+
+export const useBudgetCategoriesWithSpending = (monthYear: string) => {
+  const query = useHonoQuery<BudgetCategoriesListWithSpendingOutput>(
     ['finance', 'budget', 'categories', 'list-with-spending', monthYear],
     async (client) => {
       const res = await client.api.finance.budget.categories['list-with-spending'].$post({
@@ -47,8 +65,14 @@ export const useBudgetCategoriesWithSpending = (monthYear: string) =>
     { enabled: !!monthYear },
   );
 
-export const useBudgetCategory = (id: string) =>
-  useHonoQuery<BudgetCategoryGetOutput>(
+  return {
+    ...query,
+    data: query.data?.success ? query.data.data : undefined,
+  };
+};
+
+export const useBudgetCategory = (id: string) => {
+  const query = useHonoQuery<BudgetCategoryGetOutput>(
     ['finance', 'budget', 'categories', 'get', id],
     async (client) => {
       const res = await client.api.finance.budget.categories.get.$post({
@@ -59,8 +83,14 @@ export const useBudgetCategory = (id: string) =>
     { enabled: !!id },
   );
 
-export const useBudgetTracking = (monthYear: string) =>
-  useHonoQuery<BudgetTrackingOutput>(
+  return {
+    ...query,
+    data: query.data?.success ? query.data.data : undefined,
+  };
+};
+
+export const useBudgetTracking = (monthYear: string) => {
+  const query = useHonoQuery<BudgetTrackingOutput>(
     ['finance', 'budget', 'tracking', monthYear],
     async (client) => {
       const res = await client.api.finance.budget.tracking.$post({
@@ -71,13 +101,28 @@ export const useBudgetTracking = (monthYear: string) =>
     { enabled: !!monthYear },
   );
 
-export const useBudgetHistory = (params: { months: number }) =>
-  useHonoQuery<BudgetHistoryOutput>(['finance', 'budget', 'history', params.months], async (client) => {
-    const res = await client.api.finance.budget.history.$post({
-      json: { months: params.months },
-    });
-    return res.json() as unknown as Promise<BudgetHistoryOutput>;
-  });
+  return {
+    ...query,
+    data: query.data?.success ? query.data.data : undefined,
+  };
+};
+
+export const useBudgetHistory = (params: { months: number }) => {
+  const query = useHonoQuery<BudgetHistoryOutput>(
+    ['finance', 'budget', 'history', params.months],
+    async (client) => {
+      const res = await client.api.finance.budget.history.$post({
+        json: { months: params.months },
+      });
+      return res.json() as unknown as Promise<BudgetHistoryOutput>;
+    },
+  );
+
+  return {
+    ...query,
+    data: query.data?.success ? query.data.data : undefined,
+  };
+};
 
 // Mutation hooks
 export const useCreateBudgetCategory = () => {

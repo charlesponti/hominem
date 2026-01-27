@@ -56,9 +56,9 @@ export function TopMerchants({
           </div>
         ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching merchants.</div>
-        ) : topMerchants && 'merchants' in topMerchants && topMerchants.merchants.length > 0 ? (
+        ) : topMerchants?.success && topMerchants.data.merchants.length > 0 ? (
           <div className="space-y-3">
-            {topMerchants.merchants.map((m) => (
+            {topMerchants.data.merchants.map((m) => (
               <div key={m.name} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                 <Badge variant="secondary" className="w-12 text-center">
                   {m.transactionCount}x

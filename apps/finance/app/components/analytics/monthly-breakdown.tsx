@@ -1,4 +1,4 @@
-import type { TimeSeriesDataPoint } from '@hominem/finance-services';
+import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
 
 import { Card, CardContent } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
@@ -248,19 +248,21 @@ export function MonthlyBreakdown({
     );
   }
 
-  if (error || !data || data.data.length === 0) {
+  if (error || !data || !data.success || data.data.data.length === 0) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center text-muted-foreground">
-            {error ? 'Error loading data' : 'No data available for the selected period'}
+            {error || (data && !data.success)
+              ? 'Error loading data'
+              : 'No data available for the selected period'}
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const sortedData = [...data.data].sort(
+  const sortedData = [...data.data.data].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 

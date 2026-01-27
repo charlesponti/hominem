@@ -14,7 +14,6 @@
     { "path": "packages/notes" },
     { "path": "packages/places" },
     { "path": "packages/services" },
-    { "path": "packages/trpc" },
     { "path": "packages/ui" },
     { "path": "packages/utils" },
     { "path": "services/api" },

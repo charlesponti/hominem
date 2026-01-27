@@ -45,7 +45,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
     try {
       hasLoadedCalendars.current = true;
       const calendarList = await getCalendars();
-      setCalendars(calendarList);
+      setCalendars(calendarList?.success ? calendarList.data : []);
     } catch (error) {
       console.error('Error loading calendars:', error);
       hasLoadedCalendars.current = false;

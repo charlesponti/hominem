@@ -9,7 +9,9 @@ export function filterMessagesByQuery(
 ): ExtendedMessage[] {
   if (!query.trim()) return messages;
   const lowerQuery = query.toLowerCase();
-  return messages.filter((message) => message.content.toLowerCase().includes(lowerQuery));
+  return messages.filter(
+    (message) => !!message.content && message.content.toLowerCase().includes(lowerQuery),
+  );
 }
 
 /**

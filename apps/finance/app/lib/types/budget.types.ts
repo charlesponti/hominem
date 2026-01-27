@@ -1,10 +1,10 @@
 import type {
-  BudgetCategoriesListOutput,
+  BudgetCategoryData,
   TransactionListOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 
-// Define the type based on what the API returns
-export type BudgetCategory = BudgetCategoriesListOutput[0];
+// Define the type based on what the API returns - use the base data type
+export type BudgetCategory = BudgetCategoryData;
 
 // Define the UI-specific type that includes calculated properties
 export interface BudgetCategoryWithSpending extends BudgetCategory {

@@ -1,23 +1,17 @@
-import { useRef } from 'react';
-
 import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   ChatsSendInput,
   ChatsSendOutput,
   ChatMessage,
-  ChatsGetMessagesOutput
+  ChatsGetMessagesOutput,
 } from '@hominem/hono-rpc/types';
+
+import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
+import { useRef } from 'react';
 
 import type { ExtendedMessage } from '../types/chat-message';
 
-export function useSendMessage({
-  chatId,
-  userId,
-}: {
-  chatId: string;
-  userId?: string;
-}) {
+export function useSendMessage({ chatId, userId }: { chatId: string; userId?: string }) {
   const utils = useHonoUtils();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const streamIdRef = useRef<string | null>(null);
@@ -31,18 +25,16 @@ export function useSendMessage({
   };
 
   const markStreamingComplete = (currentChatId: string, messageId: string) => {
-    utils.setData<ChatsGetMessagesOutput>(
-      ['chats', 'getMessages', { chatId: currentChatId, limit: 50 }],
-      (oldData) => {
-        if (!oldData || !oldData.success) return oldData;
-        return {
-          ...oldData,
-          data: oldData.data.map((msg) =>
-            msg.id === messageId ? { ...msg, isStreaming: false } : msg,
-          ),
-        };
-      },
-    );
+    const key = ['chats', 'getMessages', { chatId: currentChatId, limit: 50 }];
+    const oldData = utils.getData<ChatsGetMessagesOutput>(key);
+    if (!oldData || !oldData.success) return;
+
+    utils.setData<ChatsGetMessagesOutput>(key, {
+      ...oldData,
+      data: oldData.data.map((msg) =>
+        msg.id === messageId ? { ...msg, isStreaming: false } : msg,
+      ),
+    });
   };
 
   const pollForUpdates = (currentChatId: string, _messageId: string) => {
@@ -51,7 +43,9 @@ export function useSendMessage({
     utils.invalidate(['chats', 'getMessages', { chatId: currentChatId, limit: 50 }]);
   };
 
-  return useHonoMutation<ChatsSendOutput, ChatsSendInput, { optimisticUserMessage: ExtendedMessage; currentChatId: string }>(
+  type SendMessageContext = { optimisticUserMessage: ExtendedMessage; currentChatId: string };
+
+  return useHonoMutation<ChatsSendOutput, ChatsSendInput>(
     async (client: HonoClient, variables: ChatsSendInput) => {
       const currentChatId = variables.chatId || chatId;
       const res = await client.api.chats[':id'].send.$post({
@@ -61,7 +55,7 @@ export function useSendMessage({
       return res.json() as Promise<ChatsSendOutput>;
     },
     {
-      onMutate: async (variables: ChatsSendInput) => {
+      onMutate: async (variables: ChatsSendInput): Promise<SendMessageContext | undefined> => {
         const currentChatId = variables.chatId || chatId;
         chatIdRef.current = currentChatId;
 
@@ -85,9 +79,10 @@ export function useSendMessage({
           currentChatId,
         };
       },
-      onSuccess: (result, variables, context) => {
+      onSuccess: (result, variables, onMutateResult: unknown) => {
         if (!result.success) return;
 
+        const context = onMutateResult as SendMessageContext | undefined;
         const data = result.data;
         const currentChatId = context?.currentChatId || variables.chatId || chatId;
         chatIdRef.current = currentChatId;

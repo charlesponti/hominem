@@ -50,11 +50,10 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
           </div>
         ) : error ? (
           <div className="text-red-500">An unknown error occurred while fetching categories.</div>
-        ) : categoryBreakdown &&
-          'breakdown' in categoryBreakdown &&
-          categoryBreakdown.breakdown.length > 0 ? (
+        ) : categoryBreakdown?.success &&
+          categoryBreakdown.data.breakdown.length > 0 ? (
           <div className="space-y-3">
-            {categoryBreakdown.breakdown.map((cat) => (
+            {categoryBreakdown.data.breakdown.map((cat) => (
               <div key={cat.category} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                 <Badge variant="secondary" className="w-12 justify-center">
                   {cat.transactionCount}x

@@ -26,7 +26,7 @@ import { queryKeys } from '~/lib/query-keys';
  */
 export const useLists = (options?: HonoQueryOptions<ListGetAllOutput>) =>
   useHonoQuery<ListGetAllOutput>(
-    queryKeys.lists.all() as any,
+    queryKeys.lists.all(),
     async (client: HonoClient) => {
       const res = await client.api.lists.list.$post({ json: {} });
       return res.json();
@@ -42,9 +42,9 @@ export const useListById = (
   options?: HonoQueryOptions<ListGetByIdOutput>,
 ) =>
   useHonoQuery<ListGetByIdOutput>(
-    queryKeys.lists.get(id || '') as any,
+    queryKeys.lists.get(id || ''),
     async (client: HonoClient) => {
-      if (!id) return { success: true, data: null } as any;
+      if (!id) throw new Error('ID is required');
       const res = await client.api.lists.get.$post({ json: { id } });
       return res.json();
     },
@@ -67,7 +67,7 @@ export const useCreateList = (options?: HonoMutationOptions<ListCreateOutput, Li
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(queryKeys.lists.all() as any);
+          utils.invalidate(queryKeys.lists.all());
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -89,8 +89,8 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(queryKeys.lists.all() as any);
-          utils.invalidate(queryKeys.lists.get(result.data.id) as any);
+          utils.invalidate(queryKeys.lists.all());
+          utils.invalidate(queryKeys.lists.get(result.data.id));
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -102,9 +102,7 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
 /**
  * Delete list
  */
-export const useDeleteList = (
-  options?: HonoMutationOptions<ListDeleteOutput, ListDeleteInput>,
-) => {
+export const useDeleteList = (options?: HonoMutationOptions<ListDeleteOutput, ListDeleteInput>) => {
   const utils = useHonoUtils();
   return useHonoMutation<ListDeleteOutput, ListDeleteInput>(
     async (client: HonoClient, variables: ListDeleteInput) => {
@@ -114,7 +112,7 @@ export const useDeleteList = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(queryKeys.lists.all() as any);
+          utils.invalidate(queryKeys.lists.all());
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -138,8 +136,8 @@ export const useDeleteListItem = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(queryKeys.lists.all() as any);
-          utils.invalidate(queryKeys.lists.get(variables.listId) as any);
+          utils.invalidate(queryKeys.lists.all());
+          utils.invalidate(queryKeys.lists.get(variables.listId));
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
@@ -156,7 +154,7 @@ export const useListsContainingPlace = (
   googleMapsId: string | undefined,
 ) =>
   useHonoQuery<ListGetContainingPlaceOutput>(
-    queryKeys.lists.containing(placeId, googleMapsId) as any,
+    queryKeys.lists.containing(placeId, googleMapsId),
     async (client: HonoClient) => {
       const res = await client.api.lists['containing-place'].$post({
         json: { placeId, googleMapsId },
@@ -183,8 +181,8 @@ export const useRemoveCollaborator = (
     {
       onSuccess: (result, variables, context, mutationContext) => {
         if (result.success) {
-          utils.invalidate(queryKeys.lists.all() as any);
-          utils.invalidate(queryKeys.lists.get(variables.listId) as any);
+          utils.invalidate(queryKeys.lists.all());
+          utils.invalidate(queryKeys.lists.get(variables.listId));
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },

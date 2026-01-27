@@ -65,13 +65,14 @@ export default function RunwayPage() {
     }
 
     const data = response.data;
-    if (!data) return {
-      monthsUntilZero: 0,
-      zeroDate: new Date(),
-      minimumBalance: 0,
-      isRunwayDangerous: false,
-      totalPlannedExpenses: 0,
-    };
+    if (!data)
+      return {
+        monthsUntilZero: 0,
+        zeroDate: new Date(),
+        minimumBalance: 0,
+        isRunwayDangerous: false,
+        totalPlannedExpenses: 0,
+      };
     const zeroDate = new Date(data.runwayEndDate);
     const minimumBalance = Math.min(...chartData.map((d: { balance: number }) => d.balance));
 
@@ -93,7 +94,7 @@ export default function RunwayPage() {
       // Recalculate if we have the required values
       if (initialBalance > 0 && monthlyExpenses > 0) {
         runwayMutation.mutate({
-          assets: initialBalance,
+          balance: initialBalance,
           monthlyExpenses,
           plannedPurchases: updatedPurchases,
         });
@@ -108,7 +109,7 @@ export default function RunwayPage() {
     // Recalculate if we have the required values
     if (initialBalance > 0 && monthlyExpenses > 0) {
       runwayMutation.mutate({
-        assets: initialBalance,
+        balance: initialBalance,
         monthlyExpenses,
         plannedPurchases: updatedPurchases,
       });
@@ -118,7 +119,7 @@ export default function RunwayPage() {
   const handleCalculateRunway = () => {
     if (initialBalance > 0 && monthlyExpenses > 0) {
       runwayMutation.mutate({
-        assets: initialBalance,
+        balance: initialBalance,
         monthlyExpenses,
         plannedPurchases,
       });
@@ -139,7 +140,7 @@ export default function RunwayPage() {
 
     if (newBalance > 0 && newMonthlyExpenses > 0) {
       runwayMutation.mutate({
-        assets: newBalance,
+        balance: newBalance,
         monthlyExpenses: newMonthlyExpenses,
         plannedPurchases,
       });
@@ -166,8 +167,8 @@ export default function RunwayPage() {
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Calculation Error</h3>
               <div className="mt-2 text-sm text-red-700">
-                {'error' in runwayMutation.data
-                  ? runwayMutation.data.error
+                {!runwayMutation.data.success
+                  ? runwayMutation.data.message
                   : 'Failed to calculate runway. Please try again.'}
               </div>
             </div>

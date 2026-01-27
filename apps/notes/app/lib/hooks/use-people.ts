@@ -17,7 +17,7 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-clien
 export const usePeople = () =>
   useHonoQuery<PeopleListOutput>(['people', 'list'], async (client: HonoClient) => {
     const res = await client.api.people.list.$post({ json: {} });
-    return res.json() as Promise<PeopleListOutput>;
+    return res.json();
   });
 
 /**
@@ -30,7 +30,7 @@ export const useCreatePerson = () => {
       const res = await client.api.people.create.$post({
         json: variables,
       });
-      return res.json() as Promise<PeopleCreateOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {
@@ -54,7 +54,7 @@ export const useUpdatePerson = () => {
         param: { id },
         json,
       });
-      return res.json() as Promise<PeopleUpdateOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {
@@ -77,7 +77,7 @@ export const useDeletePerson = () => {
       const res = await client.api.people[':id'].delete.$post({
         param: { id },
       });
-      return res.json() as Promise<PeopleDeleteOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {

@@ -52,12 +52,12 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
   });
 
   const chartData = useMemo(() => {
-    if (!timeSeriesData?.data) return [];
-    return timeSeriesData.data.map((point) => ({
+    if (!timeSeriesData?.success || !timeSeriesData.data.data) return [];
+    return timeSeriesData.data.data.map((point) => ({
       name: formatDateLabel(point.date),
       Spending: Math.abs(point.expenses),
     }));
-  }, [timeSeriesData?.data, formatDateLabel]);
+  }, [timeSeriesData, formatDateLabel]);
 
   if (isLoading) {
     return (

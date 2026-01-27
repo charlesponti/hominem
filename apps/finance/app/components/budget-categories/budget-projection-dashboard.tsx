@@ -25,11 +25,16 @@ export function BudgetProjectionDashboard() {
     },
   });
 
+  const categories = budgetCategories.data || [];
+
   // Calculate total income from categories
   const totalIncome =
-    budgetCategories.data
-      ?.filter((cat) => cat.type === 'income')
-      .reduce((sum, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0) || 0;
+    categories
+      .filter((cat) => cat.type === 'income')
+      .reduce(
+        (sum: number, cat) => sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')),
+        0,
+      ) || 0;
 
   const handleCalculate = () => {
     if (totalIncome > 0) {
@@ -147,11 +152,12 @@ export function BudgetProjectionDashboard() {
   }
 
   // Show results
-  if (budgetCalculateMutation.data) {
-    const budgetData = budgetCalculateMutation.data;
-    const projectedSurplus = budgetData.surplus;
+  if (budgetCalculateMutation.data?.success) {
+    const budgetData = budgetCalculateMutation.data.data;
+    const projectedSurplus = budgetData.surplus ?? 0;
 
-    const projectionData = budgetData.projections.slice(0, 6).map((proj) => ({
+    const projections = budgetData.projections ?? [];
+    const projectionData = projections.slice(0, 6).map((proj) => ({
       month: `Month ${proj.month}`,
       projected: proj.totalSaved,
       baseline: projectedSurplus * proj.month,
@@ -208,33 +214,35 @@ export function BudgetProjectionDashboard() {
                   <div className="flex justify-between">
                     <span>Monthly Income:</span>
                     <span className="font-semibold text-green-600">
-                      {formatCurrency(budgetData.income)}
+                      {formatCurrency(budgetData.income ?? 0)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Expenses:</span>
                     <span className="font-semibold text-blue-600">
-                      {formatCurrency(budgetData.totalExpenses)}
+                      {formatCurrency(budgetData.totalExpenses ?? 0)}
                     </span>
                   </div>
                   <div className="flex justify-between border-t pt-2">
                     <span>Monthly Surplus:</span>
                     <span
-                      className={`font-bold ${budgetData.surplus >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                      className={`font-bold ${projectedSurplus >= 0 ? 'text-green-600' : 'text-red-600'}`}
                     >
-                      {formatCurrency(budgetData.surplus)}
+                      {formatCurrency(projectedSurplus)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Savings Rate:</span>
-                    <span className="font-semibold">{budgetData.savingsRate.toFixed(1)}%</span>
+                    <span className="font-semibold">
+                      {(budgetData.savingsRate ?? 0).toFixed(1)}%
+                    </span>
                   </div>
                 </div>
 
                 <div className="mt-6">
                   <h4 className="font-semibold mb-2">12-Month Outlook</h4>
                   <p className="text-sm text-muted-foreground">
-                    At current rate: {formatCurrency(budgetData.surplus * 12)} saved annually
+                    At current rate: {formatCurrency(projectedSurplus * 12)} saved annually
                   </p>
                 </div>
               </div>

@@ -22,8 +22,9 @@ export function AudioWaveform({ isRecording, stream, className = '' }: AudioWave
     if (!ctx) return;
 
     // Set up audio context and analyser
+    const winWithWebkit = window as unknown as { webkitAudioContext?: typeof AudioContext };
     const AudioContextClass = (window.AudioContext ||
-      (window as any).webkitAudioContext) as typeof AudioContext;
+      winWithWebkit.webkitAudioContext) as typeof AudioContext;
     const audioContext = new AudioContextClass();
     const source = audioContext.createMediaStreamSource(stream);
     const analyser = audioContext.createAnalyser();

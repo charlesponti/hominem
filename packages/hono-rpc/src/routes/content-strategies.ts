@@ -2,6 +2,7 @@ import { google } from '@ai-sdk/google';
 import { ContentStrategySchema } from '@hominem/db/schema';
 import { ContentStrategiesService, content_generator } from '@hominem/services';
 import { error, success } from '@hominem/services';
+import { zValidator } from '@hono/zod-validator';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -27,8 +28,9 @@ const generateStrategySchema = z.object({
 });
 
 export const contentStrategiesRoutes = new Hono<AppContext>()
+  .use('*', authMiddleware)
   // List content strategies
-  .get('/', authMiddleware, async (c) => {
+  .get('/', async (c) => {
     try {
       const userId = c.get('userId')!;
       const contentStrategiesService = new ContentStrategiesService();
@@ -45,7 +47,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Get content strategy by ID
-  .get('/:id', authMiddleware, async (c) => {
+  .get('/:id', async (c) => {
     try {
       const userId = c.get('userId')!;
       const id = c.req.param('id');
@@ -68,19 +70,14 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Create content strategy
-  .post('/', authMiddleware, async (c) => {
+  .post('/', zValidator('json', createStrategySchema), async (c) => {
     try {
       const userId = c.get('userId')!;
-      const body = await c.req.json();
-      const parsed = createStrategySchema.safeParse(body);
-
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
+      const data = c.req.valid('json');
 
       const contentStrategiesService = new ContentStrategiesService();
       const result = await contentStrategiesService.create({
-        ...parsed.data,
+        ...data,
         userId,
       });
 
@@ -95,19 +92,14 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Update content strategy
-  .patch('/:id', authMiddleware, async (c) => {
+  .patch('/:id', zValidator('json', updateStrategySchema), async (c) => {
     try {
       const userId = c.get('userId')!;
       const id = c.req.param('id');
-      const body = await c.req.json();
-      const parsed = updateStrategySchema.safeParse(body);
-
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
+      const data = c.req.valid('json');
 
       const contentStrategiesService = new ContentStrategiesService();
-      const result = await contentStrategiesService.update(id, userId, parsed.data);
+      const result = await contentStrategiesService.update(id, userId, data);
 
       if (!result) {
         return c.json(error('NOT_FOUND', 'Content strategy not found'), 404);
@@ -124,7 +116,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Delete content strategy
-  .delete('/:id', authMiddleware, async (c) => {
+  .delete('/:id', async (c) => {
     try {
       const userId = c.get('userId')!;
       const id = c.req.param('id');
@@ -147,16 +139,9 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
   })
 
   // Generate content strategy using AI
-  .post('/generate', authMiddleware, async (c) => {
+  .post('/generate', zValidator('json', generateStrategySchema), async (c) => {
     try {
-      const body = await c.req.json();
-      const parsed = generateStrategySchema.safeParse(body);
-
-      if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
-      }
-
-      const { topic, audience, platforms } = parsed.data;
+      const { topic, audience, platforms } = c.req.valid('json');
 
       const result = await generateText({
         model: google('gemini-1.5-pro-latest'),
@@ -170,14 +155,14 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
             role: 'user',
             content: `Create a comprehensive content strategy for the topic "${topic}" targeting the audience "${audience}". Include the following elements:
         
-1. Key insights about the topic and audience.
-2. A detailed content plan including:
-    - Blog post ideas with titles, outlines, word counts, SEO keywords, and CTAs.
-    - Social media content ideas for platforms like ${platforms.join(', ')}.
-    - Visual content ideas such as infographics and image search terms.
-3. Monetization ideas and competitive analysis.
+ 1. Key insights about the topic and audience.
+ 2. A detailed content plan including:
+     - Blog post ideas with titles, outlines, word counts, SEO keywords, and CTAs.
+     - Social media content ideas for platforms like ${platforms.join(', ')}.
+     - Visual content ideas such as infographics and image search terms.
+ 3. Monetization ideas and competitive analysis.
         
-Ensure all content ideas are tailored to both the topic and audience.`,
+ Ensure all content ideas are tailored to both the topic and audience.`,
           },
         ],
         maxSteps: 5,

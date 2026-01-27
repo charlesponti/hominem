@@ -16,7 +16,7 @@ export function BudgetTrackingHeader({
 }: BudgetTrackingHeaderProps) {
   const navigate = useNavigate();
 
-  const { data: transactionCategories } = useTransactionCategories();
+  const { data: categories } = useTransactionCategories();
 
   return (
     <div className="flex flex-col gap-4">
@@ -25,14 +25,14 @@ export function BudgetTrackingHeader({
       </div>
       <div className="flex items-center gap-2">
         <DateMonthSelect selectedMonthYear={selectedMonthYear} onMonthChange={onMonthChange} />
-        {transactionCategories && transactionCategories.length > 0 && (
+        {categories && categories.length > 0 && (
           <Button
             variant="outline"
             onClick={() => navigate('/budget/categories/setup')}
             className="flex items-center gap-2"
           >
             <Plus className="size-4" />
-            Setup from Transactions ({transactionCategories.length})
+            Setup from Transactions ({categories.length})
           </Button>
         )}
         <Button

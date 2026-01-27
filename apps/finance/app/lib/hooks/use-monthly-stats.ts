@@ -24,9 +24,9 @@ export function useMonthlyStats(month: string | undefined | null, options = {}) 
   );
 
   return {
-    stats: query.data,
+    stats: query.data?.success ? query.data.data : undefined,
     isLoading: query.isLoading,
-    error: query.error,
+    error: query.error?.message || (query.data?.success === false ? query.data.message : null),
     refetch: query.refetch,
   };
 }

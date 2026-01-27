@@ -46,21 +46,19 @@ export function useAccountsByInstitution() {
     return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
   });
 
-  const accounts = Array.isArray(query.data)
-    ? query.data
-    : [];
+  const accounts = query.data?.success ? query.data.data : [];
 
-  const accountsByInstitution = accounts.reduce(
+  const accountsByInstitution = accounts.reduce<Record<
+    string,
+    {
+      institutionId: string;
+      institutionName: string;
+      institutionLogo: string | null;
+      accounts: typeof accounts;
+    }
+  >>(
     (
-      acc: Record<
-        string,
-        {
-          institutionId: string;
-          institutionName: string;
-          institutionLogo: string | null;
-          accounts: typeof accounts;
-        }
-      >,
+      acc,
       account,
     ) => {
       const institutionId = account.institutionId || 'unlinked';
@@ -70,7 +68,7 @@ export function useAccountsByInstitution() {
         acc[institutionId] = {
           institutionId,
           institutionName,
-          institutionLogo: account.institutionLogo,
+          institutionLogo: account.institutionLogo ?? null,
           accounts: [],
         };
       }

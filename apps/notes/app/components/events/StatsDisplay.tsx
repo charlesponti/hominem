@@ -3,7 +3,7 @@ import type React from 'react';
 interface Person {
   id: string;
   firstName?: string;
-  lastName?: string;
+  lastName?: string | null;
 }
 
 interface Activity {

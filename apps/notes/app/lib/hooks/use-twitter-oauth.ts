@@ -1,13 +1,13 @@
-import { useToast } from '@hominem/ui';
-import { useCallback } from 'react';
-
 import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   TwitterAccountsListOutput,
   TwitterPostInput,
   TwitterPostOutput,
 } from '@hominem/hono-rpc/types';
+
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { useToast } from '@hominem/ui';
+import { useCallback } from 'react';
 
 export function useTwitterOAuth() {
   // keeping this stub as it was in original, potentially unused or pending implementation
@@ -19,16 +19,22 @@ export function useTwitterOAuth() {
 }
 
 export function useTwitterAccounts() {
-  const { data: accounts, isLoading, refetch } = useHonoQuery<TwitterAccountsListOutput>(
+  const {
+    data: accounts,
+    isLoading,
+    refetch,
+  } = useHonoQuery<TwitterAccountsListOutput>(
     ['twitter', 'accounts'],
     async (client: HonoClient) => {
       const res = await client.api.twitter.accounts.$get();
       return res.json() as Promise<TwitterAccountsListOutput>;
-    }
+    },
   );
 
+  const accountsArray = accounts?.success ? accounts.data : [];
+
   return {
-    data: accounts || [],
+    data: accountsArray,
     isLoading,
     refetch,
   };
@@ -49,7 +55,7 @@ export function useTwitterPost() {
       onError: (error) => {
         toast({ title: 'Error posting tweet', description: error.message, variant: 'destructive' });
       },
-    }
+    },
   );
 
   return mutation;

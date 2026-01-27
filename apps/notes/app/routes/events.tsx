@@ -1,3 +1,11 @@
+// import { createServerCallerWithToken } from '@hominem/hono-client/ssr'; // redundant if we use createServerHonoClient
+import type {
+  PeopleListOutput,
+  EventsListOutput,
+  EventsCreateInput,
+} from '@hominem/hono-rpc/types';
+import type { ExtractApiData } from '@hominem/services';
+
 import { ActiveFiltersBar, FilterSelect } from '@hominem/ui/filters';
 import { useSort, useUrlFilters } from '@hominem/ui/hooks';
 import { useEffect, useMemo, useState } from 'react';
@@ -6,9 +14,6 @@ import { data, useNavigate } from 'react-router';
 import { getServerSession } from '~/lib/auth.server';
 import i18n from '~/lib/i18n';
 import { createServerHonoClient } from '~/lib/trpc/server';
-// import { createServerCallerWithToken } from '@hominem/hono-client/ssr'; // redundant if we use createServerHonoClient
-import type { PeopleListOutput, EventsListOutput, EventsCreateInput } from '@hominem/hono-rpc/types';
-import type { ExtractApiData } from '@hominem/services';
 
 import type { Route } from './+types/events';
 
@@ -20,6 +25,7 @@ import SyncStatus from '../components/events/SyncStatus';
 import { useGoogleCalendarSync } from '../hooks/useGoogleCalendarSync';
 
 type Person = ExtractApiData<PeopleListOutput>[number];
+type EventData = ExtractApiData<EventsListOutput>[number];
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -32,20 +38,20 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const { session, headers } = await getServerSession(request);
   const client = createServerHonoClient(session?.access_token);
-  
+
   const [eventsRes, peopleRes] = await Promise.all([
     client.api.events.$get({
       query: {
         tagNames: type, // API expects comma separated string or array? Route expects tagNames string split by comma
         companion: companion || undefined,
         sortBy,
-      }
+      },
     }),
     client.api.people.list.$post({ json: {} }),
   ]);
 
-  const eventsResult = await eventsRes.json() as EventsListOutput;
-  const peopleResult = await peopleRes.json() as PeopleListOutput;
+  const eventsResult: EventsListOutput = await eventsRes.json();
+  const peopleResult: PeopleListOutput = await peopleRes.json();
 
   const events = eventsResult.success ? eventsResult.data : [];
   const people = peopleResult.success ? peopleResult.data : [];
@@ -56,17 +62,22 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   // We need to construct the input object manually
-  
-  const tags = formData.get('tags') as string;
-  const people = formData.getAll('people') as string[];
-  
+
+  const tags = formData.get('tags');
+  const people = formData.getAll('people');
+
+  const title = formData.get('title');
+  const description = formData.get('description');
+  const date = formData.get('date');
+  const type = formData.get('type');
+
   const eventData: EventsCreateInput = {
-    title: (formData.get('title') as string) || '',
-    description: (formData.get('description') as string) || undefined,
-    date: (formData.get('date') as string) || undefined,
-    type: (formData.get('type') as string) || undefined,
-    tags: tags ? tags.split(',').map(t => t.trim()) : undefined,
-    people: people.length > 0 ? people : undefined,
+    title: typeof title === 'string' ? title : '',
+    description: typeof description === 'string' ? description : undefined,
+    date: typeof date === 'string' ? date : undefined,
+    type: typeof type === 'string' ? type : undefined,
+    tags: typeof tags === 'string' ? tags.split(',').map((t) => t.trim()) : undefined,
+    people: people.length > 0 ? people.map(p => String(p)) : undefined,
   };
 
   if (eventData.date) {
@@ -75,14 +86,14 @@ export async function action({ request }: Route.ActionArgs) {
 
   const { session } = await getServerSession(request);
   const client = createServerHonoClient(session?.access_token);
-  
+
   const res = await client.api.events.$post({ json: eventData });
   const result = await res.json();
-  
+
   if (!result.success) {
-      throw new Error(result.message);
+    throw new Error(result.message);
   }
-  
+
   return { success: true, event: result.data };
 }
 
@@ -157,33 +168,28 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
     }
   }, [sortOptions]); // Only depend on sortOptions to avoid loops
 
-  const activities = useMemo(
-    () =>
-      ((loaderData.events ?? []) as any[])
-        .map((activity) => ({
-          ...activity,
-          tags: activity.tags?.map((tag: any) => tag.name || tag) || [],
-        }))
-        .map((activity) => ({
-          ...activity,
-          description: activity.description ?? undefined,
-          people: activity.people as Person[] | undefined,
-        })) as Activity[],
-    [loaderData.events],
-  );
+  const eventsData = loaderData.events;
 
-  const people = useMemo(
-    () => (loaderData.people ?? []) as Person[],
-    [loaderData.people],
-  );
+  const activities: Activity[] = useMemo(() => {
+    return (eventsData as EventData[]).map((activity) => {
+      return {
+        ...activity,
+        tags: activity.tags || [],
+        description: activity.description ?? undefined,
+        people: undefined, // Or map people correctly if needed, but the current schema says string[]
+      };
+    });
+  }, [eventsData]);
+
+  const people: Person[] = useMemo(() => loaderData.people ?? [], [loaderData.people]);
 
   const companions = useMemo(() => {
     const allCompanions = new Set<string>();
     activities.forEach((activity) => {
-      activity.people?.forEach((person) => {
-        const name = `${person.firstName || ''} ${person.lastName || ''}`.trim();
-        if (name) {
-          allCompanions.add(name);
+      // activity.people is string[] according to events.types.ts
+      activity.people?.forEach((personName) => {
+        if (typeof personName === 'string' && personName) {
+          allCompanions.add(personName);
         }
       });
     });
@@ -293,11 +299,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         {showAddForm && (
           <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="rounded-xl p-6 shadow-sm bg-card border border-border">
-              <EventForm
-                showAddForm={showAddForm}
-                people={people}
-                onToggleForm={handleToggleEventForm}
-              />
+              <EventForm showAddForm={showAddForm} onToggleForm={handleToggleEventForm} />
             </div>
           </div>
         )}

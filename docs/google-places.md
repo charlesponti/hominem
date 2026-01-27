@@ -6,7 +6,7 @@
 | --- | --- | --- | --- | --- | --- |
 | `apps/rocco/app/lib/trpc/routers/places.ts` | `getDetails` fallback when DB lacks data | Shared helper (`getPlaceDetails`) | Helper default (`places.displayName, ... , places.photos`) | `process.env.GOOGLE_API_KEY` | Fetches via central helper before writing to DB. |
 | `apps/rocco/app/lib/trpc/routers/places.ts` | `search` resolver | Shared helper (`searchPlaces`) | Helper default (`places.id, ...`) | `process.env.GOOGLE_API_KEY` | Results cached per query + circle. |
-| `apps/rocco/app/hooks/useGooglePlacesAutocomplete.ts` | Client-side autocomplete | Calls `trpc.places.autocomplete` | N/A (server handles field mask) | No client key usage | Uses tRPC cache + shared helper. |
+| `apps/rocco/app/hooks/useGooglePlacesAutocomplete.ts` | Client-side autocomplete | Calls `client.api.places.autocomplete` (Hono RPC) | N/A (server handles field mask) | No client key usage | Uses React Query cache + shared helper. |
 | `apps/rocco/app/lib/fetchPlacePhotos.server.ts` | Server helper wrapper for photos | Delegates to shared helper | N/A (relies on helper defaults) | Server env `GOOGLE_API_KEY` | Provides consistent return shape for future server consumers. |
 | `apps/rocco/scripts/update-place-photos.ts` | Maintenance script to backfill photos | Uses shared helper (`getPlacePhotos`) | Helper default (`places.photos`) | `process.env.GOOGLE_API_KEY` | No direct HTTP layer or duplicated logic. |
 | `apps/rocco/app/components/places/PlacePhotos.tsx` | Transform stored photo refs into media URL | `GET https://places.googleapis.com/v1/{photoRef}/media` | `maxWidthPx`, `maxHeightPx`, `key` query params | `env.VITE_GOOGLE_API_KEY` | Requires the key to request public media blobs. |

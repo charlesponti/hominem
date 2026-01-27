@@ -1,14 +1,14 @@
 import { relations, sql } from 'drizzle-orm'
 import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import * as z from 'zod'
-import { type BaseContentType, BaseContentTypeSchema, type ContentTag } from './shared.schema'
+import { type AllContentType, AllContentTypeSchema, type ContentTag } from './shared.schema'
 import { users } from './users.schema'
 
 export const notes = pgTable(
   'notes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    type: text('type').notNull().$type<BaseContentType>().default('note'),
+    type: text('type').notNull().$type<AllContentType>().default('note'),
     title: text('title'),
     content: text('content').notNull(),
     tags: json('tags').$type<Array<ContentTag>>().default([]),
@@ -49,11 +49,11 @@ export type NoteMention = {
 
 /**
  * ContentType defines the type of personal notes for specialized behavior
- * These are private user notes, not publishable content
+ * These can include both base types and publishing types
  */
-export const NoteContentTypeSchema = BaseContentTypeSchema
+export const NoteContentTypeSchema = AllContentTypeSchema
 
-export type NoteContentType = BaseContentType
+export type NoteContentType = AllContentType
 
 /**
  * Task status schema for task-type content

@@ -107,8 +107,7 @@ const { data } = useHonoQuery(['lists', 'getAll'], async (client) => {
   const res = await client.api.lists.getAll.$post();
   return res.json();
 });
-// OR use predefined hooks:
-const { data } = useLists();
+// OR use predefined hooks like `useLists()` which internally call the Hono client
 ```
 
 #### 2. useMutation Replacement
@@ -218,7 +217,7 @@ Some routers have complex input validation schemas (places.ts has many nested in
 
 ```typescript
 // Before: inline inference
-const query = trpc.places.autocomplete.useQuery({
+const query = useHonoQuery(['places','autocomplete'], async (client) => {
   input: string; // TypeScript must traverse validation
 });
 

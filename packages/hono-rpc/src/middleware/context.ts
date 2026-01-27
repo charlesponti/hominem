@@ -1,6 +1,4 @@
-import type { HominemUser } from '@hominem/auth/server';
 import type { Queues } from '@hominem/services/types';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getServerAuth } from '@hominem/auth/server';
 import { getOrCreateQueues } from '@hominem/services/queues';

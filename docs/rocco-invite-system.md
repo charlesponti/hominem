@@ -27,7 +27,7 @@
 - If the invited email already exists as a user, `invitedUserId` is set immediately; otherwise left null.
 
 ### Accepting Invites (token required)
-- Entry point: `trpc.invites.accept` → `acceptListInvite` service.
+- Entry point: `client.api.invites.accept` (Hono RPC) → `acceptListInvite` service. Use `client.api.invites.accept.$post({ json: { listId, token } })` from the client.
 - Lookup: by `listId` + `token`. The invited email remains on the record for display/audit and deduping but is not used to authorize acceptance.
 - Safeguards:
   - signed-in user id isn't `invitedUserId`  → 403.
@@ -41,14 +41,14 @@
   - UI warns/asks for confirmation if signed-in email ≠ invited email before calling accept.
 
 ### Declining Invites
-- `trpc.invites.decline` deletes the invite by `listId` + `token`.
+- `client.api.invites.decline` (Hono RPC) deletes the invite by `listId` + `token` (use `client.api.invites.decline.$post({ json: { listId, token } })`).
 - If the invite is bound to a different `invitedUserId`, decline is forbidden.
 - List owners can delete pending invites they sent; accepted invites cannot be deleted.
 
 ### Listing Invites
-- Incoming: `trpc.invites.getAll` optionally accepts `{ token }` to load a specific invite via a secure link; otherwise returns invites where `invitedUserEmail` matches the signed-in user or `invitedUserId` matches (email remains necessary for this fallback).
-- By list (owner view): `trpc.invites.getByList` returns invites for a list the owner controls.
-- Outbound (sent): `trpc.invites.getAllOutbound`.
+- Incoming: `client.api.invites.getAll` optionally accepts `{ token }` to load a specific invite via a secure link (call via `client.api.invites.getAll.$post({ json: { token } })`); otherwise returns invites where `invitedUserEmail` matches the signed-in user or `invitedUserId` matches.
+- By list (owner view): `client.api.invites.getByList` returns invites for a list the owner controls (`client.api.invites.getByList.$post({ json: { listId } })`).
+- Outbound (sent): `client.api.invites.getAllOutbound` (`client.api.invites.getAllOutbound.$post()`).
 
 ### UI Behaviors (Rocco app)
 - Invites page (`apps/rocco/app/routes/invites.tsx`):

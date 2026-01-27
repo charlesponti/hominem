@@ -4,6 +4,7 @@ import {
   useQueryClient,
   type UseQueryOptions,
   type UseMutationOptions,
+  type QueryKey,
 } from '@tanstack/react-query';
 
 import { useHonoClient } from './context';
@@ -12,14 +13,14 @@ export interface HonoQueryOptions<TData> extends Omit<
   UseQueryOptions<TData>,
   'queryKey' | 'queryFn'
 > {
-  queryKey?: unknown[];
+  queryKey?: QueryKey;
 }
 
 export interface HonoMutationOptions<TData, TVariables> extends Omit<
   UseMutationOptions<TData, Error, TVariables>,
   'mutationFn'
 > {
-  invalidateKeys?: unknown[][];
+  invalidateKeys?: QueryKey[];
 }
 
 /**
@@ -36,7 +37,7 @@ export interface HonoMutationOptions<TData, TVariables> extends Omit<
  * );
  */
 export function useHonoQuery<TData>(
-  queryKey: unknown[],
+  queryKey: QueryKey,
   queryFn: (client: ReturnType<typeof useHonoClient>) => Promise<TData>,
   options?: HonoQueryOptions<TData>,
 ) {
@@ -102,22 +103,22 @@ export function useHonoUtils() {
   const queryClient = useQueryClient();
 
   return {
-    invalidate: (queryKey: unknown[]) => {
+    invalidate: (queryKey: QueryKey) => {
       return queryClient.invalidateQueries({ queryKey });
     },
-    refetch: (queryKey: unknown[]) => {
+    refetch: (queryKey: QueryKey) => {
       return queryClient.refetchQueries({ queryKey });
     },
-    setData: <TData>(queryKey: unknown[], updater: TData | ((old: TData | undefined) => TData)) => {
+    setData: <TData>(queryKey: QueryKey, updater: TData | ((old: TData | undefined) => TData)) => {
       return queryClient.setQueryData(queryKey, updater);
     },
-    getData: <TData>(queryKey: unknown[]) => {
+    getData: <TData>(queryKey: QueryKey) => {
       return queryClient.getQueryData<TData>(queryKey);
     },
-    cancel: (queryKey: unknown[]) => {
+    cancel: (queryKey: QueryKey) => {
       return queryClient.cancelQueries({ queryKey });
     },
-    remove: (queryKey: unknown[]) => {
+    remove: (queryKey: QueryKey) => {
       return queryClient.removeQueries({ queryKey });
     },
   };

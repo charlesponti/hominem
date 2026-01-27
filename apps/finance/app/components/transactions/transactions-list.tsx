@@ -19,7 +19,7 @@ type TransactionsListProps = {
 };
 
 function TransactionAmount({ transaction }: { transaction: TransactionFromAPI }) {
-  const amount = Number.parseFloat(transaction.amount);
+  const amount = transaction.amount;
   const isNegative = amount < 0;
   const displayAmount = Math.abs(amount).toFixed(2);
 

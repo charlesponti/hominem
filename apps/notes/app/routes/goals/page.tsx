@@ -97,12 +97,12 @@ export default function GoalsPage() {
     );
   };
 
-  const handleEditClick = (goal: any) => {
+  const handleEditClick = (goal: GoalJson) => {
     setCurrentGoal(goal);
     setIsEditModalOpen(true);
   };
 
-  const handleArchiveClick = (goal: any) => {
+  const handleArchiveClick = (goal: GoalJson) => {
     setCurrentGoal(goal);
     setIsArchiveModalOpen(true);
   };
@@ -170,10 +170,10 @@ export default function GoalsPage() {
         <p className="text-center text-muted-foreground mt-10">Loading goals...</p>
       ) : goals.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {goals.map((goal) => (
+          {goals.map((goal: GoalJson) => (
             <GoalCard
               key={goal.id}
-              goal={goal as any}
+              goal={goal}
               onEdit={handleEditClick}
               onDelete={handleArchiveClick}
             />

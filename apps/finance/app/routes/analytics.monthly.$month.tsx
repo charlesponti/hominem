@@ -75,18 +75,18 @@ export default function MonthlyAnalyticsPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Net Income</span>
                   <span
-                    className={`font-bold ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                    className={`font-bold ${(stats.netIncome ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}
                   >
-                    {formatCurrency(stats.netIncome)}
+                    {formatCurrency(stats.netIncome ?? 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Total Income</span>
-                  <span className="text-green-600">{formatCurrency(stats.totalIncome)}</span>
+                  <span className="text-green-600">{formatCurrency(stats.totalIncome ?? 0)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm ">
                   <span className="font-medium">Total Expenses</span>
-                  <span className="text-red-600">{formatCurrency(stats.totalExpenses)}</span>
+                  <span className="text-red-600">{formatCurrency(stats.totalExpenses ?? 0)}</span>
                 </div>
               </div>
             </CardContent>
@@ -98,7 +98,7 @@ export default function MonthlyAnalyticsPage() {
               <CardTitle>Spending by Category</CardTitle>
             </CardHeader>
             <CardContent>
-              {stats.categorySpending.length > 0 ? (
+              {stats.categorySpending && stats.categorySpending.length > 0 ? (
                 <ul className="space-y-2">
                   {stats.categorySpending.map((category) => (
                     <li

@@ -1,5 +1,4 @@
 import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   NotesListInput,
   NotesListOutput,
@@ -13,6 +12,8 @@ import type {
   NotesSyncOutput,
 } from '@hominem/hono-rpc/types';
 
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+
 export function useNotesList(options: NotesListInput = {}) {
   const queryParams: Record<string, string> = {};
   if (options.types) queryParams.types = options.types.join(',');
@@ -24,24 +25,32 @@ export function useNotesList(options: NotesListInput = {}) {
   if (options.limit) queryParams.limit = String(options.limit);
   if (options.offset) queryParams.offset = String(options.offset);
 
-  return useHonoQuery<NotesListOutput>(['notes', 'list', options], async (client: HonoClient) => {
-    const res = await client.api.notes.$get({
-      query: queryParams
-    });
-    return res.json() as Promise<NotesListOutput>;
-  }, {
-    staleTime: 1000 * 60 * 1, // 1 minute
-  });
+  return useHonoQuery<NotesListOutput>(
+    ['notes', 'list', options],
+    async (client: HonoClient) => {
+      const res = await client.api.notes.$get({
+        query: queryParams,
+      });
+      return res.json();
+    },
+    {
+      staleTime: 1000 * 60 * 1, // 1 minute
+    },
+  );
 }
 
 export function useNote(id: string) {
-  return useHonoQuery<NotesGetOutput>(['notes', id], async (client: HonoClient) => {
-    const res = await client.api.notes[':id'].$get({ param: { id } });
-    return res.json() as Promise<NotesGetOutput>;
-  }, {
-    enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  return useHonoQuery<NotesGetOutput>(
+    ['notes', id],
+    async (client: HonoClient) => {
+      const res = await client.api.notes[':id'].$get({ param: { id } });
+      return res.json();
+    },
+    {
+      enabled: !!id,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  );
 }
 
 export function useCreateNote() {
@@ -49,14 +58,16 @@ export function useCreateNote() {
 
   return useHonoMutation<NotesCreateOutput, NotesCreateInput>(
     async (client: HonoClient, variables: NotesCreateInput) => {
-      const res = await client.api.notes.$post({ json: variables });
-      return res.json() as Promise<NotesCreateOutput>;
+      const res = await client.api.notes.$post({
+        json: variables,
+      });
+      return res.json();
     },
     {
       onSuccess: () => {
         utils.invalidate(['notes', 'list']);
       },
-    }
+    },
   );
 }
 
@@ -70,15 +81,15 @@ export function useUpdateNote() {
         param: { id },
         json: data,
       });
-      return res.json() as Promise<NotesUpdateOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {
         if (result.success) {
-           utils.invalidate(['notes', 'list']);
+          utils.invalidate(['notes', 'list']);
         }
       },
-    }
+    },
   );
 }
 
@@ -90,13 +101,13 @@ export function useDeleteNote() {
       const res = await client.api.notes[':id'].$delete({
         param: { id: variables.id },
       });
-      return res.json() as Promise<NotesDeleteOutput>;
+      return res.json();
     },
     {
       onSuccess: () => {
         utils.invalidate(['notes', 'list']);
       },
-    }
+    },
   );
 }
 
@@ -105,13 +116,15 @@ export function useSyncNotes() {
 
   return useHonoMutation<NotesSyncOutput, NotesSyncInput>(
     async (client: HonoClient, variables: NotesSyncInput) => {
-      const res = await client.api.notes.sync.$post({ json: variables });
-      return res.json() as Promise<NotesSyncOutput>;
+      const res = await client.api.notes.sync.$post({
+        json: variables,
+      });
+      return res.json();
     },
     {
       onSuccess: () => {
         utils.invalidate(['notes', 'list']);
       },
-    }
+    },
   );
 }

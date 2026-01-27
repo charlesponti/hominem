@@ -41,6 +41,14 @@ export type TimeSeriesDataPoint = {
     raw: string;
     formatted: string;
     direction: 'up' | 'down' | 'flat';
+    percentChange?: string;
+    previousAmount?: number;
+    formattedPreviousAmount?: string;
+    percentChangeExpenses?: string;
+    rawExpenses?: string;
+    previousExpenses?: number;
+    formattedPreviousExpenses?: string;
+    directionExpenses?: 'up' | 'down';
   };
   formattedAmount?: string;
   formattedIncome?: string;
@@ -689,19 +697,14 @@ export type PlaidRemoveConnectionOutput = ApiResult<{
 // ============================================================================
 
 export type RunwayCalculateInput = {
-  assets: number;
+  balance: number;
   monthlyExpenses: number;
-  monthlyIncome?: number;
-  inflationRate?: number;
-  growthRate?: number;
-  includeProjections?: boolean;
-  months?: number;
-  balance?: number;
   plannedPurchases?: Array<{
     description: string;
     amount: number;
     date: string;
   }>;
+  projectionMonths?: number;
 };
 
 export type RunwayCalculateOutput = ApiResult<{

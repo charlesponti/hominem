@@ -85,14 +85,16 @@ export function useTimeSeriesData({
   };
 
   // Format data for charts
-  const chartData = query.data?.data.map((item) => ({
-    name: formatDateLabel(item.date),
-    Spending: Math.abs(item.expenses || 0),
-    Income: Math.abs(item.income || 0),
-    Count: item.count,
-    Average: Math.abs(item.average || 0),
-    ...(item.trend ? { TrendChange: Number.parseFloat(item.trend.raw) } : {}),
-  }));
+  const chartData = query.data?.success
+    ? query.data.data.data.map((item) => ({
+        name: formatDateLabel(item.date),
+        Spending: Math.abs(item.expenses || 0),
+        Income: Math.abs(item.income || 0),
+        Count: item.count,
+        Average: Math.abs(item.average || 0),
+        ...(item.trend ? { TrendChange: Number.parseFloat(item.trend.raw) } : {}),
+      }))
+    : [];
 
   return {
     ...query,

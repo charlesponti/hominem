@@ -1,5 +1,4 @@
-import type { ContentStrategy } from '@hominem/services/types';
-
+import type { ContentStrategy } from '@hominem/db/schema';
 import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Checkbox } from '@hominem/ui/components/ui/checkbox';
@@ -62,7 +61,7 @@ export default function ContentStrategyPage() {
       idMapRef.current.set(mapKey, crypto.randomUUID());
     }
 
-    return idMapRef.current.get(mapKey);
+    return idMapRef.current.get(mapKey) ?? '';
   };
 
   const platforms = [
@@ -85,8 +84,7 @@ export default function ContentStrategyPage() {
 
     setLoading(true);
     try {
-      // For now, we'll use a simple mock strategy since the AI endpoint might not be available
-      // In a real implementation, you'd call the AI endpoint here
+      // For now, we'll use a simple mock strategy
       const mockStrategy: ContentStrategy = {
         topic,
         targetAudience: audience || 'General audience',
@@ -216,7 +214,7 @@ ${strategy.monetization?.map((idea) => `• ${idea}`).join('\n') || 'No monetiza
 
 COMPETITIVE ANALYSIS:
 Content Gaps: ${strategy.competitiveAnalysis?.gaps || 'No gaps identified'}
-Opportunities: ${strategy.competitiveAnalysis?.opportunities || 'No opportunities identified'}
+Opportunities: ${strategy.competitiveAnalysis?.opportunities?.join(', ') || 'No opportunities identified'}
     `.trim();
 
     await copyToClipboard(fullText, 'Full content strategy');
@@ -268,7 +266,7 @@ ${strategy.monetization?.map((idea) => `- ${idea}`).join('\n') || '- No monetiza
 
 ## Competitive Analysis
 **Content Gaps:** ${strategy.competitiveAnalysis?.gaps || 'No gaps identified'}
-**Opportunities:** ${strategy.competitiveAnalysis?.opportunities || 'No opportunities identified'}
+**Opportunities:** ${strategy.competitiveAnalysis?.opportunities?.join(', ') || 'No opportunities identified'}
     `.trim();
 
     try {
@@ -290,31 +288,11 @@ ${strategy.monetization?.map((idea) => `- ${idea}`).join('\n') || '- No monetiza
     if (!strategy) return;
 
     try {
-      // Ensure the strategy matches our schema
-      const normalizedStrategy: ContentStrategy = {
-        topic: strategy.topic,
-        targetAudience: strategy.targetAudience,
-        platforms: selectedPlatforms,
-        keyInsights: strategy.keyInsights || [],
-        contentPlan: strategy.contentPlan,
-        monetization: strategy.monetization || [],
-        competitiveAnalysis: strategy.competitiveAnalysis
-          ? {
-              gaps: strategy.competitiveAnalysis.gaps,
-              opportunities: Array.isArray(strategy.competitiveAnalysis.opportunities)
-                ? strategy.competitiveAnalysis.opportunities
-                : typeof strategy.competitiveAnalysis.opportunities === 'string'
-                  ? [strategy.competitiveAnalysis.opportunities]
-                  : [],
-            }
-          : undefined,
-      };
-
-      // Save the strategy using the new tRPC content strategies API
-      await createStrategy({
+      // Save the strategy using the content strategies API
+      createStrategy({
         title: `Content Strategy: ${strategy.topic}`,
         description: `Content strategy for ${strategy.targetAudience} focusing on ${strategy.topic}`,
-        strategy: normalizedStrategy,
+        strategy,
       });
 
       toast({
@@ -333,9 +311,9 @@ ${strategy.monetization?.map((idea) => `- ${idea}`).join('\n') || '- No monetiza
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <span>Create Content Strategy</span>
-        <Link to="/content-strategy">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Create Content Strategy</h1>
+        <Link to="/content-strategy/saved">
           <Button variant="outline" size="sm">
             View Saved Strategies
           </Button>
@@ -694,7 +672,7 @@ ${strategy.monetization?.map((idea) => `- ${idea}`).join('\n') || '- No monetiza
                     size="sm"
                     onClick={() =>
                       copyToClipboard(
-                        `Content Gaps: ${strategy.competitiveAnalysis?.gaps || 'No gaps identified'}\n\nOpportunities: ${strategy.competitiveAnalysis?.opportunities || 'No opportunities identified'}`,
+                        `Content Gaps: ${strategy.competitiveAnalysis?.gaps || 'No gaps identified'}\n\nOpportunities: ${strategy.competitiveAnalysis?.opportunities?.join(', ') || 'No opportunities identified'}`,
                         'Competitive analysis',
                       )
                     }
@@ -712,7 +690,7 @@ ${strategy.monetization?.map((idea) => `- ${idea}`).join('\n') || '- No monetiza
                     <div>
                       <h4 className="text-sm font-medium">Opportunities:</h4>
                       <p>
-                        {strategy.competitiveAnalysis.opportunities ||
+                        {strategy.competitiveAnalysis.opportunities?.join(', ') ||
                           'No opportunities identified'}
                       </p>
                     </div>

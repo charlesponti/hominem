@@ -7,8 +7,7 @@ import { scrollToBottom } from '~/lib/utils/scroll';
 interface UseAutoScrollOptions {
   containerRef: React.RefObject<HTMLDivElement | null>;
   parentRef?: React.RefObject<HTMLDivElement | null>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  virtualizer?: Virtualizer<HTMLDivElement, any>;
+  virtualizer?: Virtualizer<HTMLDivElement, Element>;
   messageCount: number;
   status: string;
   isNearBottom: boolean;

@@ -1,23 +1,25 @@
 import type { HonoClient } from '@hominem/hono-client';
+import type {
+  ApiResult,
+  ContentStrategiesSelect,
+  ContentStrategiesInsert,
+} from '@hominem/services';
+
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
-// TODO: Import proper types from hono-rpc/types once available
-// For now relying on inference or any
-
 export function useContentStrategies() {
-  const query = useHonoQuery(
+  const query = useHonoQuery<ApiResult<ContentStrategiesSelect[]>>(
     ['content-strategies', 'list'],
-    async (client: HonoClient) => {
+    async (client) => {
       const res = await client.api['content-strategies'].$get();
       return res.json();
     },
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
-    }
+    },
   );
 
-  const data = query.data as any; // Cast to avoid strict type checks for now
-  const strategies = data?.success ? data.data : [];
+  const strategies = query.data?.success ? query.data.data : [];
 
   return {
     strategies,
@@ -28,22 +30,21 @@ export function useContentStrategies() {
 }
 
 export function useContentStrategy(strategyId: string) {
-  const query = useHonoQuery(
+  const query = useHonoQuery<ApiResult<ContentStrategiesSelect>>(
     ['content-strategies', strategyId],
-    async (client: HonoClient) => {
+    async (client) => {
       const res = await client.api['content-strategies'][':id'].$get({
-        param: { id: strategyId }
+        param: { id: strategyId },
       });
       return res.json();
     },
     {
       enabled: !!strategyId,
       staleTime: 1000 * 60 * 5, // 5 minutes
-    }
+    },
   );
 
-  const data = query.data as any;
-  const strategy = data?.success ? data.data : null;
+  const strategy = query.data?.success ? query.data.data : null;
 
   return {
     strategy,
@@ -56,16 +57,24 @@ export function useContentStrategy(strategyId: string) {
 export function useCreateContentStrategy() {
   const utils = useHonoUtils();
 
-  const createStrategy = useHonoMutation(
-    async (client: HonoClient, variables: any) => {
-      const res = await client.api['content-strategies'].$post({ json: variables });
+  const createStrategy = useHonoMutation<
+    ApiResult<ContentStrategiesSelect>,
+    Omit<ContentStrategiesInsert, 'userId' | 'id' | 'createdAt' | 'updatedAt'>
+  >(
+    async (client, variables) => {
+      const res = await client.api['content-strategies'].$post({
+        json: {
+          ...variables,
+          description: variables.description ?? undefined,
+        },
+      });
       return res.json();
     },
     {
       onSuccess: () => {
         utils.invalidate(['content-strategies', 'list']);
       },
-    }
+    },
   );
 
   return {
@@ -79,23 +88,29 @@ export function useCreateContentStrategy() {
 export function useUpdateContentStrategy() {
   const utils = useHonoUtils();
 
-  const updateStrategy = useHonoMutation(
-    async (client: HonoClient, variables: any) => {
+  const updateStrategy = useHonoMutation<
+    ApiResult<ContentStrategiesSelect>,
+    ContentStrategiesInsert & { id: string }
+  >(
+    async (client, variables) => {
       const { id, ...data } = variables;
       const res = await client.api['content-strategies'][':id'].$patch({
         param: { id },
-        json: data
+        json: {
+          ...data,
+          description: data.description ?? undefined,
+        },
       });
       return res.json();
     },
     {
-      onSuccess: (result: any) => {
+      onSuccess: (result) => {
         if (result.success) {
-            utils.invalidate(['content-strategies', 'list']);
-            utils.invalidate(['content-strategies', result.data.id]);
+          utils.invalidate(['content-strategies', 'list']);
+          utils.invalidate(['content-strategies', result.data.id]);
         }
       },
-    }
+    },
   );
 
   return {
@@ -112,7 +127,7 @@ export function useDeleteContentStrategy() {
   const deleteStrategy = useHonoMutation(
     async (client: HonoClient, variables: { id: string }) => {
       const res = await client.api['content-strategies'][':id'].$delete({
-        param: { id: variables.id }
+        param: { id: variables.id },
       });
       return res.json();
     },
@@ -120,7 +135,7 @@ export function useDeleteContentStrategy() {
       onSuccess: () => {
         utils.invalidate(['content-strategies', 'list']);
       },
-    }
+    },
   );
 
   return {

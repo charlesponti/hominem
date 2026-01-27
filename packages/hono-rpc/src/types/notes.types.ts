@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ApiResult, Note as DbNote, TaskMetadata } from '@hominem/services';
+import type { ApiResult, Note as DbNote, TaskMetadata, AllContentType } from '@hominem/services';
 
 // ============================================================================
 // Data Types
@@ -12,7 +12,7 @@ export type Note = DbNote;
 // ============================================================================
 
 export type NotesListInput = {
-  types?: string[];
+  types?: AllContentType[];
   tags?: string[];
   query?: string;
   since?: string;
@@ -35,7 +35,7 @@ export type NotesGetOutput = ApiResult<Note>;
 // ============================================================================
 
 export type NotesCreateInput = {
-  type?: string;
+  type?: AllContentType;
   title?: string;
   content: string;
   tags?: Array<{ value: string }>;
@@ -51,7 +51,7 @@ export type NotesCreateOutput = ApiResult<Note>;
 // ============================================================================
 
 export type NotesUpdateInput = {
-  type?: string;
+  type?: AllContentType;
   title?: string | null;
   content?: string;
   tags?: Array<{ value: string }>;
@@ -73,7 +73,7 @@ export type NotesDeleteOutput = ApiResult<Note>;
 
 export type NotesSyncItem = {
   id?: string;
-  type: string;
+  type: AllContentType;
   title?: string | null;
   content: string;
   tags?: Array<{ value: string }>;

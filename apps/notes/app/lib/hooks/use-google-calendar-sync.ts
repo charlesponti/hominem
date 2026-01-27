@@ -1,6 +1,8 @@
-import { useCallback, useState } from 'react';
+import type { EventsGoogleCalendarsOutput } from '@hominem/hono-rpc/types';
+import type { ApiResult } from '@hominem/services';
 
-import { trpc } from '~/lib/trpc';
+import { useHonoMutation, useHonoClient, useHonoUtils } from '@hominem/hono-client/react';
+import { useCallback, useState } from 'react';
 
 export interface CalendarSyncOptions {
   calendarId?: string;
@@ -20,7 +22,10 @@ export function useGoogleCalendarSync() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CalendarSyncResult | null>(null);
 
-  const syncMutation = trpc.events.syncGoogleCalendar.useMutation();
+  const syncMutation = useHonoMutation(async (client, variables: CalendarSyncOptions) => {
+    const res = await client.api.events.google.sync.$post({ json: variables });
+    return res.json();
+  });
 
   const syncCalendar = async (options: CalendarSyncOptions) => {
     setIsLoading(true);
@@ -33,13 +38,23 @@ export function useGoogleCalendarSync() {
         timeMax: options.timeMax,
       });
 
-      setResult({
-        success: syncResult.success,
-        syncedEvents: syncResult.created + syncResult.updated,
-        totalEvents: syncResult.created + syncResult.updated + syncResult.deleted,
-        events: [],
-        error: syncResult.errors.length > 0 ? syncResult.errors.join(', ') : undefined,
-      });
+      if (syncResult?.success) {
+        setResult({
+          success: true,
+          syncedEvents: syncResult.data?.syncedEvents ?? 0,
+          totalEvents: syncResult.data?.syncedEvents ?? 0,
+          events: [],
+          error: undefined,
+        });
+      } else {
+        setResult({
+          success: false,
+          syncedEvents: 0,
+          totalEvents: 0,
+          events: [],
+          error: syncResult?.message ?? 'Sync failed',
+        });
+      }
     } catch (error) {
       setResult({
         success: false,
@@ -53,12 +68,25 @@ export function useGoogleCalendarSync() {
     }
   };
 
-  const utils = trpc.useUtils();
+  const client = useHonoClient();
+  const utils = useHonoUtils();
 
   const getCalendars = useCallback(async () => {
-    const calendars = await utils.events.getGoogleCalendars.fetch();
-    return calendars;
-  }, [utils]);
+    // Try cache first
+    const cached = utils.getData<EventsGoogleCalendarsOutput>(['events', 'google', 'calendars']);
+    if (cached) return cached;
+
+    const res = await client.api.events.google.calendars.$get();
+    const json = await res.json();
+
+    if (json?.success) {
+      // seed cache
+      utils.setData(['events', 'google', 'calendars'], json);
+      return json;
+    }
+
+    throw new Error(json?.message ?? 'Failed to fetch Google calendars');
+  }, [client, utils]);
 
   return {
     syncCalendar,

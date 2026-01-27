@@ -68,7 +68,10 @@ export const listsRoutes = new Hono<AppContext>()
       return c.json<ListGetAllOutput>(success(result as any), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<ListGetAllOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<ListGetAllOutput>(
+          error(err.code, err.message, err.details),
+          err.statusCode as any,
+        );
       }
 
       console.error('[lists.list]', err);
@@ -91,7 +94,10 @@ export const listsRoutes = new Hono<AppContext>()
       return c.json<ListGetByIdOutput>(success(list as any), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<ListGetByIdOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<ListGetByIdOutput>(
+          error(err.code, err.message, err.details),
+          err.statusCode as any,
+        );
       }
 
       console.error('[lists.get]', err);
@@ -114,7 +120,10 @@ export const listsRoutes = new Hono<AppContext>()
       return c.json<ListCreateOutput>(success(newList as any), 201);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<ListCreateOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<ListCreateOutput>(
+          error(err.code, err.message, err.details),
+          err.statusCode as any,
+        );
       }
 
       console.error('[lists.create]', err);
@@ -138,13 +147,19 @@ export const listsRoutes = new Hono<AppContext>()
       const updatedList = await updateList(input.id, input.name, userId);
 
       if (!updatedList) {
-        return c.json<ListUpdateOutput>(error('FORBIDDEN', "You don't have permission to update this list"), 403);
+        return c.json<ListUpdateOutput>(
+          error('FORBIDDEN', "You don't have permission to update this list"),
+          403,
+        );
       }
 
       return c.json<ListUpdateOutput>(success(updatedList as any), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<ListUpdateOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<ListUpdateOutput>(
+          error(err.code, err.message, err.details),
+          err.statusCode as any,
+        );
       }
 
       console.error('[lists.update]', err);
@@ -161,13 +176,19 @@ export const listsRoutes = new Hono<AppContext>()
       const deleteSuccess = await deleteList(input.id, userId);
 
       if (!deleteSuccess) {
-        return c.json<ListDeleteOutput>(error('FORBIDDEN', "You don't have permission to delete this list"), 403);
+        return c.json<ListDeleteOutput>(
+          error('FORBIDDEN', "You don't have permission to delete this list"),
+          403,
+        );
       }
 
       return c.json<ListDeleteOutput>(success({ success: true }), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<ListDeleteOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<ListDeleteOutput>(
+          error(err.code, err.message, err.details),
+          err.statusCode as any,
+        );
       }
 
       console.error('[lists.delete]', err);
@@ -193,11 +214,17 @@ export const listsRoutes = new Hono<AppContext>()
       return c.json<ListDeleteItemOutput>(success({ success: true }), 200);
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<ListDeleteItemOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+        return c.json<ListDeleteItemOutput>(
+          error(err.code, err.message, err.details),
+          err.statusCode as any,
+        );
       }
 
       console.error('[lists.delete-item]', err);
-      return c.json<ListDeleteItemOutput>(error('INTERNAL_ERROR', 'Failed to delete list item'), 500);
+      return c.json<ListDeleteItemOutput>(
+        error('INTERNAL_ERROR', 'Failed to delete list item'),
+        500,
+      );
     }
   })
 
@@ -231,11 +258,17 @@ export const listsRoutes = new Hono<AppContext>()
         return c.json<ListGetContainingPlaceOutput>(success(result), 200);
       } catch (err) {
         if (isServiceError(err)) {
-          return c.json<ListGetContainingPlaceOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+          return c.json<ListGetContainingPlaceOutput>(
+            error(err.code, err.message, err.details),
+            err.statusCode as any,
+          );
         }
 
         console.error('[lists.containing-place]', err);
-        return c.json<ListGetContainingPlaceOutput>(error('INTERNAL_ERROR', 'Failed to fetch lists'), 500);
+        return c.json<ListGetContainingPlaceOutput>(
+          error('INTERNAL_ERROR', 'Failed to fetch lists'),
+          500,
+        );
       }
     },
   )
@@ -269,11 +302,17 @@ export const listsRoutes = new Hono<AppContext>()
         return c.json<ListRemoveCollaboratorOutput>(success({ success: true }), 200);
       } catch (err) {
         if (isServiceError(err)) {
-          return c.json<ListRemoveCollaboratorOutput>(error(err.code, err.message, err.details), err.statusCode as any);
+          return c.json<ListRemoveCollaboratorOutput>(
+            error(err.code, err.message, err.details),
+            err.statusCode as any,
+          );
         }
 
         console.error('[lists.remove-collaborator]', err);
-        return c.json<ListRemoveCollaboratorOutput>(error('INTERNAL_ERROR', 'Failed to remove collaborator'), 500);
+        return c.json<ListRemoveCollaboratorOutput>(
+          error('INTERNAL_ERROR', 'Failed to remove collaborator'),
+          500,
+        );
       }
     },
   );

@@ -41,7 +41,7 @@ export function HonoProvider({ children }: { children: ReactNode }) {
         },
       }}
     >
-      {children as any}
+      {children}
     </BaseHonoProvider>
   );
 }

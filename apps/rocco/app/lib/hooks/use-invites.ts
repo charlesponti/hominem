@@ -21,7 +21,7 @@ import { queryKeys } from '~/lib/query-keys';
  */
 export const useReceivedInvites = (token?: string) =>
   useHonoQuery<InvitesGetReceivedOutput>(
-    queryKeys.invites.received(token) as any,
+    queryKeys.invites.received(token) ,
     async (client) => {
       const res = await client.api.invites.received.$post({ json: { token } });
       return res.json() as Promise<InvitesGetReceivedOutput>;
@@ -32,7 +32,7 @@ export const useReceivedInvites = (token?: string) =>
  * Get sent invites
  */
 export const useSentInvites = () =>
-  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent() as any, async (client) => {
+  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent() , async (client) => {
     const res = await client.api.invites.sent.$post({ json: {} });
     return res.json() as Promise<InvitesGetSentOutput>;
   });
@@ -42,7 +42,7 @@ export const useSentInvites = () =>
  */
 export const useListInvites = (listId: string | undefined) =>
   useHonoQuery<InvitesGetByListOutput>(
-    queryKeys.invites.byList(listId || '') as any,
+    queryKeys.invites.byList(listId || '') ,
     async (client) => {
       if (!listId) return { success: true, data: [] } as unknown as InvitesGetByListOutput;
       const res = await client.api.invites['by-list'].$post({ json: { listId } });
@@ -66,8 +66,8 @@ export const useCreateInvite = () => {
     {
       onSuccess: (result, variables) => {
         if (result.success) {
-          utils.invalidate(queryKeys.invites.sent() as any);
-          utils.invalidate(queryKeys.invites.byList(variables.listId) as any);
+          utils.invalidate(queryKeys.invites.sent() );
+          utils.invalidate(queryKeys.invites.byList(variables.listId) );
         }
       },
     },
@@ -87,8 +87,8 @@ export const useAcceptInvite = () => {
     {
       onSuccess: (result) => {
         if (result.success) {
-          utils.invalidate(queryKeys.invites.received() as any);
-          utils.invalidate(queryKeys.lists.all() as any);
+          utils.invalidate(queryKeys.invites.received() );
+          utils.invalidate(queryKeys.lists.all() );
         }
       },
     },
@@ -108,7 +108,7 @@ export const useDeclineInvite = () => {
     {
       onSuccess: (result) => {
         if (result.success) {
-          utils.invalidate(queryKeys.invites.received() as any);
+          utils.invalidate(queryKeys.invites.received() );
         }
       },
     },
@@ -128,8 +128,8 @@ export const useDeleteInvite = () => {
     {
       onSuccess: (result, variables) => {
         if (result.success) {
-          utils.invalidate(queryKeys.invites.sent() as any);
-          utils.invalidate(queryKeys.invites.byList(variables.listId) as any);
+          utils.invalidate(queryKeys.invites.sent() );
+          utils.invalidate(queryKeys.invites.byList(variables.listId) );
         }
       },
     },

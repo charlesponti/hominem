@@ -16,7 +16,7 @@ export const runwayRoutes = new Hono<AppContext>()
 
   // POST /calculate - Calculate runway (public)
   .post('/calculate', zValidator('json', runwayCalculationSchema), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
 
     try {
       const result = calculateRunway(input);

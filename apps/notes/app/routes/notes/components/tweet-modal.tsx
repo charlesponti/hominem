@@ -1,3 +1,5 @@
+import type { ContentStrategiesSelect } from '@hominem/services';
+
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
@@ -86,7 +88,7 @@ export function TweetModal({
   const postTweet = useTwitterPost();
   const { toast } = useToast();
 
-  const hasTwitterAccount = twitterAccounts && twitterAccounts.length > 0;
+  const hasTwitterAccount = !!twitterAccounts && twitterAccounts.length > 0;
   const canPost = twitterIntegrationEnabled && hasTwitterAccount;
   const characterCount = generatedTweet.length;
   const isOverLimit = characterCount > TWEET_CHARACTER_LIMIT;
@@ -96,7 +98,7 @@ export function TweetModal({
     // Reset strategy selection when changing type
     if (newType === 'default') {
       setStrategy('storytelling');
-    } else if (customStrategies[0]) {
+    } else if (customStrategies.length > 0) {
       setStrategy(customStrategies[0].id);
     } else {
       setStrategy('');
@@ -278,7 +280,7 @@ export function TweetModal({
                         <SelectValue placeholder="Select your content strategy" />
                       </SelectTrigger>
                       <SelectContent>
-                        {customStrategies.map((s) => (
+                        {customStrategies.map((s: ContentStrategiesSelect) => (
                           <SelectItem key={s.id} value={s.id}>
                             <div className="flex flex-col">
                               <span>{s.title}</span>

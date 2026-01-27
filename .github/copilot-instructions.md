@@ -66,8 +66,8 @@ Hominem is a monorepo full-stack application with local-first architecture. It u
 
 ### Common Patterns
 
-- **tRPC Client:** `trpc.resource.operation.useQuery()` or `.useMutation()`
-- **tRPC Server:** `createCaller(request).resource.operation(input)`
+- **Hono RPC Client:** `client.api.resource.operation.$post()` or use `useHonoQuery` / `useHonoMutation` (from `@hominem/hono-client/react`)
+- **Server:** call services directly or use server-side Hono handlers; prefer direct service calls in loaders for performance
 - **Auth:** Import from `@hominem/auth`
 - **Data:** Import from `@hominem/db`
 - **Utils:** Import from `@hominem/utils`

@@ -13,7 +13,7 @@ import { queryKeys } from '~/lib/query-keys';
  * Get all people/contacts
  */
 export const usePeople = () =>
-  useHonoQuery<PeopleListOutput>(queryKeys.people.list() as any, async (client: HonoClient) => {
+  useHonoQuery<PeopleListOutput>(queryKeys.people.list() , async (client: HonoClient) => {
     const res = await client.api.people.list.$post({ json: {} });
     return res.json() as Promise<PeopleListOutput>;
   });
@@ -31,7 +31,7 @@ export const useCreatePerson = () => {
     {
       onSuccess: (result) => {
         if (result.success) {
-          utils.invalidate(queryKeys.people.list() as any);
+          utils.invalidate(queryKeys.people.list() );
         }
       },
     },

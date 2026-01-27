@@ -17,7 +17,7 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-clien
 export const useGoals = (query: GoalListQuery) =>
   useHonoQuery<GoalListOutput>(['goals', 'list', query], async (client: HonoClient) => {
     const res = await client.api.goals.$get({ query });
-    return res.json() as Promise<GoalListOutput>;
+    return res.json();
   });
 
 /**
@@ -28,7 +28,7 @@ export const useCreateGoal = (query: GoalListQuery) => {
   return useHonoMutation<GoalCreateOutput, GoalCreateInput>(
     async (client: HonoClient, variables: GoalCreateInput) => {
       const res = await client.api.goals.$post({ json: variables });
-      return res.json() as Promise<GoalCreateOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {
@@ -52,7 +52,7 @@ export const useUpdateGoal = (query: GoalListQuery) => {
         param: { id },
         json,
       });
-      return res.json() as Promise<GoalUpdateOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {
@@ -75,7 +75,7 @@ export const useArchiveGoal = (query: GoalListQuery) => {
       const res = await client.api.goals[':id'].archive.$post({
         param: { id },
       });
-      return res.json() as Promise<GoalArchiveOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {
@@ -98,7 +98,7 @@ export const useDeleteGoal = (query: GoalListQuery) => {
       const res = await client.api.goals[':id'].$delete({
         param: { id },
       });
-      return res.json() as Promise<GoalDeleteOutput>;
+      return res.json();
     },
     {
       onSuccess: (result) => {

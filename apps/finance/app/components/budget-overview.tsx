@@ -12,26 +12,29 @@ interface BudgetOverviewProps {
 
 export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
   const {
-    data: categories,
+    data: categoriesResult,
     isLoading: isLoadingCategories,
     error: errorCategories,
   } = useBudgetCategories();
 
   const {
-    stats,
+    stats: statsResult,
     isLoading: isLoadingStats,
     error: errorStats,
   } = useMonthlyStats(selectedMonthYear || '');
 
+  const categories = categoriesResult || [];
+  const stats = statsResult || null;
+
   // Calculate total budgeted amount from categories
   const totalBudgeted = useMemo(() => {
-    if (!categories) {
+    if (categories.length === 0) {
       return 0;
     }
 
     return categories
-      .filter((category) => category.type === 'expense')
-      .reduce((sum, category) => sum + Number(category.averageMonthlyExpense || 0), 0);
+      .filter((category: any) => category.type === 'expense')
+      .reduce((sum: number, category: any) => sum + Number(category.averageMonthlyExpense || 0), 0);
   }, [categories]);
 
   // Get actual spending from stats
@@ -60,9 +63,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
         <CardContent className="text-center py-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">Error Loading Budget Data</h3>
           <p className="text-xs text-gray-600">
-            {errorCategories?.message ||
-              errorStats?.message ||
-              'An error occurred while loading data'}
+            {errorCategories?.message || errorStats || 'An error occurred while loading data'}
           </p>
         </CardContent>
       </Card>

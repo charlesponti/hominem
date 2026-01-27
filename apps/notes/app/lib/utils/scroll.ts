@@ -5,8 +5,7 @@ import type { Virtualizer } from '@tanstack/react-virtual';
  */
 export function scrollToBottom(
   container: HTMLDivElement | null,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  virtualizer?: Virtualizer<HTMLDivElement, any>,
+  virtualizer?: Virtualizer<HTMLDivElement, Element>,
   shouldUseVirtual?: boolean,
   lastIndex?: number,
 ): void {

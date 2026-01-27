@@ -40,12 +40,11 @@ export function AccountHeader({
     }
   };
 
-  const formatBalance = (balance: string) => {
-    const amount = Number.parseFloat(balance);
+  const formatBalance = (balance: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount);
+    }).format(balance);
   };
 
   const getAccountTypeColor = (type: string) => {

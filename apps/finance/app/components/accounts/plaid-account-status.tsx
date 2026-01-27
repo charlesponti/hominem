@@ -73,7 +73,7 @@ export function PlaidAccountStatus({
     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <div className="flex items-center justify-between mb-3">
         <div className="font-medium text-blue-900">Plaid Connection</div>
-        <PlaidStatusBadge status={account.plaidItemStatus} />
+        <PlaidStatusBadge status={account.plaidItemStatus ?? null} />
       </div>
       <div className="space-y-2 text-sm text-blue-700">
         {account.institutionName && <div>Institution: {account.institutionName}</div>}

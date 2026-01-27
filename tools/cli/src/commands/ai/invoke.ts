@@ -16,25 +16,38 @@ export const invokeCommand = new Command()
     const spinner = ora('Generating response').start();
 
     try {
-      const response = await trpc.chats.send.mutate({ message });
+      // Create a new chat for CLI and send the message via Hono RPC
+      const createRes = await trpc.api.chats.$post({ json: { title: 'CLI' } });
+      const createJson = await createRes.json();
+      if (!createJson?.success) {
+        throw new Error('Failed to create chat');
+      }
+      const chatId = createJson.data.id;
+
+      const sendRes = await trpc.api.chats[':id'].send.$post({
+        param: { id: chatId },
+        json: { message },
+      });
+      const response = await sendRes.json();
 
       // Stop spinner
       spinner.succeed(chalk.green('Success'));
 
       // Display the message content, if available
-      if (response.messages.assistant.content) {
+      if (response.success && response.data?.messages?.assistant?.content) {
         consola.log(
-          `\n${chalk.blue.bold('assistant:')}\n${chalk.white(response.messages.assistant.content)}\n`,
+          `\n${chalk.blue.bold('assistant:')}\n${chalk.white(response.data.messages.assistant.content)}\n`,
         );
       }
 
       // Display tool calls if they exist
       if (
-        response.messages.assistant.toolCalls &&
-        response.messages.assistant.toolCalls.length > 0
+        response.success &&
+        response.data?.messages?.assistant?.toolCalls &&
+        response.data.messages.assistant.toolCalls.length > 0
       ) {
         consola.log(chalk.yellow.bold('Tool Calls:'));
-        for (const toolCall of response.messages.assistant.toolCalls) {
+        for (const toolCall of response.data.messages.assistant.toolCalls) {
           consola.log(chalk.cyan(`- Tool: ${toolCall.toolName}`));
           consola.log(chalk.cyan(`  Args: ${JSON.stringify(toolCall.args, null, 2)}`));
         }

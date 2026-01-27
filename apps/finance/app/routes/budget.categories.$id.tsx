@@ -65,7 +65,7 @@ export default function EditBudgetCategory() {
       setFormData({
         name: category.name,
         type: category.type === 'income' || category.type === 'expense' ? category.type : 'expense',
-        averageMonthlyExpense: category.averageMonthlyExpense || '',
+        averageMonthlyExpense: String(category.averageMonthlyExpense || ''),
         color: category.color || categoryColors[0],
       });
     }

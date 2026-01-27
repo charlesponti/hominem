@@ -67,15 +67,15 @@ export function AnalyticsChartDisplay({
   });
 
   const incomeExpensesChartData = useMemo(() => {
-    if (!timeSeriesData?.data) {
+    if (!timeSeriesData?.success || !timeSeriesData.data.data) {
       return [];
     }
-    return timeSeriesData.data.map((point) => ({
+    return timeSeriesData.data.data.map((point) => ({
       name: formatMonthYear(point.date),
       Income: point.income,
       Expenses: Math.abs(point.expenses),
     }));
-  }, [timeSeriesData?.data]);
+  }, [timeSeriesData]);
 
   if (isLoading) {
     return (

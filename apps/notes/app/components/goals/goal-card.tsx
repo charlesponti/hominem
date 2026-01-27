@@ -4,12 +4,11 @@ import { Button } from '@hominem/ui';
 import { Progress } from '@hominem/ui/components/ui/progress';
 import { CalendarCheck, Edit, Trash2 } from 'lucide-react';
 
-import type { GoalsListOutput } from '~/lib/trpc/notes-types';
+import type { Goal } from '~/lib/trpc/notes-types';
+
 
 import { PriorityBadge } from './priority-badge';
 import { StatusBadge } from './status-badge';
-
-type Goal = GoalsListOutput[number];
 
 interface GoalCardProps {
   goal: Goal;

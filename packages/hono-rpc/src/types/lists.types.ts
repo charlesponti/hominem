@@ -1,5 +1,6 @@
-import { z } from 'zod';
 import type { ApiResult } from '@hominem/services';
+
+import { z } from 'zod';
 
 // ============================================================================
 // Data Types
@@ -140,13 +141,15 @@ export const listGetContainingPlaceSchema = z.object({
   googleMapsId: z.string().optional(),
 });
 
-export type ListGetContainingPlaceOutput = ApiResult<Array<{
-  id: string;
-  name: string;
-  isOwner: boolean;
-  itemCount: number;
-  imageUrl: string | null;
-}>>;
+export type ListGetContainingPlaceOutput = ApiResult<
+  Array<{
+    id: string;
+    name: string;
+    isOwner: boolean;
+    itemCount: number;
+    imageUrl: string | null;
+  }>
+>;
 
 // ============================================================================
 // REMOVE COLLABORATOR

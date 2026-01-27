@@ -245,9 +245,7 @@ const BudgetImpactCalculator = () => {
       <div className="text-center py-12">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
         <p className="text-gray-600 mb-4">
-          {historicalError?.message ||
-            currentError?.message ||
-            'Unable to load your financial data'}
+          {historicalError?.message || currentError || 'Unable to load your financial data'}
         </p>
         <p className="text-sm text-gray-500">
           Please ensure you have imported transactions to use this calculator.

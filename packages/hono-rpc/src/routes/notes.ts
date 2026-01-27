@@ -1,4 +1,4 @@
-import { NoteContentTypeSchema, type NoteInsert, TaskMetadataSchema } from '@hominem/db/schema';
+import { NoteContentTypeSchema, type NoteInsert, TaskMetadataSchema, AllContentTypeSchema, type AllContentType } from '@hominem/db/schema';
 import { NotesService } from '@hominem/notes-services';
 import { error, success } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
@@ -102,9 +102,9 @@ export const notesRoutes = new Hono<AppContext>()
       const userId = c.get('userId')!;
       const queryParams = c.req.valid('query');
 
-      const types = queryParams.types?.split(',') as
-        | ('note' | 'task' | 'tweet' | 'essay' | 'blog_post' | 'social_post')[]
-        | undefined;
+      const types = queryParams.types
+        ?.split(',')
+        .filter((t): t is AllContentType => AllContentTypeSchema.safeParse(t).success);
       const tags = queryParams.tags?.split(',');
       const sortBy = queryParams.sortBy || 'createdAt';
       const sortOrder = queryParams.sortOrder || 'desc';

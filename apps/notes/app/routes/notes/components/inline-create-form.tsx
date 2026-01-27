@@ -8,7 +8,12 @@ import { compactObject } from '@hominem/utils';
 import { FileText, ListChecks, RefreshCw, Send, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Note, NotesCreateInput as NoteInsert } from '~/lib/trpc/notes-types';
+import type {
+  Note,
+  NotesCreateInput as NoteInsert,
+  NotesCreateInput,
+  NotesUpdateInput,
+} from '~/lib/trpc/notes-types';
 
 import { PrioritySelect } from '~/components/priority-select';
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes';
@@ -44,9 +49,8 @@ export function InlineCreateForm({
   const createItem = useCreateNote();
   const updateItem = useUpdateNote();
   const [error, setError] = useState<Error | null>(null);
-  const [inputMode, setInputMode] = useState<InputMode>(
-    itemToEdit ? (itemToEdit.type as InputMode) : defaultInputMode,
-  );
+  
+  const [inputMode, setInputMode] = useState<InputMode>(defaultInputMode);
   const [inputValue, setInputValue] = useState(itemToEdit?.content || '');
   const [inputTitle, setInputTitle] = useState(itemToEdit?.title || '');
   const [taskPriority, setTaskPriority] = useState<Priority>(
@@ -66,7 +70,9 @@ export function InlineCreateForm({
   }, [defaultInputMode]);
 
   const hydrateFromItem = useCallback((item: Note) => {
-    setInputMode(item.type as InputMode);
+    if (item.type === 'note' || item.type === 'task') {
+      setInputMode(item.type);
+    }
     setInputValue(item.content);
     setInputTitle(item.title || '');
     if (item.type === 'task' && item.taskMetadata) {
@@ -92,7 +98,7 @@ export function InlineCreateForm({
     resetForm();
   }, [itemToEdit, isVisible, hydrateFromItem, resetForm]);
 
-  const isEditMode = mode === 'edit' && itemToEdit;
+  const isEditMode = mode === 'edit' && !!itemToEdit;
   const isNoteMode = inputMode === 'note';
   const isTaskMode = inputMode === 'task';
   const trimmedTitle = inputTitle.trim();
@@ -109,28 +115,26 @@ export function InlineCreateForm({
     if (isNoteMode && !contentToSave) return;
     if (isTaskMode && !titleToSave && !contentToSave) return;
 
-    const additionalData: Partial<NoteInsert> = {};
+    if (isEditMode && itemToEdit) {
+      const additionalData: Partial<NotesUpdateInput> = {};
+      if (isTaskMode) {
+        const existingTaskMetadata = itemToEdit.taskMetadata ?? {};
+        additionalData.taskMetadata = {
+          ...existingTaskMetadata,
+          status: itemToEdit.taskMetadata?.status || 'todo',
+          priority: taskPriority,
+          dueDate: taskDueDate ? taskDueDate.toISOString() : undefined,
+          startTime: itemToEdit.taskMetadata?.startTime ?? undefined,
+          endTime: itemToEdit.taskMetadata?.endTime ?? undefined,
+          duration: itemToEdit.taskMetadata?.duration || 0,
+        };
+        additionalData.tags = itemToEdit.tags || [];
+      } else {
+        additionalData.tags = extractHashtags(contentToSave);
+      }
 
-    const itemType: Note['type'] = isTaskMode ? 'task' : 'note';
-    if (isTaskMode) {
-      const existingTaskMetadata = itemToEdit?.taskMetadata ?? {};
-      additionalData.taskMetadata = {
-        ...existingTaskMetadata,
-        status: itemToEdit?.taskMetadata?.status || 'todo',
-        priority: taskPriority,
-        dueDate: taskDueDate ? taskDueDate.toISOString() : undefined,
-        startTime: itemToEdit?.taskMetadata?.startTime ?? undefined,
-        endTime: itemToEdit?.taskMetadata?.endTime ?? undefined,
-        duration: itemToEdit?.taskMetadata?.duration || 0,
-      } as TaskMetadata;
-      additionalData.tags = itemToEdit?.tags || [];
-    } else {
-      additionalData.tags = extractHashtags(contentToSave);
-    }
-
-    if (isEditMode) {
       updateItem.mutate(
-        compactObject({
+        {
           id: itemToEdit.id,
           type: itemToEdit.type,
           title: titleToSave,
@@ -138,7 +142,7 @@ export function InlineCreateForm({
           tags: additionalData.tags,
           taskMetadata: additionalData.taskMetadata,
           analysis: additionalData.analysis,
-        }) as any,
+        },
         {
           onSuccess: () => {
             if (onSuccess) onSuccess();
@@ -150,15 +154,30 @@ export function InlineCreateForm({
         },
       );
     } else {
+      const additionalData: Partial<NotesCreateInput> = {};
+      const itemType = isTaskMode ? 'task' : 'note';
+      
+      if (isTaskMode) {
+        additionalData.taskMetadata = {
+          status: 'todo',
+          priority: taskPriority,
+          dueDate: taskDueDate ? taskDueDate.toISOString() : undefined,
+          duration: 0,
+        };
+        additionalData.tags = [];
+      } else {
+        additionalData.tags = extractHashtags(contentToSave);
+      }
+
       createItem.mutate(
-        compactObject({
+        {
           type: itemType,
           title: titleToSave,
           content: contentToSave,
           tags: additionalData.tags,
           taskMetadata: additionalData.taskMetadata,
           analysis: additionalData.analysis,
-        }) as any,
+        },
         {
           onSuccess: () => {
             if (onSuccess) onSuccess();

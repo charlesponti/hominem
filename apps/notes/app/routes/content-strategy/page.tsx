@@ -1,5 +1,4 @@
-import type { ContentStrategy } from '@hominem/services/types';
-
+import type { ContentStrategy } from '@hominem/db/schema';
 import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
@@ -94,7 +93,7 @@ export default function ContentStrategyPage() {
       idMapRef.current.set(mapKey, crypto.randomUUID());
     }
 
-    return idMapRef.current.get(mapKey);
+    return idMapRef.current.get(mapKey) ?? '';
   };
 
   const platforms = [
@@ -122,6 +121,7 @@ export default function ContentStrategyPage() {
       const mockStrategy: AIContentStrategy = {
         topic,
         targetAudience: audience || 'General audience',
+        platforms: selectedPlatforms,
         keyInsights: [
           'Content should be engaging and informative',
           'Focus on providing value to the target audience',
@@ -162,7 +162,7 @@ export default function ContentStrategyPage() {
           gaps: 'Focus on unique perspectives and personal experiences',
           opportunities: ['Build a community', 'Create partnerships', 'Expand to new platforms'],
         },
-      };
+      } as any; // Using AIContentStrategy which is more relaxed
 
       setStrategy(mockStrategy);
       toast({
@@ -327,7 +327,11 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
         targetAudience: strategy.targetAudience,
         platforms: selectedPlatforms,
         keyInsights: strategy.keyInsights || [],
-        contentPlan: strategy.contentPlan,
+        contentPlan: strategy.contentPlan ? {
+          blog: strategy.contentPlan.blog,
+          socialMedia: strategy.contentPlan.socialMedia,
+          visualContent: strategy.contentPlan.visualContent,
+        } : undefined,
         monetization: strategy.monetizationIdeas || [],
         competitiveAnalysis: strategy.competitiveAnalysis
           ? {

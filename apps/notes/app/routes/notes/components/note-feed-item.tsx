@@ -38,12 +38,12 @@ export function NoteFeedItem({
     }
 
     // Remove the # prefix and return unique tags
-    return [...new Set(matches.map((tag) => tag.substring(1)))];
+    return [...new Set(matches.map((tag: string) => tag.substring(1)))];
   }, [note.content]);
 
   // Combine existing tags with content hashtags
   const allTags = useMemo(() => {
-    const existingTags = note.tags?.map((tag) => tag.value) || [];
+    const existingTags = note.tags?.map((tag: { value: string }) => tag.value) || [];
     const allTagValues = [...new Set([...existingTags, ...extractHashtags])];
     return allTagValues.map((value) => ({ value }));
   }, [note.tags, extractHashtags]);
@@ -54,7 +54,7 @@ export function NoteFeedItem({
 
     return (
       <>
-        {parts.map((part, i) => {
+        {parts.map((part: string, i: number) => {
           if (part.startsWith('#')) {
             return (
               <span

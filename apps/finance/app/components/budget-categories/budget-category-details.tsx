@@ -37,19 +37,22 @@ interface BudgetCategoryDetailsProps {
 
 export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetailsProps) {
   const {
-    data: categories,
+    data: categoriesResult,
     isLoading: isLoadingCategories,
     error: errorCategories,
   } = useBudgetCategories();
 
   const {
-    stats,
+    stats: statsResult,
     isLoading: isLoadingStats,
     error: errorStats,
   } = useMonthlyStats(selectedMonthYear);
 
+  const categories = categoriesResult || [];
+  const stats = statsResult || null;
+
   const budgetDataWithActuals: BudgetCategoryWithSpending[] = useMemo(() => {
-    if (!categories || !stats) return [];
+    if (!categories.length || !stats) return [];
 
     // Calculate total expenses for allocation percentage (only expense categories)
     const totalExpenses = categories
@@ -101,9 +104,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
         <div className="text-center text-red-600">
           <p>Error loading category details</p>
           <p className="text-sm">
-            {errorCategories?.message ||
-              errorStats?.message ||
-              'An error occurred while loading data'}
+            {errorCategories?.message || errorStats || 'An error occurred while loading data'}
           </p>
         </div>
       </div>
