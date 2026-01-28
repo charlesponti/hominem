@@ -11,6 +11,7 @@ import {
   usePlaceById,
   useDeleteAccount,
   useUpdateList,
+  useAddPlaceToLists,
 } from '~/lib/hono';
 
 export class RoccoMocker {
@@ -89,6 +90,22 @@ export class RoccoMocker {
       ...overrides,
     };
     vi.mocked(useUpdateList).mockReturnValue(result as any);
+  }
+
+  mockAddPlaceToListMutation(overrides?: Partial<MockMutationResult>) {
+    const result: MockMutationResult = {
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(),
+      data: null,
+      isLoading: false,
+      isSuccess: false,
+      isError: false,
+      error: null,
+      isPending: false,
+      reset: vi.fn(),
+      ...overrides,
+    };
+    vi.mocked(useAddPlaceToLists).mockReturnValue(result as any);
   }
 }
 

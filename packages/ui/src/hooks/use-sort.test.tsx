@@ -18,8 +18,12 @@ describe('useSort', () => {
   test('addSortOption adds new sort option in multi-sort mode', async () => {
     const { result } = renderHook(() => useSort({ singleSort: false }));
 
-    result.current.addSortOption({ field: 'name', direction: 'asc' });
-    result.current.addSortOption({ field: 'date', direction: 'desc' });
+    await waitFor(() => {
+      result.current.addSortOption({ field: 'name', direction: 'asc' });
+    });
+    await waitFor(() => {
+      result.current.addSortOption({ field: 'date', direction: 'desc' });
+    });
 
     await waitFor(() => {
       expect(result.current.sortOptions).toHaveLength(2);
@@ -31,8 +35,12 @@ describe('useSort', () => {
   test('addSortOption replaces existing option in single-sort mode', async () => {
     const { result } = renderHook(() => useSort({ singleSort: true }));
 
-    result.current.addSortOption({ field: 'name', direction: 'asc' });
-    result.current.addSortOption({ field: 'date', direction: 'desc' });
+    await waitFor(() => {
+      result.current.addSortOption({ field: 'name', direction: 'asc' });
+    });
+    await waitFor(() => {
+      result.current.addSortOption({ field: 'date', direction: 'desc' });
+    });
 
     await waitFor(() => {
       expect(result.current.sortOptions).toHaveLength(1);
@@ -47,7 +55,9 @@ describe('useSort', () => {
     ];
     const { result } = renderHook(() => useSort({ initialSortOptions: initialOptions }));
 
-    result.current.removeSortOption(0);
+    await waitFor(() => {
+      result.current.removeSortOption(0);
+    });
 
     await waitFor(() => {
       expect(result.current.sortOptions).toHaveLength(1);
@@ -59,7 +69,9 @@ describe('useSort', () => {
     const initialOptions: SortOption[] = [{ field: 'name', direction: 'asc' }];
     const { result } = renderHook(() => useSort({ initialSortOptions: initialOptions }));
 
-    result.current.updateSortOption(0, { field: 'name', direction: 'desc' });
+    await waitFor(() => {
+      result.current.updateSortOption(0, { field: 'name', direction: 'desc' });
+    });
 
     await waitFor(() => {
       expect(result.current.sortOptions[0]).toEqual({ field: 'name', direction: 'desc' });
@@ -73,7 +85,9 @@ describe('useSort', () => {
     ];
     const { result } = renderHook(() => useSort({ initialSortOptions: initialOptions }));
 
-    result.current.clearSort();
+    await waitFor(() => {
+      result.current.clearSort();
+    });
 
     await waitFor(() => {
       expect(result.current.sortOptions).toHaveLength(0);
@@ -88,7 +102,9 @@ describe('useSort', () => {
       { field: 'date', direction: 'desc' },
       { field: 'amount', direction: 'asc' },
     ];
-    result.current.setSortOptions(newOptions);
+    await waitFor(() => {
+      result.current.setSortOptions(newOptions);
+    });
 
     await waitFor(() => {
       expect(result.current.sortOptions).toEqual(newOptions);

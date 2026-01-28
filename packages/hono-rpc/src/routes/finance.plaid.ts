@@ -31,25 +31,35 @@ export const plaidRoutes = new Hono<AppContext>()
 
   // POST /create-link-token - Create link token
   .post('/create-link-token', async (c) => {
-    const userId = c.get('userId')!;
+    try {
+      const userId = c.get('userId')!;
 
-    const createTokenResponse = await plaidClient.linkTokenCreate({
-      user: { client_user_id: userId },
-      client_name: 'Hominem Finance',
-      products: PLAID_PRODUCTS,
-      country_codes: PLAID_COUNTRY_CODES,
-      language: 'en',
-      webhook: `${env.API_URL}/api/finance/plaid/webhook`,
-    });
+      const createTokenResponse = await plaidClient.linkTokenCreate({
+        user: { client_user_id: userId },
+        client_name: 'Hominem Finance',
+        products: PLAID_PRODUCTS,
+        country_codes: PLAID_COUNTRY_CODES,
+        language: 'en',
+        webhook: `${env.API_URL}/api/finance/plaid/webhook`,
+      });
 
-    return c.json<PlaidCreateLinkTokenOutput>(
-      {
-        linkToken: createTokenResponse.data.link_token,
-        expiration: createTokenResponse.data.expiration,
-        requestId: createTokenResponse.data.request_id,
-      },
-      200,
-    );
+      return c.json<PlaidCreateLinkTokenOutput>(
+        {
+          linkToken: createTokenResponse.data.link_token,
+          expiration: createTokenResponse.data.expiration,
+          requestId: createTokenResponse.data.request_id,
+        },
+        200,
+      );
+    } catch (error) {
+      return c.json(
+        {
+          error: 'Failed to create link token',
+          details: error instanceof Error ? error.message : String(error),
+        },
+        500,
+      );
+    }
   })
 
   // POST /exchange-token - Exchange public token

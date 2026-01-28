@@ -36,6 +36,7 @@ vi.mock('~/components/map.lazy', () => ({
 describe('ListPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    roccoMocker.mockAddPlaceToListMutation();
   });
 
   describe('when list does not belong to user', () => {

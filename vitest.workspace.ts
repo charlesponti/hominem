@@ -1,10 +1,16 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 export default [
-  './apps/finance/vitest.config.ts',
-  './apps/notes/vitest.config.ts',
-  './apps/rocco/vitest.config.ts',
-  './packages/ui/vitest.config.ts',
-  './packages/utils/vitest.config.mts',
-  './services/api/vitest.config.mts',
-  './services/workers/vitest.config.ts',
-  './tools/cli/vitest.config.mts',
+  // Resolve paths relative to this file so they are absolute when Vitest runs from package directories
+  path.join(__dirname, 'apps/finance/vitest.config.ts'),
+  path.join(__dirname, 'apps/notes/vitest.config.ts'),
+  path.join(__dirname, 'apps/rocco/vitest.config.ts'),
+  path.join(__dirname, 'packages/ui/vitest.config.ts'),
+  path.join(__dirname, 'packages/utils/vitest.config.mts'),
+  path.join(__dirname, 'services/api/vitest.config.mts'),
+  path.join(__dirname, 'services/workers/vitest.config.ts'),
+  path.join(__dirname, 'tools/cli/vitest.config.mts'),
 ];

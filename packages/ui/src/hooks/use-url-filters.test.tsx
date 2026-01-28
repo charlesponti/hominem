@@ -19,7 +19,7 @@ describe('useUrlFilters', () => {
     expect(result.current.filters.companion).toBe('John');
   });
 
-  test('calls onFiltersChange callback', () => {
+  test('calls onFiltersChange callback', async () => {
     const onFiltersChange = vi.fn();
     const { result } = renderHook(
       () =>
@@ -31,7 +31,9 @@ describe('useUrlFilters', () => {
       { initialEntries: ['/'] },
     );
 
-    result.current.updateFilter('type', 'Events');
+    await waitFor(() => {
+      result.current.updateFilter('type', 'Events');
+    });
 
     expect(onFiltersChange).toHaveBeenCalled();
   });
@@ -46,7 +48,9 @@ describe('useUrlFilters', () => {
       { initialEntries: ['/?type=Events&companion=John'] },
     );
 
-    result.current.clearFilters();
+    await waitFor(() => {
+      result.current.clearFilters();
+    });
 
     await waitFor(() => {
       expect(result.current.filters.type).toBe('');

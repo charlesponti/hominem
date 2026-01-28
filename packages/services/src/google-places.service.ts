@@ -80,10 +80,13 @@ const getGoogleApiKey = () => {
   return key;
 };
 
-const placesClient = google.places({
-  version: 'v1',
-  auth: getGoogleApiKey(),
-});
+// Create Places client lazily to avoid reading env at module import time
+const createPlacesClient = () => {
+  return google.places({
+    version: 'v1',
+    auth: getGoogleApiKey(),
+  })
+};
 
 // Field names without prefix (for Place Details API - single place response)
 const FIELDS = {
@@ -172,7 +175,7 @@ const getDetails = async ({
     return cached;
   }
 
-  const response = await placesClient.places.get(
+  const response = await createPlacesClient().places.get(
     {
       name: `places/${placeId}`,
     },
@@ -229,7 +232,7 @@ const search = async ({
     return cached;
   }
 
-  const response = await placesClient.places.searchText(
+  const response = await createPlacesClient().places.searchText(
     {
       requestBody: body,
     },

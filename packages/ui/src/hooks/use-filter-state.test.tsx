@@ -15,7 +15,9 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    result.current.setFilters({ name: 'updated', age: 30 });
+    await waitFor(() => {
+      result.current.setFilters({ name: 'updated', age: 30 });
+    });
 
     await waitFor(() => {
       expect(result.current.filters).toEqual({ name: 'updated', age: 30 });
@@ -26,7 +28,9 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    result.current.setFilters((prev) => ({ ...prev, age: 30 }));
+    await waitFor(() => {
+      result.current.setFilters((prev) => ({ ...prev, age: 30 }));
+    });
 
     await waitFor(() => {
       expect(result.current.filters).toEqual({ name: 'test', age: 30 });
@@ -37,61 +41,80 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    result.current.updateFilter('name', 'updated');
+    await waitFor(() => {
+      result.current.updateFilter('name', 'updated');
+    });
 
     await waitFor(() => {
       expect(result.current.filters).toEqual({ name: 'updated', age: 25 });
     });
   });
 
-  test('clearFilters resets to initial', () => {
+  test('clearFilters resets to initial', async () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    result.current.setFilters({ name: 'updated', age: 30 });
-    result.current.clearFilters();
+    await waitFor(() => {
+      result.current.setFilters({ name: 'updated', age: 30 });
+    });
 
-    expect(result.current.filters).toEqual(initialFilters);
+    await waitFor(() => {
+      result.current.clearFilters();
+    });
+
+    await waitFor(() => {
+      expect(result.current.filters).toEqual(initialFilters);
+    });
   });
 
-  test('resetFilters resets to initial state', () => {
+  test('resetFilters resets to initial state', async () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    result.current.setFilters({ name: 'updated', age: 30 });
-    result.current.resetFilters();
+    await waitFor(() => {
+      result.current.setFilters({ name: 'updated', age: 30 });
+    });
 
-    expect(result.current.filters).toEqual(initialFilters);
+    await waitFor(() => {
+      result.current.resetFilters();
+    });
+
+    await waitFor(() => {
+      expect(result.current.filters).toEqual(initialFilters);
+    });
   });
 
-  test('calls onFiltersChange when filters change', () => {
+  test('calls onFiltersChange when filters change', async () => {
     const initialFilters = { name: 'test', age: 25 };
     const onFiltersChange = vi.fn();
     const { result } = renderHook(() => useFilterState({ initialFilters, onFiltersChange }));
 
-    result.current.setFilters({ name: 'updated', age: 30 });
+    await waitFor(() => {
+      result.current.setFilters({ name: 'updated', age: 30 });
+    });
 
     expect(onFiltersChange).toHaveBeenCalledWith({ name: 'updated', age: 30 });
   });
 
   test('debounces onFiltersChange when debounceMs is provided', async () => {
-    vi.useFakeTimers();
     const initialFilters = { name: 'test', age: 25 };
     const onFiltersChange = vi.fn();
     const { result } = renderHook(() =>
       useFilterState({ initialFilters, onFiltersChange, debounceMs: 100 }),
     );
 
-    result.current.setFilters({ name: 'updated', age: 30 });
+    await waitFor(() => {
+      result.current.setFilters({ name: 'updated', age: 30 });
+    });
 
+    // Callback should not be called immediately
     expect(onFiltersChange).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(100);
+    // Wait for debounce to complete (slightly more than debounceMs)
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
-    // With fake timers, the callback should be called immediately after advancing
+    // After debounce period, callback should be called
     expect(onFiltersChange).toHaveBeenCalledWith({ name: 'updated', age: 30 });
-
-    vi.useRealTimers();
   });
 
   test('clears debounce timer on unmount', () => {
