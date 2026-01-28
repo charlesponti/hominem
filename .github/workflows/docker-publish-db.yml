@@ -1,0 +1,34 @@
+name: docker-publish-db
+
+description: |
+  Build and publish the pontistudios-postgres database image to GHCR.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "docker/pontistudios-postgres.dockerfile"
+      - ".github/workflows/docker-publish-db.yml"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push pontistudios-postgres image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./docker/pontistudios-postgres.dockerfile
+          push: true
+          tags: ghcr.io/charlesponti/hominem/pontistudios-postgres:latest
