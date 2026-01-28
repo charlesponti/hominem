@@ -1,7 +1,7 @@
 ---
 name: performance-auditor
 description: Specialized in continuous monitoring and automated diagnosis of TypeScript compiler bottlenecks.
-tools: ["read", "search", "execute"]
+tools: ["read", "search", "execute", "edit", "todo"]
 model: Grok Code Fast 1 (copilot)
 ---
 
