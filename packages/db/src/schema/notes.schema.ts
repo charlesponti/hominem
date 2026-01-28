@@ -106,6 +106,34 @@ export const TweetMetadataSchema = z.object({
 
 export type TweetMetadata = z.infer<typeof TweetMetadataSchema>
 
-export type Note = typeof notes.$inferSelect
-export type NoteSelect = typeof notes.$inferSelect
-export type NoteInsert = typeof notes.$inferInsert
+export interface Note {
+  id: string;
+  type: AllContentType;
+  title: string | null;
+  content: string;
+  tags: Array<ContentTag>;
+  mentions: Array<NoteMention> | undefined;
+  analysis: unknown;
+  taskMetadata: TaskMetadata | null;
+  tweetMetadata: TweetMetadata | null;
+  userId: string;
+  synced: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+export type NoteSelect = Note;
+export interface NoteInsert {
+  id?: string;
+  type?: AllContentType;
+  title?: string | null;
+  content: string;
+  tags?: Array<ContentTag>;
+  mentions?: Array<NoteMention> | undefined;
+  analysis?: unknown;
+  taskMetadata?: TaskMetadata | null;
+  tweetMetadata?: TweetMetadata | null;
+  userId: string;
+  synced?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

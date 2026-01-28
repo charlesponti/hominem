@@ -24,6 +24,28 @@ export const vectorDocuments = pgTable(
   ]
 )
 
-export type VectorDocument = typeof vectorDocuments.$inferSelect
-export type VectorDocumentSelect = typeof vectorDocuments.$inferSelect
-export type NewVectorDocument = typeof vectorDocuments.$inferInsert
+export interface VectorDocument {
+  id: string;
+  content: string;
+  metadata: string | null;
+  embedding: number[] | null;
+  userId: string | null;
+  source: string | null;
+  sourceType: string | null;
+  title: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type VectorDocumentSelect = VectorDocument;
+export interface NewVectorDocument {
+  id?: string;
+  content: string;
+  metadata?: string | null;
+  embedding?: number[] | null;
+  userId?: string | null;
+  source?: string | null;
+  sourceType?: string | null;
+  title?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

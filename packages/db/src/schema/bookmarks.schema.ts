@@ -38,6 +38,36 @@ export const bookmarkRelations = relations(bookmark, ({ one }) => ({
   }),
 }))
 
-export type Bookmark = typeof bookmark.$inferSelect
-export type BookmarkSelect = typeof bookmark.$inferSelect
-export type BookmarkInsert = typeof bookmark.$inferInsert
+export interface Bookmark {
+  id: string;
+  image: string | null;
+  title: string;
+  description: string | null;
+  imageHeight: string | null;
+  imageWidth: string | null;
+  locationAddress: string | null;
+  locationLat: string | null;
+  locationLng: string | null;
+  siteName: string;
+  url: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+export type BookmarkSelect = Bookmark;
+export interface BookmarkInsert {
+  id: string;
+  image?: string | null;
+  title: string;
+  description?: string | null;
+  imageHeight?: string | null;
+  imageWidth?: string | null;
+  locationAddress?: string | null;
+  locationLat?: string | null;
+  locationLng?: string | null;
+  siteName: string;
+  url: string;
+  userId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

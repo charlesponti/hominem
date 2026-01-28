@@ -8,7 +8,6 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
-import { createInsertSchema } from 'drizzle-zod'
 
 export const users = pgTable(
   'users',
@@ -47,10 +46,36 @@ export const users = pgTable(
     uniqueIndex('User_email_key').using('btree', table.email.asc().nullsLast()),
   ]
 )
-export type UserInsert = typeof users.$inferInsert
-export type User = typeof users.$inferSelect
-export type UserSelect = typeof users.$inferSelect
-export const UserSchema = createInsertSchema(users)
+export interface UserInsert {
+  id: string;
+  supabaseId: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+  photoUrl?: string | null;
+  isAdmin?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  birthday?: string | null;
+  emailVerified?: string | null;
+}
+
+export interface User {
+  id: string;
+  supabaseId: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+  photoUrl: string | null;
+  isAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
+  birthday: string | null;
+  emailVerified: string | null;
+}
+
+export type UserSelect = User;
+
 
 export const account = pgTable(
   'account',
@@ -85,6 +110,34 @@ export const account = pgTable(
       .onDelete('cascade'),
   ]
 )
-export type Account = typeof account.$inferSelect
-export type AccountSelect = typeof account.$inferSelect
-export type AccountInsert = typeof account.$inferInsert
+export interface Account {
+  id: string;
+  userId: string;
+  type: string;
+  provider: string;
+  providerAccountId: string;
+  refreshToken: string | null;
+  accessToken: string | null;
+  expiresAt: string | null;
+  tokenType: string | null;
+  scope: string | null;
+  idToken: string | null;
+  sessionState: string | null;
+}
+
+export type AccountSelect = Account;
+
+export interface AccountInsert {
+  id: string;
+  userId: string;
+  type: string;
+  provider: string;
+  providerAccountId: string;
+  refreshToken?: string | null;
+  accessToken?: string | null;
+  expiresAt?: string | null;
+  tokenType?: string | null;
+  scope?: string | null;
+  idToken?: string | null;
+  sessionState?: string | null;
+}

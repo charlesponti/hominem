@@ -52,8 +52,23 @@ export const skills = pgTable(
   // Removed redundant uniqueIndex for name as .unique() handles it
 )
 
-export type Skill = typeof skills.$inferSelect
-export type NewSkill = typeof skills.$inferInsert
+export interface Skill {
+  id: string;
+  name: string;
+  description: string | null;
+  category: 'Technical' | 'Soft' | 'Language' | 'Tool' | 'Framework' | 'Other' | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface SkillInsert {
+  id?: string;
+  name: string;
+  description?: string | null;
+  category?: 'Technical' | 'Soft' | 'Language' | 'Tool' | 'Framework' | 'Other' | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewSkill = SkillInsert;
 
 export const user_skills = pgTable(
   'user_skills',
@@ -80,8 +95,31 @@ export const user_skills = pgTable(
   })
 )
 
-export type UserSkill = typeof user_skills.$inferSelect
-export type NewUserSkill = typeof user_skills.$inferInsert
+export interface UserSkill {
+  id: string;
+  userId: string;
+  skillId: string;
+  proficiencyLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert' | null;
+  yearsOfExperience: number | null;
+  lastUsedDate: Date | null;
+  isVerified: boolean;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface UserSkillInsert {
+  id?: string;
+  userId: string;
+  skillId: string;
+  proficiencyLevel?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert' | null;
+  yearsOfExperience?: number | null;
+  lastUsedDate?: Date | null;
+  isVerified?: boolean;
+  notes?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewUserSkill = UserSkillInsert;
 
 export const job_skills = pgTable(
   'job_skills',
@@ -105,5 +143,22 @@ export const job_skills = pgTable(
   })
 )
 
-export type JobSkill = typeof job_skills.$inferSelect
-export type NewJobSkill = typeof job_skills.$inferInsert
+export interface JobSkill {
+  id: string;
+  jobId: string;
+  skillId: string;
+  importanceLevel: 'Required' | 'Preferred' | 'Optional' | 'NiceToHave' | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface JobSkillInsert {
+  id?: string;
+  jobId: string;
+  skillId: string;
+  importanceLevel?: 'Required' | 'Preferred' | 'Optional' | 'NiceToHave' | null;
+  notes?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewJobSkill = JobSkillInsert;

@@ -96,6 +96,54 @@ export const possessionRelations = relations(possessions, ({ one }) => ({
   }),
 }))
 
-export type Possession = typeof possessions.$inferSelect
-export type PossessionSelect = typeof possessions.$inferSelect
-export type PossessionInsert = typeof possessions.$inferInsert
+export interface Possession {
+  id: string;
+  name: string;
+  description: string | null;
+  dateAcquired: Date;
+  dateSold: Date | null;
+  brandId: string | null;
+  categoryId: string;
+  purchasePrice: number;
+  salePrice: number | null;
+  url: string | null;
+  color: string | null;
+  imageUrl: string | null;
+  modelName: string | null;
+  modelNumber: string | null;
+  serialNumber: string | null;
+  notes: string | null;
+  size: string | null;
+  fromUserId: string | null;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isArchived: boolean;
+  tags: string[] | null;
+}
+export type PossessionSelect = Possession;
+export interface PossessionInsert {
+  id?: string;
+  name: string;
+  description?: string | null;
+  dateAcquired: Date;
+  dateSold?: Date | null;
+  brandId?: string | null;
+  categoryId: string;
+  purchasePrice: number;
+  salePrice?: number | null;
+  url?: string | null;
+  color?: string | null;
+  imageUrl?: string | null;
+  modelName?: string | null;
+  modelNumber?: string | null;
+  serialNumber?: string | null;
+  notes?: string | null;
+  size?: string | null;
+  fromUserId?: string | null;
+  userId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  isArchived?: boolean;
+  tags?: string[];
+}

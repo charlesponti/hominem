@@ -52,8 +52,48 @@ export const artists = pgTable(
   ]
 )
 
-export type ArtistInsert = typeof artists.$inferInsert
-export type Artist = typeof artists.$inferSelect
+export interface Artist {
+  id: string;
+  name: string;
+  slug: string;
+  hometown: string | null;
+  country: string | null;
+  bandMembers: number;
+  genres: string[];
+  averageTicketPrice: string;
+  averagePerformanceAttendance: number | null;
+  sellsMerchandise: boolean;
+  averageMerchandisePrice: string | null;
+  imageUrl: string | null;
+  websiteUrl: string | null;
+  spotifyFollowers: number;
+  spotifyUrl: string | null;
+  spotifyId: string;
+  spotifyData: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface ArtistInsert {
+  id?: string;
+  name: string;
+  slug: string;
+  hometown?: string | null;
+  country?: string | null;
+  bandMembers?: number;
+  genres: string[];
+  averageTicketPrice: string;
+  averagePerformanceAttendance?: number | null;
+  sellsMerchandise?: boolean;
+  averageMerchandisePrice?: string | null;
+  imageUrl?: string | null;
+  websiteUrl?: string | null;
+  spotifyFollowers?: number;
+  spotifyUrl?: string | null;
+  spotifyId: string;
+  spotifyData: unknown;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export const userArtists = pgTable(
   'user_artists',

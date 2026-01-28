@@ -1,5 +1,6 @@
 import { db } from '@hominem/db';
 import {
+  type CalendarEvent,
   type CalendarEventInsert,
   contacts,
   type EventTypeEnum,
@@ -30,7 +31,7 @@ export interface EventFilters {
   sortBy?: 'date-asc' | 'date-desc' | 'summary';
 }
 
-export type EventWithTagsAndPeople = typeof events.$inferSelect & {
+export interface EventWithTagsAndPeople extends CalendarEvent {
   tags: Array<{ id: string; name: string; color: string | null; description: string | null }>;
   people: Array<{ id: string; firstName: string; lastName: string | null }>;
 };

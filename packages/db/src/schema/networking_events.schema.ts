@@ -49,8 +49,39 @@ export const networking_events = pgTable(
   })
 )
 
-export type NetworkingEvent = typeof networking_events.$inferSelect
-export type NewNetworkingEvent = typeof networking_events.$inferInsert
+export interface NetworkingEvent {
+  id: string;
+  userId: string;
+  name: string;
+  description: string | null;
+  type: 'Conference' | 'Meetup' | 'Webinar' | 'Workshop' | 'JobFair' | 'Seminar' | 'Other' | null;
+  date: Date;
+  location: string | null;
+  organizer: string | null;
+  website: string | null;
+  notes: string | null;
+  keyTakeaways: string | null;
+  attachments: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface NetworkingEventInsert {
+  id?: string;
+  userId: string;
+  name: string;
+  description?: string | null;
+  type?: 'Conference' | 'Meetup' | 'Webinar' | 'Workshop' | 'JobFair' | 'Seminar' | 'Other' | null;
+  date: Date;
+  location?: string | null;
+  organizer?: string | null;
+  website?: string | null;
+  notes?: string | null;
+  keyTakeaways?: string | null;
+  attachments?: unknown;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewNetworkingEvent = NetworkingEventInsert;
 
 // Junction table for contacts met at networking events
 export const networking_event_attendees = pgTable(
@@ -78,5 +109,22 @@ export const networking_event_attendees = pgTable(
   })
 )
 
-export type NetworkingEventAttendee = typeof networking_event_attendees.$inferSelect
-export type NewNetworkingEventAttendee = typeof networking_event_attendees.$inferInsert
+export interface NetworkingEventAttendee {
+  id: string;
+  networkingEventId: string;
+  contactId: string;
+  notes: string | null;
+  followedUp: boolean;
+  followUpDate: Date | null;
+  createdAt: Date;
+}
+export interface NetworkingEventAttendeeInsert {
+  id?: string;
+  networkingEventId: string;
+  contactId: string;
+  notes?: string | null;
+  followedUp?: boolean;
+  followUpDate?: Date | null;
+  createdAt?: Date;
+}
+export type NewNetworkingEventAttendee = NetworkingEventAttendeeInsert;

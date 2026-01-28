@@ -13,6 +13,18 @@ export const tags = pgTable(
   (table) => [uniqueIndex('tags_name_unique').on(table.name)]
 )
 
-export type Tag = typeof tags.$inferSelect
-export type TagSelect = typeof tags.$inferSelect
-export type TagInsert = typeof tags.$inferInsert
+export interface Tag {
+  id: string;
+  name: string;
+  userId: string | null;
+  description: string | null;
+  color: string | null;
+}
+export type TagSelect = Tag;
+export interface TagInsert {
+  id: string;
+  name: string;
+  userId?: string | null;
+  description?: string | null;
+  color?: string | null;
+}

@@ -11,6 +11,24 @@ export const health = pgTable('health', {
   createdAt: timestamp('created_at').defaultNow(),
 })
 
-export type Health = typeof health.$inferSelect
-export type HealthSelect = typeof health.$inferSelect
-export type HealthInsert = typeof health.$inferInsert
+export interface Health {
+  id: number;
+  userId: string;
+  date: Date;
+  activityType: string;
+  duration: number;
+  caloriesBurned: number;
+  notes: string | null;
+  createdAt: Date | null;
+}
+export interface HealthInsert {
+  id?: number;
+  userId: string;
+  date: Date;
+  activityType: string;
+  duration: number;
+  caloriesBurned: number;
+  notes?: string | null;
+  createdAt?: Date | null;
+}
+export type HealthSelect = Health;

@@ -21,9 +21,21 @@ export const chat = pgTable(
       .onDelete('cascade'),
   ]
 )
-export type Chat = typeof chat.$inferSelect
-export type ChatSelect = typeof chat.$inferSelect
-export type ChatInsert = typeof chat.$inferInsert
+export interface Chat {
+  id: string;
+  title: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+export type ChatSelect = Chat;
+export interface ChatInsert {
+  id: string;
+  title: string;
+  userId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export type ChatMessageReasoning = {
   type: 'reasoning' | 'redacted-reasoning'
@@ -82,8 +94,35 @@ export const chatMessage = pgTable(
       .onDelete('cascade'),
   ]
 )
-export type ChatMessageSelect = typeof chatMessage.$inferSelect
-export type ChatMessageInsert = typeof chatMessage.$inferInsert
+export interface ChatMessage {
+  id: string;
+  chatId: string;
+  userId: string;
+  role: ChatMessageRole;
+  content: string;
+  toolCalls: ChatMessageToolCall[] | null;
+  reasoning: string | null;
+  files: ChatMessageFile[] | null;
+  parentMessageId: string | null;
+  messageIndex: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export type ChatMessageSelect = ChatMessage;
+export interface ChatMessageInsert {
+  id: string;
+  chatId: string;
+  userId: string;
+  role: ChatMessageRole;
+  content: string;
+  toolCalls?: ChatMessageToolCall[] | null;
+  reasoning?: string | null;
+  files?: ChatMessageFile[] | null;
+  parentMessageId?: string | null;
+  messageIndex?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export const chatRelations = relations(chat, ({ one, many }) => ({
   user: one(users, {

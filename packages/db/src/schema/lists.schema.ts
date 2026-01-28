@@ -34,8 +34,25 @@ export const list = pgTable(
       .onDelete('cascade'),
   ]
 )
-export type ListSelect = typeof list.$inferSelect
-export type ListInsert = typeof list.$inferInsert
+export interface List {
+  id: string;
+  name: string;
+  description: string | null;
+  userId: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface ListInsert {
+  id: string;
+  name: string;
+  description?: string | null;
+  userId: string;
+  isPublic?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export type ListSelect = List;
 
 export const userLists = pgTable(
   'user_lists',
@@ -66,8 +83,19 @@ export const userLists = pgTable(
     }),
   ]
 )
-export type UserListsSelect = typeof userLists.$inferSelect
-export type UserListsInsert = typeof userLists.$inferInsert
+export interface UserLists {
+  createdAt: string;
+  updatedAt: string;
+  listId: string;
+  userId: string;
+}
+export interface UserListsInsert {
+  createdAt?: string;
+  updatedAt?: string;
+  listId: string;
+  userId: string;
+}
+export type UserListsSelect = UserLists;
 
 export const listInvite = pgTable(
   'list_invite',
@@ -113,8 +141,29 @@ export const listInvite = pgTable(
     uniqueIndex('list_invite_token_unique').on(table.token),
   ]
 )
-export type ListInviteSelect = typeof listInvite.$inferSelect
-export type ListInviteInsert = typeof listInvite.$inferInsert
+export interface ListInvite {
+  accepted: boolean;
+  listId: string;
+  invitedUserEmail: string;
+  invitedUserId: string | null;
+  userId: string;
+  acceptedAt: string | null;
+  token: string;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface ListInviteInsert {
+  accepted?: boolean;
+  listId: string;
+  invitedUserEmail: string;
+  invitedUserId?: string | null;
+  userId: string;
+  acceptedAt?: string | null;
+  token?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export type ListInviteSelect = ListInvite;
 
 export const userListsRelations = relations(userLists, ({ one }) => ({
   list: one(list, {

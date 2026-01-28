@@ -75,8 +75,45 @@ export const interviews = pgTable(
   })
 )
 
-export type Interview = typeof interviews.$inferSelect
-export type NewInterview = typeof interviews.$inferInsert
+export interface Interview {
+  id: string;
+  userId: string;
+  jobApplicationId: string;
+  companyId: string | null;
+  type: 'PhoneScreen' | 'Technical' | 'Behavioral' | 'Panel' | 'CaseStudy' | 'Final' | 'Informational' | 'Other';
+  format: 'Phone' | 'VideoCall' | 'OnSite' | 'TakeHomeAssignment' | 'Other';
+  scheduledAt: Date;
+  durationMinutes: number | null;
+  location: string | null;
+  notes: string | null;
+  feedback: string | null;
+  thankYouNoteSent: Date | null;
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Rescheduled' | 'PendingFeedback' | null;
+  questionsAsked: unknown;
+  questionsToAsk: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface InterviewInsert {
+  id?: string;
+  userId: string;
+  jobApplicationId: string;
+  companyId?: string | null;
+  type: 'PhoneScreen' | 'Technical' | 'Behavioral' | 'Panel' | 'CaseStudy' | 'Final' | 'Informational' | 'Other';
+  format: 'Phone' | 'VideoCall' | 'OnSite' | 'TakeHomeAssignment' | 'Other';
+  scheduledAt: Date;
+  durationMinutes?: number | null;
+  location?: string | null;
+  notes?: string | null;
+  feedback?: string | null;
+  thankYouNoteSent?: Date | null;
+  status?: 'Scheduled' | 'Completed' | 'Cancelled' | 'Rescheduled' | 'PendingFeedback' | null;
+  questionsAsked?: unknown;
+  questionsToAsk?: unknown;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewInterview = InterviewInsert;
 
 // Junction table for interviewers (contacts) and interviews
 export const interview_interviewers = pgTable(
@@ -102,5 +139,18 @@ export const interview_interviewers = pgTable(
   })
 )
 
-export type InterviewInterviewer = typeof interview_interviewers.$inferSelect
-export type NewInterviewInterviewer = typeof interview_interviewers.$inferInsert
+export interface InterviewInterviewer {
+  id: string;
+  interviewId: string;
+  contactId: string;
+  role: string | null;
+  createdAt: Date;
+}
+export interface InterviewInterviewerInsert {
+  id?: string;
+  interviewId: string;
+  contactId: string;
+  role?: string | null;
+  createdAt?: Date;
+}
+export type NewInterviewInterviewer = InterviewInterviewerInsert;

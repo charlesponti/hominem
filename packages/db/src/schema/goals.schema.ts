@@ -42,6 +42,32 @@ export const goals = pgTable('goals', {
   createdAt: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
 })
-export type Goal = typeof goals.$inferSelect
-export type GoalSelect = typeof goals.$inferSelect
-export type GoalInsert = typeof goals.$inferInsert
+export interface Goal {
+  id: string;
+  userId: string;
+  title: string;
+  description: string | null;
+  goalCategory: string | null;
+  status: string;
+  priority: number | null;
+  milestones: GoalMilestone[] | null;
+  startDate: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export type GoalSelect = Goal;
+export interface GoalInsert {
+  id?: string;
+  userId: string;
+  title: string;
+  description?: string | null;
+  goalCategory?: string | null;
+  status?: string;
+  priority?: number | null;
+  milestones?: GoalMilestone[] | null;
+  startDate?: string | null;
+  dueDate?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}

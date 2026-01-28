@@ -36,6 +36,26 @@ export const documents = pgTable(
   })
 )
 
-export type Document = typeof documents.$inferSelect
-export type DocumentSelect = typeof documents.$inferSelect
-export type DocumentInsert = typeof documents.$inferInsert
+export interface Document {
+  id: string;
+  name: string;
+  content: string;
+  description: string | null;
+  url: string | null;
+  type: 'resume' | 'coverLetter' | 'sample' | 'other';
+  userId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type DocumentSelect = Document;
+export interface DocumentInsert {
+  id?: string;
+  name: string;
+  content: string;
+  description?: string | null;
+  url?: string | null;
+  type: 'resume' | 'coverLetter' | 'sample' | 'other';
+  userId?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

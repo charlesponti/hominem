@@ -80,10 +80,38 @@ export const jobs = pgTable('jobs', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the job posting was last updated
   version: integer('version').notNull().default(1), // Version number for tracking changes to the job posting
 })
-export type Job = typeof jobs.$inferSelect
-export type JobSelect = typeof jobs.$inferSelect
-export type JobInsert = typeof jobs.$inferInsert
-export type NewJob = typeof jobs.$inferInsert
+export interface Job {
+  id: string;
+  companyId: string | null;
+  title: string;
+  description: string;
+  requirements: unknown;
+  salary: string;
+  currency: string;
+  benefits: string[];
+  location: string;
+  status: 'draft' | 'open' | 'closed' | 'filled' | 'archived';
+  createdAt: Date;
+  updatedAt: Date;
+  version: number;
+}
+export type JobSelect = Job;
+export interface JobInsert {
+  id?: string;
+  companyId?: string | null;
+  title: string;
+  description: string;
+  requirements?: unknown;
+  salary: string;
+  currency?: string;
+  benefits?: string[];
+  location: string;
+  status?: 'draft' | 'open' | 'closed' | 'filled' | 'archived';
+  createdAt?: Date;
+  updatedAt?: Date;
+  version?: number;
+}
+export type NewJob = JobInsert;
 
 export const job_applications = pgTable('job_applications', {
   id: uuid('id').primaryKey().defaultRandom(), // Unique identifier for the job application
@@ -116,9 +144,51 @@ export const job_applications = pgTable('job_applications', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the application record was last updated
 })
 
-export type JobApplication = typeof job_applications.$inferSelect
-export type JobApplicationSelect = typeof job_applications.$inferSelect
-export type JobApplicationInsert = typeof job_applications.$inferInsert
+export interface JobApplication {
+  id: string;
+  position: string;
+  resumeDocumentUrl: string;
+  coverLetterDocumentUrl: string | null;
+  startDate: Date;
+  endDate: Date | null;
+  link: string | null;
+  location: string;
+  reference: boolean;
+  status: 'Applied' | 'Hired' | 'Withdrew' | 'Rejected' | 'Offer' | 'Screening' | 'Interviewing' | 'Pending';
+  salaryQuoted: string | null;
+  salaryAccepted: string | null;
+  jobPosting: string | null;
+  phoneScreen: string | null;
+  notes: string | null;
+  companyId: string;
+  userId: string;
+  jobId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type JobApplicationSelect = JobApplication;
+export interface JobApplicationInsert {
+  id?: string;
+  position: string;
+  resumeDocumentUrl: string;
+  coverLetterDocumentUrl?: string | null;
+  startDate?: Date;
+  endDate?: Date | null;
+  link?: string | null;
+  location?: string;
+  reference?: boolean;
+  status?: 'Applied' | 'Hired' | 'Withdrew' | 'Rejected' | 'Offer' | 'Screening' | 'Interviewing' | 'Pending';
+  salaryQuoted?: string | null;
+  salaryAccepted?: string | null;
+  jobPosting?: string | null;
+  phoneScreen?: string | null;
+  notes?: string | null;
+  companyId: string;
+  userId: string;
+  jobId?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export const application_stages = pgTable(
   'application_stages',
@@ -139,10 +209,28 @@ export const application_stages = pgTable(
   })
 )
 
-export type ApplicationStage = typeof application_stages.$inferSelect
-export type ApplicationStageSelect = typeof application_stages.$inferSelect
-export type ApplicationStageInsert = typeof application_stages.$inferInsert
-export type NewApplicationStage = typeof application_stages.$inferInsert
+export interface ApplicationStage {
+  id: string;
+  jobApplicationId: string;
+  stage: 'Applied' | 'Screening' | 'Assessment' | 'Interview' | 'TechnicalTest' | 'Offer' | 'Hired' | 'Rejected' | 'Withdrew' | 'OnHold';
+  date: Date;
+  notes: string | null;
+  status: 'Pending' | 'Scheduled' | 'InProgress' | 'Completed' | 'Skipped' | 'Failed' | 'Passed' | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type ApplicationStageSelect = ApplicationStage;
+export interface ApplicationStageInsert {
+  id?: string;
+  jobApplicationId: string;
+  stage: 'Applied' | 'Screening' | 'Assessment' | 'Interview' | 'TechnicalTest' | 'Offer' | 'Hired' | 'Rejected' | 'Withdrew' | 'OnHold';
+  date?: Date;
+  notes?: string | null;
+  status?: 'Pending' | 'Scheduled' | 'InProgress' | 'Completed' | 'Skipped' | 'Failed' | 'Passed' | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewApplicationStage = ApplicationStageInsert;
 
 export const work_experiences = pgTable(
   'work_experiences',
@@ -184,7 +272,53 @@ export const work_experiences = pgTable(
   ]
 )
 
-export type WorkExperience = typeof work_experiences.$inferSelect
-export type WorkExperienceSelect = typeof work_experiences.$inferSelect
-export type WorkExperienceInsert = typeof work_experiences.$inferInsert
-export type NewWorkExperience = typeof work_experiences.$inferInsert
+export interface WorkExperience {
+  id: string;
+  userId: string;
+  companyId: string | null;
+  title: string;
+  subtitle: string | null;
+  description: string;
+  role: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  image: string | null;
+  location: string | null;
+  tags: string[];
+  achievements: string[];
+  metadata: {
+    company_size?: string;
+    industry?: string;
+    website?: string;
+  } | null;
+  sortOrder: number;
+  isVisible: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type WorkExperienceSelect = WorkExperience;
+export interface WorkExperienceInsert {
+  id?: string;
+  userId: string;
+  companyId?: string | null;
+  title: string;
+  subtitle?: string | null;
+  description: string;
+  role: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  image?: string | null;
+  location?: string | null;
+  tags?: string[];
+  achievements?: string[];
+  metadata?: {
+    company_size?: string;
+    industry?: string;
+    website?: string;
+  } | null;
+  sortOrder?: number;
+  isVisible?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewWorkExperience = WorkExperienceInsert;

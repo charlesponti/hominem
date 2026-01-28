@@ -37,5 +37,27 @@ export const categoryRelations = relations(categories, ({ one, many }) => ({
   }),
 }))
 
-export type Category = typeof categories.$inferSelect
-export type CategoryInsert = typeof categories.$inferInsert
+export interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  domain: string;
+  icon: string | null;
+  color: string | null;
+  parentId: string | null;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface CategoryInsert {
+  id?: string;
+  name: string;
+  description?: string | null;
+  domain?: string;
+  icon?: string | null;
+  color?: string | null;
+  parentId?: string | null;
+  userId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

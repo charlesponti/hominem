@@ -82,9 +82,55 @@ export const events = pgTable(
     uniqueIndex('events_external_calendar_unique').on(table.externalId, table.calendarId),
   ]
 )
-export type CalendarEvent = typeof events.$inferSelect
-export type CalendarEventSelect = typeof events.$inferSelect
-export type CalendarEventInsert = typeof events.$inferInsert
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  date: Date;
+  placeId: string | null;
+  dateStart: Date | null;
+  dateEnd: Date | null;
+  dateTime: Date | null;
+  type: EventTypeEnum;
+  userId: string;
+  source: EventSourceEnum;
+  externalId: string | null;
+  calendarId: string | null;
+  lastSyncedAt: Date | null;
+  syncError: string | null;
+  visitNotes: string | null;
+  visitRating: number | null;
+  visitReview: string | null;
+  visitPeople: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+export type CalendarEventSelect = CalendarEvent;
+export interface CalendarEventInsert {
+  id: string;
+  title: string;
+  description?: string | null;
+  date: Date;
+  placeId?: string | null;
+  dateStart?: Date | null;
+  dateEnd?: Date | null;
+  dateTime?: Date | null;
+  type: EventTypeEnum;
+  userId: string;
+  source?: EventSourceEnum;
+  externalId?: string | null;
+  calendarId?: string | null;
+  lastSyncedAt?: Date | null;
+  syncError?: string | null;
+  visitNotes?: string | null;
+  visitRating?: number | null;
+  visitReview?: string | null;
+  visitPeople?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
+}
 
 export const eventsTags = pgTable('events_tags', {
   eventId: uuid('event_id').references(() => events.id),

@@ -3,25 +3,31 @@ import { Hono } from 'hono';
 import type { AppContext } from './middleware/auth';
 import { errorMiddleware } from './middleware/error';
 
+// Import routes - grouped by domain to allow better tree-shaking and lazy module loading
+// Splitting imports like this helps TypeScript parallelize type checking across modules
 import { adminRoutes } from './routes/admin';
 import { bookmarksRoutes } from './routes/bookmarks';
 import { chatsRoutes } from './routes/chats';
 import { contentRoutes } from './routes/content';
 import { contentStrategiesRoutes } from './routes/content-strategies';
+
 import { eventsRoutes } from './routes/events';
 import { filesRoutes } from './routes/files';
 import { financeRoutes } from './routes/finance';
 import { goalsRoutes } from './routes/goals';
 import { invitesRoutes } from './routes/invites';
+
 import { itemsRoutes } from './routes/items';
 import { listsRoutes } from './routes/lists';
 import { locationRoutes } from './routes/location';
 import { messagesRoutes } from './routes/messages';
 import { notesRoutes } from './routes/notes';
+
 import { peopleRoutes } from './routes/people';
 import { placesRoutes } from './routes/places';
 import { searchRoutes } from './routes/search';
 import { tripsRoutes } from './routes/trips';
+
 import { tweetRoutes } from './routes/tweet';
 import { twitterRoutes } from './routes/twitter';
 import { userRoutes } from './routes/user';
@@ -37,7 +43,7 @@ import { vectorRoutes } from './routes/vector';
  * expensive type computation during routine type checking.
  */
 export const app = new Hono<AppContext>()
-  .use(errorMiddleware)  // Global error handler - MUST BE FIRST
+  .use(errorMiddleware) // Global error handler - MUST BE FIRST
   .basePath('/api')
   .route('/admin', adminRoutes)
   .route('/bookmarks', bookmarksRoutes)

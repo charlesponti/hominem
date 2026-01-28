@@ -155,9 +155,41 @@ export const content = pgTable(
   ]
 )
 
-export type Content = typeof content.$inferSelect
-export type ContentSelect = typeof content.$inferSelect
-export type ContentInsert = typeof content.$inferInsert
+export interface Content {
+  id: string;
+  type: ContentType;
+  title: string | null;
+  content: string;
+  excerpt: string | null;
+  status: ContentStatus;
+  tags: ContentTag[];
+  socialMediaMetadata: SocialMediaMetadata | null;
+  seoMetadata: SEOMetadata | null;
+  userId: string;
+  contentStrategyId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  scheduledFor: string | null;
+}
+export type ContentSelect = Content;
+export interface ContentInsert {
+  id?: string;
+  type?: ContentType;
+  title?: string | null;
+  content: string;
+  excerpt?: string | null;
+  status?: ContentStatus;
+  tags?: ContentTag[];
+  socialMediaMetadata?: SocialMediaMetadata | null;
+  seoMetadata?: SEOMetadata | null;
+  userId: string;
+  contentStrategyId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string | null;
+  scheduledFor?: string | null;
+}
 
 /**
  * Relations
@@ -204,5 +236,22 @@ export const contentStrategiesRelations = relations(contentStrategies, ({ one })
   }),
 }))
 
-export type ContentStrategiesSelect = typeof contentStrategies.$inferSelect
-export type ContentStrategiesInsert = typeof contentStrategies.$inferInsert
+export interface ContentStrategies {
+  id: string;
+  title: string;
+  description: string | null;
+  strategy: ContentStrategy;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+export type ContentStrategiesSelect = ContentStrategies;
+export interface ContentStrategiesInsert {
+  id?: string;
+  title: string;
+  description?: string | null;
+  strategy: ContentStrategy;
+  userId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

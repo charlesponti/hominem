@@ -24,6 +24,30 @@ export const contacts = pgTable(
   })
 )
 
-export type Contact = typeof contacts.$inferSelect
-export type ContactSelect = typeof contacts.$inferSelect
-export type ContactInsert = typeof contacts.$inferInsert
+export interface Contact {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+  linkedinUrl: string | null;
+  title: string | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type ContactSelect = Contact;
+export interface ContactInsert {
+  id?: string;
+  userId: string;
+  firstName: string;
+  lastName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  linkedinUrl?: string | null;
+  title?: string | null;
+  notes?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

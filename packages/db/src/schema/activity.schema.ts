@@ -42,6 +42,64 @@ export const activities = pgTable('activities', {
   parentGoalId: uuid('parentGoalId').references((): AnyPgColumn => activities.id),
   milestones: json('milestones'),
 })
-export type Activity = typeof activities.$inferSelect
-export type ActivitySelect = typeof activities.$inferSelect
-export type ActivityInsert = typeof activities.$inferInsert
+export interface Activity {
+  id: string;
+  title: string | null;
+  description: string;
+  type: string | null;
+  duration: number | null;
+  durationType: string | null;
+  interval: string;
+  score: number | null;
+  startDate: Date;
+  endDate: Date;
+  isCompleted: boolean;
+  lastPerformed: Date;
+  priority: number;
+  dependencies: unknown;
+  resources: unknown;
+  notes: string;
+  dueDate: Date;
+  status: string | null;
+  recurrenceRule: string;
+  completedInstances: number;
+  streakCount: number;
+  targetValue: number | null;
+  currentValue: number;
+  unit: string | null;
+  reminderSettings: unknown;
+  goalCategory: string | null;
+  parentGoalId: string | null;
+  milestones: unknown;
+}
+export type ActivitySelect = Activity;
+export interface ActivityInsert {
+  id: string;
+  title?: string | null;
+  description: string;
+  type?: string | null;
+  duration?: number | null;
+  durationType?: string | null;
+  interval: string;
+  score?: number | null;
+  startDate: Date;
+  endDate: Date;
+  isCompleted?: boolean;
+  lastPerformed: Date;
+  priority: number;
+  dependencies: unknown;
+  resources: unknown;
+  notes: string;
+  dueDate: Date;
+  status?: string | null;
+  recurrenceRule: string;
+  completedInstances: number;
+  streakCount: number;
+  targetValue?: number | null;
+  currentValue?: number;
+  unit?: string | null;
+  reminderSettings?: unknown;
+  goalCategory?: string | null;
+  parentGoalId?: string | null;
+  milestones?: unknown;
+}

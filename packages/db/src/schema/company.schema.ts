@@ -12,7 +12,27 @@ export const companies = pgTable('companies', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
-export type Company = typeof companies.$inferSelect
-export type CompanySelect = typeof companies.$inferSelect
-export type CompanyInsert = typeof companies.$inferInsert
-export type NewCompany = typeof companies.$inferInsert
+export interface Company {
+  id: string;
+  name: string;
+  description: string;
+  website: string;
+  industry: string;
+  size: string;
+  location: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type CompanySelect = Company;
+export interface CompanyInsert {
+  id?: string;
+  name: string;
+  description: string;
+  website: string;
+  industry: string;
+  size: string;
+  location: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export type NewCompany = CompanyInsert;

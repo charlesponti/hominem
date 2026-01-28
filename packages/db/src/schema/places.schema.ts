@@ -84,9 +84,57 @@ export const place = pgTable(
     index('place_updatedAt_idx').on(table.updatedAt),
   ]
 )
-export type Place = typeof place.$inferSelect
-export type PlaceSelect = typeof place.$inferSelect
-export type PlaceInsert = typeof place.$inferInsert
+export interface Place {
+  id: string;
+  name: string;
+  description: string | null;
+  address: string | null;
+  createdAt: string;
+  updatedAt: string;
+  itemId: string | null;
+  googleMapsId: string;
+  types: string[] | null;
+  imageUrl: string | null;
+  phoneNumber: string | null;
+  rating: number | null;
+  websiteUri: string | null;
+  photos: string[] | null;
+  priceLevel: number | null;
+  location: [number, number];
+  latitude: number | null;
+  longitude: number | null;
+  bestFor: string | null;
+  isPublic: boolean;
+  wifiInfo: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
+}
+export type PlaceSelect = Place;
+export interface PlaceInsert {
+  id?: string;
+  name: string;
+  description?: string | null;
+  address?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  itemId?: string | null;
+  googleMapsId: string;
+  types?: string[] | null;
+  imageUrl?: string | null;
+  phoneNumber?: string | null;
+  rating?: number | null;
+  websiteUri?: string | null;
+  photos?: string[] | null;
+  priceLevel?: number | null;
+  location: [number, number];
+  latitude?: number | null;
+  longitude?: number | null;
+  bestFor?: string | null;
+  isPublic?: boolean;
+  wifiInfo?: string | null;
+  businessStatus?: string | null;
+  openingHours?: string | null;
+}
 
 export const placeRelations = relations(place, ({ one }) => ({
   item: one(item, {
