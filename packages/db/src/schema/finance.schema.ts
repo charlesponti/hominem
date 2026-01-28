@@ -1,6 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
 import { index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import * as z from 'zod';
 
 import {
@@ -54,6 +53,8 @@ export const accountTypeEnum = pgEnum('account_type', [
   'other',
 ]);
 
+export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
+
 export const institutionStatusEnum = pgEnum('institution_status', [
   'active',
   'error',
@@ -84,9 +85,27 @@ export const financialInstitutions = pgTable(
     ),
   ],
 );
-export type FinancialInstitution = typeof financialInstitutions.$inferSelect;
-export type FinancialInstitutionSelect = typeof financialInstitutions.$inferSelect;
-export type FinancialInstitutionInsert = typeof financialInstitutions.$inferInsert;
+export interface FinancialInstitution {
+  id: string;
+  name: string;
+  url: string | null;
+  logo: string | null;
+  primaryColor: string | null;
+  country: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export type FinancialInstitutionSelect = FinancialInstitution;
+export interface FinancialInstitutionInsert {
+  id: string;
+  name: string;
+  url?: string | null;
+  logo?: string | null;
+  primaryColor?: string | null;
+  country?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 // Plaid items table to track connected institutions
 export const plaidItems = pgTable('plaid_items', {
@@ -105,9 +124,35 @@ export const plaidItems = pgTable('plaid_items', {
   updatedAt: updatedAtColumn(),
   userId: requiredUuidColumn('user_id').references(() => users.id),
 });
-export type PlaidItem = typeof plaidItems.$inferSelect;
-export type PlaidItemSelect = typeof plaidItems.$inferSelect;
-export type PlaidItemInsert = typeof plaidItems.$inferInsert;
+export interface PlaidItem {
+  id: string;
+  itemId: string;
+  accessToken: string;
+  institutionId: string;
+  status: 'active' | 'error' | 'pending_expiration' | 'revoked';
+  consentExpiresAt: Date | null;
+  transactionsCursor: string | null;
+  error: string | null;
+  lastSyncedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+}
+export type PlaidItemSelect = PlaidItem;
+export interface PlaidItemInsert {
+  id?: string;
+  itemId: string;
+  accessToken: string;
+  institutionId: string;
+  status?: 'active' | 'error' | 'pending_expiration' | 'revoked';
+  consentExpiresAt?: Date | null;
+  transactionsCursor?: string | null;
+  error?: string | null;
+  lastSyncedAt?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  userId: string;
+}
 
 // Tables
 export const financeAccounts = pgTable(
@@ -141,9 +186,49 @@ export const financeAccounts = pgTable(
     ),
   ],
 );
-export type FinanceAccount = typeof financeAccounts.$inferSelect;
-export type FinanceAccountSelect = typeof financeAccounts.$inferSelect;
-export type FinanceAccountInsert = typeof financeAccounts.$inferInsert;
+export interface FinanceAccount {
+  id: string;
+  type: 'checking' | 'savings' | 'investment' | 'credit' | 'loan' | 'retirement' | 'depository' | 'brokerage' | 'other';
+  balance: string;
+  interestRate: string | null;
+  minimumPayment: string | null;
+  name: string;
+  mask: string | null;
+  isoCurrencyCode: string | null;
+  subtype: string | null;
+  officialName: string | null;
+  limit: string | null;
+  meta: Json | null;
+  lastUpdated: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  institutionId: string | null;
+  plaidItemId: string | null;
+  plaidAccountId: string | null;
+  userId: string;
+}
+export type FinanceAccountSelect = FinanceAccount;
+export interface FinanceAccountInsert {
+  id?: string;
+  type: 'checking' | 'savings' | 'investment' | 'credit' | 'loan' | 'retirement' | 'depository' | 'brokerage' | 'other';
+  balance: string;
+  interestRate?: string | null;
+  minimumPayment?: string | null;
+  name: string;
+  mask?: string | null;
+  isoCurrencyCode?: string | null;
+  subtype?: string | null;
+  officialName?: string | null;
+  limit?: string | null;
+  meta?: Json | null;
+  lastUpdated?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  institutionId?: string | null;
+  plaidItemId?: string | null;
+  plaidAccountId?: string | null;
+  userId: string;
+}
 
 export const transactions = pgTable(
   'transactions',
@@ -186,14 +271,62 @@ export const transactions = pgTable(
     ),
   ],
 );
-export type FinanceTransaction = typeof transactions.$inferSelect;
-export type FinanceTransactionSelect = typeof transactions.$inferSelect;
-export type FinanceTransactionInsert = typeof transactions.$inferInsert;
-export const insertTransactionSchema = createInsertSchema(transactions, {
-  type: TransactionTypeEnum,
-  location: TransactionLocationSchema.optional().nullable(),
-});
-export const updateTransactionSchema = createSelectSchema(transactions);
+export interface FinanceTransaction {
+  id: string;
+  type: 'income' | 'expense' | 'credit' | 'debit' | 'transfer' | 'investment';
+  amount: string;
+  date: Date;
+  description: string | null;
+  merchantName: string | null;
+  accountId: string;
+  fromAccountId: string | null;
+  toAccountId: string | null;
+  status: string | null;
+  category: string | null;
+  parentCategory: string | null;
+  excluded: boolean | null;
+  tags: string | null;
+  accountMask: string | null;
+  note: string | null;
+  recurring: boolean | null;
+  pending: boolean | null;
+  paymentChannel: string | null;
+  location: TransactionLocation | null;
+  plaidTransactionId: string | null;
+  source: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+}
+export type FinanceTransactionSelect = FinanceTransaction;
+export interface FinanceTransactionInsert {
+  id?: string;
+  type: 'income' | 'expense' | 'credit' | 'debit' | 'transfer' | 'investment';
+  amount: string;
+  date: Date;
+  description?: string | null;
+  merchantName?: string | null;
+  accountId: string;
+  fromAccountId?: string | null;
+  toAccountId?: string | null;
+  status?: string | null;
+  category?: string | null;
+  parentCategory?: string | null;
+  excluded?: boolean | null;
+  tags?: string | null;
+  accountMask?: string | null;
+  note?: string | null;
+  recurring?: boolean | null;
+  pending?: boolean | null;
+  paymentChannel?: string | null;
+  location?: TransactionLocation | null;
+  plaidTransactionId?: string | null;
+  source?: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  userId: string;
+}
+
 
 export const budgetCategories = pgTable(
   'budget_categories',
@@ -295,29 +428,46 @@ export const budgetCategoryRelations = relations(budgetCategories, ({ many }) =>
   transactions: many(transactions),
 }));
 
-export type BudgetCategory = typeof budgetCategories.$inferSelect;
-export type BudgetCategorySelect = typeof budgetCategories.$inferSelect;
-export type BudgetCategoryInsert = typeof budgetCategories.$inferInsert;
-export type BudgetGoal = typeof budgetGoals.$inferSelect;
-export type BudgetGoalSelect = typeof budgetGoals.$inferSelect;
-export type BudgetGoalInsert = typeof budgetGoals.$inferInsert;
+export interface BudgetCategory {
+  id: string;
+  name: string;
+  type: 'income' | 'expense';
+  budgetId: string | null;
+  averageMonthlyExpense: string | null;
+  color: string | null;
+  userId: string;
+}
+export type BudgetCategorySelect = BudgetCategory;
+export interface BudgetCategoryInsert {
+  id: string;
+  name: string;
+  type: 'income' | 'expense';
+  budgetId?: string | null;
+  averageMonthlyExpense?: string | null;
+  color?: string | null;
+  userId: string;
+}
 
-// Zod schemas generated from Drizzle
-export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
+export interface BudgetGoal {
+  id: string;
+  name: string;
+  targetAmount: string;
+  currentAmount: string;
+  startDate: Date;
+  endDate: Date | null;
+  categoryId: string | null;
+  userId: string;
+}
+export type BudgetGoalSelect = BudgetGoal;
+export interface BudgetGoalInsert {
+  id: string;
+  name: string;
+  targetAmount: string;
+  currentAmount: string;
+  startDate: Date;
+  endDate?: Date | null;
+  categoryId?: string | null;
+  userId: string;
+}
 
-export const FinanceAccountSchema = createSelectSchema(financeAccounts, {
-  type: AccountTypeEnum,
-  meta: z.custom<Json>().optional().nullable(),
-});
-export const FinanceAccountInsertSchema = createInsertSchema(financeAccounts, {
-  type: AccountTypeEnum,
-  meta: z.custom<Json>().optional().nullable(),
-});
-export const TransactionSchema = createSelectSchema(transactions, {
-  type: TransactionTypeEnum,
-  location: TransactionLocationSchema.optional().nullable(),
-});
-export const TransactionInsertSchema = createInsertSchema(transactions, {
-  type: TransactionTypeEnum,
-  location: TransactionLocationSchema.optional().nullable(),
-});
+

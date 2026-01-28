@@ -75,7 +75,7 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     const sendInviteEmailMock = vi.mocked(sendInviteEmail);
     const baseUrl = 'https://app.example.com';
 
-    const invite = await sendListInvite(inviteListId, invitedEmail, ownerId, baseUrl);
+    const invite = await sendListInvite({ listId: inviteListId, invitedUserEmail: invitedEmail, invitingUserId: ownerId, baseUrl });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
@@ -89,12 +89,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   });
 
   it('allows the list owner to delete a pending invite', async () => {
-    const invite = await sendListInvite(
-      inviteListId,
-      invitedEmail,
-      ownerId,
-      'https://app.example.com',
-    );
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
@@ -105,7 +105,7 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       userId: ownerId,
     });
 
-    expect(result).toEqual({ success: true });
+    expect(result).toBeUndefined();
 
     const inviteRecord = await db.query.listInvite.findFirst({
       where: and(eq(listInvite.listId, inviteListId), eq(listInvite.token, invite.token)),
@@ -115,32 +115,27 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   });
 
   it('prevents deleting an invite that was already accepted', async () => {
-    const invite = await sendListInvite(
-      inviteListId,
-      invitedEmail,
-      ownerId,
-      'https://app.example.com',
-    );
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
     // Accept the invite to mark it as accepted
-    const accepted = await acceptListInvite(inviteListId, inviteeUserId, invite.token);
+    const accepted = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
     if ('error' in accepted) {
       expect.fail(`Expected invite to be accepted, got error ${accepted.error}`);
     }
 
-    const result = await deleteListInvite({
+    await expect(deleteListInvite({
       listId: inviteListId,
       invitedUserEmail: invitedEmail,
       userId: ownerId,
-    });
-
-    expect(result).toEqual({
-      error: 'Invite has already been accepted and cannot be deleted.',
-      status: 400,
-    });
+    })).rejects.toThrow('Invite has already been accepted and cannot be deleted');
   });
 
   it('getUserLists should return lists shared with user (metadata only)', async () => {
@@ -192,20 +187,17 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   });
 
   it('acceptListInvite allows invite email to differ from signed-in email', async () => {
-    const invite = await sendListInvite(
-      inviteListId,
-      invitedEmail,
-      ownerId,
-      'https://app.example.com',
-    );
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const accepted = await acceptListInvite(inviteListId, inviteeUserId, invite.token);
-    if ('error' in accepted) {
-      expect.fail(`Expected invite to be accepted, got error ${accepted.error}`);
-    }
+    const accepted = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
 
     expect(accepted.id).toBe(inviteListId);
 
@@ -228,22 +220,19 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     const otherEmail = 'other-user@example.com';
     await createTestUser({ id: otherUserId, email: otherEmail });
 
-    const invite = await sendListInvite(
-      inviteListId,
-      otherEmail,
-      ownerId,
-      'https://app.example.com',
-    );
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: otherEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const response = await acceptListInvite(inviteListId, inviteeUserId, invite.token);
+    const response = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
 
-    expect('error' in response).toBe(false);
-    if (!('error' in response)) {
-      expect(response.id).toBe(inviteListId);
-    }
+    expect(response.id).toBe(inviteListId);
 
     await db
       .delete(users)
@@ -252,53 +241,42 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   });
 
   it('rejects accepting with an invalid token', async () => {
-    const invite = await sendListInvite(
-      inviteListId,
-      invitedEmail,
-      ownerId,
-      'https://app.example.com',
-    );
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const response = await acceptListInvite(inviteListId, inviteeUserId, 'invalid-token');
-    expect('error' in response).toBe(true);
-    if ('error' in response) {
-      expect(response.status).toBe(404);
-    }
+    await expect(acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: 'invalid-token' })).rejects.toThrow('Invite not found');
   });
 
   it('rejects double acceptance with the same token', async () => {
-    const invite = await sendListInvite(
-      inviteListId,
-      invitedEmail,
-      ownerId,
-      'https://app.example.com',
-    );
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const first = await acceptListInvite(inviteListId, inviteeUserId, invite.token);
-    if ('error' in first) {
-      expect.fail(`Expected first accept to succeed, got error ${first.error}`);
-    }
+    const first = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
 
-    const second = await acceptListInvite(inviteListId, inviteeUserId, invite.token);
-    expect('error' in second).toBe(true);
-    if ('error' in second) {
-      expect(second.status).toBe(400);
-    }
+    await expect(acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token })).rejects.toThrow('Invite already accepted');
   });
 
   it('decline requires the correct token', async () => {
-    const invite = await sendListInvite(
-      inviteListId,
-      invitedEmail,
-      ownerId,
-      'https://app.example.com',
-    );
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
@@ -319,17 +297,11 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   });
 
   it('prevents accepting an invite to a list you own', async () => {
-    const invite = await sendListInvite(listId, invitedEmail, ownerId, 'https://app.example.com');
+    const invite = await sendListInvite({ listId, invitedUserEmail: invitedEmail, invitingUserId: ownerId, baseUrl: 'https://app.example.com' });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const response = await acceptListInvite(listId, ownerId, invite.token);
-
-    expect('error' in response).toBe(true);
-    if ('error' in response) {
-      expect(response.status).toBe(400);
-      expect(response.error).toBe('Cannot accept an invite to a list you own.');
-    }
+    await expect(acceptListInvite({ listId, acceptingUserId: ownerId, token: invite.token })).rejects.toThrow('Cannot accept an invite to a list you own');
   });
 });
