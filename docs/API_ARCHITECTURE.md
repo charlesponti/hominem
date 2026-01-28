@@ -1,10 +1,12 @@
-# REST API Migration: Complete Guide
+# API Architecture: Response Patterns & Design Evolution
 
 **Project:** Hominem Monorepo  
 **Initiative:** Type-Safe API Architecture & REST Migration  
 **Status:** ✅ COMPLETE  
 **Date:** January 27, 2026  
-**Repository:** https://github.com/anomalyco/hominem
+**Repository:** https://github.com/charlesponti/hominem  
+
+> **Related Document:** See [HONO_RPC_IMPLEMENTATION.md](HONO_RPC_IMPLEMENTATION.md) for details on the Hono RPC framework implementation that powers these response patterns.
 
 ---
 

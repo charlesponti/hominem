@@ -1,3 +1,4 @@
+import type { AppEnv } from '../../server';
 import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/auth/server';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -17,7 +18,7 @@ const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID;
 const TWITTER_CLIENT_SECRET = env.TWITTER_CLIENT_SECRET;
 const TWITTER_REDIRECT_URI = `${env.API_URL}/api/oauth/twitter/callback`;
 
-export const oauthTwitterCallbackRoutes = new Hono();
+export const oauthTwitterCallbackRoutes = new Hono<AppEnv>();
 
 // Handle Twitter OAuth callback
 oauthTwitterCallbackRoutes.get(

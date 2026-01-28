@@ -1,4 +1,4 @@
-# Types-First RPC Architecture: Optimizing for Maximum TypeScript Performance
+# Types-First RPC Architecture: TypeScript Performance Optimization
 
 ## Executive Summary
 
@@ -6,6 +6,12 @@ This document outlines a comprehensive refactor of the Hominem monorepo's type a
 
 **Current Performance:** 17.79s (rocco), 16.99s (finance), 15.40s (notes)  
 **Target Performance:** <1s per app
+
+> **Related Documents:**
+> - [API_ARCHITECTURE.md](API_ARCHITECTURE.md) — Strategic decisions on response patterns (REST vs wrappers)
+> - [HONO_RPC_IMPLEMENTATION.md](HONO_RPC_IMPLEMENTATION.md) — Framework implementation using Hono RPC
+>
+> **Document Purpose:** This guide focuses on **type system design** for maximum TypeScript performance. Combined with the other architecture documents, it completes the picture of how types, frameworks, and responses work together.
 
 ---
 
@@ -80,6 +86,8 @@ Total time wasted: 15.98s + 17.79s + 15.40s + 16.99s + 13.87s = 79.03s
 
 ### Inverted Design: Types Lead, Routes Follow
 
+The core insight from [API_ARCHITECTURE.md](API_ARCHITECTURE.md) is that **direct REST responses are simpler**. This architecture extends that principle: **direct type definitions are simpler than inferred types**.
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Database Schemas (Zod)                                  │
@@ -138,6 +146,18 @@ Total time: types computed once, referenced everywhere
 ---
 
 ## Part 3: Detailed Architecture
+
+## Part 3: Detailed Architecture
+
+### Design Philosophy
+
+This architecture is built on principles established in [HONO_RPC_IMPLEMENTATION.md](HONO_RPC_IMPLEMENTATION.md):
+
+1. **Explicit Over Inferred** — Types are written, not derived from code
+2. **Single Computation** — Each type is computed exactly once at declaration
+3. **Published Contracts** — Types are the public API of hono-rpc
+4. **Decoupled Consumers** — Apps never depend on complex app.ts inference
+5. **Parallel Type Checking** — Each app loads only the types it needs
 
 ### Directory Structure (Post-Refactor)
 
@@ -551,6 +571,20 @@ export function usePlaceAutocomplete() {
 
 ## Part 4: Implementation Plan
 
+## Part 4: Implementation Plan
+
+### Architecture Alignment
+
+This implementation plan works hand-in-hand with:
+
+- **[API_ARCHITECTURE.md](API_ARCHITECTURE.md)** — Already moved to direct REST responses, now we optimize the type layer
+- **[HONO_RPC_IMPLEMENTATION.md](HONO_RPC_IMPLEMENTATION.md)** — Routes already structured with explicit types, now we formalize and centralize them
+
+The three efforts together create a complete optimization:
+- **Response layer** ← Direct REST (no ApiResult wrappers)
+- **Framework layer** ← Hono RPC (minimal type inference)
+- **Type layer** ← Types-first architecture (explicit definitions)
+
 ### Phase 1: Type Extraction (Week 1)
 
 Extract explicit types for each domain. Go through each route file and:
@@ -850,6 +884,49 @@ All 340 API endpoints have explicit types: ✅
 
 ## Part 9: FAQ
 
+### Q: How does this relate to the REST API architecture described in API_ARCHITECTURE.md?
+
+**A:** They're complementary layers:
+
+- **API_ARCHITECTURE.md** addresses the *shape* of responses (direct data vs wrapped)
+- **TYPES_FIRST_ARCHITECTURE.md** addresses the *definition* of those response types
+
+In practice:
+```typescript
+// API_ARCHITECTURE: We decided to return direct responses
+.post('/create', async (c) => {
+  return c.json(data); // Not wrapped
+})
+
+// TYPES_FIRST_ARCHITECTURE: We define the shape explicitly
+export type PlaceCreateOutput = {
+  id: string;
+  name: string;
+  // ... explicit fields
+};
+```
+
+Together, they ensure both the structure and the types are clean and fast.
+
+### Q: How does this interact with HONO_RPC_IMPLEMENTATION.md?
+
+**A:** They're integrated parts of the same optimization:
+
+- **HONO_RPC_IMPLEMENTATION.md** explains how to build routes with Hono
+- **TYPES_FIRST_ARCHITECTURE.md** explains how to structure types for performance
+
+In the route file:
+```typescript
+// Hono handles the HTTP part
+.post('/create', async (c) => {
+  // Types-first provides explicit types
+  const input = await c.req.json<PlaceCreateInput>();
+  return c.json<PlaceCreateOutput>(data);
+})
+```
+
+The types come from the types-first layer, the framework structure comes from Hono RPC.
+
 ### Q: Will this require breaking changes for users of hono-rpc?
 
 **A:** No! The refactor is backward compatible:
@@ -988,6 +1065,30 @@ This architecture shift transforms TypeScript from a **performance bottleneck** 
 - **Safety**: Explicit contracts prevent bugs
 
 The key insight: **Types shouldn't be computed, they should be composed.** Make types the source of truth, and everything else becomes fast.
+
+## Conclusion
+
+This architecture shift transforms TypeScript from a **performance bottleneck** to a **competitive advantage**:
+
+- **Performance**: 75s → 1.4s (98% improvement)
+- **Clarity**: Types become the public API
+- **Scalability**: Adding new routes doesn't slow type checking
+- **Maintainability**: Types are centralized and versioned
+- **Safety**: Explicit contracts prevent bugs
+
+The key insight: **Types shouldn't be computed, they should be composed.** Make types the source of truth, and everything else becomes fast.
+
+### Complete Architecture Picture
+
+This document completes the architectural trilogy:
+
+| Document | Layer | Focus | Outcome |
+|----------|-------|-------|---------|
+| **[API_ARCHITECTURE.md](API_ARCHITECTURE.md)** | Response | Shape of data (direct vs wrapped) | Simpler, REST-native responses |
+| **[HONO_RPC_IMPLEMENTATION.md](HONO_RPC_IMPLEMENTATION.md)** | Framework | HTTP routing (tRPC → Hono) | Better performance, lighter weight |
+| **[TYPES_FIRST_ARCHITECTURE.md](TYPES_FIRST_ARCHITECTURE.md)** | Type System | Type definition (inferred → explicit) | Sub-second type checking |
+
+Together, these create a **modern, performant, type-safe API architecture**.
 
 ---
 

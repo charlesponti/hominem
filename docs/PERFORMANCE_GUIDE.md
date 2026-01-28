@@ -4,7 +4,16 @@ hominem/docs/typescript-performance-optimization-guide.md
 
 ## Overview
 
-This guide articulates how TypeScript and tsserver performance is optimized in the Hominem monorepo, a full-stack application using Bun, Next.js, Drizzle ORM, Zustand, React Query, Tailwind CSS, and Shadcn UI. The optimizations span architecture, compiler settings, IDE configuration, type-level improvements, and monitoring tools to ensure fast, reliable developer experience.
+This guide articulates current TypeScript performance optimizations and best practices in the Hominem monorepo. It covers architecture, compiler settings, IDE configuration, type-level improvements, and monitoring tools for a fast, reliable developer experience.
+
+> **Related Documents:**
+> - [PERFORMANCE_ROADMAP.md](PERFORMANCE_ROADMAP.md) — Strategic vision for achieving <1s type-checking (95% improvement)
+> - [TYPES_FIRST_ARCHITECTURE.md](TYPES_FIRST_ARCHITECTURE.md) — Type system design that enables sub-second performance
+> - [ARCHITECTURE_GUIDE.md](ARCHITECTURE_GUIDE.md) — Navigation hub for all architecture documentation
+>
+> **This Document:** Current state optimizations, best practices, and how to implement them today.
+
+---
 
 ## Architecture: Internal Packages Pattern
 

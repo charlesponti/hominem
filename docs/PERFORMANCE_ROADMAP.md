@@ -1,11 +1,18 @@
 # This document replaces both IMMEDIATE_ACTION_PLAN.md and RADICAL_PERFORMANCE_PLAN.md. All future updates should be made here.
-# Radical Performance Plan: Sub-Second Type Checking
+# Performance Roadmap: Path to Sub-Second Type Checking
 
 ## 🎯 Goal: <1 second type-check, <100MB memory
 
 Current: 6.41s, 1GB memory  
 Target: <1s, <100MB memory  
 Required: **85% reduction**
+
+> **Related Documents:**
+> - [PERFORMANCE_GUIDE.md](PERFORMANCE_GUIDE.md) — Current optimizations and best practices
+> - [TYPES_FIRST_ARCHITECTURE.md](TYPES_FIRST_ARCHITECTURE.md) — Type system design to enable these improvements
+> - [ARCHITECTURE_GUIDE.md](ARCHITECTURE_GUIDE.md) — Navigation hub for all architecture documentation
+>
+> **This Document:** Strategic vision, implementation phases, and expected results.
 
 ---
 
