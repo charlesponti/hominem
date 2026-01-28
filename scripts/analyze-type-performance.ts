@@ -18,7 +18,7 @@
  */
 
 import { execSync } from 'child_process';
-import { existsSync, readFileSync, mkdirSync, rmSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 interface TypeInstantiation {
@@ -161,16 +161,81 @@ function analyzeTrace(tracePath: string) {
   console.log('   - Avoid deep chains of utility types (Pick<Omit<...>>)');
 }
 
+function writeReport(tracePath: string, opts: { outJson?: string; top?: number } = {}) {
+  const traceFile = join(tracePath, 'trace.json');
+  if (!existsSync(traceFile)) {
+    console.error(`Trace file not found at ${traceFile}`);
+    return;
+  }
+
+  let traceContent = readFileSync(traceFile, 'utf-8').trim();
+  if (!traceContent.endsWith(']')) {
+    traceContent = traceContent.replace(/,\s*$/, '');
+    traceContent += ']';
+  }
+
+  let trace: TraceEvent[];
+  try {
+    trace = JSON.parse(traceContent);
+  } catch (error) {
+    console.error('Failed to parse trace for JSON report');
+    return;
+  }
+
+  const topN = opts.top || 20;
+
+  const typeChecks = trace.filter((event) => event.name && event.name.includes('check') && event.dur);
+  const slowestChecks = typeChecks.sort((a, b) => (b.dur || 0) - (a.dur || 0)).slice(0, topN);
+
+  const instantiations = new Map<string, number>();
+  for (const event of trace) {
+    if (event.args?.path && event.args?.count) {
+      const existing = instantiations.get(event.args.path) || 0;
+      instantiations.set(event.args.path, existing + event.args.count);
+    }
+  }
+
+  const sortedInst = Array.from(instantiations.entries()).sort((a, b) => b[1] - a[1]).slice(0, topN);
+
+  const totalDuration = trace.reduce((sum, event) => sum + (event.dur || 0), 0);
+
+  const report = {
+    tracePath,
+    topChecks: slowestChecks.map((c) => ({ name: c.name, durationMs: (c.dur || 0) / 1000 })),
+    topInstantiations: sortedInst.map(([path, count]) => ({ path, count })),
+    totalMs: totalDuration / 1000,
+    eventCount: trace.length,
+    generatedAt: new Date().toISOString(),
+  };
+
+  if (opts.outJson) {
+    try {
+      writeFileSync(opts.outJson, JSON.stringify(report, null, 2), 'utf-8');
+      console.log(`\n📁 JSON report written to ${opts.outJson}`);
+    } catch (e) {
+      console.error('Failed to write JSON report:', e);
+    }
+  }
+
+  return report;
+}
+
 function main() {
   const args = process.argv.slice(2);
+
+  let outJson: string | undefined;
+  const jsonIdx = args.indexOf('--json');
+  if (jsonIdx !== -1 && args[jsonIdx + 1]) outJson = args[jsonIdx + 1];
 
   if (args[0] === '--analyze' && args[1]) {
     // Analyze existing trace
     analyzeTrace(args[1]);
+    if (outJson) writeReport(args[1], { outJson });
   } else {
     // Generate and analyze
     const tracePath = generateTrace();
     analyzeTrace(tracePath);
+    if (outJson) writeReport(tracePath, { outJson });
   }
 }
 

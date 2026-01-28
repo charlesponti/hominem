@@ -1,0 +1,28 @@
+---
+applyTo: 'apps/**, packages/hono-rpc/**, services/api/**, packages/hono-client/**'
+---
+
+# API & Type Architecture
+
+Establish type-safe, performant communication between services and applications by following the "Types-First" REST pattern.
+
+### 1. Explicit Contracts over Inference
+- **Tactical Goal:** Achieve sub-second type checking across all applications.
+- **Action:** Define every API input and output as an explicit TypeScript `type` or `interface` in `packages/hono-rpc/src/types`.
+- **Constraint:** NEVER infer the `AppType` from the implementation (e.g., `typeof app`). Apps must import domain-specific types directly (e.g., `import type { PlaceCreateOutput } from '...'`).
+
+### 2. Standardized REST Boundaries
+- **Tactical Goal:** Predictable HTTP semantic handling.
+- **Action:** Use Hono for routing and standard HTTP status codes for error states (400, 401, 403, 404, 409, 500).
+- **Format:** Return direct JSON payloads for success. Use the `success()` and `error()` helpers from `@hominem/services` to ensure consistent response envelopes.
+- **Serialization:** Explicitly handle `Date` serialization (to ISO strings) at the route layer to prevent hydration mismatches.
+
+### 3. Service Layer Separation
+- **Tactical Goal:** Framework-agnostic business logic.
+- **Action:** Keep services as pure business logic that throw typed error instances (e.g., `new ConflictError()`).
+- **Endpoint Responsibility:** The HTTP handler is responsible for catching service errors and translating them to the appropriate HTTP status codes and user-facing error messages.
+
+### 4. Input Validation
+- **Tactical Goal:** Zero-trust input handling.
+- **Action:** Use Zod schemas with `zValidator` for every external input.
+- **Pattern:** Define the Zod schema alongside the explicit Type in the domain type file to keep them in sync.

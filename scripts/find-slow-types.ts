@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 /**
@@ -86,18 +86,44 @@ async function main() {
     existsSync(join(ROOT, t.path, 'tsconfig.json')),
   );
 
-  const results: Result[] = [];
+  // We'll collect results into an outer array so we can write a JSON summary
+  // and set an appropriate exit code for CI/agents.
+}
+
+// Outer results collector used for summary JSON emission
+const results: Result[] = [];
+
+async function runAllTargets() {
+  console.log('🚀 Starting Hominem TypeScript Performance Audit...\n');
+
+  if (existsSync(TRACE_DIR)) rmSync(TRACE_DIR, { recursive: true });
+  mkdirSync(TRACE_DIR);
+
+  const apps = readdirSync(join(ROOT, 'apps')).map((d) => ({
+    name: `apps/${d}`,
+    path: join('apps', d),
+  }));
+
+  const packages = readdirSync(join(ROOT, 'packages')).map((d) => ({
+    name: `packages/${d}`,
+    path: join('packages', d),
+  }));
+
+  const targets = [...apps, ...packages].filter((t) =>
+    existsSync(join(ROOT, t.path, 'tsconfig.json')),
+  );
+
   for (const target of targets) {
     const res = await runCheck(target.name, target.path);
     if (res) results.push(res);
   }
 
-  // Final Summary Report
+  // Final Summary Report (console)
   console.log('\n' + '='.repeat(70));
   console.log('TYPE PERFORMANCE SUMMARY');
   console.log('='.repeat(70));
 
-  const sorted = results.sort((a, b) => b.duration - a.duration);
+  const sorted = results.slice().sort((a, b) => b.duration - a.duration);
 
   console.log(`\n${'STATUS'.padEnd(15)} | ${'TIME'.padEnd(8)} | ${'PROJECT'}`);
   console.log('-'.repeat(70));
@@ -123,11 +149,40 @@ async function main() {
   console.log('1. Open https://ui.perfetto.dev/ and drop in a trace.json from .type-traces/');
   console.log('2. Look for the longest "checkExpression" or "checkSourceFile" blocks.');
   console.log('3. Use @ark/attest to benchmark suspected types:');
-  console.log('   attest(() => { type Test = SlowType; }).type.instantiations.lessThan(5000)');
+  console.log("   attest(() => { type Test = SlowType; }).type.instantiations.lessThan(5000)");
   console.log('4. Simplify union types or use explicit return types to reduce inference load.');
+
+  // Emit JSON summary if requested
+  const args = process.argv.slice(2);
+  const summaryIdx = args.indexOf('--summary-json');
+  let summaryOut: string | undefined;
+  if (summaryIdx !== -1 && args[summaryIdx + 1]) summaryOut = args[summaryIdx + 1];
+
+  const summary = results.map((r) => ({
+    name: r.name,
+    path: r.path,
+    success: r.success,
+    durationSec: r.duration,
+    error: r.error || null,
+    traceDir: join(TRACE_DIR, r.name.replace(/\//g, '-')),
+  }));
+
+  const summaryJson = JSON.stringify({ results: summary, generatedAt: new Date().toISOString() }, null, 2);
+  const dest = summaryOut || join(TRACE_DIR, 'summary.json');
+  try {
+    writeFileSync(dest, summaryJson, 'utf-8');
+    console.log(`\n📁 Summary written to ${dest}`);
+  } catch (e) {
+    console.error('Failed to write summary JSON:', e);
+  }
+
+  if (critical.length > 0) {
+    process.exitCode = 2;
+  }
 }
 
-main().catch((err) => {
+runAllTargets().catch((err) => {
   console.error('\nAudit failed unexpectedly:');
   console.error(err);
+  process.exitCode = 1;
 });
