@@ -11,3 +11,6 @@ import type { Tag, TagInsert } from './tags.schema';
 
 export type TagOutput = Tag;
 export type TagInput = TagInsert;
+
+// Legacy aliases
+export type TagSelect = Tag;

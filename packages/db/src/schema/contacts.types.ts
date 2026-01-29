@@ -11,3 +11,6 @@ import type { Contact, ContactInsert } from './contacts.schema';
 
 export type ContactOutput = Contact;
 export type ContactInput = ContactInsert;
+
+// Legacy aliases
+export type ContactSelect = Contact;

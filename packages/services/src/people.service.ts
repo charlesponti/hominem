@@ -1,8 +1,10 @@
 import { db } from '@hominem/db';
-import { contacts, eventsUsers, type ContactSelect } from '@hominem/db/schema';
+import { contacts } from '@hominem/db/schema/contacts';
+import { eventsUsers } from '@hominem/db/schema/events';
+import type { ContactOutput } from '@hominem/db/schema';
 import { asc, eq, inArray } from 'drizzle-orm';
 
-export type { ContactSelect };
+export type { ContactOutput as ContactOutput };
 
 export interface PersonInput {
   userId: string;
@@ -82,7 +84,7 @@ export async function replacePeopleForEvent(eventId: string, people?: string[]) 
   await db.insert(eventsUsers).values(relationships);
 }
 
-export async function getPeople({ userId }: { userId: string }): Promise<ContactSelect[]> {
+export async function getPeople({ userId }: { userId: string }): Promise<ContactOutput[]> {
   return db
     .select()
     .from(contacts)
@@ -90,13 +92,13 @@ export async function getPeople({ userId }: { userId: string }): Promise<Contact
     .orderBy(asc(contacts.firstName));
 }
 
-export async function getPersonById(id: string): Promise<ContactSelect | null> {
+export async function getPersonById(id: string): Promise<ContactOutput | null> {
   const result = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1);
 
   return result.length > 0 ? result[0] : null;
 }
 
-export async function createPerson(person: PersonInput): Promise<ContactSelect> {
+export async function createPerson(person: PersonInput): Promise<ContactOutput> {
   if (!person.firstName) {
     throw new Error('firstName is required');
   }
@@ -119,7 +121,7 @@ export async function createPerson(person: PersonInput): Promise<ContactSelect> 
   return result;
 }
 
-export async function updatePerson(id: string, person: PersonInput): Promise<ContactSelect | null> {
+export async function updatePerson(id: string, person: PersonInput): Promise<ContactOutput | null> {
   const updateData: Record<string, unknown> = {};
 
   if (person.firstName !== undefined) {

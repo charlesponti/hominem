@@ -1,42 +1,33 @@
+// Re-export commonly used types - available from pre-computed types
 export type {
-  Activity,
-  Artist,
-  Category,
-  Chat,
-  ChatMessageFile,
-  ChatMessageSelect,
-  Company,
   ContactSelect,
   ContactInput,
   GoalOutput,
-  JobApplication,
-  JobApplicationInsert,
   PlaceOutput,
   PlaceInput,
-  Possession,
-  PossessionInsert,
+  PossessionOutput,
+  PossessionInput,
   TagOutput,
+  BookmarkOutput,
+  BookmarkInput,
 } from '@hominem/db/schema';
+
 export type {
-  Content,
-  ContentInsert,
+  ContentOutput,
   ContentStatus,
   ContentStrategy,
-  ContentStrategiesInsert,
-  ContentStrategiesSelect,
   ContentType,
   SEOMetadata,
   SocialMediaMetadata,
 } from '@hominem/db/schema';
+
 export type {
   BudgetCategoryOutput,
-  FinanceAccount,
-  FinanceTransaction as Transaction,
+  FinanceAccountOutput,
+  FinanceTransactionOutput as Transaction,
   FinancialInstitutionOutput,
 } from '@hominem/db/schema';
-export type { GoalMilestone, GoalStatus } from '@hominem/db/schema';
-export type { Item, ItemInsert } from '@hominem/db/schema';
-export type { ListInsert, ListInviteSelect, ListSelect } from '@hominem/db/schema';
+
 export type {
   NoteOutput,
   NoteContentType,
@@ -46,14 +37,16 @@ export type {
   TaskStatus,
 } from '@hominem/db/schema';
 
-export type {
-  AllContentType,
-  BaseContentType,
-  ContentTag,
-  PublishingContentType,
-} from '@hominem/db/schema';
+export type { UserOutput, UserInput, UserSelect, AccountOutput, AccountInput } from '@hominem/db/schema';
 
-export type { User, UserInsert } from '@hominem/db/schema';
+// TODO: The following types need .types.ts files to be created:
+// - Activity, Artist, Category, Chat, ChatMessageFile, ChatMessageSelect
+// - Company, JobApplication, JobApplicationInsert
+// - ContentStrategiesInsert, ContentStrategiesSelect
+// - GoalMilestone, GoalStatus
+// - Item, ItemInsert
+// - ListInsert, ListInviteSelect, ListSelect
+// - AllContentType, BaseContentType, ContentTag, PublishingContentType
 
 import type { Queue } from 'bullmq';
 

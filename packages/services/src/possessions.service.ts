@@ -1,19 +1,20 @@
 import { db } from '@hominem/db';
-import { type PossessionInsert, type PossessionSelect, possessions } from '@hominem/db/schema';
+import type { PossessionInput, PossessionOutput } from '@hominem/db/schema';
+import { possessions } from '@hominem/db/schema/possessions';
 import { and, desc, eq } from 'drizzle-orm';
 
-type CreatePossessionInput = Omit<PossessionInsert, 'createdAt' | 'updatedAt'> & {
+type CreatePossessionInput = Omit<PossessionInput, 'createdAt' | 'updatedAt'> & {
   userId: string;
 };
 
 type UpdatePossessionInput = Partial<
-  Omit<PossessionInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+  Omit<PossessionInput, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 > & {
   id: string;
   userId: string;
 };
 
-export async function listPossessions(userId: string): Promise<PossessionSelect[]> {
+export async function listPossessions(userId: string): Promise<PossessionOutput[]> {
   return db
     .select()
     .from(possessions)
@@ -21,7 +22,7 @@ export async function listPossessions(userId: string): Promise<PossessionSelect[
     .orderBy(desc(possessions.createdAt));
 }
 
-export async function createPossession(input: CreatePossessionInput): Promise<PossessionSelect> {
+export async function createPossession(input: CreatePossessionInput): Promise<PossessionOutput> {
   const [created] = await db
     .insert(possessions)
     .values({
@@ -35,7 +36,7 @@ export async function createPossession(input: CreatePossessionInput): Promise<Po
 
 export async function updatePossession(
   input: UpdatePossessionInput,
-): Promise<PossessionSelect | undefined> {
+): Promise<PossessionOutput | undefined> {
   const { id, userId, ...updates } = input;
   const [updated] = await db
     .update(possessions)

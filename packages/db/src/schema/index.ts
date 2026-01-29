@@ -30,6 +30,8 @@ export * from './contacts.types';
 export * from './users.types';
 export * from './tags.types';
 export * from './goals.types';
+export * from './bookmarks.types';
+export * from './possessions.types';
 
 // Shared utilities
 export type { Json } from './shared.schema';

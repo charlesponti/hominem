@@ -1,10 +1,11 @@
 import { db } from '@hominem/db';
-import { bookmark, type BookmarkInsert, type BookmarkSelect } from '@hominem/db/schema';
+import { bookmark } from '@hominem/db/schema/bookmarks';
+import type { BookmarkInput, BookmarkOutput } from '@hominem/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
-export type { BookmarkInsert, BookmarkSelect };
+export type { BookmarkInput as BookmarkInsert, BookmarkOutput as BookmarkSelect };
 
-export async function listBookmarksByUser(userId: string): Promise<BookmarkSelect[]> {
+export async function listBookmarksByUser(userId: string): Promise<BookmarkOutput[]> {
   return db
     .select()
     .from(bookmark)
@@ -14,8 +15,8 @@ export async function listBookmarksByUser(userId: string): Promise<BookmarkSelec
 
 export async function createBookmarkForUser(
   userId: string,
-  data: Omit<BookmarkInsert, 'id' | 'userId'>,
-): Promise<BookmarkSelect> {
+  data: Omit<BookmarkInput, 'id' | 'userId'>,
+): Promise<BookmarkOutput> {
   const [created] = await db
     .insert(bookmark)
     .values({
@@ -31,8 +32,8 @@ export async function createBookmarkForUser(
 export async function updateBookmarkForUser(
   id: string,
   userId: string,
-  data: Partial<Omit<BookmarkInsert, 'id' | 'userId'>>,
-): Promise<BookmarkSelect | null> {
+  data: Partial<Omit<BookmarkInput, 'id' | 'userId'>>,
+): Promise<BookmarkOutput | null> {
   const [updated] = await db
     .update(bookmark)
     .set(data)

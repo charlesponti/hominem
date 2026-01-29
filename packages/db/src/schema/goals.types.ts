@@ -11,3 +11,6 @@ import type { Goal, GoalInsert } from './goals.schema';
 
 export type GoalOutput = Goal;
 export type GoalInput = GoalInsert;
+
+// Legacy aliases
+export type GoalSelect = Goal;
